@@ -180,3 +180,96 @@ into the container.
    the pipeline must run headless (cron, CI) with no UI attached.
 4. **Provider is a seam** (`ChatSession`) — transport (browser vs API vs
    future local model) is a flag, never a rewrite.
+
+## Free and Pro customer backend
+
+Astryx now has a backend-only customer access layer. The current commercial
+model has two plans:
+
+- **Free:** permanently unlock up to 3 apps per account. Public catalog
+  previews are available before an unlock. Exports are not included.
+- **Pro:** $7/month or $70/year. Pro accounts can access every app and reserve
+  up to 20 controlled exports per billing month.
+
+The customer frontend, public registration, and generated export files are
+deliberately outside this backend slice. Existing administrator workflows keep
+using their current routes.
+
+### HTTP contract
+
+Public routes:
+
+- `GET /catalog` — cursor-paginated app summaries, capped at 24 apps per page
+  and 3 preview images per app.
+- `GET /preview-media/:app/:hash` — serves only an app's public preview images.
+
+Authenticated customer routes:
+
+- `POST /apps/:app/unlock` — permanently consumes one of a Free account's
+  three app slots. Concurrent requests are serialized by a database
+  transaction so the cap cannot be exceeded.
+- `GET /apps/:app` — cursor-paginated app detail, capped at 48 screens per
+  page, after checking the account's entitlement.
+- `GET /design-systems/:app` — returns entitled design-system data with
+  customer media links rewritten to short-lived signed URLs.
+- `GET /media/:app/:hash?expires=...&token=...` — validates the signature,
+  expiry, user, app, image, and current entitlement before serving a protected
+  image. Administrators may use this route without a signed query string.
+- `POST /apps/:app/exports/reservations` — reserves one controlled export for
+  a component family, a foundation category, or up to 10 selected screens.
+- `GET /billing/subscription` — returns the account's safe billing and usage
+  state without exposing Stripe object IDs.
+- `POST /billing/checkout` — creates a Stripe Checkout Session for the
+  server-selected monthly or yearly Pro Price.
+- `POST /billing/portal` — creates a Stripe Customer Portal Session.
+
+Administrator compatibility routes remain available to administrator
+accounts only. In particular, `GET /apps`, `GET /images`, `GET /jobs`,
+`GET /progress`, pipeline mutations, and unsigned `GET /media/...` are not
+customer APIs.
+
+### Stripe authority
+
+`POST /billing/webhook` is registered before JSON parsing so Stripe receives
+the unmodified request body for signature verification. Checkout completion is
+not treated as an entitlement grant. Signed subscription webhooks are the
+billing authority, and the API retrieves the latest Stripe subscription before
+applying a state change to protect against out-of-order delivery. Processed
+event IDs are stored for idempotency. A `past_due` subscription retains Pro
+access for a 7-day grace period; a canceled, unpaid, or expired subscription
+falls back to Free.
+
+The API requires these values at startup:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRO_MONTHLY_PRICE_ID`
+- `STRIPE_PRO_YEARLY_PRICE_ID`
+- `APP_URL`
+- `MEDIA_SIGNING_SECRET`
+
+The Checkout and Portal endpoints return Stripe-hosted URLs; the future
+frontend only needs to redirect to them.
+
+### Persistence and abuse controls
+
+The existing PostgreSQL database contains customer subscriptions, permanent
+Free app unlocks, processed Stripe events, monthly export usage, and access
+events.
+Normal customer accounts are capped at two active sessions; signing in on a
+third device revokes the oldest session. Administrator sessions are exempt.
+
+Default limits are 300 requests per 5 minutes, 500 protected-media requests per
+10 minutes, and traversal of 20 distinct apps per 10 minutes. Limits apply per
+authenticated user or redacted client address, return
+`verification_required` with `Retry-After`, and record blocked access events.
+Administrators bypass these customer limits.
+
+### Explicit follow-ons
+
+1. Build the customer frontend against the routes above.
+2. Add public registration and account verification; today customer rows must
+   be provisioned through an existing trusted path.
+3. Generate and deliver the reserved export artifacts. The current endpoint
+   validates entitlement, scope, and monthly quota, but intentionally stops at
+   the reservation boundary.
