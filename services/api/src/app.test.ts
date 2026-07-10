@@ -263,6 +263,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
       unlocked = true;
       return { status: "unlocked", remaining: 2 };
     },
+    recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
   const locked = await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } });
@@ -459,4 +460,29 @@ test("creates Checkout and returns safe subscription state", async (t) => {
   assert.equal(subscription.plan, "pro");
   assert.equal(subscription.interval, "month");
   assert.equal(subscription.stripe_customer_id, undefined);
+});
+
+test("blocks catalog-wide traversal and records a redacted audit event", async (t) => {
+  const events: Array<{ appSlug?: string; ipPrefix?: string; outcome: string }> = [];
+  const images = [
+    ...catalogImages,
+    { ...catalogImages[0], id: 8, app: "notion", image_url: "mobbin-bulk:1111111111111111" },
+  ];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    allImages: async () => images,
+    appTraversalLimit: 1,
+    recordAccessEvent: async (event) => { events.push(event); },
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user" };
+  assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
+  assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
+  const blocked = await fetch(`${base}/apps/notion`, { headers });
+  assert.equal(blocked.status, 429);
+  assert.equal(blocked.headers.get("retry-after"), "600");
+  assert.equal(events.at(-1)?.appSlug, "notion");
+  assert.equal(events.at(-1)?.outcome, "blocked");
+  assert.match(events.at(-1)?.ipPrefix ?? "", /\/24$/);
 });

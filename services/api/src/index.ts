@@ -30,4 +30,7 @@ const billing = createBillingService({
 createApiApp({
   billing,
   mediaSigningSecret: config.mediaSigningSecret,
+  generalRateLimit: config.generalRateLimit,
+  mediaRateLimit: config.mediaRateLimit,
+  appTraversalLimit: config.appTraversalLimit,
 }).listen(PORT, () => console.log(`[api] listening on :${PORT}`));

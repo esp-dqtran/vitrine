@@ -23,9 +23,15 @@ import { readProgress, requestCancel } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
-import { canAccessApp, getAccountEntitlements, unlockFreeApp } from "../../../src/pricingStore.ts";
+import {
+  canAccessApp,
+  getAccountEntitlements,
+  recordAccessEvent,
+  unlockFreeApp,
+} from "../../../src/pricingStore.ts";
 import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
 import type { BillingService } from "./billing.ts";
+import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -55,7 +61,11 @@ const defaults = {
   canAccessApp,
   unlockFreeApp,
   getAccountEntitlements,
+  recordAccessEvent,
   billing: disabledBilling,
+  generalRateLimit: 300,
+  mediaRateLimit: 500,
+  appTraversalLimit: 20,
   mediaSigningSecret: process.env.MEDIA_SIGNING_SECRET ?? "development-media-signing-secret",
   nowSeconds: () => Math.floor(Date.now() / 1000),
   dataDir: process.env.DATA_DIR ?? "data",
@@ -100,6 +110,9 @@ function validMobbinScreensUrl(value: string): boolean {
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const deps = { ...defaults, ...overrides };
   const app = express();
+  const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
+  const mediaLimiter = createFixedWindowLimiter({ limit: deps.mediaRateLimit, windowMs: 10 * 60_000 });
+  const traversalLimiter = createDistinctValueLimiter({ limit: deps.appTraversalLimit, windowMs: 10 * 60_000 });
   app.post("/billing/webhook", express.raw({ type: "application/json" }), async (req, res) => {
     try {
       const result = await deps.billing.handleWebhook(
@@ -184,6 +197,32 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     next();
   });
 
+  app.use(async (req, res, next) => {
+    if (res.locals.user.role === "admin") {
+      next();
+      return;
+    }
+    const byUser = generalLimiter.check(`user:${res.locals.user.id}`);
+    const byIp = generalLimiter.check(`ip:${req.ip}`);
+    const blocked = byUser.allowed ? byIp : byUser;
+    if (!blocked.allowed) {
+      res.setHeader("Retry-After", String(blocked.retryAfterSeconds));
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        ipPrefix: ipPrefix(req.ip ?? "unknown"),
+        action: "protected-request",
+        outcome: "blocked",
+      });
+      res.status(429).json({
+        error: "Security verification required",
+        code: "verification_required",
+        retryAfterSeconds: blocked.retryAfterSeconds,
+      });
+      return;
+    }
+    next();
+  });
+
   const requireAdmin: express.RequestHandler = (_req, res, next) => {
     if (res.locals.user.role !== "admin") {
       res.status(403).json({ error: "Admin access required" });
@@ -250,6 +289,25 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid app slug" });
       return;
     }
+    if (res.locals.user.role !== "admin") {
+      const traversal = traversalLimiter.check(`user:${res.locals.user.id}`, req.params.app);
+      if (!traversal.allowed) {
+        res.setHeader("Retry-After", String(traversal.retryAfterSeconds));
+        await deps.recordAccessEvent({
+          userId: res.locals.user.id,
+          ipPrefix: ipPrefix(req.ip ?? "unknown"),
+          appSlug: req.params.app,
+          action: "app-detail",
+          outcome: "blocked",
+        });
+        res.status(429).json({
+          error: "Security verification required",
+          code: "verification_required",
+          retryAfterSeconds: traversal.retryAfterSeconds,
+        });
+        return;
+      }
+    }
     if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
@@ -264,7 +322,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       (appSlug, source) => protectedMediaUrl(res.locals.user.id, appSlug, source),
     );
     if (!page) res.status(404).json({ error: "app not found" });
-    else res.json(page);
+    else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        ipPrefix: ipPrefix(req.ip ?? "unknown"),
+        appSlug: req.params.app,
+        action: "app-detail",
+        outcome: "allowed",
+      });
+      res.json(page);
+    }
   });
 
   app.get("/apps", requireAdmin, async (_req, res) => {
@@ -377,6 +444,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     if (res.locals.user.role !== "admin") {
+      const media = mediaLimiter.check(`user:${res.locals.user.id}`);
+      if (!media.allowed) {
+        res.setHeader("Retry-After", String(media.retryAfterSeconds));
+        res.status(429).json({
+          error: "Security verification required",
+          code: "verification_required",
+          retryAfterSeconds: media.retryAfterSeconds,
+        });
+        return;
+      }
       if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
         res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
         return;
