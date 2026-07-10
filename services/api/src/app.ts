@@ -20,9 +20,10 @@ import {
 } from "../../../src/authStore.ts";
 import { publishJob, type Job } from "../../../src/queue.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
-import { findBulkImage, isAppSlug } from "../../../src/imageSource.ts";
+import { bulkImageHash, findBulkImage, isAppSlug } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
-import { buildGalleryApps } from "../../../src/gallery.ts";
+import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
+import { canAccessApp, unlockFreeApp } from "../../../src/pricingStore.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -44,6 +45,8 @@ const defaults = {
   resolveSession,
   resolveSessionState,
   deleteSession,
+  canAccessApp,
+  unlockFreeApp,
   dataDir: process.env.DATA_DIR ?? "data",
 };
 type ApiDeps = typeof defaults;
@@ -113,6 +116,29 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.clearCookie(SESSION_COOKIE, cookieOptions).status(204).end();
   });
 
+  app.get("/catalog", async (req, res) => {
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    res.json(buildCatalogPage(await deps.allImages(), cursor, limit));
+  });
+
+  app.get("/preview-media/:app/:hash", async (req, res) => {
+    if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
+      res.status(400).json({ error: "invalid media reference" });
+      return;
+    }
+    const previewHashes = (await deps.appImages(req.params.app))
+      .slice(0, 3)
+      .map(({ image_url }) => bulkImageHash(image_url));
+    if (!previewHashes.includes(req.params.hash)) {
+      res.status(404).json({ error: "preview not found" });
+      return;
+    }
+    const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
+    if (!path) res.status(404).json({ error: "image not found" });
+    else res.sendFile(resolve(path));
+  });
+
   app.use(async (req, res, next) => {
     const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
     let resolution: Awaited<ReturnType<typeof resolveSessionState>> = { status: "invalid" };
@@ -146,11 +172,37 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
 
-  app.get("/apps", async (_req, res) => {
+  app.post("/apps/:app/unlock", async (req, res) => {
+    if (!isAppSlug(req.params.app)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    const result = await deps.unlockFreeApp(res.locals.user.id, req.params.app);
+    const status = result.status === "unlocked" ? 201 : result.status === "app_not_found" ? 404 : 200;
+    res.status(status).json(result);
+  });
+
+  app.get("/apps/:app", async (req, res) => {
+    if (!isAppSlug(req.params.app)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const page = buildAppDetailPage(await deps.allImages(), req.params.app, cursor, limit);
+    if (!page) res.status(404).json({ error: "app not found" });
+    else res.json(page);
+  });
+
+  app.get("/apps", requireAdmin, async (_req, res) => {
     res.json(buildGalleryApps(await deps.allImages()));
   });
 
-  app.get("/images", async (req, res) => {
+  app.get("/images", requireAdmin, async (req, res) => {
     const appName = String(req.query.app ?? "");
     if (!appName) {
       res.status(400).json({ error: "app query param required" });
@@ -167,7 +219,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(rows.rows);
   });
 
-  app.get("/progress", (_req, res) => {
+  app.get("/progress", requireAdmin, (_req, res) => {
     res.json(deps.readProgress());
   });
 
@@ -206,7 +258,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.status(201).json({ id });
   });
 
-  app.get("/jobs", async (_req, res) => {
+  app.get("/jobs", requireAdmin, async (_req, res) => {
     res.json(await deps.listJobs());
   });
 
@@ -228,6 +280,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const appSlug = req.params.app;
     if (!isAppSlug(appSlug)) {
       res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
     }
     const snapshot = await deps.getDesignSystem(appSlug);

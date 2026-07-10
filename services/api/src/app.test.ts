@@ -9,6 +9,15 @@ import { createApiApp } from "./app.ts";
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
 const adminCookie = { cookie: "astryx_session=admin" };
+const catalogImages = [
+  {
+    id: 7,
+    app: "linear",
+    platform: "web",
+    image_url: "mobbin-bulk:0123456789abcdef",
+    description: "Toolbar",
+  },
+];
 
 test("uses the repository's free host API port", async () => {
   const appModule = await import("./app.ts");
@@ -169,6 +178,70 @@ test("keeps health public and rejects private data without a session", async (t)
   assert.equal((await fetch(`${base}/health`)).status, 200);
   assert.equal((await fetch(`${base}/apps`)).status, 401);
   assert.equal((await fetch(`${base}/jobs`)).status, 401);
+});
+
+test("serves public catalog previews without exposing the admin gallery", async (t) => {
+  const { base, server } = await serve(createApiApp({ allImages: async () => catalogImages }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/catalog`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.apps[0].previewScreens.length, 1);
+  assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
+});
+
+test("serves only the first three public preview images", async (t) => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-preview-"));
+  mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
+  writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
+  const appImages = async () => [
+    ...catalogImages,
+    { ...catalogImages[0], id: 8, image_url: "mobbin-bulk:1111111111111111" },
+    { ...catalogImages[0], id: 9, image_url: "mobbin-bulk:2222222222222222" },
+    { ...catalogImages[0], id: 10, image_url: "mobbin-bulk:3333333333333333" },
+  ];
+  const { base, server } = await serve(createApiApp({ dataDir, appImages }));
+  t.after(async () => {
+    await close(server);
+    rmSync(dataDir, { recursive: true, force: true });
+  });
+  assert.equal((await fetch(`${base}/preview-media/linear/0123456789abcdef`)).status, 200);
+  assert.equal((await fetch(`${base}/preview-media/linear/3333333333333333`)).status, 404);
+});
+
+test("gates customer app detail and unlocks a Free app", async (t) => {
+  let unlocked = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    allImages: async () => catalogImages,
+    canAccessApp: async () => unlocked,
+    unlockFreeApp: async () => {
+      unlocked = true;
+      return { status: "unlocked", remaining: 2 };
+    },
+  }));
+  t.after(() => close(server));
+  const locked = await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(locked.status, 403);
+  assert.deepEqual(await locked.json(), { error: "Upgrade required", code: "upgrade_required" });
+  const unlock = await fetch(`${base}/apps/linear/unlock`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user" },
+  });
+  assert.equal(unlock.status, 201);
+  assert.equal((await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } })).status, 200);
+});
+
+test("keeps the old gallery and pipeline state admin-only", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    allImages: async () => catalogImages,
+    listJobs: async () => [],
+  }));
+  t.after(() => close(server));
+  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress"]) {
+    assert.equal((await fetch(`${base}${path}`, { headers: { cookie: "astryx_session=user" } })).status, 403);
+  }
 });
 
 test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
