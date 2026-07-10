@@ -486,3 +486,81 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
   assert.equal(events.at(-1)?.outcome, "blocked");
   assert.match(events.at(-1)?.ipPrefix ?? "", /\/24$/);
 });
+
+test("reserves a validated selected export for entitled Pro", async (t) => {
+  let receivedUserId: number | undefined;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    appImages: async () => catalogImages,
+    recordAccessEvent: async () => {},
+    reserveExportOperation: async (userId) => {
+      receivedUserId = userId;
+      return { status: "reserved", used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" };
+    },
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/apps/linear/exports/reservations`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ kind: "screens", ids: [7] }),
+  });
+  assert.equal(response.status, 201);
+  assert.equal(receivedUserId, user.id);
+  assert.equal((await response.json()).status, "reserved");
+});
+
+test("rejects oversized or unavailable export reservations", async (t) => {
+  let reserved = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => false,
+    reserveExportOperation: async () => {
+      reserved = true;
+      return { status: "not_pro", used: 0, limit: 20, resetAt: null };
+    },
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const invalid = await fetch(`${base}/apps/linear/exports/reservations`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ kind: "screens", ids: Array.from({ length: 11 }, (_, i) => i + 1) }),
+  });
+  assert.equal(invalid.status, 400);
+  const locked = await fetch(`${base}/apps/linear/exports/reservations`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ kind: "component-family", id: "buttons" }),
+  });
+  assert.equal(locked.status, 403);
+  assert.equal(reserved, false);
+});
+
+test("rejects component exports that do not belong to the app design system", async (t) => {
+  let reserved = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    getDesignSystem: async () => ({
+      app: "linear",
+      generatedAt: "2026-07-10T00:00:00Z",
+      tokens: [],
+      components: [],
+      flows: [],
+    }),
+    recordAccessEvent: async () => {},
+    reserveExportOperation: async () => {
+      reserved = true;
+      return { status: "reserved", used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" };
+    },
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/apps/linear/exports/reservations`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ kind: "component-family", id: "buttons" }),
+  });
+  assert.equal(response.status, 400);
+  assert.equal(reserved, false);
+});

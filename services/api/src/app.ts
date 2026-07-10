@@ -27,6 +27,7 @@ import {
   canAccessApp,
   getAccountEntitlements,
   recordAccessEvent,
+  reserveExportOperation,
   unlockFreeApp,
 } from "../../../src/pricingStore.ts";
 import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
@@ -62,6 +63,7 @@ const defaults = {
   unlockFreeApp,
   getAccountEntitlements,
   recordAccessEvent,
+  reserveExportOperation,
   billing: disabledBilling,
   generalRateLimit: 300,
   mediaRateLimit: 500,
@@ -71,6 +73,28 @@ const defaults = {
   dataDir: process.env.DATA_DIR ?? "data",
 };
 type ApiDeps = typeof defaults;
+
+type ExportSelection =
+  | { kind: "component-family"; id: string }
+  | { kind: "foundation-category"; id: string }
+  | { kind: "screens"; ids: number[] };
+
+function parseExportSelection(value: unknown): ExportSelection | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const body = value as Record<string, unknown>;
+  if (body.kind === "screens") {
+    if (!Array.isArray(body.ids) || body.ids.length < 1 || body.ids.length > 10) return undefined;
+    if (!body.ids.every((id) => Number.isInteger(id) && Number(id) > 0)) return undefined;
+    const ids = body.ids as number[];
+    return new Set(ids).size === ids.length ? { kind: "screens", ids } : undefined;
+  }
+  if (body.kind === "component-family" || body.kind === "foundation-category") {
+    return typeof body.id === "string" && body.id.trim()
+      ? { kind: body.kind, id: body.id.trim() }
+      : undefined;
+  }
+  return undefined;
+}
 
 const SESSION_COOKIE = "astryx_session";
 const cookieOptions = {
@@ -272,6 +296,63 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       freeUnlocksRemaining: view.freeUnlocksRemaining,
       exportUsage: view.exportUsage,
     });
+  });
+
+  app.post("/apps/:app/exports/reservations", async (req, res) => {
+    if (!isAppSlug(req.params.app)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    const selection = parseExportSelection(req.body);
+    if (!selection) {
+      res.status(400).json({ error: "invalid export selection" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    if (selection.kind === "screens") {
+      const ids = new Set((await deps.appImages(req.params.app)).map(({ id }) => id));
+      if (!selection.ids.every((id) => ids.has(id))) {
+        res.status(400).json({ error: "screen does not belong to app" });
+        return;
+      }
+    } else {
+      const snapshot = await deps.getDesignSystem(req.params.app);
+      const foundationKinds: Record<string, string> = {
+        colors: "color",
+        typography: "typography",
+        spacing: "spacing",
+        radii: "radius",
+        borders: "border",
+        effects: "effect",
+      };
+      const exists = selection.kind === "component-family"
+        ? snapshot?.components.some(({ id }) => id === selection.id)
+        : snapshot?.tokens.some(({ kind }) => kind === foundationKinds[selection.id]);
+      if (!exists) {
+        res.status(400).json({ error: "export selection does not belong to app" });
+        return;
+      }
+    }
+    const reservation = await deps.reserveExportOperation(res.locals.user.id);
+    if (reservation.status === "not_pro") {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    if (reservation.status === "limit_reached") {
+      res.status(429).json(reservation);
+      return;
+    }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug: req.params.app,
+      action: "export-reservation",
+      outcome: "allowed",
+    });
+    res.status(201).json({ ...reservation, selection });
   });
 
   app.post("/apps/:app/unlock", async (req, res) => {
