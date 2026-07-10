@@ -1,0 +1,49 @@
+{
+  "name": "astryx",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "crawl": "tsx src/index.ts crawl",
+    "crawl-bulk": "tsx src/index.ts crawl-bulk",
+    "export-storage-state": "tsx src/index.ts export-storage-state",
+    "discover-apps": "tsx src/index.ts discover-apps",
+    "migrate-sqlite-to-pg": "tsx scripts/migrate-sqlite-to-pg.ts",
+    "caption": "tsx src/index.ts caption",
+    "synthesize": "tsx src/index.ts synthesize",
+    "import-flows": "tsx src/index.ts import-flows",
+    "service:api": "tsx services/api/src/index.ts",
+    "service:discover": "tsx services/discover/src/index.ts",
+    "service:import-worker": "tsx services/import-worker/src/index.ts",
+    "test": "node --experimental-strip-types --test src/*.test.ts src/vitrine/*.test.ts services/api/src/*.test.ts services/import-worker/src/*.test.ts && tsx --test src/vitrine/*.test.tsx",
+    "dev": "vite",
+    "build": "vite build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@astryxdesign/core": "^0.1.4",
+    "@stylexjs/stylex": "^0.18.3",
+    "amqplib": "^2.0.1",
+    "express": "^5.2.1",
+    "framer-motion": "^12.42.2",
+    "gsap": "^3.15.0",
+    "pg": "^8.22.0",
+    "playwright": "^1.49.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "^10.4.6",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "storybook": "^10.4.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^8.1.3"
+  }
+}
