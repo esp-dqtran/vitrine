@@ -16,6 +16,7 @@ import {
   createSession,
   deleteSession,
   resolveSession,
+  resolveSessionState,
 } from "../../../src/authStore.ts";
 import { publishJob, type Job } from "../../../src/queue.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
@@ -41,6 +42,7 @@ const defaults = {
   authenticateUser,
   createSession,
   resolveSession,
+  resolveSessionState,
   deleteSession,
   dataDir: process.env.DATA_DIR ?? "data",
 };
@@ -113,12 +115,24 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.use(async (req, res, next) => {
     const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
-    const user = token ? await deps.resolveSession(token) : undefined;
-    if (!user) {
+    let resolution: Awaited<ReturnType<typeof resolveSessionState>> = { status: "invalid" };
+    if (token && overrides.resolveSessionState) resolution = await deps.resolveSessionState(token);
+    else if (token && overrides.resolveSession) {
+      const user = await deps.resolveSession(token);
+      resolution = user ? { status: "authenticated", user } : { status: "invalid" };
+    } else if (token) resolution = await deps.resolveSessionState(token);
+    if (resolution.status === "signed_in_elsewhere") {
+      res.status(401).json({
+        error: "Signed in on another device",
+        code: "signed_in_elsewhere",
+      });
+      return;
+    }
+    if (resolution.status !== "authenticated") {
       res.status(401).json({ error: "Authentication required" });
       return;
     }
-    res.locals.user = user;
+    res.locals.user = resolution.user;
     next();
   });
 

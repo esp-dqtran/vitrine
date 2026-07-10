@@ -225,6 +225,21 @@ test("returns one generic login failure", async (t) => {
   assert.deepEqual(await response.json(), { error: "Invalid email or password" });
 });
 
+test("explains when a normal-user session was evicted", async (t) => {
+  const { base, server } = await serve(
+    createApiApp({ resolveSessionState: async () => ({ status: "signed_in_elsewhere" }) })
+  );
+  t.after(() => close(server));
+  const response = await fetch(`${base}/auth/me`, {
+    headers: { cookie: "astryx_session=evicted" },
+  });
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), {
+    error: "Signed in on another device",
+    code: "signed_in_elsewhere",
+  });
+});
+
 test("rejects normal users and permits admins on pipeline creation", async (t) => {
   const userApp = await serve(createApiApp({ resolveSession: async () => user }));
   t.after(() => close(userApp.server));

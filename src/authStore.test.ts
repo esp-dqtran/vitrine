@@ -78,3 +78,20 @@ test("expired and inactive-user sessions do not resolve", { skip: skipReason }, 
   await query("UPDATE users SET active = false WHERE id = $1", [admin.id]);
   assert.equal(await resolveSession(active.token), undefined);
 });
+
+test("keeps two normal-user sessions and marks the oldest signed in elsewhere", { skip: skipReason }, async () => {
+  const { query } = await import("./db.ts");
+  const { hashPassword } = await import("./authCrypto.ts");
+  const { createSession, resolveSessionState } = await import("./authStore.ts");
+  await query("TRUNCATE sessions, users RESTART IDENTITY CASCADE");
+  const inserted = await query<{ id: number }>(
+    "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'user') RETURNING id",
+    ["user@example.com", await hashPassword("a sufficiently long user password")],
+  );
+  const first = await createSession(inserted.rows[0].id);
+  const second = await createSession(inserted.rows[0].id);
+  const third = await createSession(inserted.rows[0].id);
+  assert.deepEqual(await resolveSessionState(first.token), { status: "signed_in_elsewhere" });
+  assert.equal((await resolveSessionState(second.token)).status, "authenticated");
+  assert.equal((await resolveSessionState(third.token)).status, "authenticated");
+});

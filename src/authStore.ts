@@ -14,6 +14,11 @@ export interface AuthUser {
   role: UserRole;
 }
 
+export type SessionResolution =
+  | { status: "authenticated"; user: AuthUser }
+  | { status: "signed_in_elsewhere" }
+  | { status: "invalid" };
+
 interface StoredUser extends AuthUser {
   password_hash: string;
   active: boolean;
@@ -63,19 +68,40 @@ export async function createSession(
     "INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
     [userId, hashSessionToken(token), expiresAt]
   );
+  const account = await query<{ role: UserRole }>("SELECT role FROM users WHERE id = $1", [userId]);
+  if (account.rows[0]?.role === "user") {
+    await query(
+      `UPDATE sessions SET revoked_at = now(), revoked_reason = 'signed_in_elsewhere'
+       WHERE user_id = $1 AND revoked_at IS NULL AND id NOT IN (
+         SELECT id FROM sessions WHERE user_id = $1 AND revoked_at IS NULL
+         ORDER BY created_at DESC, id DESC LIMIT 2
+       )`,
+      [userId],
+    );
+  }
   return { token, expiresAt };
 }
 
-export async function resolveSession(token: string): Promise<AuthUser | undefined> {
+export async function resolveSessionState(token: string): Promise<SessionResolution> {
   const tokenHash = hashSessionToken(token);
-  const result = await query<AuthUser>(
-    `SELECT u.id, u.email, u.role FROM sessions s
+  const result = await query<AuthUser & { active: boolean; revoked_reason: string | null }>(
+    `SELECT u.id, u.email, u.role, u.active, s.revoked_reason FROM sessions s
      JOIN users u ON u.id = s.user_id
-     WHERE s.token_hash = $1 AND s.expires_at > now() AND u.active = true`,
+     WHERE s.token_hash = $1 AND s.expires_at > now()`,
     [tokenHash]
   );
-  if (!result.rows[0]) await query("DELETE FROM sessions WHERE token_hash = $1", [tokenHash]);
-  return result.rows[0] ? safeUser(result.rows[0]) : undefined;
+  const row = result.rows[0];
+  if (row?.revoked_reason === "signed_in_elsewhere") return { status: "signed_in_elsewhere" };
+  if (!row?.active || row.revoked_reason) {
+    if (!row) await query("DELETE FROM sessions WHERE token_hash = $1", [tokenHash]);
+    return { status: "invalid" };
+  }
+  return { status: "authenticated", user: safeUser(row) };
+}
+
+export async function resolveSession(token: string): Promise<AuthUser | undefined> {
+  const resolution = await resolveSessionState(token);
+  return resolution.status === "authenticated" ? resolution.user : undefined;
 }
 
 export async function deleteSession(token: string): Promise<void> {
