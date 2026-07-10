@@ -141,13 +141,14 @@ export function parseDesignSystemSnapshot(
 export function hydrateDesignSystem(
   snapshot: DesignSystemSnapshot,
   images: Array<{ id: number; image_url: string; description: string | null }>,
+  imageUrl: (app: string, source: string) => string = publicImageUrl,
 ): DesignSystemSnapshot<EvidenceView> {
   const byId = new Map(images.map((image) => [image.id, image]));
   const hydrate = (ids: number[]): EvidenceView[] => ids.flatMap((imageId) => {
     const image = byId.get(imageId);
     return image ? [{
       imageId,
-      imageUrl: publicImageUrl(snapshot.app, image.image_url),
+      imageUrl: imageUrl(snapshot.app, image.image_url),
       description: image.description,
     }] : [];
   });

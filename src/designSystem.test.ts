@@ -87,3 +87,19 @@ test("hydrates ordered flow steps without changing curator order", () => {
     "/api/media/linear/fedcba9876543210",
   ]);
 });
+
+test("hydrates evidence with an injected protected-media URL", () => {
+  const hydrated = hydrateDesignSystem({
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [{ id: "color", kind: "color", name: "Color", value: "#000", role: "text", evidence: [7] }],
+    components: [],
+    flows: [],
+  }, [
+    { id: 7, image_url: "mobbin-bulk:0123456789abcdef", description: "Toolbar" },
+  ], (app, source) => `/protected/${app}/${source}`);
+  assert.equal(
+    hydrated.tokens[0].evidence[0].imageUrl,
+    "/protected/linear/mobbin-bulk:0123456789abcdef",
+  );
+});

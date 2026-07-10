@@ -169,6 +169,50 @@ test("serves local bulk media", async (t) => {
   );
 });
 
+test("binds signed design-system media to the entitled user and expiry", async (t) => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-signed-media-"));
+  mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
+  writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
+  let nowSeconds = 1_000;
+  const other = { id: 3, email: "other@example.com", role: "user" as const };
+  const { base, server } = await serve(createApiApp({
+    dataDir,
+    mediaSigningSecret: "0123456789abcdef0123456789abcdef",
+    nowSeconds: () => nowSeconds,
+    resolveSession: async (token) => token === "owner" ? user : other,
+    canAccessApp: async () => true,
+    getDesignSystem: async () => ({
+      app: "linear",
+      generatedAt: "2026-07-10T00:00:00.000Z",
+      tokens: [{ id: "color", kind: "color", name: "Color", value: "#000", role: "text", evidence: [7] }],
+      components: [],
+      flows: [],
+    }),
+    appImages: async () => catalogImages,
+    getAppFlows: async () => [],
+  }));
+  t.after(async () => {
+    await close(server);
+    rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  const snapshot = await (await fetch(`${base}/design-systems/linear`, {
+    headers: { cookie: "astryx_session=owner" },
+  })).json();
+  const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
+  assert.match(mediaUrl, /\?expires=1300&token=/);
+  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
+    headers: { cookie: "astryx_session=owner" },
+  })).status, 200);
+  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
+    headers: { cookie: "astryx_session=other" },
+  })).status, 403);
+  nowSeconds = 1_301;
+  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
+    headers: { cookie: "astryx_session=owner" },
+  })).status, 410);
+});
+
 test("keeps health public and rejects private data without a session", async (t) => {
   const { base, server } = await serve(
     createApiApp({ resolveSession: async () => undefined })

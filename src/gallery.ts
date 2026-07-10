@@ -44,7 +44,12 @@ function appMeta(app: string) {
   };
 }
 
-function screen(app: string, image: CrawledImage, preview = false): CatalogScreen {
+function screen(
+  app: string,
+  image: CrawledImage,
+  preview = false,
+  imageUrl: (app: string, source: string) => string = publicImageUrl,
+): CatalogScreen {
   const hash = bulkImageHash(image.image_url);
   return {
     id: image.id,
@@ -56,7 +61,7 @@ function screen(app: string, image: CrawledImage, preview = false): CatalogScree
     description: image.description,
     url: preview
       ? hash ? `/api/preview-media/${app}/${hash}` : null
-      : publicImageUrl(app, image.image_url),
+      : imageUrl(app, image.image_url),
   };
 }
 
@@ -107,6 +112,7 @@ export function buildAppDetailPage(
   appSlug: string,
   cursor?: string,
   requestedLimit = 24,
+  imageUrl: (app: string, source: string) => string = publicImageUrl,
 ): { app: CatalogApp; screens: CatalogScreen[]; nextCursor: string | null } | undefined {
   const appImages = groups(images).get(appSlug)?.sort((a, b) => a.id - b.id);
   if (!appImages) return undefined;
@@ -116,7 +122,7 @@ export function buildAppDetailPage(
   const page = appImages.slice(start < 0 ? appImages.length : start, (start < 0 ? appImages.length : start) + limit);
   return {
     app: catalogApp(appSlug, appImages),
-    screens: page.map((image) => screen(appSlug, image)),
+    screens: page.map((image) => screen(appSlug, image, false, imageUrl)),
     nextCursor: page.length === limit && page.at(-1)!.id < appImages.at(-1)!.id
       ? encodeCursor(String(page.at(-1)!.id))
       : null,

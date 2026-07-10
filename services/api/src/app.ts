@@ -24,6 +24,7 @@ import { bulkImageHash, findBulkImage, isAppSlug } from "../../../src/imageSourc
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import { canAccessApp, unlockFreeApp } from "../../../src/pricingStore.ts";
+import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -47,6 +48,8 @@ const defaults = {
   deleteSession,
   canAccessApp,
   unlockFreeApp,
+  mediaSigningSecret: process.env.MEDIA_SIGNING_SECRET ?? "development-media-signing-secret",
+  nowSeconds: () => Math.floor(Date.now() / 1000),
   dataDir: process.env.DATA_DIR ?? "data",
 };
 type ApiDeps = typeof defaults;
@@ -170,6 +173,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     next();
   };
 
+  const protectedMediaUrl = (userId: number, appSlug: string, source: string): string => {
+    const hash = bulkImageHash(source);
+    if (!hash) return source;
+    const expiresAt = deps.nowSeconds() + 300;
+    const token = createMediaToken(deps.mediaSigningSecret, { userId, app: appSlug, hash, expiresAt });
+    return `/api/media/${appSlug}/${hash}?expires=${expiresAt}&token=${encodeURIComponent(token)}`;
+  };
+
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
 
   app.post("/apps/:app/unlock", async (req, res) => {
@@ -193,7 +204,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const page = buildAppDetailPage(await deps.allImages(), req.params.app, cursor, limit);
+    const page = buildAppDetailPage(
+      await deps.allImages(),
+      req.params.app,
+      cursor,
+      limit,
+      (appSlug, source) => protectedMediaUrl(res.locals.user.id, appSlug, source),
+    );
     if (!page) res.status(404).json({ error: "app not found" });
     else res.json(page);
   });
@@ -292,13 +309,41 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const flows = await deps.getAppFlows(appSlug);
-    res.json(hydrateDesignSystem({ ...snapshot, flows }, await deps.appImages(appSlug)));
+    const images = await deps.appImages(appSlug);
+    res.json(res.locals.user.role === "admin"
+      ? hydrateDesignSystem({ ...snapshot, flows }, images)
+      : hydrateDesignSystem(
+          { ...snapshot, flows },
+          images,
+          (app, source) => protectedMediaUrl(res.locals.user.id, app, source),
+        ));
   });
 
-  app.get("/media/:app/:hash", (req, res) => {
+  app.get("/media/:app/:hash", async (req, res) => {
     if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
       res.status(400).json({ error: "invalid media reference" });
       return;
+    }
+    if (res.locals.user.role !== "admin") {
+      if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
+        res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+        return;
+      }
+      const expiresAt = Number(req.query.expires);
+      const token = typeof req.query.token === "string" ? req.query.token : "";
+      if (expiresAt <= deps.nowSeconds()) {
+        res.status(410).json({ error: "media URL expired" });
+        return;
+      }
+      if (!verifyMediaToken(deps.mediaSigningSecret, token, {
+        userId: res.locals.user.id,
+        app: req.params.app,
+        hash: req.params.hash,
+        expiresAt,
+      }, deps.nowSeconds())) {
+        res.status(403).json({ error: "invalid media token" });
+        return;
+      }
     }
     const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
     if (!path) {
