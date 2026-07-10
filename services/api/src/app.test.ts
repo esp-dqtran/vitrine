@@ -395,3 +395,68 @@ test("rejects normal users and permits admins on pipeline creation", async (t) =
   assert.equal(allowed.status, 201);
   assert.equal(created, true);
 });
+
+test("accepts raw Stripe webhooks before JSON parsing", async (t) => {
+  let received = "";
+  const { base, server } = await serve(createApiApp({
+    billing: {
+      createCheckout: async () => ({ status: "already_subscribed" }),
+      createPortal: async () => undefined,
+      handleWebhook: async (body) => {
+        received = body.toString();
+        return "processed";
+      },
+    },
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/billing/webhook`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "stripe-signature": "sig" },
+    body: '{"id":"evt_1"}',
+  });
+  assert.equal(response.status, 200);
+  assert.equal(received, '{"id":"evt_1"}');
+});
+
+test("creates Checkout and returns safe subscription state", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    billing: {
+      createCheckout: async (_user, interval) => ({ status: "created", url: `https://stripe/${interval}` }),
+      createPortal: async () => ({ url: "https://stripe/portal" }),
+      handleWebhook: async () => "processed",
+    },
+    getAccountEntitlements: async () => ({
+      plan: "pro",
+      subscription: {
+        user_id: user.id,
+        stripe_customer_id: "cus_secret",
+        stripe_subscription_id: "sub_secret",
+        stripe_price_id: "price_secret",
+        billing_interval: "month",
+        status: "active",
+        current_period_start: "2026-07-01T00:00:00Z",
+        current_period_end: "2026-08-01T00:00:00Z",
+        cancel_at_period_end: false,
+        grace_expires_at: null,
+      },
+      freeUnlocks: ["linear"],
+      freeUnlocksRemaining: 2,
+      exportUsage: { used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" },
+    }),
+  }));
+  t.after(() => close(server));
+  const checkout = await fetch(`${base}/billing/checkout`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ interval: "month" }),
+  });
+  assert.equal(checkout.status, 201);
+  assert.deepEqual(await checkout.json(), { url: "https://stripe/month" });
+  const subscription = await (await fetch(`${base}/billing/subscription`, {
+    headers: { cookie: "astryx_session=user" },
+  })).json();
+  assert.equal(subscription.plan, "pro");
+  assert.equal(subscription.interval, "month");
+  assert.equal(subscription.stripe_customer_id, undefined);
+});

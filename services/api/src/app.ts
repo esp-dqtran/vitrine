@@ -23,11 +23,17 @@ import { readProgress, requestCancel } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
-import { canAccessApp, unlockFreeApp } from "../../../src/pricingStore.ts";
+import { canAccessApp, getAccountEntitlements, unlockFreeApp } from "../../../src/pricingStore.ts";
 import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
+import type { BillingService } from "./billing.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
+const disabledBilling: BillingService = {
+  createCheckout: async () => { throw new Error("Billing is not configured"); },
+  createPortal: async () => { throw new Error("Billing is not configured"); },
+  handleWebhook: async () => { throw new Error("Billing is not configured"); },
+};
 const defaults = {
   query,
   allImages,
@@ -48,6 +54,8 @@ const defaults = {
   deleteSession,
   canAccessApp,
   unlockFreeApp,
+  getAccountEntitlements,
+  billing: disabledBilling,
   mediaSigningSecret: process.env.MEDIA_SIGNING_SECRET ?? "development-media-signing-secret",
   nowSeconds: () => Math.floor(Date.now() / 1000),
   dataDir: process.env.DATA_DIR ?? "data",
@@ -92,6 +100,17 @@ function validMobbinScreensUrl(value: string): boolean {
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const deps = { ...defaults, ...overrides };
   const app = express();
+  app.post("/billing/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+    try {
+      const result = await deps.billing.handleWebhook(
+        req.body as Buffer,
+        req.header("stripe-signature"),
+      );
+      res.json({ received: true, result });
+    } catch {
+      res.status(400).json({ error: "Invalid Stripe webhook" });
+    }
+  });
   app.use(express.json());
 
   app.get("/health", (_req, res) => res.json({ status: "ok" }));
@@ -182,6 +201,39 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
 
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
+
+  app.post("/billing/checkout", async (req, res) => {
+    const interval = req.body?.interval;
+    if (interval !== "month" && interval !== "year") {
+      res.status(400).json({ error: "interval must be month or year" });
+      return;
+    }
+    const result = await deps.billing.createCheckout(res.locals.user, interval);
+    if (result.status === "already_subscribed") {
+      res.status(409).json({ error: "Already subscribed", code: "already_subscribed" });
+    } else res.status(201).json({ url: result.url });
+  });
+
+  app.post("/billing/portal", async (_req, res) => {
+    const portal = await deps.billing.createPortal(res.locals.user.id);
+    if (!portal) res.status(404).json({ error: "Billing customer not found" });
+    else res.json(portal);
+  });
+
+  app.get("/billing/subscription", async (_req, res) => {
+    const view = await deps.getAccountEntitlements(res.locals.user.id);
+    res.json({
+      plan: view.plan,
+      status: view.subscription?.status ?? null,
+      interval: view.subscription?.billing_interval ?? null,
+      currentPeriodEnd: view.subscription?.current_period_end ?? null,
+      cancelAtPeriodEnd: view.subscription?.cancel_at_period_end ?? false,
+      graceExpiresAt: view.subscription?.grace_expires_at ?? null,
+      freeUnlocks: view.freeUnlocks,
+      freeUnlocksRemaining: view.freeUnlocksRemaining,
+      exportUsage: view.exportUsage,
+    });
+  });
 
   app.post("/apps/:app/unlock", async (req, res) => {
     if (!isAppSlug(req.params.app)) {
