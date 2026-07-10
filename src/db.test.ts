@@ -40,6 +40,11 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     closePool,
   } = await import("./db.ts");
 
+  for (const table of ["subscriptions", "free_app_unlocks", "stripe_events", "export_usage", "access_events"]) {
+    const result = await query<{ name: string | null }>("SELECT to_regclass($1) AS name", [table]);
+    assert.equal(result.rows[0].name, table);
+  }
+
   await query("TRUNCATE app_flows, design_systems, apps, platforms, images RESTART IDENTITY CASCADE");
 
   await insertImage("airbnb", "web", "https://cdn.example.com/a.png");

@@ -94,6 +94,50 @@ function ensureSchema(): Promise<unknown> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions(expires_at);
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS revoked_reason TEXT;
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      stripe_customer_id TEXT UNIQUE,
+      stripe_subscription_id TEXT UNIQUE,
+      stripe_price_id TEXT,
+      billing_interval TEXT CHECK (billing_interval IN ('month', 'year')),
+      status TEXT CHECK (status IN ('incomplete', 'incomplete_expired', 'active', 'past_due', 'canceled', 'unpaid', 'paused')),
+      current_period_start TIMESTAMPTZ,
+      current_period_end TIMESTAMPTZ,
+      cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
+      grace_expires_at TIMESTAMPTZ,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS free_app_unlocks (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      app_id INTEGER NOT NULL REFERENCES apps(id) ON DELETE CASCADE,
+      unlocked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (user_id, app_id)
+    );
+    CREATE TABLE IF NOT EXISTS stripe_events (
+      event_id TEXT PRIMARY KEY,
+      processed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS export_usage (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      window_start TIMESTAMPTZ NOT NULL,
+      operation_count INTEGER NOT NULL DEFAULT 0 CHECK (operation_count >= 0),
+      PRIMARY KEY (user_id, window_start)
+    );
+    CREATE TABLE IF NOT EXISTS access_events (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      session_hash TEXT,
+      ip_prefix TEXT,
+      app_slug TEXT,
+      action TEXT NOT NULL,
+      volume INTEGER NOT NULL DEFAULT 1,
+      outcome TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS access_events_user_created_idx ON access_events(user_id, created_at DESC);
 
     CREATE TABLE IF NOT EXISTS design_systems (
       app_id INTEGER PRIMARY KEY REFERENCES apps(id) ON DELETE CASCADE,
@@ -115,6 +159,22 @@ export async function query<R extends pg.QueryResultRow = pg.QueryResultRow>(
 ): Promise<pg.QueryResult<R>> {
   await ensureSchema();
   return pool.query<R>(text, params);
+}
+
+export async function withTransaction<T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+  await ensureSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await work(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function closePool(): Promise<void> {
