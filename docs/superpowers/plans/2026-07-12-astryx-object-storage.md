@@ -236,15 +236,15 @@ git commit -m "feat: add verified local object storage"
 - Create: `src/objectStoreConfig.ts`
 - Create: `src/objectStoreConfig.test.ts`
 
-- [ ] **Step 1: Install only the required SDK packages**
+- [x] **Step 1: Install only the required SDK packages**
 
 Run: `npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner`
 
-- [ ] **Step 2: Write failing S3 and configuration tests**
+- [x] **Step 2: Write failing S3 and configuration tests**
 
 Inject command sending and signing. Assert `PutObject` carries content length, MIME, checksum, access metadata, and never public ACL; `HeadObject` metadata must match; signed URLs expire in 30–300 seconds; list/delete stay inside the configured prefix. Reject missing bucket/region, HTTP endpoints outside development, path-style production endpoints, static credentials absent as a pair, and unknown backends.
 
-- [ ] **Step 3: Implement configuration**
+- [x] **Step 3: Implement configuration**
 
 ```typescript
 export type ObjectStoreConfig =
@@ -258,11 +258,11 @@ export type ObjectStoreConfig =
 
 Local is allowed only when `NODE_ENV !== "production"`. Production S3 uses the default AWS credential chain unless both explicit credential values are present. Never log the config object.
 
-- [ ] **Step 4: Implement S3 operations**
+- [x] **Step 4: Implement S3 operations**
 
 Use `PutObjectCommand`, `HeadObjectCommand`, `GetObjectCommand`, `ListObjectsV2Command`, and `DeleteObjectCommand`. Send base64 SHA-256 through `ChecksumSHA256`, store the hexadecimal checksum/access class in object metadata, and reject a post-write head mismatch. `signedGetUrl()` signs only `GetObjectCommand` and clamps expiry to 30–300 seconds.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 ```bash
 node --experimental-strip-types --test src/objectStore.test.ts src/s3ObjectStore.test.ts src/objectStoreConfig.test.ts
