@@ -27,6 +27,17 @@ services:
       timeout: 5s
       retries: 10
 
+  migrate:
+    build:
+      context: .
+      dockerfile: services/migrate/Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/astryx
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: .
@@ -54,6 +65,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: on-failure
 
   discover:
@@ -90,6 +103,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: on-failure
 
 volumes:

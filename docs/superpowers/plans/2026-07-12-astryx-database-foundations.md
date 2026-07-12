@@ -470,7 +470,7 @@ git commit -m "refactor: move schema changes into migration"
 - Create: `services/migrate/Dockerfile`
 - Modify: `docker-compose.yml`
 
-- [ ] **Step 1: Write failing startup-order tests**
+- [x] **Step 1: Write failing startup-order tests**
 
 Extract minimal `startApi()` and `startImportWorker()` functions with injected migration assertion and runtime start callbacks. Tests prove the assertion runs first and a rejection prevents listen/consume:
 
@@ -494,17 +494,17 @@ test("worker refuses to consume when migrations are pending", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and confirm startup seams are absent**
+- [x] **Step 2: Run the tests and confirm startup seams are absent**
 
 Run: `node --experimental-strip-types --test services/api/src/startup.test.ts`
 
 Expected: FAIL because the injectable startup functions do not exist.
 
-- [ ] **Step 3: Add migration assertions before traffic or queue consumption**
+- [x] **Step 3: Add migration assertions before traffic or queue consumption**
 
 Put the orchestration functions in `services/api/src/start.ts` and `services/import-worker/src/start.ts`; importing either module performs no startup side effect. Use the shared `pool` and `assertMigrationsCurrent(pool)` before reading secrets, seeding the current administrator, creating Stripe, listening, or consuming RabbitMQ. Keep administrator rotation behavior unchanged in this slice; the identity slice replaces it.
 
-- [ ] **Step 4: Add migration artifacts and Compose gate**
+- [x] **Step 4: Add migration artifacts and Compose gate**
 
 Copy `migrations/` into API and worker images. Add `services/migrate/Dockerfile` using `node:22-slim`, `npm ci --omit=dev`, copied `src/migrations.ts`, `scripts/migrate.ts`, and migration SQL, with:
 
@@ -527,7 +527,7 @@ Add a `migrate` Compose service and require successful completion before API and
     restart: "no"
 ```
 
-- [ ] **Step 5: Verify startup and Compose behavior**
+- [x] **Step 5: Verify startup and Compose behavior**
 
 Run:
 
@@ -540,7 +540,7 @@ docker compose run --rm migrate
 
 Expected: tests PASS; Compose validates; first migration run applies pending files if any; second applies zero files.
 
-- [ ] **Step 6: Commit startup gating**
+- [x] **Step 6: Commit startup gating**
 
 ```bash
 git add services/api/src/index.ts services/api/src/start.ts services/api/src/startup.test.ts services/import-worker/src/index.ts services/import-worker/src/start.ts services/import-worker/src/startup.test.ts services/api/Dockerfile services/import-worker/Dockerfile services/migrate/Dockerfile docker-compose.yml

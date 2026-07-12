@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 RUN npm install
 COPY src ./src
+COPY migrations ./migrations
 COPY services/api/src ./services/api/src
 ENV PORT=3000
 EXPOSE 3000
