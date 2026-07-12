@@ -355,7 +355,7 @@ git commit -m "feat: run transactional database migrations"
 - Modify: `src/db.ts:1-486`
 - Modify: `src/db.test.ts:1-30`
 
-- [ ] **Step 1: Add a failing source-boundary test**
+- [x] **Step 1: Add a failing source-boundary test**
 
 Add a test that reads `src/db.ts` and asserts there is no `ensureSchema`, no `schemaReady`, and no query helper call that runs DDL. Also assert the migration file contains the current tables, crawler constraints, duplicate consolidation, and unique image index.
 
@@ -372,13 +372,13 @@ test("ordinary database queries never mutate schema", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the boundary test and confirm it fails**
+- [x] **Step 2: Run the boundary test and confirm it fails**
 
 Run: `node --experimental-strip-types --test src/migrations.test.ts`
 
 Expected: FAIL because `src/db.ts` still contains `ensureSchema` and the baseline SQL file is absent.
 
-- [ ] **Step 3: Create the exact baseline migration**
+- [x] **Step 3: Create the exact baseline migration**
 
 Move the literal SQL currently inside `ensureSchema()` (`src/db.ts:83-451`) into `migrations/0001_current_schema.sql`. Expand `${IMAGE_CONSOLIDATION_SQL}` with the exact SQL currently at `src/db.ts:18-78`. Retain the guarded legacy `images_flat` conversion, all current customer/version/crawler/collection tables, duplicate consolidation, unique image index, and version snapshot backfills. Do not add new product schema in migration 0001.
 
@@ -408,7 +408,7 @@ ALTER TABLE collection_items ADD CONSTRAINT collection_items_kind_check
   CHECK (kind IN ('app', 'screen', 'component', 'token', 'flow', 'pattern'));
 ```
 
-- [ ] **Step 4: Remove runtime schema mutation**
+- [x] **Step 4: Remove runtime schema mutation**
 
 Delete `mkdirSync("data")`, `schemaReady`, `ensureSchema`, `IMAGE_CONSOLIDATION_SQL`, and the test-only `consolidateDuplicateImages`. Make `query()` and `withTransaction()` operate directly:
 
@@ -438,7 +438,7 @@ export async function withTransaction<T>(work: (client: pg.PoolClient) => Promis
 
 Update `src/db.test.ts` to run `applyMigrations` against `astryx_test` before importing database behavior and move duplicate-consolidation assertions into the upgrade verifier.
 
-- [ ] **Step 5: Run migration and database tests**
+- [x] **Step 5: Run migration and database tests**
 
 Run:
 
@@ -449,7 +449,7 @@ node --experimental-strip-types --test src/migrations.test.ts src/db.test.ts src
 
 Expected: migration applies version 1 once; all focused tests PASS; a second `db:migrate` reports an empty `appliedVersions` array.
 
-- [ ] **Step 6: Commit the baseline migration**
+- [x] **Step 6: Commit the baseline migration**
 
 ```bash
 git add migrations/0001_current_schema.sql src/db.ts src/db.test.ts src/migrations.test.ts

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import pg from "pg";
+import { applyMigrations } from "./migrations.ts";
 
 const ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres";
 const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_test";
@@ -18,6 +19,12 @@ async function ensureTestDb(): Promise<string | undefined> {
     if ((err as { code?: string }).code !== "42P04") throw err; // 42P04 = already exists
   } finally {
     await client.end();
+  }
+  const pool = new pg.Pool({ connectionString: TEST_URL });
+  try {
+    await applyMigrations(pool);
+  } finally {
+    await pool.end();
   }
   return undefined;
 }
@@ -52,7 +59,6 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     getVersionDesignSystem,
     publishedImages,
     pool,
-    consolidateDuplicateImages,
     query,
     closePool,
   } = await import("./db.ts");
@@ -425,72 +431,5 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal(await removeCollectionItem(-101, collection.id, item!.id), true);
   assert.equal(await deleteCollection(-102, collection.id), false);
   assert.equal(await deleteCollection(-101, collection.id), true);
-
-  const migrationClient = await pool.connect();
-  await migrationClient.query("BEGIN");
-  try {
-    await migrationClient.query("DROP INDEX images_platform_image_url_uidx");
-    const platform = await migrationClient.query<{ id: number }>(
-      `SELECT p.id FROM platforms p JOIN apps a ON a.id = p.app_id
-       WHERE a.name = 'airbnb' AND p.name = 'web'`,
-    );
-    const duplicateUrl = "https://cdn.example.com/consolidated.png";
-    const canonical = await migrationClient.query<{ id: number }>(
-      `INSERT INTO images (platform_id, image_url, description, analysis)
-       VALUES ($1, $2, 'Canonical description', NULL) RETURNING id`,
-      [platform.rows[0].id, duplicateUrl],
-    );
-    const duplicate = await migrationClient.query<{ id: number }>(
-      `INSERT INTO images (platform_id, image_url, description, analysis)
-       VALUES ($1, $2, NULL, '{"description":"Complementary analysis"}'::jsonb) RETURNING id`,
-      [platform.rows[0].id, duplicateUrl],
-    );
-    assert.ok(canonical.rows[0].id < duplicate.rows[0].id);
-    await migrationClient.query(
-      `INSERT INTO version_images (version_id, image_id, source_url, viewport_width, viewport_height, state_context)
-       VALUES
-         ($1, $3, 'https://example.com/canonical', 1440, 900, 'canonical'),
-         ($2, $4, 'https://example.com/duplicate', 1280, 720, 'duplicate')`,
-      [firstVersion.id, secondVersion.id, canonical.rows[0].id, duplicate.rows[0].id],
-    );
-    const evidence = await migrationClient.query<{ id: string }>(
-      `INSERT INTO crawl_evidence
-         (version_id, plan_id, image_id, flow_id, step_id, source_url, final_url,
-          state_label, screenshot_hash, viewport_width, viewport_height)
-       VALUES ($1, $2, $3, 'published-isolation', 'open', 'https://example.com/source',
-         'https://example.com/consolidated', 'consolidated', 'consolidated-hash', 1440, 900)
-       RETURNING id`,
-      [secondVersion.id, approvedPlan.id, duplicate.rows[0].id],
-    );
-
-    await consolidateDuplicateImages(migrationClient);
-
-    const consolidated = await migrationClient.query<{
-      id: number;
-      description: string | null;
-      analysis: { description?: string } | null;
-    }>("SELECT id, description, analysis FROM images WHERE platform_id = $1 AND image_url = $2", [platform.rows[0].id, duplicateUrl]);
-    assert.equal(consolidated.rowCount, 1);
-    assert.equal(consolidated.rows[0].id, canonical.rows[0].id);
-    assert.equal(consolidated.rows[0].description, "Canonical description");
-    assert.equal(consolidated.rows[0].analysis?.description, "Complementary analysis");
-    assert.deepEqual(
-      (await migrationClient.query<{ version_id: number }>(
-        "SELECT version_id FROM version_images WHERE image_id = $1 ORDER BY version_id",
-        [canonical.rows[0].id],
-      )).rows.map(({ version_id }) => version_id),
-      [firstVersion.id, secondVersion.id].sort((left, right) => left - right),
-    );
-    assert.equal((await migrationClient.query<{ image_id: number }>(
-      "SELECT image_id FROM crawl_evidence WHERE id = $1",
-      [evidence.rows[0].id],
-    )).rows[0].image_id, canonical.rows[0].id);
-    await migrationClient.query(
-      "CREATE UNIQUE INDEX images_platform_image_url_uidx ON images(platform_id, image_url)",
-    );
-  } finally {
-    await migrationClient.query("ROLLBACK");
-    migrationClient.release();
-  }
 
 });

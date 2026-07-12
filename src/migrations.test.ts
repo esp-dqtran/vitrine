@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -189,4 +189,28 @@ test("migration application times out while another session owns the lock", { sk
     () => applyMigrations(pool, directory, { lockTimeoutMs: 30, lockPollMs: 5 }),
     /migration lock timeout/i,
   );
+});
+
+test("ordinary database queries never bootstrap or mutate schema", async () => {
+  const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /ensureSchema|schemaReady/);
+  assert.doesNotMatch(source, /pool\.query\(`\s*(?:CREATE|ALTER|DROP)/i);
+
+  const migration = await readFile(
+    new URL("../migrations/0001_current_schema.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of [
+    "apps",
+    "images",
+    "app_versions",
+    "crawl_plans",
+    "crawl_runs",
+    "crawl_evidence",
+    "collections",
+  ]) {
+    assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}\\b`));
+  }
+  assert.match(migration, /images_platform_image_url_uidx/);
+  assert.match(migration, /collection_items_kind_check/);
 });
