@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Badge } from '@astryxdesign/core';
 import { ArrowButton } from './ArrowButton';
 import { PlaceholderImage } from './PlaceholderImage';
 import type { App } from '../types';
@@ -89,10 +88,6 @@ export function AppCard({ app, onOpen, compareSelected, onToggleCompare }: AppCa
           {app.iconUrl && <img src={app.iconUrl} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
         </motion.div>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#18181b' }}>{app.app}</span>
-      </div>
-
-      <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, pointerEvents: 'none' }}>
-        <Badge variant="neutral" label={screens[index].type} />
       </div>
 
       <div

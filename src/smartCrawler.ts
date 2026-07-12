@@ -327,13 +327,13 @@ export async function captureIfNew(page: Page, seen: Set<string>, stateContext: 
   const viewport = page.viewportSize() ?? { width: 0, height: 0 };
   const key = dedupeKey(url, bodyText, viewport);
   if (seen.has(key)) return false;
-  const pageHeight = await page
-    .evaluate(() => Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0))
-    .catch(() => 0);
-  const png =
-    pageHeight > MAX_CAPTURE_HEIGHT_PX
-      ? await page.screenshot({ fullPage: true, clip: { x: 0, y: 0, width: viewport.width, height: MAX_CAPTURE_HEIGHT_PX } })
-      : await page.screenshot({ fullPage: true });
+  // Always clip: measuring first then deciding races lazy-loaded content that grows the
+  // page mid-screenshot. Playwright intersects the clip with the real page bounds, so
+  // short pages come out natural-height and tall ones cap at MAX_CAPTURE_HEIGHT_PX.
+  const png = await page.screenshot({
+    fullPage: true,
+    clip: { x: 0, y: 0, width: viewport.width, height: MAX_CAPTURE_HEIGHT_PX },
+  });
   await sink({ png, sourceUrl: url, stateContext });
   seen.add(key);
   return true;

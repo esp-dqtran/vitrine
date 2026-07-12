@@ -4,7 +4,6 @@ import { Button, EmptyState, Spinner, Text } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { AppCard } from './components/AppCard';
 import { ProgressBanner } from './components/ProgressBanner';
-import { PipelinePanel } from './components/PipelinePanel';
 import { ScreenDetail } from './components/ScreenDetail';
 import { SearchBox } from './components/SearchBox';
 import { SearchResults } from './components/SearchResults';
@@ -102,7 +101,6 @@ export function App() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '20px 28px 0', width: '100%' }}>
           {accountControls}
-          {user?.role === 'admin' && <PipelinePanel onPipelineDone={refresh} />}
           {user?.role === 'admin' && <ProgressBanner />}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: 24 }}>
@@ -234,7 +232,6 @@ export function App() {
             </div>
           </div>
 
-          {user?.role === 'admin' && <PipelinePanel onPipelineDone={refresh} />}
           {user?.role === 'admin' && <ProgressBanner />}
 
           {searchError && <div role="alert" style={{ margin: '10px 0', color: 'var(--color-text-danger)' }}>{searchError}</div>}

@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Badge, Button, Dialog, Heading, Spinner, Text, TextInput } from '@astryxdesign/core';
-import type { App, Screen } from '../types';
+import type { App, Job, Screen } from '../types';
+import type { DesignSystemSnapshot, EvidenceView } from '../../designSystem';
 import { groupPipelines } from '../jobs';
 import { useJobs } from '../useJobs';
 import { useDesignSystem } from '../useDesignSystem';
+import { PlaceholderImage } from './PlaceholderImage';
+
+type Snapshot = DesignSystemSnapshot<EvidenceView> | null;
 
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
 const wrap = { maxWidth: 1360, margin: '0 auto', padding: '0 28px' } as const;
@@ -11,9 +15,9 @@ const wrap = { maxWidth: 1360, margin: '0 auto', padding: '0 28px' } as const;
 // The four automated pipeline stages, mapped to the real backend job types:
 //   Crawl Mobbin              → a screen row exists (import-app)
 //   Describe images (ChatGPT) → screen has an analysis / confidence (caption-app)
-//   Extract design system     → the app has a synthesized snapshot (synthesize-app)
-//   Finished                  → described + extracted
-const STAGES = ['Crawl Mobbin', 'Describe images (ChatGPT)', 'Extract design system component', 'Finished'] as const;
+//   Extract design system     → the screen is referenced by synthesized evidence
+//   Result ready              → described + evidence-backed extraction
+const STAGES = ['Crawl Mobbin', 'Describe images (ChatGPT)', 'Extract design system component', 'Result ready'] as const;
 const WORK = '#2563eb';
 const DONE = '#16a34a';
 
@@ -34,7 +38,7 @@ function fmtDate(iso: string | null | undefined): string {
 // ------------------------------------------------------------------
 // Per-app row view-model (real apps + in-flight import jobs)
 // ------------------------------------------------------------------
-type RowStatus = 'Queued' | 'In progress' | 'Complete';
+type RowStatus = 'Queued' | 'In progress' | 'Complete' | 'Needs attention' | 'Cancelled';
 interface RowVM {
   slug: string;
   name: string;
@@ -64,8 +68,8 @@ function AppIcon({ iconUrl, accent, size, radius }: { iconUrl?: string | null; a
   );
 }
 
-const ROW_STATUS_VARIANT: Record<RowStatus, 'neutral' | 'blue' | 'green'> = { Queued: 'neutral', 'In progress': 'blue', Complete: 'green' };
-const APP_FILTERS = ['All', 'Queued', 'In progress', 'Complete'] as const;
+const ROW_STATUS_VARIANT: Record<RowStatus, 'neutral' | 'blue' | 'green' | 'red'> = { Queued: 'neutral', 'In progress': 'blue', Complete: 'green', 'Needs attention': 'red', Cancelled: 'neutral' };
+const APP_FILTERS = ['All', 'Queued', 'In progress', 'Complete', 'Needs attention', 'Cancelled'] as const;
 
 function FilterChips<T extends string>({ options, value, onChange }: { options: readonly T[]; value: T; onChange: (v: T) => void }) {
   return (
@@ -153,6 +157,46 @@ function ImportDialog({ isOpen, onClose, submitImport }: { isOpen: boolean; onCl
   );
 }
 
+const JOB_LABEL: Record<Job['type'], string> = {
+  'discover-catalog': 'Discover catalog',
+  'import-app': 'Import screenshots',
+  'caption-app': 'Describe screens',
+  'synthesize-app': 'Extract design system',
+};
+
+const JOB_STATUS_VARIANT: Record<Job['status'], 'neutral' | 'info' | 'success' | 'error'> = {
+  queued: 'neutral', running: 'info', done: 'success', error: 'error', cancelled: 'neutral',
+};
+
+export function PipelineStatusList({ jobs, error, onCancel }: { jobs: Job[]; error: string | null; onCancel: (id: number) => void | Promise<void> }) {
+  const pipelines = groupPipelines(jobs).slice(0, 5);
+  if (!error && pipelines.length === 0) return null;
+  return (
+    <div style={{ ...wrap, paddingTop: 18 }}>
+      <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', padding: 16, background: 'var(--color-background-surface)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Text weight="semibold">Recent pipelines</Text>
+        {error && <div role="alert" style={{ color: 'var(--color-text-danger)', fontSize: 13 }}>{error}</div>}
+        {pipelines.map((pipeline) => (
+          <div key={pipeline.root.id} style={{ borderTop: '1px solid var(--color-border)', paddingTop: 10 }}>
+            <Text weight="semibold">{pipeline.root.payload.name ?? `Pipeline ${pipeline.root.id}`}</Text>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 7 }}>
+              {pipeline.stages.map((stage) => (
+                <div key={stage.id} style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+                  <Badge label={stage.status} variant={JOB_STATUS_VARIANT[stage.status]} />
+                  <Text type="supporting">{JOB_LABEL[stage.type]}</Text>
+                  {stage.message && <Text type="supporting" color="secondary">{stage.message}</Text>}
+                  <div style={{ flex: 1 }} />
+                  {(stage.status === 'queued' || stage.status === 'running') && <Button label="Cancel" size="sm" variant="destructive" clickAction={() => void onCancel(stage.id)} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const listCols = 'minmax(170px,2fr) minmax(90px,1fr) minmax(200px,2fr) 120px 130px 84px';
 
 function AppListView({ rows, onOpen, onImport }: { rows: RowVM[]; onOpen: (id: string) => void; onImport: () => void }) {
@@ -219,34 +263,56 @@ function AppListView({ rows, onOpen, onImport }: { rows: RowVM[]; onOpen: (id: s
 // ------------------------------------------------------------------
 // App detail — per-screen pipeline cards with a stage timeline
 // ------------------------------------------------------------------
-type ScreenStatus = 'Describing' | 'Extracting' | 'Finished';
-// Active stage index into STAGES (crawl=0 is always done for a captured screen).
-function screenStage(s: Screen, synthesized: boolean): { status: ScreenStatus; idx: number } {
-  if (s.confidence == null) return { status: 'Describing', idx: 1 };
-  if (!synthesized) return { status: 'Extracting', idx: 2 };
-  return { status: 'Finished', idx: 3 };
+export function screenHasSynthesizedEvidence(snapshot: Snapshot, imageId: number): boolean {
+  if (!snapshot) return false;
+  const has = (evidence: EvidenceView[]) => evidence.some((item) => item.imageId === imageId);
+  return snapshot.tokens.some((token) => has(token.evidence))
+    || snapshot.components.some((component) => component.variants.some((variant) => has(variant.evidence)))
+    || snapshot.flows.some((flow) => flow.steps.some((step) => has(step.evidence)))
+    || (snapshot.rules ?? []).some((rule) => has(rule.evidence));
 }
-const SCREEN_BADGE: Record<ScreenStatus, { variant: 'blue' | 'green'; label: string }> = {
-  Describing: { variant: 'blue', label: 'In progress' },
-  Extracting: { variant: 'blue', label: 'In progress' },
-  Finished: { variant: 'green', label: 'Finished' },
+
+// Data-driven state — reflects what exists, NOT "actively working". A screen is captured
+// (crawled), analyzed (has a ChatGPT description), or finished (has synthesized evidence).
+type ScreenState = 'captured' | 'analyzed' | 'finished';
+function screenState(s: Screen, evidenceReady: boolean): ScreenState {
+  if (s.confidence == null) return 'captured';
+  return evidenceReady ? 'finished' : 'analyzed';
+}
+const SCREEN_BADGE: Record<ScreenState, { variant: 'neutral' | 'blue' | 'green'; label: string }> = {
+  captured: { variant: 'neutral', label: 'Captured' },
+  analyzed: { variant: 'blue', label: 'Analyzed' },
+  finished: { variant: 'green', label: 'Finished' },
 };
+
+// The pipeline stage a job is *currently running* for this app (from live job state), or
+// null when nothing is running — so a stage only spins when work is genuinely happening.
+type ActiveStage = 'crawl' | 'describe' | 'extract' | null;
+const JOB_STAGE: Partial<Record<Job['type'], ActiveStage>> = { 'import-app': 'crawl', 'caption-app': 'describe', 'synthesize-app': 'extract' };
+function appRunningStage(jobs: Job[], slug: string): ActiveStage {
+  const live = jobs.filter((j) => j.payload.name === slug && (j.status === 'running' || j.status === 'queued'));
+  const job = live.find((j) => j.status === 'running') ?? live[0];
+  return job ? JOB_STAGE[job.type] ?? null : null;
+}
 
 const STAGE_COPY: Record<(typeof STAGES)[number], { done: string; active: string }> = {
   'Crawl Mobbin': { done: 'Captured a screenshot from Mobbin.', active: 'Capturing a screenshot from Mobbin…' },
   'Describe images (ChatGPT)': { done: 'Generated a layout + component description via ChatGPT vision.', active: 'Describing layout + components via ChatGPT vision…' },
   'Extract design system component': { done: 'Matched reconstructed components against the observed design system.', active: 'Matching reconstructed components against the observed design system…' },
-  Finished: { done: 'Published to the observed design system.', active: 'Publishing to the observed design system…' },
+  'Result ready': { done: 'Evidence-backed extraction is available.', active: 'Preparing the evidence-backed result…' },
 };
 
-function StageTimeline({ screen, synthesized }: { screen: Screen; synthesized: boolean }) {
-  const { idx } = screenStage(screen, synthesized);
+function StageTimeline({ screen, evidenceReady, activeStage }: { screen: Screen; evidenceReady: boolean; activeStage: ActiveStage }) {
+  const described = screen.confidence != null;
+  // done reflects data that exists; a stage only goes "active" when a job is running for it.
+  const done = [true, described, evidenceReady, evidenceReady]; // Crawl / Describe / Extract / Result
+  const activeIdx = activeStage === 'crawl' ? 0 : activeStage === 'describe' ? 1 : activeStage === 'extract' ? 2 : -1;
   return (
     <div style={{ paddingTop: 14 }}>
       {STAGES.map((label, i) => {
-        const state: 'done' | 'active' | 'pending' = i < idx ? 'done' : i === idx ? (label === 'Finished' ? 'done' : 'active') : 'pending';
+        const state: 'done' | 'active' | 'pending' = done[i] ? 'done' : i === activeIdx ? 'active' : 'pending';
         const dotColor = state === 'done' ? DONE : state === 'active' ? WORK : 'var(--color-border)';
-        const desc = state === 'pending' ? 'Waiting on the previous stage.' : STAGE_COPY[label][state === 'active' ? 'active' : 'done'];
+        const desc = state === 'done' ? STAGE_COPY[label].done : state === 'active' ? STAGE_COPY[label].active : 'Not started yet.';
         const time = label === 'Crawl Mobbin' && state === 'done' ? fmtDate(screen.capturedAt) : null;
         return (
           <div key={label} style={{ display: 'flex', gap: 12 }}>
@@ -273,6 +339,8 @@ function StageTimeline({ screen, synthesized }: { screen: Screen; synthesized: b
 // Full-screen viewer for the captured UI. Uses object-fit:contain so mobile (tall) and web
 // (wide) screens both show in full, unlike the gallery Lightbox's fixed 16/10 frame.
 function ScreenLightbox({ screens, index, onClose, onNavigate }: { screens: Screen[]; index: number; onClose: () => void; onNavigate: (i: number) => void }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [index]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -295,8 +363,8 @@ function ScreenLightbox({ screens, index, onClose, onNavigate }: { screens: Scre
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,11,0.94)', zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
       <button type="button" aria-label="Close" onClick={(e) => { e.stopPropagation(); onClose(); }}
         style={{ position: 'absolute', top: 20, right: 24, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
-      {s.url
-        ? <img src={s.url} alt={s.type} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain', borderRadius: 10, boxShadow: '0 20px 60px rgba(0,0,0,0.5)', background: 'var(--color-background-muted)' }} />
+      {s.url && !failed
+        ? <img src={s.url} alt={s.type} onError={() => setFailed(true)} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain', borderRadius: 10, boxShadow: '0 20px 60px rgba(0,0,0,0.5)', background: 'var(--color-background-muted)' }} />
         : <div onClick={(e) => e.stopPropagation()} style={{ color: '#d4d4d8' }}>Image unavailable</div>}
       {screens.length > 1 && arrow('left', -1)}
       {screens.length > 1 && arrow('right', 1)}
@@ -305,16 +373,23 @@ function ScreenLightbox({ screens, index, onClose, onNavigate }: { screens: Scre
   );
 }
 
-function ScreenCard({ screen, synthesized, onView }: { screen: Screen; synthesized: boolean; onView: () => void }) {
-  const badge = SCREEN_BADGE[screenStage(screen, synthesized).status];
+function ScreenCard({ screen, accent, evidenceReady, activeStage, onOpen }: { screen: Screen; accent: string; evidenceReady: boolean; activeStage: ActiveStage; onOpen: () => void }) {
+  const badge = SCREEN_BADGE[screenState(screen, evidenceReady)];
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', background: 'var(--color-background-surface)', overflow: 'hidden' }}>
-      <button type="button" onClick={onView} aria-label={`View ${screen.type}`} title="View full screen" style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', padding: 0, border: 'none', borderBottom: '1px solid var(--color-border)', background: 'var(--color-background-muted)', cursor: 'pointer', display: 'block', overflow: 'hidden' }}>
-        {screen.url && <img src={screen.url} alt={screen.type} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      title="Open screen details"
+      style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', background: 'var(--color-background-surface)', overflow: 'hidden', cursor: 'pointer' }}
+    >
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', borderBottom: '1px solid var(--color-border)', background: 'var(--color-background-muted)', overflow: 'hidden' }}>
+        <PlaceholderImage src={screen.url} accent={accent} />
         <span aria-hidden style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: 7, background: 'rgba(10,10,11,0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
         </span>
-      </button>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 18 }}>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -324,18 +399,113 @@ function ScreenCard({ screen, synthesized, onView }: { screen: Screen; synthesiz
           <Badge variant={badge.variant} label={badge.label} />
         </div>
         <Text type="supporting" color="secondary">Last synced {fmtDate(screen.capturedAt)}</Text>
-        <StageTimeline screen={screen} synthesized={synthesized} />
+        <StageTimeline screen={screen} evidenceReady={evidenceReady} activeStage={activeStage} />
       </div>
     </div>
   );
 }
 
-function AppDetailView({ app, onBack }: { app: App; onBack: () => void }) {
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const { status } = useDesignSystem(app.id);
-  const synthesized = status === 'ready';
+function ResultBlock({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>{label}</span>
+      {children}
+    </div>
+  );
+}
+
+// Per-screen detail: the captured UI + its pipeline timeline + the "Result" the pipeline
+// produced for it (ChatGPT description, components/tokens extracted with this screen as
+// evidence, review status). Rich fields only appear once the app has been synthesized.
+function ScreenDetailView({ screen, accent, snapshot, evidenceReady, activeStage, onBack }: { screen: Screen; accent: string; snapshot: Snapshot; evidenceReady: boolean; activeStage: ActiveStage; onBack: () => void }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const badge = SCREEN_BADGE[screenState(screen, evidenceReady)];
+  const described = screen.confidence != null;
+
+  const extracted = (snapshot?.components ?? []).flatMap((c) =>
+    c.variants
+      .filter((v) => v.evidence.some((e) => e.imageId === screen.id))
+      .map((v) => ({ name: c.name, variant: v.name as string | null, confidence: v.confidence ?? null })),
+  );
+  const components = extracted.length ? extracted : (screen.componentNames ?? []).map((n) => ({ name: n, variant: null as string | null, confidence: null as number | null }));
+  const tokens = (snapshot?.tokens ?? []).filter((t) => t.evidence.some((e) => e.imageId === screen.id));
+  const patterns = [...new Set([...(screen.visibleStates ?? []), ...(screen.layoutPatterns ?? [])])];
+
+  return (
+    <div style={wrap}>
+      <button type="button" onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '24px 0 0', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 500, color: 'var(--color-text-secondary)' }}>
+        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 6 9 12 15 18" /></svg>
+        Back to screens
+      </button>
+      <div style={{ display: 'flex', gap: 24, padding: '20px 0 32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <button type="button" onClick={() => setLightboxOpen(true)} aria-label="View full screen" title="View full screen" style={{ position: 'relative', flex: '1 1 420px', maxWidth: 600, aspectRatio: '16 / 10', padding: 0, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', overflow: 'hidden', background: 'var(--color-background-muted)', cursor: 'pointer' }}>
+          <PlaceholderImage src={screen.url} accent={accent} />
+          <span aria-hidden style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: 8, background: 'rgba(10,10,11,0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
+          </span>
+        </button>
+        <div style={{ flex: '1 1 280px', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Heading level={2}>{screen.type}</Heading>
+              <Badge variant={badge.variant} label={badge.label} />
+            </div>
+            {screen.sourceUrl && <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', fontFamily: MONO }}>{screen.sourceUrl.replace(/^https?:\/\//, '')}</span>}
+            <Text type="supporting" color="secondary">{screen.productArea} · last synced {fmtDate(screen.capturedAt)}</Text>
+          </div>
+          <StageTimeline screen={screen} evidenceReady={evidenceReady} activeStage={activeStage} />
+        </div>
+      </div>
+      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <Heading level={3}>Result</Heading>
+        {described ? (
+          <>
+            {screen.description && <ResultBlock label="ChatGPT description"><Text color="secondary">{screen.description}</Text></ResultBlock>}
+            {components.length > 0 && (
+              <ResultBlock label={extracted.length ? 'Extracted components' : 'Observed components'}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {components.map((c, i) => <Badge key={`${c.name}-${i}`} variant="blue" label={c.variant ? `${c.name} · ${c.variant}${c.confidence != null ? ` · ${Math.round(c.confidence * 100)}%` : ''}` : c.name} />)}
+                </div>
+              </ResultBlock>
+            )}
+            {patterns.length > 0 && (
+              <ResultBlock label="Observed states & patterns">
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{patterns.map((p) => <Badge key={p} variant="neutral" label={p} />)}</div>
+              </ResultBlock>
+            )}
+            {tokens.length > 0 && (
+              <ResultBlock label="Extracted tokens">
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  {tokens.map((t) => (
+                    <div key={t.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {t.kind === 'color' && <div style={{ width: 16, height: 16, borderRadius: 4, background: t.value, border: '1px solid var(--color-border)', flex: '0 0 auto' }} />}
+                      <Text weight="medium">{t.name}</Text>
+                      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', fontFamily: MONO }}>{t.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </ResultBlock>
+            )}
+          </>
+        ) : (
+          <Text color="secondary">Result will appear once ChatGPT describes this screen.</Text>
+        )}
+      </div>
+      {lightboxOpen && <ScreenLightbox screens={[screen]} index={0} onClose={() => setLightboxOpen(false)} onNavigate={() => undefined} />}
+    </div>
+  );
+}
+
+function AppDetailView({ app, activeStage, onBack }: { app: App; activeStage: ActiveStage; onBack: () => void }) {
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const { snapshot } = useDesignSystem(app.id);
   const captured = app.totalScreens;
   const analyzed = app.screens.filter((s) => s.confidence != null).length;
+
+  const detailScreen = detailId != null ? app.screens.find((s) => s.id === detailId) : undefined;
+  if (detailScreen) {
+    return <ScreenDetailView screen={detailScreen} accent={app.accent} snapshot={snapshot} evidenceReady={screenHasSynthesizedEvidence(snapshot, detailScreen.id)} activeStage={activeStage} onBack={() => setDetailId(null)} />;
+  }
 
   return (
     <div style={wrap}>
@@ -357,14 +527,13 @@ function AppDetailView({ app, onBack }: { app: App; onBack: () => void }) {
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18, paddingTop: 4 }}>
-        {app.screens.map((s, i) => <ScreenCard key={s.id} screen={s} synthesized={synthesized} onView={() => setLightbox(i)} />)}
+        {app.screens.map((s) => <ScreenCard key={s.id} screen={s} accent={app.accent} evidenceReady={screenHasSynthesizedEvidence(snapshot, s.id)} activeStage={activeStage} onOpen={() => setDetailId(s.id)} />)}
         {app.screens.length === 0 && (
           <div style={{ gridColumn: '1 / -1', padding: '40px 16px', textAlign: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', background: 'var(--color-background-surface)' }}>
             <Text color="secondary">No screens captured yet.</Text>
           </div>
         )}
       </div>
-      {lightbox != null && <ScreenLightbox screens={app.screens} index={lightbox} onClose={() => setLightbox(null)} onNavigate={setLightbox} />}
     </div>
   );
 }
@@ -372,7 +541,7 @@ function AppDetailView({ app, onBack }: { app: App; onBack: () => void }) {
 export function ImportTrackerPanel({ apps, onBack, onRefresh }: { apps: App[]; onBack: () => void; onRefresh?: () => void | Promise<void> }): ReactNode {
   const [openApp, setOpenApp] = useState<string | null>(null);
   const openAppData = useMemo(() => apps.find((a) => a.id === openApp), [apps, openApp]);
-  const { jobs, submitImport } = useJobs();
+  const { jobs, error, submitImport, cancelJob } = useJobs();
   const [dialogOpen, setDialogOpen] = useState(false);
   const seenDone = useRef<Set<number>>(new Set());
 
@@ -389,17 +558,23 @@ export function ImportTrackerPanel({ apps, onBack, onRefresh }: { apps: App[]; o
   const rows = useMemo(() => {
     const real = apps.map(appRow);
     const known = new Set(real.map((r) => r.slug));
-    const inflight: RowVM[] = groupPipelines(jobs)
-      .filter((p) => p.stages.some((s) => s.status === 'queued' || s.status === 'running'))
-      .map((p) => p.root.payload.name)
-      .filter((name): name is string => !!name && !known.has(name))
-      .filter((name, i, arr) => arr.indexOf(name) === i)
-      .map((name) => {
-        const stages = groupPipelines(jobs).find((p) => p.root.payload.name === name)?.stages ?? [];
+    const pipelineRows: RowVM[] = groupPipelines(jobs)
+      .filter((pipeline) => Boolean(pipeline.root.payload.name) && !known.has(pipeline.root.payload.name!))
+      .filter((pipeline, index, all) => all.findIndex((candidate) => candidate.root.payload.name === pipeline.root.payload.name) === index)
+      .map((pipeline) => {
+        const name = pipeline.root.payload.name!;
+        const stages = pipeline.stages;
         const active = stages.find((s) => s.status === 'running') ?? stages.find((s) => s.status === 'queued');
-        return { slug: name, name, cat: 'Importing', accent: '#a3a3ab', captured: 0, analyzed: 0, lastSynced: null, status: (active && active.type !== 'import-app' ? 'In progress' : 'Queued') as RowStatus };
+        const status: RowStatus = stages.some((stage) => stage.status === 'error')
+          ? 'Needs attention'
+          : active
+            ? (active.type === 'import-app' ? 'Queued' : 'In progress')
+            : stages.some((stage) => stage.status === 'cancelled')
+              ? 'Cancelled'
+              : 'Complete';
+        return { slug: name, name, cat: 'Importing', accent: '#a3a3ab', captured: 0, analyzed: 0, lastSynced: null, status };
       });
-    return [...inflight, ...real];
+    return [...pipelineRows, ...real];
   }, [apps, jobs]);
 
   return (
@@ -417,8 +592,9 @@ export function ImportTrackerPanel({ apps, onBack, onRefresh }: { apps: App[]; o
         </div>
       </div>
       <ImportDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} submitImport={submitImport} />
+      {!openAppData && <PipelineStatusList jobs={jobs} error={error} onCancel={cancelJob} />}
       {openAppData
-        ? <AppDetailView app={openAppData} onBack={() => setOpenApp(null)} />
+        ? <AppDetailView app={openAppData} activeStage={appRunningStage(jobs, openAppData.id)} onBack={() => setOpenApp(null)} />
         : <AppListView rows={rows} onOpen={setOpenApp} onImport={() => setDialogOpen(true)} />}
     </div>
   );

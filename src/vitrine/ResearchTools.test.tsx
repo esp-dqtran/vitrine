@@ -6,6 +6,7 @@ import { ComparisonPanel } from './components/ComparisonPanel.tsx';
 import { CollectionPicker } from './components/CollectionPicker.tsx';
 import { ExportPanel } from './components/ExportPanel.tsx';
 import { VersionPanel } from './components/VersionPanel.tsx';
+import { AppCard } from './components/AppCard.tsx';
 
 test('renders grouped evidence-aware catalog results and facets', () => {
   const html = renderToStaticMarkup(<SearchResults
@@ -38,6 +39,20 @@ test('renders aligned comparison rows without inventing missing values', () => {
   assert.match(html, /#5E6AD2/);
 });
 
+test('keeps app comparison available from catalog cards', () => {
+  const html = renderToStaticMarkup(<AppCard
+    app={{
+      id: 'linear', app: 'Linear', cat: 'Productivity', accent: '#5E6AD2', totalScreens: 1,
+      screens: [{ id: 7, type: 'Workspace', productArea: 'Issues', theme: 'light', visibleStates: [], platform: 'web', description: null, url: '/media/linear/7' }],
+    }}
+    onOpen={() => undefined}
+    compareSelected={false}
+    onToggleCompare={() => undefined}
+  />);
+  assert.match(html, /Add Linear to comparison/);
+  assert.match(html, />Compare</);
+});
+
 test('offers saving any observed reference to a collection', () => {
   const html = renderToStaticMarkup(<CollectionPicker
     reference={{ kind: 'flow', app: 'linear', referenceId: 'sign-in', title: 'Sign in' }}
@@ -65,6 +80,7 @@ test('shows capture counts and curator review actions without exposing draft as 
   assert.match(html, /12 screens/);
   assert.match(html, /10 analyzed/);
   assert.match(html, /Submit for review/);
+  assert.doesNotMatch(html, />Publish<\/button>/);
   assert.match(html, /Published/);
   assert.match(html, /Start recapture/);
 });
