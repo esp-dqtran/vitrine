@@ -179,7 +179,7 @@ test("preview lookup uses explicit ranks one to three on the latest published ve
   assert.deepEqual(captured?.values, ["alpha", 3]);
   assert.match(captured!.sql, /JOIN app_preview_images api ON api\.version_id = published\.id/);
   assert.match(captured!.sql, /ORDER BY av\.version_number DESC/);
-  assert.match(captured!.sql, /so\.access_class = 'public-preview'/);
+  assert.match(captured!.sql, /'protected', 'public-preview'/);
 });
 
 test("preview lookup rejects ranks outside one to three without querying", async () => {

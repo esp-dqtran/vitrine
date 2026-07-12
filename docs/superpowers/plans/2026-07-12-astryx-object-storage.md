@@ -401,14 +401,16 @@ git commit -m "feat: persist media and exports in object storage"
 **Files:**
 - Create: `scripts/migrate-media-to-objects.ts`
 - Create: `src/mediaMigration.test.ts`
+- Create: `src/mediaMigration.ts`
 - Create: `scripts/verify-object-storage.ts`
+- Create: `src/objectStorageVerify.ts`, `src/objectStorageVerify.test.ts`
 - Modify: `package.json`
 
-- [ ] **Step 1: Write migration safety tests**
+- [x] **Step 1: Write migration safety tests**
 
 Test dry-run default, explicit `MEDIA_MIGRATION_APPLY=1`, missing/ambiguous legacy file, extension/MIME sniff mismatch, size limit, stable key, checksum mismatch against an existing object, interrupted state, retry, bounded concurrency, per-image transaction, and a report that contains IDs/counts/checksums but no database URL or local absolute path.
 
-- [ ] **Step 2: Implement the ordered migration state machine**
+- [x] **Step 2: Implement the ordered migration state machine**
 
 Query images with `object_key IS NULL` in ID order. Resolve `mobbin-bulk:`/`capture:` with the current compatibility resolver, require exactly one file, inspect magic bytes, hash full SHA-256, and print a dry-run summary. Apply mode uploads/verifies, transactionally inserts `stored_objects`, attaches `images.object_key`, and marks `media_migration_state=complete`. Failed rows record only a stable error code. Resume skips complete rows only after a fresh object head/checksum check.
 
@@ -422,11 +424,11 @@ Add exact package commands:
 }
 ```
 
-- [ ] **Step 3: Add preview selection as an explicit operation**
+- [x] **Step 3: Add preview selection as an explicit operation**
 
 `--seed-published-previews` selects ranks 1–3 only from each latest published version after every selected image is object-backed, writes `app_preview_images`, and emits the chosen app/version/image IDs for curator review. It never exposes a draft or a fourth image.
 
-- [ ] **Step 4: Add full parity verification**
+- [x] **Step 4: Add full parity verification**
 
 `verify-object-storage.ts` asserts:
 
@@ -438,11 +440,11 @@ Add exact package commands:
 - legacy and object byte checksums match during the compatibility window;
 - output gives total objects/bytes and a SHA-256 of ordered `(image_id, object_key, sha256, size)` evidence.
 
-- [ ] **Step 5: Run on a copied fixture first**
+- [x] **Step 5: Run on a copied fixture first**
 
 Run the migration twice against a temporary database and temporary local object root. Expected first apply migrates all fixture media; second reports zero uploads and identical evidence hash.
 
-- [ ] **Step 6: Commit migration tooling**
+- [x] **Step 6: Commit migration tooling**
 
 ```bash
 git add package.json scripts/migrate-media-to-objects.ts scripts/verify-object-storage.ts src/mediaMigration.test.ts

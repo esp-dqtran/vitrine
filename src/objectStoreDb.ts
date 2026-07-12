@@ -171,7 +171,7 @@ export async function publishedPreviewObject(
      JOIN platforms p ON p.id = i.platform_id AND p.app_id = a.id
      JOIN stored_objects so ON so.object_key = i.object_key
      WHERE a.name = $1 AND api.rank = $2
-       AND so.access_class = 'public-preview'
+       AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,
     [input.app, input.rank],
   );
