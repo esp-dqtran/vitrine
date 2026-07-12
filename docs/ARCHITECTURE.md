@@ -16,15 +16,20 @@ Vitrine ──HTTP──▶ API ───────────────▶
                                          │
                                          └──Playwright──▶ Mobbin
 
-Compose startup: postgres healthy ──▶ migrate completes ──▶ API + import worker
+Compose startup: postgres + rabbitmq + minio healthy
+                 └──▶ minio-init bucket bootstrap
+                 └──▶ migrate completes
+                 └──▶ API + import worker
 ```
 
 PostgreSQL is the only relational source of truth. The API and import worker
 perform a read-only migration-head assertion before they start; ordinary query
 paths never create or alter schema. RabbitMQ is transport, not durable product
-state. The import worker consumes at `prefetch(1)` because a Mobbin profile must
-have one serial browser owner. Captured media is still under `data/images/**`;
-moving it to durable object storage is a separate production gate.
+state. MinIO provides the local production-like S3-compatible object store;
+PostgreSQL owns object references, ownership, checksums, and authorization.
+The import worker consumes at `prefetch(1)` because a Mobbin profile must have
+one serial browser owner. Legacy `data/images/**` remains mounted read-only for
+rollback and migration compatibility, not as the durable media authority.
 
 Schema changes are forward-only SQL files in `migrations/`. The dedicated
 `migrate` service takes a PostgreSQL advisory lock, verifies the immutable
@@ -156,11 +161,13 @@ protecting (one Mobbin login = one browser session, ever):
   splitting "discover" and "import" into separate services does **not** mean
   two browser sessions; both still run serially through this one worker.
 
-Infra: PostgreSQL 17 and RabbitMQ (`docker-compose.yml`), durable queue + a dead-letter queue
-after 3 failed attempts (manual retry-count header, not a plugin). PostgreSQL is
-the relational source of truth. S3/R2 has not shipped: `data/images/**` is still
-mounted into `api` and `import-worker`, so production requires the object-storage
-gate before horizontal or multi-host deployment.
+Infra: PostgreSQL 17, RabbitMQ, and MinIO (`docker-compose.yml`), durable queue
+and a dead-letter queue after 3 failed attempts (manual retry-count header, not a
+plugin). PostgreSQL is the relational and authorization source of truth; MinIO
+stores media/export/failure bytes through the same S3-compatible contract used
+for staging/production. The API keeps `/health` as liveness and exposes
+`/ready` for object-storage readiness. Admin job creation and the import worker
+both fail closed when object storage is unavailable.
 
 What this buys over the jobs-table version: real process isolation (the API
 can be down/redeployed without touching the worker), a broker UI for

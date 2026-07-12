@@ -64,6 +64,7 @@ import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../..
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
+import { verifyObjectStoreReady } from "../../../src/objectStorageReady.ts";
 import {
   adminImageObject,
   entitledImageObject,
@@ -135,6 +136,7 @@ const defaults = {
   nowSeconds: () => Math.floor(Date.now() / 1000),
   dataDir: process.env.DATA_DIR ?? "data",
   objectStore: undefined as ObjectStore | undefined,
+  storageReady: undefined as (() => Promise<void>) | undefined,
   adminImageObject,
   entitledImageObject,
   legacyImageReference,
@@ -298,6 +300,31 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.use(express.json());
 
   app.get("/health", (_req, res) => res.json({ status: "ok" }));
+  const checkStorageReady = async (): Promise<void> => {
+    if (deps.storageReady) {
+      await deps.storageReady();
+      return;
+    }
+    if (deps.objectStore) await verifyObjectStoreReady(deps.objectStore);
+  };
+  const requireStorageReady = async (res: express.Response): Promise<boolean> => {
+    try {
+      await checkStorageReady();
+      return true;
+    } catch {
+      res.status(503).json({ error: "Object storage unavailable", code: "object_storage_unavailable" });
+      return false;
+    }
+  };
+
+  app.get("/ready", async (_req, res) => {
+    try {
+      await checkStorageReady();
+      res.json({ status: "ok" });
+    } catch {
+      res.status(503).json({ status: "error", error: "object_storage_unavailable" });
+    }
+  });
 
   app.use((_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
@@ -439,6 +466,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     try {
       const version = await deps.createAppVersion(appSlug, res.locals.user.id, sourceUrl || undefined);
       if (sourceUrl) {
+        if (!await requireStorageReady(res)) return;
         const jobId = await deps.createJob("import-app", { name: appSlug, url: sourceUrl, versionId: version.id });
         try { await deps.publishJob({ type: "import-app", name: appSlug, url: sourceUrl, jobId }); }
         catch (error) {
@@ -993,6 +1021,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
 
     const payload = { name, url };
+    if (!await requireStorageReady(res)) return;
     const id = await deps.createJob(type, payload);
     try {
       await deps.publishJob({ type, name, url, jobId: id } as Job);

@@ -12,8 +12,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && pg_dump --version | grep -q ' 17\.'
 COPY package.json package-lock.json ./
+RUN npm install -g npm@11.6.2
 RUN npm ci --omit=dev
-COPY src/migrations.ts src/dbRecovery.ts ./src/
-COPY scripts/migrate.ts scripts/db-backup.ts scripts/db-restore-verify.ts ./scripts/
+COPY src ./src
+COPY scripts ./scripts
 COPY migrations ./migrations
 CMD ["node", "--experimental-strip-types", "scripts/migrate.ts"]

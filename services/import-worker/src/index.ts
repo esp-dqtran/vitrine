@@ -3,6 +3,7 @@ import { insertImage, pool } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { attachImageObject, imageObjectById } from "../../../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
+import { verifyObjectStoreReady } from "../../../src/objectStorageReady.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../../../src/bulkDownload.ts";
 import { caption } from "../../../src/caption.ts";
 import { createPipelineHandler } from "./pipeline.ts";
@@ -24,6 +25,7 @@ const bulkStorage: BulkObjectDependencies = {
 
 await startImportWorker({
   assertMigrations: () => assertMigrationsCurrent(pool),
+  assertObjectStorage: () => verifyObjectStoreReady(objectStore),
   consume: async () => {
     console.log("[import-worker] Waiting for jobs...");
     await consumeJobs(createPipelineHandler({

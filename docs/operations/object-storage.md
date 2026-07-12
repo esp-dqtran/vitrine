@@ -17,6 +17,18 @@ OBJECT_STORE_S3_REGION=ap-southeast-1
 OBJECT_STORE_S3_PREFIX=prod
 ```
 
+The local production-like Compose stack runs MinIO with a private bucket,
+versioning enabled, and an app-scoped access key created by `minio-init`:
+
+```bash
+docker compose up -d postgres rabbitmq minio minio-init migrate api import-worker
+curl -fsS http://localhost:3010/ready
+```
+
+`/health` is liveness only. `/ready` proves object storage is reachable. The
+API refuses import-job creation and the import worker refuses to consume jobs
+when storage readiness fails.
+
 Production must not use public ACLs or path-style HTTP endpoints. Credentials
 come from the runtime secret manager or the platform credential chain; never log
 the full object-store configuration.
@@ -34,6 +46,14 @@ Apply requires an explicit opt-in:
 ```bash
 MEDIA_MIGRATION_APPLY=1 DATABASE_URL="$DATABASE_URL" npm run storage:migrate
 DATABASE_URL="$DATABASE_URL" npm run storage:verify
+```
+
+The same scripts are available in Compose as profiled one-shot jobs:
+
+```bash
+docker compose --profile storage-tools run --rm storage-migrate
+MEDIA_MIGRATION_APPLY=1 docker compose --profile storage-tools run --rm storage-migrate
+docker compose --profile storage-tools run --rm storage-verify
 ```
 
 Do not delete the legacy `data/images` tree during the rollback window. Keep it

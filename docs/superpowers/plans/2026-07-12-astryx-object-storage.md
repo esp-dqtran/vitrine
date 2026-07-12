@@ -493,17 +493,19 @@ git commit -m "feat: verify object recovery and orphan cleanup"
 - Modify: `docs/ARCHITECTURE.md`
 - Modify: `docs/operations/object-storage.md`
 
-- [ ] **Step 1: Add MinIO with private bucket bootstrap**
+- [x] **Step 1: Add MinIO with private bucket bootstrap**
 
 Compose adds a pinned MinIO server, persistent volume, health check, and one-shot bucket-init job. The bucket has no anonymous policy. API, worker, media migration, and verifier depend on healthy storage/bucket creation; frontend never receives root credentials.
 
-- [ ] **Step 2: Validate service startup and readiness**
+- [x] **Step 2: Validate service startup and readiness**
 
 Missing or unreachable object storage must prevent readiness and job acceptance, while liveness remains accurate. API and worker containers receive only the bucket-scoped access key/secret through environment/secret injection. Browser profile mounts remain separate and read-only.
 
 - [ ] **Step 3: Migrate the real local image tree**
 
 Before apply, retain the existing database backup and a read-only 1,422-file checksum inventory (or current live count). Run dry-run, then explicit apply, then seed reviewed previews. Run migration again and require zero uploads. Run full parity; expected database image count, object count, legacy file count, and ordered evidence hash must match. Retain the local tree read-only until rollback expiry.
+
+2026-07-12 evidence: the current local tree has 1,328 files and a pre-object-storage PostgreSQL backup was retained under `data/backups/task8-object-storage-20260712T144658Z/`. The dry-run is intentionally not clean yet: 1,328 rows are ready, and 126 rows fail with `LEGACY_FILE_MISSING`. All missing rows belong to Atlassian draft version 5, image IDs 2413-2538, and have no preview references. Do not run the apply/parity gate until those source capture files are restored or the draft is intentionally retired by an explicit data decision.
 
 - [ ] **Step 4: Exercise rollback and recovery**
 

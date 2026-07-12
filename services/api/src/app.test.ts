@@ -550,6 +550,44 @@ test("keeps health public and rejects private data without a session", async (t)
   assert.equal((await fetch(`${base}/jobs`)).status, 401);
 });
 
+test("keeps liveness up but fails readiness when object storage is unavailable", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    storageReady: async () => { throw new Error("Object storage is unavailable"); },
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/health`)).status, 200);
+  const response = await fetch(`${base}/ready`);
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { status: "error", error: "object_storage_unavailable" });
+});
+
+test("rejects import job acceptance when object storage is unavailable", async (t) => {
+  let created = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    storageReady: async () => { throw new Error("Object storage is unavailable"); },
+    createJob: async () => {
+      created = true;
+      return 1;
+    },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({
+      type: "import-app",
+      name: "linear",
+      url: "https://mobbin.com/apps/linear/version/screens",
+    }),
+  });
+  assert.equal(response.status, 503);
+  assert.equal(created, false);
+  assert.deepEqual(await response.json(), { error: "Object storage unavailable", code: "object_storage_unavailable" });
+});
+
 test("serves public catalog previews without exposing the admin gallery", async (t) => {
   const { base, server } = await serve(createApiApp({
     allImages: async () => catalogImages,
