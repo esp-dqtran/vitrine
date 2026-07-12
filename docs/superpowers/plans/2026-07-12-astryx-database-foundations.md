@@ -41,7 +41,7 @@
 - Create: `src/migrations.test.ts`
 - Create: `src/migrations.ts`
 
-- [ ] **Step 1: Write failing discovery and state tests**
+- [x] **Step 1: Write failing discovery and state tests**
 
 Create tests that build a temporary migration directory and assert strict names, contiguous versions, SHA-256 checksums, forbidden transaction statements, applied checksum equality, pending detection, and unknown applied-version rejection:
 
@@ -106,13 +106,13 @@ test("rejects gaps, edited migrations, unknown applied versions, and SQL transac
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm the module is missing**
+- [x] **Step 2: Run the test and confirm the module is missing**
 
 Run: `node --experimental-strip-types --test src/migrations.test.ts`
 
 Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `src/migrations.ts`.
 
-- [ ] **Step 3: Implement manifest discovery and validation**
+- [x] **Step 3: Implement manifest discovery and validation**
 
 Implement these public types and functions:
 
@@ -176,13 +176,13 @@ export function validateMigrationState(files: readonly MigrationFile[], applied:
 
 Complete the second test with real temporary files rather than comments.
 
-- [ ] **Step 4: Run the focused tests**
+- [x] **Step 4: Run the focused tests**
 
 Run: `node --experimental-strip-types --test src/migrations.test.ts`
 
 Expected: PASS with all manifest/state tests green.
 
-- [ ] **Step 5: Commit the manifest layer**
+- [x] **Step 5: Commit the manifest layer**
 
 ```bash
 git add src/migrations.ts src/migrations.test.ts
