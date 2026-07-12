@@ -1,4 +1,4 @@
-# Astryx — Scalable Architecture
+# Astryx architecture
 
 Goal: extract design systems from application screenshots at scale — many apps,
 hundreds of screens per app, observable and controllable from the Vitrine UI.
@@ -7,32 +7,35 @@ This doc describes the current architecture, where it stops scaling, and a
 staged path forward. Each stage has an explicit trigger — don't build a stage
 before its trigger fires.
 
-## Current state (v0 — works today)
+## Current runtime
 
 ```
-┌──────────┐   ┌───────────────┐   ┌──────────────────┐   ┌────────────────────┐
-│  Mobbin  │──▶│ crawl         │──▶│ caption          │──▶│ synthesize         │
-│ (web UI) │   │ Playwright    │   │ Playwright →     │   │ rolling batch merge │
-└──────────┘   │ 4 tabs/app,   │   │ ChatGPT/Claude/  │   │ via same chat UI   │
-               │ apps serial   │   │ Gemini web, 3 tabs│  └─────────┬──────────┘
-               └──────┬────────┘   └────────┬─────────┘             │
-                      ▼                     ▼                       ▼
-               data/images/**        images.description    data/design-systems/<app>.md
-                      └──────────── data/astryx.db (SQLite) ────────┘
-                                            ▲
-                              vite dev server (/api/apps, /api/progress,
-                              /api/progress/cancel) ← Vitrine UI polls 1.5s
+Vitrine ──HTTP──▶ API ───────────────▶ PostgreSQL 17
+                   │                       ▲
+                   └──RabbitMQ jobs──▶ import worker
+                                         │
+                                         └──Playwright──▶ Mobbin
+
+Compose startup: postgres healthy ──▶ migrate completes ──▶ API + import worker
 ```
 
-Cross-cutting: `data/progress.json` (single-slot progress), `data/cancel-requested`
-(cooperative cancel flag), `pool.ts` (shared worker pool), `llmChat.ts`
-(ChatSession abstraction over the three chat providers).
+PostgreSQL is the only relational source of truth. The API and import worker
+perform a read-only migration-head assertion before they start; ordinary query
+paths never create or alter schema. RabbitMQ is transport, not durable product
+state. The import worker consumes at `prefetch(1)` because a Mobbin profile must
+have one serial browser owner. Captured media is still under `data/images/**`;
+moving it to durable object storage is a separate production gate.
+
+Schema changes are forward-only SQL files in `migrations/`. The dedicated
+`migrate` service takes a PostgreSQL advisory lock, verifies the immutable
+SHA-256 ledger, and applies each pending file and ledger row in one transaction.
+See `docs/operations/database.md` for backup, restore, rollout, and recovery.
 
 What already scales fine:
 - **Crawling.** One-shot per app, 4 concurrent tabs, resumable (`INSERT OR IGNORE`
   + skip-if-exists), multi-app via `crawlMany`. Bound by one Mobbin login — that's
   a hard constraint (persistent profile = one process), not a real bottleneck.
-- **Idempotency.** Every stage checkpoints to SQLite/disk and resumes where it
+- **Idempotency.** Every stage checkpoints to PostgreSQL/disk and resumes where it
   left off. This is the property that makes everything below cheap to add —
   preserve it in every change.
 
@@ -74,11 +77,10 @@ Synthesis stays a sequential rolling merge (each batch needs the previous
 doc). If it ever dominates wall-clock: map-reduce — summarize chunks in
 parallel, merge the summaries. Trigger: synthesis > 15 min per app.
 
-## Stage 2 — jobs table + worker (trigger: you want to start runs from the UI, or run crawl→caption→synthesize as one command)
+## Historical proposal: jobs table + worker
 
-Today the UI can only observe and cancel; starting a run means a terminal.
-Replace the single-slot `progress.json` + flag file with a `jobs` table in the
-existing SQLite db:
+This section records the original local-only proposal. It is superseded by the
+current PostgreSQL + RabbitMQ runtime described above.
 
 ```sql
 CREATE TABLE jobs (
@@ -99,16 +101,12 @@ caption/synthesize share one API budget. The vite server gains
 model as today, minus the flag file. Pipelines are just three rows enqueued
 in order with a "skip if previous failed" check.
 
-Enable SQLite WAL (`PRAGMA journal_mode=WAL`) so the worker (writer) and vite
-server (reader) don't block each other. That's the entire "database migration"
-at this stage.
-
-## Stage 3 — hosted product (trigger: a second user who isn't on this machine)
+## Historical proposal: hosted product
 
 Only if Astryx becomes a service (the SignIn page becomes real):
 
-- **Postgres** replaces SQLite (same schema; `jobs` table becomes pg-boss or
-  stays hand-rolled with `FOR UPDATE SKIP LOCKED`).
+- **Postgres** replaces SQLite. This part has shipped; RabbitMQ remains the job
+  transport and PostgreSQL stores job/product state.
 - **S3/R2** replaces `data/images/**`; `/media` becomes signed URLs.
 - **API server** (the vite middleware endpoints extracted into a small
   Fastify/Hono app) + N caption/synthesize workers, horizontally scalable —
@@ -127,8 +125,8 @@ equivalent that's one file instead of one service.
 |---|---|---|
 | API for caption/synthesize, browser as fallback | 10x+ throughput, no login babysitting, no selector rot | Cost becomes the constraint → batch API / cheaper tier |
 | Playwright stays for crawling | Mobbin has no public API; login + virtualized grid require a real browser | Mobbin ships an API |
-| SQLite + WAL, one worker | Zero infra; serial worker matches the real constraints (one Mobbin login, one API budget) | Second machine or second user |
-| Jobs in a table, not a queue service | A table is inspectable, resumable, and 20 lines | >1 worker host needs `SKIP LOCKED` semantics → Postgres |
+| PostgreSQL 17 + explicit migrations | Durable shared state and deterministic, auditable schema rollout | Revisit only for a demonstrated database constraint |
+| RabbitMQ transport + PostgreSQL job state | Broker isolation without treating queue delivery as product truth | Revisit when cross-region delivery is required |
 | Structured JSON as synthesis source of truth | Data > prose: renderable, diffable, compilable to theme tokens | — |
 | Cooperative cancel (checked between items) | In-flight item finishes cleanly; every stage checkpoints ≤1 item of work | — |
 
@@ -142,9 +140,10 @@ trigger. Recording why, so this doesn't read as an oversight later.
 What actually shipped, and how it respects the constraint the table below is
 protecting (one Mobbin login = one browser session, ever):
 
-- **`services/api`** — read-only HTTP surface over the same SQLite db/progress
-  file this doc describes (`/apps`, `/images`, `/progress`). No queue, no
-  Playwright.
+- **`services/api`** — customer/admin HTTP surface over PostgreSQL. It owns
+  authentication, billing and entitlement enforcement, catalog reads, signed
+  media authorization, pipeline mutations, and progress/job observation. It
+  never launches Playwright.
 - **`services/discover`** — a thin producer. `POST /trigger` publishes a
   single `{type: "discover-catalog"}` message to RabbitMQ. It does **not**
   run Playwright itself.
@@ -157,11 +156,11 @@ protecting (one Mobbin login = one browser session, ever):
   splitting "discover" and "import" into separate services does **not** mean
   two browser sessions; both still run serially through this one worker.
 
-Infra: RabbitMQ (`docker-compose.yml`), durable queue + a dead-letter queue
-after 3 failed attempts (manual retry-count header, not a plugin). No
-Postgres/S3 — SQLite (`data/astryx.db`) and `data/images/**` are still the
-source of truth, now mounted as a shared volume into `api` and
-`import-worker` rather than read off local disk directly.
+Infra: PostgreSQL 17 and RabbitMQ (`docker-compose.yml`), durable queue + a dead-letter queue
+after 3 failed attempts (manual retry-count header, not a plugin). PostgreSQL is
+the relational source of truth. S3/R2 has not shipped: `data/images/**` is still
+mounted into `api` and `import-worker`, so production requires the object-storage
+gate before horizontal or multi-host deployment.
 
 What this buys over the jobs-table version: real process isolation (the API
 can be down/redeployed without touching the worker), a broker UI for
@@ -180,6 +179,12 @@ into the container.
    the pipeline must run headless (cron, CI) with no UI attached.
 4. **Provider is a seam** (`ChatSession`) — transport (browser vs API vs
    future local model) is a flag, never a rewrite.
+5. **Evidence is immutable input to publication** — a crawl can finalize only
+   from evidence pinned to the worker lease that produced it.
+6. **Drafts never displace published data implicitly** — captured versions stay
+   draft until the explicit review/publish transition updates catalog membership.
+7. **One browser owner per profile** — queue depth may grow, but importing stays
+   serial for each Mobbin profile.
 
 ## Free and Pro customer backend
 

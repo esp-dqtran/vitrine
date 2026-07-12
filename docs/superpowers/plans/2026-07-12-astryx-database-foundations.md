@@ -699,15 +699,15 @@ git commit -m "feat: verify database backup and restore"
 **Files:**
 - Create runtime evidence under ignored `data/backups/` and `data/verification/`
 
-- [ ] **Step 1: Record pre-migration evidence**
+- [x] **Step 1: Record pre-migration evidence**
 
 Query all public table counts, app/version/image/job relationships, image-reference categories, sequence maxima, and non-secret snapshot hashes into a JSON evidence file. Do not include emails, password/session hashes, Stripe IDs, or row payloads.
 
-- [ ] **Step 2: Create the pre-migration backup**
+- [x] **Step 2: Create the pre-migration backup**
 
 Run `npm run db:backup` against the current `astryx` database and verify its checksum before any migration.
 
-- [ ] **Step 3: Apply migration 0001 explicitly**
+- [x] **Step 3: Apply migration 0001 explicitly**
 
 Run:
 
@@ -718,11 +718,11 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/astryx npm run db:check
 
 Expected: migration 1 applies once; check exits 0.
 
-- [ ] **Step 4: Compare post-migration evidence**
+- [x] **Step 4: Compare post-migration evidence**
 
 Re-run the same safe queries and assert stable counts, IDs, relationships, sequence maxima or valid advancement, and snapshot hashes. Run migration again and assert zero applied versions.
 
-- [ ] **Step 5: Restore the real snapshot into a disposable database**
+- [x] **Step 5: Restore the real snapshot into a disposable database**
 
 Run `db:restore-verify` using the newly created dump and a generated `astryx_restore_test_*` target. Retain the safe JSON result for final handoff.
 
@@ -733,15 +733,15 @@ Run `db:restore-verify` using the newly created dump and a generated `astryx_res
 - Create: `docs/operations/database.md`
 - Modify: `docs/superpowers/plans/2026-07-12-astryx-database-foundations.md`
 
-- [ ] **Step 1: Reconcile architecture documentation**
+- [x] **Step 1: Reconcile architecture documentation**
 
 Replace SQLite/query-time schema claims with PostgreSQL, explicit migration job, startup check, backup/restore, forward-only recovery, and actual API/worker responsibilities. Preserve the evidence, draft, and serial-browser-worker invariants.
 
-- [ ] **Step 2: Write operator commands**
+- [x] **Step 2: Write operator commands**
 
 Document development, staging, and production command order; backup and restore arguments; expected JSON outputs; checksum mismatch handling; failed-uncommitted migration recovery; application rollback with backward-compatible schema; and declared disaster restore.
 
-- [ ] **Step 3: Run the complete verification gate**
+- [x] **Step 3: Run the complete verification gate**
 
 Run:
 
@@ -759,11 +759,11 @@ git diff --check
 
 Expected: every command exits 0; test output records exact Node and rendered React counts; the Vite warning remains a later frontend-splitting task, not a failure of this slice.
 
-- [ ] **Step 4: Re-run real backup restore after final code**
+- [x] **Step 4: Re-run real backup restore after final code**
 
 Create a fresh dump from the migrated local database and restore it to a new disposable target. Record checksum, migration head, table counts, and relationship result.
 
-- [ ] **Step 5: Mark this plan's completed checkboxes and commit**
+- [x] **Step 5: Mark this plan's completed checkboxes and commit**
 
 ```bash
 git add docs/ARCHITECTURE.md docs/operations/database.md docs/superpowers/plans/2026-07-12-astryx-database-foundations.md
