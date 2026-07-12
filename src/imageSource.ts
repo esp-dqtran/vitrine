@@ -8,12 +8,32 @@ const BULK_REF = /^(?:mobbin-bulk|capture):([0-9a-f]{16})$/;
 const BULK_HASH = /^[0-9a-f]{16}$/;
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"] as const;
 
+export type ParsedImageSource =
+  | { kind: "legacy"; hash: string }
+  | { kind: "external"; url: string };
+
 export function isAppSlug(value: string): boolean {
   return APP_SLUG.test(value);
 }
 
+export function parseImageSource(source: string): ParsedImageSource | undefined {
+  const legacy = source.match(BULK_REF)?.[1];
+  if (legacy) return { kind: "legacy", hash: legacy };
+  if (source.length === 0 || source.length > 2_048 || source.includes("\0")) return undefined;
+  try {
+    const parsed = new URL(source);
+    if (!["http:", "https:"].includes(parsed.protocol) || !parsed.hostname || parsed.username || parsed.password) {
+      return undefined;
+    }
+    return { kind: "external", url: source };
+  } catch {
+    return undefined;
+  }
+}
+
 export function bulkImageHash(source: string): string | undefined {
-  return source.match(BULK_REF)?.[1];
+  const parsed = parseImageSource(source);
+  return parsed?.kind === "legacy" ? parsed.hash : undefined;
 }
 
 export function findBulkImage(dataDir: string, app: string, hash: string): string | undefined {
@@ -26,6 +46,7 @@ export function findBulkImage(dataDir: string, app: string, hash: string): strin
 }
 
 export function publicImageUrl(app: string, source: string): string {
-  const hash = bulkImageHash(source);
-  return hash && isAppSlug(app) ? `/api/media/${app}/${hash}` : source;
+  const parsed = parseImageSource(source);
+  if (parsed?.kind === "legacy" && isAppSlug(app)) return `/api/media/${app}/${parsed.hash}`;
+  return parsed?.kind === "external" ? parsed.url : "";
 }

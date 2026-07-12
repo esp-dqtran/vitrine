@@ -492,6 +492,30 @@ export async function publishedImages(): Promise<CrawledImage[]> {
   return res.rows;
 }
 
+export interface PublishedPreviewImage extends CrawledImage {
+  preview_rank: number;
+}
+
+export async function publishedPreviewImages(): Promise<PublishedPreviewImage[]> {
+  const res = await query<PublishedPreviewImage>(
+    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       a.icon_url, a.category, vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height,
+       vi.state_context, vi.captured_at, api.rank::integer AS preview_rank
+     FROM apps a
+     JOIN LATERAL (
+       SELECT av.id FROM app_versions av
+       WHERE av.app_id = a.id AND av.status = 'published'
+       ORDER BY av.version_number DESC LIMIT 1
+     ) published ON true
+     JOIN app_preview_images api ON api.version_id = published.id
+     JOIN version_images vi ON vi.version_id = published.id AND vi.image_id = api.image_id
+     JOIN images i ON i.id = api.image_id
+     JOIN platforms p ON p.id = i.platform_id AND p.app_id = a.id
+     ORDER BY a.name, api.rank`,
+  );
+  return res.rows;
+}
+
 export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot[]> {
   const res = await query<{ snapshot: DesignSystemSnapshot }>(
     `SELECT dsv.snapshot FROM design_system_versions dsv JOIN app_versions av ON av.id = dsv.version_id

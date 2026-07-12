@@ -63,7 +63,7 @@ function validateKey(key: string): void {
   }
 }
 
-function validateMetadata(metadata: ObjectMetadata): void {
+export function validateObjectMetadata(metadata: ObjectMetadata): void {
   validateKey(metadata.key);
   if (!SHA256_PATTERN.test(metadata.sha256)) throw new Error("Invalid SHA-256");
   if (!Number.isSafeInteger(metadata.byteSize) || metadata.byteSize <= 0) throw new Error("Invalid byte size");
@@ -99,7 +99,7 @@ export class LocalObjectStore implements ObjectStore {
       contentType: input.contentType,
       accessClass: input.accessClass,
     };
-    validateMetadata(metadata);
+    validateObjectMetadata(metadata);
     if (input.body.byteLength > MAX_BYTES) throw new Error("Object exceeds the 64 MiB media ceiling");
     if (input.byteSize !== input.body.byteLength) throw new Error("Byte size mismatch");
     const body = Buffer.from(input.body.buffer, input.body.byteOffset, input.body.byteLength);
@@ -242,7 +242,7 @@ export class LocalObjectStore implements ObjectStore {
     let metadata: ObjectMetadata;
     try {
       metadata = JSON.parse(raw.toString("utf8")) as ObjectMetadata;
-      validateMetadata(metadata);
+      validateObjectMetadata(metadata);
     } catch (error) {
       throw new Error(`Invalid object metadata for ${key}`, { cause: error });
     }

@@ -13,8 +13,10 @@ import {
   upsertStripeCustomer,
   upsertSubscription,
 } from "../../../src/pricingStore.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
+const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 await startApi({
   assertMigrations: () => assertMigrationsCurrent(pool),
   start: async () => {
@@ -35,6 +37,7 @@ await startApi({
     });
     createApiApp({
       billing,
+      objectStore,
       mediaSigningSecret: config.mediaSigningSecret,
       generalRateLimit: config.generalRateLimit,
       mediaRateLimit: config.mediaRateLimit,

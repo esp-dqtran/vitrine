@@ -1,4 +1,4 @@
-import type { CrawledImage } from "./db.ts";
+import type { CrawledImage, PublishedPreviewImage } from "./db.ts";
 import { bulkImageHash, publicImageUrl } from "./imageSource.ts";
 
 const APP_META: Record<string, { label: string; cat: string; accent: string; websiteUrl: string }> = {
@@ -58,7 +58,7 @@ function appMeta(app: string) {
 function screen(
   app: string,
   image: CrawledImage,
-  preview = false,
+  previewRank?: number,
   imageUrl: (app: string, source: string) => string = publicImageUrl,
 ): CatalogScreen {
   const hash = bulkImageHash(image.image_url);
@@ -78,8 +78,8 @@ function screen(
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,
-    url: preview
-      ? hash ? `/api/preview-media/${app}/${hash}` : null
+    url: previewRank
+      ? hash ? `/api/preview-media/${app}/${previewRank}` : null
       : imageUrl(app, image.image_url),
   };
 }
@@ -101,7 +101,7 @@ function decodeCursor(value: string | undefined): string | undefined {
   }
 }
 
-function catalogApp(app: string, images: CrawledImage[]): CatalogApp {
+function catalogApp(app: string, images: CrawledImage[], previews: PublishedPreviewImage[] = []): CatalogApp {
   const meta = appMeta(app);
   return {
     id: app,
@@ -109,21 +109,33 @@ function catalogApp(app: string, images: CrawledImage[]): CatalogApp {
     cat: images[0]?.category ?? meta.cat,
     accent: meta.accent,
     totalScreens: images.length,
-    previewScreens: images.slice(0, 3).map((image) => screen(app, image, true)),
+    previewScreens: previews
+      .sort((left, right) => left.preview_rank - right.preview_rank)
+      .map((image) => screen(app, image, image.preview_rank)),
     websiteUrl: meta.websiteUrl,
     iconUrl: images[0]?.icon_url ?? null,
   };
 }
 
-export function buildCatalogPage(images: CrawledImage[], cursor?: string, requestedLimit = 24): CatalogPage {
+export function buildCatalogPage(
+  images: CrawledImage[],
+  cursor?: string,
+  requestedLimit = 24,
+  previewImages: PublishedPreviewImage[] = [],
+): CatalogPage {
   const byApp = groups(images);
+  const previewsByApp = groups(previewImages);
   const names = [...byApp.keys()].sort();
   const after = decodeCursor(cursor);
   const start = after ? Math.max(0, names.findIndex((name) => name > after)) : 0;
   const limit = Math.min(Math.max(requestedLimit, 1), 24);
   const pageNames = names.slice(start, start + limit);
   return {
-    apps: pageNames.map((name) => catalogApp(name, byApp.get(name) ?? [])),
+    apps: pageNames.map((name) => catalogApp(
+      name,
+      byApp.get(name) ?? [],
+      (previewsByApp.get(name) ?? []) as PublishedPreviewImage[],
+    )),
     nextCursor: start + limit < names.length ? encodeCursor(pageNames.at(-1) ?? "") : null,
   };
 }
@@ -143,7 +155,7 @@ export function buildAppDetailPage(
   const page = appImages.slice(start < 0 ? appImages.length : start, (start < 0 ? appImages.length : start) + limit);
   return {
     app: catalogApp(appSlug, appImages),
-    screens: page.map((image) => screen(appSlug, image, false, imageUrl)),
+    screens: page.map((image) => screen(appSlug, image, undefined, imageUrl)),
     nextCursor: page.length === limit && page.at(-1)!.id < appImages.at(-1)!.id
       ? encodeCursor(String(page.at(-1)!.id))
       : null,

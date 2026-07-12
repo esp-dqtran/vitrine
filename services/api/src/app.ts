@@ -29,6 +29,7 @@ import {
   getVersionDesignSystem,
   versionImages,
   publishedImages,
+  publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
   recordExport,
@@ -42,7 +43,7 @@ import {
 } from "../../../src/authStore.ts";
 import { publishJob, type Job } from "../../../src/queue.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
-import { bulkImageHash, findBulkImage, isAppSlug } from "../../../src/imageSource.ts";
+import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
@@ -58,6 +59,13 @@ import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
+import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
+import {
+  adminImageObject,
+  entitledImageObject,
+  legacyImageReference,
+  publishedPreviewObject,
+} from "../../../src/objectStoreDb.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -94,6 +102,7 @@ const defaults = {
   getVersionDesignSystem,
   versionImages,
   publishedImages,
+  publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
   recordExport,
@@ -117,6 +126,11 @@ const defaults = {
   mediaSigningSecret: process.env.MEDIA_SIGNING_SECRET ?? "development-media-signing-secret",
   nowSeconds: () => Math.floor(Date.now() / 1000),
   dataDir: process.env.DATA_DIR ?? "data",
+  objectStore: undefined as ObjectStore | undefined,
+  adminImageObject,
+  entitledImageObject,
+  legacyImageReference,
+  publishedPreviewObject,
 };
 type ApiDeps = typeof defaults;
 
@@ -203,6 +217,29 @@ function validMobbinScreensUrl(value: string): boolean {
   }
 }
 
+function sameObjectMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
+  return left.key === right.key && left.sha256 === right.sha256 && left.byteSize === right.byteSize
+    && left.contentType === right.contentType && left.accessClass === right.accessClass;
+}
+
+async function sendStoredObject(
+  store: ObjectStore,
+  metadata: ObjectMetadata,
+  res: express.Response,
+): Promise<void> {
+  const signed = await store.signedGetUrl(metadata.key, 60);
+  if (signed) {
+    res.setHeader("Cache-Control", "private, no-store");
+    res.redirect(302, signed);
+    return;
+  }
+  const object = await store.get(metadata.key);
+  if (!sameObjectMetadata(object.metadata, metadata)) throw new Error("Object metadata mismatch");
+  res.setHeader("Content-Type", metadata.contentType);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.send(object.body);
+}
+
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const deps = {
     ...defaults,
@@ -256,24 +293,30 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    res.json(buildCatalogPage(await deps.publishedImages(), cursor, limit));
+    const [images, previews] = await Promise.all([deps.publishedImages(), deps.publishedPreviewImages()]);
+    res.json(buildCatalogPage(images, cursor, limit, previews));
   });
 
-  app.get("/preview-media/:app/:hash", async (req, res) => {
-    if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
+  app.get("/preview-media/:app/:rank", async (req, res) => {
+    const rank = Number(req.params.rank);
+    if (!isAppSlug(req.params.app) || !Number.isInteger(rank) || rank < 1 || rank > 3) {
       res.status(400).json({ error: "invalid media reference" });
       return;
     }
-    const previewHashes = (await deps.appImages(req.params.app))
-      .slice(0, 3)
-      .map(({ image_url }) => bulkImageHash(image_url));
-    if (!previewHashes.includes(req.params.hash)) {
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "media storage unavailable" });
+      return;
+    }
+    const metadata = await deps.publishedPreviewObject({ app: req.params.app, rank });
+    if (!metadata) {
       res.status(404).json({ error: "preview not found" });
       return;
     }
-    const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
-    if (!path) res.status(404).json({ error: "image not found" });
-    else res.sendFile(resolve(path));
+    try {
+      await sendStoredObject(deps.objectStore, metadata, res);
+    } catch {
+      res.status(503).json({ error: "media storage unavailable" });
+    }
   });
 
   app.use(async (req, res, next) => {
@@ -334,8 +377,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
 
   const protectedMediaUrl = (userId: number, appSlug: string, source: string): string => {
-    const hash = bulkImageHash(source);
-    if (!hash) return source;
+    const parsed = parseImageSource(source);
+    if (!parsed) return "";
+    if (parsed.kind === "external") return parsed.url;
+    const hash = parsed.hash;
     const expiresAt = deps.nowSeconds() + 300;
     const token = createMediaToken(deps.mediaSigningSecret, { userId, app: appSlug, hash, expiresAt });
     return `/api/media/${appSlug}/${hash}?expires=${expiresAt}&token=${encodeURIComponent(token)}`;
@@ -946,6 +991,28 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         expiresAt,
       }, deps.nowSeconds())) {
         res.status(403).json({ error: "invalid media token" });
+        return;
+      }
+    }
+    if (deps.objectStore) {
+      const metadata = res.locals.user.role === "admin"
+        ? await deps.adminImageObject({ app: req.params.app, hash: req.params.hash })
+        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: req.params.hash });
+      if (metadata) {
+        try {
+          await sendStoredObject(deps.objectStore, metadata, res);
+        } catch {
+          res.status(503).json({ error: "media storage unavailable" });
+        }
+        return;
+      }
+      const legacy = await deps.legacyImageReference({
+        app: req.params.app,
+        hash: req.params.hash,
+        publishedOnly: res.locals.user.role !== "admin",
+      });
+      if (!legacy) {
+        res.status(404).json({ error: "image not found" });
         return;
       }
     }

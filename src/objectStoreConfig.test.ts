@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
+import { LocalObjectStore } from "./objectStore.ts";
+import { S3ObjectStore } from "./s3ObjectStore.ts";
 
 test("parses a local development object store", () => {
   assert.deepEqual(objectStoreConfigFromEnvironment({
@@ -75,4 +77,12 @@ test("rejects unknown backends and unsafe prefixes", () => {
     NODE_ENV: "development", OBJECT_STORE_BACKEND: "s3", OBJECT_STORE_S3_BUCKET: "astryx",
     OBJECT_STORE_S3_REGION: "us-east-1", OBJECT_STORE_S3_PREFIX: "../escape",
   }), /prefix/i);
+});
+
+test("constructs the configured local or S3 adapter without exposing configuration", () => {
+  assert.ok(createObjectStore({ backend: "local", root: "/tmp/astryx-objects" }) instanceof LocalObjectStore);
+  assert.ok(createObjectStore({
+    backend: "s3", bucket: "astryx", region: "us-east-1", prefix: "catalog",
+    forcePathStyle: false,
+  }) instanceof S3ObjectStore);
 });

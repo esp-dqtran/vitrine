@@ -5,11 +5,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Server } from "node:http";
 import { createApiApp } from "./app.ts";
+import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
 const publishedVersion = { id: 1, app: "linear", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
+const previewMetadata: ObjectMetadata = {
+  key: `images/7/${"a".repeat(64)}.webp`, sha256: "b".repeat(64), byteSize: 5,
+  contentType: "image/webp", accessClass: "public-preview",
+};
+const localObjectStore: ObjectStore = {
+  put: async () => { throw new Error("unused"); },
+  head: async () => previewMetadata,
+  get: async () => ({ metadata: previewMetadata, body: Buffer.from("image") }),
+  signedGetUrl: async () => undefined,
+  async *list() { yield previewMetadata; },
+  delete: async () => false,
+};
 const catalogImages = [
   {
     id: 7,
@@ -339,7 +352,10 @@ test("binds signed design-system media to the entitled user and expiry", async (
   const signedSnapshot = {
     app: "linear",
     generatedAt: "2026-07-10T00:00:00.000Z",
-    tokens: [{ id: "color", kind: "color" as const, name: "Color", value: "#000", role: "text", evidence: [7] }],
+    tokens: [
+      { id: "color", kind: "color" as const, name: "Color", value: "#000", role: "text", evidence: [7] },
+      { id: "invalid", kind: "color" as const, name: "Invalid", value: "#fff", role: "background", evidence: [8] },
+    ],
     components: [],
     flows: [],
   };
@@ -352,7 +368,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
     getDesignSystem: async () => signedSnapshot,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: signedSnapshot, flows: [] }),
     appImages: async () => catalogImages,
-    versionImages: async () => catalogImages,
+    versionImages: async () => [...catalogImages, { ...catalogImages[0], id: 8, image_url: "javascript:alert(1)" }],
     getAppFlows: async () => [],
   }));
   t.after(async () => {
@@ -364,6 +380,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
     headers: { cookie: "astryx_session=owner" },
   })).json();
   const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
+  assert.equal(snapshot.tokens[1].evidence[0].imageUrl, "");
   assert.match(mediaUrl, /\?expires=1300&token=/);
   assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
     headers: { cookie: "astryx_session=owner" },
@@ -389,7 +406,10 @@ test("keeps health public and rejects private data without a session", async (t)
 });
 
 test("serves public catalog previews without exposing the admin gallery", async (t) => {
-  const { base, server } = await serve(createApiApp({ allImages: async () => catalogImages }));
+  const { base, server } = await serve(createApiApp({
+    allImages: async () => catalogImages,
+    publishedPreviewImages: async () => [{ ...catalogImages[0], preview_rank: 1 }],
+  }));
   t.after(() => close(server));
   const response = await fetch(`${base}/catalog`);
   assert.equal(response.status, 200);
@@ -399,22 +419,46 @@ test("serves public catalog previews without exposing the admin gallery", async 
 });
 
 test("serves only the first three public preview images", async (t) => {
-  const dataDir = mkdtempSync(join(tmpdir(), "astryx-preview-"));
-  mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
-  writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
-  const appImages = async () => [
-    ...catalogImages,
-    { ...catalogImages[0], id: 8, image_url: "mobbin-bulk:1111111111111111" },
-    { ...catalogImages[0], id: 9, image_url: "mobbin-bulk:2222222222222222" },
-    { ...catalogImages[0], id: 10, image_url: "mobbin-bulk:3333333333333333" },
-  ];
-  const { base, server } = await serve(createApiApp({ dataDir, appImages }));
-  t.after(async () => {
-    await close(server);
-    rmSync(dataDir, { recursive: true, force: true });
+  const ranks: number[] = [];
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    publishedPreviewObject: async ({ rank }) => {
+      ranks.push(rank);
+      return rank === 1 ? previewMetadata : undefined;
+    },
+  }));
+  t.after(() => close(server));
+  const preview = await fetch(`${base}/preview-media/linear/1`);
+  assert.equal(preview.status, 200);
+  assert.equal(preview.headers.get("content-type"), "image/webp");
+  assert.equal(preview.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(await preview.text(), "image");
+  assert.equal((await fetch(`${base}/preview-media/linear/2`)).status, 404);
+  assert.equal((await fetch(`${base}/preview-media/linear/4`)).status, 400);
+  assert.deepEqual(ranks, [1, 2]);
+});
+
+test("redirects authorized object-backed media to a short-lived signed URL", async (t) => {
+  const signedStore: ObjectStore = {
+    ...localObjectStore,
+    signedGetUrl: async (_key, expires) => {
+      assert.equal(expires, 60);
+      return "https://objects.example/signed";
+    },
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    objectStore: signedStore,
+    adminImageObject: async () => ({ ...previewMetadata, accessClass: "protected" }),
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/media/linear/0123456789abcdef`, {
+    headers: adminCookie,
+    redirect: "manual",
   });
-  assert.equal((await fetch(`${base}/preview-media/linear/0123456789abcdef`)).status, 200);
-  assert.equal((await fetch(`${base}/preview-media/linear/3333333333333333`)).status, 404);
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "https://objects.example/signed");
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
 });
 
 test("gates customer app detail and unlocks a Free app", async (t) => {

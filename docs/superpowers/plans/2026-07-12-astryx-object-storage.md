@@ -282,11 +282,11 @@ git commit -m "feat: add S3-compatible object storage"
 - Modify: `services/api/src/app.test.ts`
 - Modify: `services/api/src/index.ts`
 
-- [ ] **Step 1: Write failing ownership tests**
+- [x] **Step 1: Write failing ownership tests**
 
 Prove: metadata and an image association commit together; same key/different checksum is rejected; one app cannot resolve another app's object; a normal customer cannot resolve an unpublished version; preview reads require an `app_preview_images` row on the latest published version; at most ranks 1–3 are returned; legacy rows fall back only while `object_key IS NULL`.
 
-- [ ] **Step 2: Implement focused database functions**
+- [x] **Step 2: Implement focused database functions**
 
 ```typescript
 export async function attachImageObject(client: pg.PoolClient, input: {
@@ -304,15 +304,15 @@ export async function publishedPreviewObject(input: {
 
 Every read joins `stored_objects -> images -> platforms -> apps`; protected customer reads additionally join entitlement and published-version membership. Never accept an object key from the route.
 
-- [ ] **Step 3: Keep the legacy parser narrow**
+- [x] **Step 3: Keep the legacy parser narrow**
 
 Replace the single regex helper with a typed parser returning `{ kind: "legacy"; hash } | { kind: "external"; url }`. Object-backed reads resolve by database ownership first; `findBulkImage()` is only the nullable-object compatibility fallback.
 
-- [ ] **Step 4: Update media routes**
+- [x] **Step 4: Update media routes**
 
 After existing session/entitlement/token checks, resolve metadata through the database. For S3, respond `302` to a 60-second signed URL with `Cache-Control: private, no-store`; for local storage, send the verified bytes with its stored MIME, `X-Content-Type-Options: nosniff`, and no inline user-controlled filename. Public preview uses only `publishedPreviewObject()` and never the legacy directory scan.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 ```bash
 node --experimental-strip-types --test src/objectStoreDb.test.ts src/imageSource.test.ts services/api/src/app.test.ts

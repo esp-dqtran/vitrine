@@ -48,13 +48,19 @@ test("builds paginated public previews without source image fields", () => {
     })),
   ).flat();
 
-  const first = buildCatalogPage(images);
+  const previews = images.slice(0, 3).map((image, index) => ({ ...image, preview_rank: index + 1 }));
+  const first = buildCatalogPage(images, undefined, 24, previews);
   assert.equal(first.apps.length, 24);
   assert.equal(first.apps[0].previewScreens.length, 3);
+  assert.deepEqual(first.apps[0].previewScreens.map(({ url }) => url), [
+    "/api/preview-media/catalog-01/1",
+    "/api/preview-media/catalog-01/2",
+    "/api/preview-media/catalog-01/3",
+  ]);
   assert.ok(first.nextCursor);
   assert.doesNotMatch(JSON.stringify(first), /image_url|mobbin-bulk/);
 
-  const second = buildCatalogPage(images, first.nextCursor ?? undefined);
+  const second = buildCatalogPage(images, first.nextCursor ?? undefined, 24, previews);
   assert.equal(second.apps.length, 6);
   assert.equal(second.nextCursor, null);
   assert.notEqual(second.apps[0].id, first.apps[0].id);

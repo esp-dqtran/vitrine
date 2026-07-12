@@ -1,4 +1,8 @@
 import { isAbsolute, resolve } from "node:path";
+import { S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { LocalObjectStore, type ObjectStore } from "./objectStore.ts";
+import { S3ObjectStore } from "./s3ObjectStore.ts";
 
 export type ObjectStoreConfig =
   | { backend: "local"; root: string }
@@ -103,4 +107,22 @@ export function objectStoreConfigFromEnvironment(
     forcePathStyle,
     ...(accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : {}),
   };
+}
+
+export function createObjectStore(config: ObjectStoreConfig): ObjectStore {
+  if (config.backend === "local") return new LocalObjectStore(config.root);
+  const client = new S3Client({
+    region: config.region,
+    ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+    forcePathStyle: config.forcePathStyle,
+    ...(config.accessKeyId && config.secretAccessKey
+      ? { credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey } }
+      : {}),
+  });
+  return new S3ObjectStore({
+    bucket: config.bucket,
+    prefix: config.prefix,
+    send: (command) => client.send(command as never),
+    sign: (command, expiresSeconds) => getSignedUrl(client, command, { expiresIn: expiresSeconds }),
+  });
 }
