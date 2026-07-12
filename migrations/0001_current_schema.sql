@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS images (
   description TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- Catches up databases created by an earlier revision that had both of these.
-ALTER TABLE images DROP COLUMN IF EXISTS local_path;
+-- Catches up databases created by an earlier revision without deleting legacy
+-- path metadata. Durable-storage migration owns any later removal.
 ALTER TABLE images DROP CONSTRAINT IF EXISTS images_image_url_key;
 ALTER TABLE apps ADD COLUMN IF NOT EXISTS icon_url TEXT;
 ALTER TABLE apps ADD COLUMN IF NOT EXISTS category TEXT;
@@ -392,6 +392,12 @@ INSERT INTO version_images (version_id, image_id, captured_at, source_url)
   JOIN platforms p ON p.app_id = av.app_id
   JOIN images i ON i.platform_id = p.id
   WHERE av.version_number = 1
+    AND NOT EXISTS (
+      SELECT 1
+      FROM version_images existing_vi
+      JOIN app_versions existing_av ON existing_av.id = existing_vi.version_id
+      WHERE existing_av.app_id = av.app_id
+    )
   ON CONFLICT DO NOTHING;
 INSERT INTO design_system_versions (version_id, snapshot)
   SELECT av.id, ds.snapshot FROM app_versions av JOIN design_systems ds ON ds.app_id = av.app_id
@@ -422,4 +428,3 @@ CREATE TABLE IF NOT EXISTS collection_items (
 );
 ALTER TABLE collection_items DROP CONSTRAINT IF EXISTS collection_items_kind_check;
 ALTER TABLE collection_items ADD CONSTRAINT collection_items_kind_check CHECK (kind IN ('app', 'screen', 'component', 'token', 'flow', 'pattern'));
-

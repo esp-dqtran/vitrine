@@ -5,6 +5,10 @@ import { join } from "node:path";
 import { test } from "node:test";
 import pg from "pg";
 import {
+  assertGeneratedMigrationDatabaseName,
+  createMigrationVerificationConfig,
+} from "../scripts/verify-migrations.ts";
+import {
   applyMigrations,
   assertMigrationsCurrent,
   discoverMigrations,
@@ -33,6 +37,33 @@ async function ensureMigrationTestDatabase(): Promise<string | undefined> {
 }
 
 const postgresSkipReason = await ensureMigrationTestDatabase();
+
+test("migration verification requires explicit disposable-database opt-in", () => {
+  assert.throws(
+    () => createMigrationVerificationConfig({}),
+    /MIGRATION_TEST_DATABASE_URL is required/,
+  );
+  assert.throws(
+    () => createMigrationVerificationConfig({
+      MIGRATION_TEST_DATABASE_URL: ADMIN_URL,
+    }),
+    /MIGRATION_TEST_ALLOW_DROP=1 is required/,
+  );
+
+  const config = createMigrationVerificationConfig({
+    MIGRATION_TEST_DATABASE_URL: ADMIN_URL,
+    MIGRATION_TEST_ALLOW_DROP: "1",
+  }, ["a".repeat(32), "b".repeat(32)]);
+
+  assert.deepEqual(config.databaseNames, {
+    empty: `astryx_migration_test_${"a".repeat(32)}`,
+    upgrade: `astryx_migration_test_${"b".repeat(32)}`,
+  });
+  assert.doesNotThrow(() => assertGeneratedMigrationDatabaseName(config.databaseNames.empty));
+  for (const unsafe of ["astryx", "astryx_migration_test_", "astryx_migration_test_bad-name", "postgres"]) {
+    assert.throws(() => assertGeneratedMigrationDatabaseName(unsafe), /refusing unsafe database name/i);
+  }
+});
 
 async function temporaryDirectory(t: { after(fn: () => Promise<void>): void }): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), "astryx-migrations-"));
@@ -213,4 +244,72 @@ test("ordinary database queries never bootstrap or mutate schema", async () => {
   }
   assert.match(migration, /images_platform_image_url_uidx/);
   assert.match(migration, /collection_items_kind_check/);
+});
+
+test("baseline migration preserves existing published and draft image membership", {
+  skip: postgresSkipReason,
+}, async (t) => {
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP SCHEMA public CASCADE");
+  await pool.query("CREATE SCHEMA public");
+
+  const [baseline] = await discoverMigrations();
+  await pool.query(baseline.sql);
+  await pool.query(await readFile(
+    new URL("../tests/fixtures/current-schema-upgrade.sql", import.meta.url),
+    "utf8",
+  ));
+
+  await applyMigrations(pool);
+
+  assert.deepEqual((await pool.query(
+    `SELECT version_id, array_agg(image_id ORDER BY image_id) AS image_ids
+     FROM version_images GROUP BY version_id ORDER BY version_id`,
+  )).rows, [
+    { version_id: 501, image_ids: [301] },
+    { version_id: 502, image_ids: [301, 302] },
+  ]);
+});
+
+test("baseline migration consolidates legacy duplicate image references", {
+  skip: postgresSkipReason,
+}, async (t) => {
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP SCHEMA public CASCADE");
+  await pool.query("CREATE SCHEMA public");
+
+  const [baseline] = await discoverMigrations();
+  await pool.query(baseline.sql);
+  await pool.query(await readFile(
+    new URL("../tests/fixtures/current-schema-upgrade.sql", import.meta.url),
+    "utf8",
+  ));
+  await pool.query("DROP INDEX images_platform_image_url_uidx");
+  await pool.query(
+    `INSERT INTO images
+       (id, platform_id, image_url, description, created_at, analysis, kind)
+     SELECT 303, platform_id, image_url, 'Duplicate draft capture', created_at,
+       analysis, kind FROM images WHERE id = 302`,
+  );
+  await pool.query(
+    `INSERT INTO version_images
+       (version_id, image_id, captured_at, source_url, viewport_width, viewport_height, state_context)
+     VALUES (502, 303, '2025-01-04T00:02:00Z', 'https://fixture.example/draft',
+       1280, 800, 'legacy-duplicate')`,
+  );
+  await pool.query("UPDATE crawl_evidence SET image_id = 303 WHERE id = 1301");
+
+  await applyMigrations(pool);
+
+  assert.deepEqual((await pool.query(
+    "SELECT id FROM images WHERE image_url = 'capture:2222222222222222' ORDER BY id",
+  )).rows, [{ id: 302 }]);
+  assert.deepEqual((await pool.query(
+    "SELECT image_id FROM crawl_evidence WHERE id = 1301",
+  )).rows, [{ image_id: 302 }]);
+  assert.deepEqual((await pool.query(
+    "SELECT image_id FROM version_images WHERE version_id = 502 ORDER BY image_id",
+  )).rows, [{ image_id: 301 }, { image_id: 302 }]);
 });

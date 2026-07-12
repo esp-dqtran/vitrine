@@ -553,8 +553,10 @@ git commit -m "feat: gate services on database migrations"
 - Create: `tests/fixtures/current-schema-upgrade.sql`
 - Create: `scripts/verify-migrations.ts`
 - Modify: `src/migrations.test.ts`
+- Modify: `migrations/0001_current_schema.sql`
+- Modify: `tsconfig.json`
 
-- [ ] **Step 1: Write a sanitized unversioned fixture**
+- [x] **Step 1: Write a sanitized unversioned fixture**
 
 The verifier first executes `migrations/0001_current_schema.sql` directly on the upgrade database without creating the migration ledger. That produces the exact unversioned current schema. It then executes a data-only fixture with synthetic rows for one app, both image-reference kinds, a published version, a draft, snapshots, version-image links, a user/session, subscription, job, collection, and crawler plan/run/evidence. Use deterministic IDs and fake hashes/Stripe values. The migration runner subsequently applies version 1 against that populated but unversioned schema, proving the baseline SQL is idempotent and data-preserving rather than merely accepting its own ledger.
 
@@ -582,11 +584,11 @@ INSERT INTO version_images (version_id, image_id, source_url) VALUES
 
 Complete the fixture with valid rows for every protected relationship named above and reset each affected sequence with `setval(..., max(id), true)`.
 
-- [ ] **Step 2: Implement disposable database safety**
+- [x] **Step 2: Implement disposable database safety**
 
 The verifier requires `MIGRATION_TEST_DATABASE_URL`, `MIGRATION_TEST_ALLOW_DROP=1`, and generated database names beginning with `astryx_migration_test_`. It connects to the URL's maintenance database, creates two temporary databases, and drops only those generated names in `finally`.
 
-- [ ] **Step 3: Verify both scenarios**
+- [x] **Step 3: Verify both scenarios**
 
 For empty install, apply migrations, assert schema/ledger, apply again, and prove no-op. For upgrade, load the fixture, capture stable IDs/counts/JSON hashes, apply migrations, and compare them afterward. Verify all foreign keys and sequence next values.
 
@@ -604,7 +606,7 @@ interface MigrationVerificationResult {
 }
 ```
 
-- [ ] **Step 4: Run the verifier**
+- [x] **Step 4: Run the verifier**
 
 Run:
 
@@ -615,10 +617,10 @@ MIGRATION_TEST_ALLOW_DROP=1 npm run db:verify
 
 Expected: exit 0; both scenarios report migration head 1 and `rerunApplied: 0`.
 
-- [ ] **Step 5: Commit verification fixtures**
+- [x] **Step 5: Commit verification fixtures**
 
 ```bash
-git add tests/fixtures/current-schema-upgrade.sql scripts/verify-migrations.ts src/migrations.test.ts
+git add tests/fixtures/current-schema-upgrade.sql scripts/verify-migrations.ts src/migrations.test.ts migrations/0001_current_schema.sql tsconfig.json
 git commit -m "test: verify empty and upgrade migrations"
 ```
 

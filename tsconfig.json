@@ -10,5 +10,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "services", ".storybook", "vite.config.ts"]
+  "include": ["src", "services", "scripts", ".storybook", "vite.config.ts"]
 }
