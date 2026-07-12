@@ -297,6 +297,19 @@ test("object storage migration preserves every legacy image reference", {
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM app_preview_images")).rows[0].count, 0);
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM media_migration_state")).rows[0].count, 0);
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM object_gc_marks")).rows[0].count, 0);
+  await pool.query(
+    `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+     VALUES ('images/301/fixture.png', $1, 7, 'image/png', 'protected')`,
+    ["a".repeat(64)],
+  );
+  await assert.rejects(
+    pool.query(
+      `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+       VALUES ('images/../escape.png', $1, 7, 'image/png', 'protected')`,
+      ["b".repeat(64)],
+    ),
+    /stored_objects_object_key_check/,
+  );
   assert.deepEqual((await applyMigrations(pool)).appliedVersions, []);
 });
 

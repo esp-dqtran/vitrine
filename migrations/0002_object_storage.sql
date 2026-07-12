@@ -1,5 +1,11 @@
 CREATE TABLE IF NOT EXISTS stored_objects (
-  object_key TEXT PRIMARY KEY CHECK (object_key ~ '^[a-z0-9][a-z0-9/_=.@-]{0,1023}$'),
+  object_key TEXT PRIMARY KEY CHECK (
+    length(object_key) BETWEEN 1 AND 1024
+    AND object_key ~ '^[a-z0-9][a-z0-9/_=.@-]*$'
+    AND right(object_key, 1) <> '/'
+    AND position('//' IN object_key) = 0
+    AND object_key !~ '(^|/)\.{1,2}(/|$)'
+  ),
   sha256 TEXT NOT NULL CHECK (sha256 ~ '^[0-9a-f]{64}$'),
   byte_size BIGINT NOT NULL CHECK (byte_size > 0),
   content_type TEXT NOT NULL CHECK (content_type IN (
