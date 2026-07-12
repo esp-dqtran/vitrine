@@ -3,45 +3,98 @@ import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { Icon, Spinner } from '@astryxdesign/core';
 import type { App } from '../types';
+import type { ResearchCollection } from '../../db';
+import type { AppVersion } from '../../db';
 import { useDesignSystem } from '../useDesignSystem';
 import { ComponentsPanel } from './ComponentsPanel';
 import { FlowsPanel } from './FlowsPanel';
 import { HeroButton } from './HeroButton';
 import { Lightbox } from './Lightbox';
 import { ScreenGridCard } from './ScreenGridCard';
+import { CollectionPicker } from './CollectionPicker';
+import { ExportPanel } from './ExportPanel';
+import { VersionPanel } from './VersionPanel';
+import { OverviewPanel } from './OverviewPanel';
+import { CuratorReviewPanel } from './CuratorReviewPanel';
+import { listAppVersions } from '../researchApi';
 
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
 
-type Section = 'screens' | 'elements' | 'flows' | 'design-system';
+type Section = 'overview' | 'screens' | 'elements' | 'flows' | 'design-system' | 'export' | 'review';
 type LightboxState = { index: number } | null;
 
 interface ScreenDetailProps {
   app: App;
   onBack: () => void;
+  collections: ResearchCollection[];
+  onCollectionsChange: (collections: ResearchCollection[]) => void;
+  role: 'admin' | 'user';
 }
 
-export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
-  const screens = app.screens;
+export function ScreenDetail({ app, onBack, collections, onCollectionsChange, role }: ScreenDetailProps) {
+  const [versions, setVersions] = useState<AppVersion[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<number>();
+  const [versionScreens, setVersionScreens] = useState<App['screens'] | null>(null);
+  const screens = versionScreens ?? app.screens;
   const count = screens.length;
-  const { snapshot, status: designSystemStatus } = useDesignSystem(app.id);
+  const { snapshot, status: designSystemStatus } = useDesignSystem(app.id, selectedVersion);
   const components = snapshot?.components ?? [];
   const flows = snapshot?.flows ?? [];
 
-  const [section, setSection] = useState<Section>('screens');
+  const [section, setSection] = useState<Section>('overview');
   const [typeFilter, setTypeFilter] = useState('All');
+  const [productFilter, setProductFilter] = useState('All');
+  const [themeFilter, setThemeFilter] = useState('All');
+  const [viewportFilter, setViewportFilter] = useState('All');
+  const [layoutFilter, setLayoutFilter] = useState('All');
+  const [componentFilter, setComponentFilter] = useState('All');
+  const [stateFilter, setStateFilter] = useState('All');
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+
+  const selectVersion = async (version: number) => {
+    setSelectedVersion(version);
+    const response = await fetch(`/api/apps/${app.id}?version=${version}&limit=48`);
+    if (response.ok) {
+      const data = await response.json() as { screens: App['screens'] };
+      setVersionScreens(data.screens);
+    }
+  };
+
+  useEffect(() => {
+    listAppVersions(app.id).then((items) => {
+      setVersions(items);
+      const latest = items.find(({ status }) => status === 'published') ?? items[0];
+      if (latest) void selectVersion(latest.version_number);
+    }).catch(() => setVersions([]));
+  }, [app.id]);
 
   const types = Array.from(new Set(screens.map((s) => s.type)));
   const typeCounts = (t: string) => (t === 'All' ? count : screens.filter((s) => s.type === t).length);
-  const filtered = typeFilter === 'All' ? screens : screens.filter((s) => s.type === typeFilter);
+  const products = [...new Set(screens.map((screen) => screen.productArea))];
+  const themes = [...new Set(screens.map((screen) => screen.theme))];
+  const viewports = [...new Set(screens.map((screen) => screen.viewport ?? 'unknown'))];
+  const layouts = [...new Set(screens.flatMap((screen) => screen.layoutPatterns ?? []))];
+  const screenComponents = [...new Set(screens.flatMap((screen) => screen.componentNames ?? []))];
+  const states = [...new Set(screens.flatMap((screen) => screen.visibleStates))];
+  const filtered = screens.filter((screen) =>
+    (typeFilter === 'All' || screen.type === typeFilter)
+    && (productFilter === 'All' || screen.productArea === productFilter)
+    && (themeFilter === 'All' || screen.theme === themeFilter)
+    && (viewportFilter === 'All' || (screen.viewport ?? 'unknown') === viewportFilter)
+    && (layoutFilter === 'All' || screen.layoutPatterns?.includes(layoutFilter))
+    && (componentFilter === 'All' || screen.componentNames?.includes(componentFilter))
+    && (stateFilter === 'All' || screen.visibleStates.includes(stateFilter)));
 
   const tabRefs = useRef<Record<Section, HTMLButtonElement | null>>({
+    overview: null,
     screens: null,
     elements: null,
     flows: null,
     'design-system': null,
+    export: null,
+    review: null,
   });
   const indicatorRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -156,9 +209,16 @@ export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
               </div>
             ))}
           </div>
+          <VersionPanel app={app.id} role={role} versions={versions} selectedVersion={selectedVersion} onVersionsChange={setVersions} onSelect={(version) => void selectVersion(version)} />
           <div style={{ display: 'flex', gap: 10, marginBottom: 28, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .15s both' }}>
-            <HeroButton primary>Save</HeroButton>
-            <HeroButton>Visit site</HeroButton>
+            <CollectionPicker
+              dark
+              reference={{ kind: 'app', app: app.id, referenceId: app.id, title: `${app.app} design system` }}
+              collections={collections}
+              onCollectionsChange={onCollectionsChange}
+            />
+            <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton>
+            {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}
           </div>
           <div
             style={{
@@ -172,10 +232,13 @@ export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
           >
             {(
               [
+                ['overview', 'Overview'],
                 ['screens', 'Screens'],
                 ['elements', 'UI Elements'],
                 ['flows', 'Flows'],
                 ['design-system', 'Design System'],
+                ['export', 'Export'],
+                ...(role === 'admin' ? [['review', 'Review'] as const] : []),
               ] as const
             ).map(([id, label]) => (
               <button
@@ -208,8 +271,14 @@ export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
             />
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: 13, color: '#8b8b93', paddingBottom: 14 }}>
-              {section === 'design-system'
+              {section === 'overview'
+                ? 'Observed system summary'
+                : section === 'design-system'
                 ? 'Design system document'
+                : section === 'export'
+                  ? 'Editable observed assets'
+                : section === 'review'
+                  ? 'Curator controls'
                 : section === 'screens'
                 ? `Showing ${filtered.length}${app.totalScreens > count ? ` of ${app.totalScreens}` : ''} screens`
                 : section === 'elements'
@@ -263,6 +332,24 @@ export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
           ) : (
             <div style={{ height: 16 }} />
           )}
+          {section === 'screens' && (
+            <div style={{ display: 'flex', gap: 8, padding: '0 0 16px', flexWrap: 'wrap' }}>
+              {([
+                ['Product area', productFilter, setProductFilter, products],
+                ['Theme', themeFilter, setThemeFilter, themes],
+                ['Viewport', viewportFilter, setViewportFilter, viewports],
+                ['Layout', layoutFilter, setLayoutFilter, layouts],
+                ['Component', componentFilter, setComponentFilter, screenComponents],
+                ['State', stateFilter, setStateFilter, states],
+              ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? (
+                <label key={label} style={{ display: 'grid', gap: 4, color: '#8b8b93', fontSize: 10.5 }}>{label}
+                  <select value={value} onChange={(event) => change(event.target.value)} style={{ height: 32, border: '1px solid rgba(255,255,255,.16)', borderRadius: 8, padding: '0 8px', background: '#202024', color: '#d4d4d8', font: 'inherit', fontSize: 11.5 }}>
+                    <option>All</option>{options.map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
+              ) : null)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -275,15 +362,21 @@ export function ScreenDetail({ app, onBack }: ScreenDetailProps) {
             padding:
               section === 'screens'
                 ? '32px 40px 72px'
-                : section === 'elements' || section === 'design-system'
+                : section === 'overview' || section === 'elements' || section === 'design-system' || section === 'export' || section === 'review'
                   ? '8px 40px 80px'
                   : '32px 40px 80px',
           }}
         >
-          {section === 'design-system' ? (
+          {section === 'overview' ? (
+            <OverviewPanel snapshot={snapshot} screens={screens} />
+          ) : section === 'review' ? (
+            <CuratorReviewPanel app={app.id} snapshot={snapshot} />
+          ) : section === 'design-system' ? (
             <Suspense fallback={<Spinner size="lg" />}>
               <DesignSystemPanel snapshot={snapshot} status={designSystemStatus} />
             </Suspense>
+          ) : section === 'export' ? (
+            <ExportPanel app={app.id} snapshot={snapshot} screens={screens} />
           ) : section === 'flows' ? (
             <FlowsPanel flows={flows} />
           ) : section === 'screens' ? (

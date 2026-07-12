@@ -7,6 +7,14 @@ export interface Screen {
   platform: string;
   description: string | null;
   url: string;
+  sourceUrl?: string | null;
+  viewport?: string;
+  layoutPatterns?: string[];
+  componentNames?: string[];
+  visibleText?: string[];
+  capturedAt?: string | null;
+  stateContext?: string | null;
+  confidence?: number | null;
 }
 
 export interface App {
@@ -16,6 +24,8 @@ export interface App {
   accent: string;
   totalScreens: number;
   screens: Screen[];
+  websiteUrl?: string | null;
+  iconUrl?: string | null;
 }
 
 export interface ElementItem {

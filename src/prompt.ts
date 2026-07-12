@@ -8,10 +8,18 @@ Return ONLY valid JSON with this exact shape:
   "productArea": "short product area such as Authentication, Billing, Projects, Account, or Navigation",
   "theme": "light|dark|mixed",
   "visibleStates": ["only states visibly present, such as loading, empty, error, selected navigation, disabled button"],
-  "componentNames": ["deduplicated reusable components visibly present"]
+  "componentNames": ["deduplicated reusable components visibly present"],
+  "visibleText": ["important visible labels and content, copied exactly"],
+  "layoutPatterns": ["observed layout regions or patterns such as fixed sidebar, centered form, split pane, dense table"],
+  "icons": ["visibly identifiable icon names or treatments"],
+  "imagery": ["observed illustration, photography, avatar, thumbnail, or decorative-image treatments"],
+  "contentPatterns": ["observed writing or information patterns such as helper text, metadata row, confirmation copy"],
+  "interactionPatterns": ["only interaction affordances visibly evidenced, such as tabs, disclosure, pagination, bulk selection"],
+  "responsiveViewport": "desktop|tablet|mobile|unknown",
+  "confidence": 0.0
 }
 
-Be concrete and exhaustive in description. Do not infer hidden screens, missing states, hover behavior, flow order, or components that are not visible.`;
+Confidence is from 0 to 1 and reflects how clearly the screenshot supports the structured observations. Be concrete and exhaustive in description. Do not infer hidden screens, missing states, hover behavior, flow order, or components that are not visible.`;
 
 export const SYNTHESIS_PROMPT = `Build one evidence-backed observed design-system snapshot from the supplied screen descriptions.
 
@@ -23,19 +31,47 @@ Return ONLY valid JSON with this exact top-level shape:
     "name": "human-readable name",
     "value": "observed value or compact specification",
     "role": "observed usage role",
-    "evidence": [123]
+    "evidence": [123],
+    "confidence": 0.0,
+    "responsiveViewports": ["desktop"]
   }],
   "components": [{
     "id": "stable-kebab-case-id",
     "name": "human-readable name",
     "category": "Actions|Inputs|Navigation|Data display|Feedback|Layout|Other",
     "description": "observed anatomy and purpose",
+    "anatomy": ["visible named parts"],
+    "associatedTokenIds": ["ids from tokens above"],
+    "responsiveBehavior": ["only differences visibly supported by multiple viewports"],
     "variants": [{
       "id": "stable-kebab-case-id",
       "name": "observed variant name",
       "description": "observed visual and behavioral properties",
-      "evidence": [123]
+      "evidence": [123],
+      "observedProperties": ["properties that distinguish this variant"],
+      "observedStates": ["only states visible in evidence"],
+      "responsiveViewports": ["desktop"],
+      "confidence": 0.0
+      ,"reconstruction": {
+        "layoutMode": "HORIZONTAL|VERTICAL",
+        "width": 0,
+        "height": 0,
+        "padding": 0,
+        "gap": 0,
+        "fill": "observed hex color when measurable",
+        "stroke": "observed hex color when measurable",
+        "radius": 0,
+        "visibleText": "representative visible text from evidence"
+      }
     }]
+  }],
+  "rules": [{
+    "id": "stable-kebab-case-id",
+    "kind": "layout|icon|imagery|responsive|content|interaction",
+    "name": "observed rule name",
+    "description": "observed pattern without extrapolation",
+    "evidence": [123],
+    "confidence": 0.0
   }],
   "flows": []
 }

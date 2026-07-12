@@ -74,7 +74,7 @@ export function SearchBox({ apps, value, onChange }: SearchBoxProps) {
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
-          placeholder="Search apps…"
+          placeholder="Search screens, flows, components, tokens…"
           style={{
             width: '100%',
             height: 38,

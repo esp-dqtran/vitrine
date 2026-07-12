@@ -4,7 +4,7 @@ import { PlaceholderImage } from './PlaceholderImage';
 interface LightboxItem {
   /** Real image URL, when the item comes from a crawl. */
   url?: string;
-  /** picsum.photos placeholder seed, for mock content with no real image. */
+  /** Optional stable key for a neutral unavailable-preview state. */
   seed?: string;
   type: string;
   caption: string;

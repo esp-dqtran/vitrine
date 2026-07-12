@@ -8,6 +8,14 @@ export interface ScreenAnalysis {
   theme: ScreenTheme;
   visibleStates: string[];
   componentNames: string[];
+  visibleText?: string[];
+  layoutPatterns?: string[];
+  icons?: string[];
+  imagery?: string[];
+  contentPatterns?: string[];
+  interactionPatterns?: string[];
+  responsiveViewport?: "desktop" | "tablet" | "mobile" | "unknown";
+  confidence?: number;
 }
 
 function requiredText(value: unknown, field: string): string {
@@ -37,6 +45,10 @@ export function parseScreenAnalysis(raw: string): ScreenAnalysis {
 
   const theme = requiredText(value.theme, "theme") as ScreenTheme;
   if (!["light", "dark", "mixed"].includes(theme)) throw new Error(`Unsupported screen theme: ${theme}`);
+  const viewport = typeof value.responsiveViewport === "string" ? value.responsiveViewport : "unknown";
+  if (!["desktop", "tablet", "mobile", "unknown"].includes(viewport)) throw new Error(`Unsupported responsive viewport: ${viewport}`);
+  const confidence = typeof value.confidence === "number" ? value.confidence : 0.5;
+  if (confidence < 0 || confidence > 1) throw new Error("confidence must be between 0 and 1");
   return {
     description: requiredText(value.description, "description"),
     purpose: requiredText(value.purpose, "purpose"),
@@ -45,5 +57,13 @@ export function parseScreenAnalysis(raw: string): ScreenAnalysis {
     theme,
     visibleStates: stringList(value.visibleStates),
     componentNames: stringList(value.componentNames),
+    visibleText: stringList(value.visibleText),
+    layoutPatterns: stringList(value.layoutPatterns),
+    icons: stringList(value.icons),
+    imagery: stringList(value.imagery),
+    contentPatterns: stringList(value.contentPatterns),
+    interactionPatterns: stringList(value.interactionPatterns),
+    responsiveViewport: viewport as ScreenAnalysis["responsiveViewport"],
+    confidence,
   };
 }

@@ -1,9 +1,9 @@
 import type { CrawledImage } from "./db.ts";
 import { bulkImageHash, publicImageUrl } from "./imageSource.ts";
 
-const APP_META: Record<string, { label: string; cat: string; accent: string }> = {
-  linear: { label: "Linear", cat: "Productivity", accent: "#5E6AD2" },
-  airbnb: { label: "Airbnb", cat: "Travel", accent: "#FF5A5F" },
+const APP_META: Record<string, { label: string; cat: string; accent: string; websiteUrl: string }> = {
+  linear: { label: "Linear", cat: "Productivity", accent: "#5E6AD2", websiteUrl: "https://linear.app" },
+  airbnb: { label: "Airbnb", cat: "Travel", accent: "#FF5A5F", websiteUrl: "https://airbnb.com" },
 };
 
 const FALLBACK_ACCENTS = ["#3b6ef6", "#0e9f6e", "#e0518a", "#f0763b", "#7c3aed", "#0891b2"];
@@ -18,6 +18,14 @@ export interface CatalogScreen {
   platform: string;
   description: string | null;
   url: string | null;
+  sourceUrl: string | null;
+  viewport: string;
+  layoutPatterns: string[];
+  componentNames: string[];
+  visibleText: string[];
+  capturedAt: string | null;
+  stateContext: string | null;
+  confidence: number | null;
 }
 
 export interface CatalogApp {
@@ -27,6 +35,8 @@ export interface CatalogApp {
   accent: string;
   totalScreens: number;
   previewScreens: CatalogScreen[];
+  websiteUrl: string | null;
+  iconUrl: string | null;
 }
 
 export interface CatalogPage {
@@ -41,6 +51,7 @@ function appMeta(app: string) {
     label: app[0].toUpperCase() + app.slice(1),
     cat: "Design inspiration",
     accent: FALLBACK_ACCENTS[hue % FALLBACK_ACCENTS.length],
+    websiteUrl: null,
   };
 }
 
@@ -59,6 +70,14 @@ function screen(
     visibleStates: image.analysis?.visibleStates ?? [],
     platform: image.platform,
     description: image.description,
+    sourceUrl: image.capture_url ?? null,
+    viewport: image.analysis?.responsiveViewport ?? (image.viewport_width ? `${image.viewport_width}×${image.viewport_height ?? '?'}` : 'unknown'),
+    layoutPatterns: image.analysis?.layoutPatterns ?? [],
+    componentNames: image.analysis?.componentNames ?? [],
+    visibleText: image.analysis?.visibleText ?? [],
+    capturedAt: image.captured_at ?? null,
+    stateContext: image.state_context ?? null,
+    confidence: image.analysis?.confidence ?? null,
     url: preview
       ? hash ? `/api/preview-media/${app}/${hash}` : null
       : imageUrl(app, image.image_url),
@@ -87,10 +106,12 @@ function catalogApp(app: string, images: CrawledImage[]): CatalogApp {
   return {
     id: app,
     app: meta.label,
-    cat: meta.cat,
+    cat: images[0]?.category ?? meta.cat,
     accent: meta.accent,
     totalScreens: images.length,
     previewScreens: images.slice(0, 3).map((image) => screen(app, image, true)),
+    websiteUrl: meta.websiteUrl,
+    iconUrl: images[0]?.icon_url ?? null,
   };
 }
 
@@ -137,9 +158,11 @@ export function buildGalleryApps(images: CrawledImage[]) {
     return {
       id: app,
       app: meta.label,
-      cat: meta.cat,
+      cat: appImages[0]?.category ?? meta.cat,
       accent: meta.accent,
       totalScreens: appImages.length,
+      websiteUrl: meta.websiteUrl,
+      iconUrl: appImages[0]?.icon_url ?? null,
       screens: appImages.slice(0, MAX_SCREENS_PER_APP).map((image) => ({
         id: image.id,
         type: image.analysis?.pageType ?? "Unclassified",
@@ -148,6 +171,14 @@ export function buildGalleryApps(images: CrawledImage[]) {
         visibleStates: image.analysis?.visibleStates ?? [],
         platform: image.platform,
         description: image.description,
+        sourceUrl: image.capture_url ?? null,
+        viewport: image.analysis?.responsiveViewport ?? (image.viewport_width ? `${image.viewport_width}×${image.viewport_height ?? '?'}` : 'unknown'),
+        layoutPatterns: image.analysis?.layoutPatterns ?? [],
+        componentNames: image.analysis?.componentNames ?? [],
+        visibleText: image.analysis?.visibleText ?? [],
+        capturedAt: image.captured_at ?? null,
+        stateContext: image.state_context ?? null,
+        confidence: image.analysis?.confidence ?? null,
         url: publicImageUrl(app, image.image_url),
       })),
     };

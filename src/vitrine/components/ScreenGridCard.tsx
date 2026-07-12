@@ -39,6 +39,9 @@ export function ScreenGridCard({ screen, accent, delay, onOpen }: ScreenGridCard
       <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, pointerEvents: 'none' }}>
         <Badge variant="neutral" label={screen.type} />
       </div>
+      <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
+        {[screen.productArea, screen.viewport, ...(screen.visibleStates ?? []).slice(0, 1)].filter(Boolean).map((label) => <span key={label} style={{ padding: '3px 7px', borderRadius: 999, background: 'rgba(24,24,27,.72)', color: '#fff', fontSize: 10.5, backdropFilter: 'blur(4px)' }}>{label}</span>)}
+      </div>
     </div>
   );
 }

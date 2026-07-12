@@ -39,7 +39,8 @@ export function parseFlowManifest(raw: string, allowedImageIds: ReadonlySet<numb
       }
       if (seenImageIds.has(imageId)) throw new Error(`Duplicate image id ${imageId} in flow ${id}`);
       seenImageIds.add(imageId);
-      return { label: text(step.label, `flows[${flowIndex}].steps[${stepIndex}].label`), evidence: [imageId] };
+      const label = text(step.label, `flows[${flowIndex}].steps[${stepIndex}].label`);
+      return { label, interaction: typeof step.interaction === "string" && step.interaction.trim() ? step.interaction.trim() : label, evidence: [imageId] };
     });
     const tags = Array.isArray(flow.tags)
       ? [...new Set(flow.tags.filter((tag): tag is string => typeof tag === "string" && !!tag.trim()).map((tag) => tag.trim()))]

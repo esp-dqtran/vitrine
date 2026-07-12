@@ -4,7 +4,7 @@ const PROGRESS_PATH = "data/progress.json";
 const CANCEL_PATH = "data/cancel-requested";
 
 export interface ProgressState {
-  stage: "crawl" | "caption" | "synthesize";
+  stage: "crawl" | "caption" | "synthesize" | "smart-crawl";
   app: string;
   done: number;
   total: number;

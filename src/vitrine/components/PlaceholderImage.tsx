@@ -3,19 +3,17 @@ import type { CSSProperties } from 'react';
 interface PlaceholderImageProps {
   /** Real image URL — pass this when there's crawled data (src/db.ts). */
   src?: string;
-  /**
-   * ponytail: picsum.photos placeholder for content with no real crawl behind
-   * it yet (the UI Elements library). Used only when `src` is omitted.
-   */
+  /** Stable label used only for neutral marketing/unavailable placeholders. */
   seed?: string;
   accent?: string;
   style?: CSSProperties;
 }
 
-export function PlaceholderImage({ src, seed, accent, style }: PlaceholderImageProps) {
+export function PlaceholderImage({ src, accent, style }: PlaceholderImageProps) {
+  if (!src) return <div aria-label="Captured preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))`, color: 'var(--color-text-disabled)', fontSize: 11.5, letterSpacing: '.03em', ...style }}><span>Observed preview unavailable</span></div>;
   return (
     <img
-      src={src ?? `https://picsum.photos/seed/${encodeURIComponent(seed ?? 'vitrine')}/640/400`}
+      src={src}
       alt=""
       loading="lazy"
       style={{

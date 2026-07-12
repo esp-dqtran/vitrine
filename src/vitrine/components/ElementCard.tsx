@@ -27,6 +27,9 @@ export function ElementCard({ component }: { component: DesignComponent<Evidence
         <div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
           {component.variants.length} observed variant{component.variants.length === 1 ? '' : 's'}
         </div>
+        {component.anatomy?.length ? <div style={{ marginTop: 7, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>Anatomy: {component.anatomy.join(', ')}</div> : null}
+        <div style={{ marginTop: 8, display: 'grid', gap: 5 }}>{component.variants.map((variant) => <div key={variant.id} style={{ fontSize: 11.5 }}><strong>{variant.name}</strong> · {variant.evidence.length} occurrence{variant.evidence.length === 1 ? '' : 's'}{variant.observedStates?.length ? ` · ${variant.observedStates.join(', ')}` : ''}{variant.confidence != null ? ` · ${Math.round(variant.confidence * 100)}% confidence` : ''}{variant.reviewStatus ? ` · ${variant.reviewStatus}` : ''}<div style={{ display: 'flex', gap: 5 }}>{variant.evidence.map((source) => <a key={source.imageId} href={source.imageUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--color-accent)', fontSize: 10.5 }}>Screen {source.imageId}</a>)}</div></div>)}</div>
+        {component.responsiveBehavior?.length ? <div style={{ marginTop: 7, fontSize: 11, color: 'var(--color-text-disabled)' }}>Responsive: {component.responsiveBehavior.join('; ')}</div> : null}
       </div>
     </article>
   );

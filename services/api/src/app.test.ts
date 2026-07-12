@@ -8,6 +8,7 @@ import { createApiApp } from "./app.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
+const publishedVersion = { id: 1, app: "linear", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
 const catalogImages = [
   {
@@ -136,6 +137,166 @@ test("serves a hydrated structured design system", async (t) => {
   assert.match(response.headers.get("content-type") ?? "", /application\/json/);
 });
 
+test("downloads a complete editable Figma library and secondary exports", async (t) => {
+  const snapshot = {
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [{ id: "accent", kind: "color" as const, name: "Accent", value: "#5E6AD2", role: "Primary", evidence: [7] }],
+    components: [{ id: "button", name: "Button", category: "Actions", description: "Action", variants: [{ id: "primary", name: "Primary", description: "Filled", evidence: [7] }] }],
+    flows: [],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
+    recordAccessEvent: async () => undefined,
+    recordExport: async () => 1,
+    getDesignSystem: async () => snapshot,
+    getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot, flows: [] }),
+    getAppFlows: async () => [],
+    appImages: async () => catalogImages,
+    versionImages: async () => catalogImages,
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const figma = await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST", headers, body: JSON.stringify({ format: "figma", selection: { kind: "design-system" } }),
+  });
+  assert.equal(figma.status, 200);
+  assert.equal(Buffer.from(await figma.arrayBuffer()).subarray(0, 2).toString(), "PK");
+  assert.match(figma.headers.get("content-disposition") ?? "", /linear-figma-library\.zip/);
+  assert.equal(figma.headers.get("content-type"), "application/zip");
+
+  const json = await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST", headers, body: JSON.stringify({ format: "json", selection: { kind: "component-family", id: "button" } }),
+  });
+  assert.equal(json.status, 200);
+  assert.equal((await json.json()).components.length, 1);
+  assert.equal((await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST", headers, body: JSON.stringify({ format: "pdf", selection: { kind: "design-system" } }),
+  })).status, 400);
+});
+
+test("serves evidence-backed search and 2-app comparison", async (t) => {
+  const systems = [
+    {
+      app: "linear",
+      generatedAt: "2026-07-10T00:00:00.000Z",
+      tokens: [{ id: "accent", kind: "color" as const, name: "Accent", value: "#5E6AD2", role: "Primary", evidence: [7] }],
+      components: [{ id: "button", name: "Button", category: "Actions", description: "Action", variants: [{ id: "primary", name: "Primary", description: "Filled", evidence: [7] }] }],
+      flows: [],
+    },
+    {
+      app: "airbnb",
+      generatedAt: "2026-07-10T00:00:00.000Z",
+      tokens: [{ id: "accent", kind: "color" as const, name: "Accent", value: "#FF385C", role: "Primary", evidence: [8] }],
+      components: [],
+      flows: [],
+    },
+  ];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    allImages: async () => [{
+      ...catalogImages[0],
+      analysis: {
+        description: "Toolbar with primary action",
+        purpose: "Manage issues",
+        pageType: "Workspace",
+        productArea: "Issues",
+        theme: "dark" as const,
+        visibleStates: ["default"],
+        componentNames: ["Button"],
+      },
+    }],
+    listDesignSystems: async () => systems,
+    listAppFlowSets: async () => [],
+  }));
+  t.after(() => close(server));
+
+  const search = await fetch(`${base}/search?q=primary&kind=component`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(search.status, 200);
+  assert.equal((await search.json()).items[0].id, "component:linear:button");
+
+  const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(compare.status, 200);
+  assert.deepEqual((await compare.json()).foundations[0].values, ["#5E6AD2", "#FF385C"]);
+  assert.equal((await fetch(`${base}/compare?apps=linear`, { headers: { cookie: "astryx_session=user" } })).status, 400);
+});
+
+test("creates user-owned collections and edits item notes", async (t) => {
+  const now = "2026-07-11T00:00:00.000Z";
+  const collection = { id: 4, name: "Onboarding", description: "", created_at: now, updated_at: now, items: [] };
+  let notes = "";
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    createCollection: async (_userId, name, description) => ({ ...collection, name, description: description ?? "" }),
+    listCollections: async () => [{ ...collection, items: [] }],
+    addCollectionItem: async (_userId, _collectionId, item) => ({
+      id: 9,
+      kind: item.kind,
+      app: item.app,
+      reference_id: item.referenceId,
+      title: item.title,
+      notes: item.notes,
+      created_at: now,
+      updated_at: now,
+    }),
+    updateCollectionItemNotes: async (_userId, _collectionId, _itemId, value) => {
+      notes = value;
+      return { id: 9, kind: "screen", app: "linear", reference_id: "7", title: "Workspace", notes, created_at: now, updated_at: now };
+    },
+    removeCollectionItem: async () => true,
+    deleteCollection: async () => true,
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+
+  const created = await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Onboarding" }) });
+  assert.equal(created.status, 201);
+  assert.equal((await created.json()).name, "Onboarding");
+  assert.equal((await fetch(`${base}/collections`, { headers })).status, 200);
+
+  const added = await fetch(`${base}/collections/4/items`, {
+    method: "POST", headers,
+    body: JSON.stringify({ kind: "screen", app: "linear", referenceId: "7", title: "Workspace", notes: "Reference" }),
+  });
+  assert.equal(added.status, 201);
+  const patched = await fetch(`${base}/collections/4/items/9`, { method: "PATCH", headers, body: JSON.stringify({ notes: "Reuse hierarchy" }) });
+  assert.equal(patched.status, 200);
+  assert.equal(notes, "Reuse hierarchy");
+  assert.equal((await fetch(`${base}/collections/4/items/9`, { method: "DELETE", headers })).status, 204);
+  assert.equal((await fetch(`${base}/collections/4`, { method: "DELETE", headers })).status, 204);
+});
+
+test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
+  const version = { id: 12, app: "linear", version_number: 2, label: "v2", source_url: null, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
+  let publishedOnly: boolean | undefined;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async (token) => token === "admin" ? admin : user,
+    createAppVersion: async () => version,
+    createJob: async () => 44,
+    publishJob: async () => undefined,
+    listAppVersions: async (_app, only) => { publishedOnly = only; return only ? [] : [version]; },
+    getVersionPublicationBlockers: async () => [],
+    submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
+    publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
+  }));
+  t.after(() => close(server));
+  const jsonHeaders = { ...adminCookie, "content-type": "application/json" };
+  const created = await fetch(`${base}/apps/linear/versions`, { method: "POST", headers: jsonHeaders, body: JSON.stringify({ sourceUrl: "https://mobbin.com/apps/linear/version/screens" }) });
+  assert.equal(created.status, 201);
+  assert.equal((await created.json()).status, "draft");
+  assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminCookie })).status, 200);
+  assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminCookie })).status, 200);
+  assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminCookie })).json()).status, "published");
+
+  const designerVersions = await fetch(`${base}/apps/linear/versions`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(designerVersions.status, 200);
+  assert.equal(publishedOnly, true);
+});
+
 test("returns 404 when an app has no structured design system", async (t) => {
   const { base, server } = await serve(
     createApiApp({ resolveSession: async () => admin, getDesignSystem: async () => undefined })
@@ -175,20 +336,23 @@ test("binds signed design-system media to the entitled user and expiry", async (
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
   let nowSeconds = 1_000;
   const other = { id: 3, email: "other@example.com", role: "user" as const };
+  const signedSnapshot = {
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [{ id: "color", kind: "color" as const, name: "Color", value: "#000", role: "text", evidence: [7] }],
+    components: [],
+    flows: [],
+  };
   const { base, server } = await serve(createApiApp({
     dataDir,
     mediaSigningSecret: "0123456789abcdef0123456789abcdef",
     nowSeconds: () => nowSeconds,
     resolveSession: async (token) => token === "owner" ? user : other,
     canAccessApp: async () => true,
-    getDesignSystem: async () => ({
-      app: "linear",
-      generatedAt: "2026-07-10T00:00:00.000Z",
-      tokens: [{ id: "color", kind: "color", name: "Color", value: "#000", role: "text", evidence: [7] }],
-      components: [],
-      flows: [],
-    }),
+    getDesignSystem: async () => signedSnapshot,
+    getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: signedSnapshot, flows: [] }),
     appImages: async () => catalogImages,
+    versionImages: async () => catalogImages,
     getAppFlows: async () => [],
   }));
   t.after(async () => {

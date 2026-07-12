@@ -8,9 +8,11 @@ import type { App } from '../types';
 interface AppCardProps {
   app: App;
   onOpen: () => void;
+  compareSelected: boolean;
+  onToggleCompare: () => void;
 }
 
-export function AppCard({ app, onOpen }: AppCardProps) {
+export function AppCard({ app, onOpen, compareSelected, onToggleCompare }: AppCardProps) {
   const [hovered, setHovered] = useState(false);
   const [index, setIndex] = useState(0);
   // ponytail: card preview caps at 5 screens regardless of how many the app
@@ -39,6 +41,15 @@ export function AppCard({ app, onOpen }: AppCardProps) {
         transform: hovered ? 'translateY(-6px) scale(1.01)' : 'none',
       }}
     >
+      <button
+        type="button"
+        aria-pressed={compareSelected}
+        aria-label={`${compareSelected ? 'Remove' : 'Add'} ${app.app} ${compareSelected ? 'from' : 'to'} comparison`}
+        onClick={(event) => { event.stopPropagation(); onToggleCompare(); }}
+        style={{ position: 'absolute', top: 10, left: 10, zIndex: 5, border: '1px solid rgba(255,255,255,.75)', borderRadius: 999, padding: '6px 10px', background: compareSelected ? 'var(--color-accent)' : 'rgba(24,24,27,.72)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: 11.5, fontWeight: 650, backdropFilter: 'blur(5px)' }}
+      >
+        {compareSelected ? 'Selected' : 'Compare'}
+      </button>
       <div onClick={() => onOpen()} style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}>
         <div
           style={{
@@ -74,7 +85,9 @@ export function AppCard({ app, onOpen }: AppCardProps) {
           boxShadow: 'var(--shadow-low)',
         }}
       >
-        <motion.div layoutId={`app-icon-${app.id}`} style={{ width: 20, height: 20, borderRadius: 6, background: app.accent, flex: '0 0 auto' }} />
+        <motion.div layoutId={`app-icon-${app.id}`} style={{ width: 20, height: 20, borderRadius: 6, background: app.accent, flex: '0 0 auto', overflow: 'hidden', position: 'relative' }}>
+          {app.iconUrl && <img src={app.iconUrl} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        </motion.div>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#18181b' }}>{app.app}</span>
       </div>
 

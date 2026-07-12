@@ -163,7 +163,8 @@ async function crawlAppScreens(context: BrowserContext, appUrl: string, appName:
         console.warn(`No main image found for screen ${id}, skipping.`);
         return;
       }
-      const src = await mainImg.evaluate((img: HTMLImageElement) => img.currentSrc || img.src);
+      const observedImage = await mainImg.evaluate((img: HTMLImageElement) => ({ src: img.currentSrc || img.src, width: img.naturalWidth, height: img.naturalHeight }));
+      const src = observedImage.src;
 
       // Dedupe on the CDN url, which is only known once the page has rendered — so a
       // re-crawl still pays the page load per screen, it just skips the insert.
@@ -171,7 +172,7 @@ async function crawlAppScreens(context: BrowserContext, appUrl: string, appName:
         skipped++;
         return;
       }
-      await insertImage(appName, platform, src);
+      await insertImage(appName, platform, src, { sourceUrl: pageUrl, viewportWidth: observedImage.width, viewportHeight: observedImage.height });
       done++;
       if (done % 20 === 0) console.log(`[${appName}] ...${done}/${screenIds.length} done (${skipped} already had this screen)`);
     } catch (e) {

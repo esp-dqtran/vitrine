@@ -2,7 +2,9 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const APP_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const BULK_REF = /^mobbin-bulk:([0-9a-f]{16})$/;
+// "mobbin-bulk:" refs come from bulkDownload, "capture:" refs from the smart crawler's own
+// screenshots — both point at data/images/<app>/<hash>.<ext> and serve through /api/media.
+const BULK_REF = /^(?:mobbin-bulk|capture):([0-9a-f]{16})$/;
 const BULK_HASH = /^[0-9a-f]{16}$/;
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"] as const;
 

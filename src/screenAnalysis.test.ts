@@ -11,12 +11,23 @@ test("normalizes a fenced structured screen analysis", () => {
     "productArea": "Authentication",
     "theme": "light",
     "visibleStates": ["default", "default", "focused input"],
-    "componentNames": ["Text input", "Primary button"]
+    "componentNames": ["Text input", "Primary button"],
+    "visibleText": ["Welcome back"],
+    "layoutPatterns": ["Centered form"],
+    "icons": ["Brand mark"],
+    "imagery": [],
+    "contentPatterns": ["Helper text"],
+    "interactionPatterns": ["Password reveal"],
+    "responsiveViewport": "desktop",
+    "confidence": 0.92
   }
   \`\`\``);
 
   assert.equal(analysis.pageType, "Login");
   assert.deepEqual(analysis.visibleStates, ["default", "focused input"]);
+  assert.deepEqual(analysis.layoutPatterns, ["Centered form"]);
+  assert.equal(analysis.responsiveViewport, "desktop");
+  assert.equal(analysis.confidence, 0.92);
 });
 
 test("rejects unsupported theme values", () => {

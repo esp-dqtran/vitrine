@@ -73,7 +73,7 @@ const FAQS = [
   },
   {
     q: 'What exports are included with Pro?',
-    a: 'Selected editable exports within our fair-use policy. Pro does not include a raw API, database export, bulk catalog download, complete offline catalog, or complete application-system export.',
+    a: 'Editable Figma exports for selected evidence or a complete observed application design system, plus secondary token and component formats, within the fair-use policy. Pro does not include a raw API, database export, bulk catalog download, or complete offline catalog.',
   },
   {
     q: 'Do you offer Team or Enterprise plans?',
@@ -335,7 +335,7 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
         <div style={{ marginTop: 20, padding: 20, borderRadius: 'var(--radius-container)', background: 'var(--color-background-muted)' }}>
           <Text type="label" color="secondary">Not part of the initial launch: </Text>
           <Text type="body" color="secondary">
-            Team and Enterprise plans, seat-based billing, shared collections, a raw API, database or bulk catalog export, a complete offline catalog, complete application-system export, and private or user-submitted app analysis.
+            Team and Enterprise plans, seat-based billing, shared collections, a raw API, database or bulk catalog export, a complete offline catalog, and private or user-submitted app analysis.
           </Text>
         </div>
       </Section>

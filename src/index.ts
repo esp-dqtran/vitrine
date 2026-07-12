@@ -1,10 +1,13 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { crawl, crawlMany, exportMobbinStorageState, type AppTarget } from "./crawler.ts";
-import { crawlBulkDownload } from "./bulkDownload.ts";
+import { crawlBulkDownload, crawlFlowsDownload } from "./bulkDownload.ts";
 import { discoverApps } from "./discoverApps.ts";
 import { caption } from "./caption.ts";
 import { synthesize } from "./synthesize.ts";
 import { importFlowManifest } from "./flows.ts";
+import { recordApp, smartCrawl } from "./smartCrawler.ts";
+import { repairFlow, researchApp } from "./appResearch.ts";
+import { startChatSession } from "./llmChat.ts";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -30,13 +33,17 @@ switch (command) {
     await crawl(appUrl, appName ?? new URL(appUrl).pathname.split("/").filter(Boolean).pop() ?? "app");
     break;
   }
-  case "crawl-bulk": {
+  case "crawl-bulk":
+  case "crawl-elements":
+  case "crawl-flows": {
     const [appUrl, appName] = rest;
     if (!appUrl) {
-      console.error("Usage: npm run crawl-bulk -- <mobbinAppScreensUrl> [appName]");
+      console.error(`Usage: npm run ${command} -- <mobbinAppUrl> [appName]`);
       process.exit(1);
     }
-    await crawlBulkDownload(appUrl, appName ?? new URL(appUrl).pathname.split("/").filter(Boolean).pop() ?? "app");
+    const name = appName ?? new URL(appUrl).pathname.split("/").filter(Boolean).pop() ?? "app";
+    if (command === "crawl-flows") await crawlFlowsDownload(appUrl, name);
+    else await crawlBulkDownload(appUrl, name, command === "crawl-elements" ? "ui-elements" : "screens");
     break;
   }
   case "export-storage-state": {
@@ -75,9 +82,62 @@ switch (command) {
     console.log(`Imported ${count} flow(s) for ${app}.`);
     break;
   }
+  case "research": {
+    const [appName, homepageUrl, provider] = rest;
+    if (!appName || !homepageUrl) {
+      console.error("Usage: npm run research -- <appName> <homepageUrl> [chatgpt|claude|gemini]");
+      process.exit(1);
+    }
+    const session = await startChatSession(provider ?? "chatgpt");
+    try {
+      await researchApp(appName, homepageUrl, session.ask);
+    } finally {
+      await session.close();
+    }
+    break;
+  }
+  case "smart-crawl": {
+    const [appName] = rest;
+    if (!appName) {
+      console.error("Usage: npm run smart-crawl -- <appName>");
+      process.exit(1);
+    }
+    await smartCrawl(appName);
+    break;
+  }
+  case "record": {
+    const [appName, startUrl] = rest;
+    if (!appName || !startUrl) {
+      console.error("Usage: npm run record -- <appName> <startUrl>");
+      process.exit(1);
+    }
+    await recordApp(appName, startUrl);
+    break;
+  }
+  case "repair-flow": {
+    const [appName, flowId, provider] = rest;
+    if (!appName || !flowId) {
+      console.error("Usage: npm run repair-flow -- <appName> <flowId> [chatgpt|claude|gemini]");
+      process.exit(1);
+    }
+    const session = await startChatSession(provider ?? "chatgpt");
+    const confirm = async (message: string): Promise<boolean> => {
+      const { createInterface } = await import("node:readline/promises");
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      const answer = await rl.question(`${message} [y/N] `);
+      rl.close();
+      return answer.trim().toLowerCase() === "y";
+    };
+    try {
+      await repairFlow(appName, flowId, session.ask, confirm);
+    } finally {
+      await session.close();
+    }
+    break;
+  }
   default:
     console.error(
-      "Usage: npm run crawl -- <mobbinAppScreensUrl> [appName]\n       npm run crawl -- --file <apps.json>\n       npm run crawl-bulk -- <mobbinAppScreensUrl> [appName]\n       npm run export-storage-state -- [outPath]\n       npm run discover-apps -- [outPath] [web,ios,android]\n       npm run caption -- [chatgpt|claude|gemini] [limit]\n       npm run synthesize -- <app> [chatgpt|claude|gemini]\n       npm run import-flows -- <app> <manifest.json>"
+      "Usage: npm run crawl -- <mobbinAppScreensUrl> [appName]\n       npm run crawl -- --file <apps.json>\n       npm run crawl-bulk -- <mobbinAppScreensUrl> [appName]\n       npm run crawl-elements -- <mobbinAppUrl> [appName]\n       npm run crawl-flows -- <mobbinAppUrl> [appName]\n       npm run export-storage-state -- [outPath]\n       npm run discover-apps -- [outPath] [web,ios,android]\n       npm run caption -- [chatgpt|claude|gemini] [limit]\n       npm run synthesize -- <app> [chatgpt|claude|gemini]\n       npm run import-flows -- <app> <manifest.json>\n       npm run research -- <appName> <homepageUrl> [provider]\n       npm run smart-crawl -- <appName>\n       npm run record -- <appName> <startUrl>\n       npm run repair-flow -- <appName> <flowId> [provider]"
     );
     process.exit(1);
 }

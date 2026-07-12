@@ -45,7 +45,7 @@
 - Modify: `src/appResearch.ts`
 - Modify: `src/appResearch.test.ts`
 
-- [ ] **Step 1: Replace the valid-plan fixture with the revisioned observable contract**
+- [x] **Step 1: Replace the valid-plan fixture with the revisioned observable contract**
 
 Use this shape in `src/crawlPlan.test.ts`:
 
@@ -74,7 +74,7 @@ const validPlan = {
 };
 ```
 
-- [ ] **Step 2: Add failing parser tests for every new invariant**
+- [x] **Step 2: Add failing parser tests for every new invariant**
 
 Tests must reject duplicate step IDs, missing expected state, expectations without URL/visible/hidden assertions, invalid URL globs, `optional: true` without `optionalReason`, CSS without `locatorReason`, literal email/credential values, invalid secret names, `side-effect` steps inside a safe flow, and a flow that declares a `$VAR` without listing it in `requiredSecrets`.
 
@@ -86,7 +86,7 @@ node --experimental-strip-types --test src/crawlPlan.test.ts
 
 Expected: failures because the current parser ignores the new fields.
 
-- [ ] **Step 3: Implement the minimal public contract**
+- [x] **Step 3: Implement the minimal public contract**
 
 Add these types to `src/crawlPlan.ts` and validate every field strictly:
 
@@ -142,17 +142,17 @@ export interface CrawlPlan {
 
 Export `urlMatchesExpectation(actual, expected)` and implement wildcard matching by escaping the expected string then converting `*` to `.*`. Do not evaluate plan-provided raw regular expressions.
 
-- [ ] **Step 4: Make secret validation fail closed**
+- [x] **Step 4: Make secret validation fail closed**
 
 Only `$[A-Z][A-Z0-9_]*` values resolve from the environment. Reject other values that look like email addresses, bearer tokens, passwords, or private keys. A flow's `requiredSecrets` must exactly cover all referenced variables, and a missing runtime variable must name only the variable, never a value.
 
-- [ ] **Step 5: Update research and repair prompts**
+- [x] **Step 5: Update research and repair prompts**
 
 The generated plan prompt must include the exact revised JSON contract, semantic locator priority, observable expectation rules, safety fields, and `reviewed: false`. `sanitizeDraft()` must force `revision: 1`, `reviewed: false`, every flow `safe: false`, and every step safety to `side-effect` unless a human later reviews it.
 
 Repair output remains one replacement step. Applying it increments the file revision and resets `reviewed: false`.
 
-- [ ] **Step 6: Run focused tests**
+- [x] **Step 6: Run focused tests**
 
 ```bash
 node --experimental-strip-types --test src/crawlPlan.test.ts src/appResearch.test.ts
@@ -160,7 +160,7 @@ node --experimental-strip-types --test src/crawlPlan.test.ts src/appResearch.tes
 
 Expected: all plan and research tests pass.
 
-- [ ] **Step 7: Check the narrow diff**
+- [x] **Step 7: Check the narrow diff**
 
 ```bash
 git diff --check -- src/crawlPlan.ts src/crawlPlan.test.ts src/appResearch.ts src/appResearch.test.ts
@@ -177,7 +177,7 @@ Expected: no output.
 - Modify: `src/smartCrawler.ts`
 - Modify: `src/smartCrawler.test.ts`
 
-- [ ] **Step 1: Expand the local fixture**
+- [x] **Step 1: Expand the local fixture**
 
 Add a client-side navigation button, a popup link, a delayed panel, and a link that deliberately stays on the wrong page:
 
@@ -189,7 +189,7 @@ Add a client-side navigation button, a popup link, a delayed panel, and a link t
 <button id="no-op">No-op</button>
 ```
 
-- [ ] **Step 2: Write failing execution tests**
+- [x] **Step 2: Write failing execution tests**
 
 Cover:
 
@@ -209,7 +209,7 @@ node --experimental-strip-types --test --test-name-pattern="observable|popup|opt
 
 Expected: failures against the current `interpretStep(): Promise<void>` behavior.
 
-- [ ] **Step 3: Introduce explicit step results**
+- [x] **Step 3: Introduce explicit step results**
 
 Use these result types:
 
@@ -237,11 +237,11 @@ export class SemanticStepError extends Error {
 
 Change execution to return the active `Page`. When `expected.page === "new"`, arm `context.waitForEvent("page")` before the action, wait for the new page's DOM content, and validate on it. Otherwise validate on the current page and close unexpected popup pages.
 
-- [ ] **Step 4: Validate URL and visible/hidden outcomes**
+- [x] **Step 4: Validate URL and visible/hidden outcomes**
 
 Implement `assertExpectedState(page, expected, sourceUrl, disposition)`. Use `page.waitForURL()` for exact/glob URLs and a fresh semantic locator for visible/hidden assertions. Capture `page.url()` after redirects settle. Do not treat the action's successful return as proof.
 
-- [ ] **Step 5: Run the complete crawler unit test**
+- [x] **Step 5: Run the complete crawler unit test**
 
 ```bash
 node --experimental-strip-types --test src/smartCrawler.test.ts
@@ -258,7 +258,7 @@ Expected: all local Playwright fixture tests pass.
 - Modify: `src/smartCrawler.ts`
 - Modify: `src/smartCrawler.test.ts`
 
-- [ ] **Step 1: Write failing flow-result tests**
+- [x] **Step 1: Write failing flow-result tests**
 
 Require `runFlow()` to return this shape instead of `StepFailure | null`:
 
@@ -280,11 +280,11 @@ export interface FlowRunResult {
 
 Tests must prove a semantic failure is not retried, a transient navigation failure is attempted at most twice, cancellation stops before the next step, a failed flow does not become completed evidence, and context cleanup runs after thrown errors.
 
-- [ ] **Step 2: Add narrow transient classification**
+- [x] **Step 2: Add narrow transient classification**
 
 `isTransientBrowserError()` may match Playwright/network errors containing `ERR_NAME_NOT_RESOLVED`, `ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED`, `ERR_TIMED_OUT`, `Target page, context or browser has been closed`, or interrupted navigation. `SemanticStepError`, locator timeouts, wrong URLs, and missing expected text are never transient.
 
-- [ ] **Step 3: Persist failure screenshots through an injected callback**
+- [x] **Step 3: Persist failure screenshots through an injected callback**
 
 Replace direct report-directory writes inside `runFlow()` with:
 
@@ -300,11 +300,11 @@ export interface RunnerHooks {
 
 Keep a filesystem/console hook for CLI compatibility. Durable hooks arrive in Task 6.
 
-- [ ] **Step 4: Put context closing and final status in `finally`**
+- [x] **Step 4: Put context closing and final status in `finally`**
 
 `smartCrawl()` returns a `CrawlExecutionResult` with flow results and counts. It writes compatibility `report.json` only after the structured result exists. A run with any failed required flow returns `failed`, never `done`.
 
-- [ ] **Step 5: Run focused tests and diff check**
+- [x] **Step 5: Run focused tests and diff check**
 
 ```bash
 node --experimental-strip-types --test src/smartCrawler.test.ts
@@ -324,7 +324,7 @@ Expected: all tests pass and diff check is silent.
 - Create: `src/crawlStore.ts`
 - Create: `src/crawlStore.test.ts`
 
-- [ ] **Step 1: Write the database lifecycle test first**
+- [x] **Step 1: Write the database lifecycle test first**
 
 Against `astryx_test`, verify:
 
@@ -346,7 +346,7 @@ node --experimental-strip-types --test src/crawlStore.test.ts
 
 Expected: module/table failures.
 
-- [ ] **Step 2: Add schema tables and constraints**
+- [x] **Step 2: Add schema tables and constraints**
 
 Add the five tables from the design to `ensureSchema()`. Use `BIGSERIAL` run IDs, JSONB expected/actual/plan fields, foreign keys to `apps`, `app_versions`, `users`, `jobs`, and `images`, and database `CHECK` constraints for statuses.
 
@@ -362,19 +362,19 @@ The run-step key is:
 PRIMARY KEY (run_id, flow_id, step_id)
 ```
 
-- [ ] **Step 3: Make image insertion atomic per app platform**
+- [x] **Step 3: Make image insertion atomic per app platform**
 
 Create a unique index on `(platform_id, image_url)` after consolidating any duplicate rows while preserving all `version_images` membership. Change `insertImage()` to use `ON CONFLICT (platform_id, image_url) DO UPDATE ... RETURNING id`. Keep existing callers compatible.
 
-- [ ] **Step 4: Implement `crawlStore.ts`**
+- [x] **Step 4: Implement `crawlStore.ts`**
 
 Export typed functions for plan CRUD/approval, run creation/claim/update/list, step upsert, evidence find/create, cancellation, repair review, heartbeat, stale-run interruption, and retry creation. Accept an injectable query function in a factory for unit isolation while exporting a PostgreSQL-backed default.
 
-- [ ] **Step 5: Prove published versions are untouched**
+- [x] **Step 5: Prove published versions are untouched**
 
 Extend `src/db.test.ts` so a failed/cancelled crawl attached to a draft cannot change `publishedImages()`, `getVersionDesignSystem()`, or the latest published status.
 
-- [ ] **Step 6: Run persistence tests**
+- [x] **Step 6: Run persistence tests**
 
 ```bash
 node --experimental-strip-types --test --test-concurrency=1 src/db.test.ts src/crawlStore.test.ts

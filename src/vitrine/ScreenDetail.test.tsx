@@ -7,6 +7,9 @@ import { ScreenDetail } from './components/ScreenDetail.tsx';
 test('offers the generated design system alongside screens, elements, and flows', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
       app={{
         id: 'linear',
         app: 'Linear',

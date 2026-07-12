@@ -6,6 +6,16 @@ export interface EvidenceView {
   imageId: number;
   imageUrl: string;
   description: string | null;
+  capturedAt?: string | null;
+  responsiveViewport?: string;
+  sourceUrl?: string | null;
+}
+
+export type ReviewStatus = "needs_review" | "reviewed" | "rejected";
+export interface EvidenceOccurrence {
+  imageId: number;
+  region?: { x: number; y: number; width: number; height: number };
+  confidence?: number;
 }
 
 export interface DesignToken<T = number> {
@@ -15,6 +25,10 @@ export interface DesignToken<T = number> {
   value: string;
   role: string;
   evidence: T[];
+  confidence?: number;
+  reviewStatus?: ReviewStatus;
+  responsiveViewports?: string[];
+  occurrences?: EvidenceOccurrence[];
 }
 
 export interface ComponentVariant<T = number> {
@@ -22,6 +36,23 @@ export interface ComponentVariant<T = number> {
   name: string;
   description: string;
   evidence: T[];
+  observedProperties?: string[];
+  observedStates?: string[];
+  confidence?: number;
+  reviewStatus?: ReviewStatus;
+  responsiveViewports?: string[];
+  occurrences?: EvidenceOccurrence[];
+  reconstruction?: {
+    layoutMode?: "HORIZONTAL" | "VERTICAL";
+    width?: number;
+    height?: number;
+    padding?: number;
+    gap?: number;
+    fill?: string;
+    stroke?: string;
+    radius?: number;
+    visibleText?: string;
+  };
 }
 
 export interface DesignComponent<T = number> {
@@ -30,6 +61,9 @@ export interface DesignComponent<T = number> {
   category: string;
   description: string;
   variants: ComponentVariant<T>[];
+  anatomy?: string[];
+  associatedTokenIds?: string[];
+  responsiveBehavior?: string[];
 }
 
 export interface DesignFlow<T = number> {
@@ -37,7 +71,7 @@ export interface DesignFlow<T = number> {
   title: string;
   description: string;
   tags: string[];
-  steps: Array<{ label: string; evidence: T[] }>;
+  steps: Array<{ label: string; interaction?: string; evidence: T[] }>;
 }
 
 export interface DesignSystemSnapshot<T = number> {
@@ -46,6 +80,15 @@ export interface DesignSystemSnapshot<T = number> {
   tokens: DesignToken<T>[];
   components: DesignComponent<T>[];
   flows: DesignFlow<T>[];
+  rules?: Array<{
+    id: string;
+    kind: "layout" | "icon" | "imagery" | "responsive" | "content" | "interaction";
+    name: string;
+    description: string;
+    evidence: T[];
+    confidence?: number;
+    reviewStatus?: ReviewStatus;
+  }>;
 }
 
 type JsonObject = Record<string, unknown>;
@@ -76,6 +119,18 @@ function evidence(value: unknown, allowedImageIds: ReadonlySet<number>): number[
       ),
     ),
   ];
+}
+
+function confidence(value: unknown): number {
+  return typeof value === "number" && value >= 0 && value <= 1 ? value : 0.5;
+}
+
+function reconstruction(value: unknown): ComponentVariant["reconstruction"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const item = value as JsonObject;
+  const number = (field: string) => typeof item[field] === "number" && Number(item[field]) >= 0 ? Number(item[field]) : undefined;
+  const layoutMode = item.layoutMode === "HORIZONTAL" || item.layoutMode === "VERTICAL" ? item.layoutMode : undefined;
+  return { layoutMode, width: number("width"), height: number("height"), padding: number("padding"), gap: number("gap"), radius: number("radius"), fill: typeof item.fill === "string" ? item.fill : undefined, stroke: typeof item.stroke === "string" ? item.stroke : undefined, visibleText: typeof item.visibleText === "string" ? item.visibleText : undefined };
 }
 
 function stripFence(raw: string): string {
@@ -110,6 +165,10 @@ export function parseDesignSystemSnapshot(
       value: text(item.value, "token.value"),
       role: text(item.role, "token.role"),
       evidence: refs,
+      confidence: confidence(item.confidence),
+      reviewStatus: "needs_review",
+      responsiveViewports: list(item.responsiveViewports).filter((value): value is string => typeof value === "string"),
+      occurrences: refs.map((imageId) => ({ imageId, confidence: confidence(item.confidence) })),
     }];
   });
 
@@ -123,6 +182,13 @@ export function parseDesignSystemSnapshot(
         name: text(variant.name, "component.variant.name"),
         description: text(variant.description, "component.variant.description"),
         evidence: refs,
+        observedProperties: list(variant.observedProperties).filter((value): value is string => typeof value === "string"),
+        observedStates: list(variant.observedStates).filter((value): value is string => typeof value === "string"),
+        confidence: confidence(variant.confidence),
+        reviewStatus: "needs_review",
+        responsiveViewports: list(variant.responsiveViewports).filter((value): value is string => typeof value === "string"),
+        occurrences: refs.map((imageId) => ({ imageId, confidence: confidence(variant.confidence) })),
+        reconstruction: reconstruction(variant.reconstruction),
       }];
     });
     if (variants.length === 0) return [];
@@ -132,15 +198,25 @@ export function parseDesignSystemSnapshot(
       category: text(item.category, "component.category"),
       description: text(item.description, "component.description"),
       variants,
+      anatomy: list(item.anatomy).filter((value): value is string => typeof value === "string"),
+      associatedTokenIds: list(item.associatedTokenIds).filter((value): value is string => typeof value === "string"),
+      responsiveBehavior: list(item.responsiveBehavior).filter((value): value is string => typeof value === "string"),
     }];
   });
 
-  return { app, generatedAt, tokens, components, flows: [] };
+  const rules = list(parsed.rules).flatMap((value) => {
+    const item = object(value, "rule");
+    const refs = evidence(item.evidence, allowedImageIds);
+    const kind = text(item.kind, "rule.kind") as NonNullable<DesignSystemSnapshot["rules"]>[number]["kind"];
+    if (!refs.length || !["layout", "icon", "imagery", "responsive", "content", "interaction"].includes(kind)) return [];
+    return [{ id: text(item.id, "rule.id"), kind, name: text(item.name, "rule.name"), description: text(item.description, "rule.description"), evidence: refs, confidence: confidence(item.confidence), reviewStatus: "needs_review" as const }];
+  });
+  return { app, generatedAt, tokens, components, flows: [], rules };
 }
 
 export function hydrateDesignSystem(
   snapshot: DesignSystemSnapshot,
-  images: Array<{ id: number; image_url: string; description: string | null }>,
+  images: Array<{ id: number; image_url: string; description: string | null; captured_at?: string | null; capture_url?: string | null; analysis?: { responsiveViewport?: string } | null }>,
   imageUrl: (app: string, source: string) => string = publicImageUrl,
 ): DesignSystemSnapshot<EvidenceView> {
   const byId = new Map(images.map((image) => [image.id, image]));
@@ -150,6 +226,9 @@ export function hydrateDesignSystem(
       imageId,
       imageUrl: imageUrl(snapshot.app, image.image_url),
       description: image.description,
+      ...(image.captured_at !== undefined ? { capturedAt: image.captured_at } : {}),
+      ...(image.analysis?.responsiveViewport ? { responsiveViewport: image.analysis.responsiveViewport } : {}),
+      ...(image.capture_url !== undefined ? { sourceUrl: image.capture_url } : {}),
     }] : [];
   });
 
@@ -164,5 +243,6 @@ export function hydrateDesignSystem(
       ...flow,
       steps: flow.steps.map((step) => ({ ...step, evidence: hydrate(step.evidence) })),
     })),
+    rules: snapshot.rules?.map((rule) => ({ ...rule, evidence: hydrate(rule.evidence) })),
   };
 }

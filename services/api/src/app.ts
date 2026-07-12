@@ -1,5 +1,6 @@
 import express from "express";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import {
   query,
   allImages,
@@ -8,8 +9,29 @@ import {
   getJob,
   setJobStatus,
   getDesignSystem,
+  listDesignSystems,
   appImages,
   getAppFlows,
+  saveDesignSystem,
+  saveAppFlows,
+  listAppFlowSets,
+  createCollection,
+  listCollections,
+  addCollectionItem,
+  updateCollectionItemNotes,
+  removeCollectionItem,
+  deleteCollection,
+  createAppVersion,
+  listAppVersions,
+  getVersionPublicationBlockers,
+  submitAppVersionForReview,
+  publishAppVersion,
+  getVersionDesignSystem,
+  versionImages,
+  publishedImages,
+  listPublishedDesignSystems,
+  listPublishedFlowSets,
+  recordExport,
 } from "../../../src/db.ts";
 import {
   authenticateUser,
@@ -33,6 +55,9 @@ import {
 import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
 import type { BillingService } from "./billing.ts";
 import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
+import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
+import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
+import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -49,8 +74,29 @@ const defaults = {
   getJob,
   setJobStatus,
   getDesignSystem,
+  listDesignSystems,
   appImages,
   getAppFlows,
+  saveDesignSystem,
+  saveAppFlows,
+  listAppFlowSets,
+  createCollection,
+  listCollections,
+  addCollectionItem,
+  updateCollectionItemNotes,
+  removeCollectionItem,
+  deleteCollection,
+  createAppVersion,
+  listAppVersions,
+  getVersionPublicationBlockers,
+  submitAppVersionForReview,
+  publishAppVersion,
+  getVersionDesignSystem,
+  versionImages,
+  publishedImages,
+  listPublishedDesignSystems,
+  listPublishedFlowSets,
+  recordExport,
   publishJob,
   readProgress,
   requestCancel,
@@ -74,14 +120,12 @@ const defaults = {
 };
 type ApiDeps = typeof defaults;
 
-type ExportSelection =
-  | { kind: "component-family"; id: string }
-  | { kind: "foundation-category"; id: string }
-  | { kind: "screens"; ids: number[] };
+type ExportSelection = ExportScope;
 
 function parseExportSelection(value: unknown): ExportSelection | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const body = value as Record<string, unknown>;
+  if (body.kind === "design-system") return { kind: "design-system" };
   if (body.kind === "screens") {
     if (!Array.isArray(body.ids) || body.ids.length < 1 || body.ids.length > 10) return undefined;
     if (!body.ids.every((id) => Number.isInteger(id) && Number(id) > 0)) return undefined;
@@ -93,7 +137,35 @@ function parseExportSelection(value: unknown): ExportSelection | undefined {
       ? { kind: body.kind, id: body.id.trim() }
       : undefined;
   }
+  if (body.kind === "selected") {
+    if (!Array.isArray(body.componentIds) || !Array.isArray(body.screenIds)) return undefined;
+    if (!body.componentIds.every((id) => typeof id === "string" && id.trim()) || !body.screenIds.every((id) => Number.isInteger(id) && Number(id) > 0)) return undefined;
+    const componentIds = [...new Set(body.componentIds as string[])];
+    const screenIds = [...new Set(body.screenIds as number[])];
+    if (componentIds.length + screenIds.length < 1 || componentIds.length + screenIds.length > 20) return undefined;
+    return { kind: "selected", componentIds, screenIds };
+  }
   return undefined;
+}
+
+const catalogKinds = new Set<CatalogEntityKind>(["app", "screen", "component", "token", "flow", "pattern"]);
+const collectionKinds = new Set(["app", "screen", "component", "token", "flow", "pattern"] as const);
+const exportFormats = new Set<ExportFormat>(["figma", "json", "css", "tailwind", "component-spec", "react"]);
+
+function optionalQuery(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function positiveId(value: string): number | undefined {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function boundedText(value: unknown, max: number, required = false): string | undefined {
+  if (typeof value !== "string") return required ? undefined : "";
+  const parsed = value.trim();
+  if ((required && !parsed) || parsed.length > max) return undefined;
+  return parsed;
 }
 
 const SESSION_COOKIE = "astryx_session";
@@ -132,7 +204,13 @@ function validMobbinScreensUrl(value: string): boolean {
 }
 
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
-  const deps = { ...defaults, ...overrides };
+  const deps = {
+    ...defaults,
+    ...overrides,
+    publishedImages: overrides.publishedImages ?? overrides.allImages ?? defaults.publishedImages,
+    listPublishedDesignSystems: overrides.listPublishedDesignSystems ?? overrides.listDesignSystems ?? defaults.listPublishedDesignSystems,
+    listPublishedFlowSets: overrides.listPublishedFlowSets ?? overrides.listAppFlowSets ?? defaults.listPublishedFlowSets,
+  };
   const app = express();
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
   const mediaLimiter = createFixedWindowLimiter({ limit: deps.mediaRateLimit, windowMs: 10 * 60_000 });
@@ -178,7 +256,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    res.json(buildCatalogPage(await deps.allImages(), cursor, limit));
+    res.json(buildCatalogPage(await deps.publishedImages(), cursor, limit));
   });
 
   app.get("/preview-media/:app/:hash", async (req, res) => {
@@ -265,6 +343,234 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
 
+  app.get("/apps/:app/versions", async (req, res) => {
+    const appSlug = String(req.params.app);
+    if (!isAppSlug(appSlug)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    res.json(await deps.listAppVersions(appSlug, res.locals.user.role !== "admin"));
+  });
+
+  app.post("/apps/:app/versions", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const sourceUrl = boundedText(req.body?.sourceUrl, 2000);
+    if (!isAppSlug(appSlug) || sourceUrl === undefined || (sourceUrl && !validMobbinScreensUrl(sourceUrl))) {
+      res.status(400).json({ error: "invalid recapture request" });
+      return;
+    }
+    try {
+      const version = await deps.createAppVersion(appSlug, res.locals.user.id, sourceUrl || undefined);
+      if (sourceUrl) {
+        const jobId = await deps.createJob("import-app", { name: appSlug, url: sourceUrl, versionId: version.id });
+        try { await deps.publishJob({ type: "import-app", name: appSlug, url: sourceUrl, jobId }); }
+        catch (error) {
+          await deps.setJobStatus(jobId, "error", (error as Error).message);
+          res.status(503).json({ error: (error as Error).message, version, jobId });
+          return;
+        }
+        res.status(201).json({ ...version, recaptureJobId: jobId });
+        return;
+      }
+      res.status(201).json(version);
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/versions/:versionId/blockers", requireAdmin, async (req, res) => {
+    const versionId = positiveId(String(req.params.versionId));
+    if (!versionId) {
+      res.status(400).json({ error: "invalid version id" });
+      return;
+    }
+    res.json({ blockers: await deps.getVersionPublicationBlockers(versionId) });
+  });
+
+  app.post("/versions/:versionId/submit", requireAdmin, async (req, res) => {
+    const versionId = positiveId(String(req.params.versionId));
+    if (!versionId) {
+      res.status(400).json({ error: "invalid version id" });
+      return;
+    }
+    try { res.json(await deps.submitAppVersionForReview(versionId, res.locals.user.id)); }
+    catch (error) { res.status(409).json({ error: (error as Error).message }); }
+  });
+
+  app.post("/versions/:versionId/publish", requireAdmin, async (req, res) => {
+    const versionId = positiveId(String(req.params.versionId));
+    if (!versionId) {
+      res.status(400).json({ error: "invalid version id" });
+      return;
+    }
+    try { res.json(await deps.publishAppVersion(versionId, res.locals.user.id)); }
+    catch (error) { res.status(409).json({ error: (error as Error).message }); }
+  });
+
+  app.post("/apps/:app/review-actions", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    if (!isAppSlug(appSlug) || !req.body || typeof req.body !== "object") {
+      res.status(400).json({ error: "invalid curator action" });
+      return;
+    }
+    const snapshot = await deps.getDesignSystem(appSlug);
+    if (!snapshot) {
+      res.status(404).json({ error: "design system not found" });
+      return;
+    }
+    try {
+      const reviewed = applyCuratorAction({ ...snapshot, flows: await deps.getAppFlows(appSlug) }, req.body as CuratorAction);
+      await deps.saveDesignSystem(appSlug, { ...reviewed, flows: [] });
+      await deps.saveAppFlows(appSlug, reviewed.flows);
+      res.json(reviewed);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/search", async (req, res) => {
+    const requestedKind = optionalQuery(req.query.kind) ?? "all";
+    if (requestedKind !== "all" && !catalogKinds.has(requestedKind as CatalogEntityKind)) {
+      res.status(400).json({ error: "invalid search kind" });
+      return;
+    }
+    const [images, systems, flows] = await Promise.all([
+      res.locals.user.role === "admin" ? deps.allImages() : deps.publishedImages(),
+      res.locals.user.role === "admin" ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
+      res.locals.user.role === "admin" ? deps.listAppFlowSets() : deps.listPublishedFlowSets(),
+    ]);
+    const appNames = [...new Set([
+      ...images.map(({ app }) => app),
+      ...systems.map(({ app }) => app),
+      ...flows.map(({ app }) => app),
+    ])];
+    const allowed = new Set<string>();
+    for (const appName of appNames) {
+      // Catalog discovery is public-to-members; entitlement gates the detailed system,
+      // protected media, comparison, and exports after a result is opened.
+      allowed.add(appName);
+    }
+    const allowedImages = images.filter(({ app }) => allowed.has(app));
+    const appCategories = Object.fromEntries(buildGalleryApps(allowedImages).map(({ id, cat }) => [id, cat]));
+    res.json(searchCatalog({
+      images: allowedImages,
+      systems: systems.filter(({ app }) => allowed.has(app)),
+      flows: flows.filter(({ app }) => allowed.has(app)),
+      appCategories,
+    }, {
+      query: optionalQuery(req.query.q) ?? "",
+      kind: requestedKind as CatalogEntityKind | "all",
+      theme: optionalQuery(req.query.theme),
+      pageType: optionalQuery(req.query.pageType),
+      productArea: optionalQuery(req.query.productArea),
+      state: optionalQuery(req.query.state),
+      layout: optionalQuery(req.query.layout),
+      component: optionalQuery(req.query.component),
+      viewport: optionalQuery(req.query.viewport),
+      appCategory: optionalQuery(req.query.appCategory),
+      limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
+    }));
+  });
+
+  app.get("/compare", async (req, res) => {
+    const apps = optionalQuery(req.query.apps)?.split(",").map((value) => value.trim()).filter(Boolean) ?? [];
+    if (apps.length < 2 || apps.length > 5 || new Set(apps).size !== apps.length || !apps.every(isAppSlug)) {
+      res.status(400).json({ error: "apps must contain 2 to 5 unique app slugs" });
+      return;
+    }
+    for (const appName of apps) {
+      if (!(await deps.canAccessApp(res.locals.user, appName))) {
+        res.status(403).json({ error: "Upgrade required", code: "upgrade_required", app: appName });
+        return;
+      }
+    }
+    const availableSystems = res.locals.user.role === "admin" ? await deps.listDesignSystems() : await deps.listPublishedDesignSystems();
+    const systems = apps.map((appName) => availableSystems.find(({ app }) => app === appName));
+    if (systems.some((system) => !system)) {
+      res.status(404).json({ error: "design system not found for every selected app" });
+      return;
+    }
+    const availableFlows = res.locals.user.role === "admin" ? await deps.listAppFlowSets() : await deps.listPublishedFlowSets();
+    const flowSets = apps.map((appName) => availableFlows.find(({ app }) => app === appName) ?? { app: appName, flows: [] });
+    res.json(buildComparison(systems.filter((system) => system !== undefined), flowSets));
+  });
+
+  app.get("/collections", async (_req, res) => {
+    res.json(await deps.listCollections(res.locals.user.id));
+  });
+
+  app.post("/collections", async (req, res) => {
+    const name = boundedText(req.body?.name, 120, true);
+    const description = boundedText(req.body?.description, 1000);
+    if (name === undefined || description === undefined) {
+      res.status(400).json({ error: "invalid collection" });
+      return;
+    }
+    res.status(201).json(await deps.createCollection(res.locals.user.id, name, description));
+  });
+
+  app.delete("/collections/:collectionId", async (req, res) => {
+    const collectionId = positiveId(req.params.collectionId);
+    if (!collectionId) {
+      res.status(400).json({ error: "invalid collection id" });
+      return;
+    }
+    if (!(await deps.deleteCollection(res.locals.user.id, collectionId))) {
+      res.status(404).json({ error: "collection not found" });
+      return;
+    }
+    res.status(204).end();
+  });
+
+  app.post("/collections/:collectionId/items", async (req, res) => {
+    const collectionId = positiveId(req.params.collectionId);
+    const kind = req.body?.kind;
+    const appName = boundedText(req.body?.app, 120, true);
+    const referenceId = boundedText(req.body?.referenceId, 200, true);
+    const title = boundedText(req.body?.title, 240, true);
+    const notes = boundedText(req.body?.notes, 4000);
+    if (!collectionId || !collectionKinds.has(kind) || !appName || !isAppSlug(appName) || !referenceId || !title || notes === undefined) {
+      res.status(400).json({ error: "invalid collection item" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appName))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const item = await deps.addCollectionItem(res.locals.user.id, collectionId, {
+      kind, app: appName, referenceId, title, notes,
+    });
+    if (!item) res.status(404).json({ error: "collection not found" });
+    else res.status(201).json(item);
+  });
+
+  app.patch("/collections/:collectionId/items/:itemId", async (req, res) => {
+    const collectionId = positiveId(req.params.collectionId);
+    const itemId = positiveId(req.params.itemId);
+    const notes = boundedText(req.body?.notes, 4000);
+    if (!collectionId || !itemId || notes === undefined) {
+      res.status(400).json({ error: "invalid collection item notes" });
+      return;
+    }
+    const item = await deps.updateCollectionItemNotes(res.locals.user.id, collectionId, itemId, notes);
+    if (!item) res.status(404).json({ error: "collection item not found" });
+    else res.json(item);
+  });
+
+  app.delete("/collections/:collectionId/items/:itemId", async (req, res) => {
+    const collectionId = positiveId(req.params.collectionId);
+    const itemId = positiveId(req.params.itemId);
+    if (!collectionId || !itemId) {
+      res.status(400).json({ error: "invalid collection item" });
+      return;
+    }
+    if (!(await deps.removeCollectionItem(res.locals.user.id, collectionId, itemId))) {
+      res.status(404).json({ error: "collection item not found" });
+      return;
+    }
+    res.status(204).end();
+  });
+
   app.post("/billing/checkout", async (req, res) => {
     const interval = req.body?.interval;
     if (interval !== "month" && interval !== "year") {
@@ -298,6 +604,62 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
   });
 
+  app.post("/design-systems/:app/exports", async (req, res) => {
+    const appSlug = req.params.app;
+    const format = req.body?.format;
+    const selection = parseExportSelection(req.body?.selection);
+    if (!isAppSlug(appSlug) || !exportFormats.has(format) || !selection) {
+      res.status(400).json({ error: "invalid export request" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const versioned = res.locals.user.role === "admin" ? undefined : await deps.getVersionDesignSystem(appSlug);
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug) : undefined);
+    if (!snapshot) {
+      res.status(404).json({ error: "design system not found" });
+      return;
+    }
+    const [flows, images] = versioned
+      ? [versioned.flows, await deps.versionImages(appSlug, versioned.version.version_number)] as const
+      : await Promise.all([deps.getAppFlows(appSlug), deps.appImages(appSlug)]);
+    const exportImages = images.map((image) => {
+      const hash = bulkImageHash(image.image_url);
+      const path = hash ? findBulkImage(deps.dataDir, appSlug, hash) : undefined;
+      return { ...image, imageData: path ? readFileSync(path).toString("base64") : undefined };
+    });
+    let artifact;
+    try {
+      artifact = buildExportArtifact({ ...snapshot, flows }, exportImages, format, selection);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
+    const reservation = await deps.reserveExportOperation(res.locals.user.id);
+    if (reservation.status === "not_pro") {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    if (reservation.status === "limit_reached") {
+      res.status(429).json(reservation);
+      return;
+    }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug,
+      action: `export-${format}`,
+      outcome: "allowed",
+    });
+    await deps.recordExport(res.locals.user.id, appSlug, versioned?.version.id, selection, format, artifact.filename);
+    res.setHeader("Content-Type", artifact.mime);
+    res.setHeader("Content-Disposition", `attachment; filename="${artifact.filename}"`);
+    res.setHeader("X-Astryx-Export-Used", String(reservation.used));
+    res.send(artifact.content);
+  });
+
   app.post("/apps/:app/exports/reservations", async (req, res) => {
     if (!isAppSlug(req.params.app)) {
       res.status(400).json({ error: "invalid app slug" });
@@ -318,7 +680,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         res.status(400).json({ error: "screen does not belong to app" });
         return;
       }
-    } else {
+    } else if (selection.kind !== "design-system") {
       const snapshot = await deps.getDesignSystem(req.params.app);
       const foundationKinds: Record<string, string> = {
         colors: "color",
@@ -330,7 +692,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       };
       const exists = selection.kind === "component-family"
         ? snapshot?.components.some(({ id }) => id === selection.id)
-        : snapshot?.tokens.some(({ kind }) => kind === foundationKinds[selection.id]);
+        : selection.kind === "foundation-category"
+          ? snapshot?.tokens.some(({ kind }) => kind === foundationKinds[selection.id])
+          : selection.componentIds.every((id) => snapshot?.components.some((component) => component.id === id))
+            && selection.screenIds.every((id) => (snapshot?.tokens.some(({ evidence }) => evidence.includes(id))
+              || snapshot?.components.some(({ variants }) => variants.some(({ evidence }) => evidence.includes(id)))));
       if (!exists) {
         res.status(400).json({ error: "export selection does not belong to app" });
         return;
@@ -395,8 +761,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const requestedVersion = optionalQuery(req.query.version) ? Number(req.query.version) : undefined;
+    if (requestedVersion !== undefined && (!Number.isInteger(requestedVersion) || requestedVersion < 1)) {
+      res.status(400).json({ error: "invalid version" });
+      return;
+    }
+    const versions = await deps.listAppVersions(req.params.app, res.locals.user.role !== "admin");
+    const selectedVersion = requestedVersion === undefined
+      ? versions.find(({ status }) => status === "published")
+      : versions.find(({ version_number }) => version_number === requestedVersion);
+    const sourceImages = selectedVersion
+      ? await deps.versionImages(req.params.app, selectedVersion.version_number)
+      : res.locals.user.role === "admin" ? await deps.allImages() : [];
     const page = buildAppDetailPage(
-      await deps.allImages(),
+      sourceImages,
       req.params.app,
       cursor,
       limit,
@@ -411,7 +789,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         action: "app-detail",
         outcome: "allowed",
       });
-      res.json(page);
+      res.json({ ...page, version: selectedVersion ?? null });
     }
   });
 
@@ -503,20 +881,36 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
     }
-    const snapshot = await deps.getDesignSystem(appSlug);
+    const requestedVersion = optionalQuery(req.query.version) ? Number(req.query.version) : undefined;
+    if (requestedVersion !== undefined && (!Number.isInteger(requestedVersion) || requestedVersion < 1)) {
+      res.status(400).json({ error: "invalid version" });
+      return;
+    }
+    if (res.locals.user.role !== "admin" && requestedVersion !== undefined) {
+      const published = await deps.listAppVersions(appSlug, true);
+      if (!published.some(({ version_number }) => version_number === requestedVersion)) {
+        res.status(404).json({ error: "published design system version not found" });
+        return;
+      }
+    }
+    const versioned = requestedVersion !== undefined || res.locals.user.role !== "admin"
+      ? await deps.getVersionDesignSystem(appSlug, requestedVersion)
+      : undefined;
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug) : undefined);
     if (!snapshot) {
       res.status(404).json({ error: "design system not found" });
       return;
     }
-    const flows = await deps.getAppFlows(appSlug);
-    const images = await deps.appImages(appSlug);
-    res.json(res.locals.user.role === "admin"
+    const flows = versioned?.flows ?? await deps.getAppFlows(appSlug);
+    const images = versioned ? await deps.versionImages(appSlug, versioned.version.version_number) : await deps.appImages(appSlug);
+    const hydrated = res.locals.user.role === "admin"
       ? hydrateDesignSystem({ ...snapshot, flows }, images)
       : hydrateDesignSystem(
           { ...snapshot, flows },
           images,
           (app, source) => protectedMediaUrl(res.locals.user.id, app, source),
-        ));
+        );
+    res.json({ ...hydrated, version: versioned?.version ?? null });
   });
 
   app.get("/media/:app/:hash", async (req, res) => {
