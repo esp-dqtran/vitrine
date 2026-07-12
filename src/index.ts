@@ -1,13 +1,38 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { crawl, crawlMany, exportMobbinStorageState, type AppTarget } from "./crawler.ts";
-import { crawlBulkDownload, crawlFlowsDownload } from "./bulkDownload.ts";
+import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "./bulkDownload.ts";
 import { discoverApps } from "./discoverApps.ts";
 import { caption } from "./caption.ts";
 import { synthesize } from "./synthesize.ts";
 import { importFlowManifest } from "./flows.ts";
-import { recordApp, smartCrawl } from "./smartCrawler.ts";
+import { recordApp, smartCrawl, type LegacyCaptureDependencies } from "./smartCrawler.ts";
 import { repairFlow, researchApp } from "./appResearch.ts";
 import { startChatSession } from "./llmChat.ts";
+import { insertImage, pool } from "./db.ts";
+import { attachImageObject, imageObjectById } from "./objectStoreDb.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
+
+function objectDependencies(): { bulk: BulkObjectDependencies & LegacyCaptureDependencies; caption: Parameters<typeof caption>[3] } {
+  const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
+  return {
+    bulk: {
+      objectStore,
+      insertImage,
+      attachImage: async (imageId, metadata) => {
+        const client = await pool.connect();
+        try {
+          await attachImageObject(client, { imageId, metadata });
+        } finally {
+          client.release();
+        }
+      },
+    },
+    caption: {
+      objectStore,
+      resolveObjectMetadata: (image) => imageObjectById(image.id),
+    },
+  };
+}
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -42,8 +67,9 @@ switch (command) {
       process.exit(1);
     }
     const name = appName ?? new URL(appUrl).pathname.split("/").filter(Boolean).pop() ?? "app";
-    if (command === "crawl-flows") await crawlFlowsDownload(appUrl, name);
-    else await crawlBulkDownload(appUrl, name, command === "crawl-elements" ? "ui-elements" : "screens");
+    const storage = objectDependencies().bulk;
+    if (command === "crawl-flows") await crawlFlowsDownload(appUrl, name, undefined, storage);
+    else await crawlBulkDownload(appUrl, name, command === "crawl-elements" ? "ui-elements" : "screens", undefined, storage);
     break;
   }
   case "export-storage-state": {
@@ -60,7 +86,7 @@ switch (command) {
   case "caption": {
     const provider = rest[0] ?? "chatgpt";
     const limit = rest[1] ? Number(rest[1]) : undefined;
-    await caption(provider, limit);
+    await caption(provider, limit, undefined, objectDependencies().caption);
     break;
   }
   case "synthesize": {
@@ -102,7 +128,7 @@ switch (command) {
       console.error("Usage: npm run smart-crawl -- <appName>");
       process.exit(1);
     }
-    await smartCrawl(appName);
+    await smartCrawl(appName, "data", objectDependencies().bulk);
     break;
   }
   case "record": {
@@ -111,7 +137,7 @@ switch (command) {
       console.error("Usage: npm run record -- <appName> <startUrl>");
       process.exit(1);
     }
-    await recordApp(appName, startUrl);
+    await recordApp(appName, startUrl, "data", objectDependencies().bulk);
     break;
   }
   case "repair-flow": {

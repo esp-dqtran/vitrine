@@ -6,6 +6,7 @@ import {
   adminImageObject,
   entitledImageObject,
   legacyImageReference,
+  imageObjectById,
   publishedPreviewObject,
   type DatabaseQuery,
 } from "./objectStoreDb.ts";
@@ -147,6 +148,18 @@ test("admin object lookup remains app-scoped without published-only filtering", 
   assert.match(captured!.sql, /JOIN platforms p[\s\S]+JOIN apps a/);
   assert.doesNotMatch(captured!.sql, /object_key\s*=\s*\$\d/);
   assert.doesNotMatch(captured!.sql, /status = 'published'/);
+});
+
+test("trusted worker lookup resolves metadata by image id without accepting a key", async () => {
+  let captured: { sql: string; values?: readonly unknown[] } | undefined;
+  const query: DatabaseQuery = async (sql, values) => {
+    captured = { sql, values };
+    return result([{ object_key: metadata.key, sha256: metadata.sha256, byte_size: 123, content_type: metadata.contentType, access_class: metadata.accessClass }]);
+  };
+  assert.deepEqual(await imageObjectById(7, query), metadata);
+  assert.deepEqual(captured?.values, [7]);
+  assert.match(captured!.sql, /JOIN images i ON i\.object_key = so\.object_key/);
+  assert.doesNotMatch(captured!.sql, /object_key\s*=\s*\$1/);
 });
 
 test("preview lookup uses explicit ranks one to three on the latest published version", async () => {

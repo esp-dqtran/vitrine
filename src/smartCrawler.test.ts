@@ -1,6 +1,6 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer, type Server } from "node:http";
@@ -11,6 +11,7 @@ import {
   assembleFlows,
   assertRunnable,
   captureIfNew,
+  dbCaptureSink,
   dedupeKey,
   installSettleTracker,
   interpretStep,
@@ -19,6 +20,7 @@ import {
   runFlow,
   sha16,
   splitBySafety,
+  withDurableFailureArtifacts,
   type CaptureRecord,
   type CrawlExecutionResult,
   type FlowRunResult,
@@ -26,6 +28,7 @@ import {
   type StepActual,
 } from "./smartCrawler.ts";
 import type { DesignFlow } from "./designSystem.ts";
+import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 
 // ---------- pure parts ----------
 
@@ -50,6 +53,73 @@ test("dedupe key is stable and drops query strings", () => {
   assert.equal(a, b);
   assert.notEqual(a, dedupeKey("https://x.com/pricing", "Plans changed", viewport));
   assert.notEqual(a, dedupeKey("https://x.com/pricing", "Plans", { width: 375, height: 812 }));
+});
+
+function pngFixture(): Buffer {
+  const png = Buffer.alloc(24);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(png);
+  png.writeUInt32BE(1440, 16);
+  png.writeUInt32BE(900, 20);
+  return png;
+}
+
+test("legacy capture sink uploads verified PNG bytes before attaching the image", async () => {
+  const events: string[] = [];
+  let uploaded: ObjectMetadata | undefined;
+  const { sink, ledger } = dbCaptureSink("fixture", {
+    insertImage: async (_app, _platform, reference) => { events.push(`insert:${reference}`); return 41; },
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => { events.push("put"); uploaded = input; return { created: true, metadata: input }; },
+    } as unknown as ObjectStore,
+    attachImage: async (imageId, metadata) => {
+      events.push(`attach:${imageId}`);
+      const { body: _body, ...expected } = uploaded! as ObjectMetadata & { body: Uint8Array };
+      assert.deepEqual(metadata, expected);
+    },
+  });
+  await sink({ png: pngFixture(), sourceUrl: "https://example.com/home", stateContext: "home" });
+  assert.deepEqual(events.map((event) => event.split(":")[0]), ["insert", "put", "attach"]);
+  assert.match(uploaded!.key, /^images\/41\/[0-9a-f]{64}\.png$/);
+  assert.equal(uploaded!.contentType, "image/png");
+  assert.equal(uploaded!.accessClass, "protected");
+  assert.equal(ledger.length, 1);
+});
+
+test("legacy capture upload failure leaves no association and an identical retry succeeds", async () => {
+  let attached = false;
+  let puts = 0;
+  const { sink } = dbCaptureSink("fixture", {
+    insertImage: async () => 42,
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => {
+        if (++puts === 1) throw new Error("storage unavailable");
+        return { created: true, metadata: input };
+      },
+    } as unknown as ObjectStore,
+    attachImage: async () => { attached = true; },
+  });
+  const capture = { png: pngFixture(), sourceUrl: "https://example.com/home", stateContext: "home" };
+  await assert.rejects(sink(capture), /storage unavailable/);
+  assert.equal(attached, false);
+  await sink(capture);
+  assert.equal(attached, true);
+  assert.equal(puts, 2);
+});
+
+test("legacy capture rejects mismatched adapter metadata before attachment", async () => {
+  let attached = false;
+  const { sink } = dbCaptureSink("fixture", {
+    insertImage: async () => 43,
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => ({
+        created: true,
+        metadata: { ...input, key: "images/999/" + "0".repeat(64) + ".png" },
+      }),
+    } as unknown as ObjectStore,
+    attachImage: async () => { attached = true; },
+  });
+  await assert.rejects(sink({ png: pngFixture(), sourceUrl: "https://example.com/home", stateContext: "home" }), /metadata does not match/);
+  assert.equal(attached, false);
 });
 
 test("refuses unreviewed plans and splits unsafe flows without TEST_ACCOUNT", () => {
@@ -1442,8 +1512,8 @@ test("runFlow walks steps, captures along the way, and reports a stuck step", as
   assert.ok(failure);
   assert.equal(failure.flow, "broken");
   assert.equal(failure.stepIndex, 0);
-  assert.ok(failure.screenshot.endsWith("broken-step-1.png"));
-  assert.ok(readdirSync(reportDir).includes("broken-step-1.png"));
+  assert.equal(failure.screenshot, "");
+  assert.equal(readdirSync(reportDir).includes("broken-step-1.png"), false);
   rmSync(reportDir, { recursive: true, force: true });
 });
 
@@ -1545,9 +1615,19 @@ test("runFlow captures the failed popup active page and closes it", async () => 
   const { records, sink } = collectingSink();
   await page.goto(baseUrl);
   const sourceHash = sha16(await page.screenshot());
+  let failurePng = Buffer.alloc(0);
+  const hooks = withDurableFailureArtifacts(cliRunnerHooks(sink, reportDir), { runId: "99", workerId: "worker-1" }, {
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => {
+        failurePng = Buffer.from(input.body);
+        return { created: true, metadata: input };
+      },
+    } as unknown as ObjectStore,
+    attachFailureObject: async () => {},
+  });
 
   const result = await runFlow(page, fixturePlan([flow]), flow, sink, reportDir, {
-    hooks: cliRunnerHooks(sink, reportDir),
+    hooks,
   });
 
   assert.equal(result.status, "failed");
@@ -1555,7 +1635,7 @@ test("runFlow captures the failed popup active page and closes it", async () => 
   assert.ok(failure);
   assert.equal(records.length, 0);
   const pageCountAfterFailure = context.pages().length;
-  const failureHash = sha16(readFileSync(failure.screenshot));
+  const failureHash = sha16(failurePng);
   await Promise.all(context.pages().filter((openPage) => openPage !== page).map((openPage) => openPage.close()));
   assert.equal(pageCountAfterFailure, 1);
   assert.notEqual(failureHash, sourceHash);

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 import type { Server } from "node:http";
 import { createApiApp } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
@@ -11,8 +12,9 @@ const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
 const publishedVersion = { id: 1, app: "linear", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
+const previewSha256 = createHash("sha256").update("image").digest("hex");
 const previewMetadata: ObjectMetadata = {
-  key: `images/7/${"a".repeat(64)}.webp`, sha256: "b".repeat(64), byteSize: 5,
+  key: `images/7/${previewSha256}.webp`, sha256: previewSha256, byteSize: 5,
   contentType: "image/webp", accessClass: "public-preview",
 };
 const localObjectStore: ObjectStore = {
@@ -158,12 +160,38 @@ test("downloads a complete editable Figma library and secondary exports", async 
     components: [{ id: "button", name: "Button", category: "Actions", description: "Action", variants: [{ id: "primary", name: "Primary", description: "Filled", evidence: [7] }] }],
     flows: [],
   };
+  const durable: Array<{ exportId: number; metadata: ObjectMetadata }> = [];
+  const uploaded: Array<ObjectMetadata & { body: Uint8Array }> = [];
+  const evidenceBody = Buffer.from("object-backed-evidence");
+  const evidenceMetadata: ObjectMetadata = {
+    key: `images/7/${createHash("sha256").update(evidenceBody).digest("hex")}.webp`,
+    sha256: createHash("sha256").update(evidenceBody).digest("hex"),
+    byteSize: evidenceBody.byteLength,
+    contentType: "image/webp",
+    accessClass: "protected",
+  };
+  let nextExportId = 40;
+  const exportStore: ObjectStore = {
+    put: async (input) => {
+      uploaded.push(input);
+      return { created: true, metadata: input };
+    },
+    head: async () => undefined,
+    get: async () => ({ metadata: evidenceMetadata, body: evidenceBody }),
+    signedGetUrl: async () => undefined,
+    async *list() { /* unused */ },
+    delete: async () => false,
+  };
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
     recordAccessEvent: async () => undefined,
-    recordExport: async () => 1,
+    createExport: async () => ++nextExportId,
+    completeExport: async (exportId, metadata) => { durable.push({ exportId, metadata }); },
+    failExport: async () => undefined,
+    objectStore: exportStore,
+    imageObjectById: async () => evidenceMetadata,
     getDesignSystem: async () => snapshot,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot, flows: [] }),
     getAppFlows: async () => [],
@@ -185,9 +213,126 @@ test("downloads a complete editable Figma library and secondary exports", async 
   });
   assert.equal(json.status, 200);
   assert.equal((await json.json()).components.length, 1);
+  assert.equal(uploaded.length, 2);
+  assert.match(Buffer.from(uploaded[0].body).toString("utf8"), new RegExp(evidenceBody.toString("base64")));
+  assert.deepEqual(durable.map(({ exportId }) => exportId), [41, 42]);
+  for (let index = 0; index < uploaded.length; index++) {
+    const metadata = uploaded[index];
+    assert.equal(metadata.key, `exports/${41 + index}/${metadata.sha256}.${index === 0 ? "zip" : "json"}`);
+    assert.equal(metadata.sha256, createHash("sha256").update(metadata.body).digest("hex"));
+    assert.equal(metadata.byteSize, metadata.body.byteLength);
+    assert.equal(metadata.accessClass, "protected");
+    const { body: _body, ...persistedMetadata } = metadata;
+    assert.deepEqual(durable[index], { exportId: 41 + index, metadata: persistedMetadata });
+  }
   assert.equal((await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST", headers, body: JSON.stringify({ format: "pdf", selection: { kind: "design-system" } }),
   })).status, 400);
+});
+
+test("does not fall back to legacy media when an associated object fails verification", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "astryx-export-object-"));
+  mkdirSync(join(root, "images", "linear"), { recursive: true });
+  writeFileSync(join(root, "images", "linear", "0123456789abcdef.webp"), "legacy-fallback");
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const expected: ObjectMetadata = {
+    key: `images/7/${"a".repeat(64)}.webp`, sha256: "a".repeat(64), byteSize: 7,
+    contentType: "image/webp", accessClass: "protected",
+  };
+  let created = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    objectStore: { ...localObjectStore, get: async () => ({ metadata: expected, body: Buffer.from("wrong") }) },
+    imageObjectById: async () => expected,
+    getVersionDesignSystem: async () => ({
+      version: publishedVersion,
+      snapshot: { app: "linear", generatedAt: "2026-07-10T00:00:00.000Z", tokens: [], components: [], flows: [] },
+      flows: [],
+    }),
+    versionImages: async () => catalogImages,
+    reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
+    recordAccessEvent: async () => undefined,
+    createExport: async () => { created = true; return 1; },
+    dataDir: root,
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ format: "figma", selection: { kind: "design-system" } }),
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: "Export storage unavailable" });
+  assert.equal(created, false);
+});
+
+test("downloads an authorized completed export locally or by short signed redirect", async (t) => {
+  const body = Buffer.from('{"tokens":[]}');
+  const metadata: ObjectMetadata = {
+    key: `exports/91/${createHash("sha256").update(body).digest("hex")}.json`,
+    sha256: createHash("sha256").update(body).digest("hex"), byteSize: body.byteLength,
+    contentType: "application/json", accessClass: "protected",
+  };
+  let signed = false;
+  const store: ObjectStore = {
+    ...localObjectStore,
+    get: async () => ({ metadata, body }),
+    signedGetUrl: async () => signed ? "https://objects.example/signed" : undefined,
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    objectStore: store,
+    authorizedExportObject: async ({ exportId }) => {
+      if (exportId === 93) throw new Error("exports/91/secret-key");
+      return exportId === 91 ? { metadata, filename: "linear tokens\r\nunsafe.json" } : undefined;
+    },
+  }));
+  t.after(() => close(server));
+  const local = await fetch(`${base}/exports/91`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(local.status, 200);
+  assert.deepEqual(Buffer.from(await local.arrayBuffer()), body);
+  assert.equal(local.headers.get("content-type"), "application/json");
+  assert.equal(local.headers.get("content-disposition"), 'attachment; filename="linear_tokens__unsafe.json"');
+
+  signed = true;
+  const redirect = await fetch(`${base}/exports/91`, { headers: { cookie: "astryx_session=user" }, redirect: "manual" });
+  assert.equal(redirect.status, 302);
+  assert.equal(redirect.headers.get("location"), "https://objects.example/signed");
+  assert.equal(redirect.headers.get("content-type"), "application/json");
+  assert.equal(redirect.headers.get("content-disposition"), 'attachment; filename="linear_tokens__unsafe.json"');
+  const missing = await fetch(`${base}/exports/92`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(missing.status, 404);
+  assert.doesNotMatch(await missing.text(), /exports\/91|object_key|signed/i);
+  const failed = await fetch(`${base}/exports/93`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(failed.status, 503);
+  assert.deepEqual(await failed.json(), { error: "Export storage unavailable" });
+});
+
+test("does not complete an export when object upload fails", async (t) => {
+  const snapshot = { app: "linear", generatedAt: "2026-07-10T00:00:00.000Z", tokens: [], components: [], flows: [] };
+  const completed: number[] = [];
+  const failed: number[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
+    recordAccessEvent: async () => undefined,
+    createExport: async () => 73,
+    completeExport: async (exportId) => { completed.push(exportId); },
+    failExport: async (exportId) => { failed.push(exportId); },
+    objectStore: { ...localObjectStore, put: async () => { throw new Error("checksum mismatch"); } },
+    getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot, flows: [] }),
+    versionImages: async () => [],
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ format: "json", selection: { kind: "design-system" } }),
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(completed, []);
+  assert.deepEqual(failed, [73]);
 });
 
 test("serves evidence-backed search and 2-app comparison", async (t) => {

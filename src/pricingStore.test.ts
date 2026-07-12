@@ -1,7 +1,9 @@
-import { after, beforeEach, test } from "node:test";
+import { after, before, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import pg from "pg";
 import { hashPassword } from "./authCrypto.ts";
+import type { ObjectMetadata } from "./objectStore.ts";
+import { applyMigrations } from "./migrations.ts";
 
 const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_test";
 process.env.DATABASE_URL = TEST_URL;
@@ -22,6 +24,7 @@ const skip = (await postgresAvailable()) ? undefined : "Postgres test database u
 const db = await import("./db.ts");
 
 after(async () => db.closePool());
+before(async () => { if (!skip) await applyMigrations(db.pool); });
 
 beforeEach(async () => {
   if (skip) return;
@@ -104,4 +107,116 @@ test("active Pro accesses every app and receives twenty monthly export reservati
     limit: 20,
     resetAt: "2026-08-01T00:00:00.000Z",
   });
+});
+
+test("creates an export before transactionally completing a stable retry", { skip }, async () => {
+  const { completeExport, createExport, failExport } = await import("./pricingStore.ts");
+  const { userId, apps } = await fixture();
+  const exportId = await createExport(
+    userId,
+    apps[0],
+    undefined,
+    { kind: "design-system" },
+    "json",
+    "pricing-one-tokens.json",
+  );
+  const before = await db.query(
+    "SELECT status, object_key, completed_at FROM exports WHERE id = $1",
+    [exportId],
+  );
+  assert.deepEqual(before.rows[0], { status: "generating", object_key: null, completed_at: null });
+  await failExport(exportId);
+
+  const metadata: ObjectMetadata = {
+    key: `exports/${exportId}/${"a".repeat(64)}.json`,
+    sha256: "a".repeat(64),
+    byteSize: 7,
+    contentType: "application/json",
+    accessClass: "protected",
+  };
+  await completeExport(exportId, metadata);
+  await completeExport(exportId, metadata);
+
+  const completed = await db.query(
+    `SELECT e.status, e.object_key, e.completed_at IS NOT NULL AS completed,
+            so.sha256, so.byte_size::int AS byte_size, so.content_type, so.access_class
+     FROM exports e JOIN stored_objects so ON so.object_key = e.object_key WHERE e.id = $1`,
+    [exportId],
+  );
+  assert.deepEqual(completed.rows[0], {
+    status: "complete",
+    object_key: metadata.key,
+    completed: true,
+    sha256: metadata.sha256,
+    byte_size: metadata.byteSize,
+    content_type: metadata.contentType,
+    access_class: metadata.accessClass,
+  });
+});
+
+test("does not complete an export with invalid object metadata", { skip }, async () => {
+  const { completeExport, createExport } = await import("./pricingStore.ts");
+  const { userId, apps } = await fixture();
+  const exportId = await createExport(
+    userId,
+    apps[0],
+    undefined,
+    { kind: "design-system" },
+    "json",
+    "pricing-one-tokens.json",
+  );
+  await assert.rejects(() => completeExport(exportId, {
+    key: `exports/${exportId}/${"a".repeat(64)}.json`,
+    sha256: "wrong",
+    byteSize: 7,
+    contentType: "application/json",
+    accessClass: "protected",
+  }), /Invalid SHA-256/);
+  const row = await db.query("SELECT status, object_key, completed_at FROM exports WHERE id = $1", [exportId]);
+  assert.deepEqual(row.rows[0], { status: "generating", object_key: null, completed_at: null });
+});
+
+test("does not attach another export's otherwise valid object", { skip }, async () => {
+  const { completeExport, createExport } = await import("./pricingStore.ts");
+  const { userId, apps } = await fixture();
+  const exportId = await createExport(userId, apps[0], undefined, { kind: "design-system" }, "json", "tokens.json");
+  await assert.rejects(() => completeExport(exportId, {
+    key: `exports/${exportId + 1}/${"a".repeat(64)}.json`,
+    sha256: "a".repeat(64),
+    byteSize: 7,
+    contentType: "application/json",
+    accessClass: "protected",
+  }), /does not match export/i);
+  const row = await db.query("SELECT status, object_key FROM exports WHERE id = $1", [exportId]);
+  assert.deepEqual(row.rows[0], { status: "generating", object_key: null });
+});
+
+test("returns completed exports only to their owner or an active admin", { skip }, async () => {
+  const { authorizedExportObject, completeExport, createExport } = await import("./pricingStore.ts");
+  const { userId, apps } = await fixture();
+  const password = await hashPassword("a sufficiently long pricing password");
+  const other = await db.query<{ id: number }>(
+    "INSERT INTO users (email, password_hash, role) VALUES ('pricing-other@example.com', $1, 'user') RETURNING id",
+    [password],
+  );
+  const admin = await db.query<{ id: number }>(
+    "INSERT INTO users (email, password_hash, role) VALUES ('pricing-admin@example.com', $1, 'admin') RETURNING id",
+    [password],
+  );
+  const exportId = await createExport(userId, apps[0], undefined, { kind: "design-system" }, "json", "pricing-one-tokens.json");
+  const metadata: ObjectMetadata = {
+    key: `exports/${exportId}/${"b".repeat(64)}.json`, sha256: "b".repeat(64), byteSize: 9,
+    contentType: "application/json", accessClass: "protected",
+  };
+  await completeExport(exportId, metadata);
+  const expected = { metadata, filename: "pricing-one-tokens.json" };
+
+  assert.deepEqual(await authorizedExportObject({ userId, exportId }), expected);
+  assert.equal(await authorizedExportObject({ userId: other.rows[0].id, exportId }), undefined);
+  assert.deepEqual(await authorizedExportObject({ userId: admin.rows[0].id, exportId }), expected);
+  await db.query("UPDATE users SET active = false WHERE id = $1", [admin.rows[0].id]);
+  assert.equal(await authorizedExportObject({ userId: admin.rows[0].id, exportId }), undefined);
+
+  const generatingId = await createExport(userId, apps[0], undefined, { kind: "design-system" }, "json", "pending.json");
+  assert.equal(await authorizedExportObject({ userId, exportId: generatingId }), undefined);
 });

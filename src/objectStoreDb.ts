@@ -135,6 +135,22 @@ export async function adminImageObject(
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
 }
 
+export async function imageObjectById(
+  imageId: number,
+  runQuery: DatabaseQuery = query,
+): Promise<ObjectMetadata | undefined> {
+  if (!Number.isSafeInteger(imageId) || imageId <= 0) throw new Error("Invalid image ID");
+  const result = await runQuery(
+    `SELECT ${METADATA_COLUMNS}
+     FROM stored_objects so
+     JOIN images i ON i.object_key = so.object_key
+     WHERE i.id = $1
+     LIMIT 1`,
+    [imageId],
+  );
+  return metadataFrom(result.rows[0] as MetadataRow | undefined);
+}
+
 export async function publishedPreviewObject(
   input: { app: string; rank: number },
   runQuery: DatabaseQuery = query,

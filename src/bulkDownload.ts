@@ -1,11 +1,12 @@
 import { type Page, type Download } from "playwright";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { getAppFlows, insertImage, saveAppFlows, setAppMeta, type ImageKind } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
 import { waitUntilVisible, getExpectedAlt, launchMobbinContext, platformFromUrl } from "./crawler.ts";
+import { imageObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "./objectStore.ts";
 
 const LOGIN_WAIT_MS = 30 * 60_000; // time to log in manually in the opened window
 const SCROLL_STEP = 500;
@@ -188,16 +189,44 @@ function extractIfArchive(filePath: string, destDir: string): boolean {
 // collisions and makes re-running idempotent regardless of what the zip calls things.
 // Entries are ingested in filename order (Mobbin numbers exported flow screens), so the
 // returned image ids preserve step order for flow reconstruction.
-async function ingestImages(
+export interface BulkObjectDependencies {
+  objectStore: ObjectStore;
+  insertImage: typeof insertImage;
+  attachImage(imageId: number, metadata: ObjectMetadata): Promise<void>;
+}
+
+const IMAGE_TYPE: Record<string, { extension: "png" | "jpg" | "webp"; contentType: StoredContentType }> = {
+  png: { extension: "png", contentType: "image/png" },
+  jpg: { extension: "jpg", contentType: "image/jpeg" },
+  jpeg: { extension: "jpg", contentType: "image/jpeg" },
+  webp: { extension: "webp", contentType: "image/webp" },
+};
+
+function sameObjectMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
+  return left.key === right.key && left.sha256 === right.sha256 && left.byteSize === right.byteSize
+    && left.contentType === right.contentType && left.accessClass === right.accessClass;
+}
+
+function hasExpectedImageSignature(body: Uint8Array, contentType: StoredContentType): boolean {
+  if (contentType === "image/png") {
+    return body.length >= 8 && Buffer.from(body.subarray(0, 8)).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (contentType === "image/jpeg") return body.length >= 3 && body[0] === 0xff && body[1] === 0xd8 && body[2] === 0xff;
+  return body.length >= 12
+    && Buffer.from(body.subarray(0, 4)).toString("ascii") === "RIFF"
+    && Buffer.from(body.subarray(8, 12)).toString("ascii") === "WEBP";
+}
+
+export async function ingestDownloadedImages(
   sourceDir: string,
   appName: string,
   platform: string,
   sourceUrl: string,
   viewport?: { width: number; height: number } | null,
   kind: ImageKind = "screen",
+  dependencies?: BulkObjectDependencies,
 ): Promise<{ imported: number; imageIds: number[] }> {
-  const dir = `data/images/${appName}`;
-  mkdirSync(dir, { recursive: true });
+  if (!dependencies) throw new Error("Object storage is required for bulk ingestion");
   let imported = 0;
   const imageIds: number[] = [];
   const entries = (existsSync(sourceDir) ? (readdirSync(sourceDir, { recursive: true }) as string[]) : [])
@@ -206,18 +235,31 @@ async function ingestImages(
   for (const rel of entries) {
     const full = `${sourceDir}/${rel}`;
     const body = readFileSync(full);
-    const hash = createHash("sha1").update(body).digest("hex").slice(0, 16);
-    const ext = rel.split(".").pop();
-    const localPath = `${dir}/${hash}.${ext}`;
-    if (!existsSync(localPath)) {
-      renameSync(full, localPath);
-      imported++;
+    const sha256 = createHash("sha256").update(body).digest("hex");
+    const legacyHash = sha256.slice(0, 16);
+    const type = IMAGE_TYPE[rel.split(".").pop()?.toLowerCase() ?? ""];
+    if (!type) throw new Error("Unsupported downloaded image type");
+    if (!hasExpectedImageSignature(body, type.contentType)) {
+      throw new Error(`Downloaded image content does not match ${type.contentType}: ${rel}`);
     }
-    // ponytail: bulk-imported screens come off disk, so there is no fetchable image_url
-    // for the captioner to pull — these rows stay uncaptioned until they're re-crawled.
-    imageIds.push(
-      await insertImage(appName, platform, `mobbin-bulk:${hash}`, { sourceUrl, viewportWidth: viewport?.width, viewportHeight: viewport?.height, kind })
+    const imageId = await dependencies.insertImage(
+      appName,
+      platform,
+      `mobbin-bulk:${legacyHash}`,
+      { sourceUrl, viewportWidth: viewport?.width, viewportHeight: viewport?.height, kind },
     );
+    const metadata: ObjectMetadata = {
+      key: imageObjectKey(imageId, sha256, type.extension),
+      sha256,
+      byteSize: body.byteLength,
+      contentType: type.contentType,
+      accessClass: "protected",
+    };
+    const stored = await dependencies.objectStore.put({ ...metadata, body });
+    if (!sameObjectMetadata(stored.metadata, metadata)) throw new Error("Uploaded bulk image metadata does not match the downloaded bytes");
+    await dependencies.attachImage(imageId, metadata);
+    if (stored.created) imported += 1;
+    imageIds.push(imageId);
   }
   return { imported, imageIds };
 }
@@ -225,7 +267,7 @@ async function ingestImages(
 // gridWaitMs defaults to the long login window (first crawl waits for a manual sign-in).
 // A caller that has already established login (e.g. after the screens tab) passes a short
 // timeout so a tab the app simply doesn't have fails fast instead of hanging 30 minutes.
-export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS): Promise<StageOutcome> {
+export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies): Promise<StageOutcome> {
   clearCancel();
   const platform = platformFromUrl(appUrl);
   const kind: ImageKind = tab === "ui-elements" ? "ui_element" : "screen";
@@ -306,7 +348,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   let imported = 0;
   for (const path of savedPaths) {
     const sourceDir = extractIfArchive(path, extractDir) ? extractDir : downloadDir;
-    imported += (await ingestImages(sourceDir, appName, platform, appUrl, page.viewportSize(), kind)).imported;
+    imported += (await ingestDownloadedImages(sourceDir, appName, platform, appUrl, page.viewportSize(), kind, storage)).imported;
   }
 
   rmSync(downloadDir, { recursive: true, force: true });
@@ -353,7 +395,7 @@ async function collectFlowLinks(page: Page): Promise<Array<{ id: string; title: 
 
 // Visits each flow page and uses its own "Download all screens" export, then records the
 // flow in app_flows with steps pointing at the ingested images (in export order).
-export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS): Promise<StageOutcome> {
+export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies): Promise<StageOutcome> {
   clearCancel();
   const platform = platformFromUrl(appUrl);
   const context = await launchMobbinContext();
@@ -388,7 +430,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
       const imageIds: number[] = [];
       for (const path of savedPaths) {
         const sourceDir = extractIfArchive(path, extractDir) ? extractDir : dir;
-        imageIds.push(...(await ingestImages(sourceDir, appName, platform, flow.url, page.viewportSize())).imageIds);
+        imageIds.push(...(await ingestDownloadedImages(sourceDir, appName, platform, flow.url, page.viewportSize(), "screen", storage)).imageIds);
       }
       if (imageIds.length === 0) continue;
       crawled.push({

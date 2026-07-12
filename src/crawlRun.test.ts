@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import assert from "node:assert/strict";
@@ -11,12 +11,14 @@ import type {
   PersistEvidenceBundleInput,
   PersistEvidenceBundleResult,
 } from "./crawlStore.ts";
+import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import {
   assembleCanonicalFlows,
   captureValidatedState,
   finalizeCanonicalRun,
   normalizeCaptureUrl,
+  persistFailureArtifact,
   type CaptureDependencies,
   type CompletedCaptureIdentity,
 } from "./crawlRun.ts";
@@ -80,6 +82,53 @@ test("capture URL normalization accepts only HTTP(S), strips volatile parts, and
   }
 });
 
+test("failure artifact uploads deterministic internal PNG before database attachment and retries idempotently", async () => {
+  const png = Buffer.from("failure screenshot");
+  const events: string[] = [];
+  const keys: string[] = [];
+  const objectStore = {
+    put: async (input: ObjectMetadata & { body: Uint8Array }) => {
+      events.push("put");
+      keys.push(input.key);
+      assert.deepEqual(Buffer.from(input.body), png);
+      return { created: keys.length === 1, metadata: input };
+    },
+  } as unknown as ObjectStore;
+  const dependencies = {
+    objectStore,
+    attachFailureObject: async (input: { object: ObjectMetadata }) => { events.push("attach"); assert.equal(input.object.key, keys.at(-1)); },
+  };
+  const identity = { runId: "7", workerId: "worker-1", flowId: "settings/main", stepId: "open panel" };
+  const first = await persistFailureArtifact(screenshotPage(png), identity, dependencies);
+  const second = await persistFailureArtifact(screenshotPage(png), identity, dependencies);
+  assert.deepEqual(events, ["put", "attach", "put", "attach"]);
+  assert.equal(first.key, second.key);
+  assert.match(first.key, /^crawl-failures\/7\//);
+  assert.equal(first.accessClass, "internal");
+});
+
+test("failure artifact upload or metadata mismatch never creates a database association", async () => {
+  const png = Buffer.from("failure screenshot");
+  let attached = false;
+  const identity = { runId: "8", workerId: "worker-1", flowId: "settings", stepId: "open" };
+  await assert.rejects(persistFailureArtifact(screenshotPage(png), identity, {
+    objectStore: { put: async () => { throw new Error("storage unavailable"); } } as unknown as ObjectStore,
+    attachFailureObject: async () => { attached = true; },
+  }), /storage unavailable/);
+  assert.equal(attached, false);
+
+  await assert.rejects(persistFailureArtifact(screenshotPage(png), identity, {
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => ({
+        created: true,
+        metadata: { ...input, sha256: "0".repeat(64) },
+      }),
+    } as unknown as ObjectStore,
+    attachFailureObject: async () => { attached = true; },
+  }), /metadata does not match/);
+  assert.equal(attached, false);
+});
+
 function sameEvidenceKey(record: CrawlEvidenceRecord, key: EvidenceKey): boolean {
   return (
     record.version_id === key.versionId &&
@@ -97,7 +146,10 @@ function fakeCaptureStore(dataDir: string) {
   const images = new Map<string, number>();
   const versionImages = new Map<number, Set<number>>();
   const persistCalls: string[] = [];
-  const state = { failBundle: false, workerId: "worker-1" };
+  const state = { failBundle: false, failUpload: false, workerId: "worker-1" };
+  const objects = new Map<string, { metadata: ObjectMetadata; body: Buffer }>();
+  const putCalls: string[] = [];
+  const attached = new Map<number, string>();
 
   const findEvidence = async (key: EvidenceKey): Promise<CrawlEvidenceRecord | undefined> =>
     evidences.find((record) => sameEvidenceKey(record, key));
@@ -109,10 +161,19 @@ function fakeCaptureStore(dataDir: string) {
     return findEvidence(input);
   };
 
+  const reserveCaptureImage = async (input: { imageUrl: string }): Promise<{ imageId: number; imageCreated: boolean }> => {
+    if (state.workerId !== "worker-1") throw new Error("Crawl run worker lease is not active");
+    const existing = images.get(input.imageUrl);
+    if (existing) return { imageId: existing, imageCreated: false };
+    const imageId = images.size + 1;
+    images.set(input.imageUrl, imageId);
+    return { imageId, imageCreated: true };
+  };
+
   const persistEvidenceBundle = async (
     input: PersistEvidenceBundleInput,
   ): Promise<PersistEvidenceBundleResult> => {
-    persistCalls.push(input.imageUrl);
+    persistCalls.push(input.object.key);
     const existing = await findEvidence(input);
     if (existing) {
       return {
@@ -124,8 +185,9 @@ function fakeCaptureStore(dataDir: string) {
       };
     }
 
-    const existingImageId = images.get(input.imageUrl);
-    const imageId = existingImageId ?? images.size + 1;
+    const imageId = input.imageId;
+    const attachedKey = attached.get(imageId);
+    if (attachedKey && attachedKey !== input.object.key) throw new Error("Image already attached to another object");
     const record: CrawlEvidenceRecord = {
       id: `evidence-${evidences.length + 1}`,
       version_id: input.versionId,
@@ -142,7 +204,7 @@ function fakeCaptureStore(dataDir: string) {
       captured_at: new Date(`2026-07-12T00:00:0${evidences.length}Z`),
     };
     if (state.failBundle) throw new Error("evidence database unavailable");
-    if (existingImageId === undefined) images.set(input.imageUrl, imageId);
+    attached.set(imageId, input.object.key);
     const membership = versionImages.get(input.versionId) ?? new Set<number>();
     membership.add(imageId);
     versionImages.set(input.versionId, membership);
@@ -150,14 +212,36 @@ function fakeCaptureStore(dataDir: string) {
     return {
       imageId,
       evidence: record,
-      imageCreated: existingImageId === undefined,
+      imageCreated: false,
       evidenceCreated: true,
       reused: false,
     };
   };
 
-  const deps: CaptureDependencies = { dataDir, findWorkerEvidence, persistEvidenceBundle, secretValues: [] };
-  return { deps, evidences, images, versionImages, persistCalls, state };
+  const objectStore: ObjectStore = {
+    put: async (input) => {
+      putCalls.push(input.key);
+      if (state.failUpload) throw new Error("object storage unavailable");
+      const existing = objects.get(input.key);
+      const metadata = { key: input.key, sha256: input.sha256, byteSize: input.byteSize, contentType: input.contentType, accessClass: input.accessClass };
+      if (!existing) objects.set(input.key, { metadata, body: Buffer.from(input.body) });
+      return { created: !existing, metadata };
+    },
+    head: async (key) => objects.get(key)?.metadata,
+    get: async (key) => {
+      const found = objects.get(key);
+      if (!found) throw new Error("not found");
+      return found;
+    },
+    signedGetUrl: async () => undefined,
+    async *list() { for (const value of objects.values()) yield value.metadata; },
+    delete: async (key) => objects.delete(key),
+  };
+
+  const deps: CaptureDependencies = {
+    dataDir, findWorkerEvidence, reserveCaptureImage, persistEvidenceBundle, objectStore, secretValues: [],
+  };
+  return { deps, evidences, images, versionImages, persistCalls, state, objects, putCalls };
 }
 
 test("an existing canonical capture still requires the active worker lease", async () => {
@@ -176,20 +260,11 @@ test("an existing canonical capture still requires the active worker lease", asy
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
     assert.equal(store.persistCalls.length, 1);
-    assert.equal(imageFiles(dataDir).length, 1);
+    assert.equal(store.objects.size, 1);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
 });
-
-function imageFiles(dataDir: string): string[] {
-  try {
-    return readdirSync(join(dataDir, "images", "fixture-app")).sort();
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
-}
 
 test("first canonical evidence wins while every run retains its observed screenshot hash", async () => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-first-wins-"));
@@ -225,8 +300,8 @@ test("first canonical evidence wins while every run retains its observed screens
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
     assert.equal(store.persistCalls.length, 1);
-    assert.deepEqual(imageFiles(dataDir), [`${sha256(shotA).slice(0, 16)}.png`]);
-    assert.deepEqual(readFileSync(join(dataDir, "images", "fixture-app", `${sha256(shotA).slice(0, 16)}.png`)), shotA);
+    assert.deepEqual([...store.objects.keys()], [`images/1/${sha256(shotA)}.png`]);
+    assert.deepEqual([...store.objects.values()][0].body, shotA);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
@@ -259,7 +334,7 @@ test("a new draft version reuses identical media but creates new logical evidenc
     assert.equal(store.persistCalls.length, 2);
     assert.deepEqual([...store.versionImages.get(1) ?? []], [first.imageId]);
     assert.deepEqual([...store.versionImages.get(2) ?? []], [second.imageId]);
-    assert.deepEqual(imageFiles(dataDir), [`${sha256(screenshot).slice(0, 16)}.png`]);
+    assert.deepEqual([...store.objects.keys()], [`images/1/${sha256(screenshot)}.png`]);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
@@ -281,13 +356,13 @@ test("an exact repeated capture creates no duplicate row, image, or file", async
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
     assert.equal(store.persistCalls.length, 1);
-    assert.equal(imageFiles(dataDir).length, 1);
+    assert.equal(store.objects.size, 1);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
 });
 
-test("an existing short-hash target is verified and a collision fails before database writes", async () => {
+test("a short-reference collision cannot replace an image's attached object", async () => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-collision-"));
   const store = fakeCaptureStore(dataDir);
   const shortRef = () => "aaaaaaaaaaaaaaaa";
@@ -301,14 +376,13 @@ test("an existing short-hash target is verified and a collision fails before dat
         identity({ runId: "run-2", versionId: 2 }),
         deps,
       ),
-      /hash collision/i,
+      /attached to another object/i,
     );
 
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
-    assert.equal(store.persistCalls.length, 1);
-    assert.deepEqual(imageFiles(dataDir), ["aaaaaaaaaaaaaaaa.png"]);
-    assert.equal(imageFiles(dataDir).some((name) => name.includes(".tmp")), false);
+    assert.equal(store.persistCalls.length, 2);
+    assert.equal(store.objects.size, 2);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
@@ -327,10 +401,9 @@ test("evidence failure throws, cleans temporary files, and permits a safe retry"
     );
 
     assert.equal(store.evidences.length, 0);
-    assert.equal(store.images.size, 0);
+    assert.equal(store.images.size, 1);
     assert.equal(store.versionImages.size, 0);
-    assert.deepEqual(imageFiles(dataDir), [`${sha256(screenshot).slice(0, 16)}.png`]);
-    assert.equal(imageFiles(dataDir).some((name) => name.includes(".tmp")), false);
+    assert.deepEqual([...store.objects.keys()], [`images/1/${sha256(screenshot)}.png`]);
 
     store.state.failBundle = false;
     const retried = await captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps);
@@ -338,7 +411,31 @@ test("evidence failure throws, cleans temporary files, and permits a safe retry"
     assert.equal(retried.reused, false);
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
-    assert.equal(imageFiles(dataDir).length, 1);
+    assert.equal(store.objects.size, 1);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("object upload failure leaves no usable evidence and permits an idempotent retry", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-upload-failure-"));
+  const store = fakeCaptureStore(dataDir);
+  const screenshot = Buffer.from("upload retry screenshot");
+
+  try {
+    store.state.failUpload = true;
+    await assert.rejects(captureValidatedState(screenshotPage(screenshot), identity(), store.deps), /object storage unavailable/);
+    assert.equal(store.images.size, 1);
+    assert.equal(store.objects.size, 0);
+    assert.equal(store.evidences.length, 0);
+    assert.equal(store.persistCalls.length, 0);
+
+    store.state.failUpload = false;
+    const retried = await captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps);
+    assert.equal(retried.imageId, 1);
+    assert.equal(retried.newFile, true);
+    assert.equal(store.objects.size, 1);
+    assert.equal(store.evidences.length, 1);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }
@@ -364,7 +461,7 @@ test("skipped and failed results cannot reach screenshot persistence", async () 
     assert.equal(observed.calls, 0);
     assert.equal(store.evidences.length, 0);
     assert.equal(store.images.size, 0);
-    assert.deepEqual(imageFiles(dataDir), []);
+    assert.equal(store.objects.size, 0);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }

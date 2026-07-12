@@ -5,7 +5,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { LocalObjectStore, type ObjectMetadata } from "./objectStore.ts";
+import {
+  exportObjectKey,
+  failureObjectKey,
+  imageObjectKey,
+  LocalObjectStore,
+  type ObjectMetadata,
+} from "./objectStore.ts";
 
 const sha256 = (body: Uint8Array) => createHash("sha256").update(body).digest("hex");
 
@@ -30,6 +36,62 @@ async function withStore(run: (store: LocalObjectStore, root: string) => Promise
     await rm(root, { recursive: true, force: true });
   }
 }
+
+test("builds deterministic image and export keys from validated identities", () => {
+  const digest = "a".repeat(64);
+  assert.equal(imageObjectKey(301, digest, "webp"), `images/301/${digest}.webp`);
+  assert.equal(exportObjectKey("42", digest, "json"), `exports/42/${digest}.json`);
+});
+
+test("rejects invalid image IDs, export IDs, hashes, and extensions", () => {
+  const digest = "a".repeat(64);
+  for (const imageId of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => imageObjectKey(imageId, digest, "png"), /invalid image object identity/i);
+  }
+  for (const exportId of ["", "0", "01", "-1", "1.5", "customer/export"]) {
+    assert.throws(() => exportObjectKey(exportId, digest, "zip"), /invalid export object identity/i);
+  }
+  for (const hash of ["a".repeat(63), "A".repeat(64), "g".repeat(64)]) {
+    assert.throws(() => imageObjectKey(1, hash, "png"), /invalid image object identity/i);
+    assert.throws(() => exportObjectKey("1", hash, "zip"), /invalid export object identity/i);
+  }
+  for (const extension of ["", "jpeg", "PNG", ".png", "png/../json", "html"]) {
+    assert.throws(() => imageObjectKey(1, digest, extension), /invalid object extension/i);
+    assert.throws(() => exportObjectKey("1", digest, extension), /invalid object extension/i);
+  }
+});
+
+test("builds failure keys with byte-encoded flow and step identities", () => {
+  const digest = "b".repeat(64);
+  assert.equal(
+    failureObjectKey("7", "flow/../customer Acme", "画面-1", digest),
+    `crawl-failures/7/${Buffer.from("flow/../customer Acme").toString("hex")}/${Buffer.from("画面-1").toString("hex")}/${digest}.png`,
+  );
+});
+
+test("failure keys never expose traversal or customer text", () => {
+  const flowId = "../../Customer Name/private";
+  const stepId = "https://customer.example/account?token=secret";
+  const key = failureObjectKey("9", flowId, stepId, "c".repeat(64));
+  assert.equal(key.includes(".."), false);
+  assert.equal(key.includes("Customer"), false);
+  assert.equal(key.includes("customer.example"), false);
+  assert.equal(key.includes("secret"), false);
+});
+
+test("rejects invalid failure run IDs, hashes, and empty or oversized encoded parts", () => {
+  const digest = "d".repeat(64);
+  for (const runId of ["", "0", "01", "-1", "1.5", "run-1"]) {
+    assert.throws(() => failureObjectKey(runId, "flow", "step", digest), /invalid failure object identity/i);
+  }
+  for (const hash of ["d".repeat(63), "D".repeat(64), "z".repeat(64)]) {
+    assert.throws(() => failureObjectKey("1", "flow", "step", hash), /invalid failure object identity/i);
+  }
+  for (const [flowId, stepId] of [["", "step"], ["flow", ""], ["é".repeat(61), "step"], ["flow", "é".repeat(61)]]) {
+    assert.throws(() => failureObjectKey("1", flowId, stepId, digest), /invalid object-key identity part/i);
+  }
+  assert.doesNotThrow(() => failureObjectKey("1", "é".repeat(60), "x".repeat(120), digest));
+});
 
 test("rejects traversal, absolute, backslash, control-byte, and invalid-character keys", async () => {
   await withStore(async (store) => {

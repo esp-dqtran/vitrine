@@ -16,6 +16,8 @@ import {
 import { appImages, getAppFlows, imageExists, insertImage, saveAppFlows } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { clearCancel, isCancelRequested, writeProgress, type ProgressState } from "./progress.ts";
+import { imageObjectKey, type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
+import { persistFailureArtifact, type FailureArtifactDependencies } from "./crawlRun.ts";
 
 const STEP_TIMEOUT_MS = 10_000;
 const OPTIONAL_STEP_TIMEOUT_MS = 5_000;
@@ -339,27 +341,43 @@ export async function captureIfNew(page: Page, seen: Set<string>, stateContext: 
   return true;
 }
 
-// Production sink: screenshot bytes to data/images/<app>/<hash>.png (same layout bulk
-// download uses, served via /api/media through the capture: ref), one images row, and a
-// ledger of every state seen this run — including already-inserted ones — so flow
-// assembly can attach evidence even when a re-run captures nothing new.
-export function dbCaptureSink(app: string, dataDir = "data"): { sink: CaptureSink; ledger: Array<{ ref: string; stateContext: string }> } {
+// Compatibility sink: keep capture: refs while durable bytes live in object storage.
+// The ledger includes every state seen this run so flow assembly can attach evidence
+// even when a re-run reuses an existing logical image.
+export interface LegacyCaptureDependencies {
+  objectStore: ObjectStore;
+  insertImage: typeof insertImage;
+  attachImage(imageId: number, metadata: ObjectMetadata): Promise<void>;
+}
+
+function sameObjectMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
+  return left.key === right.key && left.sha256 === right.sha256 && left.byteSize === right.byteSize
+    && left.contentType === right.contentType && left.accessClass === right.accessClass;
+}
+
+export function dbCaptureSink(app: string, dependencies: LegacyCaptureDependencies): { sink: CaptureSink; ledger: Array<{ ref: string; stateContext: string }> } {
   const ledger: Array<{ ref: string; stateContext: string }> = [];
   const sink: CaptureSink = async ({ png, sourceUrl, stateContext }) => {
-    const hash = sha16(png);
-    const ref = `capture:${hash}`;
+    const sha256 = createHash("sha256").update(png).digest("hex");
+    const ref = `capture:${sha256.slice(0, 16)}`;
     ledger.push({ ref, stateContext });
-    if (await imageExists(ref)) return;
-    const dir = join(dataDir, "images", app);
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, `${hash}.png`), png);
     const size = pngSize(png);
-    await insertImage(app, "web", ref, {
+    const imageId = await dependencies.insertImage(app, "web", ref, {
       sourceUrl,
       viewportWidth: size.width,
       viewportHeight: size.height,
       stateContext,
     });
+    const metadata: ObjectMetadata = {
+      key: imageObjectKey(imageId, sha256, "png"),
+      sha256,
+      byteSize: png.byteLength,
+      contentType: "image/png",
+      accessClass: "protected",
+    };
+    const stored = await dependencies.objectStore.put({ ...metadata, body: png });
+    if (!sameObjectMetadata(stored.metadata, metadata)) throw new Error("Uploaded legacy capture metadata does not match the PNG");
+    await dependencies.attachImage(imageId, metadata);
   };
   return { sink, ledger };
 }
@@ -478,7 +496,7 @@ function flowRunResult(flowId: string, status: FlowRunResult["status"], steps: F
 
 export function createCliRunnerHooks(
   sink: CaptureSink,
-  reportDir: string,
+  _reportDir: string,
   cancelled: () => boolean | Promise<boolean> = isCancelRequested
 ): RunnerHooks {
   const seen = new Set<string>();
@@ -487,15 +505,24 @@ export function createCliRunnerHooks(
     stepStarted: async () => {},
     stepFinished: async () => {},
     capture: async (page, _flow, _step, state) => void (await captureIfNew(page, seen, state, sink)),
+    failure: async () => undefined,
+  };
+}
+
+export function withDurableFailureArtifacts(
+  hooks: RunnerHooks,
+  identity: { runId: string; workerId: string },
+  dependencies: FailureArtifactDependencies,
+): RunnerHooks {
+  return {
+    ...hooks,
     failure: async (page, failure) => {
-      mkdirSync(reportDir, { recursive: true });
-      const screenshot = join(reportDir, `${failure.flow}-step-${failure.stepIndex + 1}.png`);
-      try {
-        await page.screenshot({ fullPage: true, path: screenshot });
-        return screenshot;
-      } catch {
-        return undefined;
-      }
+      const object = await persistFailureArtifact(page, {
+        ...identity,
+        flowId: failure.flow,
+        stepId: failure.stepId,
+      }, dependencies);
+      return object.key;
     },
   };
 }
@@ -824,7 +851,7 @@ export async function withCrawlProgress(
   }
 }
 
-export async function smartCrawl(appName: string, dataDir = "data"): Promise<CrawlExecutionResult> {
+export async function smartCrawl(appName: string, dataDir = "data", storage: LegacyCaptureDependencies): Promise<CrawlExecutionResult> {
   const plan = loadPlan(appName, dataDir);
   assertRunnable(plan);
   const { runnable, skippedUnsafe } = splitBySafety(plan);
@@ -846,7 +873,7 @@ export async function smartCrawl(appName: string, dataDir = "data"): Promise<Cra
       const context = await launchAppContext(appName, dataDir);
       return withOwnedContext(context, async () => {
         const page = context.pages()[0] ?? (await context.newPage());
-        const { sink, ledger } = dbCaptureSink(plan.app, dataDir);
+        const { sink, ledger } = dbCaptureSink(plan.app, storage);
         const reportDir = join(dataDir, "crawl-reports", plan.app);
 
         for (const [i, flow] of runnable.entries()) {
@@ -889,13 +916,13 @@ export async function smartCrawl(appName: string, dataDir = "data"): Promise<Cra
 // Record mode without a plan file: open the app, human drives, every settled state is
 // captured. Doubles as the login bootstrap — the persistent profile keeps the session
 // for later scripted runs.
-export async function recordApp(appName: string, startUrl: string, dataDir = "data"): Promise<FlowRunResult> {
+export async function recordApp(appName: string, startUrl: string, dataDir = "data", storage: LegacyCaptureDependencies): Promise<FlowRunResult> {
   new URL(startUrl);
   clearCancel();
   const context = await launchAppContext(appName, dataDir);
   return withOwnedContext(context, async () => {
     const page = context.pages()[0] ?? (await context.newPage());
-    const { sink, ledger } = dbCaptureSink(appName, dataDir);
+    const { sink, ledger } = dbCaptureSink(appName, storage);
     const plan: CrawlPlan = { app: appName, revision: 1, startUrl, domain: "", sources: [], reviewed: true, flows: [] };
     const flow: CrawlFlow = { id: "recorded", title: `Recorded session`, description: "", safe: true, requiredSecrets: [], steps: [] };
     const result = await runFlow(page, plan, flow, sink, join(dataDir, "crawl-reports", appName));

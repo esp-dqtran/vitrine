@@ -1,23 +1,28 @@
-import { createHash, randomUUID } from "node:crypto";
-import { link, mkdir, open, readFile, unlink } from "node:fs/promises";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
 import type { CrawlPlan } from "./crawlPlan.ts";
 import { getAppFlows as getStoredAppFlows } from "./db.ts";
 import {
+  attachFailureObject as attachStoredFailureObject,
   findWorkerEvidence as findStoredWorkerEvidence,
   loadWorkerRunFinalization as loadStoredWorkerRunFinalization,
   persistEvidenceBundle as persistStoredEvidenceBundle,
+  reserveCaptureImage as reserveStoredCaptureImage,
   saveWorkerAppFlows as saveStoredWorkerAppFlows,
   type CrawlEvidenceRecord,
   type EvidenceKey,
   type FindWorkerEvidenceInput,
   type PersistEvidenceBundleInput,
   type PersistEvidenceBundleResult,
+  type ReserveCaptureImageInput,
+  type ReserveCaptureImageResult,
   type SaveWorkerAppFlowsInput,
   type WorkerRunFinalizationSnapshot,
 } from "./crawlStore.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { isAppSlug } from "./imageSource.ts";
+import { failureObjectKey, imageObjectKey, LocalObjectStore, type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
 
 export interface CompletedCaptureIdentity {
   status: "completed";
@@ -41,9 +46,23 @@ export interface ScreenshotPage {
 export interface CaptureDependencies {
   dataDir: string;
   findWorkerEvidence(input: FindWorkerEvidenceInput): Promise<CrawlEvidenceRecord | undefined>;
+  reserveCaptureImage(input: ReserveCaptureImageInput): Promise<ReserveCaptureImageResult>;
   persistEvidenceBundle(input: PersistEvidenceBundleInput): Promise<PersistEvidenceBundleResult>;
+  objectStore: ObjectStore;
   secretValues: readonly string[];
   shortRef?(fullHash: string): string;
+}
+
+export interface FailureArtifactIdentity {
+  runId: string;
+  workerId: string;
+  flowId: string;
+  stepId: string;
+}
+
+export interface FailureArtifactDependencies {
+  objectStore: ObjectStore;
+  attachFailureObject(input: FailureArtifactIdentity & { object: ObjectMetadata }): Promise<void>;
 }
 
 export interface ValidatedCapture {
@@ -131,50 +150,40 @@ function livePageState(page: ScreenshotPage, secretValues: readonly string[]): L
   return { rawUrl, finalUrl, viewport: { ...viewport } };
 }
 
-class CaptureHashCollisionError extends Error {}
-
-async function removeTemporaryFile(path: string): Promise<void> {
-  try {
-    await unlink(path);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+function defaultObjectStore(dataDir: string): ObjectStore {
+  if (process.env.OBJECT_STORE_BACKEND || process.env.NODE_ENV === "production") {
+    return createObjectStore(objectStoreConfigFromEnvironment(process.env));
   }
+  return new LocalObjectStore(resolve(dataDir, "objects"));
 }
 
-async function persistContentAddressedFile(
-  dataDir: string,
-  app: string,
-  hash16: string,
-  observedHash: string,
-  png: Uint8Array,
-): Promise<boolean> {
-  const directory = join(dataDir, "images", app);
-  await mkdir(directory, { recursive: true });
-  const target = join(directory, `${hash16}.png`);
-  const temporary = join(directory, `.${hash16}.${randomUUID()}.tmp`);
+function sameMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
+  return left.key === right.key && left.sha256 === right.sha256 && left.byteSize === right.byteSize
+    && left.contentType === right.contentType && left.accessClass === right.accessClass;
+}
 
-  try {
-    const handle = await open(temporary, "wx", 0o600);
-    try {
-      await handle.writeFile(png);
-      await handle.sync();
-    } finally {
-      await handle.close();
-    }
+export async function persistFailureArtifact(
+  page: Pick<ScreenshotPage, "screenshot">,
+  identity: FailureArtifactIdentity,
+  dependencies: FailureArtifactDependencies,
+): Promise<ObjectMetadata> {
+  const png = await page.screenshot({ fullPage: true });
+  const sha256 = fullHash(png);
+  const object: ObjectMetadata = {
+    key: failureObjectKey(identity.runId, identity.flowId, identity.stepId, sha256),
+    sha256,
+    byteSize: png.byteLength,
+    contentType: "image/png",
+    accessClass: "internal",
+  };
+  const uploaded = await dependencies.objectStore.put({ ...object, body: png });
+  if (!sameMetadata(uploaded.metadata, object)) throw new Error("Uploaded failure metadata does not match the PNG");
+  await dependencies.attachFailureObject({ ...identity, object });
+  return object;
+}
 
-    try {
-      await link(temporary, target);
-      return true;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-      if (fullHash(await readFile(target)) !== observedHash) {
-        throw new CaptureHashCollisionError(`Capture media hash collision for capture:${hash16}`);
-      }
-      return false;
-    }
-  } finally {
-    await removeTemporaryFile(temporary);
-  }
+export function defaultFailureArtifactDependencies(objectStore: ObjectStore): FailureArtifactDependencies {
+  return { objectStore, attachFailureObject: attachStoredFailureObject };
 }
 
 export async function captureValidatedState(
@@ -198,8 +207,10 @@ export async function captureValidatedState(
   const observedHash = fullHash(png);
   const shortRef = overrides.shortRef ?? ((hash: string) => hash.slice(0, 16));
   const findWorkerEvidence = overrides.findWorkerEvidence ?? findStoredWorkerEvidence;
+  const reserveCaptureImage = overrides.reserveCaptureImage ?? reserveStoredCaptureImage;
   const persistEvidenceBundle = overrides.persistEvidenceBundle ?? persistStoredEvidenceBundle;
   const dataDir = overrides.dataDir ?? "data";
+  const objectStore = overrides.objectStore ?? defaultObjectStore(dataDir);
   const key: EvidenceKey = {
     versionId: identity.versionId,
     planId: identity.planId,
@@ -227,22 +238,32 @@ export async function captureValidatedState(
     };
   }
 
-  const { ref, hash16 } = mediaReference(observedHash, shortRef);
-  let newFile: boolean;
-  try {
-    newFile = await persistContentAddressedFile(dataDir, identity.app, hash16, observedHash, png);
-  } catch (error) {
-    if (error instanceof CaptureHashCollisionError) throw error;
-    const code = (error as NodeJS.ErrnoException).code;
-    throw new Error(`Capture file persistence failed${code ? ` (${code})` : ""}`);
-  }
+  const { ref } = mediaReference(observedHash, shortRef);
+  const reserved = await reserveCaptureImage({
+    ...key,
+    runId: identity.runId,
+    workerId: identity.workerId,
+    app: identity.app,
+    imageUrl: ref,
+  });
+  const object: ObjectMetadata = {
+    key: imageObjectKey(reserved.imageId, observedHash, "png"),
+    sha256: observedHash,
+    byteSize: png.byteLength,
+    contentType: "image/png",
+    accessClass: "protected",
+  };
+  const uploaded = await objectStore.put({ ...object, body: png });
+  if (!sameMetadata(uploaded.metadata, object)) throw new Error("Uploaded capture metadata does not match the PNG");
 
   const persisted = await persistEvidenceBundle({
     ...key,
     runId: identity.runId,
     workerId: identity.workerId,
     app: identity.app,
-    imageUrl: ref,
+    imageId: reserved.imageId,
+    imageCreated: reserved.imageCreated,
+    object,
     sourceUrl,
     stateLabel: identity.stateLabel,
     screenshotHash: observedHash,
@@ -253,7 +274,7 @@ export async function captureValidatedState(
     imageId: persisted.imageId,
     ref: mediaReference(persisted.evidence.screenshot_hash, shortRef).ref,
     observedHash,
-    newFile,
+    newFile: uploaded.created,
     reused: persisted.reused,
   };
 }

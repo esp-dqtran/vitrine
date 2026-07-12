@@ -3,6 +3,7 @@ import type pg from "pg";
 import { parseCrawlPlan, parseCrawlStep, type CrawlPlan, type CrawlStep } from "./crawlPlan.ts";
 import { query, withTransaction } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
+import { failureObjectKey, validateObjectMetadata, type ObjectMetadata } from "./objectStore.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -83,6 +84,7 @@ export interface CrawlRunStepRecord {
   error_class: string | null;
   error_message: string | null;
   failure_screenshot: string | null;
+  failure_object_key: string | null;
   created_at: Date;
   started_at: Date | null;
   finished_at: Date | null;
@@ -163,6 +165,14 @@ export interface UpsertRunStepInput {
   finishedAt?: Date | string | null;
 }
 
+export interface AttachFailureObjectInput {
+  runId: string;
+  workerId: string;
+  flowId: string;
+  stepId: string;
+  object: ObjectMetadata;
+}
+
 export interface EvidenceKey {
   versionId: number;
   planId: string;
@@ -193,11 +203,25 @@ export interface PersistEvidenceBundleInput extends EvidenceKey {
   runId: string;
   workerId: string;
   app: string;
-  imageUrl: string;
+  imageId: number;
+  imageCreated: boolean;
+  object: ObjectMetadata;
   sourceUrl: string;
   stateLabel: string;
   screenshotHash: string;
   capturedAt?: Date | string;
+}
+
+export interface ReserveCaptureImageInput extends EvidenceKey {
+  runId: string;
+  workerId: string;
+  app: string;
+  imageUrl: string;
+}
+
+export interface ReserveCaptureImageResult {
+  imageId: number;
+  imageCreated: boolean;
 }
 
 export interface PersistEvidenceBundleResult {
@@ -736,6 +760,47 @@ export async function upsertRunStep(input: UpsertRunStepInput): Promise<CrawlRun
   });
 }
 
+export async function attachFailureObject(input: AttachFailureObjectInput): Promise<void> {
+  const flowId = nonEmpty(input.flowId, "Flow id");
+  const stepId = nonEmpty(input.stepId, "Step id");
+  validateObjectMetadata(input.object);
+  if (
+    input.object.key !== failureObjectKey(input.runId, flowId, stepId, input.object.sha256)
+    || input.object.contentType !== "image/png"
+    || input.object.accessClass !== "internal"
+  ) {
+    throw new Error("Failure object metadata does not match the crawl step");
+  }
+  assertNoSecrets(input, "Failure object");
+
+  await withTransaction(async (client) => {
+    const locked = await lockedWorkerRun(client, input.runId, input.workerId);
+    if (!planHasStep(locked.plan.plan, flowId, stepId)) {
+      throw new Error("Failure object flow and step are not present in the pinned plan");
+    }
+    const stored = await client.query(
+      `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (object_key) DO UPDATE SET object_key = EXCLUDED.object_key
+       WHERE stored_objects.sha256 = EXCLUDED.sha256
+         AND stored_objects.byte_size = EXCLUDED.byte_size
+         AND stored_objects.content_type = EXCLUDED.content_type
+         AND stored_objects.access_class = EXCLUDED.access_class
+       RETURNING object_key`,
+      [input.object.key, input.object.sha256, input.object.byteSize, input.object.contentType, input.object.accessClass],
+    );
+    if (stored.rowCount !== 1) throw new Error("Object key already exists with different metadata");
+    const attached = await client.query(
+      `UPDATE crawl_run_steps SET failure_object_key = $4, updated_at = now()
+       WHERE run_id = $1 AND flow_id = $2 AND step_id = $3
+         AND (failure_object_key IS NULL OR failure_object_key = $4)
+       RETURNING run_id`,
+      [input.runId, flowId, stepId, input.object.key],
+    );
+    if (attached.rowCount !== 1) throw new Error("Crawl run step not found or already attached to another failure object");
+  });
+}
+
 function validateEvidenceKey(key: EvidenceKey): void {
   assertNonNegative(key.viewportWidth - 1, "Viewport width");
   assertNonNegative(key.viewportHeight - 1, "Viewport height");
@@ -793,6 +858,58 @@ export async function findWorkerEvidence(input: FindWorkerEvidenceInput): Promis
   });
 }
 
+export async function reserveCaptureImage(input: ReserveCaptureImageInput): Promise<ReserveCaptureImageResult> {
+  validateEvidenceKey(input);
+  nonEmpty(input.app, "Evidence app");
+  nonEmpty(input.imageUrl, "Evidence image URL");
+  assertNoSecrets(input, "Capture image reservation");
+  return withTransaction(async (client) => {
+    const pin = await client.query<{ version_id: number }>(
+      "SELECT version_id FROM crawl_runs WHERE id = $1",
+      [input.runId],
+    );
+    if (!pin.rowCount || pin.rows[0].version_id !== input.versionId) {
+      throw new Error("Capture image must use the run's pinned version");
+    }
+    const version = await client.query<{ app_id: number; status: string }>(
+      `SELECT app_id, status FROM app_versions
+       WHERE id = $1 AND status IN ('draft', 'in_review') FOR UPDATE`,
+      [input.versionId],
+    );
+    const locked = await lockedWorkerRun(client, input.runId, input.workerId);
+    if (
+      !version.rowCount ||
+      version.rows[0].app_id !== locked.run.app_id ||
+      locked.run.version_id !== input.versionId ||
+      locked.run.plan_id !== input.planId ||
+      locked.run.app !== input.app ||
+      locked.plan.app_id !== locked.run.app_id ||
+      locked.plan.app !== input.app
+    ) {
+      throw new Error("Capture image must use the run's pinned app, version and plan");
+    }
+    if (!planHasStep(locked.plan.plan, input.flowId, input.stepId)) {
+      throw new Error("Capture image flow and step are not present in the pinned plan");
+    }
+    const platform = await client.query<{ id: number }>(
+      `INSERT INTO platforms (app_id, name) VALUES ($1, 'web')
+       ON CONFLICT (app_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
+      [locked.run.app_id],
+    );
+    const inserted = await client.query<{ id: number }>(
+      `INSERT INTO images (platform_id, image_url, kind) VALUES ($1, $2, 'screen')
+       ON CONFLICT (platform_id, image_url) DO NOTHING RETURNING id`,
+      [platform.rows[0].id, input.imageUrl],
+    );
+    const imageId = inserted.rows[0]?.id ?? (await client.query<{ id: number }>(
+      "SELECT id FROM images WHERE platform_id = $1 AND image_url = $2",
+      [platform.rows[0].id, input.imageUrl],
+    )).rows[0]?.id;
+    if (!imageId) throw new Error("Capture image was not reserved");
+    return { imageId, imageCreated: Boolean(inserted.rowCount) };
+  });
+}
+
 export async function createEvidence(input: CreateEvidenceInput): Promise<CrawlEvidenceRecord> {
   validateEvidenceKey(input);
   assertNoSecrets(input, "Crawl evidence");
@@ -839,10 +956,14 @@ export async function createEvidence(input: CreateEvidenceInput): Promise<CrawlE
 export async function persistEvidenceBundle(input: PersistEvidenceBundleInput): Promise<PersistEvidenceBundleResult> {
   validateEvidenceKey(input);
   nonEmpty(input.app, "Evidence app");
-  nonEmpty(input.imageUrl, "Evidence image URL");
   nonEmpty(input.sourceUrl, "Evidence source URL");
   nonEmpty(input.stateLabel, "Evidence state label");
   nonEmpty(input.screenshotHash, "Evidence screenshot hash");
+  if (!Number.isSafeInteger(input.imageId) || input.imageId <= 0) throw new Error("Evidence image ID is invalid");
+  validateObjectMetadata(input.object);
+  if (input.object.sha256 !== input.screenshotHash || input.object.contentType !== "image/png") {
+    throw new Error("Evidence object must be the captured PNG");
+  }
   assertNoSecrets(input, "Crawl evidence bundle");
 
   return withTransaction(async (client) => {
@@ -900,20 +1021,28 @@ export async function persistEvidenceBundle(input: PersistEvidenceBundleInput): 
       };
     }
 
-    const platform = await client.query<{ id: number }>(
-      `INSERT INTO platforms (app_id, name) VALUES ($1, 'web')
-       ON CONFLICT (app_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-      [locked.run.app_id],
+    const stored = await client.query(
+      `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (object_key) DO UPDATE SET object_key = EXCLUDED.object_key
+       WHERE stored_objects.sha256 = EXCLUDED.sha256
+         AND stored_objects.byte_size = EXCLUDED.byte_size
+         AND stored_objects.content_type = EXCLUDED.content_type
+         AND stored_objects.access_class = EXCLUDED.access_class
+       RETURNING object_key`,
+      [input.object.key, input.object.sha256, input.object.byteSize, input.object.contentType, input.object.accessClass],
     );
-    const insertedImage = await client.query<{ id: number }>(
-      `INSERT INTO images (platform_id, image_url, kind) VALUES ($1, $2, 'screen')
-       ON CONFLICT (platform_id, image_url) DO NOTHING RETURNING id`,
-      [platform.rows[0].id, input.imageUrl],
+    if (stored.rowCount !== 1) throw new Error("Object key already exists with different metadata");
+    const attached = await client.query(
+      `UPDATE images i SET object_key = $2
+       FROM platforms p
+       WHERE i.id = $1 AND p.id = i.platform_id AND p.app_id = $3
+         AND (i.object_key IS NULL OR i.object_key = $2)
+       RETURNING i.id`,
+      [input.imageId, input.object.key, locked.run.app_id],
     );
-    const imageId = insertedImage.rows[0]?.id ?? (await client.query<{ id: number }>(
-      "SELECT id FROM images WHERE platform_id = $1 AND image_url = $2",
-      [platform.rows[0].id, input.imageUrl],
-    )).rows[0].id;
+    if (attached.rowCount !== 1) throw new Error("Image not found or already attached to another object");
+    const imageId = input.imageId;
 
     await client.query(
       `INSERT INTO version_images
@@ -975,7 +1104,7 @@ export async function persistEvidenceBundle(input: PersistEvidenceBundleInput): 
     return {
       imageId: canonical.image_id,
       evidence: canonical,
-      imageCreated: Boolean(insertedImage.rowCount),
+      imageCreated: input.imageCreated,
       evidenceCreated,
       reused: !evidenceCreated,
     };

@@ -1,6 +1,7 @@
 import express from "express";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import {
   query,
   allImages,
@@ -32,7 +33,6 @@ import {
   publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
-  recordExport,
 } from "../../../src/db.ts";
 import {
   authenticateUser,
@@ -47,7 +47,11 @@ import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../..
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
+  authorizedExportObject,
   canAccessApp,
+  completeExport,
+  createExport,
+  failExport,
   getAccountEntitlements,
   recordAccessEvent,
   reserveExportOperation,
@@ -59,10 +63,11 @@ import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
 import { buildExportArtifact, type ExportFormat, type ExportScope } from "../../../src/exportEngine.ts";
 import { applyCuratorAction, type CuratorAction } from "../../../src/curatorReview.ts";
-import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
+import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "../../../src/objectStore.ts";
 import {
   adminImageObject,
   entitledImageObject,
+  imageObjectById,
   legacyImageReference,
   publishedPreviewObject,
 } from "../../../src/objectStoreDb.ts";
@@ -105,7 +110,10 @@ const defaults = {
   publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
-  recordExport,
+  createExport,
+  completeExport,
+  failExport,
+  authorizedExportObject,
   publishJob,
   readProgress,
   requestCancel,
@@ -131,6 +139,7 @@ const defaults = {
   entitledImageObject,
   legacyImageReference,
   publishedPreviewObject,
+  imageObjectById,
 };
 type ApiDeps = typeof defaults;
 
@@ -165,6 +174,13 @@ function parseExportSelection(value: unknown): ExportSelection | undefined {
 const catalogKinds = new Set<CatalogEntityKind>(["app", "screen", "component", "token", "flow", "pattern"]);
 const collectionKinds = new Set(["app", "screen", "component", "token", "flow", "pattern"] as const);
 const exportFormats = new Set<ExportFormat>(["figma", "json", "css", "tailwind", "component-spec", "react"]);
+const exportStorageTypes = new Map<string, { contentType: StoredContentType; extension: string }>([
+  ["application/zip", { contentType: "application/zip", extension: "zip" }],
+  ["application/json", { contentType: "application/json", extension: "json" }],
+  ["text/css", { contentType: "text/css", extension: "css" }],
+  ["text/javascript", { contentType: "text/javascript", extension: "js" }],
+  ["text/typescript", { contentType: "text/typescript", extension: "tsx" }],
+]);
 
 function optionalQuery(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -227,17 +243,33 @@ async function sendStoredObject(
   metadata: ObjectMetadata,
   res: express.Response,
 ): Promise<void> {
+  res.setHeader("Content-Type", metadata.contentType);
+  res.setHeader("X-Content-Type-Options", "nosniff");
   const signed = await store.signedGetUrl(metadata.key, 60);
   if (signed) {
     res.setHeader("Cache-Control", "private, no-store");
-    res.redirect(302, signed);
+    res.status(302).setHeader("Location", signed).end();
     return;
   }
   const object = await store.get(metadata.key);
-  if (!sameObjectMetadata(object.metadata, metadata)) throw new Error("Object metadata mismatch");
-  res.setHeader("Content-Type", metadata.contentType);
-  res.setHeader("X-Content-Type-Options", "nosniff");
+  verifiedObjectBody(metadata, object);
   res.send(object.body);
+}
+
+function verifiedObjectBody(
+  expected: ObjectMetadata,
+  object: Awaited<ReturnType<ObjectStore["get"]>>,
+): Buffer {
+  if (
+    !sameObjectMetadata(object.metadata, expected)
+    || object.body.byteLength !== expected.byteSize
+    || createHash("sha256").update(object.body).digest("hex") !== expected.sha256
+  ) throw new Error("Object bytes do not match metadata");
+  return object.body;
+}
+
+function safeDownloadFilename(filename: string): string {
+  return filename.replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+/, "").slice(0, 180) || "export";
 }
 
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
@@ -661,6 +693,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
     }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "Export storage unavailable" });
+      return;
+    }
     const versioned = res.locals.user.role === "admin" ? undefined : await deps.getVersionDesignSystem(appSlug);
     const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug) : undefined);
     if (!snapshot) {
@@ -670,11 +706,23 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const [flows, images] = versioned
       ? [versioned.flows, await deps.versionImages(appSlug, versioned.version.version_number)] as const
       : await Promise.all([deps.getAppFlows(appSlug), deps.appImages(appSlug)]);
-    const exportImages = images.map((image) => {
-      const hash = bulkImageHash(image.image_url);
-      const path = hash ? findBulkImage(deps.dataDir, appSlug, hash) : undefined;
-      return { ...image, imageData: path ? readFileSync(path).toString("base64") : undefined };
-    });
+    const store = deps.objectStore;
+    let exportImages;
+    try {
+      exportImages = await Promise.all(images.map(async (image) => {
+        const metadata = await deps.imageObjectById(image.id);
+        if (metadata) {
+          const body = verifiedObjectBody(metadata, await store.get(metadata.key));
+          return { ...image, imageData: body.toString("base64") };
+        }
+        const hash = bulkImageHash(image.image_url);
+        const path = hash ? findBulkImage(deps.dataDir, appSlug, hash) : undefined;
+        return { ...image, imageData: path ? readFileSync(path).toString("base64") : undefined };
+      }));
+    } catch {
+      res.status(503).json({ error: "Export storage unavailable" });
+      return;
+    }
     let artifact;
     try {
       artifact = buildExportArtifact({ ...snapshot, flows }, exportImages, format, selection);
@@ -698,11 +746,70 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       action: `export-${format}`,
       outcome: "allowed",
     });
-    await deps.recordExport(res.locals.user.id, appSlug, versioned?.version.id, selection, format, artifact.filename);
+    const storageType = exportStorageTypes.get(artifact.mime);
+    if (!storageType) {
+      res.status(500).json({ error: "Unsupported export artifact" });
+      return;
+    }
+    const exportId = await deps.createExport(
+      res.locals.user.id,
+      appSlug,
+      versioned?.version.id,
+      selection,
+      format,
+      artifact.filename,
+    );
+    const sha256 = createHash("sha256").update(artifact.content).digest("hex");
+    const metadata: ObjectMetadata = {
+      key: exportObjectKey(String(exportId), sha256, storageType.extension),
+      sha256,
+      byteSize: artifact.content.byteLength,
+      contentType: storageType.contentType,
+      accessClass: "protected",
+    };
+    try {
+      const stored = await deps.objectStore.put({ ...metadata, body: artifact.content });
+      if (!sameObjectMetadata(stored.metadata, metadata)) throw new Error("Object metadata mismatch");
+      await deps.completeExport(exportId, metadata);
+    } catch {
+      await deps.failExport(exportId);
+      res.status(503).json({ error: "Export storage unavailable" });
+      return;
+    }
     res.setHeader("Content-Type", artifact.mime);
     res.setHeader("Content-Disposition", `attachment; filename="${artifact.filename}"`);
     res.setHeader("X-Astryx-Export-Used", String(reservation.used));
     res.send(artifact.content);
+  });
+
+  app.get("/exports/:id", async (req, res) => {
+    const exportId = positiveId(req.params.id);
+    if (!exportId) {
+      res.status(400).json({ error: "invalid export ID" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "Export storage unavailable" });
+      return;
+    }
+    let artifact;
+    try {
+      artifact = await deps.authorizedExportObject({ userId: res.locals.user.id, exportId });
+    } catch {
+      res.status(503).json({ error: "Export storage unavailable" });
+      return;
+    }
+    if (!artifact) {
+      res.status(404).json({ error: "export not found" });
+      return;
+    }
+    res.setHeader("Content-Disposition", `attachment; filename="${safeDownloadFilename(artifact.filename)}"`);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    try {
+      await sendStoredObject(deps.objectStore, artifact.metadata, res);
+    } catch {
+      res.status(503).json({ error: "Export storage unavailable" });
+    }
   });
 
   app.post("/apps/:app/exports/reservations", async (req, res) => {

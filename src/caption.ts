@@ -1,4 +1,5 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { uncaptionedImages, saveScreenAnalysis } from "./db.ts";
 import { CAPTION_PROMPT } from "./prompt.ts";
@@ -6,33 +7,80 @@ import { startChatPool } from "./llmChat.ts";
 import { runPool } from "./pool.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
 import { bulkImageHash, findBulkImage } from "./imageSource.ts";
+import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 import { parseScreenAnalysis } from "./screenAnalysis.ts";
 
 export const parseCaptionReply = parseScreenAnalysis;
 
-// The chat providers attach images via a file input, so a URL has to hit the disk first.
-async function withDownloaded<T>(
-  app: string,
-  imageUrl: string,
-  fn: (filePath: string) => Promise<T>
+export type CaptionImage = { id: number; app: string; image_url: string };
+
+const CAPTION_IMAGE_EXTENSIONS = new Set(["png", "jpg", "webp"]);
+
+export interface CaptionDependencies {
+  objectStore?: ObjectStore;
+  resolveObjectMetadata?: (image: CaptionImage) => Promise<ObjectMetadata | undefined>;
+}
+
+async function withTemporaryFile<T>(
+  body: Uint8Array,
+  extension: string,
+  fn: (filePath: string) => Promise<T>,
 ): Promise<T> {
-  const hash = bulkImageHash(imageUrl);
-  if (hash) {
-    const localPath = findBulkImage(process.env.DATA_DIR ?? "data", app, hash);
-    if (!localPath) throw new Error(`Missing local image for ${imageUrl}`);
-    return fn(localPath);
-  }
-  const res = await fetch(imageUrl);
-  if (!res.ok) throw new Error(`Could not fetch ${imageUrl}: HTTP ${res.status}`);
-  const ext = (res.headers.get("content-type") ?? "image/webp").split("/")[1].split(";")[0];
   const dir = mkdtempSync(`${tmpdir()}/astryx-caption-`);
-  const filePath = `${dir}/image.${ext}`;
-  writeFileSync(filePath, Buffer.from(await res.arrayBuffer()));
   try {
+    chmodSync(dir, 0o700);
+    const filePath = `${dir}/image.${extension}`;
+    writeFileSync(filePath, body, { flag: "wx", mode: 0o600 });
     return await fn(filePath);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+function verifiedObjectBody(
+  expected: ObjectMetadata,
+  object: Awaited<ReturnType<ObjectStore["get"]>>,
+): Buffer {
+  const actual = object.metadata;
+  if (
+    actual.key !== expected.key
+    || actual.sha256 !== expected.sha256
+    || actual.byteSize !== expected.byteSize
+    || actual.contentType !== expected.contentType
+    || actual.accessClass !== expected.accessClass
+    || object.body.byteLength !== expected.byteSize
+    || createHash("sha256").update(object.body).digest("hex") !== expected.sha256
+  ) throw new Error(`Object bytes do not match metadata for ${expected.key}`);
+  return object.body;
+}
+
+// The chat providers attach images via a file input, so remote bytes have to hit the disk briefly.
+export async function withDownloaded<T>(
+  image: CaptionImage,
+  fn: (filePath: string) => Promise<T>,
+  dependencies: CaptionDependencies = {},
+): Promise<T> {
+  const metadata = await dependencies.resolveObjectMetadata?.(image);
+  if (metadata) {
+    if (!dependencies.objectStore) throw new Error("Object store is required for object-backed captions");
+    const body = verifiedObjectBody(metadata, await dependencies.objectStore.get(metadata.key));
+    const extension = metadata.contentType === "image/jpeg" ? "jpg" : metadata.contentType.split("/")[1];
+    if (!CAPTION_IMAGE_EXTENSIONS.has(extension)) {
+      throw new Error(`Unsupported caption object content type: ${metadata.contentType}`);
+    }
+    return withTemporaryFile(body, extension, fn);
+  }
+
+  const hash = bulkImageHash(image.image_url);
+  if (hash) {
+    const localPath = findBulkImage(process.env.DATA_DIR ?? "data", image.app, hash);
+    if (!localPath) throw new Error(`Missing local image for ${image.image_url}`);
+    return fn(localPath);
+  }
+  const res = await fetch(image.image_url);
+  if (!res.ok) throw new Error(`Could not fetch ${image.image_url}: HTTP ${res.status}`);
+  const ext = (res.headers.get("content-type") ?? "image/webp").split("/")[1].split(";")[0];
+  return withTemporaryFile(Buffer.from(await res.arrayBuffer()), ext, fn);
 }
 
 // ponytail: fixed pool size, not measured against the provider's actual rate limits —
@@ -41,7 +89,12 @@ async function withDownloaded<T>(
 // several simultaneous conversations than Mobbin is to notice several page loads.
 const CONCURRENCY = 3;
 
-export async function caption(providerName: string, limit?: number, app?: string): Promise<StageOutcome> {
+export async function caption(
+  providerName: string,
+  limit?: number,
+  app?: string,
+  dependencies: CaptionDependencies = {},
+): Promise<StageOutcome> {
   clearCancel();
   const images = (await uncaptionedImages(app)).slice(0, limit);
   if (images.length === 0) {
@@ -61,8 +114,10 @@ export async function caption(providerName: string, limit?: number, app?: string
     sessions,
     async (session, image) => {
       try {
-        const reply = await withDownloaded(image.app, image.image_url, (filePath) =>
-          session.ask(CAPTION_PROMPT, filePath)
+        const reply = await withDownloaded(
+          image,
+          (filePath) => session.ask(CAPTION_PROMPT, filePath),
+          dependencies,
         );
         await saveScreenAnalysis(image.id, parseCaptionReply(reply));
         done++;

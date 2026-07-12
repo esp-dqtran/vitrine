@@ -1,6 +1,7 @@
 import type { QueryResultRow } from "pg";
 import type { AuthUser } from "./authStore.ts";
 import { query, withTransaction } from "./db.ts";
+import { exportObjectKey, validateObjectMetadata, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
 import {
   effectivePlan,
   exportWindow,
@@ -210,6 +211,112 @@ export async function reserveExportOperation(
       resetAt: window.end.toISOString(),
     };
   });
+}
+
+export async function createExport(
+  userId: number,
+  app: string,
+  versionId: number | undefined,
+  scope: unknown,
+  format: string,
+  filename: string,
+): Promise<number> {
+  const result = await query<{ id: number }>(
+    `INSERT INTO exports (user_id, app_id, version_id, scope, format, status, output_filename)
+     SELECT $1, a.id, $3, $4::jsonb, $5, 'generating', $6 FROM apps a WHERE a.name = $2
+     RETURNING id`,
+    [userId, app, versionId ?? null, JSON.stringify(scope), format, filename],
+  );
+  if (!result.rows[0]) throw new Error("Export app not found");
+  return Number(result.rows[0].id);
+}
+
+export async function completeExport(exportId: number, metadata: ObjectMetadata): Promise<void> {
+  if (!Number.isSafeInteger(exportId) || exportId <= 0) throw new Error("Invalid export ID");
+  validateObjectMetadata(metadata);
+  const extensionByType: Partial<Record<StoredContentType, string>> = {
+    "application/zip": "zip",
+    "application/json": "json",
+    "text/css": "css",
+    "text/javascript": "js",
+    "text/typescript": "tsx",
+  };
+  const extension = extensionByType[metadata.contentType];
+  if (
+    !extension
+    || metadata.accessClass !== "protected"
+    || metadata.key !== exportObjectKey(String(exportId), metadata.sha256, extension)
+  ) {
+    throw new Error("Object metadata does not match export");
+  }
+  await withTransaction(async (client) => {
+    const stored = await client.query(
+      `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (object_key) DO UPDATE SET object_key = EXCLUDED.object_key
+       WHERE stored_objects.sha256 = EXCLUDED.sha256
+         AND stored_objects.byte_size = EXCLUDED.byte_size
+         AND stored_objects.content_type = EXCLUDED.content_type
+         AND stored_objects.access_class = EXCLUDED.access_class
+       RETURNING object_key`,
+      [metadata.key, metadata.sha256, metadata.byteSize, metadata.contentType, metadata.accessClass],
+    );
+    if (stored.rowCount !== 1) throw new Error("Object key already exists with different metadata");
+    const completed = await client.query(
+      `UPDATE exports SET object_key = $2, status = 'complete', completed_at = COALESCE(completed_at, now()), error = NULL
+       WHERE id = $1
+         AND status IN ('generating', 'failed', 'complete')
+         AND (object_key IS NULL OR object_key = $2)
+       RETURNING id`,
+      [exportId, metadata.key],
+    );
+    if (completed.rowCount !== 1) throw new Error("Export not found or already attached to another object");
+  });
+}
+
+export async function failExport(exportId: number): Promise<void> {
+  await query(
+    `UPDATE exports SET status = 'failed', error = $2, completed_at = NULL
+     WHERE id = $1 AND status <> 'complete'`,
+    [exportId, "artifact storage failed"],
+  );
+}
+
+export async function authorizedExportObject(input: {
+  userId: number;
+  exportId: number;
+}): Promise<{ metadata: ObjectMetadata; filename: string } | undefined> {
+  if (!Number.isSafeInteger(input.userId) || input.userId <= 0) throw new Error("Invalid user ID");
+  if (!Number.isSafeInteger(input.exportId) || input.exportId <= 0) throw new Error("Invalid export ID");
+  const result = await query<{
+    object_key: string;
+    sha256: string;
+    byte_size: string | number;
+    content_type: StoredContentType;
+    access_class: ObjectMetadata["accessClass"];
+    output_filename: string;
+  }>(
+    `SELECT so.object_key, so.sha256, so.byte_size, so.content_type, so.access_class, e.output_filename
+     FROM exports e
+     JOIN stored_objects so ON so.object_key = e.object_key
+     JOIN users requester ON requester.id = $1 AND requester.active = true
+     WHERE e.id = $2 AND e.status = 'complete' AND e.completed_at IS NOT NULL
+       AND (e.user_id = requester.id OR requester.role = 'admin')
+     LIMIT 1`,
+    [input.userId, input.exportId],
+  );
+  const row = result.rows[0];
+  if (!row) return undefined;
+  const metadata: ObjectMetadata = {
+    key: row.object_key,
+    sha256: row.sha256,
+    byteSize: Number(row.byte_size),
+    contentType: row.content_type,
+    accessClass: row.access_class,
+  };
+  validateObjectMetadata(metadata);
+  if (!row.output_filename) throw new Error("Completed export has no filename");
+  return { metadata, filename: row.output_filename };
 }
 
 export async function hasProcessedStripeEvent(eventId: string): Promise<boolean> {

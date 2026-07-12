@@ -55,6 +55,39 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "text/typescript",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);
+const EXTENSIONS = new Set(["png", "jpg", "webp", "json", "zip", "css", "js", "tsx"]);
+
+function encodeKeyPart(value: string): string {
+  const bytes = Buffer.from(value, "utf8");
+  if (bytes.length === 0 || bytes.length > 120) throw new Error("Invalid object-key identity part");
+  return bytes.toString("hex");
+}
+
+function checkedExtension(extension: string): string {
+  if (!EXTENSIONS.has(extension)) throw new Error("Invalid object extension");
+  return extension;
+}
+
+export function imageObjectKey(imageId: number, sha256: string, extension: string): string {
+  if (!Number.isSafeInteger(imageId) || imageId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid image object identity");
+  }
+  return `images/${imageId}/${sha256}.${checkedExtension(extension)}`;
+}
+
+export function failureObjectKey(runId: string, flowId: string, stepId: string, sha256: string): string {
+  if (!/^[1-9][0-9]*$/.test(runId) || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid failure object identity");
+  }
+  return `crawl-failures/${runId}/${encodeKeyPart(flowId)}/${encodeKeyPart(stepId)}/${sha256}.png`;
+}
+
+export function exportObjectKey(exportId: string, sha256: string, extension: string): string {
+  if (!/^[1-9][0-9]*$/.test(exportId) || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid export object identity");
+  }
+  return `exports/${exportId}/${sha256}.${checkedExtension(extension)}`;
+}
 
 function validateKey(key: string): void {
   const segments = key.split("/");

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import pg from "pg";
+import { failureObjectKey } from "./objectStore.ts";
 
 const ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres";
 const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_crawl_store_test";
@@ -32,6 +33,9 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
   const db = await import("./db.ts");
 
   try {
+    for (const migration of ["0001_current_schema.sql", "0002_object_storage.sql"]) {
+      await db.query(readFileSync(join(process.cwd(), "migrations", migration), "utf8"));
+    }
     for (const table of ["crawl_plans", "crawl_runs", "crawl_run_steps", "crawl_evidence", "crawl_repairs"]) {
       const result = await db.query<{ name: string | null }>("SELECT to_regclass($1) AS name", [table]);
       assert.equal(result.rows[0].name, table);
@@ -73,7 +77,8 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     await db.query(`
       TRUNCATE crawl_repairs, crawl_run_steps, crawl_evidence, crawl_runs, crawl_plans,
         collection_items, collections, app_flow_versions, design_system_versions,
-        version_images, app_versions, app_flows, design_systems, jobs, platforms, images, apps
+        version_images, app_versions, app_flows, design_systems, jobs, platforms, images, apps,
+        stored_objects
       RESTART IDENTITY CASCADE
     `);
     await db.query(`
@@ -234,7 +239,6 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       app: "durable-app",
       versionId: version.id,
       planId: approved.id,
-      imageUrl: "capture:1111111111111111",
       flowId: "core",
       stepId: "dashboard",
       sourceUrl: "https://example.com/home",
@@ -244,12 +248,26 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       viewportWidth: 1440,
       viewportHeight: 900,
     };
-    const bundle = await store.persistEvidenceBundle(bundleInput);
+    const bundleImageUrl = "capture:1111111111111111";
+    const reservedBundleImage = await store.reserveCaptureImage({ ...bundleInput, imageUrl: bundleImageUrl });
+    const bundleObject = {
+      key: `images/${reservedBundleImage.imageId}/${bundleInput.screenshotHash}.png`,
+      sha256: bundleInput.screenshotHash,
+      byteSize: 123,
+      contentType: "image/png" as const,
+      accessClass: "protected" as const,
+    };
+    const attachedBundleInput = {
+      ...bundleInput,
+      ...reservedBundleImage,
+      object: bundleObject,
+    };
+    const bundle = await store.persistEvidenceBundle(attachedBundleInput);
     assert.deepEqual(
       { imageCreated: bundle.imageCreated, evidenceCreated: bundle.evidenceCreated, reused: bundle.reused },
       { imageCreated: true, evidenceCreated: true, reused: false },
     );
-    const repeatedBundle = await store.persistEvidenceBundle(bundleInput);
+    const repeatedBundle = await store.persistEvidenceBundle({ ...attachedBundleInput, imageCreated: false });
     assert.equal(repeatedBundle.imageId, bundle.imageId);
     assert.equal(repeatedBundle.evidence.id, bundle.evidence.id);
     assert.deepEqual(
@@ -278,7 +296,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
          (SELECT count(*) FROM images WHERE image_url = $1)::text AS images,
          (SELECT count(*) FROM version_images WHERE version_id = $2 AND image_id = $3)::text AS memberships,
          (SELECT count(*) FROM crawl_evidence WHERE id = $4)::text AS evidence`,
-      [bundleInput.imageUrl, version.id, bundle.imageId, bundle.evidence.id],
+      [bundleImageUrl, version.id, bundle.imageId, bundle.evidence.id],
     )).rows[0];
     const beforeForgedLookup = await canonicalCounts();
     await assert.rejects(
@@ -294,26 +312,40 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       [version.id],
     );
     await assert.rejects(
-      () => store.persistEvidenceBundle({ ...bundleInput, versionId: otherDraft.rows[0].id }),
+      () => store.persistEvidenceBundle({ ...attachedBundleInput, versionId: otherDraft.rows[0].id }),
       /pinned version|run version/i,
     );
 
     const failedImageUrl = "capture:2222222222222222";
+    const failedHash = "2".repeat(64);
+    const failedReservation = await store.reserveCaptureImage({
+      ...bundleInput,
+      imageUrl: failedImageUrl,
+      finalUrl: "https://example.com/evidence-failure",
+    });
     await assert.rejects(
       () => store.persistEvidenceBundle({
         ...bundleInput,
-        imageUrl: failedImageUrl,
+        ...failedReservation,
+        object: {
+          key: `images/${failedReservation.imageId}/${failedHash}.png`,
+          sha256: failedHash,
+          byteSize: 456,
+          contentType: "image/png",
+          accessClass: "protected",
+        },
         finalUrl: "https://example.com/evidence-failure",
-        screenshotHash: "2".repeat(64),
+        screenshotHash: failedHash,
         capturedAt: "not-a-timestamp",
       }),
       /date|time|timestamp/i,
     );
     assert.equal((await db.query(
       `SELECT 1 FROM images i JOIN platforms p ON p.id = i.platform_id
-       WHERE p.app_id = (SELECT app_id FROM app_versions WHERE id = $1) AND p.name = 'web' AND i.image_url = $2`,
+       WHERE p.app_id = (SELECT app_id FROM app_versions WHERE id = $1) AND p.name = 'web'
+         AND i.image_url = $2 AND i.object_key IS NULL`,
       [version.id, failedImageUrl],
-    )).rowCount, 0);
+    )).rowCount, 1);
     assert.equal((await db.query(
       "SELECT 1 FROM crawl_evidence WHERE version_id = $1 AND final_url = 'https://example.com/evidence-failure'",
       [version.id],
@@ -391,6 +423,25 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       failureScreenshot: "screen-dashboard-failed",
     });
     assert.equal(failedStep.status, "failed");
+    const failureHash = "f".repeat(64);
+    const failureKey = failureObjectKey(run.id, "core", "dashboard", failureHash);
+    await store.attachFailureObject({
+      runId: run.id,
+      workerId: "crawler-1",
+      flowId: "core",
+      stepId: "dashboard",
+      object: {
+        key: failureKey,
+        sha256: failureHash,
+        byteSize: 123,
+        contentType: "image/png",
+        accessClass: "internal",
+      },
+    });
+    assert.equal((await db.query<{ failure_object_key: string | null }>(
+      "SELECT failure_object_key FROM crawl_run_steps WHERE run_id = $1 AND flow_id = $2 AND step_id = $3",
+      [run.id, "core", "dashboard"],
+    )).rows[0].failure_object_key, failureKey);
 
     const updated = await store.updateRun(run.id, "crawler-1", {
       currentFlowId: "core",
@@ -515,10 +566,14 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
         "SELECT 1 FROM version_images WHERE version_id = $1 AND image_id = $2",
         [version.id, firstReplay.imageId],
       )).rowCount, 1);
-      const replayFiles = readdirSync(join(replayDataDir, "images", "durable-app"));
-      assert.deepEqual(replayFiles, [`${firstReplay.observedHash.slice(0, 16)}.png`]);
+      const replayObjectDir = join(replayDataDir, "objects", "images", String(firstReplay.imageId));
+      const replayFiles = readdirSync(replayObjectDir);
+      assert.deepEqual(replayFiles.sort(), [
+        `${firstReplay.observedHash}.png`,
+        `${firstReplay.observedHash}.png.metadata.json`,
+      ]);
       assert.deepEqual(
-        readFileSync(join(replayDataDir, "images", "durable-app", replayFiles[0])),
+        readFileSync(join(replayObjectDir, `${firstReplay.observedHash}.png`)),
         Buffer.from("first run pixels"),
       );
 
