@@ -335,9 +335,19 @@ export async function finalizeCanonicalRun(
     throw new Error("Finalization snapshot does not match the pinned run");
   }
 
+  // Task 6 must persist observedHash + evidenceId before marking a step completed.
+  // Finalization deliberately ignores status-only rows so a crash cannot publish stale evidence.
+  const canonicalEvidenceById = new Map(snapshot.evidence.map((record) => [record.id, record]));
   const completedSteps = new Set(
     snapshot.steps
-      .filter((step) => step.status === "completed")
+      .filter((step) => {
+        const evidence = step.evidenceId ? canonicalEvidenceById.get(step.evidenceId) : undefined;
+        return step.status === "completed"
+          && evidence?.version_id === snapshot.versionId
+          && evidence.plan_id === snapshot.planId
+          && evidence.flow_id === step.flowId
+          && evidence.step_id === step.stepId;
+      })
       .map((step) => `${step.flowId}\u0000${step.stepId}`),
   );
   const completedFlowIds = snapshot.plan.flows

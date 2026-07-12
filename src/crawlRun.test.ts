@@ -625,6 +625,11 @@ test("durable finalization loads the pinned run and saves plan-ordered flows by 
     steps: [{ label: "Previous", evidence: [99] }],
   };
   const saved: Array<{ runId: string; workerId: string; app: string; flows: DesignFlow[] }> = [];
+  const evidence = [
+    canonicalEvidence(1, "complete", "complete-step-1", "https://example.com/first"),
+    canonicalEvidence(2, "complete", "complete-step-2", "https://example.com/second"),
+    canonicalEvidence(3, "partial", "partial-step-1", "https://example.com/partial"),
+  ];
 
   const flows = await finalizeCanonicalRun(
     { runId: "run-1", workerId: "worker-1" },
@@ -636,15 +641,11 @@ test("durable finalization loads the pinned run and saves plan-ordered flows by 
         planId: "plan-1",
         plan,
         steps: [
-          { flowId: "complete", stepId: "complete-step-1", status: "completed" },
-          { flowId: "complete", stepId: "complete-step-2", status: "completed" },
-          { flowId: "partial", stepId: "partial-step-1", status: "completed" },
+          { flowId: "complete", stepId: "complete-step-1", status: "completed", evidenceId: evidence[0].id },
+          { flowId: "complete", stepId: "complete-step-2", status: "completed", evidenceId: evidence[1].id },
+          { flowId: "partial", stepId: "partial-step-1", status: "completed", evidenceId: evidence[2].id },
         ],
-        evidence: [
-          canonicalEvidence(1, "complete", "complete-step-1", "https://example.com/first"),
-          canonicalEvidence(2, "complete", "complete-step-2", "https://example.com/second"),
-          canonicalEvidence(3, "partial", "partial-step-1", "https://example.com/partial"),
-        ],
+        evidence,
       }),
       getAppFlows: async (app) => {
         assert.equal(app, "fixture-app");
@@ -668,4 +669,53 @@ test("durable finalization loads the pinned run and saves plan-ordered flows by 
     app: "fixture-app",
     flows,
   }]);
+});
+
+test("durable finalization retains an existing flow when a completed step lacks matching evidence", async () => {
+  const flow = plannedFlow("unlinked", ["Observed"]);
+  const plan: CrawlPlan = {
+    app: "fixture-app",
+    revision: 1,
+    startUrl: "https://example.com",
+    domain: "example.com",
+    sources: [],
+    reviewed: true,
+    flows: [flow],
+  };
+  const retained: DesignFlow = {
+    id: "unlinked",
+    title: "Previously curated",
+    description: "Keep until the run step links evidence",
+    tags: ["manual"],
+    steps: [{ label: "Previous", evidence: [99] }],
+  };
+  let saves = 0;
+
+  const flows = await finalizeCanonicalRun(
+    { runId: "run-1", workerId: "worker-1" },
+    {
+      loadWorkerRunFinalization: async () => ({
+        runId: "run-1",
+        app: "fixture-app",
+        versionId: 1,
+        planId: "plan-1",
+        plan,
+        steps: [{
+          flowId: "unlinked",
+          stepId: "unlinked-step-1",
+          status: "completed",
+          evidenceId: "evidence-for-another-step",
+        }],
+        evidence: [
+          canonicalEvidence(1, "unlinked", "unlinked-step-1", "https://example.com/observed"),
+          canonicalEvidence(2, "other", "other-step", "https://example.com/other", { id: "evidence-for-another-step" }),
+        ],
+      }),
+      getAppFlows: async () => [retained],
+      saveWorkerAppFlows: async () => { saves++; },
+    },
+  );
+
+  assert.equal(flows[0], retained);
+  assert.equal(saves, 0);
 });

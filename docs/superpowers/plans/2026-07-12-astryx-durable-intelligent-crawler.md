@@ -395,7 +395,7 @@ Expected: all persistence tests pass against PostgreSQL.
 - Modify: `src/imageSource.ts`
 - Modify: `src/imageSource.test.ts`
 
-- [ ] **Step 1: Write a two-run idempotency test**
+- [x] **Step 1: Write a two-run idempotency test**
 
 The same draft, plan revision, flow, step, URL, and viewport is executed twice with different in-memory PNG bytes. Assert:
 
@@ -405,7 +405,7 @@ The same draft, plan revision, flow, step, URL, and viewport is executed twice w
 - both runs link the same canonical evidence;
 - a new draft version may create a new logical evidence row but reuses the file when bytes match.
 
-- [ ] **Step 2: Implement an atomic capture store**
+- [x] **Step 2: Implement an atomic capture store**
 
 `captureValidatedState()` must:
 
@@ -417,11 +417,11 @@ The same draft, plan revision, flow, step, URL, and viewport is executed twice w
 6. atomically insert/reuse the image row and `crawl_evidence` row;
 7. attach the image to the draft version.
 
-- [ ] **Step 3: Assemble flows from canonical evidence**
+- [x] **Step 3: Assemble flows from canonical evidence**
 
 Replace timing-ledger assembly with plan-order assembly. Include only flows whose required steps completed, retain partial evidence separately through run-step records, and upsert the existing `app_flows` working draft by stable flow ID.
 
-- [ ] **Step 4: Run capture tests**
+- [x] **Step 4: Run capture tests**
 
 ```bash
 node --experimental-strip-types --test src/crawlRun.test.ts src/smartCrawler.test.ts src/imageSource.test.ts

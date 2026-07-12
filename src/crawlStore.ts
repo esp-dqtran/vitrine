@@ -214,7 +214,7 @@ export interface WorkerRunFinalizationSnapshot {
   versionId: number;
   planId: string;
   plan: CrawlPlan;
-  steps: Array<{ flowId: string; stepId: string; status: CrawlRunStepStatus }>;
+  steps: Array<{ flowId: string; stepId: string; status: CrawlRunStepStatus; evidenceId: string | null }>;
   evidence: CrawlEvidenceRecord[];
 }
 
@@ -993,8 +993,9 @@ export async function loadWorkerRunFinalization(
       flow_id: string;
       step_id: string;
       status: CrawlRunStepStatus;
+      evidence_id: string | null;
     }>(
-      `SELECT flow_id, step_id, status FROM crawl_run_steps
+      `SELECT flow_id, step_id, status, evidence_id FROM crawl_run_steps
        WHERE run_id = $1 ORDER BY flow_order, step_order`,
       [runId],
     );
@@ -1014,6 +1015,7 @@ export async function loadWorkerRunFinalization(
         flowId: step.flow_id,
         stepId: step.step_id,
         status: step.status,
+        evidenceId: step.evidence_id,
       })),
       evidence: evidence.rows,
     };
