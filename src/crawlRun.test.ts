@@ -5,7 +5,12 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { CrawlFlow, CrawlPlan, CrawlStep } from "./crawlPlan.ts";
-import type { CreateEvidenceInput, CrawlEvidenceRecord, EvidenceKey } from "./crawlStore.ts";
+import type {
+  CrawlEvidenceRecord,
+  EvidenceKey,
+  PersistEvidenceBundleInput,
+  PersistEvidenceBundleResult,
+} from "./crawlStore.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import {
   assembleCanonicalFlows,
@@ -31,8 +36,6 @@ function identity(overrides: Partial<CompletedCaptureIdentity> = {}): CompletedC
     stepId: "open-settings",
     stateLabel: "Settings open",
     sourceUrl: "https://example.com/home?session=discarded",
-    finalUrl: "https://example.com/settings?attempt=1#panel",
-    viewport: { width: 1280, height: 720 },
     ...overrides,
   };
 }
@@ -91,21 +94,35 @@ function sameEvidenceKey(record: CrawlEvidenceRecord, key: EvidenceKey): boolean
 function fakeCaptureStore(dataDir: string) {
   const evidences: CrawlEvidenceRecord[] = [];
   const images = new Map<string, number>();
-  const insertCalls: string[] = [];
-  const state = { failEvidence: false };
+  const versionImages = new Map<number, Set<number>>();
+  const persistCalls: string[] = [];
+  const state = { failBundle: false };
 
   const findEvidence = async (key: EvidenceKey): Promise<CrawlEvidenceRecord | undefined> =>
     evidences.find((record) => sameEvidenceKey(record, key));
 
-  const createEvidence = async (input: CreateEvidenceInput): Promise<CrawlEvidenceRecord> => {
-    if (state.failEvidence) throw new Error("evidence database unavailable");
+  const persistEvidenceBundle = async (
+    input: PersistEvidenceBundleInput,
+  ): Promise<PersistEvidenceBundleResult> => {
+    persistCalls.push(input.imageUrl);
     const existing = await findEvidence(input);
-    if (existing) return existing;
+    if (existing) {
+      return {
+        imageId: existing.image_id,
+        evidence: existing,
+        imageCreated: false,
+        evidenceCreated: false,
+        reused: true,
+      };
+    }
+
+    const existingImageId = images.get(input.imageUrl);
+    const imageId = existingImageId ?? images.size + 1;
     const record: CrawlEvidenceRecord = {
       id: `evidence-${evidences.length + 1}`,
       version_id: input.versionId,
       plan_id: input.planId,
-      image_id: input.imageId,
+      image_id: imageId,
       flow_id: input.flowId,
       step_id: input.stepId,
       source_url: input.sourceUrl,
@@ -116,25 +133,23 @@ function fakeCaptureStore(dataDir: string) {
       viewport_height: input.viewportHeight,
       captured_at: new Date(`2026-07-12T00:00:0${evidences.length}Z`),
     };
+    if (state.failBundle) throw new Error("evidence database unavailable");
+    if (existingImageId === undefined) images.set(input.imageUrl, imageId);
+    const membership = versionImages.get(input.versionId) ?? new Set<number>();
+    membership.add(imageId);
+    versionImages.set(input.versionId, membership);
     evidences.push(record);
-    return record;
+    return {
+      imageId,
+      evidence: record,
+      imageCreated: existingImageId === undefined,
+      evidenceCreated: true,
+      reused: false,
+    };
   };
 
-  const insertImage: CaptureDependencies["insertImage"] = async (app, platform, ref, capture) => {
-    assert.equal(app, "fixture-app");
-    assert.equal(platform, "web");
-    assert.ok(capture);
-    assert.equal(capture.stateContext, "Settings open");
-    insertCalls.push(ref);
-    const existing = images.get(ref);
-    if (existing !== undefined) return existing;
-    const id = images.size + 1;
-    images.set(ref, id);
-    return id;
-  };
-
-  const deps: CaptureDependencies = { dataDir, findEvidence, createEvidence, insertImage };
-  return { deps, evidences, images, insertCalls, state };
+  const deps: CaptureDependencies = { dataDir, findEvidence, persistEvidenceBundle, secretValues: [] };
+  return { deps, evidences, images, versionImages, persistCalls, state };
 }
 
 function imageFiles(dataDir: string): string[] {
@@ -156,7 +171,7 @@ test("first canonical evidence wins while every run retains its observed screens
     const first = await captureValidatedState(screenshotPage(shotA), identity(), store.deps);
     const second = await captureValidatedState(
       screenshotPage(shotB),
-      identity({ runId: "run-2", finalUrl: "https://example.com/settings?attempt=2#changed" }),
+      identity({ runId: "run-2" }),
       store.deps,
     );
 
@@ -179,7 +194,7 @@ test("first canonical evidence wins while every run retains its observed screens
     assert.equal(first.evidence.final_url, "https://example.com/settings");
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
-    assert.equal(store.insertCalls.length, 1);
+    assert.equal(store.persistCalls.length, 1);
     assert.deepEqual(imageFiles(dataDir), [`${sha256(shotA).slice(0, 16)}.png`]);
     assert.deepEqual(readFileSync(join(dataDir, "images", "fixture-app", `${sha256(shotA).slice(0, 16)}.png`)), shotA);
   } finally {
@@ -211,7 +226,9 @@ test("a new draft version reuses identical media but creates new logical evidenc
     );
     assert.equal(store.evidences.length, 2);
     assert.equal(store.images.size, 1);
-    assert.equal(store.insertCalls.length, 2);
+    assert.equal(store.persistCalls.length, 2);
+    assert.deepEqual([...store.versionImages.get(1) ?? []], [first.imageId]);
+    assert.deepEqual([...store.versionImages.get(2) ?? []], [second.imageId]);
     assert.deepEqual(imageFiles(dataDir), [`${sha256(screenshot).slice(0, 16)}.png`]);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
@@ -233,7 +250,7 @@ test("an exact repeated capture creates no duplicate row, image, or file", async
     assert.equal(repeated.observedHash, sha256(screenshot));
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
-    assert.equal(store.insertCalls.length, 1);
+    assert.equal(store.persistCalls.length, 1);
     assert.equal(imageFiles(dataDir).length, 1);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
@@ -259,7 +276,7 @@ test("an existing short-hash target is verified and a collision fails before dat
 
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
-    assert.equal(store.insertCalls.length, 1);
+    assert.equal(store.persistCalls.length, 1);
     assert.deepEqual(imageFiles(dataDir), ["aaaaaaaaaaaaaaaa.png"]);
     assert.equal(imageFiles(dataDir).some((name) => name.includes(".tmp")), false);
   } finally {
@@ -273,18 +290,19 @@ test("evidence failure throws, cleans temporary files, and permits a safe retry"
   const screenshot = Buffer.from("durable before database failure");
 
   try {
-    store.state.failEvidence = true;
+    store.state.failBundle = true;
     await assert.rejects(
       captureValidatedState(screenshotPage(screenshot), identity(), store.deps),
       /evidence database unavailable/,
     );
 
     assert.equal(store.evidences.length, 0);
-    assert.equal(store.images.size, 1);
+    assert.equal(store.images.size, 0);
+    assert.equal(store.versionImages.size, 0);
     assert.deepEqual(imageFiles(dataDir), [`${sha256(screenshot).slice(0, 16)}.png`]);
     assert.equal(imageFiles(dataDir).some((name) => name.includes(".tmp")), false);
 
-    store.state.failEvidence = false;
+    store.state.failBundle = false;
     const retried = await captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps);
     assert.equal(retried.newFile, false);
     assert.equal(retried.reused, false);
@@ -333,7 +351,11 @@ test("capture derives the durable URL and viewport from stable page state", asyn
   try {
     const captured = await captureValidatedState(
       page,
-      identity({ finalUrl: "https://attacker.example/forged", viewport: { width: 1, height: 1 } }),
+      {
+        ...identity(),
+        finalUrl: "https://attacker.example/forged",
+        viewport: { width: 1, height: 1 },
+      } as CompletedCaptureIdentity,
       store.deps,
     );
 
