@@ -272,6 +272,34 @@ test("baseline migration preserves existing published and draft image membership
   ]);
 });
 
+test("object storage migration preserves every legacy image reference", {
+  skip: postgresSkipReason,
+}, async (t) => {
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP SCHEMA public CASCADE");
+  await pool.query("CREATE SCHEMA public");
+
+  const [baseline] = await discoverMigrations();
+  await pool.query(baseline.sql);
+  await pool.query(await readFile(
+    new URL("../tests/fixtures/current-schema-upgrade.sql", import.meta.url),
+    "utf8",
+  ));
+  const before = (await pool.query("SELECT id, image_url FROM images ORDER BY id")).rows;
+
+  await applyMigrations(pool);
+
+  assert.deepEqual((await pool.query("SELECT id, image_url FROM images ORDER BY id")).rows, before);
+  assert.equal((await pool.query("SELECT max(version)::integer AS head FROM schema_migrations")).rows[0].head, 2);
+  assert.equal((await pool.query("SELECT count(*)::integer AS count FROM stored_objects")).rows[0].count, 0);
+  assert.equal((await pool.query("SELECT count(*)::integer AS count FROM images WHERE object_key IS NOT NULL")).rows[0].count, 0);
+  assert.equal((await pool.query("SELECT count(*)::integer AS count FROM app_preview_images")).rows[0].count, 0);
+  assert.equal((await pool.query("SELECT count(*)::integer AS count FROM media_migration_state")).rows[0].count, 0);
+  assert.equal((await pool.query("SELECT count(*)::integer AS count FROM object_gc_marks")).rows[0].count, 0);
+  assert.deepEqual((await applyMigrations(pool)).appliedVersions, []);
+});
+
 test("baseline migration consolidates legacy duplicate image references", {
   skip: postgresSkipReason,
 }, async (t) => {

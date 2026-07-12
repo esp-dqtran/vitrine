@@ -41,6 +41,19 @@ const TABLE_ORDER = {
   collection_items: "id",
 } as const;
 
+const OBJECT_STORAGE_TABLES = [
+  "app_preview_images",
+  "media_migration_state",
+  "object_gc_marks",
+  "stored_objects",
+] as const;
+
+const ADDED_NULLABLE_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
+  images: ["object_key"],
+  exports: ["object_key"],
+  crawl_run_steps: ["failure_object_key"],
+};
+
 const SEQUENCE_MAX_ID = {
   apps_id_seq: "apps",
   platforms_id_seq: "platforms",
@@ -161,8 +174,12 @@ async function captureUpgradeState(pool: pg.Pool): Promise<UpgradeState> {
       `SELECT count(*)::integer AS count FROM ${identifier}`,
     );
     counts[table] = count.rows[0].count;
+    const omitted = ADDED_NULLABLE_COLUMNS[table as keyof typeof TABLE_ORDER] ?? [];
+    const value = omitted.length
+      ? `to_jsonb(ordered_row) - ARRAY[${omitted.map((column) => `'${column}'`).join(", ")}]::text[]`
+      : "to_jsonb(ordered_row)";
     const rows = await pool.query<{ value: string }>(
-      `SELECT to_jsonb(ordered_row)::text AS value
+      `SELECT (${value})::text AS value
        FROM (SELECT * FROM ${identifier} ORDER BY ${order}) ordered_row`,
     );
     hashes[table] = sha256(rows.rows.map((row) => row.value).join("\n"));
@@ -202,7 +219,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
     await pool.query("SET TIME ZONE 'UTC'");
     await applyMigrations(pool);
     await assertMigrationsCurrent(pool);
-    const expectedTables = [...Object.keys(TABLE_ORDER), "schema_migrations"].sort();
+    const expectedTables = [...Object.keys(TABLE_ORDER), ...OBJECT_STORAGE_TABLES, "schema_migrations"].sort();
     const tables = await publicTables(pool);
     assert.deepEqual(tables, expectedTables, "empty install created an unexpected table set");
     const rerun = await applyMigrations(pool);
@@ -235,6 +252,15 @@ async function verifyUpgradeDatabase(databaseUrlValue: string): Promise<Migratio
     const after = await captureUpgradeState(pool);
     assert.deepEqual(after.counts, before.counts, "upgrade changed protected row counts");
     assert.deepEqual(after.hashes, before.hashes, "upgrade changed protected rows or sequences");
+    for (const table of OBJECT_STORAGE_TABLES) {
+      const result = await pool.query<{ count: number }>(
+        `SELECT count(*)::integer AS count FROM ${quotedIdentifier(table)}`,
+      );
+      assert.equal(result.rows[0].count, 0, `${table} must start empty`);
+    }
+    assert.equal((await pool.query<{ count: number }>(
+      "SELECT count(*)::integer AS count FROM images WHERE object_key IS NOT NULL",
+    )).rows[0].count, 0, "upgrade must preserve legacy image references");
 
     const rerun = await applyMigrations(pool);
     return {

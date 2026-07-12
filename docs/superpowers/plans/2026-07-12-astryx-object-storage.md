@@ -59,7 +59,7 @@
 - Modify: `scripts/verify-migrations.ts`
 - Modify: `tests/fixtures/current-schema-upgrade.sql`
 
-- [ ] **Step 1: Write failing migration-boundary tests**
+- [x] **Step 1: Write failing migration-boundary tests**
 
 Add assertions that empty installation reaches head 2 and that an upgrade from the 26-table fixture preserves every existing row/hash while adding only nullable object references and empty control tables. Assert rerun applies zero migrations.
 
@@ -73,13 +73,13 @@ test("object storage migration preserves every legacy image reference", async ()
 });
 ```
 
-- [ ] **Step 2: Run the migration tests and record the missing-version failure**
+- [x] **Step 2: Run the migration tests and record the missing-version failure**
 
 Run: `node --experimental-strip-types --test --test-name-pattern='object storage migration' src/migrations.test.ts`
 
 Expected: FAIL because migration 0002 and its tables/columns do not exist.
 
-- [ ] **Step 3: Create migration 0002**
+- [x] **Step 3: Create migration 0002**
 
 Use the following ownership model. Do not rewrite or delete `images.image_url` in this migration.
 
@@ -130,7 +130,7 @@ CREATE TABLE object_gc_marks (
 
 Update the verifier so `protected legacy tables` are hashed before/after while the expected post-migration table allowlist separately includes the four new tables.
 
-- [ ] **Step 4: Run empty and upgrade verification**
+- [x] **Step 4: Run empty and upgrade verification**
 
 ```bash
 node --experimental-strip-types --test src/migrations.test.ts
@@ -140,7 +140,7 @@ MIGRATION_TEST_ALLOW_DROP=1 npm run db:verify
 
 Expected: head 2, preserved legacy counts/hashes, new tables empty, rerun 0.
 
-- [ ] **Step 5: Commit the migration**
+- [x] **Step 5: Commit the migration**
 
 ```bash
 git add migrations/0002_object_storage.sql src/migrations.test.ts scripts/verify-migrations.ts tests/fixtures/current-schema-upgrade.sql
