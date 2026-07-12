@@ -3,7 +3,36 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { discoverMigrations, validateMigrationState } from "./migrations.ts";
+import pg from "pg";
+import {
+  applyMigrations,
+  assertMigrationsCurrent,
+  discoverMigrations,
+  redactMigrationError,
+  validateMigrationState,
+} from "./migrations.ts";
+
+const ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres";
+const TEST_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/astryx_migrations_test";
+
+async function ensureMigrationTestDatabase(): Promise<string | undefined> {
+  const client = new pg.Client({ connectionString: ADMIN_URL });
+  try {
+    await client.connect();
+  } catch {
+    return "Postgres not running — docker compose up -d postgres";
+  }
+  try {
+    await client.query("CREATE DATABASE astryx_migrations_test");
+  } catch (error) {
+    if ((error as { code?: string }).code !== "42P04") throw error;
+  } finally {
+    await client.end();
+  }
+  return undefined;
+}
+
+const postgresSkipReason = await ensureMigrationTestDatabase();
 
 async function temporaryDirectory(t: { after(fn: () => Promise<void>): void }): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), "astryx-migrations-"));
@@ -78,4 +107,86 @@ test("rejects changed, missing, and discontinuous applied migrations", async (t)
     name: "more",
     checksum: files[1].checksum,
   }]), /sequence gap at version 2/);
+});
+
+test("redacts database URLs and decoded passwords from migration errors", () => {
+  const databaseUrl = "postgres://operator:p%40ssword@db.internal:5432/astryx";
+  const error = new Error(`connection failed for ${databaseUrl} with password p@ssword`);
+
+  const message = redactMigrationError(error, databaseUrl);
+
+  assert.doesNotMatch(message, /operator|p%40ssword|p@ssword|db\.internal/);
+  assert.match(message, /redacted/);
+});
+
+test("applies pending migrations once and rejects an edited applied file", { skip: postgresSkipReason }, async (t) => {
+  const directory = await temporaryDirectory(t);
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP TABLE IF EXISTS schema_migrations, migration_probe CASCADE");
+  await writeFile(join(directory, "0001_base.sql"),
+    "CREATE TABLE migration_probe (id integer PRIMARY KEY, label text NOT NULL);\n");
+  await writeFile(join(directory, "0002_seed.sql"),
+    "INSERT INTO migration_probe (id, label) VALUES (1, 'ready');\n");
+
+  assert.deepEqual((await applyMigrations(pool, directory)).appliedVersions, [1, 2]);
+  assert.deepEqual((await pool.query("SELECT id, label FROM migration_probe")).rows, [{ id: 1, label: "ready" }]);
+  await assertMigrationsCurrent(pool, directory);
+  assert.deepEqual((await applyMigrations(pool, directory)).appliedVersions, []);
+
+  await writeFile(join(directory, "0001_base.sql"), "SELECT 999;\n");
+  await assert.rejects(() => assertMigrationsCurrent(pool, directory), /does not match its immutable file/);
+});
+
+test("rolls back a failed migration and omits its ledger row", { skip: postgresSkipReason }, async (t) => {
+  const directory = await temporaryDirectory(t);
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP TABLE IF EXISTS schema_migrations, migration_probe, rollback_probe CASCADE");
+  await writeFile(join(directory, "0001_base.sql"),
+    "CREATE TABLE migration_probe (id integer PRIMARY KEY);\n");
+  await applyMigrations(pool, directory);
+  await writeFile(join(directory, "0002_bad.sql"),
+    "CREATE TABLE rollback_probe (id integer PRIMARY KEY);\nSELECT missing_column FROM rollback_probe;\n");
+
+  await assert.rejects(() => applyMigrations(pool, directory), /missing_column/);
+  assert.equal((await pool.query<{ name: string | null }>(
+    "SELECT to_regclass('rollback_probe') AS name",
+  )).rows[0].name, null);
+  assert.deepEqual(
+    (await pool.query<{ version: number }>("SELECT version FROM schema_migrations ORDER BY version")).rows,
+    [{ version: 1 }],
+  );
+});
+
+test("read-only assertion does not create a missing migration ledger", { skip: postgresSkipReason }, async (t) => {
+  const directory = await temporaryDirectory(t);
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await pool.query("DROP TABLE IF EXISTS schema_migrations CASCADE");
+  await writeFile(join(directory, "0001_base.sql"), "SELECT 1;\n");
+
+  await assert.rejects(() => assertMigrationsCurrent(pool, directory), /have not been applied/);
+  assert.equal((await pool.query<{ name: string | null }>(
+    "SELECT to_regclass('schema_migrations') AS name",
+  )).rows[0].name, null);
+});
+
+test("migration application times out while another session owns the lock", { skip: postgresSkipReason }, async (t) => {
+  const directory = await temporaryDirectory(t);
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  const holder = await pool.connect();
+  t.after(async () => {
+    await holder.query("SELECT pg_advisory_unlock(hashtext('astryx-schema-migrations'))");
+    holder.release();
+    await pool.end();
+  });
+  await pool.query("DROP TABLE IF EXISTS schema_migrations CASCADE");
+  await writeFile(join(directory, "0001_base.sql"), "SELECT 1;\n");
+  await holder.query("SELECT pg_advisory_lock(hashtext('astryx-schema-migrations'))");
+
+  await assert.rejects(
+    () => applyMigrations(pool, directory, { lockTimeoutMs: 30, lockPollMs: 5 }),
+    /migration lock timeout/i,
+  );
 });

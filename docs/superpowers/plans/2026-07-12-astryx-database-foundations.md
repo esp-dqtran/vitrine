@@ -198,7 +198,7 @@ git commit -m "feat: add immutable migration manifests"
 - Create: `scripts/check-migrations.ts`
 - Modify: `package.json`
 
-- [ ] **Step 1: Write failing runner tests**
+- [x] **Step 1: Write failing runner tests**
 
 Use a disposable PostgreSQL database (skip only when local PostgreSQL is unavailable) to prove:
 
@@ -238,13 +238,13 @@ test("rolls back a failed migration and does not write its ledger row", async ()
 });
 ```
 
-- [ ] **Step 2: Run the tests and confirm exports are missing**
+- [x] **Step 2: Run the tests and confirm exports are missing**
 
 Run: `node --experimental-strip-types --test src/migrations.test.ts`
 
 Expected: FAIL because `applyMigrations` and `assertMigrationsCurrent` are not exported.
 
-- [ ] **Step 3: Implement the PostgreSQL runner**
+- [x] **Step 3: Implement the PostgreSQL runner**
 
 Add a ledger constant, session advisory lock, applied-row reader, and public operations:
 
@@ -316,7 +316,7 @@ export async function applyMigrations(pool: pg.Pool, directory = "migrations") {
 
 Use `pg_try_advisory_lock` with bounded polling instead of an unbounded wait in the final implementation; the test injects a short timeout and proves the distinct lock-timeout error.
 
-- [ ] **Step 4: Add explicit commands**
+- [x] **Step 4: Add explicit commands**
 
 `scripts/migrate.ts` validates `DATABASE_URL`, creates a pool, calls `applyMigrations`, emits one JSON summary, and closes the pool in `finally`. `scripts/check-migrations.ts` does the same with `assertMigrationsCurrent` and never creates the ledger.
 
@@ -330,7 +330,7 @@ Add package scripts using the production-compatible Node runtime:
 "db:restore-verify": "node --experimental-strip-types scripts/db-restore-verify.ts"
 ```
 
-- [ ] **Step 5: Run focused tests and command argument checks**
+- [x] **Step 5: Run focused tests and command argument checks**
 
 Run:
 
@@ -341,7 +341,7 @@ env -u DATABASE_URL npm run db:migrate
 
 Expected: tests PASS; the command without `DATABASE_URL` exits non-zero with `DATABASE_URL is required` and prints no connection string.
 
-- [ ] **Step 6: Commit the runner**
+- [x] **Step 6: Commit the runner**
 
 ```bash
 git add src/migrations.ts src/migrations.test.ts scripts/migrate.ts scripts/check-migrations.ts package.json
