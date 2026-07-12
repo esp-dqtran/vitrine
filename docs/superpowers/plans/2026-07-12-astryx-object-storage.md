@@ -153,7 +153,7 @@ git commit -m "feat: add durable object metadata"
 - Create: `src/objectStore.ts`
 - Create: `src/objectStore.test.ts`
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 Cover traversal (`..`, leading slash, backslash, control bytes), allowed key characters, MIME allowlist, declared versus measured bytes, SHA-256 mismatch, no-overwrite mismatch, idempotent same-content put, get/head/delete, and a 64 MiB media ceiling.
 
@@ -179,13 +179,13 @@ assert.deepEqual(await store.put(input), {
 assert.equal((await store.put(input)).created, false);
 ```
 
-- [ ] **Step 2: Run and confirm the module is missing**
+- [x] **Step 2: Run and confirm the module is missing**
 
 Run: `node --experimental-strip-types --test src/objectStore.test.ts`
 
 Expected: FAIL with `ERR_MODULE_NOT_FOUND`.
 
-- [ ] **Step 3: Implement the minimal contract and local adapter**
+- [x] **Step 3: Implement the minimal contract and local adapter**
 
 ```typescript
 export type StoredContentType =
@@ -213,13 +213,13 @@ export interface ObjectStore {
 
 The filesystem adapter writes a same-directory temporary file with mode `0600`, fsyncs, atomically renames, writes a JSON metadata sidecar, and re-reads metadata on every idempotent collision. Resolve every path under one configured root and reject anything whose resolved path escapes it.
 
-- [ ] **Step 4: Run tests and TypeScript**
+- [x] **Step 4: Run tests and TypeScript**
 
 Run: `node --experimental-strip-types --test src/objectStore.test.ts && npx tsc --noEmit`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the local adapter**
+- [x] **Step 5: Commit the local adapter**
 
 ```bash
 git add src/objectStore.ts src/objectStore.test.ts
