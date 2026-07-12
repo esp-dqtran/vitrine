@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type pg from "pg";
 import { parseCrawlPlan, parseCrawlStep, type CrawlPlan, type CrawlStep } from "./crawlPlan.ts";
 import { query, withTransaction } from "./db.ts";
+import type { DesignFlow } from "./designSystem.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -172,6 +173,12 @@ export interface EvidenceKey {
   viewportHeight: number;
 }
 
+export interface FindWorkerEvidenceInput extends EvidenceKey {
+  runId: string;
+  workerId: string;
+  app: string;
+}
+
 export interface CreateEvidenceInput extends EvidenceKey {
   runId: string;
   workerId: string;
@@ -199,6 +206,23 @@ export interface PersistEvidenceBundleResult {
   imageCreated: boolean;
   evidenceCreated: boolean;
   reused: boolean;
+}
+
+export interface WorkerRunFinalizationSnapshot {
+  runId: string;
+  app: string;
+  versionId: number;
+  planId: string;
+  plan: CrawlPlan;
+  steps: Array<{ flowId: string; stepId: string; status: CrawlRunStepStatus }>;
+  evidence: CrawlEvidenceRecord[];
+}
+
+export interface SaveWorkerAppFlowsInput {
+  runId: string;
+  workerId: string;
+  app: string;
+  flows: DesignFlow[];
 }
 
 export interface ProposeRepairInput {
@@ -732,6 +756,43 @@ export async function findEvidence(key: EvidenceKey): Promise<CrawlEvidenceRecor
   return result.rows[0];
 }
 
+export async function findWorkerEvidence(input: FindWorkerEvidenceInput): Promise<CrawlEvidenceRecord | undefined> {
+  validateEvidenceKey(input);
+  nonEmpty(input.runId, "Run id");
+  nonEmpty(input.app, "Evidence app");
+  assertNoSecrets(input, "Worker evidence lookup");
+  return withTransaction(async (client) => {
+    const locked = await lockedWorkerRun(client, input.runId, input.workerId);
+    if (
+      locked.run.app !== input.app ||
+      locked.run.version_id !== input.versionId ||
+      locked.run.plan_id !== input.planId ||
+      locked.plan.app_id !== locked.run.app_id ||
+      locked.plan.app !== input.app
+    ) {
+      throw new Error("Evidence lookup must use the run's pinned app, version and plan");
+    }
+    if (!planHasStep(locked.plan.plan, input.flowId, input.stepId)) {
+      throw new Error("Evidence flow and step are not present in the pinned plan");
+    }
+    const result = await client.query<CrawlEvidenceRecord>(
+      `SELECT * FROM crawl_evidence
+       WHERE version_id = $1 AND plan_id = $2 AND flow_id = $3 AND step_id = $4
+         AND final_url = $5 AND viewport_width = $6 AND viewport_height = $7`,
+      [
+        input.versionId,
+        input.planId,
+        input.flowId,
+        input.stepId,
+        input.finalUrl,
+        input.viewportWidth,
+        input.viewportHeight,
+      ],
+    );
+    return result.rows[0];
+  });
+}
+
 export async function createEvidence(input: CreateEvidenceInput): Promise<CrawlEvidenceRecord> {
   validateEvidenceKey(input);
   assertNoSecrets(input, "Crawl evidence");
@@ -918,6 +979,73 @@ export async function persistEvidenceBundle(input: PersistEvidenceBundleInput): 
       evidenceCreated,
       reused: !evidenceCreated,
     };
+  });
+}
+
+export async function loadWorkerRunFinalization(
+  runId: string,
+  workerId: string,
+): Promise<WorkerRunFinalizationSnapshot> {
+  nonEmpty(runId, "Run id");
+  return withTransaction(async (client) => {
+    const locked = await lockedWorkerRun(client, runId, workerId);
+    const steps = await client.query<{
+      flow_id: string;
+      step_id: string;
+      status: CrawlRunStepStatus;
+    }>(
+      `SELECT flow_id, step_id, status FROM crawl_run_steps
+       WHERE run_id = $1 ORDER BY flow_order, step_order`,
+      [runId],
+    );
+    const evidence = await client.query<CrawlEvidenceRecord>(
+      `SELECT * FROM crawl_evidence
+       WHERE version_id = $1 AND plan_id = $2
+       ORDER BY flow_id, step_id, final_url, viewport_width, viewport_height, image_id`,
+      [locked.run.version_id, locked.run.plan_id],
+    );
+    return {
+      runId: locked.run.id,
+      app: locked.run.app,
+      versionId: locked.run.version_id,
+      planId: locked.run.plan_id,
+      plan: locked.plan.plan,
+      steps: steps.rows.map((step) => ({
+        flowId: step.flow_id,
+        stepId: step.step_id,
+        status: step.status,
+      })),
+      evidence: evidence.rows,
+    };
+  });
+}
+
+export async function saveWorkerAppFlows(input: SaveWorkerAppFlowsInput): Promise<void> {
+  nonEmpty(input.runId, "Run id");
+  nonEmpty(input.app, "App");
+  if (!Array.isArray(input.flows)) throw new Error("App flows must be an array");
+  const ids = new Set<string>();
+  for (const flow of input.flows) {
+    const id = nonEmpty(flow.id, "Flow id");
+    if (ids.has(id)) throw new Error("App flow ids must be unique");
+    ids.add(id);
+  }
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(input.flows);
+  } catch {
+    throw new Error("App flows must be JSON-serializable");
+  }
+  return withTransaction(async (client) => {
+    const locked = await lockedWorkerRun(client, input.runId, input.workerId);
+    if (locked.run.app !== input.app || locked.plan.app_id !== locked.run.app_id) {
+      throw new Error("App flows must use the run's pinned app");
+    }
+    await client.query(
+      `INSERT INTO app_flows (app_id, flows) VALUES ($1, $2::jsonb)
+       ON CONFLICT (app_id) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
+      [locked.run.app_id, serialized],
+    );
   });
 }
 

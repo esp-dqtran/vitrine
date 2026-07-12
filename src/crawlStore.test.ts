@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import pg from "pg";
 
@@ -253,6 +256,36 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       { imageCreated: repeatedBundle.imageCreated, evidenceCreated: repeatedBundle.evidenceCreated, reused: repeatedBundle.reused },
       { imageCreated: false, evidenceCreated: false, reused: true },
     );
+    const workerEvidenceKey = {
+      runId: run.id,
+      workerId: "crawler-1",
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      flowId: "core",
+      stepId: "dashboard",
+      finalUrl: "https://example.com/dashboard",
+      viewportWidth: 1440,
+      viewportHeight: 900,
+    };
+    assert.equal((await store.findWorkerEvidence(workerEvidenceKey))?.id, bundle.evidence.id);
+    const canonicalCounts = async () => (await db.query<{
+      images: string;
+      memberships: string;
+      evidence: string;
+    }>(
+      `SELECT
+         (SELECT count(*) FROM images WHERE image_url = $1)::text AS images,
+         (SELECT count(*) FROM version_images WHERE version_id = $2 AND image_id = $3)::text AS memberships,
+         (SELECT count(*) FROM crawl_evidence WHERE id = $4)::text AS evidence`,
+      [bundleInput.imageUrl, version.id, bundle.imageId, bundle.evidence.id],
+    )).rows[0];
+    const beforeForgedLookup = await canonicalCounts();
+    await assert.rejects(
+      () => store.findWorkerEvidence({ ...workerEvidenceKey, workerId: "forged-worker" }),
+      /worker lease/i,
+    );
+    assert.deepEqual(await canonicalCounts(), beforeForgedLookup);
     assert.deepEqual(
       (await db.query<{ version_id: number }>(
         "SELECT version_id FROM version_images WHERE image_id = $1 ORDER BY version_id",
@@ -370,6 +403,142 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal(updated.failed_count, 1);
     assert.equal((await store.listRuns("durable-app")).length, 1);
     assert.equal((await store.getRun(run.id))?.current_step_id, "dashboard");
+
+    const replayRunA = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    const replayRunB = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    assert.equal((await store.claimRun("replay-worker-a"))?.id, replayRunA.id);
+    assert.equal((await store.claimRun("replay-worker-b"))?.id, replayRunB.id);
+
+    const { captureValidatedState, finalizeCanonicalRun } = await import("./crawlRun.ts");
+    const replayDataDir = mkdtempSync(join(tmpdir(), "astryx-canonical-replay-"));
+    const replayPage = (bytes: Uint8Array) => ({
+      url: () => "https://example.com/canonical-replay?volatile=discarded",
+      viewportSize: () => ({ width: 1280, height: 720 }),
+      screenshot: async () => bytes,
+    });
+    try {
+      const replayIdentity = {
+        status: "completed" as const,
+        app: "durable-app",
+        versionId: version.id,
+        planId: approved.id,
+        flowId: "core",
+        stepId: "open",
+        stateLabel: "home",
+        sourceUrl: "https://example.com/app",
+      };
+      const firstReplay = await captureValidatedState(
+        replayPage(Buffer.from("first run pixels")),
+        { ...replayIdentity, runId: replayRunA.id, workerId: "replay-worker-a" },
+        { dataDir: replayDataDir },
+      );
+      const secondReplay = await captureValidatedState(
+        replayPage(Buffer.from("second run pixels")),
+        { ...replayIdentity, runId: replayRunB.id, workerId: "replay-worker-b" },
+        { dataDir: replayDataDir },
+      );
+      assert.notEqual(firstReplay.observedHash, secondReplay.observedHash);
+      assert.equal(secondReplay.evidence.id, firstReplay.evidence.id);
+      assert.equal(secondReplay.imageId, firstReplay.imageId);
+
+      for (const [replayRun, workerId, capture] of [
+        [replayRunA, "replay-worker-a", firstReplay],
+        [replayRunB, "replay-worker-b", secondReplay],
+      ] as const) {
+        await store.upsertRunStep({
+          runId: replayRun.id,
+          workerId,
+          flowId: "core",
+          stepId: "open",
+          flowOrder: 0,
+          stepOrder: 0,
+          status: "completed",
+          attempts: 1,
+          sourceUrl: "https://example.com/app",
+          finalUrl: "https://example.com/canonical-replay",
+          observedScreenshotHash: capture.observedHash,
+          evidenceId: capture.evidence.id,
+        });
+      }
+      await store.upsertRunStep({
+        runId: replayRunA.id,
+        workerId: "replay-worker-a",
+        flowId: "core",
+        stepId: "dashboard",
+        flowOrder: 0,
+        stepOrder: 1,
+        status: "completed",
+        attempts: 1,
+        sourceUrl: "https://example.com/home",
+        finalUrl: "https://example.com/dashboard",
+        observedScreenshotHash: bundle.evidence.screenshot_hash,
+        evidenceId: bundle.evidence.id,
+      });
+
+      const replaySteps = await db.query<{
+        run_id: string;
+        observed_screenshot_hash: string;
+        evidence_id: string;
+      }>(
+        `SELECT run_id, observed_screenshot_hash, evidence_id
+         FROM crawl_run_steps
+         WHERE run_id = ANY($1::bigint[]) AND step_id = 'open' ORDER BY run_id`,
+        [[replayRunA.id, replayRunB.id]],
+      );
+      assert.equal(replaySteps.rowCount, 2);
+      assert.deepEqual(
+        new Map(replaySteps.rows.map((row) => [row.run_id, [row.observed_screenshot_hash, row.evidence_id]])),
+        new Map([
+          [replayRunA.id, [firstReplay.observedHash, firstReplay.evidence.id]],
+          [replayRunB.id, [secondReplay.observedHash, firstReplay.evidence.id]],
+        ]),
+      );
+      assert.equal((await db.query(
+        `SELECT 1 FROM crawl_evidence
+         WHERE version_id = $1 AND plan_id = $2 AND flow_id = 'core' AND step_id = 'open'
+           AND final_url = 'https://example.com/canonical-replay'
+           AND viewport_width = 1280 AND viewport_height = 720`,
+        [version.id, approved.id],
+      )).rowCount, 1);
+      assert.equal((await db.query("SELECT 1 FROM images WHERE id = $1", [firstReplay.imageId])).rowCount, 1);
+      assert.equal((await db.query(
+        "SELECT 1 FROM version_images WHERE version_id = $1 AND image_id = $2",
+        [version.id, firstReplay.imageId],
+      )).rowCount, 1);
+      const replayFiles = readdirSync(join(replayDataDir, "images", "durable-app"));
+      assert.deepEqual(replayFiles, [`${firstReplay.observedHash.slice(0, 16)}.png`]);
+      assert.deepEqual(
+        readFileSync(join(replayDataDir, "images", "durable-app", replayFiles[0])),
+        Buffer.from("first run pixels"),
+      );
+
+      await db.saveAppFlows("durable-app", [
+        { id: "manual", title: "Manual", description: "Retain me", tags: ["manual"], steps: [{ label: "Old", evidence: [imageId] }] },
+        { id: "core", title: "Stale core", description: "Replace me", tags: [], steps: [{ label: "Old", evidence: [imageId] }] },
+      ]);
+      const finalized = await finalizeCanonicalRun({ runId: replayRunA.id, workerId: "replay-worker-a" });
+      assert.deepEqual(finalized.map(({ id }) => id), ["manual", "core"]);
+      assert.equal(finalized.filter(({ id }) => id === "core").length, 1);
+      assert.deepEqual(finalized.find(({ id }) => id === "core")?.steps, [
+        { label: "home", evidence: [firstReplay.imageId] },
+        { label: "dashboard", evidence: [bundle.imageId] },
+      ]);
+      assert.deepEqual(await db.getAppFlows("durable-app"), finalized);
+    } finally {
+      rmSync(replayDataDir, { recursive: true, force: true });
+    }
+    await store.updateRun(replayRunA.id, "replay-worker-a", { status: "succeeded", completedCount: 2 });
+    await store.updateRun(replayRunB.id, "replay-worker-b", { status: "succeeded", completedCount: 1 });
 
     await store.requestRunCancellation(run.id);
     assert.equal(await store.isRunCancellationRequested(run.id), true);
@@ -542,6 +711,10 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     await assert.rejects(
       () => store.createEvidence({ ...evidenceInput, workerId: "crawler-1", screenshotHash: "lost-lease-write" }),
       /worker|lease|running/i,
+    );
+    await assert.rejects(
+      () => store.findWorkerEvidence(workerEvidenceKey),
+      /worker lease/i,
     );
     assert.equal((await store.getRun(run.id))?.completed_count, beforeLostLease?.completed_count);
     assert.equal((await db.query<{ attempts: number }>(

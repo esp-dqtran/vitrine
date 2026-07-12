@@ -2,13 +2,19 @@ import { createHash, randomUUID } from "node:crypto";
 import { link, mkdir, open, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { CrawlPlan } from "./crawlPlan.ts";
+import { getAppFlows as getStoredAppFlows } from "./db.ts";
 import {
-  findEvidence as findStoredEvidence,
+  findWorkerEvidence as findStoredWorkerEvidence,
+  loadWorkerRunFinalization as loadStoredWorkerRunFinalization,
   persistEvidenceBundle as persistStoredEvidenceBundle,
+  saveWorkerAppFlows as saveStoredWorkerAppFlows,
   type CrawlEvidenceRecord,
   type EvidenceKey,
+  type FindWorkerEvidenceInput,
   type PersistEvidenceBundleInput,
   type PersistEvidenceBundleResult,
+  type SaveWorkerAppFlowsInput,
+  type WorkerRunFinalizationSnapshot,
 } from "./crawlStore.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { isAppSlug } from "./imageSource.ts";
@@ -34,7 +40,7 @@ export interface ScreenshotPage {
 
 export interface CaptureDependencies {
   dataDir: string;
-  findEvidence(key: EvidenceKey): Promise<CrawlEvidenceRecord | undefined>;
+  findWorkerEvidence(input: FindWorkerEvidenceInput): Promise<CrawlEvidenceRecord | undefined>;
   persistEvidenceBundle(input: PersistEvidenceBundleInput): Promise<PersistEvidenceBundleResult>;
   secretValues: readonly string[];
   shortRef?(fullHash: string): string;
@@ -191,7 +197,7 @@ export async function captureValidatedState(
   }
   const observedHash = fullHash(png);
   const shortRef = overrides.shortRef ?? ((hash: string) => hash.slice(0, 16));
-  const findEvidence = overrides.findEvidence ?? findStoredEvidence;
+  const findWorkerEvidence = overrides.findWorkerEvidence ?? findStoredWorkerEvidence;
   const persistEvidenceBundle = overrides.persistEvidenceBundle ?? persistStoredEvidenceBundle;
   const dataDir = overrides.dataDir ?? "data";
   const key: EvidenceKey = {
@@ -204,7 +210,12 @@ export async function captureValidatedState(
     viewportHeight: before.viewport.height,
   };
 
-  const existing = await findEvidence(key);
+  const existing = await findWorkerEvidence({
+    ...key,
+    runId: identity.runId,
+    workerId: identity.workerId,
+    app: identity.app,
+  });
   if (existing) {
     return {
       evidence: existing,
@@ -298,4 +309,54 @@ export function assembleCanonicalFlows(
 
   const replaced = new Set(built.map((flow) => flow.id));
   return [...existing.filter((flow) => !replaced.has(flow.id)), ...built];
+}
+
+export interface FinalizeCanonicalRunInput {
+  runId: string;
+  workerId: string;
+}
+
+export interface CanonicalFinalizationDependencies {
+  loadWorkerRunFinalization(runId: string, workerId: string): Promise<WorkerRunFinalizationSnapshot>;
+  getAppFlows(app: string): Promise<DesignFlow[]>;
+  saveWorkerAppFlows(input: SaveWorkerAppFlowsInput): Promise<void>;
+}
+
+export async function finalizeCanonicalRun(
+  input: FinalizeCanonicalRunInput,
+  overrides: Partial<CanonicalFinalizationDependencies> = {},
+): Promise<DesignFlow[]> {
+  if (!input.runId.trim() || !input.workerId.trim()) throw new Error("Run and worker ids must be non-empty");
+  const loadWorkerRunFinalization = overrides.loadWorkerRunFinalization ?? loadStoredWorkerRunFinalization;
+  const getAppFlows = overrides.getAppFlows ?? getStoredAppFlows;
+  const saveWorkerAppFlows = overrides.saveWorkerAppFlows ?? saveStoredWorkerAppFlows;
+  const snapshot = await loadWorkerRunFinalization(input.runId, input.workerId);
+  if (snapshot.runId !== input.runId || snapshot.plan.app !== snapshot.app) {
+    throw new Error("Finalization snapshot does not match the pinned run");
+  }
+
+  const completedSteps = new Set(
+    snapshot.steps
+      .filter((step) => step.status === "completed")
+      .map((step) => `${step.flowId}\u0000${step.stepId}`),
+  );
+  const completedFlowIds = snapshot.plan.flows
+    .filter((flow) => flow.steps.every((step) => step.optional || completedSteps.has(`${flow.id}\u0000${step.id}`)))
+    .map((flow) => flow.id);
+  const existing = await getAppFlows(snapshot.app);
+  const flows = assembleCanonicalFlows(
+    snapshot.plan,
+    { versionId: snapshot.versionId, planId: snapshot.planId, completedFlowIds },
+    snapshot.evidence,
+    existing,
+  );
+  if (JSON.stringify(flows) !== JSON.stringify(existing)) {
+    await saveWorkerAppFlows({
+      runId: input.runId,
+      workerId: input.workerId,
+      app: snapshot.app,
+      flows,
+    });
+  }
+  return flows;
 }

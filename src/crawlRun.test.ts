@@ -15,6 +15,7 @@ import type { DesignFlow } from "./designSystem.ts";
 import {
   assembleCanonicalFlows,
   captureValidatedState,
+  finalizeCanonicalRun,
   normalizeCaptureUrl,
   type CaptureDependencies,
   type CompletedCaptureIdentity,
@@ -96,10 +97,17 @@ function fakeCaptureStore(dataDir: string) {
   const images = new Map<string, number>();
   const versionImages = new Map<number, Set<number>>();
   const persistCalls: string[] = [];
-  const state = { failBundle: false };
+  const state = { failBundle: false, workerId: "worker-1" };
 
   const findEvidence = async (key: EvidenceKey): Promise<CrawlEvidenceRecord | undefined> =>
     evidences.find((record) => sameEvidenceKey(record, key));
+
+  const findWorkerEvidence = async (
+    input: EvidenceKey & { runId: string; workerId: string; app: string },
+  ): Promise<CrawlEvidenceRecord | undefined> => {
+    if (input.workerId !== state.workerId) throw new Error("Crawl run worker lease is not active");
+    return findEvidence(input);
+  };
 
   const persistEvidenceBundle = async (
     input: PersistEvidenceBundleInput,
@@ -148,9 +156,31 @@ function fakeCaptureStore(dataDir: string) {
     };
   };
 
-  const deps: CaptureDependencies = { dataDir, findEvidence, persistEvidenceBundle, secretValues: [] };
+  const deps: CaptureDependencies = { dataDir, findWorkerEvidence, persistEvidenceBundle, secretValues: [] };
   return { deps, evidences, images, versionImages, persistCalls, state };
 }
+
+test("an existing canonical capture still requires the active worker lease", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-worker-lease-"));
+  const store = fakeCaptureStore(dataDir);
+  const screenshot = Buffer.from("canonical screenshot");
+
+  try {
+    await captureValidatedState(screenshotPage(screenshot), identity(), store.deps);
+    store.state.workerId = "worker-2";
+
+    await assert.rejects(
+      captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps),
+      /worker lease/i,
+    );
+    assert.equal(store.evidences.length, 1);
+    assert.equal(store.images.size, 1);
+    assert.equal(store.persistCalls.length, 1);
+    assert.equal(imageFiles(dataDir).length, 1);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
 
 function imageFiles(dataDir: string): string[] {
   try {
@@ -573,4 +603,69 @@ test("canonical assembly preserves an existing flow until every required step ha
     { label: "Required", evidence: [3] },
     { label: "Optional", evidence: [4] },
   ]);
+});
+
+test("durable finalization loads the pinned run and saves plan-ordered flows by stable ID", async () => {
+  const complete = plannedFlow("complete", ["First", "Second"]);
+  const partial = plannedFlow("partial", ["Only", "Missing"]);
+  const plan: CrawlPlan = {
+    app: "fixture-app",
+    revision: 1,
+    startUrl: "https://example.com",
+    domain: "example.com",
+    sources: [],
+    reviewed: true,
+    flows: [complete, partial],
+  };
+  const retained: DesignFlow = {
+    id: "partial",
+    title: "Previously curated",
+    description: "Retained until the durable run completes",
+    tags: ["manual"],
+    steps: [{ label: "Previous", evidence: [99] }],
+  };
+  const saved: Array<{ runId: string; workerId: string; app: string; flows: DesignFlow[] }> = [];
+
+  const flows = await finalizeCanonicalRun(
+    { runId: "run-1", workerId: "worker-1" },
+    {
+      loadWorkerRunFinalization: async () => ({
+        runId: "run-1",
+        app: "fixture-app",
+        versionId: 1,
+        planId: "plan-1",
+        plan,
+        steps: [
+          { flowId: "complete", stepId: "complete-step-1", status: "completed" },
+          { flowId: "complete", stepId: "complete-step-2", status: "completed" },
+          { flowId: "partial", stepId: "partial-step-1", status: "completed" },
+        ],
+        evidence: [
+          canonicalEvidence(1, "complete", "complete-step-1", "https://example.com/first"),
+          canonicalEvidence(2, "complete", "complete-step-2", "https://example.com/second"),
+          canonicalEvidence(3, "partial", "partial-step-1", "https://example.com/partial"),
+        ],
+      }),
+      getAppFlows: async (app) => {
+        assert.equal(app, "fixture-app");
+        return [retained];
+      },
+      saveWorkerAppFlows: async (input) => {
+        saved.push(input);
+      },
+    },
+  );
+
+  assert.deepEqual(flows.map(({ id }) => id), ["partial", "complete"]);
+  assert.equal(flows[0], retained);
+  assert.deepEqual(flows[1].steps, [
+    { label: "First", evidence: [1] },
+    { label: "Second", evidence: [2] },
+  ]);
+  assert.deepEqual(saved, [{
+    runId: "run-1",
+    workerId: "worker-1",
+    app: "fixture-app",
+    flows,
+  }]);
 });
