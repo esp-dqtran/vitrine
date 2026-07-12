@@ -627,16 +627,17 @@ git commit -m "test: verify empty and upgrade migrations"
 ### Task 6: Backup and restore verification
 
 **Files:**
+- Create: `src/dbRecovery.ts`
 - Create: `scripts/db-backup.ts`
 - Create: `scripts/db-restore-verify.ts`
 - Create: `src/dbRecovery.test.ts`
 - Modify: `services/migrate/Dockerfile`
 
-- [ ] **Step 1: Write failing manifest and safety tests**
+- [x] **Step 1: Write failing manifest and safety tests**
 
 Test checksum calculation, manifest redaction, fixed argument-array construction, disposable target-name validation, checksum mismatch rejection, and missing-tool errors. Inject `spawn` so tests never invoke real tools.
 
-- [ ] **Step 2: Implement backup command**
+- [x] **Step 2: Implement backup command**
 
 Parse `DATABASE_URL` with `URL`, reject non-PostgreSQL protocols, and pass connection fields through libpq environment variables rather than process arguments:
 
@@ -663,33 +664,33 @@ await runTool("pg_dump", ["--format=custom", "--file", dumpPath], {
 
 Compute SHA-256, query migration head and non-sensitive counts, then atomically write `.sha256` and `.json` manifest files. A pre-migration backup records `migrationHead: null`. Redact the URL and libpq environment from every thrown error and JSON summary.
 
-- [ ] **Step 3: Implement restore verification**
+- [x] **Step 3: Implement restore verification**
 
-Require `RESTORE_TEST_ALLOW_DROP=1` and a target database name beginning `astryx_restore_test_`. Verify the sidecar checksum before creating the target. Run `pg_restore --clean --if-exists --no-owner <dump>` with the target supplied only through `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`; assert migrations current, compare counts, validate core version/image relationships, and drop the target only after recording the result.
+Require `RESTORE_TEST_ALLOW_DROP=1` and a target database name beginning `astryx_restore_test_`. Verify the sidecar checksum before creating the target. Run `pg_restore --clean --if-exists --no-owner --no-acl --exit-on-error <dump>` with the target supplied only through `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`; compare migration head, counts, and core version/image relationships, then drop the target only after recording the result. A manifest with `migrationHead: null` must restore to a database without a migration ledger; a numbered head must pass the current-migration assertion.
 
-- [ ] **Step 4: Add PostgreSQL client tools to migration image**
+- [x] **Step 4: Add PostgreSQL client tools to migration image**
 
 Install the PostgreSQL 17 client in the build image using a pinned base and remove apt metadata. The later container-hardening slice pins image digests and creates the final non-root/read-only layout.
 
-- [ ] **Step 5: Run unit and live recovery tests**
+- [x] **Step 5: Run unit and live recovery tests**
 
 Run:
 
 ```bash
 node --experimental-strip-types --test src/dbRecovery.test.ts
 mkdir -p data/backups
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/astryx \
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/astryx_test \
 BACKUP_DIR=data/backups BACKUP_BASENAME=astryx-local-verification npm run db:backup
 RESTORE_TEST_ALLOW_DROP=1 npm run db:restore-verify -- data/backups/astryx-local-verification.dump \
   postgres://postgres:postgres@localhost:5432/astryx_restore_test_local
 ```
 
-Expected: unit tests PASS; backup writes dump/checksum/manifest; restore reports matching migration head, counts, and relationships.
+Expected: unit tests PASS; backup writes dump/checksum/manifest; restore of the migrated integration database reports matching migration head, counts, and relationships. Task 7 separately proves the unversioned real pre-migration snapshot.
 
-- [ ] **Step 6: Commit recovery tooling**
+- [x] **Step 6: Commit recovery tooling**
 
 ```bash
-git add scripts/db-backup.ts scripts/db-restore-verify.ts src/dbRecovery.test.ts services/migrate/Dockerfile
+git add scripts/db-backup.ts scripts/db-restore-verify.ts src/dbRecovery.ts src/dbRecovery.test.ts services/migrate/Dockerfile
 git commit -m "feat: verify database backup and restore"
 ```
 
