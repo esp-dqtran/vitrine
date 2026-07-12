@@ -459,28 +459,28 @@ git commit -m "feat: migrate legacy media resumably"
 - Modify: `src/dbRecovery.ts`, `src/dbRecovery.test.ts`
 - Create: `docs/operations/object-storage.md`
 
-- [ ] **Step 1: Write two-pass cleanup tests**
+- [x] **Step 1: Write two-pass cleanup tests**
 
 An unreferenced object is only marked on pass one. It is deletable only after the configured grace period and a second fresh reference scan. A re-reference clears the mark. Dry-run is the default; apply requires `OBJECT_GC_APPLY=1`; prefix mismatch, list truncation, or database failure prevents deletion. Reports include count/bytes/keys but no signed URLs.
 
-- [ ] **Step 2: Implement reference inventory and GC**
+- [x] **Step 2: Implement reference inventory and GC**
 
 Reference `images.object_key`, `exports.object_key`, and `crawl_run_steps.failure_object_key`. Use a repeatable-read transaction for the mark set, close it, then recheck each candidate immediately before delete. Delete bytes first; remove metadata/mark only after confirmed object absence. A failed delete retains the mark for retry.
 
-- [ ] **Step 3: Define backup/restore contract**
+- [x] **Step 3: Define backup/restore contract**
 
 The database dump protects metadata/ownership but not bytes. The runbook requires bucket versioning in production, immutable daily bucket inventory, provider replication or object backup, and retention rules: failure artifacts 30 days after terminal run, completed exports 7 days, logs per observability policy, published evidence retained while its version exists. No lifecycle rule may delete an object still referenced by PostgreSQL.
 
-- [ ] **Step 4: Add restore drill**
+- [x] **Step 4: Add restore drill**
 
 Restore a database snapshot into a disposable database, restore/copy the matching object prefix into a fresh bucket/root, point the verifier at both, and require parity before traffic. Also prove a deliberately missing object makes readiness/verification fail without exposing a signed URL.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 ```bash
 node --experimental-strip-types --test src/objectGc.test.ts src/dbRecovery.test.ts
 npx tsc --noEmit
-git add scripts/object-gc.ts src/objectGc.test.ts src/dbRecovery.ts src/dbRecovery.test.ts docs/operations/object-storage.md
+git add scripts/object-gc.ts src/objectGc.ts src/objectGc.test.ts src/dbRecovery.ts src/dbRecovery.test.ts docs/operations/object-storage.md
 git commit -m "feat: verify object recovery and orphan cleanup"
 ```
 

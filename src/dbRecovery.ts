@@ -663,6 +663,18 @@ export interface VerifyDatabaseRestoreOptions {
   spawn?: SpawnTool;
   createPool?: (databaseUrl: string) => RecoveryPool;
   assertMigrations?: (pool: RecoveryPool) => Promise<void>;
+  objectRecovery?: ObjectRecoveryDrill;
+}
+
+export interface ObjectRecoveryEvidence {
+  totalObjects: number;
+  totalBytes: number;
+  evidenceSha256: string;
+}
+
+export interface ObjectRecoveryDrill {
+  restore(): Promise<void>;
+  verify(pool: RecoveryPool): Promise<ObjectRecoveryEvidence>;
 }
 
 export interface DatabaseRestoreResult {
@@ -671,6 +683,25 @@ export interface DatabaseRestoreResult {
   migrationHead: number | null;
   tableCounts: Record<string, number>;
   relationships: RelationshipEvidence;
+  objectStorage?: ObjectRecoveryEvidence;
+}
+
+export async function runObjectRecoveryDrill(
+  drill: ObjectRecoveryDrill,
+  pool: RecoveryPool,
+): Promise<ObjectRecoveryEvidence> {
+  try {
+    await drill.restore();
+    const evidence = await drill.verify(pool);
+    if (
+      !Number.isSafeInteger(evidence.totalObjects) || evidence.totalObjects < 0
+      || !Number.isSafeInteger(evidence.totalBytes) || evidence.totalBytes < 0
+      || !/^[0-9a-f]{64}$/.test(evidence.evidenceSha256)
+    ) throw new Error("invalid evidence");
+    return evidence;
+  } catch {
+    throw new Error("Object restore verification failed");
+  }
 }
 
 function quotedDatabaseName(name: string): string {
@@ -714,6 +745,7 @@ export async function verifyDatabaseRestore(
     });
     const targetPool = createPool(config.targetUrl);
     let evidence: DatabaseEvidence;
+    let objectStorage: ObjectRecoveryEvidence | undefined;
     try {
       evidence = await captureDatabaseEvidence(targetPool);
       const ledger = await targetPool.query(
@@ -731,6 +763,12 @@ export async function verifyDatabaseRestore(
           await assertMigrationsCurrent(pool as unknown as pg.Pool);
         });
         await assertMigrations(targetPool);
+      }
+      if (artifact.manifest.migrationHead !== null && artifact.manifest.migrationHead >= 2 && !options.objectRecovery) {
+        throw new Error("Object restore verification failed");
+      }
+      if (options.objectRecovery) {
+        objectStorage = await runObjectRecoveryDrill(options.objectRecovery, targetPool);
       }
       await targetPool.query("SELECT app_row.id FROM apps app_row ORDER BY app_row.id LIMIT 1");
     } finally {
@@ -755,6 +793,7 @@ export async function verifyDatabaseRestore(
       migrationHead: evidence.migrationHead,
       tableCounts: evidence.tableCounts,
       relationships: evidence.relationships,
+      ...(objectStorage ? { objectStorage } : {}),
     };
   } catch (error) {
     operationError = error;

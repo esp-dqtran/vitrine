@@ -19,10 +19,35 @@ import {
   pgDumpArguments,
   pgRestoreArguments,
   redactRecoveryError,
+  runObjectRecoveryDrill,
   runTool,
   sha256File,
   verifyDatabaseRestore,
 } from "./dbRecovery.ts";
+
+test("object recovery restores bytes before parity verification and returns aggregate evidence", async () => {
+  const calls: string[] = [];
+  const evidence = await runObjectRecoveryDrill({
+    restore: async () => { calls.push("restore"); },
+    verify: async () => {
+      calls.push("verify");
+      return { totalObjects: 3, totalBytes: 42, evidenceSha256: "a".repeat(64) };
+    },
+  }, {} as never);
+  assert.deepEqual(calls, ["restore", "verify"]);
+  assert.deepEqual(evidence, { totalObjects: 3, totalBytes: 42, evidenceSha256: "a".repeat(64) });
+});
+
+test("object recovery reports missing bytes without leaking object locations", async () => {
+  await assert.rejects(runObjectRecoveryDrill({
+    restore: async () => {},
+    verify: async () => { throw new Error("missing https://signed.example/private?token=secret /Users/kai/objects"); },
+  }, {} as never), (error: Error) => {
+    assert.equal(error.message, "Object restore verification failed");
+    assert.doesNotMatch(error.message, /signed|token|Users|secret/);
+    return true;
+  });
+});
 
 function fakeChild(): EventEmitter & { stderr: PassThrough; kill(signal?: NodeJS.Signals): boolean } {
   return Object.assign(new EventEmitter(), {
@@ -727,8 +752,9 @@ test("verifies an unversioned dump has no migration ledger and matching evidence
 test("requires a current migration assertion for a versioned dump", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "astryx-recovery-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
-  const dumpPath = await writeBackupArtifact(directory, 1);
+  const dumpPath = await writeBackupArtifact(directory, 2);
   let migrationAssertionCalls = 0;
+  const restoreEvents: string[] = [];
   const adminPool = {
     async query(statement: string) {
       if (statement.includes("FROM pg_database")) return { rows: [{ present: false }] };
@@ -740,7 +766,7 @@ test("requires a current migration assertion for a versioned dump", async (t) =>
     async query(statement: string) {
       if (statement === "SHOW server_version") return { rows: [{ server_version: "17.6" }] };
       if (statement.includes("to_regclass")) return { rows: [{ present: true }] };
-      if (statement.includes("max(version)")) return { rows: [{ head: 1 }] };
+      if (statement.includes("max(version)")) return { rows: [{ head: 2 }] };
       if (statement.includes("table_name")) return { rows: [
         { table_name: "apps", row_count: 4 },
         { table_name: "app_versions", row_count: 4 },
@@ -771,10 +797,72 @@ test("requires a current migration assertion for a versioned dump", async (t) =>
     spawn,
     createPool: () => (++poolCalls === 1 ? adminPool : targetPool),
     assertMigrations: async () => { migrationAssertionCalls += 1; },
+    objectRecovery: {
+      restore: async () => { restoreEvents.push("objects-restored"); },
+      verify: async (pool) => {
+        restoreEvents.push("objects-verified");
+        assert.equal(pool, targetPool);
+        return { totalObjects: 3, totalBytes: 42, evidenceSha256: "b".repeat(64) };
+      },
+    },
   });
 
-  assert.equal(result.migrationHead, 1);
+  assert.equal(result.migrationHead, 2);
   assert.equal(migrationAssertionCalls, 1);
+  assert.deepEqual(restoreEvents, ["objects-restored", "objects-verified"]);
+  assert.deepEqual(result.objectStorage, { totalObjects: 3, totalBytes: 42, evidenceSha256: "b".repeat(64) });
+});
+
+test("object-era restore requires object parity evidence", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "astryx-recovery-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const dumpPath = await writeBackupArtifact(directory, 2);
+  const adminPool = {
+    async query(statement: string) {
+      if (statement.includes("FROM pg_database")) return { rows: [{ present: false }] };
+      return { rows: [] };
+    },
+    async end() {},
+  };
+  const targetPool = {
+    async query(statement: string) {
+      if (statement === "SHOW server_version") return { rows: [{ server_version: "17.6" }] };
+      if (statement.includes("to_regclass")) return { rows: [{ present: true }] };
+      if (statement.includes("max(version)")) return { rows: [{ head: 2 }] };
+      if (statement.includes("table_name")) return { rows: [
+        { table_name: "apps", row_count: 4 },
+        { table_name: "app_versions", row_count: 4 },
+        { table_name: "version_images", row_count: 12 },
+      ] };
+      if (statement.includes("invalid_version_images")) return { rows: [{
+        app_versions: 4,
+        version_images: 12,
+        invalid_app_versions: 0,
+        invalid_version_images: 0,
+      }] };
+      throw new Error(`Unexpected query: ${statement}`);
+    },
+    async end() {},
+  };
+  let poolCalls = 0;
+  const spawn = (() => {
+    const child = fakeChild();
+    queueMicrotask(() => child.emit("close", 0, null));
+    return child;
+  });
+
+  await assert.rejects(() => verifyDatabaseRestore({
+    dumpPath,
+    targetUrl: "postgres://operator:secret@localhost/astryx_restore_test_missing_objects",
+    environment: { RESTORE_TEST_ALLOW_DROP: "1" },
+    spawn,
+    createPool: () => (++poolCalls === 1 ? adminPool : targetPool),
+    assertMigrations: async () => {},
+  }), (error: unknown) => {
+    assert.equal((error as Error).message, "Object restore verification failed");
+    assert.doesNotMatch((error as Error).message, /secret|localhost|signed|token|Users/);
+    return true;
+  });
 });
 
 test("computes the dump checksum and allowlists non-sensitive manifest fields", async (t) => {
