@@ -439,11 +439,11 @@ Expected: all tests pass and the two-run fixture writes one canonical file.
 - Modify: `src/crawlRun.test.ts`
 - Modify: `src/smartCrawler.ts`
 
-- [ ] **Step 1: Write service tests with fake store and browser runner**
+- [x] **Step 1: Write service tests with fake store and browser runner**
 
 Cover full run, failed-flows-only retry, unsafe-flow skip, missing-secret refusal, approved unsafe prefix stopping before a side-effect step, cancellation, semantic failure, transient interruption, and same-run resume after completed steps.
 
-- [ ] **Step 2: Implement `createCrawlRunService()`**
+- [x] **Step 2: Implement `createCrawlRunService()`**
 
 Expose:
 
@@ -459,11 +459,11 @@ export interface CrawlRunService {
 
 The service loads one immutable approved plan, creates/reuses one active draft, filters requested flows, validates unsafe gates without logging values, wires durable runner hooks, and writes terminal status exactly once.
 
-- [ ] **Step 3: Resume rather than replay completed durable steps**
+- [x] **Step 3: Resume rather than replay completed durable steps**
 
 On RabbitMQ redelivery of the same run ID, skip completed run-step rows only after confirming their expected result and canonical evidence are recorded. Resume the first missing/incomplete step. A new user-requested retry gets a new run ID and `retry_of_run_id`.
 
-- [ ] **Step 4: Run service tests**
+- [x] **Step 4: Run service tests**
 
 ```bash
 node --experimental-strip-types --test src/crawlRun.test.ts
@@ -483,7 +483,7 @@ Expected: all lifecycle tests pass.
 - Modify: `services/import-worker/src/index.ts`
 - Modify: `docker-compose.yml`
 
-- [ ] **Step 1: Write worker tests first**
+- [x] **Step 1: Write worker tests first**
 
 Tests must prove:
 
@@ -494,7 +494,7 @@ Tests must prove:
 - a cancelled run is not replayed;
 - startup recovery marks stale running runs interrupted before consumption.
 
-- [ ] **Step 2: Extend the `Job` union**
+- [x] **Step 2: Extend the `Job` union**
 
 ```ts
 | { type: "research-app"; name: string; homepageUrl: string; provider?: string }
@@ -503,15 +503,15 @@ Tests must prove:
 
 Messages contain identifiers and public URLs only. They never contain secret values or full plan JSON.
 
-- [ ] **Step 3: Dispatch through injected services**
+- [x] **Step 3: Dispatch through injected services**
 
 Add `researchAppJob()` and `crawlRunService.execute()` dependencies to `createPipelineHandler()`. Preserve existing Mobbin behavior. Only retryable infrastructure exceptions escape the handler.
 
-- [ ] **Step 4: Configure the container for headless public crawling**
+- [x] **Step 4: Configure the container for headless public crawling**
 
 Set `HEADLESS=true` and a Linux-specific crawl-profile suffix/root for `import-worker`. Keep the host macOS headed profile separate. Do not copy or print host credentials.
 
-- [ ] **Step 5: Run worker and compose tests**
+- [x] **Step 5: Run worker and compose tests**
 
 ```bash
 node --experimental-strip-types --test services/import-worker/src/pipeline.test.ts
@@ -529,11 +529,11 @@ Expected: tests and Compose validation pass.
 - Modify: `services/api/src/app.ts`
 - Modify: `services/api/src/app.test.ts`
 
-- [ ] **Step 1: Add failing authorization and validation tests**
+- [x] **Step 1: Add failing authorization and validation tests**
 
 Every route below must return `403` for a normal authenticated user and avoid calling its dependency. Invalid app slugs, public URLs, plan bodies, run modes, IDs, and repair decisions return `400`.
 
-- [ ] **Step 2: Add plan/research routes**
+- [x] **Step 2: Add plan/research routes**
 
 Implement:
 
@@ -547,7 +547,7 @@ POST   /crawl/plans/:planId/approve
 
 Research enqueues `research-app`. Editing parses the complete plan before saving a new draft revision. Approval records the admin ID and supersedes the previously approved revision atomically.
 
-- [ ] **Step 3: Add run routes**
+- [x] **Step 3: Add run routes**
 
 Implement:
 
@@ -562,7 +562,7 @@ GET    /crawl/runs/:runId/failures/:stepId/screenshot
 
 Run creation persists first, then publishes the transport job. Publish failure marks the run interrupted and returns `503` with IDs but no secrets.
 
-- [ ] **Step 4: Add repair routes**
+- [x] **Step 4: Add repair routes**
 
 Implement:
 
@@ -574,7 +574,7 @@ POST   /crawl/repairs/:repairId/reject
 
 Repair suggestion may enqueue or call the existing LLM boundary, but apply/reject always requires a separate admin action. Applying creates a new unapproved plan revision.
 
-- [ ] **Step 5: Run API tests**
+- [x] **Step 5: Run API tests**
 
 ```bash
 node --experimental-strip-types --test services/api/src/app.test.ts
@@ -590,15 +590,15 @@ Expected: all existing and new API tests pass.
 
 - Modify: `data/crawl-plans/atlassian.json`
 
-- [ ] **Step 1: Add stable IDs, revision, safety, secrets, and expected states**
+- [x] **Step 1: Add stable IDs, revision, safety, secrets, and expected states**
 
 Every meaningful action receives a state label and URL/visible assertion. Preserve seven safe product-coverage flows. Use role/name locators where the live accessible tree supports them, text second, and CSS only with a real reason.
 
-- [ ] **Step 2: Correct the signup flow**
+- [x] **Step 2: Correct the signup flow**
 
 Replace the literal email with `$ATLASSIAN_TEST_EMAIL`, declare it in `requiredSecrets`, mark the flow unsafe, mark submission `side-effect`, and make the preceding read-only state observable. Keep normal runs from selecting the flow.
 
-- [ ] **Step 3: Validate the plan locally**
+- [x] **Step 3: Validate the plan locally**
 
 ```bash
 npx tsx -e "import {readFileSync} from 'node:fs'; import {parseCrawlPlan} from './src/crawlPlan.ts'; const p=parseCrawlPlan(readFileSync('data/crawl-plans/atlassian.json','utf8')); console.log(JSON.stringify({revision:p.revision, safe:p.flows.filter(f=>f.safe).length, unsafe:p.flows.filter(f=>!f.safe).length, steps:p.flows.reduce((n,f)=>n+f.steps.length,0)}))"
@@ -606,7 +606,7 @@ npx tsx -e "import {readFileSync} from 'node:fs'; import {parseCrawlPlan} from '
 
 Expected: one valid reviewed revision, seven safe flows, one unsafe flow, and no literal credential.
 
-- [ ] **Step 4: Run the headed CLI baseline with strict assertions**
+- [x] **Step 4: Run the headed CLI baseline with strict assertions**
 
 ```bash
 env -u HEADLESS npm run smart-crawl -- atlassian
@@ -614,7 +614,7 @@ env -u HEADLESS npm run smart-crawl -- atlassian
 
 Expected: each safe flow either completes with exact observable outcomes or produces a structured semantic failure naming flow, step, current/final URL, expected state, actual state, and screenshot. Do not weaken a failed assertion.
 
-- [ ] **Step 5: Inspect and repair live mismatches**
+- [x] **Step 5: Inspect and repair live mismatches**
 
 Use the real page URL, accessible roles/names, text, popup behavior, and redirects. Generic browser/runner failures are fixed in code with a failing local fixture test. Only Atlassian information-architecture changes modify the plan.
 
@@ -630,15 +630,15 @@ Repeat Steps 3-5 until one headed strict run has zero semantic failures.
 - Modify: `src/vitrine/types.ts`
 - Create: `src/vitrine/CrawlWorkspacePanel.test.tsx`
 
-- [ ] **Step 1: Define serializable view models**
+- [x] **Step 1: Define serializable view models**
 
 Add `CrawlPlanSummary`, `CrawlPlanView`, `CrawlRunView`, `CrawlRunStepView`, `CrawlRepairView`, and `CrawlFailureView`. Never include secret values; required secrets are names and configured/missing booleans only.
 
-- [ ] **Step 2: Add typed API helpers**
+- [x] **Step 2: Add typed API helpers**
 
 Add functions matching Task 8 routes for research, plan save/approve, run create/list/get/cancel/retry, and repair request/apply/reject.
 
-- [ ] **Step 3: Add a rendered normal-user exclusion test**
+- [x] **Step 3: Add a rendered normal-user exclusion test**
 
 The component rendered with `role="user"` must contain no research, approve, start, cancel, repair, retry, or publish controls.
 
@@ -661,27 +661,27 @@ Expected: fail until the component exists.
 - Modify: `src/vitrine/Home.tsx` or `src/vitrine/components/ScreenDetail.tsx`
 - Modify: `src/vitrine/styles.css` only for shared responsive layout rules not expressible with the existing components.
 
-- [ ] **Step 1: Render research and plan editing states**
+- [x] **Step 1: Render research and plan editing states**
 
 Test empty input, research queued/running/error, sources, editable flow/step fields, safety badges, missing-secret names, validation errors, approved revision, and regeneration returning to unapproved state.
 
-- [ ] **Step 2: Render durable run states**
+- [x] **Step 2: Render durable run states**
 
 Test queued, running, succeeded, failed, cancelled, and interrupted states; current flow/step; counters; full/failed retry; cancel; headed/headless metadata; and polling cleanup on unmount.
 
-- [ ] **Step 3: Render evidence, failure, and repair states**
+- [x] **Step 3: Render evidence, failure, and repair states**
 
 Test ordered validated captures, incomplete labels, exact expected/actual diagnostics, failure screenshots, proposed repair diff, apply/reject, and the rule that a repair produces an unapproved revision.
 
-- [ ] **Step 4: Reuse the existing draft/publication panel**
+- [x] **Step 4: Reuse the existing draft/publication panel**
 
 Show the resulting draft version and delegate submission/publishing to the current version APIs. Do not duplicate publication logic inside the crawler panel.
 
-- [ ] **Step 5: Mount only for admins**
+- [x] **Step 5: Mount only for admins**
 
 Place the workspace in the existing curator navigation. Customer screens and routes stay unchanged.
 
-- [ ] **Step 6: Run all rendered UI tests**
+- [x] **Step 6: Run all rendered UI tests**
 
 ```bash
 npx tsx --test src/vitrine/*.test.tsx

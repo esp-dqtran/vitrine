@@ -4,6 +4,17 @@ import type { AppVersion } from '../db';
 import type { ExportFormat, ExportScope } from '../exportEngine';
 import type { CuratorAction } from '../curatorReview';
 import type { DesignSystemSnapshot } from '../designSystem';
+import type { CrawlPlan } from '../crawlPlan';
+import type {
+  CrawlPlanView,
+  CrawlRepairRequest,
+  CrawlRepairView,
+  CrawlResearchProvider,
+  CrawlRetryMode,
+  CrawlRunDetailView,
+  CrawlRunView,
+  CreateCrawlRunRequest,
+} from './types';
 
 export interface SearchFilters {
   kind: CatalogEntityKind | 'all';
@@ -85,3 +96,39 @@ export const submitVersion = (versionId: number): Promise<AppVersion> => json(`/
 export const publishVersion = (versionId: number): Promise<AppVersion> => json(`/api/versions/${versionId}/publish`, { method: 'POST' });
 export const applyReviewAction = (app: string, action: CuratorAction): Promise<DesignSystemSnapshot> =>
   json(`/api/apps/${app}/review-actions`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(action) });
+
+const crawlPath = (value: string) => encodeURIComponent(value);
+
+export const researchCrawlApp = (app: string, homepageUrl: string, provider?: CrawlResearchProvider): Promise<{ jobId: number; app: string; homepageUrl: string }> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/research`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ homepageUrl, provider }),
+  });
+
+export const listCrawlPlans = (app: string): Promise<CrawlPlanView[]> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/plans`);
+export const getCrawlPlan = (planId: string): Promise<CrawlPlanView> =>
+  json(`/api/crawl/plans/${crawlPath(planId)}`);
+export const saveCrawlPlan = (planId: string, plan: CrawlPlan): Promise<CrawlPlanView> =>
+  json(`/api/crawl/plans/${crawlPath(planId)}`, { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(plan) });
+export const approveCrawlPlan = (planId: string): Promise<CrawlPlanView> =>
+  json(`/api/crawl/plans/${crawlPath(planId)}/approve`, { method: 'POST' });
+
+export const createCrawlRun = (app: string, request: CreateCrawlRunRequest): Promise<CrawlRunView> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/runs`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(request) });
+export const listCrawlRuns = (app: string): Promise<CrawlRunView[]> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/runs`);
+export const getCrawlRun = (runId: string): Promise<CrawlRunDetailView> =>
+  json(`/api/crawl/runs/${crawlPath(runId)}`);
+export const cancelCrawlRun = (runId: string): Promise<CrawlRunView> =>
+  json(`/api/crawl/runs/${crawlPath(runId)}/cancel`, { method: 'POST' });
+export const retryCrawlRun = (runId: string, mode: CrawlRetryMode): Promise<CrawlRunView> =>
+  json(`/api/crawl/runs/${crawlPath(runId)}/retry`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ mode }) });
+
+export const requestCrawlRepair = (runId: string, request: CrawlRepairRequest): Promise<CrawlRepairView> =>
+  json(`/api/crawl/runs/${crawlPath(runId)}/repairs`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(request) });
+export const applyCrawlRepair = (repairId: string): Promise<CrawlRepairView> =>
+  json(`/api/crawl/repairs/${crawlPath(repairId)}/apply`, { method: 'POST' });
+export const rejectCrawlRepair = (repairId: string): Promise<CrawlRepairView> =>
+  json(`/api/crawl/repairs/${crawlPath(repairId)}/reject`, { method: 'POST' });

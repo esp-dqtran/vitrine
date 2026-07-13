@@ -329,6 +329,34 @@ export async function createAppVersion(app: string, userId?: number, sourceUrl?:
   return (await appVersionById(id))!;
 }
 
+export async function ensureActiveAppVersion(app: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
+  const id = await withTransaction(async (client) => {
+    // The harmless conflict update locks this app, serializing concurrent ensure calls.
+    const appRow = await client.query<{ id: number }>(
+      `INSERT INTO apps (name) VALUES ($1)
+       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
+      [app],
+    );
+    const appId = appRow.rows[0].id;
+    const active = await client.query<{ id: number }>(
+      `SELECT id FROM app_versions
+       WHERE app_id = $1 AND status IN ('draft', 'in_review')
+       ORDER BY version_number DESC LIMIT 1`,
+      [appId],
+    );
+    if (active.rowCount) return active.rows[0].id;
+    const created = await client.query<{ id: number }>(
+      `INSERT INTO app_versions (app_id, version_number, label, source_url, status, created_by)
+       SELECT $1, COALESCE(MAX(version_number), 0) + 1,
+         'v' || (COALESCE(MAX(version_number), 0) + 1), $2, 'draft', $3
+       FROM app_versions WHERE app_id = $1 RETURNING id`,
+      [appId, sourceUrl ?? null, userId ?? null],
+    );
+    return created.rows[0].id;
+  });
+  return (await appVersionById(id))!;
+}
+
 async function publicationCandidate(versionId: number) {
   const version = await appVersionById(versionId);
   if (!version) return undefined;

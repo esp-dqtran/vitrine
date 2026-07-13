@@ -56,6 +56,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     submitAppVersionForReview,
     publishAppVersion,
     createAppVersion,
+    ensureActiveAppVersion,
     getVersionDesignSystem,
     publishedImages,
     pool,
@@ -180,6 +181,14 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal(secondVersion.status, "draft");
   assert.equal((await listAppVersions("airbnb"))[0].version_number, 2);
   assert.equal(secondVersion.screen_count, 2);
+  assert.equal((await ensureActiveAppVersion("airbnb", -101)).id, secondVersion.id);
+  const [ensuredDraftA, ensuredDraftB] = await Promise.all([
+    ensureActiveAppVersion("ensure-draft-app", -101, "https://example.com/source-a"),
+    ensureActiveAppVersion("ensure-draft-app", -101, "https://example.com/source-b"),
+  ]);
+  assert.equal(ensuredDraftA.id, ensuredDraftB.id);
+  assert.equal(ensuredDraftA.status, "draft");
+  assert.equal((await listAppVersions("ensure-draft-app")).length, 1);
 
   const publishedBefore = (await publishedImages()).filter(({ app }) => app === "airbnb");
   const publishedDesignBefore = await getVersionDesignSystem("airbnb");

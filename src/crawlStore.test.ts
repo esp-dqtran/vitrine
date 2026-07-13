@@ -194,6 +194,34 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       assert.match(message, /unsupported/i);
       assert.equal(message.includes(arbitraryEnvironmentValue), false);
     }
+    const unknownRequestedFlow = "flow-that-is-not-in-the-approved-plan";
+    try {
+      await store.createRun({
+        app: "durable-app",
+        versionId: version.id,
+        planId: approved.id,
+        environment: {
+          requestedFlowIds: [unknownRequestedFlow],
+          unsafeApproved: false,
+          disposableAccountAcknowledged: false,
+          allowSideEffects: false,
+        },
+      });
+      assert.fail("unknown requested flow was accepted");
+    } catch (error) {
+      const message = (error as Error).message;
+      assert.match(message, /requested flow/i);
+      assert.equal(message.includes(unknownRequestedFlow), false);
+    }
+    await assert.rejects(
+      () => store.createRun({
+        app: "durable-app",
+        versionId: version.id,
+        planId: approved.id,
+        environment: { requestedFlowIds: [42] } as never,
+      }),
+      /unsupported/i,
+    );
 
     const jobId = await db.createJob("smart-crawl", { app: "durable-app" });
     const runEnvironment = {
@@ -205,6 +233,10 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       locale: "en-US",
       timezone: "UTC",
       viewport: { width: 1440, height: 900 },
+      requestedFlowIds: ["core", "core"],
+      unsafeApproved: true,
+      disposableAccountAcknowledged: true,
+      allowSideEffects: false,
     };
     const run = await store.createRun({
       app: "durable-app",
@@ -217,12 +249,61 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal(run.retry_mode, "all");
     assert.equal(run.version_id, version.id);
     assert.equal(run.plan_id, approved.id);
-    assert.deepEqual(run.environment, runEnvironment);
+    assert.deepEqual(run.environment, { ...runEnvironment, requestedFlowIds: ["core"] });
 
-    const claimed = await store.claimRun("crawler-1");
+    const notRequestedRun = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    const unpublishedRun = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    const interruptedBeforePublish = await store.markQueuedRunInterrupted(unpublishedRun.id);
+    assert.equal(interruptedBeforePublish.status, "interrupted");
+    assert.equal(interruptedBeforePublish.worker_id, null);
+    assert.equal(interruptedBeforePublish.finished_at, null);
+
+    const cancelledBeforePublish = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    const cancelledSnapshot = await store.requestRunCancellation(cancelledBeforePublish.id);
+    assert.equal((await store.markQueuedRunInterrupted(cancelledBeforePublish.id)).status, "cancelled");
+    assert.deepEqual(await store.getRun(cancelledBeforePublish.id), cancelledSnapshot);
+    await db.query("DELETE FROM crawl_runs WHERE id = ANY($1::bigint[])", [[unpublishedRun.id, cancelledBeforePublish.id]]);
+
+    const claimed = await store.claimRunById(run.id, "crawler-1");
     assert.equal(claimed?.id, run.id);
     assert.equal(claimed?.status, "running");
     assert.equal(claimed?.worker_id, "crawler-1");
+    assert.equal((await store.getRun(notRequestedRun.id))?.status, "queued");
+    assert.equal((await store.claimRunById(run.id, "crawler-1")).id, run.id);
+    assert.equal((await store.markQueuedRunInterrupted(run.id)).status, "running");
+    await assert.rejects(() => store.claimRunById(run.id, "different-worker"), /another worker|owned/i);
+    assert.equal((await store.requestRunCancellation(notRequestedRun.id)).status, "cancelled");
+    await db.query("DELETE FROM crawl_runs WHERE id = $1", [notRequestedRun.id]);
+    for (const desiredStatus of ["succeeded", "failed", "interrupted"] as const) {
+      const raceRun = await store.createRun({
+        app: "durable-app",
+        versionId: version.id,
+        planId: approved.id,
+        environment: { browserName: "chromium" },
+      });
+      const raceWorker = `cancel-race-${desiredStatus}`;
+      await store.claimRunById(raceRun.id, raceWorker);
+      await store.requestRunCancellation(raceRun.id);
+      const resolved = await store.updateRun(raceRun.id, raceWorker, { status: desiredStatus });
+      assert.equal(resolved.status, "cancelled");
+      assert.ok(resolved.finished_at);
+      await db.query("DELETE FROM crawl_runs WHERE id = $1", [raceRun.id]);
+    }
     const heartbeat = await store.heartbeatRun(run.id, "crawler-1");
     assert.equal(heartbeat.status, "running");
     assert.ok(heartbeat.heartbeat_at);
@@ -470,7 +551,11 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal((await store.claimRun("replay-worker-a"))?.id, replayRunA.id);
     assert.equal((await store.claimRun("replay-worker-b"))?.id, replayRunB.id);
 
-    const { captureValidatedState, finalizeCanonicalRun } = await import("./crawlRun.ts");
+    const { captureValidatedState, finalizeCanonicalRun, sanitizeDurableActualUrl } = await import("./crawlRun.ts");
+    const safeSemanticUrl = sanitizeDurableActualUrl(
+      "https://example.com/canonical-replay?tab=tab-1&refresh_token=must-drop&session_id=must-drop",
+    );
+    assert.equal(safeSemanticUrl, "https://example.com/canonical-replay?tab=tab-1");
     const replayDataDir = mkdtempSync(join(tmpdir(), "astryx-canonical-replay-"));
     const replayPage = (bytes: Uint8Array) => ({
       url: () => "https://example.com/canonical-replay?volatile=discarded",
@@ -516,7 +601,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
           status: "completed",
           attempts: 1,
           sourceUrl: "https://example.com/app",
-          finalUrl: "https://example.com/canonical-replay",
+          finalUrl: replayRun.id === replayRunB.id ? safeSemanticUrl : "https://example.com/canonical-replay",
           observedScreenshotHash: capture.observedHash,
           evidenceId: capture.evidence.id,
         });
@@ -535,6 +620,14 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
         observedScreenshotHash: bundle.evidence.screenshot_hash,
         evidenceId: bundle.evidence.id,
       });
+      assert.deepEqual(
+        (await store.listRunEvidence(replayRunA.id)).map(({ id }) => id),
+        [firstReplay.evidence.id, bundle.evidence.id],
+      );
+      assert.deepEqual(
+        (await store.listRunEvidence(replayRunB.id)).map(({ id }) => id),
+        [firstReplay.evidence.id],
+      );
 
       const replaySteps = await db.query<{
         run_id: string;
@@ -713,6 +806,24 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal(clearedFailureStep.evidence_id, evidence.id);
     assert.equal(clearedFailureStep.source_url, fullyStoredStep.source_url);
 
+    const exactRunSteps = await store.listRunSteps(run.id);
+    assert.equal(exactRunSteps.length, 2);
+    assert.ok(exactRunSteps.every(({ run_id }) => run_id === run.id));
+    const execution = await store.loadWorkerRunExecution(run.id, "crawler-1");
+    assert.equal(execution.run.id, run.id);
+    assert.equal(execution.plan.id, approved.id);
+    assert.equal(execution.plan.status, "approved");
+    assert.equal(execution.plan.content_hash, approvedHash);
+    assert.deepEqual(execution.steps, exactRunSteps);
+    const executionOpen = execution.steps.find(({ flow_id, step_id }) => flow_id === "core" && step_id === "open");
+    assert.deepEqual(executionOpen?.expected, fullyStoredStep.expected);
+    assert.deepEqual(executionOpen?.actual, fullyStoredStep.actual);
+    assert.equal(executionOpen?.observed_screenshot_hash, fullyStoredStep.observed_screenshot_hash);
+    assert.equal(executionOpen?.evidence_id, evidence.id);
+    assert.equal(executionOpen?.final_url, fullyStoredStep.final_url);
+    assert.deepEqual(execution.evidence.map(({ id }) => id), [evidence.id]);
+    assert.ok(execution.evidence.every(({ version_id, plan_id }) => version_id === version.id && plan_id === approved.id));
+
     await assert.rejects(
       () => store.upsertRunStep({
         runId: run.id,
@@ -733,10 +844,11 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     )).rows[0].evidence_id, null);
 
     await db.query("UPDATE crawl_runs SET heartbeat_at = now() - interval '2 hours' WHERE id = $1", [run.id]);
-    assert.equal(await store.markStaleRunsInterrupted(new Date(Date.now() - 60_000)), 1);
+    assert.deepEqual(await store.markStaleRunIdsInterrupted(new Date(Date.now() - 60_000)), [run.id]);
+    assert.equal(await store.markStaleRunsInterrupted(new Date(Date.now() - 60_000)), 0);
     assert.equal((await store.getRun(run.id))?.status, "interrupted");
 
-    const reclaimed = await store.claimRun("crawler-2");
+    const reclaimed = await store.claimRunById(run.id, "crawler-2");
     assert.equal(reclaimed?.id, run.id);
     assert.equal(reclaimed?.worker_id, "crawler-2");
     const beforeLostLease = await store.getRun(run.id);
@@ -779,7 +891,8 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal((await db.query("SELECT 1 FROM crawl_evidence WHERE version_id = $1", [version.id])).rowCount, beforeLostLeaseEvidence.rowCount);
 
     const terminalRun = await store.updateRun(run.id, "crawler-2", { status: "failed", failedCount: 2 });
-    assert.equal(terminalRun.status, "failed");
+    assert.equal(terminalRun.status, "cancelled");
+    await assert.rejects(() => store.claimRunById(run.id, "crawler-2"), /terminal/i);
     await assert.rejects(
       () => store.updateRun(run.id, "crawler-2", { status: "running" }),
       /transition|terminal|lease/i,
@@ -830,6 +943,10 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       assert.equal(retry.plan_id, approved.id);
       assert.equal(retry.status, "queued");
       assert.equal(retry.retry_mode, mode);
+      assert.deepEqual(retry.environment.requestedFlowIds, ["core"]);
+      assert.equal(retry.environment.unsafeApproved, true);
+      assert.equal(retry.environment.disposableAccountAcknowledged, true);
+      assert.equal(retry.environment.allowSideEffects, false);
       assert.equal((await store.getRun(retry.id))?.retry_mode, mode);
       retries.push(retry);
     }
@@ -841,9 +958,29 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       () => store.createRetry(run.id, { mode: "invalid" as never, environment: { browserName: "chromium" } }),
       /retry mode/i,
     );
+
+    const succeededSource = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approved.id,
+      environment: { browserName: "chromium" },
+    });
+    await store.claimRunById(succeededSource.id, "crawler-success");
+    await store.updateRun(succeededSource.id, "crawler-success", { status: "succeeded" });
+    const succeededRetry = await store.createRetry(succeededSource.id, {
+      mode: "all",
+      environment: { browserName: "chromium" },
+    });
+    assert.equal(succeededRetry.retry_of_run_id, succeededSource.id);
+    assert.equal(succeededRetry.retry_mode, "all");
+    await assert.rejects(
+      () => store.createRetry(succeededSource.id, { mode: "failed", environment: { browserName: "chromium" } }),
+      /full|all|succeeded/i,
+    );
     for (const retry of [...retries, defaultRetry]) {
       assert.equal((await store.requestRunCancellation(retry.id)).status, "cancelled");
     }
+    assert.equal((await store.requestRunCancellation(succeededRetry.id)).status, "cancelled");
 
     const repairedStep = {
       id: "dashboard",
@@ -877,6 +1014,13 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     assert.equal(appliedRepair.status, "applied");
     assert.ok(appliedRepair.applied_plan_id);
     await assert.rejects(() => store.rejectRepair(appliedRepair.id, -201), /already reviewed/i);
+    assert.deepEqual(
+      (await store.listRunRepairs(run.id)).map(({ id, status }) => ({ id, status })),
+      [
+        { id: rejectedProposal.id, status: "rejected" },
+        { id: appliedProposal.id, status: "applied" },
+      ],
+    );
 
     const planV2 = await store.getPlan(appliedRepair.applied_plan_id!);
     assert.ok(planV2);
@@ -913,6 +1057,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     const claimedPinnedRun = await store.claimRun("pinned-worker");
     assert.equal(claimedPinnedRun?.id, pinnedQueuedRun.id);
     assert.equal(claimedPinnedRun?.plan_id, approved.id);
+    assert.equal((await store.loadWorkerRunExecution(pinnedQueuedRun.id, "pinned-worker")).plan.status, "superseded");
     await store.updateRun(pinnedQueuedRun.id, "pinned-worker", { status: "interrupted" });
     const pinnedRetry = await store.createRetry(pinnedQueuedRun.id, {
       mode: "failed",
@@ -929,7 +1074,16 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       planId: approvedV2.id,
       environment: { browserName: "chromium" },
     });
+    const invalidExactVersionRun = await store.createRun({
+      app: "durable-app",
+      versionId: version.id,
+      planId: approvedV2.id,
+      environment: { browserName: "chromium" },
+    });
     await db.query("UPDATE app_versions SET status = 'published', published_at = now() WHERE id = $1", [version.id]);
+    const exactCancelled = await store.claimRunById(invalidExactVersionRun.id, "published-exact-worker");
+    assert.equal(exactCancelled.status, "cancelled");
+    assert.ok(exactCancelled.finished_at);
     assert.equal(await store.claimRun("published-version-worker"), undefined);
     const cancelledInvalidVersionRun = await store.getRun(invalidVersionRun.id);
     assert.equal(cancelledInvalidVersionRun?.status, "cancelled");

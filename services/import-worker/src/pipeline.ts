@@ -5,6 +5,8 @@ import { caption } from "../../../src/caption.ts";
 import { synthesize } from "../../../src/synthesize.ts";
 import { publishJob, type Job } from "../../../src/queue.ts";
 import type { StageOutcome } from "../../../src/progress.ts";
+import { CrawlRunInterruptedError, type CrawlRunService } from "../../../src/crawlRun.ts";
+import { researchAppJob, type ResearchAppJobInput } from "../../../src/crawlJobs.ts";
 
 const DEFAULT_PROVIDER = "chatgpt";
 // Screens establishes login (up to 30 min); UI Elements / Flows then fail fast if the app
@@ -22,6 +24,10 @@ const defaults = {
   caption,
   synthesize,
   publishJob,
+  researchAppJob,
+  crawlRunService: {
+    execute: async () => { throw new Error("Crawl run service is not configured"); },
+  } as Pick<CrawlRunService, "execute">,
 };
 type PipelineDeps = typeof defaults;
 
@@ -72,6 +78,16 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
       return outcome;
     }
 
+    if (job.type === "research-app") {
+      const input: ResearchAppJobInput = {
+        name: job.name,
+        homepageUrl: job.homepageUrl,
+        ...(job.provider ? { provider: job.provider } : {}),
+      };
+      await deps.researchAppJob(input);
+      return { status: "done" };
+    }
+
     return deps.synthesize(job.name, DEFAULT_PROVIDER);
   }
 
@@ -80,6 +96,20 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
       const record = await deps.getJob(job.jobId);
       if (record?.status === "cancelled") return;
       await deps.setJobStatus(job.jobId, "running");
+    }
+
+    if (job.type === "smart-crawl-app") {
+      try {
+        const run = await deps.crawlRunService.execute(job.runId);
+        if (job.jobId != null) {
+          const status = run.status === "succeeded" ? "done" : run.status === "cancelled" ? "cancelled" : "error";
+          await deps.setJobStatus(job.jobId, status, status === "error" ? `Crawl run ${run.status}` : undefined);
+        }
+      } catch (error) {
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
+        if (error instanceof CrawlRunInterruptedError) throw error;
+      }
+      return;
     }
 
     try {

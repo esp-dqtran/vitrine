@@ -22,7 +22,19 @@ export interface CrawlRunEnvironment {
   locale?: string;
   timezone?: string;
   viewport?: { width: number; height: number };
+  requestedFlowIds: string[];
+  unsafeApproved: boolean;
+  disposableAccountAcknowledged: boolean;
+  allowSideEffects: boolean;
 }
+
+export type CrawlRunEnvironmentInput = Omit<
+  CrawlRunEnvironment,
+  "requestedFlowIds" | "unsafeApproved" | "disposableAccountAcknowledged" | "allowSideEffects"
+> & Partial<Pick<
+  CrawlRunEnvironment,
+  "requestedFlowIds" | "unsafeApproved" | "disposableAccountAcknowledged" | "allowSideEffects"
+>>;
 
 export interface CrawlPlanRecord {
   id: string;
@@ -129,7 +141,7 @@ export interface CreateRunInput {
   planId: string;
   jobId?: number;
   retryOfRunId?: string;
-  environment: CrawlRunEnvironment;
+  environment: CrawlRunEnvironmentInput;
 }
 
 export interface UpdateRunInput {
@@ -242,6 +254,13 @@ export interface WorkerRunFinalizationSnapshot {
   evidence: CrawlEvidenceRecord[];
 }
 
+export interface WorkerRunExecutionSnapshot {
+  run: CrawlRunRecord;
+  plan: CrawlPlanRecord;
+  steps: CrawlRunStepRecord[];
+  evidence: CrawlEvidenceRecord[];
+}
+
 export interface SaveWorkerAppFlowsInput {
   runId: string;
   workerId: string;
@@ -267,7 +286,14 @@ const RETRY_MODES = new Set<RetryMode>(["all", "failed", "remaining"]);
 const SECRET_KEY = /password|passwd|pwd|secret|token|api.?key|private.?key|authorization|cookie|session.?id/i;
 const SECRET_VALUE = /\bBearer\s+\S+|-----BEGIN [^-]*PRIVATE KEY-----|(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^/\s:@]+:[^@\s]+@|\bAKIA[0-9A-Z]{16}\b|\b[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\b/;
 const ENVIRONMENT_STRING_KEYS = ["browserName", "browserVersion", "platform", "workerVersion", "locale", "timezone"] as const;
-const ENVIRONMENT_KEYS = new Set<string>(["headless", "viewport", ...ENVIRONMENT_STRING_KEYS]);
+const ENVIRONMENT_BOOLEAN_KEYS = ["unsafeApproved", "disposableAccountAcknowledged", "allowSideEffects"] as const;
+const ENVIRONMENT_KEYS = new Set<string>([
+  "headless",
+  "viewport",
+  "requestedFlowIds",
+  ...ENVIRONMENT_STRING_KEYS,
+  ...ENVIRONMENT_BOOLEAN_KEYS,
+]);
 
 const planSelect = `SELECT cp.*, a.name AS app
   FROM crawl_plans cp JOIN apps a ON a.id = cp.app_id`;
@@ -338,6 +364,9 @@ function parseRunEnvironment(value: unknown): CrawlRunEnvironment {
   }
   if (containsSecretLike(raw, true) || Object.keys(raw).some((key) => !ENVIRONMENT_KEYS.has(key))) return invalid();
   if (raw.headless !== undefined && typeof raw.headless !== "boolean") return invalid();
+  for (const key of ENVIRONMENT_BOOLEAN_KEYS) {
+    if (raw[key] !== undefined && typeof raw[key] !== "boolean") return invalid();
+  }
   for (const key of ENVIRONMENT_STRING_KEYS) {
     if (raw[key] !== undefined && (typeof raw[key] !== "string" || !raw[key].trim())) return invalid();
   }
@@ -348,7 +377,18 @@ function parseRunEnvironment(value: unknown): CrawlRunEnvironment {
     if (!Number.isInteger(viewport.width) || (viewport.width as number) <= 0
       || !Number.isInteger(viewport.height) || (viewport.height as number) <= 0) return invalid();
   }
-  return raw as CrawlRunEnvironment;
+  if (raw.requestedFlowIds !== undefined && (
+    !Array.isArray(raw.requestedFlowIds)
+    || raw.requestedFlowIds.some((flowId) => typeof flowId !== "string" || !flowId.trim())
+  )) return invalid();
+  const requestedFlowIds = [...new Set((raw.requestedFlowIds as string[] | undefined)?.map((id) => id.trim()) ?? [])];
+  return {
+    ...raw,
+    requestedFlowIds,
+    unsafeApproved: raw.unsafeApproved ?? false,
+    disposableAccountAcknowledged: raw.disposableAccountAcknowledged ?? false,
+    allowSideEffects: raw.allowSideEffects ?? false,
+  } as CrawlRunEnvironment;
 }
 
 function assertNonNegative(value: number, label: string): void {
@@ -499,6 +539,9 @@ export async function createRun(input: CreateRunInput): Promise<CrawlRunRecord> 
     if (!plan || plan.status !== "approved") throw new Error("Crawl runs require an approved plan");
     if (plan.app_id !== appId) throw new Error("Plan and version must belong to the same app");
     if (!plan.plan.reviewed) throw new Error("Crawl runs require an approved reviewed plan");
+    if (environment.requestedFlowIds.some((flowId) => !plan.plan.flows.some(({ id }) => id === flowId))) {
+      throw new Error("Requested flow is not present in the approved plan");
+    }
 
     const version = await client.query<{ app_id: number; status: string }>(
       "SELECT app_id, status FROM app_versions WHERE id = $1 FOR SHARE",
@@ -599,6 +642,62 @@ export async function claimRun(workerId: string): Promise<CrawlRunRecord | undef
   });
 }
 
+export async function claimRunById(runId: string, workerId: string): Promise<CrawlRunRecord> {
+  const id = nonEmpty(runId, "Run id");
+  const worker = nonEmpty(workerId, "Worker id");
+  return withTransaction(async (client) => {
+    const pin = await client.query<{ version_id: number }>(
+      "SELECT version_id FROM crawl_runs WHERE id = $1",
+      [id],
+    );
+    if (!pin.rowCount) throw new Error("Crawl run not found");
+
+    // Publication locks the version before its runs. Match that order here.
+    const version = await client.query<{ status: string }>(
+      "SELECT status FROM app_versions WHERE id = $1 FOR SHARE",
+      [pin.rows[0].version_id],
+    );
+    const locked = await client.query<CrawlRunRecord>(
+      `${runSelect} WHERE cr.id = $1 FOR UPDATE OF cr`,
+      [id],
+    );
+    const run = locked.rows[0];
+    if (!run) throw new Error("Crawl run not found");
+    if (run.version_id !== pin.rows[0].version_id) throw new Error("Crawl run version changed while claiming it");
+    if (run.status === "running") {
+      if (run.worker_id !== worker) throw new Error("Crawl run is owned by another worker");
+      const reused = await client.query<CrawlRunRecord>(
+        `UPDATE crawl_runs cr SET heartbeat_at = now(), updated_at = now()
+         FROM apps a WHERE cr.id = $1 AND a.id = cr.app_id
+         RETURNING cr.*, a.name AS app`,
+        [id],
+      );
+      return reused.rows[0];
+    }
+    if (!["queued", "interrupted"].includes(run.status)) throw new Error("Terminal crawl run cannot be claimed");
+    if (!version.rowCount || !["draft", "in_review"].includes(version.rows[0].status)) {
+      const cancelled = await client.query<CrawlRunRecord>(
+        `UPDATE crawl_runs cr
+         SET status = 'cancelled', worker_id = NULL, finished_at = now(), updated_at = now()
+         FROM apps a
+         WHERE cr.id = $1 AND cr.status IN ('queued', 'interrupted') AND a.id = cr.app_id
+         RETURNING cr.*, a.name AS app`,
+        [id],
+      );
+      return cancelled.rows[0];
+    }
+    const claimed = await client.query<CrawlRunRecord>(
+      `UPDATE crawl_runs cr
+       SET status = 'running', worker_id = $2, heartbeat_at = now(),
+           started_at = COALESCE(cr.started_at, now()), finished_at = NULL, updated_at = now()
+       FROM apps a WHERE cr.id = $1 AND a.id = cr.app_id
+       RETURNING cr.*, a.name AS app`,
+      [id, worker],
+    );
+    return claimed.rows[0];
+  });
+}
+
 export async function heartbeatRun(id: string, workerId: string): Promise<CrawlRunRecord> {
   const result = await query<CrawlRunRecord>(
     `UPDATE crawl_runs cr SET heartbeat_at = now(), updated_at = now()
@@ -623,8 +722,14 @@ export async function updateRun(id: string, workerId: string, patch: UpdateRunIn
     if (!["succeeded", "failed", "cancelled", "interrupted"].includes(patch.status)) {
       throw new Error("Invalid crawl run transition");
     }
-    set("status", patch.status);
-    if (TERMINAL_RUN_STATUSES.has(patch.status)) assignments.push("finished_at = now()");
+    values.push(patch.status);
+    const statusParameter = `$${values.length}`;
+    assignments.push(`status = CASE WHEN cancel_requested_at IS NOT NULL THEN 'cancelled' ELSE ${statusParameter} END`);
+    if (TERMINAL_RUN_STATUSES.has(patch.status)) {
+      assignments.push("finished_at = now()");
+    } else {
+      assignments.push("finished_at = CASE WHEN cancel_requested_at IS NOT NULL THEN now() ELSE finished_at END");
+    }
     if (patch.status === "interrupted") assignments.push("worker_id = NULL");
   }
   if (patch.currentFlowId !== undefined) set("current_flow_id", patch.currentFlowId);
@@ -665,6 +770,30 @@ export async function requestRunCancellation(id: string): Promise<CrawlRunRecord
   );
   if (!result.rowCount) throw new Error("Only an active crawl run can be cancelled");
   return result.rows[0];
+}
+
+export async function markQueuedRunInterrupted(id: string): Promise<CrawlRunRecord> {
+  const runId = nonEmpty(id, "Run id");
+  return withTransaction(async (client) => {
+    const result = await client.query<CrawlRunRecord>(
+      `UPDATE crawl_runs
+       SET status = CASE WHEN cancel_requested_at IS NULL THEN 'interrupted' ELSE 'cancelled' END,
+           worker_id = NULL,
+           heartbeat_at = NULL,
+           finished_at = CASE
+             WHEN cancel_requested_at IS NULL THEN NULL
+             ELSE COALESCE(finished_at, now())
+           END,
+           updated_at = now()
+       WHERE id = $1 AND status = 'queued'
+       RETURNING crawl_runs.*, (SELECT name FROM apps WHERE id = crawl_runs.app_id) AS app`,
+      [runId],
+    );
+    if (result.rowCount) return result.rows[0];
+    const current = await clientRun(client, runId);
+    if (!current) throw new Error("Crawl run not found");
+    return current;
+  });
 }
 
 export async function isRunCancellationRequested(id: string): Promise<boolean> {
@@ -799,6 +928,27 @@ export async function attachFailureObject(input: AttachFailureObjectInput): Prom
     );
     if (attached.rowCount !== 1) throw new Error("Crawl run step not found or already attached to another failure object");
   });
+}
+
+export async function listRunSteps(runId: string): Promise<CrawlRunStepRecord[]> {
+  const result = await query<CrawlRunStepRecord>(
+    `SELECT * FROM crawl_run_steps
+     WHERE run_id = $1 ORDER BY flow_order, step_order`,
+    [nonEmpty(runId, "Run id")],
+  );
+  return result.rows;
+}
+
+export async function listRunEvidence(runId: string): Promise<CrawlEvidenceRecord[]> {
+  const result = await query<CrawlEvidenceRecord>(
+    `SELECT ce.*
+     FROM crawl_run_steps crs
+     JOIN crawl_evidence ce ON ce.id = crs.evidence_id
+     WHERE crs.run_id = $1
+     ORDER BY crs.flow_order, crs.step_order, ce.id`,
+    [nonEmpty(runId, "Run id")],
+  );
+  return result.rows;
 }
 
 function validateEvidenceKey(key: EvidenceKey): void {
@@ -1115,37 +1265,49 @@ export async function loadWorkerRunFinalization(
   runId: string,
   workerId: string,
 ): Promise<WorkerRunFinalizationSnapshot> {
-  nonEmpty(runId, "Run id");
+  const snapshot = await loadWorkerRunExecution(runId, workerId);
+  return {
+    runId: snapshot.run.id,
+    app: snapshot.run.app,
+    versionId: snapshot.run.version_id,
+    planId: snapshot.run.plan_id,
+    plan: snapshot.plan.plan,
+    steps: snapshot.steps.map((step) => ({
+      flowId: step.flow_id,
+      stepId: step.step_id,
+      status: step.status,
+      evidenceId: step.evidence_id,
+    })),
+    evidence: snapshot.evidence,
+  };
+}
+
+export async function loadWorkerRunExecution(
+  runId: string,
+  workerId: string,
+): Promise<WorkerRunExecutionSnapshot> {
+  const id = nonEmpty(runId, "Run id");
   return withTransaction(async (client) => {
-    const locked = await lockedWorkerRun(client, runId, workerId);
-    const steps = await client.query<{
-      flow_id: string;
-      step_id: string;
-      status: CrawlRunStepStatus;
-      evidence_id: string | null;
-    }>(
-      `SELECT flow_id, step_id, status, evidence_id FROM crawl_run_steps
+    const locked = await lockedWorkerRun(client, id, workerId);
+    if (!["approved", "superseded"].includes(locked.plan.status) || !locked.plan.plan.reviewed) {
+      throw new Error("Worker execution requires an immutable reviewed pinned plan");
+    }
+    const steps = await client.query<CrawlRunStepRecord>(
+      `SELECT * FROM crawl_run_steps
        WHERE run_id = $1 ORDER BY flow_order, step_order`,
-      [runId],
+      [id],
     );
     const evidence = await client.query<CrawlEvidenceRecord>(
-      `SELECT * FROM crawl_evidence
-       WHERE version_id = $1 AND plan_id = $2
-       ORDER BY flow_id, step_id, final_url, viewport_width, viewport_height, image_id`,
-      [locked.run.version_id, locked.run.plan_id],
+      `SELECT DISTINCT ce.* FROM crawl_evidence ce
+       JOIN crawl_run_steps crs ON crs.evidence_id = ce.id
+       WHERE crs.run_id = $1 AND ce.version_id = $2 AND ce.plan_id = $3
+       ORDER BY ce.flow_id, ce.step_id, ce.final_url, ce.viewport_width, ce.viewport_height, ce.image_id`,
+      [id, locked.run.version_id, locked.run.plan_id],
     );
     return {
-      runId: locked.run.id,
-      app: locked.run.app,
-      versionId: locked.run.version_id,
-      planId: locked.run.plan_id,
-      plan: locked.plan.plan,
-      steps: steps.rows.map((step) => ({
-        flowId: step.flow_id,
-        stepId: step.step_id,
-        status: step.status,
-        evidenceId: step.evidence_id,
-      })),
+      run: { ...locked.run, environment: parseRunEnvironment(locked.run.environment) },
+      plan: locked.plan,
+      steps: steps.rows,
       evidence: evidence.rows,
     };
   });
@@ -1181,26 +1343,33 @@ export async function saveWorkerAppFlows(input: SaveWorkerAppFlowsInput): Promis
 }
 
 export async function markStaleRunsInterrupted(heartbeatBefore: Date): Promise<number> {
+  return (await markStaleRunIdsInterrupted(heartbeatBefore)).length;
+}
+
+export async function markStaleRunIdsInterrupted(heartbeatBefore: Date): Promise<string[]> {
   if (Number.isNaN(heartbeatBefore.getTime())) throw new Error("Heartbeat threshold must be a valid date");
-  const result = await query(
+  const result = await query<{ id: string }>(
     `UPDATE crawl_runs
      SET status = 'interrupted', worker_id = NULL, updated_at = now()
-     WHERE status = 'running' AND COALESCE(heartbeat_at, started_at, created_at) < $1`,
+     WHERE status = 'running' AND COALESCE(heartbeat_at, started_at, created_at) < $1
+     RETURNING id`,
     [heartbeatBefore],
   );
-  return result.rowCount ?? 0;
+  return result.rows.map(({ id }) => id).sort((a, b) => Number(BigInt(a) - BigInt(b)));
 }
 
 export async function createRetry(
   originalRunId: string,
-  options: { mode?: RetryMode; environment?: CrawlRunEnvironment } = {},
+  options: { mode?: RetryMode; environment?: Partial<CrawlRunEnvironment> } = {},
 ): Promise<CrawlRunRecord> {
   const mode = options.mode ?? "all";
   if (!RETRY_MODES.has(mode)) throw new Error("Invalid retry mode");
   const snapshot = await getRun(originalRunId);
   if (!snapshot) throw new Error("Original crawl run not found");
-  if (!["failed", "cancelled", "interrupted"].includes(snapshot.status)) {
-    throw new Error("Only a failed, cancelled, or interrupted crawl run can be retried");
+  const retryable = ["failed", "cancelled", "interrupted"].includes(snapshot.status)
+    || (snapshot.status === "succeeded" && mode === "all");
+  if (!retryable) {
+    throw new Error("Only a failed, cancelled, or interrupted run, or a succeeded full run, can be retried");
   }
   const environment = parseRunEnvironment({
     ...snapshot.environment,
@@ -1216,6 +1385,9 @@ export async function createRetry(
     const plan = planResult.rows[0] ? mapPlanRow(planResult.rows[0]) : undefined;
     if (!plan || plan.app_id !== snapshot.app_id || !["approved", "superseded"].includes(plan.status) || !plan.plan.reviewed) {
       throw new Error("Retry requires the original reviewed pinned plan");
+    }
+    if (environment.requestedFlowIds.some((flowId) => !plan.plan.flows.some(({ id }) => id === flowId))) {
+      throw new Error("Requested flow is not present in the pinned plan");
     }
     const version = await client.query<{ app_id: number; status: string }>(
       "SELECT app_id, status FROM app_versions WHERE id = $1 FOR SHARE",
@@ -1235,7 +1407,8 @@ export async function createRetry(
       || original.rows[0].app_id !== snapshot.app_id
       || original.rows[0].version_id !== snapshot.version_id
       || original.rows[0].plan_id !== snapshot.plan_id
-      || !["failed", "cancelled", "interrupted"].includes(original.rows[0].status)) {
+      || !(["failed", "cancelled", "interrupted"].includes(original.rows[0].status)
+        || (original.rows[0].status === "succeeded" && mode === "all"))) {
       throw new Error("Original crawl run changed while creating its retry");
     }
     const created = await client.query<{ id: string }>(
@@ -1252,6 +1425,14 @@ export async function createRetry(
 export async function getRepair(id: string): Promise<CrawlRepairRecord | undefined> {
   const result = await query<CrawlRepairRecord>("SELECT * FROM crawl_repairs WHERE id = $1", [id]);
   return result.rows[0];
+}
+
+export async function listRunRepairs(runId: string): Promise<CrawlRepairRecord[]> {
+  const result = await query<CrawlRepairRecord>(
+    "SELECT * FROM crawl_repairs WHERE run_id = $1 ORDER BY created_at, id",
+    [nonEmpty(runId, "Run id")],
+  );
+  return result.rows;
 }
 
 export async function proposeRepair(input: ProposeRepairInput): Promise<CrawlRepairRecord> {

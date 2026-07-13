@@ -114,13 +114,15 @@ function waitForOpenedPage(opened: Promise<Page>, timeout: number): { promise: P
   return { promise, cancel };
 }
 
-async function assertExpectedState(page: Page, expected: ExpectedState, actual: StepActual, timeout: number): Promise<void> {
+export async function assertExpectedState(page: Page, expected: ExpectedState, actual: StepActual, timeout: number): Promise<void> {
   if (expected.url !== undefined || expected.urlPattern !== undefined) {
     try {
       await page.waitForURL((url) => urlMatchesExpectation(url.toString(), expected), { timeout });
     } catch {
       actual.finalUrl = page.url();
-      throw new SemanticStepError(expected, actual, page);
+      if (!urlMatchesExpectation(actual.finalUrl, expected)) {
+        throw new SemanticStepError(expected, actual, page);
+      }
     }
   }
   actual.finalUrl = page.url();
@@ -248,9 +250,8 @@ export async function interpretStep(
       const actual: StepActual = { sourceUrl, finalUrl: openedPage.url(), page: "new" };
       try {
         await openedPage.waitForLoadState("domcontentloaded", { timeout });
-      } catch {
-        actual.finalUrl = openedPage.url();
-        throw new SemanticStepError(step.expected, actual, openedPage);
+      } catch (error) {
+        if (!(error instanceof errors.TimeoutError)) throw error;
       }
       await assertExpectedState(openedPage, step.expected, actual, timeout);
       return { status: "completed", page: openedPage, actual };
@@ -420,7 +421,7 @@ export interface RunnerHooks {
   cancelled(): boolean | Promise<boolean>;
   stepStarted(flow: CrawlFlow, step: CrawlStep, index: number, attempt: number): Promise<void>;
   stepFinished(flow: CrawlFlow, step: CrawlStep, index: number, result: FlowStepRecord): Promise<void>;
-  capture(page: Page, flow: CrawlFlow, step: CrawlStep | undefined, state: string): Promise<void>;
+  capture(page: Page, flow: CrawlFlow, step: CrawlStep | undefined, state: string, actual?: StepActual): Promise<void>;
   failure(page: Page, failure: Omit<StepFailure, "screenshot">): Promise<string | undefined>;
 }
 
@@ -431,10 +432,16 @@ export type StepExecutor = (
   env?: Record<string, string | undefined>
 ) => Promise<StepResult>;
 
+export interface FlowResume {
+  stepIndex: number;
+  url: string;
+}
+
 export interface RunFlowOptions {
   env?: Record<string, string | undefined>;
   hooks?: RunnerHooks;
   executeStep?: StepExecutor;
+  resume?: FlowResume;
 }
 
 export interface CrawlExecutionResult {
@@ -624,6 +631,21 @@ async function captureRecordState(page: Page, flow: CrawlFlow, state: string, ho
   }
 }
 
+function validateFlowResume(flow: CrawlFlow, resume: FlowResume | undefined): FlowResume | undefined {
+  if (!resume) return undefined;
+  if (!Number.isSafeInteger(resume.stepIndex) || resume.stepIndex < 0 || resume.stepIndex > flow.steps.length) {
+    throw new Error("Resume step index is outside the flow");
+  }
+  let url: URL;
+  try {
+    url = new URL(resume.url);
+  } catch {
+    throw new Error("Resume URL must be absolute");
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Resume URL must use HTTP or HTTPS");
+  return { stepIndex: resume.stepIndex, url: url.toString() };
+}
+
 // Walks one flow's steps and exposes terminal records through narrow hooks. Empty steps
 // remain record mode: the human drives while explicit settled observations are captured.
 export async function runFlow(
@@ -637,15 +659,17 @@ export async function runFlow(
   const env = options.env ?? process.env;
   const hooks = options.hooks ?? createCliRunnerHooks(sink, reportDir);
   const executeStep = options.executeStep ?? interpretStep;
+  const resume = validateFlowResume(flow, options.resume);
+  const startIndex = resume?.stepIndex ?? 0;
   const records: FlowStepRecord[] = [];
   let activePage = page;
   try {
     if (await hooks.cancelled()) {
-      await appendSkippedSteps(flow, 0, "cancelled", records, hooks);
+      await appendSkippedSteps(flow, startIndex, "cancelled", records, hooks);
       return flowRunResult(flow.id, "cancelled", records);
     }
 
-    await activePage.goto(plan.startUrl, { waitUntil: "domcontentloaded" });
+    await activePage.goto(resume?.url ?? plan.startUrl, { waitUntil: "domcontentloaded" });
 
     if (flow.steps.length === 0) {
       if (await hooks.cancelled()) return flowRunResult(flow.id, "cancelled", records);
@@ -662,7 +686,8 @@ export async function runFlow(
       return flowRunResult(flow.id, "completed", records);
     }
 
-    for (const [i, step] of flow.steps.entries()) {
+    for (let i = startIndex; i < flow.steps.length; i++) {
+      const step = flow.steps[i];
       if (await hooks.cancelled()) {
         await appendSkippedSteps(flow, i, "cancelled", records, hooks);
         return flowRunResult(flow.id, "cancelled", records);
@@ -730,7 +755,7 @@ export async function runFlow(
       };
       if (outcome.status === "completed") {
         await waitForSettle(activePage);
-        await hooks.capture(activePage, flow, step, `${flow.id}/${stepLabel(step, i)}`);
+        await hooks.capture(activePage, flow, step, `${flow.id}/${stepLabel(step, i)}`, outcome.actual);
       }
       records.push(record);
       await hooks.stepFinished(flow, step, i, record);
@@ -800,6 +825,41 @@ export async function withOwnedContext<T extends OwnedContext, R>(context: T, wo
   } finally {
     await context.close().catch(() => {});
   }
+}
+
+export interface ExecuteFlowsInOwnedContextOptions {
+  createContext(): Promise<BrowserContext>;
+  hooks: RunnerHooks;
+  env?: Record<string, string | undefined>;
+  executeStep?: StepExecutor;
+  resumes?: ReadonlyMap<string, FlowResume>;
+}
+
+export async function executeFlowsInOwnedContext(
+  plan: CrawlPlan,
+  flows: CrawlFlow[],
+  options: ExecuteFlowsInOwnedContextOptions
+): Promise<FlowRunResult[]> {
+  const context = await initializeOwnedContext(options.createContext, installSettleTracker);
+  return withOwnedContext(context, async () => {
+    const page = context.pages()[0] ?? (await context.newPage());
+    try {
+      const results: FlowRunResult[] = [];
+      for (const flow of flows) {
+        results.push(
+          await runFlow(page, plan, flow, async () => {}, "", {
+            env: options.env,
+            hooks: options.hooks,
+            executeStep: options.executeStep,
+            resume: options.resumes?.get(flow.id),
+          })
+        );
+      }
+      return results;
+    } finally {
+      if (!page.isClosed()) await page.close().catch(() => {});
+    }
+  });
 }
 
 async function launchAppContext(appName: string, dataDir: string): Promise<BrowserContext> {
