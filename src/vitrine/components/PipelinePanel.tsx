@@ -9,6 +9,8 @@ const STAGE_LABEL: Record<Job['type'], string> = {
   'caption-app': 'Caption screens',
   'synthesize-app': 'Synthesize design system',
   'discover-catalog': 'Discover catalog',
+  'research-app': 'Research crawl plan',
+  'smart-crawl-app': 'Run intelligent crawler',
 };
 
 const STATUS_VARIANT: Record<Job['status'], 'neutral' | 'info' | 'success' | 'error'> = {

@@ -35,10 +35,14 @@ test('shows accepted pipeline failures and cancellation controls', () => {
   const jobs: Job[] = [
     { id: 10, parent_id: null, type: 'import-app', payload: { name: 'linear' }, status: 'running', message: 'Capturing', created_at: '2026-07-12', updated_at: null },
     { id: 11, parent_id: 10, type: 'caption-app', payload: { name: 'linear' }, status: 'error', message: 'Provider unavailable', created_at: '2026-07-12', updated_at: null },
+    { id: 12, parent_id: 10, type: 'research-app', payload: { name: 'atlassian' }, status: 'done', message: null, created_at: '2026-07-12', updated_at: null },
+    { id: 13, parent_id: 10, type: 'smart-crawl-app', payload: { name: 'atlassian' }, status: 'queued', message: null, created_at: '2026-07-12', updated_at: null },
   ];
   const html = renderToStaticMarkup(<PipelineStatusList jobs={jobs} error="Job refresh failed" onCancel={() => undefined} />);
   assert.match(html, /Job refresh failed/);
   assert.match(html, /Provider unavailable/);
+  assert.match(html, /Research crawl plan/);
+  assert.match(html, /Run smart crawl/);
   assert.match(html, /Cancel/);
 });
 

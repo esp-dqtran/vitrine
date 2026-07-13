@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import type { Server } from "node:http";
-import { createApiApp } from "./app.ts";
+import { createApiApp, createCrawlRepairRequester } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
@@ -16,6 +16,15 @@ const previewSha256 = createHash("sha256").update("image").digest("hex");
 const previewMetadata: ObjectMetadata = {
   key: `images/7/${previewSha256}.webp`, sha256: previewSha256, byteSize: 5,
   contentType: "image/webp", accessClass: "public-preview",
+};
+const failureBody = Buffer.from("real-png-evidence");
+const failureSha256 = createHash("sha256").update(failureBody).digest("hex");
+const failureMetadata: ObjectMetadata = {
+  key: `crawl-failures/21/62726f7773652d70726f6475637473/6f70656e2d736f667477617265/${failureSha256}.png`,
+  sha256: failureSha256,
+  byteSize: failureBody.byteLength,
+  contentType: "image/png",
+  accessClass: "internal",
 };
 const localObjectStore: ObjectStore = {
   put: async () => { throw new Error("unused"); },
@@ -35,6 +44,91 @@ const catalogImages = [
   },
 ];
 
+function crawlPlan(revision = 1, reviewed = false) {
+  return {
+    app: "atlassian",
+    revision,
+    startUrl: "https://www.atlassian.com/",
+    domain: "Team collaboration and developer tools.",
+    sources: ["https://www.atlassian.com/software/jira"],
+    reviewed,
+    flows: [{
+      id: "browse-products",
+      title: "Browse products",
+      description: "Open Jira from the catalog.",
+      safe: true,
+      requiredSecrets: [],
+      steps: [{
+        id: "open-software",
+        action: "goto",
+        url: "/software",
+        safety: "read",
+        expected: {
+          state: "Software catalog",
+          url: "https://www.atlassian.com/software",
+          visible: { text: "Explore Atlassian products" },
+        },
+      }],
+    }],
+  };
+}
+
+function crawlPlanWithSecret() {
+  const plan = crawlPlan();
+  plan.flows.push({
+    id: "signup",
+    title: "Start signup",
+    description: "Enter a disposable test email without submitting.",
+    safe: false,
+    requiredSecrets: ["ATLASSIAN_TEST_EMAIL"],
+    steps: [{
+      id: "enter-email",
+      action: "fill",
+      role: "textbox",
+      name: "Email",
+      value: "$ATLASSIAN_TEST_EMAIL",
+      safety: "read",
+      expected: { state: "Email entered", visible: { role: "textbox", name: "Email" } },
+    }],
+  } as never);
+  return plan;
+}
+
+function crawlRun(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "21",
+    app_id: 4,
+    app: "atlassian",
+    version_id: 8,
+    plan_id: "11",
+    job_id: null,
+    status: "queued",
+    current_flow_id: null,
+    current_step_id: null,
+    completed_count: 0,
+    failed_count: 0,
+    skipped_count: 0,
+    cancel_requested_at: null,
+    retry_of_run_id: null,
+    retry_mode: "all",
+    environment: {
+      headless: true,
+      browserName: "chromium",
+      requestedFlowIds: [],
+      unsafeApproved: false,
+      disposableAccountAcknowledged: false,
+      allowSideEffects: false,
+    },
+    worker_id: null,
+    heartbeat_at: null,
+    created_at: "2026-07-12T00:00:00.000Z",
+    started_at: null,
+    finished_at: null,
+    updated_at: "2026-07-12T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 test("uses the repository's free host API port", async () => {
   const appModule = await import("./app.ts");
   assert.equal((appModule as { DEFAULT_API_PORT?: number }).DEFAULT_API_PORT, 3010);
@@ -53,6 +147,441 @@ function close(server: Server): Promise<void> {
     server.close((error) => (error ? reject(error) : resolve()));
   });
 }
+
+test("keeps every crawl administration route admin-only before dependencies run", async (t) => {
+  let dependencyCalls = 0;
+  const touched = async () => {
+    dependencyCalls++;
+    return undefined as never;
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    createJob: touched,
+    publishJob: touched,
+    listCrawlPlans: touched,
+    getCrawlPlan: touched,
+    saveCrawlPlan: touched,
+    approveCrawlPlan: touched,
+    createCrawlRun: touched,
+    listCrawlRuns: touched,
+    getCrawlRun: touched,
+    listCrawlRunSteps: touched,
+    listCrawlRunEvidence: touched,
+    listCrawlRunRepairs: touched,
+    cancelCrawlRun: touched,
+    retryCrawlRun: touched,
+    markQueuedCrawlRunInterrupted: touched,
+    requestCrawlRepair: touched,
+    applyCrawlRepair: touched,
+    rejectCrawlRepair: touched,
+  } as never));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const cases = [
+    ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "https://www.atlassian.com" }],
+    ["GET", "/crawl/apps/atlassian/plans"],
+    ["GET", "/crawl/plans/11"],
+    ["PUT", "/crawl/plans/11", crawlPlan(2)],
+    ["POST", "/crawl/plans/11/approve"],
+    ["POST", "/crawl/apps/atlassian/runs", { planId: "11", mode: "full" }],
+    ["GET", "/crawl/apps/atlassian/runs"],
+    ["GET", "/crawl/runs/21"],
+    ["POST", "/crawl/runs/21/cancel"],
+    ["POST", "/crawl/runs/21/retry", { mode: "failed" }],
+    ["GET", "/crawl/runs/21/failures/browse-products/open-software/screenshot"],
+    ["POST", "/crawl/runs/21/repairs", { flowId: "browse-products", stepId: "open-software" }],
+    ["POST", "/crawl/repairs/31/apply"],
+    ["POST", "/crawl/repairs/31/reject"],
+  ] as const;
+  for (const [method, path, body] of cases) {
+    const response = await fetch(`${base}${path}`, {
+      method,
+      headers,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    assert.equal(response.status, 403, `${method} ${path}`);
+  }
+  assert.equal(dependencyCalls, 0);
+});
+
+test("validates crawl slugs, public URLs, plans, modes, ids, and repair requests", async (t) => {
+  let dependencyCalls = 0;
+  const touched = async () => {
+    dependencyCalls++;
+    return undefined as never;
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: touched,
+    listCrawlPlans: touched,
+    getCrawlPlan: touched,
+    saveCrawlPlan: touched,
+    createCrawlRun: touched,
+    listCrawlRuns: touched,
+    getCrawlRun: touched,
+    cancelCrawlRun: touched,
+    retryCrawlRun: touched,
+    requestCrawlRepair: touched,
+    applyCrawlRepair: touched,
+    rejectCrawlRepair: touched,
+  } as never));
+  t.after(() => close(server));
+  const headers = { ...adminCookie, "content-type": "application/json" };
+  const cases = [
+    ["POST", "/crawl/apps/not%20safe/research", { homepageUrl: "https://example.com" }],
+    ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "http://127.0.0.1/private" }],
+    ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "https://user:password@example.com" }],
+    ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "https://example.com", provider: "gemini" }],
+    ["GET", "/crawl/apps/not%20safe/plans"],
+    ["GET", "/crawl/plans/0"],
+    ["PUT", "/crawl/plans/11", {}],
+    ["POST", "/crawl/plans/not-an-id/approve"],
+    ["POST", "/crawl/apps/atlassian/runs", { planId: "11", mode: "failed" }],
+    ["POST", "/crawl/apps/atlassian/runs", { planId: 11, mode: "full" }],
+    ["POST", "/crawl/apps/atlassian/runs", { planId: "11", mode: "full", unsafeApproved: "yes" }],
+    ["GET", "/crawl/runs/9223372036854775808"],
+    ["POST", "/crawl/runs/21/retry", { mode: "remaining" }],
+    ["GET", "/crawl/runs/21/failures/not%20safe/open-software/screenshot"],
+    ["POST", "/crawl/runs/21/repairs", { flowId: "browse-products", stepId: "open-software", provider: "unknown" }],
+    ["POST", "/crawl/runs/21/repairs", { flowId: "browse-products", stepId: "open-software", provider: "gemini" }],
+    ["POST", "/crawl/repairs/not-an-id/apply"],
+    ["POST", "/crawl/repairs/0/reject"],
+  ] as const;
+  for (const [method, path, body] of cases) {
+    const response = await fetch(`${base}${path}`, {
+      method,
+      headers,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    assert.equal(response.status, 400, `${method} ${path}`);
+  }
+  assert.equal(dependencyCalls, 0);
+});
+
+test("enqueues research and supports immutable plan revision and approval", async (t) => {
+  const plans = [{ id: "11", app: "atlassian", revision: 1, status: "draft", plan: crawlPlan() }];
+  const published: unknown[] = [];
+  const saved: unknown[] = [];
+  const approvedBy: number[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: async (type: string, payload: Record<string, unknown>) => {
+      assert.equal(type, "research-app");
+      assert.deepEqual(payload, { name: "atlassian", homepageUrl: "https://www.atlassian.com/", provider: "claude" });
+      return 41;
+    },
+    publishJob: async (job: unknown) => { published.push(job); },
+    listCrawlPlans: async () => plans as never,
+    getCrawlPlan: async () => plans[0] as never,
+    saveCrawlPlan: async (plan: unknown, userId: number, metadata: Record<string, unknown>) => {
+      saved.push({ plan, userId, metadata });
+      return { id: "12", app: "atlassian", revision: 2, status: "draft", plan } as never;
+    },
+    approveCrawlPlan: async (_id: string, userId: number) => {
+      approvedBy.push(userId);
+      return { ...plans[0], status: "approved", plan: crawlPlan(1, true) } as never;
+    },
+  } as never));
+  t.after(() => close(server));
+  const headers = { ...adminCookie, "content-type": "application/json" };
+
+  const research = await fetch(`${base}/crawl/apps/atlassian/research`, {
+    method: "POST", headers, body: JSON.stringify({ homepageUrl: "https://www.atlassian.com", provider: "claude" }),
+  });
+  assert.equal(research.status, 202);
+  assert.deepEqual(await research.json(), { jobId: 41, app: "atlassian", homepageUrl: "https://www.atlassian.com/" });
+  assert.deepEqual(published, [{ type: "research-app", name: "atlassian", homepageUrl: "https://www.atlassian.com/", provider: "claude", jobId: 41 }]);
+
+  assert.deepEqual(await (await fetch(`${base}/crawl/apps/atlassian/plans`, { headers })).json(), plans.map((plan) => ({ ...plan, requiredSecrets: [] })));
+  assert.equal((await fetch(`${base}/crawl/plans/11`, { headers })).status, 200);
+  const revised = await fetch(`${base}/crawl/plans/11`, {
+    method: "PUT", headers, body: JSON.stringify(crawlPlan(2)),
+  });
+  assert.equal(revised.status, 201);
+  assert.deepEqual(saved, [{ plan: crawlPlan(2), userId: admin.id, metadata: { sourcePlanId: "11" } }]);
+
+  const approval = await fetch(`${base}/crawl/plans/11/approve`, { method: "POST", headers });
+  assert.equal(approval.status, 200);
+  assert.deepEqual(approvedBy, [admin.id]);
+  assert.equal((await approval.json()).plan.reviewed, true);
+});
+
+test("reports required secret configuration without returning secret values", async (t) => {
+  const secretValue = "curator-secret-must-never-leak@example.com";
+  process.env.ATLASSIAN_TEST_EMAIL = secretValue;
+  t.after(() => { delete process.env.ATLASSIAN_TEST_EMAIL; });
+  const plan = { id: "11", app: "atlassian", revision: 1, status: "draft", plan: crawlPlanWithSecret() };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    getCrawlPlan: async () => plan as never,
+  } as never));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/crawl/plans/11`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.requiredSecrets, [{ name: "ATLASSIAN_TEST_EMAIL", configured: true }]);
+  assert.equal(JSON.stringify(body).includes(secretValue), false);
+});
+
+test("persists crawl runs before transport, returns durable details, and controls retries", async (t) => {
+  const createdInputs: unknown[] = [];
+  const published: unknown[] = [];
+  const cancelled: string[] = [];
+  const retried: unknown[] = [];
+  const queued = crawlRun();
+  const failedStep = {
+    run_id: "21",
+    flow_id: "browse-products",
+    step_id: "open-software",
+    status: "failed",
+    failure_screenshot: "data/crawl-failures/atlassian/21/failure.png",
+    failure_object_key: failureMetadata.key,
+    error_class: "SemanticStepError",
+    error_message: "Expected software catalog",
+  };
+  const evidence = {
+    id: "61",
+    version_id: 8,
+    plan_id: "11",
+    image_id: 70,
+    flow_id: "browse-products",
+    step_id: "open-software",
+    source_url: "https://www.atlassian.com/",
+    final_url: "https://www.atlassian.com/software",
+    state_label: "Software catalog",
+    screenshot_hash: "a".repeat(64),
+    viewport_width: 1440,
+    viewport_height: 900,
+    captured_at: "2026-07-12T00:00:00.000Z",
+  };
+  const repair = {
+    id: "31",
+    run_id: "21",
+    flow_id: "browse-products",
+    step_id: "open-software",
+    status: "proposed",
+    failure: { error: "Expected software catalog", screenshot: "/private/crawl/failure.png" },
+    proposed_step: crawlPlan().flows[0].steps[0],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createCrawlRun: async (input: unknown) => { createdInputs.push(input); return queued as never; },
+    publishJob: async (job: unknown) => { published.push(job); },
+    listCrawlRuns: async () => [queued] as never,
+    getCrawlRun: async () => queued as never,
+    listCrawlRunSteps: async () => [failedStep] as never,
+    listCrawlRunEvidence: async () => [evidence] as never,
+    listCrawlRunRepairs: async () => [repair] as never,
+    cancelCrawlRun: async (runId: string) => { cancelled.push(runId); return crawlRun({ status: "cancelled" }) as never; },
+    retryCrawlRun: async (runId: string, mode: "full" | "failed") => {
+      retried.push({ runId, mode });
+      return crawlRun({ id: "22", retry_of_run_id: runId, retry_mode: mode === "full" ? "all" : mode }) as never;
+    },
+  } as never));
+  t.after(() => close(server));
+  const headers = { ...adminCookie, "content-type": "application/json" };
+
+  const started = await fetch(`${base}/crawl/apps/atlassian/runs`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      planId: "11",
+      mode: "full",
+      unsafeApproved: false,
+      disposableAccountAcknowledged: false,
+      allowSideEffects: false,
+      environment: { headless: true, browserName: "chromium", viewport: { width: 1440, height: 900 } },
+    }),
+  });
+  assert.equal(started.status, 202);
+  assert.deepEqual(createdInputs, [{
+    app: "atlassian",
+    planId: "11",
+    unsafeApproved: false,
+    disposableAccountAcknowledged: false,
+    allowSideEffects: false,
+    environment: { headless: true, browserName: "chromium", viewport: { width: 1440, height: 900 } },
+    userId: admin.id,
+  }]);
+  assert.deepEqual(published, [{ type: "smart-crawl-app", name: "atlassian", runId: "21" }]);
+
+  assert.equal((await fetch(`${base}/crawl/apps/atlassian/runs`, { headers })).status, 200);
+  const detail = await (await fetch(`${base}/crawl/runs/21`, { headers })).json();
+  assert.equal(detail.run.id, "21");
+  assert.equal(detail.steps[0].failure_screenshot, undefined);
+  assert.equal(detail.steps[0].failure_object_key, undefined);
+  assert.equal(detail.steps[0].failureScreenshotUrl, "/api/crawl/runs/21/failures/browse-products/open-software/screenshot");
+  assert.equal(detail.evidence[0].imageUrl, "/api/media/atlassian/aaaaaaaaaaaaaaaa");
+  assert.equal(detail.repairs[0].failure.screenshot, undefined);
+  assert.equal(JSON.stringify(detail).includes("/private/crawl/failure.png"), false);
+
+  assert.equal((await fetch(`${base}/crawl/runs/21/cancel`, { method: "POST", headers })).status, 200);
+  assert.deepEqual(cancelled, ["21"]);
+  const retry = await fetch(`${base}/crawl/runs/21/retry`, {
+    method: "POST", headers, body: JSON.stringify({ mode: "failed" }),
+  });
+  assert.equal(retry.status, 202);
+  assert.deepEqual(retried, [{ runId: "21", mode: "failed" }]);
+  assert.deepEqual(published.at(-1), { type: "smart-crawl-app", name: "atlassian", runId: "22" });
+});
+
+test("marks a persisted run interrupted and returns only safe IDs when publishing fails", async (t) => {
+  const interrupted: string[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createCrawlRun: async () => crawlRun() as never,
+    publishJob: async () => { throw new Error("broker-password-must-not-leak"); },
+    markQueuedCrawlRunInterrupted: async (runId: string) => {
+      interrupted.push(runId);
+      return crawlRun({ status: "interrupted" }) as never;
+    },
+  } as never));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/crawl/apps/atlassian/runs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ planId: "11", mode: "full" }),
+  });
+  assert.equal(response.status, 503);
+  const body = await response.json();
+  assert.deepEqual(body, {
+    error: "crawl transport unavailable",
+    runId: "21",
+    versionId: 8,
+    planId: "11",
+  });
+  assert.deepEqual(interrupted, ["21"]);
+  assert.equal(JSON.stringify(body).includes("broker-password"), false);
+});
+
+test("serves only the database-bound internal failure object for its exact flow and step", async (t) => {
+  let lookup: unknown;
+  const signedRequests: Array<{ key: string; expires: number }> = [];
+  const objectStore: ObjectStore = {
+    put: async () => { throw new Error("unused"); },
+    head: async () => failureMetadata,
+    get: async () => ({ metadata: failureMetadata, body: failureBody }),
+    signedGetUrl: async (key, expires) => {
+      signedRequests.push({ key, expires });
+      return "http://minio:9000/astryx/internal-failure.png?signature=test";
+    },
+    async *list() { yield failureMetadata; },
+    delete: async () => false,
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    objectStore,
+    crawlFailureObject: async (input: unknown) => {
+      lookup = input;
+      return failureMetadata;
+    },
+  } as never));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/crawl/runs/21/failures/browse-products/open-software/screenshot`, {
+    headers: adminCookie,
+    redirect: "manual",
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), failureBody);
+  assert.deepEqual(signedRequests, []);
+  assert.deepEqual(lookup, { runId: "21", flowId: "browse-products", stepId: "open-software" });
+});
+
+test("keeps repair suggestion, apply, and reject as separate admin actions", async (t) => {
+  const requests: unknown[] = [];
+  const applies: unknown[] = [];
+  const rejects: unknown[] = [];
+  const proposed = {
+    id: "31",
+    run_id: "21",
+    status: "proposed",
+    failure: { error: "Expected software catalog", screenshot: "/private/crawl/failure.png" },
+    proposed_step: crawlPlan().flows[0].steps[0],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    requestCrawlRepair: async (input: unknown) => { requests.push(input); return proposed as never; },
+    applyCrawlRepair: async (id: string, userId: number) => {
+      applies.push({ id, userId });
+      return { ...proposed, status: "applied", applied_plan_id: "12" } as never;
+    },
+    rejectCrawlRepair: async (id: string, userId: number) => {
+      rejects.push({ id, userId });
+      return { ...proposed, status: "rejected" } as never;
+    },
+  } as never));
+  t.after(() => close(server));
+  const headers = { ...adminCookie, "content-type": "application/json" };
+  const requested = await fetch(`${base}/crawl/runs/21/repairs`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ flowId: "browse-products", stepId: "open-software", provider: "chatgpt" }),
+  });
+  assert.equal(requested.status, 201);
+  const requestedBody = await requested.json();
+  assert.equal(requestedBody.failure.error, "Expected software catalog");
+  assert.equal(requestedBody.failure.screenshot, undefined);
+  assert.equal(JSON.stringify(requestedBody).includes("/private/crawl/failure.png"), false);
+  assert.deepEqual(requests, [{ runId: "21", flowId: "browse-products", stepId: "open-software", provider: "chatgpt" }]);
+  assert.deepEqual(applies, []);
+  assert.deepEqual(rejects, []);
+
+  const applied = await fetch(`${base}/crawl/repairs/31/apply`, { method: "POST", headers });
+  const rejected = await fetch(`${base}/crawl/repairs/31/reject`, { method: "POST", headers });
+  assert.equal(applied.status, 200);
+  assert.equal(rejected.status, 200);
+  assert.equal((await applied.json()).failure.screenshot, undefined);
+  assert.equal((await rejected.json()).failure.screenshot, undefined);
+  assert.deepEqual(applies, [{ id: "31", userId: admin.id }]);
+  assert.deepEqual(rejects, [{ id: "31", userId: admin.id }]);
+});
+
+test("repair suggestions attach only the verified internal failure object", async () => {
+  const askedWith: unknown[] = [];
+  let metadata: ObjectMetadata | undefined = failureMetadata;
+  let corrupt = false;
+  const requester = createCrawlRepairRequester({
+    getRun: async () => crawlRun({ status: "failed" }) as never,
+    getPlan: async () => ({ id: "11", plan: crawlPlan(1, true) }) as never,
+    listRunSteps: async () => [{
+      flow_id: "browse-products",
+      step_id: "open-software",
+      status: "failed",
+      final_url: "https://www.atlassian.com/",
+      failure_screenshot: null,
+      failure_object_key: failureMetadata.key,
+      error_class: "SemanticStepError",
+      error_message: "Expected software catalog",
+    }] as never,
+    crawlFailureObject: async () => metadata,
+    objectStore: {
+      put: async () => { throw new Error("unused"); },
+      head: async () => metadata,
+      get: async () => ({ metadata: failureMetadata, body: corrupt ? Buffer.from("corrupt") : failureBody }),
+      signedGetUrl: async () => undefined,
+      async *list() { yield failureMetadata; },
+      delete: async () => false,
+    },
+    startChatSession: async () => ({
+      ask: async (_prompt: string, attachment?: unknown) => {
+        askedWith.push(attachment);
+        return JSON.stringify(crawlPlan().flows[0].steps[0]);
+      },
+      close: async () => {},
+    }),
+    proposeRepair: async () => ({ id: "31", status: "proposed" }) as never,
+  });
+  const input = { runId: "21", flowId: "browse-products", stepId: "open-software", provider: "chatgpt" as const };
+
+  await requester(input);
+  metadata = undefined;
+  await requester(input);
+  metadata = failureMetadata;
+  corrupt = true;
+  await assert.rejects(() => requester(input), /Object bytes do not match metadata/);
+
+  assert.deepEqual(askedWith, [{ name: "crawl-failure.png", mimeType: "image/png", buffer: failureBody }, undefined]);
+});
 
 test("rejects an invalid Mobbin import before creating a job", async (t) => {
   let created = false;

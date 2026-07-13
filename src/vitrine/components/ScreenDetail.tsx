@@ -16,13 +16,14 @@ import { ExportPanel } from './ExportPanel';
 import { VersionPanel } from './VersionPanel';
 import { OverviewPanel } from './OverviewPanel';
 import { CuratorReviewPanel } from './CuratorReviewPanel';
+import { CrawlWorkspacePanel } from './CrawlWorkspacePanel';
 import { listAppVersions } from '../researchApi';
 
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
 
-type Section = 'overview' | 'screens' | 'elements' | 'flows' | 'design-system' | 'export' | 'review';
+type Section = 'overview' | 'screens' | 'elements' | 'flows' | 'design-system' | 'export' | 'review' | 'crawl';
 type LightboxState = { index: number } | null;
 
 interface ScreenDetailProps {
@@ -95,6 +96,7 @@ export function ScreenDetail({ app, onBack, collections, onCollectionsChange, ro
     'design-system': null,
     export: null,
     review: null,
+    crawl: null,
   });
   const indicatorRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -238,7 +240,7 @@ export function ScreenDetail({ app, onBack, collections, onCollectionsChange, ro
                 ['flows', 'Flows'],
                 ['design-system', 'Design System'],
                 ['export', 'Export'],
-                ...(role === 'admin' ? [['review', 'Review'] as const] : []),
+                ...(role === 'admin' ? [['crawl', 'Crawler'] as const, ['review', 'Review'] as const] : []),
               ] as const
             ).map(([id, label]) => (
               <button
@@ -279,6 +281,8 @@ export function ScreenDetail({ app, onBack, collections, onCollectionsChange, ro
                   ? 'Editable observed assets'
                 : section === 'review'
                   ? 'Curator controls'
+                : section === 'crawl'
+                  ? 'Durable intelligent crawling'
                 : section === 'screens'
                 ? `Showing ${filtered.length}${app.totalScreens > count ? ` of ${app.totalScreens}` : ''} screens`
                 : section === 'elements'
@@ -362,13 +366,15 @@ export function ScreenDetail({ app, onBack, collections, onCollectionsChange, ro
             padding:
               section === 'screens'
                 ? '32px 40px 72px'
-                : section === 'overview' || section === 'elements' || section === 'design-system' || section === 'export' || section === 'review'
+                : section === 'overview' || section === 'elements' || section === 'design-system' || section === 'export' || section === 'review' || section === 'crawl'
                   ? '8px 40px 80px'
                   : '32px 40px 80px',
           }}
         >
           {section === 'overview' ? (
             <OverviewPanel snapshot={snapshot} screens={screens} />
+          ) : section === 'crawl' ? (
+            <CrawlWorkspacePanel app={app.id} role={role} onDraftVersionChange={async () => setVersions(await listAppVersions(app.id))} />
           ) : section === 'review' ? (
             <CuratorReviewPanel app={app.id} snapshot={snapshot} />
           ) : section === 'design-system' ? (

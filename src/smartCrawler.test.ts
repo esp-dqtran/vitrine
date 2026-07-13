@@ -9,6 +9,7 @@ import type { CrawlFlow, CrawlPlan, CrawlStep, ExpectedState } from "./crawlPlan
 import * as smartCrawlerModule from "./smartCrawler.ts";
 import {
   assembleFlows,
+  assertExpectedState,
   assertRunnable,
   captureIfNew,
   dbCaptureSink,
@@ -120,6 +121,31 @@ test("legacy capture rejects mismatched adapter metadata before attachment", asy
   });
   await assert.rejects(sink({ png: pngFixture(), sourceUrl: "https://example.com/home", stateContext: "home" }), /metadata does not match/);
   assert.equal(attached, false);
+});
+
+test("URL validation accepts a matching settled URL after Playwright reports an interrupted wait", async () => {
+  const expected: ExpectedState = {
+    state: "Rovo overview",
+    url: "https://www.atlassian.com/software/rovo",
+  };
+  const actual: StepActual = {
+    sourceUrl: "https://www.atlassian.com/",
+    finalUrl: "about:blank",
+    page: "same",
+  };
+  let waits = 0;
+  const settledPage = {
+    waitForURL: async () => {
+      waits++;
+      throw new Error("Navigation was interrupted by another navigation");
+    },
+    url: () => expected.url!,
+  } as unknown as Page;
+
+  await assertExpectedState(settledPage, expected, actual, 50);
+
+  assert.equal(waits, 1);
+  assert.equal(actual.finalUrl, expected.url);
 });
 
 test("refuses unreviewed plans and splits unsafe flows without TEST_ACCOUNT", () => {
@@ -349,6 +375,127 @@ function cliRunnerHooks(sink: (record: CaptureRecord) => Promise<void>, reportDi
 function completedActual(activePage: Page): StepActual {
   return { sourceUrl: activePage.url(), finalUrl: activePage.url(), page: "same" };
 }
+
+test("runner resume starts at the requested original index and URL without replaying prior steps", async () => {
+  const reportDir = mkdtempSync(join(tmpdir(), "astryx-resume-flow-"));
+  const steps = [
+    fixtureStep({ action: "waitFor", text: "Fixture app" }),
+    fixtureStep({ action: "waitFor", text: "Second page" }),
+    fixtureStep({ action: "waitFor", text: "Second page" }),
+  ];
+  const flow: CrawlFlow = { id: "resume", title: "Resume", description: "", safe: true, requiredSecrets: [], steps };
+  const executed: Array<{ stepId: string; url: string }> = [];
+  const started: number[] = [];
+  const finished: number[] = [];
+  const captured: Array<{ stepId: string; state: string }> = [];
+
+  try {
+    const result = await runFlow(page, fixturePlan([flow]), flow, async () => {}, reportDir, {
+      resume: { stepIndex: 1, url: `${baseUrl}/second` },
+      hooks: silentRunnerHooks({
+        stepStarted: async (_flow, _step, index) => void started.push(index),
+        stepFinished: async (_flow, _step, index) => void finished.push(index),
+        capture: async (_page, _flow, step, state) => void captured.push({ stepId: step!.id, state }),
+      }),
+      executeStep: async (activePage, _plan, step) => {
+        executed.push({ stepId: step.id, url: activePage.url() });
+        return { status: "completed", page: activePage, actual: completedActual(activePage) };
+      },
+    });
+
+    assert.equal(result.status, "completed");
+    assert.deepEqual(executed, [
+      { stepId: steps[1].id, url: `${baseUrl}/second` },
+      { stepId: steps[2].id, url: `${baseUrl}/second` },
+    ]);
+    assert.deepEqual(started, [1, 2]);
+    assert.deepEqual(finished, [1, 2]);
+    assert.deepEqual(result.steps.map(({ stepId, index }) => ({ stepId, index })), [
+      { stepId: steps[1].id, index: 1 },
+      { stepId: steps[2].id, index: 2 },
+    ]);
+    assert.deepEqual(captured.map(({ stepId }) => stepId), [steps[1].id, steps[2].id]);
+    assert.match(captured[0].state, /^resume\/2\./);
+    assert.match(captured[1].state, /^resume\/3\./);
+  } finally {
+    rmSync(reportDir, { recursive: true, force: true });
+  }
+});
+
+test("completed capture hook receives the observed step actual before stepFinished", async () => {
+  const reportDir = mkdtempSync(join(tmpdir(), "astryx-capture-actual-"));
+  const step = fixtureStep({ action: "waitFor", text: "Fixture app" });
+  const flow: CrawlFlow = { id: "capture-actual", title: "Capture actual", description: "", safe: true, requiredSecrets: [], steps: [step] };
+  const actual: StepActual = { sourceUrl: `${baseUrl}/before`, finalUrl: `${baseUrl}/after`, page: "same", visible: true };
+  const events: string[] = [];
+  let capturedActual: StepActual | undefined;
+
+  try {
+    await runFlow(page, fixturePlan([flow]), flow, async () => {}, reportDir, {
+      hooks: silentRunnerHooks({
+        capture: (async (...args: unknown[]) => {
+          events.push("capture");
+          capturedActual = args[4] as StepActual | undefined;
+        }) as RunnerHooks["capture"],
+        stepFinished: async () => void events.push("finished"),
+      }),
+      executeStep: async (activePage) => ({ status: "completed", page: activePage, actual }),
+    });
+
+    assert.equal(capturedActual, actual);
+    assert.deepEqual(events, ["capture", "finished"]);
+  } finally {
+    rmSync(reportDir, { recursive: true, force: true });
+  }
+});
+
+test("owned flow executor closes its page and context after success, failure, and cancellation", async () => {
+  type ExecuteOwned = (
+    plan: CrawlPlan,
+    flows: CrawlFlow[],
+    options: {
+      createContext(): Promise<BrowserContext>;
+      hooks: RunnerHooks;
+      env?: Record<string, string | undefined>;
+      executeStep?: typeof interpretStep;
+      resumes?: ReadonlyMap<string, { stepIndex: number; url: string }>;
+    }
+  ) => Promise<FlowRunResult[]>;
+  const executeOwned = (smartCrawlerModule as typeof smartCrawlerModule & { executeFlowsInOwnedContext?: ExecuteOwned })
+    .executeFlowsInOwnedContext;
+  assert.equal(typeof executeOwned, "function");
+
+  const step = fixtureStep({ action: "waitFor", text: "Fixture app" });
+  const flow: CrawlFlow = { id: "owned", title: "Owned", description: "", safe: true, requiredSecrets: [], steps: [step] };
+  const plan = fixturePlan([flow]);
+
+  for (const scenario of ["success", "failure", "cancel"] as const) {
+    let ownedContext!: BrowserContext;
+    let ownedPage!: Page;
+    const captureError = new Error("Durable capture failed");
+    const hooks = silentRunnerHooks({
+      cancelled: () => scenario === "cancel",
+      ...(scenario === "failure" ? { capture: async () => Promise.reject(captureError) } : {}),
+    });
+    const work = executeOwned!(plan, [flow], {
+      createContext: async () => {
+        ownedContext = await browser.newContext();
+        ownedPage = await ownedContext.newPage();
+        return ownedContext;
+      },
+      hooks,
+      executeStep: async (activePage) => ({ status: "completed", page: activePage, actual: completedActual(activePage) }),
+    });
+
+    if (scenario === "failure") await assert.rejects(work, (error) => error === captureError);
+    else {
+      const [result] = await work;
+      assert.equal(result.status, scenario === "cancel" ? "cancelled" : "completed");
+    }
+    assert.equal(ownedPage.isClosed(), true, `${scenario} page should close`);
+    await assert.rejects(ownedContext.newPage(), `${scenario} context should close`);
+  }
+});
 
 test("review: cancellation requested during start navigation skips index zero and every remaining step", async () => {
   const reportDir = mkdtempSync(join(tmpdir(), "astryx-cancel-during-goto-"));
@@ -1111,6 +1258,55 @@ test("expected popup becomes active page and validates wildcard URL", async () =
     visible: true,
   });
   await result.page.close();
+});
+
+test("popup load timeout defers success and failure to semantic assertions", async () => {
+  const plan = fixturePlan([]);
+  await page.goto(`${baseUrl}/`);
+  const pagePrototype = Object.getPrototypeOf(page) as { waitForLoadState: Page["waitForLoadState"] };
+  const originalWaitForLoadState = pagePrototype.waitForLoadState;
+  pagePrototype.waitForLoadState = async function (this: Page, ...args: Parameters<Page["waitForLoadState"]>) {
+    if (this !== page && args[0] === "domcontentloaded") throw new errors.TimeoutError("Forced popup load timeout");
+    return originalWaitForLoadState.apply(this, args);
+  };
+
+  try {
+    const expected: ExpectedState = {
+      state: "Popup opened despite load timeout",
+      page: "new",
+      urlPattern: `${baseUrl}/popup*`,
+      visible: { text: "Popup page" },
+    };
+    const result = await interpretStep(page, plan, fixtureStep({ action: "click", role: "link", name: "Open popup", expected }));
+    assert.equal(result.status, "completed");
+    assert.deepEqual(result.actual, {
+      sourceUrl: `${baseUrl}/`,
+      finalUrl: `${baseUrl}/popup?source=fixture`,
+      page: "new",
+      visible: true,
+    });
+    await result.page.close();
+
+    const missingExpected: ExpectedState = {
+      state: "Missing popup state",
+      page: "new",
+      urlPattern: `${baseUrl}/popup*`,
+      visible: { css: "h1, body" },
+    };
+    await assert.rejects(
+      interpretStep(page, plan, fixtureStep({ action: "click", role: "link", name: "Open popup", expected: missingExpected })),
+      (error) =>
+        semanticError(error, missingExpected, {
+          sourceUrl: `${baseUrl}/`,
+          finalUrl: `${baseUrl}/popup?source=fixture`,
+          page: "new",
+          visible: false,
+        })
+    );
+  } finally {
+    pagePrototype.waitForLoadState = originalWaitForLoadState;
+    await Promise.all(context.pages().filter((openPage) => openPage !== page).map((openPage) => openPage.close()));
+  }
 });
 
 test("missing expected popup fails with observable expected and actual state", async () => {

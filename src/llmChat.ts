@@ -1,5 +1,6 @@
 import { chromium, type Page } from "playwright";
 import { homedir } from "node:os";
+import { join } from "node:path";
 
 const LOGIN_WAIT_MS = 5 * 60_000; // time to log in manually in the opened window
 
@@ -118,9 +119,15 @@ async function sendPrompt(page: Page, input: import("playwright").Locator, promp
   }
 }
 
+export interface ChatAttachment {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
 export interface ChatSession {
   /** Sends a fresh message (each call starts a clean chat, no history carries over) and returns the reply. */
-  ask(prompt: string, filePath?: string): Promise<string>;
+  ask(prompt: string, filePath?: string | ChatAttachment): Promise<string>;
   close(): Promise<void>;
 }
 
@@ -184,16 +191,26 @@ function getProvider(providerName: string): Provider {
 
 // Reuse the already-authenticated profile from the chatgpt-cli side-project instead of
 // spinning up a fresh, never-logged-in one under data/ — avoids a second manual login.
-function profileDirFor(providerName: string): string {
-  if (providerName === "chatgpt") return `${homedir()}/.config/chatgpt-cli/profile`;
+export function resolveChatProfileDir(
+  providerName: string,
+  env: Record<string, string | undefined> = process.env,
+  home = homedir(),
+): string {
+  const root = env.CHAT_PROFILE_ROOT?.trim();
+  if (root) return join(root, providerName);
+  if (providerName === "chatgpt") return join(home, ".config/chatgpt-cli/profile");
   return `data/browser-profile-${providerName}`;
+}
+
+export function chatSessionHeadless(env: Record<string, string | undefined> = process.env): boolean {
+  return env.HEADLESS === "true";
 }
 
 export async function startChatSession(providerName: string): Promise<ChatSession> {
   const provider = getProvider(providerName);
 
-  const context = await chromium.launchPersistentContext(profileDirFor(providerName), {
-    headless: false,
+  const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
+    headless: chatSessionHeadless(),
   });
   const page = context.pages()[0] ?? (await context.newPage());
   await page.bringToFront(); // make sure the window isn't missed behind others
@@ -211,8 +228,8 @@ export async function startChatPool(
 ): Promise<{ sessions: ChatSession[]; closeAll: () => Promise<void> }> {
   const provider = getProvider(providerName);
 
-  const context = await chromium.launchPersistentContext(profileDirFor(providerName), {
-    headless: false,
+  const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
+    headless: chatSessionHeadless(),
   });
   const firstPage = context.pages()[0] ?? (await context.newPage());
   await firstPage.bringToFront();

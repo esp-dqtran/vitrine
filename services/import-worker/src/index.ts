@@ -8,8 +8,15 @@ import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } fr
 import { caption } from "../../../src/caption.ts";
 import { createPipelineHandler } from "./pipeline.ts";
 import { startImportWorker } from "./start.ts";
+import { createCrawlRunService } from "../../../src/crawlRun.ts";
+import { researchAppJob } from "../../../src/crawlJobs.ts";
+import { hostname } from "node:os";
 
+const workerId = process.env.CRAWL_WORKER_ID?.trim() || `${hostname()}-${process.pid}`;
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
+const crawlRunService = createCrawlRunService({ workerId, objectStore });
+const staleRunThresholdMs = Number(process.env.CRAWL_STALE_RUN_THRESHOLD_MS ?? 5 * 60_000);
+
 const bulkStorage: BulkObjectDependencies = {
   objectStore,
   insertImage,
@@ -26,6 +33,11 @@ const bulkStorage: BulkObjectDependencies = {
 await startImportWorker({
   assertMigrations: () => assertMigrationsCurrent(pool),
   assertObjectStorage: () => verifyObjectStoreReady(objectStore),
+  staleRunThresholdMs,
+  recoverStaleRuns: async (staleBefore) => {
+    const recovered = await crawlRunService.recoverStaleRuns(staleBefore);
+    if (recovered.length > 0) console.log(`[import-worker] Recovered ${recovered.length} stale crawl run(s).`);
+  },
   consume: async () => {
     console.log("[import-worker] Waiting for jobs...");
     await consumeJobs(createPipelineHandler({
@@ -35,6 +47,8 @@ await startImportWorker({
         objectStore,
         resolveObjectMetadata: (image) => imageObjectById(image.id),
       }),
+      researchAppJob,
+      crawlRunService,
     }));
   },
 });

@@ -41,7 +41,7 @@ import {
   resolveSession,
   resolveSessionState,
 } from "../../../src/authStore.ts";
-import { publishJob, type Job } from "../../../src/queue.ts";
+import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
@@ -67,11 +67,36 @@ import { exportObjectKey, type ObjectMetadata, type ObjectStore, type StoredCont
 import { verifyObjectStoreReady } from "../../../src/objectStorageReady.ts";
 import {
   adminImageObject,
+  crawlFailureObject,
   entitledImageObject,
   imageObjectById,
   legacyImageReference,
   publishedPreviewObject,
 } from "../../../src/objectStoreDb.ts";
+import { parseCrawlPlan, parseCrawlStep } from "../../../src/crawlPlan.ts";
+import { buildRepairPrompt, extractJson } from "../../../src/appResearch.ts";
+import { startChatSession } from "../../../src/llmChat.ts";
+import { createCrawlRunService } from "../../../src/crawlRun.ts";
+import {
+  approvePlan as approveCrawlPlan,
+  applyRepair as applyCrawlRepair,
+  getPlan as getCrawlPlan,
+  getRun as getCrawlRun,
+  listPlans as listCrawlPlans,
+  listRunEvidence as listCrawlRunEvidence,
+  listRunRepairs as listCrawlRunRepairs,
+  listRuns as listCrawlRuns,
+  listRunSteps as listCrawlRunSteps,
+  markQueuedRunInterrupted as markQueuedCrawlRunInterrupted,
+  proposeRepair,
+  rejectRepair as rejectCrawlRepair,
+  saveDraftPlan as saveCrawlPlan,
+  type CrawlPlanRecord,
+  type CrawlEvidenceRecord,
+  type CrawlRepairRecord,
+  type CrawlRunStepRecord,
+} from "../../../src/crawlStore.ts";
+import type { StepActual, StepFailure } from "../../../src/smartCrawler.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -80,6 +105,105 @@ const disabledBilling: BillingService = {
   createPortal: async () => { throw new Error("Billing is not configured"); },
   handleWebhook: async () => { throw new Error("Billing is not configured"); },
 };
+const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
+
+type RepairProvider = ResearchProvider;
+interface CrawlRepairRequest {
+  runId: string;
+  flowId: string;
+  stepId: string;
+  provider: RepairProvider;
+}
+
+interface CrawlRepairRequesterDependencies {
+  getRun: typeof getCrawlRun;
+  getPlan: typeof getCrawlPlan;
+  listRunSteps: typeof listCrawlRunSteps;
+  crawlFailureObject: typeof crawlFailureObject;
+  objectStore?: ObjectStore;
+  startChatSession: typeof startChatSession;
+  proposeRepair: typeof proposeRepair;
+}
+
+const crawlRepairRequesterDefaults: CrawlRepairRequesterDependencies = {
+  getRun: getCrawlRun,
+  getPlan: getCrawlPlan,
+  listRunSteps: listCrawlRunSteps,
+  crawlFailureObject,
+  startChatSession,
+  proposeRepair,
+};
+
+export function createCrawlRepairRequester(overrides: Partial<CrawlRepairRequesterDependencies> = {}) {
+  const dependencies = { ...crawlRepairRequesterDefaults, ...overrides };
+  return async function requestCrawlRepair(input: CrawlRepairRequest): Promise<CrawlRepairRecord> {
+    const [run, steps] = await Promise.all([
+      dependencies.getRun(input.runId),
+      dependencies.listRunSteps(input.runId),
+    ]);
+    if (!run) throw new Error("Crawl run not found");
+    const planRecord = await dependencies.getPlan(run.plan_id);
+    if (!planRecord) throw new Error("Pinned crawl plan not found");
+    const flow = planRecord.plan.flows.find(({ id }) => id === input.flowId);
+    const stepIndex = flow?.steps.findIndex(({ id }) => id === input.stepId) ?? -1;
+    const step = stepIndex >= 0 ? flow!.steps[stepIndex] : undefined;
+    const failureRow = steps.find((candidate) =>
+      candidate.flow_id === input.flowId && candidate.step_id === input.stepId && candidate.status === "failed"
+    );
+    if (!flow || !step || !failureRow) throw new Error("A failed crawl step is required for repair");
+
+    const failure: StepFailure = {
+      flow: flow.id,
+      flowTitle: flow.title,
+      stepIndex,
+      stepId: step.id,
+      step,
+      ...(step.role ? { locator: { role: step.role, name: step.name } }
+        : step.text ? { locator: { text: step.text } }
+          : step.css ? { locator: { css: step.css } } : {}),
+      currentUrl: failureRow.final_url ?? failureRow.source_url ?? planRecord.plan.startUrl,
+      expected: step.expected,
+      actual: failureRow.actual as StepActual | undefined,
+      errorClass: failureRow.error_class ?? "CrawlStepError",
+      error: failureRow.error_message ?? "Crawl step failed",
+      screenshot: failureRow.failure_object_key ?? "",
+    };
+    const session = await dependencies.startChatSession(input.provider);
+    try {
+      let attachment: Parameters<typeof session.ask>[1];
+      if (dependencies.objectStore) {
+        const metadata = await dependencies.crawlFailureObject({
+          runId: String(run.id),
+          flowId: flow.id,
+          stepId: step.id,
+        });
+        if (metadata) {
+          attachment = {
+            name: "crawl-failure.png",
+            mimeType: metadata.contentType,
+            buffer: verifiedObjectBody(metadata, await dependencies.objectStore.get(metadata.key)),
+          };
+        }
+      }
+      const reply = await session.ask(buildRepairPrompt(failure, flow.steps), attachment);
+      const proposedStep = parseCrawlStep(JSON.parse(extractJson(reply)));
+      return await dependencies.proposeRepair({
+        planId: run.plan_id,
+        runId: run.id,
+        flowId: flow.id,
+        stepId: step.id,
+        proposedStep,
+        failure: { ...failure, screenshot: attachment ? "attached" : "" },
+        provider: input.provider,
+      });
+    } finally {
+      await session.close();
+    }
+  };
+}
+
+const requestCrawlRepair = createCrawlRepairRequester();
+
 const defaults = {
   query,
   allImages,
@@ -118,6 +242,23 @@ const defaults = {
   publishJob,
   readProgress,
   requestCancel,
+  listCrawlPlans,
+  getCrawlPlan,
+  saveCrawlPlan,
+  approveCrawlPlan,
+  createCrawlRun: apiCrawlRunService.create,
+  listCrawlRuns,
+  getCrawlRun,
+  listCrawlRunSteps,
+  listCrawlRunEvidence,
+  listCrawlRunRepairs,
+  cancelCrawlRun: apiCrawlRunService.cancel,
+  retryCrawlRun: apiCrawlRunService.retry,
+  markQueuedCrawlRunInterrupted,
+  requestCrawlRepair,
+  applyCrawlRepair,
+  rejectCrawlRepair,
+  isCrawlSecretConfigured: (name: string) => typeof process.env[name] === "string" && process.env[name]!.length > 0,
   authenticateUser,
   createSession,
   resolveSession,
@@ -138,6 +279,7 @@ const defaults = {
   objectStore: undefined as ObjectStore | undefined,
   storageReady: undefined as (() => Promise<void>) | undefined,
   adminImageObject,
+  crawlFailureObject,
   entitledImageObject,
   legacyImageReference,
   publishedPreviewObject,
@@ -183,6 +325,10 @@ const exportStorageTypes = new Map<string, { contentType: StoredContentType; ext
   ["text/javascript", { contentType: "text/javascript", extension: "js" }],
   ["text/typescript", { contentType: "text/typescript", extension: "tsx" }],
 ]);
+const crawlPlanStatuses = new Set(["draft", "approved", "superseded"]);
+const crawlRunStatuses = new Set(["queued", "running", "succeeded", "failed", "cancelled", "interrupted"]);
+const repairProviders = new Set<RepairProvider>(["chatgpt", "claude"]);
+const BIGINT_MAX = 9_223_372_036_854_775_807n;
 
 function optionalQuery(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -191,6 +337,114 @@ function optionalQuery(value: unknown): string | undefined {
 function positiveId(value: string): number | undefined {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function crawlId(value: string): string | undefined {
+  if (!/^[1-9]\d*$/.test(value)) return undefined;
+  try {
+    return BigInt(value) <= BIGINT_MAX ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function crawlIdentifier(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const parsed = value.trim();
+  return parsed.length <= 120 && /^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(parsed) ? parsed : undefined;
+}
+
+function publicHttpUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.length > 2_000) return undefined;
+  try {
+    const normalized = new URL(value).toString();
+    const parsed = parseJob({ type: "research-app", name: "url-check", homepageUrl: normalized });
+    return parsed.type === "research-app" ? parsed.homepageUrl : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function record(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function exactBody(value: unknown, allowed: readonly string[]): Record<string, unknown> | undefined {
+  const body = record(value);
+  if (!body || Object.keys(body).some((key) => !allowed.includes(key))) return undefined;
+  return body;
+}
+
+function crawlEnvironment(value: unknown): Record<string, unknown> | undefined {
+  if (value === undefined) return {};
+  const environment = exactBody(value, ["headless", "browserName", "locale", "timezone", "viewport"]);
+  if (!environment) return undefined;
+  if (environment.headless !== undefined && typeof environment.headless !== "boolean") return undefined;
+  if (environment.browserName !== undefined && environment.browserName !== "chromium") return undefined;
+  for (const key of ["locale", "timezone"] as const) {
+    if (environment[key] !== undefined
+      && (typeof environment[key] !== "string" || !environment[key].trim() || environment[key].length > 100)) return undefined;
+  }
+  if (environment.viewport !== undefined) {
+    const viewport = exactBody(environment.viewport, ["width", "height"]);
+    if (!viewport
+      || !Number.isInteger(viewport.width) || Number(viewport.width) < 1 || Number(viewport.width) > 10_000
+      || !Number.isInteger(viewport.height) || Number(viewport.height) < 1 || Number(viewport.height) > 10_000) return undefined;
+  }
+  return environment;
+}
+
+function publicPlanBody(value: unknown): ReturnType<typeof parseCrawlPlan> {
+  const plan = parseCrawlPlan(JSON.stringify(value));
+  if (!isAppSlug(plan.app)
+    || !publicHttpUrl(plan.startUrl)
+    || plan.sources.some((source) => !publicHttpUrl(source))) {
+    throw new Error("Crawl plan URLs must be public HTTP(S) URLs");
+  }
+  return plan;
+}
+
+function crawlPlanView(
+  plan: CrawlPlanRecord,
+  configured: (name: string) => boolean,
+): CrawlPlanRecord & { requiredSecrets: Array<{ name: string; configured: boolean }> } {
+  const names = [...new Set(plan.plan.flows.flatMap((flow) => flow.requiredSecrets))].sort();
+  return {
+    ...plan,
+    requiredSecrets: names.map((name) => ({ name, configured: configured(name) })),
+  };
+}
+
+function crawlStepView(runId: string, step: CrawlRunStepRecord): Omit<CrawlRunStepRecord, "failure_screenshot" | "failure_object_key"> & {
+  failureScreenshotUrl?: string;
+} {
+  const { failure_screenshot, failure_object_key, ...view } = step;
+  return {
+    ...view,
+    ...(failure_object_key
+      ? { failureScreenshotUrl: `/api/crawl/runs/${runId}/failures/${encodeURIComponent(step.flow_id)}/${encodeURIComponent(step.step_id)}/screenshot` }
+      : {}),
+  };
+}
+
+function crawlEvidenceView(app: string, evidence: CrawlEvidenceRecord): CrawlEvidenceRecord & { imageUrl?: string } {
+  const hash = /^[0-9a-f]{64}$/.test(evidence.screenshot_hash)
+    ? evidence.screenshot_hash.slice(0, 16)
+    : undefined;
+  return {
+    ...evidence,
+    ...(hash ? { imageUrl: `/api/media/${app}/${hash}` } : {}),
+  };
+}
+
+function crawlRepairView(repair: CrawlRepairRecord): CrawlRepairRecord {
+  const failure = { ...repair.failure };
+  delete failure.screenshot;
+  delete failure.failureScreenshot;
+  delete failure.failure_screenshot;
+  return { ...repair, failure };
 }
 
 function boundedText(value: unknown, max: number, required = false): string | undefined {
@@ -247,7 +501,7 @@ async function sendStoredObject(
 ): Promise<void> {
   res.setHeader("Content-Type", metadata.contentType);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const signed = await store.signedGetUrl(metadata.key, 60);
+  const signed = metadata.accessClass === "internal" ? undefined : await store.signedGetUrl(metadata.key, 60);
   if (signed) {
     res.setHeader("Cache-Control", "private, no-store");
     res.status(302).setHeader("Location", signed).end();
@@ -282,6 +536,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     listPublishedDesignSystems: overrides.listPublishedDesignSystems ?? overrides.listDesignSystems ?? defaults.listPublishedDesignSystems,
     listPublishedFlowSets: overrides.listPublishedFlowSets ?? overrides.listAppFlowSets ?? defaults.listPublishedFlowSets,
   };
+  const requestCrawlRepair = overrides.requestCrawlRepair ?? createCrawlRepairRequester({
+    getRun: deps.getCrawlRun,
+    getPlan: deps.getCrawlPlan,
+    listRunSteps: deps.listCrawlRunSteps,
+    crawlFailureObject: deps.crawlFailureObject,
+    objectStore: deps.objectStore,
+    startChatSession,
+    proposeRepair,
+  });
   const app = express();
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
   const mediaLimiter = createFixedWindowLimiter({ limit: deps.mediaRateLimit, windowMs: 10 * 60_000 });
@@ -434,6 +697,281 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  const publishCrawlTransport = async (
+    run: Awaited<ReturnType<typeof deps.createCrawlRun>>,
+    res: express.Response,
+  ): Promise<boolean> => {
+    try {
+      await deps.publishJob({ type: "smart-crawl-app", name: run.app, runId: String(run.id) });
+      return true;
+    } catch {
+      await deps.markQueuedCrawlRunInterrupted(String(run.id));
+      res.status(503).json({
+        error: "crawl transport unavailable",
+        runId: String(run.id),
+        versionId: run.version_id,
+        planId: String(run.plan_id),
+      });
+      return false;
+    }
+  };
+
+  app.post("/crawl/apps/:app/research", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, ["homepageUrl", "provider"]);
+    const homepageUrl = publicHttpUrl(body?.homepageUrl);
+    const provider = body?.provider ?? "chatgpt";
+    if (!isAppSlug(appSlug) || !homepageUrl || !repairProviders.has(provider as RepairProvider)) {
+      res.status(400).json({ error: "invalid crawl research request" });
+      return;
+    }
+    const job = parseJob({ type: "research-app", name: appSlug, homepageUrl, provider }) as Extract<Job, { type: "research-app" }>;
+    const jobId = await deps.createJob("research-app", { name: appSlug, homepageUrl, provider });
+    try {
+      await deps.publishJob({ ...job, jobId });
+    } catch {
+      await deps.setJobStatus(jobId, "error", "Research transport unavailable");
+      res.status(503).json({ error: "research transport unavailable", jobId });
+      return;
+    }
+    res.status(202).json({ jobId, app: appSlug, homepageUrl });
+  });
+
+  app.get("/crawl/apps/:app/plans", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    if (!isAppSlug(appSlug) || (status !== undefined && !crawlPlanStatuses.has(status))) {
+      res.status(400).json({ error: "invalid crawl plan query" });
+      return;
+    }
+    const plans = await deps.listCrawlPlans(appSlug, status as Parameters<typeof deps.listCrawlPlans>[1]);
+    res.json(plans.map((plan) => crawlPlanView(plan, deps.isCrawlSecretConfigured)));
+  });
+
+  app.get("/crawl/plans/:planId", requireAdmin, async (req, res) => {
+    const planId = crawlId(String(req.params.planId));
+    if (!planId) {
+      res.status(400).json({ error: "invalid crawl plan id" });
+      return;
+    }
+    const plan = await deps.getCrawlPlan(planId);
+    if (!plan) res.status(404).json({ error: "crawl plan not found" });
+    else res.json(crawlPlanView(plan, deps.isCrawlSecretConfigured));
+  });
+
+  app.put("/crawl/plans/:planId", requireAdmin, async (req, res) => {
+    const planId = crawlId(String(req.params.planId));
+    let plan: ReturnType<typeof publicPlanBody>;
+    try {
+      plan = publicPlanBody(req.body);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
+    if (!planId || plan.reviewed) {
+      res.status(400).json({ error: "invalid crawl plan revision" });
+      return;
+    }
+    const source = await deps.getCrawlPlan(planId);
+    if (!source) {
+      res.status(404).json({ error: "crawl plan not found" });
+      return;
+    }
+    if (plan.app !== source.app || plan.revision !== source.revision + 1) {
+      res.status(400).json({ error: "crawl plan revision must follow the source plan for the same app" });
+      return;
+    }
+    try {
+      const saved = await deps.saveCrawlPlan(plan, res.locals.user.id, { sourcePlanId: source.id });
+      res.status(201).json(crawlPlanView(saved, deps.isCrawlSecretConfigured));
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/crawl/plans/:planId/approve", requireAdmin, async (req, res) => {
+    const planId = crawlId(String(req.params.planId));
+    if (!planId) {
+      res.status(400).json({ error: "invalid crawl plan id" });
+      return;
+    }
+    try {
+      const approved = await deps.approveCrawlPlan(planId, res.locals.user.id);
+      res.json(crawlPlanView(approved, deps.isCrawlSecretConfigured));
+    } catch (error) {
+      const message = (error as Error).message;
+      res.status(/not found/i.test(message) ? 404 : 409).json({ error: message });
+    }
+  });
+
+  app.post("/crawl/apps/:app/runs", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, [
+      "planId", "mode", "unsafeApproved", "disposableAccountAcknowledged", "allowSideEffects", "environment",
+    ]);
+    const planId = typeof body?.planId === "string" ? crawlId(body.planId) : undefined;
+    const environment = crawlEnvironment(body?.environment);
+    const safety = [body?.unsafeApproved, body?.disposableAccountAcknowledged, body?.allowSideEffects];
+    if (!isAppSlug(appSlug) || !body || !planId || body.mode !== "full" || !environment
+      || safety.some((value) => value !== undefined && typeof value !== "boolean")) {
+      res.status(400).json({ error: "invalid crawl run request" });
+      return;
+    }
+    try {
+      const run = await deps.createCrawlRun({
+        app: appSlug,
+        planId,
+        unsafeApproved: body.unsafeApproved as boolean | undefined ?? false,
+        disposableAccountAcknowledged: body.disposableAccountAcknowledged as boolean | undefined ?? false,
+        allowSideEffects: body.allowSideEffects as boolean | undefined ?? false,
+        environment,
+        userId: res.locals.user.id,
+      });
+      if (await publishCrawlTransport(run, res)) res.status(202).json(run);
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/crawl/apps/:app/runs", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    if (!isAppSlug(appSlug) || (status !== undefined && !crawlRunStatuses.has(status))) {
+      res.status(400).json({ error: "invalid crawl run query" });
+      return;
+    }
+    res.json(await deps.listCrawlRuns(appSlug, status as Parameters<typeof deps.listCrawlRuns>[1]));
+  });
+
+  app.get("/crawl/runs/:runId", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    if (!runId) {
+      res.status(400).json({ error: "invalid crawl run id" });
+      return;
+    }
+    const run = await deps.getCrawlRun(runId);
+    if (!run) {
+      res.status(404).json({ error: "crawl run not found" });
+      return;
+    }
+    const [steps, evidence, repairs] = await Promise.all([
+      deps.listCrawlRunSteps(runId),
+      deps.listCrawlRunEvidence(runId),
+      deps.listCrawlRunRepairs(runId),
+    ]);
+    res.json({
+      run,
+      steps: steps.map((step) => crawlStepView(runId, step)),
+      evidence: evidence.map((item) => crawlEvidenceView(run.app, item)),
+      repairs: repairs.map(crawlRepairView),
+    });
+  });
+
+  app.post("/crawl/runs/:runId/cancel", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    if (!runId) {
+      res.status(400).json({ error: "invalid crawl run id" });
+      return;
+    }
+    try {
+      res.json(await deps.cancelCrawlRun(runId));
+    } catch (error) {
+      const message = (error as Error).message;
+      res.status(/not found/i.test(message) ? 404 : 409).json({ error: message });
+    }
+  });
+
+  app.post("/crawl/runs/:runId/retry", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    const body = exactBody(req.body, ["mode"]);
+    if (!runId || !body || (body.mode !== "full" && body.mode !== "failed")) {
+      res.status(400).json({ error: "invalid crawl retry request" });
+      return;
+    }
+    try {
+      const retry = await deps.retryCrawlRun(runId, body.mode);
+      if (await publishCrawlTransport(retry, res)) res.status(202).json(retry);
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/crawl/runs/:runId/failures/:flowId/:stepId/screenshot", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    const flowId = crawlIdentifier(req.params.flowId);
+    const stepId = crawlIdentifier(req.params.stepId);
+    if (!runId || !flowId || !stepId) {
+      res.status(400).json({ error: "invalid crawl failure reference" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "media storage unavailable" });
+      return;
+    }
+    try {
+      const metadata = await deps.crawlFailureObject({ runId, flowId, stepId });
+      if (!metadata) {
+        res.status(404).json({ error: "failure screenshot not found" });
+        return;
+      }
+      await sendStoredObject(deps.objectStore, metadata, res);
+    } catch {
+      res.status(503).json({ error: "media storage unavailable" });
+    }
+  });
+
+  app.post("/crawl/runs/:runId/repairs", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    const body = exactBody(req.body, ["flowId", "stepId", "provider"]);
+    const flowId = crawlIdentifier(body?.flowId);
+    const stepId = crawlIdentifier(body?.stepId);
+    const provider = body?.provider ?? "chatgpt";
+    if (!runId || !flowId || !stepId || !repairProviders.has(provider as RepairProvider)) {
+      res.status(400).json({ error: "invalid crawl repair request" });
+      return;
+    }
+    try {
+      const repair = await requestCrawlRepair({
+        runId,
+        flowId,
+        stepId,
+        provider: provider as RepairProvider,
+      });
+      res.status(201).json(crawlRepairView(repair));
+    } catch (error) {
+      const message = (error as Error).message;
+      res.status(/not found/i.test(message) ? 404 : 409).json({ error: message });
+    }
+  });
+
+  app.post("/crawl/repairs/:repairId/apply", requireAdmin, async (req, res) => {
+    const repairId = crawlId(String(req.params.repairId));
+    if (!repairId) {
+      res.status(400).json({ error: "invalid crawl repair id" });
+      return;
+    }
+    try {
+      res.json(crawlRepairView(await deps.applyCrawlRepair(repairId, res.locals.user.id)));
+    } catch (error) {
+      const message = (error as Error).message;
+      res.status(/not found/i.test(message) ? 404 : 409).json({ error: message });
+    }
+  });
+
+  app.post("/crawl/repairs/:repairId/reject", requireAdmin, async (req, res) => {
+    const repairId = crawlId(String(req.params.repairId));
+    if (!repairId) {
+      res.status(400).json({ error: "invalid crawl repair id" });
+      return;
+    }
+    try {
+      res.json(crawlRepairView(await deps.rejectCrawlRepair(repairId, res.locals.user.id)));
+    } catch (error) {
+      const message = (error as Error).message;
+      res.status(/not found/i.test(message) ? 404 : 409).json({ error: message });
+    }
+  });
 
   const protectedMediaUrl = (userId: number, appSlug: string, source: string): string => {
     const parsed = parseImageSource(source);

@@ -162,6 +162,8 @@ const JOB_LABEL: Record<Job['type'], string> = {
   'import-app': 'Import screenshots',
   'caption-app': 'Describe screens',
   'synthesize-app': 'Extract design system',
+  'research-app': 'Research crawl plan',
+  'smart-crawl-app': 'Run smart crawl',
 };
 
 const JOB_STATUS_VARIANT: Record<Job['status'], 'neutral' | 'info' | 'success' | 'error'> = {

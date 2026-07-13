@@ -1,18 +1,141 @@
 import amqp, { type ChannelModel, type Channel } from "amqplib";
+import { isIP } from "node:net";
+import { isAppSlug } from "./imageSource.ts";
 
 const QUEUE_NAME = "mobbin-jobs";
 const DLQ_NAME = "mobbin-jobs.dlq";
 const MAX_ATTEMPTS = 3;
+const SENSITIVE_URL_KEY = /password|passwd|pwd|secret|token|apikey|privatekey|authorization|auth|cookie|sessionid|credential|signature/i;
+
+export type ResearchProvider = "chatgpt" | "claude";
 
 export type Job = (
   | { type: "discover-catalog" }
   | { type: "import-app"; name: string; url: string }
   | { type: "caption-app"; name: string }
   | { type: "synthesize-app"; name: string }
+  | { type: "research-app"; name: string; homepageUrl: string; provider?: ResearchProvider }
+  | { type: "smart-crawl-app"; name: string; runId: string }
 ) & { jobId?: number };
 
 let connection: ChannelModel | undefined;
 let channel: Channel | undefined;
+
+function invalidJob(): never {
+  throw new Error("Invalid queue job");
+}
+
+function object(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) invalidJob();
+  return value as Record<string, unknown>;
+}
+
+function exactKeys(value: Record<string, unknown>, allowed: readonly string[]): void {
+  const keys = new Set(allowed);
+  if (Object.entries(value).some(([key, item]) => item !== undefined && !keys.has(key))) invalidJob();
+}
+
+function appSlug(value: unknown): string {
+  if (typeof value !== "string" || !isAppSlug(value)) invalidJob();
+  return value;
+}
+
+function nonPublicIpv4(value: string): boolean {
+  const [a, b, c] = value.split(".").map(Number);
+  return a === 0 || a === 10 || a === 127 || a >= 224
+    || (a === 100 && b >= 64 && b <= 127)
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2))))
+    || (a === 198 && (b === 18 || b === 19 || b === 51))
+    || (a === 203 && b === 0 && c === 113);
+}
+
+function mappedIpv4(value: string): string | undefined {
+  const match = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(value);
+  if (!match) return undefined;
+  const high = Number.parseInt(match[1], 16);
+  const low = Number.parseInt(match[2], 16);
+  return `${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`;
+}
+
+function publicUrl(value: unknown): string {
+  if (typeof value !== "string") invalidJob();
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return invalidJob();
+  }
+  const host = url.hostname.toLowerCase();
+  const ipHost = host.startsWith("[") && host.endsWith("]") ? host.slice(1, -1) : host;
+  const ip = isIP(ipHost);
+  const mapped = ip === 6 ? mappedIpv4(ipHost) : undefined;
+  const blockedIpv4 = ip === 4 && nonPublicIpv4(ipHost);
+  const blockedIpv6 = ip === 6 && (
+    ipHost === "::" || ipHost === "::1"
+    || /^(?:fc|fd|fe[89ab]|ff)/i.test(ipHost)
+    || (mapped !== undefined && nonPublicIpv4(mapped))
+  );
+  const sensitiveQuery = [...url.searchParams.keys()].some((key) =>
+    SENSITIVE_URL_KEY.test(key.toLowerCase().replace(/[^a-z0-9]/g, ""))
+  );
+  if (
+    !["http:", "https:"].includes(url.protocol)
+    || url.username || url.password
+    || url.hash || sensitiveQuery
+    || host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")
+    || blockedIpv4 || blockedIpv6
+  ) invalidJob();
+  return value;
+}
+
+function researchProvider(value: unknown): ResearchProvider | undefined {
+  if (value === undefined) return undefined;
+  if (value !== "chatgpt" && value !== "claude") invalidJob();
+  return value;
+}
+
+function optionalJobId(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (!Number.isSafeInteger(value) || (value as number) <= 0) invalidJob();
+  return value as number;
+}
+
+export function parseJob(value: unknown): Job {
+  const input = object(value);
+  const type = input.type;
+  const jobId = optionalJobId(input.jobId);
+  const withJobId = <T extends object>(job: T): T & { jobId?: number } => jobId === undefined ? job : { ...job, jobId };
+  if (type === "discover-catalog") {
+    exactKeys(input, ["type", "jobId"]);
+    return withJobId({ type });
+  }
+  if (type === "import-app") {
+    exactKeys(input, ["type", "name", "url", "jobId"]);
+    return withJobId({ type, name: appSlug(input.name), url: publicUrl(input.url) });
+  }
+  if (type === "caption-app" || type === "synthesize-app") {
+    exactKeys(input, ["type", "name", "jobId"]);
+    return withJobId({ type, name: appSlug(input.name) });
+  }
+  if (type === "research-app") {
+    exactKeys(input, ["type", "name", "homepageUrl", "provider", "jobId"]);
+    const provider = researchProvider(input.provider);
+    return withJobId({
+      type,
+      name: appSlug(input.name),
+      homepageUrl: publicUrl(input.homepageUrl),
+      ...(provider === undefined ? {} : { provider }),
+    });
+  }
+  if (type === "smart-crawl-app") {
+    exactKeys(input, ["type", "name", "runId", "jobId"]);
+    if (typeof input.runId !== "string" || !/^[1-9]\d*$/.test(input.runId)) invalidJob();
+    return withJobId({ type, name: appSlug(input.name), runId: input.runId });
+  }
+  return invalidJob();
+}
 
 // ponytail: no in-process reconnect logic — if the broker connection drops, this process
 // exits (unhandled connection error) and docker-compose's `restart: on-failure` brings it
@@ -34,8 +157,9 @@ async function getChannel(): Promise<Channel> {
 }
 
 export async function publishJob(job: Job): Promise<void> {
+  const parsed = parseJob(job);
   const ch = await getChannel();
-  ch.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(job)), {
+  ch.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(parsed)), {
     persistent: true,
     headers: { "x-attempt": 1 },
   });
@@ -49,12 +173,13 @@ export async function consumeJobs(handler: (job: Job) => Promise<void>): Promise
   await ch.consume(QUEUE_NAME, async (msg) => {
     if (!msg) return;
     const attempt = (msg.properties.headers?.["x-attempt"] as number | undefined) ?? 1;
-    const job = JSON.parse(msg.content.toString()) as Job;
+    let job: Job | undefined;
     try {
+      job = parseJob(JSON.parse(msg.content.toString()));
       await handler(job);
       ch.ack(msg);
     } catch (e) {
-      console.error(`Job failed (attempt ${attempt}/${MAX_ATTEMPTS}, type=${job.type}):`, e);
+      console.error(`Job failed (attempt ${attempt}/${MAX_ATTEMPTS}, type=${job?.type ?? "invalid"}):`, e);
       if (attempt >= MAX_ATTEMPTS) {
         ch.nack(msg, false, false); // routes to the DLQ per the queue's dead-letter args
       } else {

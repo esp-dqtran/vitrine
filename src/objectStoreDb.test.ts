@@ -4,6 +4,7 @@ import type { PoolClient, QueryResult } from "pg";
 import {
   attachImageObject,
   adminImageObject,
+  crawlFailureObject,
   entitledImageObject,
   legacyImageReference,
   imageObjectById,
@@ -18,6 +19,14 @@ const metadata: ObjectMetadata = {
   byteSize: 123,
   contentType: "image/png",
   accessClass: "protected",
+};
+
+const failureMetadata: ObjectMetadata = {
+  key: `crawl-failures/21/666c6f77/73746570/${"c".repeat(64)}.png`,
+  sha256: "c".repeat(64),
+  byteSize: 321,
+  contentType: "image/png",
+  accessClass: "internal",
 };
 
 function result(rows: Record<string, unknown>[] = [], rowCount = rows.length): QueryResult<any> {
@@ -160,6 +169,27 @@ test("trusted worker lookup resolves metadata by image id without accepting a ke
   assert.deepEqual(captured?.values, [7]);
   assert.match(captured!.sql, /JOIN images i ON i\.object_key = so\.object_key/);
   assert.doesNotMatch(captured!.sql, /object_key\s*=\s*\$1/);
+});
+
+test("crawl failure lookup is pinned to the failed run, flow, and step", async () => {
+  let captured: { sql: string; values?: readonly unknown[] } | undefined;
+  const query: DatabaseQuery = async (sql, values) => {
+    captured = { sql, values };
+    return result([{
+      object_key: failureMetadata.key,
+      sha256: failureMetadata.sha256,
+      byte_size: failureMetadata.byteSize,
+      content_type: failureMetadata.contentType,
+      access_class: failureMetadata.accessClass,
+    }]);
+  };
+
+  assert.deepEqual(await crawlFailureObject({ runId: "21", flowId: "browse-products", stepId: "open-software" }, query), failureMetadata);
+  assert.deepEqual(captured?.values, ["21", "browse-products", "open-software"]);
+  assert.match(captured!.sql, /JOIN crawl_run_steps crs ON crs\.failure_object_key = so\.object_key/);
+  assert.match(captured!.sql, /crs\.status = 'failed'/);
+  assert.match(captured!.sql, /so\.content_type = 'image\/png'/);
+  assert.match(captured!.sql, /so\.access_class = 'internal'/);
 });
 
 test("preview lookup uses explicit ranks one to three on the latest published version", async () => {

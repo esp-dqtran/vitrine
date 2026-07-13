@@ -151,6 +151,27 @@ export async function imageObjectById(
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
 }
 
+export async function crawlFailureObject(
+  input: { runId: string; flowId: string; stepId: string },
+  runQuery: DatabaseQuery = query,
+): Promise<ObjectMetadata | undefined> {
+  if (!/^[1-9][0-9]*$/.test(input.runId) || !input.flowId || !input.stepId) {
+    throw new Error("Invalid crawl failure identity");
+  }
+  const result = await runQuery(
+    `SELECT ${METADATA_COLUMNS}
+     FROM stored_objects so
+     JOIN crawl_run_steps crs ON crs.failure_object_key = so.object_key
+     WHERE crs.run_id = $1 AND crs.flow_id = $2 AND crs.step_id = $3
+       AND crs.status = 'failed'
+       AND so.content_type = 'image/png'
+       AND so.access_class = 'internal'
+     LIMIT 1`,
+    [input.runId, input.flowId, input.stepId],
+  );
+  return metadataFrom(result.rows[0] as MetadataRow | undefined);
+}
+
 export async function publishedPreviewObject(
   input: { app: string; rank: number },
   runQuery: DatabaseQuery = query,
