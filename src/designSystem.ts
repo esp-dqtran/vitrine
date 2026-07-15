@@ -1,4 +1,5 @@
 import { publicImageUrl } from "./imageSource.ts";
+import type { FlowProvenance } from "./autonomousGraph.ts";
 
 export type TokenKind = "color" | "typography" | "spacing" | "radius" | "border" | "effect";
 
@@ -74,6 +75,7 @@ export interface DesignFlow<T = number> {
   description: string;
   tags: string[];
   steps: Array<{ label: string; interaction?: string; evidence: T[] }>;
+  provenance?: FlowProvenance;
 }
 
 export interface DesignSystemSnapshot<T = number> {

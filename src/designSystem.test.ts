@@ -88,6 +88,32 @@ test("hydrates ordered flow steps without changing curator order", () => {
   ]);
 });
 
+test("preserves autonomous flow provenance while hydrating evidence", () => {
+  const hydrated = hydrateDesignSystem({
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [],
+    components: [],
+    flows: [{
+      id: "create-item",
+      title: "Create an item",
+      description: "Create an item",
+      tags: ["Items"],
+      steps: [{ label: "Items", evidence: [7] }],
+      provenance: {
+        autonomousRunId: "1",
+        missionId: "mission-1",
+        confidence: 0.91,
+        sourceUrls: ["https://docs.app.test/items"],
+        validationStatus: "complete",
+      },
+    }],
+  }, [{ id: 7, image_url: "mobbin-bulk:0123456789abcdef", description: "Items" }]);
+
+  assert.equal(hydrated.flows[0].provenance?.autonomousRunId, "1");
+  assert.equal(hydrated.flows[0].provenance?.confidence, 0.91);
+});
+
 test("hydrates evidence with an injected protected-media URL", () => {
   const hydrated = hydrateDesignSystem({
     app: "linear",
