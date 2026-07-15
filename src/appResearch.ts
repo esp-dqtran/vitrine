@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { lookup } from "node:dns/promises";
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 import { chromium, type APIRequestContext, type APIResponse, type Route } from "playwright";
 import { parseCrawlPlan, parseCrawlStep, type CrawlPlan, type CrawlStep } from "./crawlPlan.ts";
 import { planPath, type StepFailure } from "./smartCrawler.ts";
+import type { VerifiedResearchSource } from "./autonomousResearch.ts";
 
 // Research reads only the app's public surface: the homepage plus same-domain pages that
 // describe the product (features, docs, pricing, help). No login, no app UI — the output
@@ -13,6 +16,7 @@ const MAX_PAGES = 30;
 const MAX_PAGE_CHARS = 8_000;
 const MAX_CORPUS_CHARS = 60_000; // stay well inside what a chat textarea accepts
 const MAX_REDIRECT_HOPS = 10;
+const MAX_SOURCE_BYTES = 1024 * 1024;
 
 const PATH_ALLOWLIST = /^\/(features?|products?|software|solutions|pricing|docs?|guides?|help|support|changelog|whats-new)(\/|$)/i;
 const SUBDOMAIN_ALLOWLIST = /^(docs|help|support|guide|developer)\./i;
@@ -107,6 +111,130 @@ async function fetchResearchDocument(
 export interface ResearchPage {
   url: string;
   text: string;
+}
+
+export interface ResearchSourceFetchDependencies {
+  resolveHostname(hostname: string): Promise<string[]>;
+  fetch(url: string, init: RequestInit): Promise<Response>;
+  now(): Date;
+}
+
+function nonPublicIpv4(value: string): boolean {
+  const [a, b, c] = value.split(".").map(Number);
+  return a === 0 || a === 10 || a === 127 || a >= 224
+    || (a === 100 && b >= 64 && b <= 127)
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2))))
+    || (a === 198 && (b === 18 || b === 19 || b === 51))
+    || (a === 203 && b === 0 && c === 113);
+}
+
+function mappedIpv4(value: string): string | undefined {
+  const dotted = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(value)?.[1];
+  if (dotted) return dotted;
+  const hexadecimal = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(value);
+  if (!hexadecimal) return undefined;
+  const high = Number.parseInt(hexadecimal[1], 16);
+  const low = Number.parseInt(hexadecimal[2], 16);
+  return `${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`;
+}
+
+function publicAddress(value: string): boolean {
+  const kind = isIP(value);
+  if (kind === 4) return !nonPublicIpv4(value);
+  if (kind !== 6) return false;
+  const mapped = mappedIpv4(value);
+  return !(
+    value === "::" || value === "::1"
+    || /^(?:fc|fd|fe[89ab]|ff)/i.test(value)
+    || /^2001:db8:/i.test(value)
+    || (mapped && nonPublicIpv4(mapped))
+  );
+}
+
+async function assertPublicSourceUrl(url: URL, resolveHostname: (hostname: string) => Promise<string[]>): Promise<void> {
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (
+    !["http:", "https:"].includes(url.protocol) || url.username || url.password || url.hash
+    || host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")
+  ) throw new Error("Research source must be a public HTTP(S) URL");
+  const addresses = isIP(host) ? [host] : await resolveHostname(host);
+  if (addresses.length === 0 || addresses.some((address) => !publicAddress(address))) {
+    throw new Error("Research source must resolve only to public addresses");
+  }
+}
+
+async function boundedText(response: Response): Promise<string> {
+  const contentType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() ?? "";
+  if (!(contentType.startsWith("text/") || contentType === "application/xhtml+xml")) {
+    throw new Error("Research source must return text or HTML");
+  }
+  const declared = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_SOURCE_BYTES) throw new Error("Research source exceeds 1 MiB");
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_SOURCE_BYTES) throw new Error("Research source exceeds 1 MiB");
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString("utf8");
+}
+
+const sourceFetchDefaults: ResearchSourceFetchDependencies = {
+  resolveHostname: async (hostname) => (await lookup(hostname, { all: true, verbatim: true })).map(({ address }) => address),
+  fetch: (url, init) => globalThis.fetch(url, init),
+  now: () => new Date(),
+};
+
+export async function fetchAndVerifyResearchSources(
+  candidates: string[],
+  homepageUrl: string,
+  overrides: Partial<ResearchSourceFetchDependencies> = {},
+): Promise<VerifiedResearchSource[]> {
+  const dependencies = { ...sourceFetchDefaults, ...overrides };
+  const verified = new Map<string, VerifiedResearchSource>();
+  for (const candidate of [...new Set(candidates)]) {
+    let current: URL;
+    try {
+      current = new URL(candidate, homepageUrl);
+    } catch {
+      throw new Error("Research source must be a public HTTP(S) URL");
+    }
+    const visited = new Set<string>();
+    for (let redirects = 0; ; redirects++) {
+      if (redirects > MAX_REDIRECT_HOPS) throw new Error("Research source redirect limit exceeded");
+      await assertPublicSourceUrl(current, dependencies.resolveHostname);
+      if (visited.has(current.toString())) throw new Error("Research source redirect loop");
+      visited.add(current.toString());
+      const response = await dependencies.fetch(current.toString(), { redirect: "manual" });
+      const location = response.headers.get("location");
+      if (location && response.status >= 300 && response.status < 400) {
+        current = new URL(location, current);
+        continue;
+      }
+      if (!response.ok) throw new Error(`Research source returned HTTP ${response.status}`);
+      const text = await boundedText(response);
+      const title = /<title[^>]*>([^<]+)<\/title>/i.exec(text)?.[1]?.trim() || current.hostname;
+      verified.set(current.toString(), {
+        url: current.toString(),
+        title,
+        retrievedAt: dependencies.now().toISOString(),
+        text,
+      });
+      break;
+    }
+  }
+  return [...verified.values()];
 }
 
 export function buildCorpus(pages: ResearchPage[]): string {

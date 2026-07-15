@@ -12,6 +12,7 @@ import {
   collectResearchPages,
   draftPlan,
   extractJson,
+  fetchAndVerifyResearchSources,
   isResearchUrl,
   repairFlow,
   sanitizeDraft,
@@ -51,6 +52,56 @@ test("research url allowlist: same-site product/docs pages only", () => {
 
 test("research crawl rejects a non-http homepage", async () => {
   await assert.rejects(collectResearchPages("file:///tmp/astryx-secret"), /http/i);
+});
+
+test("verified research sources resolve every hop and enforce text size bounds", async () => {
+  let fetches = 0;
+  await assert.rejects(
+    fetchAndVerifyResearchSources(["https://docs.example.test/start"], HOME, {
+      resolveHostname: async () => ["127.0.0.1"],
+      fetch: async () => {
+        fetches++;
+        return new Response("should not fetch");
+      },
+      now: () => new Date("2026-07-16T00:00:00.000Z"),
+    }),
+    /public/i,
+  );
+  assert.equal(fetches, 0);
+
+  await assert.rejects(
+    fetchAndVerifyResearchSources(["https://docs.example.test/start"], HOME, {
+      resolveHostname: async (hostname) => hostname === "docs.example.test" ? ["93.184.216.34"] : ["10.0.0.1"],
+      fetch: async () => {
+        fetches++;
+        return new Response(null, { status: 302, headers: { location: "https://private.example.test/final" } });
+      },
+      now: () => new Date("2026-07-16T00:00:00.000Z"),
+    }),
+    /public/i,
+  );
+  assert.equal(fetches, 1);
+
+  await assert.rejects(
+    fetchAndVerifyResearchSources(["https://docs.example.test/large"], HOME, {
+      resolveHostname: async () => ["93.184.216.34"],
+      fetch: async () => new Response("x".repeat(1_048_577), { headers: { "content-type": "text/html" } }),
+      now: () => new Date("2026-07-16T00:00:00.000Z"),
+    }),
+    /1 MiB/i,
+  );
+
+  const [source] = await fetchAndVerifyResearchSources(["https://docs.example.test/final"], HOME, {
+    resolveHostname: async () => ["93.184.216.34"],
+    fetch: async () => new Response("<title>Docs</title><main>Product help</main>", { headers: { "content-type": "text/html" } }),
+    now: () => new Date("2026-07-16T00:00:00.000Z"),
+  });
+  assert.deepEqual(source, {
+    url: "https://docs.example.test/final",
+    title: "Docs",
+    retrievedAt: "2026-07-16T00:00:00.000Z",
+    text: "<title>Docs</title><main>Product help</main>",
+  });
 });
 
 test("research crawl never follows a main-frame redirect to a disallowed host", async () => {
