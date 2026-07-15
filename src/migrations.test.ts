@@ -246,6 +246,28 @@ test("ordinary database queries never bootstrap or mutate schema", async () => {
   assert.match(migration, /collection_items_kind_check/);
 });
 
+test("autonomous crawler migration defines durable missions and shared-account leases", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0006_autonomous_crawler.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of [
+    "crawl_dossiers",
+    "crawl_missions",
+    "crawl_states",
+    "crawl_transitions",
+    "crawl_account_sessions",
+    "crawl_account_leases",
+  ]) {
+    assert.match(sql, new RegExp(`CREATE TABLE ${table}\\b`));
+  }
+  assert.match(sql, /run_kind TEXT NOT NULL DEFAULT 'planned'/);
+  assert.match(sql, /CHECK \(\(run_kind = 'planned' AND plan_id IS NOT NULL\) OR \(run_kind = 'autonomous' AND plan_id IS NULL\)\)/);
+  assert.match(sql, /UNIQUE \(run_id, mission_key\)/);
+  assert.match(sql, /UNIQUE \(run_id, state_key\)/);
+  assert.match(sql, /lease_expires_at TIMESTAMPTZ/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {
@@ -280,7 +302,8 @@ test("object storage migration preserves every legacy image reference", {
   await pool.query("DROP SCHEMA public CASCADE");
   await pool.query("CREATE SCHEMA public");
 
-  const [baseline] = await discoverMigrations();
+  const migrations = await discoverMigrations();
+  const [baseline] = migrations;
   await pool.query(baseline.sql);
   await pool.query(await readFile(
     new URL("../tests/fixtures/current-schema-upgrade.sql", import.meta.url),
@@ -291,7 +314,10 @@ test("object storage migration preserves every legacy image reference", {
   await applyMigrations(pool);
 
   assert.deepEqual((await pool.query("SELECT id, image_url FROM images ORDER BY id")).rows, before);
-  assert.equal((await pool.query("SELECT max(version)::integer AS head FROM schema_migrations")).rows[0].head, 2);
+  assert.equal(
+    (await pool.query("SELECT max(version)::integer AS head FROM schema_migrations")).rows[0].head,
+    migrations.at(-1)!.version,
+  );
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM stored_objects")).rows[0].count, 0);
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM images WHERE object_key IS NOT NULL")).rows[0].count, 0);
   assert.equal((await pool.query("SELECT count(*)::integer AS count FROM app_preview_images")).rows[0].count, 0);
