@@ -18,6 +18,7 @@ export interface BillingConfig {
   yearlyPriceId: string;
   appUrl: string;
   mediaSigningSecret: string;
+  crawlSessionEncryptionKey: string;
   generalRateLimit: number;
   mediaRateLimit: number;
   appTraversalLimit: number;
@@ -42,10 +43,12 @@ export function billingConfigFromEnv(env: Record<string, string | undefined>): B
   const yearlyPriceId = required(env, "STRIPE_PRO_YEARLY_PRICE_ID");
   const appUrl = required(env, "APP_URL");
   const mediaSigningSecret = required(env, "MEDIA_SIGNING_SECRET");
+  const crawlSessionEncryptionKey = required(env, "CRAWL_SESSION_ENCRYPTION_KEY");
   if (!/^https?:\/\//.test(appUrl)) throw new Error("APP_URL must be an absolute HTTP URL");
   if (mediaSigningSecret.length < 32) {
     throw new Error("MEDIA_SIGNING_SECRET must contain at least 32 characters");
   }
+  decodeSessionKey(crawlSessionEncryptionKey);
   return {
     stripeSecretKey,
     stripeWebhookSecret,
@@ -53,8 +56,10 @@ export function billingConfigFromEnv(env: Record<string, string | undefined>): B
     yearlyPriceId,
     appUrl: appUrl.replace(/\/$/, ""),
     mediaSigningSecret,
+    crawlSessionEncryptionKey,
     generalRateLimit: positiveInt(env.GENERAL_RATE_LIMIT, 300, "GENERAL_RATE_LIMIT"),
     mediaRateLimit: positiveInt(env.MEDIA_RATE_LIMIT, 500, "MEDIA_RATE_LIMIT"),
     appTraversalLimit: positiveInt(env.APP_TRAVERSAL_LIMIT, 20, "APP_TRAVERSAL_LIMIT"),
   };
 }
+import { decodeSessionKey } from "../../../src/crawlSession.ts";

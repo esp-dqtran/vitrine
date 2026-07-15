@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { adminSeedFromEnv, billingConfigFromEnv } from "./config.ts";
 
 test("requires valid admin seed variables", () => {
@@ -41,7 +42,24 @@ test("requires all billing and media-security variables", () => {
   );
 });
 
+test("requires a 32-byte base64 crawl-session encryption key", () => {
+  const base = {
+    STRIPE_SECRET_KEY: "sk_test_x",
+    STRIPE_WEBHOOK_SECRET: "whsec_x",
+    STRIPE_PRO_MONTHLY_PRICE_ID: "price_month",
+    STRIPE_PRO_YEARLY_PRICE_ID: "price_year",
+    APP_URL: "https://astryx.example",
+    MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+  };
+  assert.throws(() => billingConfigFromEnv(base), /CRAWL_SESSION_ENCRYPTION_KEY/);
+  assert.throws(
+    () => billingConfigFromEnv({ ...base, CRAWL_SESSION_ENCRYPTION_KEY: randomBytes(31).toString("base64") }),
+    /32 bytes/,
+  );
+});
+
 test("parses billing and limiter configuration", () => {
+  const crawlSessionEncryptionKey = randomBytes(32).toString("base64");
   assert.deepEqual(
     billingConfigFromEnv({
       STRIPE_SECRET_KEY: "sk_test_x",
@@ -50,6 +68,7 @@ test("parses billing and limiter configuration", () => {
       STRIPE_PRO_YEARLY_PRICE_ID: "price_year",
       APP_URL: "https://astryx.example/",
       MEDIA_SIGNING_SECRET: "0123456789abcdef0123456789abcdef",
+      CRAWL_SESSION_ENCRYPTION_KEY: crawlSessionEncryptionKey,
       GENERAL_RATE_LIMIT: "300",
       MEDIA_RATE_LIMIT: "500",
       APP_TRAVERSAL_LIMIT: "20",
@@ -61,6 +80,7 @@ test("parses billing and limiter configuration", () => {
       yearlyPriceId: "price_year",
       appUrl: "https://astryx.example",
       mediaSigningSecret: "0123456789abcdef0123456789abcdef",
+      crawlSessionEncryptionKey,
       generalRateLimit: 300,
       mediaRateLimit: 500,
       appTraversalLimit: 20,

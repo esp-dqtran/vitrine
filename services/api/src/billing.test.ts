@@ -12,6 +12,7 @@ const config: BillingConfig = {
   yearlyPriceId: "price_year",
   appUrl: "https://astryx.example",
   mediaSigningSecret: "0123456789abcdef0123456789abcdef",
+  crawlSessionEncryptionKey: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
   generalRateLimit: 300,
   mediaRateLimit: 500,
   appTraversalLimit: 20,
