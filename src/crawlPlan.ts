@@ -183,6 +183,19 @@ export function parseCrawlStep(value: unknown): CrawlStep {
   return parseStep(value, "step");
 }
 
+export function parseCrawlSteps(values: unknown): CrawlStep[] {
+  if (!Array.isArray(values) || values.length < 1 || values.length > 5) {
+    throw new Error("Agent episode must contain one to five steps");
+  }
+  const steps = values.map((value, index) => parseStep(value, `episode.steps[${index}]`));
+  const seen = new Set<string>();
+  for (const step of steps) {
+    if (seen.has(step.id)) throw new Error(`Duplicate step id ${step.id}`);
+    seen.add(step.id);
+  }
+  return steps;
+}
+
 export function parseCrawlPlan(raw: string): CrawlPlan {
   let root: JsonObject;
   try {

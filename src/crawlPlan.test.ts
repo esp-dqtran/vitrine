@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as crawlPlan from "./crawlPlan.ts";
 
-const { parseCrawlPlan, resolveStepUrl, resolveValue } = crawlPlan;
+const { parseCrawlPlan, parseCrawlSteps, resolveStepUrl, resolveValue } = crawlPlan;
 
 const ready = { state: "Ready", visible: { text: "Ready" } };
 
@@ -280,4 +280,11 @@ test("resolves only exact $NAME references without leaking values", () => {
 test("resolves step urls against startUrl", () => {
   assert.equal(resolveStepUrl("https://www.atlassian.com", "/software"), "https://www.atlassian.com/software");
   assert.equal(resolveStepUrl("https://www.atlassian.com", "https://id.atlassian.com/login"), "https://id.atlassian.com/login");
+});
+
+test("parses one to five bounded autonomous episode steps", () => {
+  assert.equal(parseCrawlSteps([makeStep("click")]).length, 1);
+  assert.throws(() => parseCrawlSteps([]), /one to five/);
+  assert.throws(() => parseCrawlSteps(Array.from({ length: 6 }, (_, index) => makeStep("click", { id: `step-${index}` }))), /one to five/);
+  assert.throws(() => parseCrawlSteps([makeStep("click", { id: "same" }), makeStep("click", { id: "same" })]), /Duplicate step id same/);
 });

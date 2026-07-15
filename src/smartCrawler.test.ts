@@ -11,6 +11,7 @@ import {
   assembleFlows,
   assertExpectedState,
   assertRunnable,
+  assertAgentEpisodePlan,
   captureIfNew,
   dbCaptureSink,
   dedupeKey,
@@ -54,6 +55,13 @@ test("dedupe key is stable and drops query strings", () => {
   assert.equal(a, b);
   assert.notEqual(a, dedupeKey("https://x.com/pricing", "Plans changed", viewport));
   assert.notEqual(a, dedupeKey("https://x.com/pricing", "Plans", { width: 375, height: 812 }));
+});
+
+test("accepts only one reviewed bounded flow as an agent episode", () => {
+  const flow: CrawlFlow = { id: "episode", title: "Episode", description: "", safe: true, requiredSecrets: [], steps: [fixtureStep({ action: "click", text: "New", expected: { state: "New", page: "same", visible: { text: "New" } } })] };
+  assert.doesNotThrow(() => assertAgentEpisodePlan({ app: "fixture", revision: 1, startUrl: "https://app.test", domain: "", sources: [], reviewed: true, flows: [flow] }));
+  assert.throws(() => assertAgentEpisodePlan({ app: "fixture", revision: 1, startUrl: "https://app.test", domain: "", sources: [], reviewed: false, flows: [flow] }), /review/);
+  assert.throws(() => assertAgentEpisodePlan({ app: "fixture", revision: 1, startUrl: "https://app.test", domain: "", sources: [], reviewed: true, flows: [flow, flow] }), /exactly one flow/);
 });
 
 function pngFixture(): Buffer {

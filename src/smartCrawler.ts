@@ -558,6 +558,16 @@ export function assertRunnable(plan: CrawlPlan): void {
   }
 }
 
+export function assertAgentEpisodePlan(plan: CrawlPlan): void {
+  assertRunnable(plan);
+  if (plan.flows.length !== 1) throw new Error("Agent episode must contain exactly one flow");
+  const steps = plan.flows[0].steps;
+  if (steps.length < 1 || steps.length > 5) throw new Error("Agent episode flow must contain one to five steps");
+  if (steps.some((step) => step.expected.page === undefined)) {
+    throw new Error("Every agent episode step must declare its expected page disposition");
+  }
+}
+
 export function splitBySafety(plan: CrawlPlan, env: Record<string, string | undefined> = process.env): { runnable: CrawlFlow[]; skippedUnsafe: CrawlFlow[] } {
   if (env.TEST_ACCOUNT === "1") return { runnable: plan.flows, skippedUnsafe: [] };
   return {
