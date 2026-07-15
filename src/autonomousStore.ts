@@ -11,6 +11,7 @@ import {
   type MissionStatus,
 } from "./autonomousCrawler.ts";
 import type { CrawlRunRecord } from "./crawlStore.ts";
+import type { DesignFlow } from "./designSystem.ts";
 import type { Platform } from "./platformFromUrl.ts";
 
 export interface CreateAutonomousRunInput {
@@ -98,6 +99,7 @@ export interface AutonomousStore {
   upsertState(runId: string, state: AutonomousState, evidenceId?: string): Promise<CrawlStateRecord>;
   recordTransition(input: RecordTransitionInput): Promise<CrawlTransitionRecord>;
   autonomousRunDetail(runId: string): Promise<AutonomousRunDetail | undefined>;
+  saveAutonomousFlows(runId: string, flows: DesignFlow[]): Promise<DesignFlow[]>;
   requestPause(runId: string): Promise<void>;
   clearPause(runId: string): Promise<void>;
 }
@@ -436,6 +438,34 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     };
   };
 
+  const saveAutonomousFlows = (runId: string, incoming: DesignFlow[]): Promise<DesignFlow[]> => deps.withTransaction(async (client) => {
+    const target = await client.query<{ app_id: number; platform: string; status: string }>(
+      `SELECT av.app_id, av.platform, av.status
+       FROM crawl_runs cr JOIN app_versions av ON av.id = cr.version_id
+       WHERE cr.id = $1 AND cr.run_kind = 'autonomous'
+       FOR UPDATE OF av`,
+      [runId],
+    );
+    if (!target.rowCount) throw new Error("Autonomous run target version not found");
+    if (!['draft', 'in_review'].includes(target.rows[0].status)) {
+      throw new Error("Autonomous flows can only update an active version");
+    }
+    const existing = await client.query<{ flows: DesignFlow[] }>(
+      `SELECT flows FROM app_flows WHERE app_id = $1 AND platform = $2 FOR UPDATE`,
+      [target.rows[0].app_id, target.rows[0].platform],
+    );
+    const merged = new Map((existing.rows[0]?.flows ?? []).map((flow) => [flow.id, flow]));
+    for (const flow of incoming) merged.set(flow.id, flow);
+    const flows = [...merged.values()];
+    await client.query(
+      `INSERT INTO app_flows (app_id, platform, flows)
+       VALUES ($1, $2, $3::jsonb)
+       ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
+      [target.rows[0].app_id, target.rows[0].platform, JSON.stringify(flows)],
+    );
+    return flows;
+  });
+
   const requestPause = async (runId: string): Promise<void> => {
     const updated = await deps.query(
       `UPDATE crawl_runs SET pause_requested_at = now(), status = 'interrupted',
@@ -476,6 +506,7 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     upsertState,
     recordTransition,
     autonomousRunDetail,
+    saveAutonomousFlows,
     requestPause,
     clearPause,
   };

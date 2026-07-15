@@ -79,6 +79,7 @@ async function fixture(t: { after(fn: () => Promise<void>): void }) {
   };
   return {
     store: createAutonomousStore({ query: pool.query.bind(pool), withTransaction: transaction }),
+    pool,
     versionId: version.rows[0].id,
   };
 }
@@ -206,4 +207,27 @@ test("persists autonomous progress and resumes checkpointed missions after a pau
   assert.equal(detail?.missions.length, 2);
   assert.equal(detail?.states.length, 1);
   assert.equal(detail?.transitions[0].id, transition.id);
+});
+
+test("merges validated flows under the autonomous target version", { skip: skipReason }, async (t) => {
+  const { store, pool, versionId } = await fixture(t);
+  const parent = await store.createAutonomousRun({
+    app: "agent-app", platform: "web", versionId, createdBy: -301,
+    homepageUrl: "https://agent.test", allowAll: true,
+  });
+  await pool.query(
+    `INSERT INTO app_flows (app_id, platform, flows)
+     SELECT id, 'web', $2::jsonb FROM apps WHERE name = $1`,
+    ["agent-app", JSON.stringify([{ id: "manual", title: "Manual", description: "Keep", tags: [], steps: [] }])],
+  );
+  const merged = await store.saveAutonomousFlows(parent.id, [{
+    id: "create-item", title: "Create item", description: "Create", tags: ["Items"],
+    steps: [{ label: "Created", evidence: [10] }],
+  }]);
+  assert.deepEqual(merged.map(({ id }) => id), ["manual", "create-item"]);
+  const stored = await pool.query<{ flows: Array<{ id: string }> }>(
+    `SELECT af.flows FROM app_flows af JOIN apps a ON a.id = af.app_id
+     WHERE a.name = 'agent-app' AND af.platform = 'web'`,
+  );
+  assert.deepEqual(stored.rows[0].flows.map(({ id }) => id), ["manual", "create-item"]);
 });

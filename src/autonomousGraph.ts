@@ -195,3 +195,78 @@ export function assembleGraphFlowCandidates(input: GraphAssemblyInput): GraphFlo
 export function assembleGraphFlows(input: GraphAssemblyInput): DesignFlow[] {
   return assembleGraphFlowCandidates(input).flows;
 }
+
+export interface AutonomousFinalizationSnapshot extends GraphAssemblyInput {
+  app: string;
+  versionId: number;
+  createdBy: number;
+}
+
+export interface AutonomousFlowDraft extends DesignFlow {
+  blockers: string[];
+}
+
+export interface AutonomousFlowFinalization {
+  published: DesignFlow[];
+  drafts: AutonomousFlowDraft[];
+  versionBlockers: unknown[];
+}
+
+export interface FinalizeAutonomousDependencies {
+  loadFinalization(runId: string): Promise<AutonomousFinalizationSnapshot>;
+  verifyEvidence(flows: DesignFlow[]): Promise<{
+    valid: DesignFlow[];
+    invalid: Array<{ flow: DesignFlow; blockers: string[] }>;
+  }>;
+  saveValidatedFlows(runId: string, flows: DesignFlow[]): Promise<DesignFlow[]>;
+  analyzeCapturedScreens(app: string, platform: string, versionId: number): Promise<void>;
+  ensureDesignSystem(app: string, platform: string, versionId: number): Promise<void>;
+  getVersionPublicationBlockers(versionId: number): Promise<unknown[]>;
+  submitVersionForReview(versionId: number, userId: number): Promise<unknown>;
+  publishVersion(versionId: number, userId: number): Promise<unknown>;
+}
+
+function draftBlocker(reason: string): string {
+  if (reason.startsWith("confidence ")) return "confidence_below_threshold";
+  if (/evidence/i.test(reason)) return "evidence_missing";
+  if (/repeats|continue the mission path/i.test(reason)) return "incoherent_path";
+  if (/another run|belongs to (?:run|platform|version)/i.test(reason)) return "ownership_mismatch";
+  if (/status|unsuccessful|no successful/i.test(reason)) return "mission_incomplete";
+  return "graph_validation_failed";
+}
+
+export async function finalizeAutonomousFlows(
+  runId: string,
+  dependencies: FinalizeAutonomousDependencies,
+): Promise<AutonomousFlowFinalization> {
+  const snapshot = await dependencies.loadFinalization(runId);
+  if (snapshot.runId !== runId) throw new Error("Autonomous finalization snapshot belongs to another run");
+  const candidates = assembleGraphFlowCandidates(snapshot);
+  const verified = await dependencies.verifyEvidence(candidates.flows);
+  const validIds = new Set(verified.valid.map(({ id }) => id));
+  if (verified.valid.some((flow) => flow.provenance?.validationStatus !== "complete")) {
+    throw new Error("Evidence verifier returned an incomplete autonomous flow");
+  }
+  if (verified.invalid.some(({ flow }) => validIds.has(flow.id))) {
+    throw new Error("Evidence verifier returned the same flow as valid and invalid");
+  }
+  await dependencies.saveValidatedFlows(runId, verified.valid);
+  await dependencies.analyzeCapturedScreens(snapshot.app, snapshot.platform, snapshot.versionId);
+  await dependencies.ensureDesignSystem(snapshot.app, snapshot.platform, snapshot.versionId);
+  const versionBlockers = await dependencies.getVersionPublicationBlockers(snapshot.versionId);
+  if (versionBlockers.length === 0) {
+    await dependencies.submitVersionForReview(snapshot.versionId, snapshot.createdBy);
+    await dependencies.publishVersion(snapshot.versionId, snapshot.createdBy);
+  }
+  return {
+    published: verified.valid,
+    drafts: [
+      ...candidates.rejected.map(({ flow, reasons }) => ({
+        ...flow,
+        blockers: [...new Set(reasons.map(draftBlocker))],
+      })),
+      ...verified.invalid.map(({ flow, blockers }) => ({ ...flow, blockers: [...new Set(blockers)] })),
+    ],
+    versionBlockers,
+  };
+}
