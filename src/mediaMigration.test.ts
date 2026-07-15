@@ -117,7 +117,7 @@ test("missing and ambiguous legacy files record stable error codes only", async 
   await legacy(root, "linear", "2222222222222222", "png");
   await legacy(root, "linear", "2222222222222222", "webp", Buffer.concat([Buffer.from("RIFF0000WEBP"), Buffer.from("x")]));
   const report = await migrateLegacyMedia({ dataDir: root, database: db, objectStore: store, apply: true });
-  assert.deepEqual(db.failures, [
+  assert.deepEqual([...db.failures].sort((left, right) => left.imageId - right.imageId), [
     { imageId: 1, errorCode: "LEGACY_FILE_MISSING" },
     { imageId: 2, errorCode: "LEGACY_FILE_AMBIGUOUS" },
   ]);

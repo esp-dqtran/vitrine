@@ -1326,6 +1326,8 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     allImages: async () => catalogImages,
+    listAppVersions: async (app) => [{ ...publishedVersion, app }],
+    versionImages: async () => catalogImages,
     canAccessApp: async () => unlocked,
     unlockFreeApp: async () => {
       unlocked = true;
@@ -1540,6 +1542,8 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
     resolveSession: async () => user,
     canAccessApp: async () => true,
     allImages: async () => images,
+    listAppVersions: async (app) => [{ ...publishedVersion, app }],
+    versionImages: async (app) => images.filter((image) => image.app === app),
     appTraversalLimit: 1,
     recordAccessEvent: async (event) => { events.push(event); },
   }));

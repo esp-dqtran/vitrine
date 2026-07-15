@@ -76,6 +76,12 @@ Opens on `http://localhost:5173`, proxying `/api` to the API service (`VITRINE_A
 npm test
 ```
 
+## Autonomous app-flow discovery
+
+Administrators can open an app's Intelligent crawler workspace, enter a public app URL, upload a shared Playwright storage state, and start a deep autonomous crawl. The parent run first builds a cited product dossier, then delegates bounded missions to concurrent discovery agents. Read missions may overlap; authentication and mutations use durable single-account leases. Complete high-confidence paths become ordered, evidence-backed Flows, while uncertain paths remain drafts with exact blockers.
+
+Generate `CRAWL_SESSION_ENCRYPTION_KEY` with `openssl rand -base64 32` before uploading a session. Queue messages contain only the app slug and durable parent run ID; browser state, credentials, dossiers, and missions remain in encrypted/database-backed storage. See [Autonomous crawler operations](docs/operations/autonomous-crawler.md) for setup, safety controls, recovery, and acceptance procedures.
+
 ## Bulk-importing apps from Mobbin (optional, advanced)
 
 `scripts/catalog-import.ts` is a standalone, resumable script that crawls Mobbin's full app catalog directly (outside the queue/worker system) — useful for large batch imports. It requires an authenticated Mobbin browser profile (Playwright persistent context) and a real S3 bucket; not needed to just run the app against existing data.
