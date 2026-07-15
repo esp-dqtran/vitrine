@@ -348,7 +348,7 @@ test("secret-bearing canonical capture refuses a page without masking support", 
   }
 });
 
-test("first canonical evidence wins while every run retains its observed screenshot hash", async () => {
+test("canonical evidence rejects a changed screenshot for the same state identity", async () => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-first-wins-"));
   const store = fakeCaptureStore(dataDir);
   const shotA = Buffer.from("rendered screenshot A");
@@ -356,28 +356,13 @@ test("first canonical evidence wins while every run retains its observed screens
 
   try {
     const first = await captureValidatedState(screenshotPage(shotA), identity(), store.deps);
-    const second = await captureValidatedState(
-      screenshotPage(shotB),
-      identity({ runId: "run-2" }),
-      store.deps,
+    await assert.rejects(
+      captureValidatedState(screenshotPage(shotB), identity({ runId: "run-2" }), store.deps),
+      /canonical crawl evidence changed/i,
     );
 
     assert.equal(first.observedHash, sha256(shotA));
-    assert.equal(second.observedHash, sha256(shotB));
-    assert.notEqual(second.observedHash, first.observedHash);
     assert.equal(first.evidence.screenshot_hash, sha256(shotA));
-    assert.equal(second.evidence.id, first.evidence.id);
-    assert.equal(second.evidence.screenshot_hash, sha256(shotA));
-    assert.equal(second.ref, first.ref);
-    assert.equal(second.imageId, first.imageId);
-    assert.deepEqual(
-      { reused: first.reused, newFile: first.newFile },
-      { reused: false, newFile: true },
-    );
-    assert.deepEqual(
-      { reused: second.reused, newFile: second.newFile },
-      { reused: true, newFile: false },
-    );
     assert.equal(first.evidence.final_url, "https://example.com/settings");
     assert.equal(store.evidences.length, 1);
     assert.equal(store.images.size, 1);
@@ -439,6 +424,45 @@ test("an exact repeated capture creates no duplicate row, image, or file", async
     assert.equal(store.images.size, 1);
     assert.equal(store.persistCalls.length, 1);
     assert.equal(store.objects.size, 1);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("canonical evidence reuse rejects a missing object", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-missing-object-"));
+  const store = fakeCaptureStore(dataDir);
+  const screenshot = Buffer.from("repeatable screenshot");
+
+  try {
+    await captureValidatedState(screenshotPage(screenshot), identity(), store.deps);
+    store.objects.clear();
+
+    await assert.rejects(
+      captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps),
+      /canonical crawl evidence object is missing/i,
+    );
+    assert.equal(store.persistCalls.length, 1);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("canonical evidence reuse rejects a checksum mismatch", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-capture-bad-checksum-"));
+  const store = fakeCaptureStore(dataDir);
+  const screenshot = Buffer.from("repeatable screenshot");
+
+  try {
+    await captureValidatedState(screenshotPage(screenshot), identity(), store.deps);
+    const stored = [...store.objects.values()][0];
+    stored.metadata = { ...stored.metadata, sha256: "0".repeat(64) };
+
+    await assert.rejects(
+      captureValidatedState(screenshotPage(screenshot), identity({ runId: "run-2" }), store.deps),
+      /canonical crawl evidence object checksum does not match/i,
+    );
+    assert.equal(store.persistCalls.length, 1);
   } finally {
     rmSync(dataDir, { recursive: true, force: true });
   }

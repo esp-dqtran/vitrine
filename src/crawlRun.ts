@@ -352,6 +352,14 @@ export async function captureValidatedState(
     app: identity.app,
   });
   if (existing) {
+    if (existing.screenshot_hash !== observedHash) {
+      throw new Error("Canonical crawl evidence changed for the same state identity");
+    }
+    const existingObject = await objectStore.head(imageObjectKey(existing.image_id, existing.screenshot_hash, "png"));
+    if (!existingObject) throw new Error("Canonical crawl evidence object is missing");
+    if (existingObject.sha256 !== existing.screenshot_hash) {
+      throw new Error("Canonical crawl evidence object checksum does not match");
+    }
     return {
       evidence: existing,
       imageId: existing.image_id,

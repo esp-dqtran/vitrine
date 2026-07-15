@@ -69,20 +69,21 @@ export async function insertImage(
     await client.query(
       `WITH next AS (
          SELECT COALESCE(MAX(version_number), 0) + 1 AS revision
-         FROM app_versions WHERE app_id = $1
+         FROM app_versions WHERE app_id = $1 AND platform = $2
        )
-       INSERT INTO app_versions (app_id, version_number, label, status)
-       SELECT $1, revision, 'v' || revision, 'draft' FROM next
+       INSERT INTO app_versions (app_id, platform, version_number, label, status)
+       SELECT $1, $2, revision, 'v' || revision, 'draft' FROM next
        WHERE NOT EXISTS (
-         SELECT 1 FROM app_versions WHERE app_id = $1 AND status IN ('draft', 'in_review')
+         SELECT 1 FROM app_versions
+         WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
        )`,
-      [appId],
+      [appId, platform],
     );
     await client.query(
       `INSERT INTO version_images (version_id, image_id, source_url, viewport_width, viewport_height, state_context)
-       SELECT av.id, $2, COALESCE($3, $4), $5, $6, $7
+       SELECT av.id, $3, COALESCE($4, $5), $6, $7, $8
        FROM app_versions av
-       WHERE av.app_id = $1 AND av.status IN ('draft', 'in_review')
+       WHERE av.app_id = $1 AND av.platform = $2 AND av.status IN ('draft', 'in_review')
        ORDER BY av.version_number DESC LIMIT 1
        ON CONFLICT (version_id, image_id) DO UPDATE SET
          source_url = COALESCE(EXCLUDED.source_url, version_images.source_url),
@@ -91,6 +92,7 @@ export async function insertImage(
          state_context = COALESCE(EXCLUDED.state_context, version_images.state_context)`,
       [
         appId,
+        platform,
         imageId,
         capture.sourceUrl ?? null,
         imageUrl,
@@ -375,9 +377,9 @@ export async function ensureActiveAppVersion(app: string, platform: string, user
 async function publicationCandidate(versionId: number) {
   const version = await appVersionById(versionId);
   if (!version) return undefined;
-  const images = await query<{ id: number; analysis: ScreenAnalysis | null }>(
-    `SELECT i.id, i.analysis FROM version_images vi JOIN images i ON i.id = vi.image_id
-     WHERE vi.version_id = $1 AND i.kind = 'screen'`, [versionId]
+  const images = await query<{ id: number; kind: 'screen' | 'flow_step'; analysis: ScreenAnalysis | null }>(
+    `SELECT i.id, i.kind, i.analysis FROM version_images vi JOIN images i ON i.id = vi.image_id
+     WHERE vi.version_id = $1 AND i.kind IN ('screen', 'flow_step')`, [versionId]
   );
   const snapshot = await getDesignSystem(version.app, version.platform);
   const flows = await getAppFlows(version.app, version.platform);
@@ -411,25 +413,25 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
   const outcome = await withTransaction(async (client) => {
     // READ COMMITTED is intentional: after waiting for a prior version lock holder,
     // every candidate/run query below must see what that transaction committed.
-    const version = await client.query<{ app_id: number; status: AppVersionStatus }>(
-      `SELECT app_id, status FROM app_versions WHERE id = $1 FOR UPDATE`,
+    const version = await client.query<{ app_id: number; platform: string; status: AppVersionStatus }>(
+      `SELECT app_id, platform, status FROM app_versions WHERE id = $1 FOR UPDATE`,
       [versionId],
     );
     if (!version.rowCount || version.rows[0].status !== 'in_review') {
       throw new Error('Only an in-review version can be published');
     }
-    const images = await client.query<{ id: number; analysis: ScreenAnalysis | null }>(
-      `SELECT i.id, i.analysis FROM version_images vi JOIN images i ON i.id = vi.image_id
-       WHERE vi.version_id = $1 AND i.kind = 'screen'`,
+    const images = await client.query<{ id: number; kind: 'screen' | 'flow_step'; analysis: ScreenAnalysis | null }>(
+      `SELECT i.id, i.kind, i.analysis FROM version_images vi JOIN images i ON i.id = vi.image_id
+       WHERE vi.version_id = $1 AND i.kind IN ('screen', 'flow_step')`,
       [versionId],
     );
     const snapshot = await client.query<{ snapshot: DesignSystemSnapshot }>(
-      `SELECT snapshot FROM design_systems WHERE app_id = $1`,
-      [version.rows[0].app_id],
+      `SELECT snapshot FROM design_systems WHERE app_id = $1 AND platform = $2`,
+      [version.rows[0].app_id, version.rows[0].platform],
     );
     const flows = await client.query<{ flows: DesignFlow[] }>(
-      `SELECT flows FROM app_flows WHERE app_id = $1`,
-      [version.rows[0].app_id],
+      `SELECT flows FROM app_flows WHERE app_id = $1 AND platform = $2`,
+      [version.rows[0].app_id, version.rows[0].platform],
     );
     const issues = await client.query<{ message: string }>(
       `SELECT message FROM review_issues
@@ -564,7 +566,8 @@ export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot
   const res = await query<{ snapshot: DesignSystemSnapshot }>(
     `SELECT dsv.snapshot FROM design_system_versions dsv JOIN app_versions av ON av.id = dsv.version_id
      WHERE av.status = 'published' AND av.version_number = (
-       SELECT MAX(latest.version_number) FROM app_versions latest WHERE latest.app_id = av.app_id AND latest.status = 'published'
+       SELECT MAX(latest.version_number) FROM app_versions latest
+       WHERE latest.app_id = av.app_id AND latest.platform = av.platform AND latest.status = 'published'
      ) ORDER BY av.app_id`
   );
   return res.rows.map(({ snapshot }) => snapshot);
@@ -576,7 +579,8 @@ export async function listPublishedFlowSets(): Promise<Array<{ app: string; flow
      FROM app_versions av JOIN apps a ON a.id = av.app_id
      LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
      WHERE av.status = 'published' AND av.version_number = (
-       SELECT MAX(latest.version_number) FROM app_versions latest WHERE latest.app_id = av.app_id AND latest.status = 'published'
+       SELECT MAX(latest.version_number) FROM app_versions latest
+       WHERE latest.app_id = av.app_id AND latest.platform = av.platform AND latest.status = 'published'
      ) ORDER BY a.name`
   );
   return res.rows;

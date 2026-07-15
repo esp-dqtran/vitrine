@@ -8,7 +8,7 @@ export interface PublicationBlocker {
 }
 
 export interface PublicationCandidate {
-  images: Array<{ id: number; analysis?: unknown | null }>;
+  images: Array<{ id: number; kind: 'screen' | 'flow_step'; analysis?: unknown | null }>;
   snapshot?: DesignSystemSnapshot;
   flows: DesignFlow[];
 }
@@ -19,8 +19,9 @@ export function canTransitionVersion(from: AppVersionStatus, to: AppVersionStatu
 
 export function validatePublication({ images, snapshot, flows }: PublicationCandidate): PublicationBlocker[] {
   const blockers: PublicationBlocker[] = [];
-  if (images.length === 0) blockers.push({ code: 'screens_missing', message: 'Capture at least one web screen.' });
-  else if (images.some(({ analysis }) => !analysis)) blockers.push({ code: 'screen_analysis_missing', message: 'Every captured screen must complete structured analysis.' });
+  const screens = images.filter(({ kind }) => kind === 'screen');
+  if (screens.length === 0) blockers.push({ code: 'screens_missing', message: 'Capture at least one screen.' });
+  else if (screens.some(({ analysis }) => !analysis)) blockers.push({ code: 'screen_analysis_missing', message: 'Every captured screen must complete structured analysis.' });
   if (!snapshot) blockers.push({ code: 'design_system_missing', message: 'Complete structured design-system synthesis.' });
   if (!snapshot) return blockers;
 

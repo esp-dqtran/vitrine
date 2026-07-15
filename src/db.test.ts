@@ -58,6 +58,9 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     createAppVersion,
     ensureActiveAppVersion,
     getVersionDesignSystem,
+    listPublishedDesignSystems,
+    listPublishedFlowSets,
+    versionImages,
     publishedImages,
     pool,
     query,
@@ -86,6 +89,79 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
 
   await query("TRUNCATE crawl_repairs, crawl_run_steps, crawl_evidence, crawl_runs, crawl_plans, collection_items, collections, app_flow_versions, design_system_versions, version_images, app_versions, app_flows, design_systems, apps, platforms, images RESTART IDENTITY CASCADE");
   await query(`INSERT INTO users (id, email, password_hash, role)
+    VALUES (-103, 'db-admin@example.com', 'hash', 'admin')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, role = EXCLUDED.role`);
+
+  const scopedWebImage = await insertImage("scope-app", "web", "https://cdn.example.com/scope-web.png");
+  const scopedIosImage = await insertImage("scope-app", "ios", "https://cdn.example.com/scope-ios.png");
+  const scopedWebVersion = (await listAppVersions("scope-app", "web"))[0];
+  const scopedIosVersion = (await listAppVersions("scope-app", "ios"))[0];
+  assert.ok(scopedWebVersion);
+  assert.ok(scopedIosVersion);
+  assert.deepEqual(
+    (await versionImages("scope-app", "web", scopedWebVersion.version_number)).map(({ id }) => id),
+    [scopedWebImage],
+  );
+  assert.deepEqual(
+    (await versionImages("scope-app", "ios", scopedIosVersion.version_number)).map(({ id }) => id),
+    [scopedIosImage],
+  );
+  await saveScreenAnalysis(scopedWebImage, {
+    description: "Web home", purpose: "Use the web app", pageType: "Home", productArea: "Core",
+    theme: "light", visibleStates: ["default"], componentNames: [],
+  });
+  await saveScreenAnalysis(scopedIosImage, {
+    description: "iOS home", purpose: "Use the iOS app", pageType: "Home", productArea: "Core",
+    theme: "light", visibleStates: ["default"], componentNames: [],
+  });
+  await saveDesignSystem("scope-app", "web", {
+    app: "scope-app", generatedAt: "2026-07-16T00:00:00.000Z",
+    tokens: [{ id: "web-token", kind: "color", name: "Web", value: "#000000", role: "web", evidence: [scopedWebImage] }],
+    components: [], flows: [],
+  });
+  await saveDesignSystem("scope-app", "ios", {
+    app: "scope-app", generatedAt: "2026-07-16T00:00:00.000Z",
+    tokens: [{ id: "ios-token", kind: "color", name: "iOS", value: "#ffffff", role: "ios", evidence: [scopedIosImage] }],
+    components: [], flows: [],
+  });
+  await saveAppFlows("scope-app", "web", [{
+    id: "web-flow", title: "Web", description: "Web flow", tags: [],
+    steps: [{ label: "Web", evidence: [scopedWebImage] }],
+  }]);
+  await saveAppFlows("scope-app", "ios", [{
+    id: "ios-flow", title: "iOS", description: "iOS flow", tags: [],
+    steps: [{ label: "iOS", evidence: [scopedIosImage] }],
+  }]);
+  assert.equal((await submitAppVersionForReview(scopedIosVersion.id, -103)).status, "in_review");
+  assert.equal((await publishAppVersion(scopedIosVersion.id, -103)).status, "published");
+  const scopedPublished = await getVersionDesignSystem("scope-app", "ios", scopedIosVersion.version_number);
+  assert.equal(scopedPublished?.snapshot.tokens[0].id, "ios-token");
+  assert.equal(scopedPublished?.flows[0].id, "ios-flow");
+  assert.equal((await submitAppVersionForReview(scopedWebVersion.id, -103)).status, "in_review");
+  assert.equal((await publishAppVersion(scopedWebVersion.id, -103)).status, "published");
+  const scopedWebV2 = await createAppVersion("scope-app", "web", -103, "https://example.com/web-v2");
+  await saveDesignSystem("scope-app", "web", {
+    app: "scope-app", generatedAt: "2026-07-16T01:00:00.000Z",
+    tokens: [{ id: "web-token-v2", kind: "color", name: "Web v2", value: "#111111", role: "web", evidence: [scopedWebImage] }],
+    components: [], flows: [],
+  });
+  await saveAppFlows("scope-app", "web", [{
+    id: "web-flow-v2", title: "Web v2", description: "Web flow v2", tags: [],
+    steps: [{ label: "Web v2", evidence: [scopedWebImage] }],
+  }]);
+  assert.equal((await submitAppVersionForReview(scopedWebV2.id, -103)).status, "in_review");
+  assert.equal((await publishAppVersion(scopedWebV2.id, -103)).status, "published");
+  assert.deepEqual(
+    (await listPublishedDesignSystems()).map(({ tokens }) => tokens[0].id).sort(),
+    ["ios-token", "web-token-v2"],
+  );
+  assert.deepEqual(
+    (await listPublishedFlowSets()).map(({ flows }) => flows[0].id).sort(),
+    ["ios-flow", "web-flow-v2"],
+  );
+
+  await query("TRUNCATE crawl_repairs, crawl_run_steps, crawl_evidence, crawl_runs, crawl_plans, collection_items, collections, app_flow_versions, design_system_versions, version_images, app_versions, app_flows, design_systems, apps, platforms, images RESTART IDENTITY CASCADE");
+  await query(`INSERT INTO users (id, email, password_hash, role)
     VALUES
       (-101, 'db-designer@example.com', 'hash', 'user'),
       (-102, 'db-other@example.com', 'hash', 'user'),
@@ -95,12 +171,12 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   const airbnbLoginId = await insertImage("airbnb", "web", "https://cdn.example.com/a.png");
   const duplicateLoginId = await insertImage("airbnb", "web", "https://cdn.example.com/a.png");
   assert.equal(duplicateLoginId, airbnbLoginId);
-  const airbnbSearchId = await insertImage("airbnb", "ios", "https://cdn.example.com/b.png");
+  const airbnbSearchId = await insertImage("airbnb", "web", "https://cdn.example.com/b.png");
   await insertImage("linear", "web", "https://cdn.example.com/linear.png");
 
-  // Two apps, three platforms, three images — duplicate URLs are still ignored.
+  // Two apps, two platforms, three images — duplicate URLs are still ignored.
   assert.equal((await query("SELECT 1 FROM apps")).rowCount, 2);
-  assert.equal((await query("SELECT 1 FROM platforms")).rowCount, 3);
+  assert.equal((await query("SELECT 1 FROM platforms")).rowCount, 2);
 
   const airbnbPending = await uncaptionedImages("airbnb");
   assert.equal(airbnbPending.length, 2);
