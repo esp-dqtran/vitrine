@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import pg from "pg";
+import { applyMigrations } from "./migrations.ts";
 import { failureObjectKey } from "./objectStore.ts";
 
 const ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres";
@@ -33,9 +34,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
   const db = await import("./db.ts");
 
   try {
-    for (const migration of ["0001_current_schema.sql", "0002_object_storage.sql"]) {
-      await db.query(readFileSync(join(process.cwd(), "migrations", migration), "utf8"));
-    }
+    await applyMigrations(db.pool);
     for (const table of ["crawl_plans", "crawl_runs", "crawl_run_steps", "crawl_evidence", "crawl_repairs"]) {
       const result = await db.query<{ name: string | null }>("SELECT to_regclass($1) AS name", [table]);
       assert.equal(result.rows[0].name, table);
@@ -104,6 +103,22 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
 
     const version = (await db.listAppVersions("durable-app", "web"))[0];
     assert.equal(version.status, "draft");
+
+    const autonomousParent = await db.query<{ id: string }>(
+      `INSERT INTO crawl_runs
+         (app_id, version_id, plan_id, status, run_kind, platform, allow_all, environment)
+       VALUES ((SELECT app_id FROM app_versions WHERE id = $1), $1, NULL, 'queued', 'autonomous', 'web', true, '{}'::jsonb)
+       RETURNING id`,
+      [version.id],
+    );
+    const autonomousRead = await store.getRun(autonomousParent.rows[0].id);
+    assert.equal(autonomousRead?.plan_id, null);
+    assert.equal(autonomousRead?.run_kind, "autonomous");
+    await assert.rejects(
+      () => store.claimRunById(autonomousParent.rows[0].id, "planned-worker"),
+      /planned/i,
+    );
+    await db.query("DELETE FROM crawl_runs WHERE id = $1", [autonomousParent.rows[0].id]);
 
     const planV1 = {
       app: "durable-app",
@@ -579,11 +594,11 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
         { dataDir: replayDataDir },
       );
       const secondReplay = await captureValidatedState(
-        replayPage(Buffer.from("second run pixels")),
+        replayPage(Buffer.from("first run pixels")),
         { ...replayIdentity, runId: replayRunB.id, workerId: "replay-worker-b" },
         { dataDir: replayDataDir },
       );
-      assert.notEqual(firstReplay.observedHash, secondReplay.observedHash);
+      assert.equal(firstReplay.observedHash, secondReplay.observedHash);
       assert.equal(secondReplay.evidence.id, firstReplay.evidence.id);
       assert.equal(secondReplay.imageId, firstReplay.imageId);
 

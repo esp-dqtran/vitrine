@@ -983,6 +983,11 @@ function serviceRun(
     app: plan.app,
     version_id: 9,
     plan_id: "plan-1",
+    run_kind: "planned",
+    parent_run_id: null,
+    platform: "web",
+    allow_all: false,
+    pause_requested_at: null,
     job_id: null,
     status: "queued",
     current_flow_id: null,
@@ -1175,7 +1180,7 @@ function serviceHarness(options: {
         identity.flowId,
         identity.stepId,
         finalUrl,
-        { version_id: run.version_id, plan_id: run.plan_id, id: `captured-${identity.flowId}-${identity.stepId}` },
+        { version_id: run.version_id, plan_id: run.plan_id!, id: `captured-${identity.flowId}-${identity.stepId}` },
       );
       evidenceRecords.push(evidence);
       return {

@@ -59,7 +59,12 @@ export interface CrawlRunRecord {
   app_id: number;
   app: string;
   version_id: number;
-  plan_id: string;
+  plan_id: string | null;
+  run_kind: "planned" | "autonomous";
+  parent_run_id: string | null;
+  platform: string;
+  allow_all: boolean;
+  pause_requested_at: Date | null;
   job_id: number | null;
   status: CrawlRunStatus;
   current_flow_id: string | null;
@@ -433,6 +438,7 @@ async function lockedWorkerRun(
   if (!run || run.status !== "running" || run.worker_id !== nonEmpty(workerId, "Worker id")) {
     throw new Error("Crawl run worker lease is not active");
   }
+  if (run.run_kind !== "planned" || !run.plan_id) throw new Error("Only planned child runs can execute through CrawlRunService");
   const planResult = await client.query<CrawlPlanRow>(
     `${planSelect} WHERE cp.id = $1 FOR SHARE OF cp`,
     [run.plan_id],
@@ -601,6 +607,7 @@ export async function claimRun(workerId: string): Promise<CrawlRunRecord | undef
         `SELECT cr.id, cr.version_id
          FROM crawl_runs cr
          WHERE cr.status IN ('queued', 'interrupted')
+           AND cr.run_kind = 'planned'
            AND NOT (cr.id = ANY($1::bigint[]))
          ORDER BY CASE cr.status WHEN 'queued' THEN 0 ELSE 1 END, cr.created_at, cr.id
          LIMIT 1`,
@@ -663,6 +670,7 @@ export async function claimRunById(runId: string, workerId: string): Promise<Cra
     );
     const run = locked.rows[0];
     if (!run) throw new Error("Crawl run not found");
+    if (run.run_kind !== "planned" || !run.plan_id) throw new Error("Only planned child runs can execute through CrawlRunService");
     if (run.version_id !== pin.rows[0].version_id) throw new Error("Crawl run version changed while claiming it");
     if (run.status === "running") {
       if (run.worker_id !== worker) throw new Error("Crawl run is owned by another worker");
@@ -1270,7 +1278,7 @@ export async function loadWorkerRunFinalization(
     runId: snapshot.run.id,
     app: snapshot.run.app,
     versionId: snapshot.run.version_id,
-    planId: snapshot.run.plan_id,
+    planId: snapshot.plan.id,
     plan: snapshot.plan.plan,
     steps: snapshot.steps.map((step) => ({
       flowId: step.flow_id,
@@ -1335,9 +1343,9 @@ export async function saveWorkerAppFlows(input: SaveWorkerAppFlowsInput): Promis
       throw new Error("App flows must use the run's pinned app");
     }
     await client.query(
-      `INSERT INTO app_flows (app_id, flows) VALUES ($1, $2::jsonb)
-       ON CONFLICT (app_id) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-      [locked.run.app_id, serialized],
+      `INSERT INTO app_flows (app_id, platform, flows) VALUES ($1, $2, $3::jsonb)
+       ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
+      [locked.run.app_id, locked.run.platform, serialized],
     );
   });
 }
@@ -1366,6 +1374,7 @@ export async function createRetry(
   if (!RETRY_MODES.has(mode)) throw new Error("Invalid retry mode");
   const snapshot = await getRun(originalRunId);
   if (!snapshot) throw new Error("Original crawl run not found");
+  if (snapshot.run_kind !== "planned" || !snapshot.plan_id) throw new Error("Only planned child runs can be retried");
   const retryable = ["failed", "cancelled", "interrupted"].includes(snapshot.status)
     || (snapshot.status === "succeeded" && mode === "all");
   if (!retryable) {

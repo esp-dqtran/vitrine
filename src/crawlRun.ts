@@ -862,6 +862,9 @@ export function createCrawlRunService(options: CrawlRunServiceDependencies): Cra
       const beforeClaim = await store.getRun(runId);
       if (!beforeClaim) throw new Error("Crawl run not found");
       if (TERMINAL_CRAWL_RUNS.has(beforeClaim.status)) return beforeClaim;
+      if (beforeClaim.run_kind !== "planned" || !beforeClaim.plan_id) {
+        throw new Error("Only planned child runs can execute through CrawlRunService");
+      }
       let run: CrawlRunRecord;
       try {
         run = await store.claimRunById(runId, options.workerId);
@@ -871,6 +874,10 @@ export function createCrawlRunService(options: CrawlRunServiceDependencies): Cra
         throw error;
       }
       if (run.status !== "running") return run;
+      if (run.run_kind !== "planned" || !run.plan_id) {
+        throw new Error("Only planned child runs can execute through CrawlRunService");
+      }
+      const planId = run.plan_id;
       let terminalWritten = false;
       let snapshot: WorkerRunExecutionSnapshot | undefined;
       const finish = async (status: "succeeded" | "failed" | "cancelled" | "interrupted") => {
@@ -1002,7 +1009,7 @@ export function createCrawlRunService(options: CrawlRunServiceDependencies): Cra
               workerId: options.workerId,
               app: run.app,
               versionId: run.version_id,
-              planId: run.plan_id,
+              planId,
               flowId: flow.id,
               stepId: step.id,
               stateLabel: step.expected.state,

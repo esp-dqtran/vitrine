@@ -144,6 +144,7 @@ export function createCrawlRepairRequester(overrides: Partial<CrawlRepairRequest
       dependencies.listRunSteps(input.runId),
     ]);
     if (!run) throw new Error("Crawl run not found");
+    if (run.run_kind !== "planned" || !run.plan_id) throw new Error("Only planned crawl runs can be repaired");
     const planRecord = await dependencies.getPlan(run.plan_id);
     if (!planRecord) throw new Error("Pinned crawl plan not found");
     const flow = planRecord.plan.flows.find(({ id }) => id === input.flowId);
