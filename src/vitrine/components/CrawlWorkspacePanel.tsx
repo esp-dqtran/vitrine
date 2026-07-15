@@ -3,6 +3,8 @@ import { Selector } from "@astryxdesign/core";
 import { parseCrawlPlan, type CrawlPlan, type CrawlStep } from "../../crawlPlan";
 import type {
   CrawlPlanView,
+  AutonomousRunDetailView,
+  CreateAutonomousRunRequest,
   CrawlRepairView,
   CrawlResearchProvider,
   CrawlRunDetailView,
@@ -23,6 +25,12 @@ import {
   researchCrawlApp,
   retryCrawlRun,
   saveCrawlPlan,
+  createAutonomousRun,
+  getAutonomousRun,
+  pauseAutonomousRun,
+  cancelAutonomousRun,
+  resumeAutonomousRun,
+  saveCrawlSession,
 } from "../researchApi";
 import { useJobs } from "../useJobs";
 
@@ -93,6 +101,11 @@ interface CrawlWorkspaceCommandApi {
   requestCrawlRepair: typeof requestCrawlRepair;
   applyCrawlRepair: typeof applyCrawlRepair;
   rejectCrawlRepair: typeof rejectCrawlRepair;
+  createAutonomousRun?: typeof createAutonomousRun;
+  pauseAutonomousRun?: typeof pauseAutonomousRun;
+  cancelAutonomousRun?: typeof cancelAutonomousRun;
+  resumeAutonomousRun?: typeof resumeAutonomousRun;
+  saveCrawlSession?: typeof saveCrawlSession;
 }
 
 const commandApi: CrawlWorkspaceCommandApi = {
@@ -105,6 +118,11 @@ const commandApi: CrawlWorkspaceCommandApi = {
   requestCrawlRepair,
   applyCrawlRepair,
   rejectCrawlRepair,
+  createAutonomousRun,
+  pauseAutonomousRun,
+  cancelAutonomousRun,
+  resumeAutonomousRun,
+  saveCrawlSession,
 };
 
 export function createCrawlWorkspaceCommands(api: CrawlWorkspaceCommandApi = commandApi) {
@@ -134,6 +152,26 @@ export function createCrawlWorkspaceCommands(api: CrawlWorkspaceCommandApi = com
       api.requestCrawlRepair(runId, { flowId, stepId, provider }),
     reviewRepair: (repairId: string, decision: "apply" | "reject") =>
       decision === "apply" ? api.applyCrawlRepair(repairId) : api.rejectCrawlRepair(repairId),
+    startAutonomous: (app: string, request: CreateAutonomousRunRequest) => {
+      if (!api.createAutonomousRun) throw new Error("Autonomous crawl API is unavailable");
+      return api.createAutonomousRun(app, request);
+    },
+    pauseAutonomous: (runId: string) => {
+      if (!api.pauseAutonomousRun) throw new Error("Autonomous crawl API is unavailable");
+      return api.pauseAutonomousRun(runId);
+    },
+    cancelAutonomous: (runId: string) => {
+      if (!api.cancelAutonomousRun) throw new Error("Autonomous crawl API is unavailable");
+      return api.cancelAutonomousRun(runId);
+    },
+    resumeAutonomous: (runId: string, acknowledged: boolean) => {
+      if (!api.resumeAutonomousRun) throw new Error("Autonomous crawl API is unavailable");
+      return api.resumeAutonomousRun(runId, acknowledged);
+    },
+    saveSession: (app: string, storageState: unknown) => {
+      if (!api.saveCrawlSession) throw new Error("Autonomous crawl API is unavailable");
+      return api.saveCrawlSession(app, storageState);
+    },
   };
 }
 
@@ -142,7 +180,7 @@ const workspaceCommands = createCrawlWorkspaceCommands();
 async function loadWorkspace(app: string): Promise<{ plan?: CrawlPlanView; run?: CrawlRunDetailView; runPlan?: CrawlPlanView }> {
   const [plans, runs] = await Promise.all([listCrawlPlans(app), listCrawlRuns(app)]);
   const run = runs[0] ? await getCrawlRun(runs[0].id) : undefined;
-  const runPlan = run
+  const runPlan = run?.run.plan_id
     ? plans.find(({ id }) => id === run.run.plan_id) ?? await getCrawlPlan(run.run.plan_id)
     : undefined;
   return {
@@ -201,6 +239,15 @@ function AdminCrawlWorkspace({
   const [unsafeApproved, setUnsafeApproved] = useState(false);
   const [disposableAccountAcknowledged, setDisposableAccountAcknowledged] = useState(false);
   const [allowSideEffects, setAllowSideEffects] = useState(false);
+  const [autonomousRun, setAutonomousRun] = useState<AutonomousRunDetailView>();
+  const [autonomousProvider, setAutonomousProvider] = useState<CrawlResearchProvider>("chatgpt");
+  const [autonomousPlatform, setAutonomousPlatform] = useState<"web" | "ios" | "android">("web");
+  const [requiredSecretNames, setRequiredSecretNames] = useState("");
+  const [allowAll, setAllowAll] = useState(false);
+  const [allowAllAcknowledged, setAllowAllAcknowledged] = useState(false);
+  const [agentConcurrency, setAgentConcurrency] = useState(3);
+  const [sessionJson, setSessionJson] = useState('{"cookies":[],"origins":[]}');
+  const [sessionStatus, setSessionStatus] = useState("Not uploaded");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const { jobs, error: jobsError, refresh: refreshJobs } = useJobs();
@@ -258,6 +305,13 @@ function AdminCrawlWorkspace({
       onDraftVersionChange ? () => onDraftVersionChange() : undefined,
     );
   }, [run?.run.id, run?.run.status]);
+
+  useEffect(() => {
+    if (!autonomousRun || !shouldPollRunStatus(autonomousRun.run.status)) return;
+    const poll = () => void getAutonomousRun(autonomousRun.run.id).then(setAutonomousRun).catch((error) => setMessage((error as Error).message));
+    const timer = setInterval(poll, 1_500);
+    return () => clearInterval(timer);
+  }, [autonomousRun?.run.id, autonomousRun?.run.status]);
 
   const perform = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -347,6 +401,27 @@ function AdminCrawlWorkspace({
     setMessage(decision === "apply" ? "Repair applied as a new unapproved plan revision." : "Repair rejected.");
   });
 
+  const startAutonomous = () => perform(async () => {
+    const created = await workspaceCommands.startAutonomous(app.trim(), {
+      homepageUrl: homepageUrl.trim(),
+      platform: autonomousPlatform,
+      provider: autonomousProvider,
+      requiredSecrets: [...new Set(requiredSecretNames.split(",").map((name) => name.trim()).filter(Boolean))],
+      allowAll,
+      allowAllAcknowledged,
+      ceilings: { runtimeMinutes: 120, actions: 500, modelRequests: 50, storageBytes: 100_000_000 },
+      agentConcurrency,
+    });
+    setAutonomousRun({ run: created, missions: [], states: [], transitions: [] });
+    setMessage(`Autonomous run ${created.id} queued.`);
+  });
+
+  const saveSharedSession = () => perform(async () => {
+    const storageState = JSON.parse(sessionJson) as unknown;
+    const saved = await workspaceCommands.saveSession(app.trim(), storageState);
+    setSessionStatus(`Version ${saved.stateVersion}`);
+  });
+
   let displayedPlan = plan?.plan;
   try {
     displayedPlan = planJson ? parseCrawlPlan(planJson) : undefined;
@@ -421,6 +496,30 @@ function AdminCrawlWorkspace({
             </div>
           </div>
         ) : <p style={mutedStyle}>No crawl plan yet.</p>}
+      </section>
+
+      <section style={panelStyle}>
+        <h3>Autonomous discovery</h3>
+        <p style={mutedStyle}>Research the app, delegate deep flow discovery to multiple agents, and retain only evidence-backed candidates.</p>
+        <div style={fieldsStyle}>
+          <label style={fieldStyle}>Provider<select value={autonomousProvider} onChange={(event) => setAutonomousProvider(event.target.value as CrawlResearchProvider)} style={inputStyle}><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option></select></label>
+          <label style={fieldStyle}>Platform<select value={autonomousPlatform} onChange={(event) => setAutonomousPlatform(event.target.value as typeof autonomousPlatform)} style={inputStyle}><option value="web">Web</option><option value="ios">iOS</option><option value="android">Android</option></select></label>
+          <label style={fieldStyle}>Agent concurrency<input type="number" min={1} max={8} value={agentConcurrency} onChange={(event) => setAgentConcurrency(Number(event.target.value))} style={inputStyle} /></label>
+          <label style={{ ...fieldStyle, flex: 2 }}>Secret names (comma separated)<input value={requiredSecretNames} onChange={(event) => setRequiredSecretNames(event.target.value)} placeholder="APP_TEST_EMAIL, APP_TEST_PASSWORD" style={inputStyle} /></label>
+        </div>
+        <div style={{ display: "grid", gap: 7, marginTop: 10 }}>
+          <label><input type="checkbox" checked={allowAll} onChange={(event) => { setAllowAll(event.target.checked); if (!event.target.checked) setAllowAllAcknowledged(false); }} /> Allow all actions</label>
+          <label><input type="checkbox" checked={allowAllAcknowledged} disabled={!allowAll} onChange={(event) => setAllowAllAcknowledged(event.target.checked)} /> I acknowledge this shared test account may be mutated</label>
+        </div>
+        <div style={{ ...fieldsStyle, marginTop: 10 }}>
+          <button type="button" disabled={busy || !app.trim() || !homepageUrl.trim() || (allowAll && !allowAllAcknowledged)} onClick={() => void startAutonomous()} style={buttonStyle}>Start autonomous crawl</button>
+          {autonomousRun && <><span style={badgeStyle}>Run {autonomousRun.run.id}</span><span style={badgeStyle}>{label(autonomousRun.run.status)}</span></>}
+          {autonomousRun && ["queued", "running"].includes(autonomousRun.run.status) && <button type="button" disabled={busy} onClick={() => void perform(async () => { setAutonomousRun(await workspaceCommands.pauseAutonomous(autonomousRun.run.id)); })} style={secondaryButtonStyle}>Pause</button>}
+          {autonomousRun?.run.status === "interrupted" && <button type="button" disabled={busy} onClick={() => void perform(async () => { setAutonomousRun(await workspaceCommands.resumeAutonomous(autonomousRun.run.id, allowAllAcknowledged)); })} style={secondaryButtonStyle}>Resume</button>}
+          {autonomousRun && !["succeeded", "failed", "cancelled"].includes(autonomousRun.run.status) && <button type="button" disabled={busy} onClick={() => void perform(async () => { const updated = await workspaceCommands.cancelAutonomous(autonomousRun.run.id); setAutonomousRun({ ...autonomousRun, run: updated }); })} style={secondaryButtonStyle}>Cancel autonomous run</button>}
+        </div>
+        <details style={{ marginTop: 12 }}><summary>Shared account session · {sessionStatus}</summary><label style={fieldStyle}>Playwright storage state<textarea value={sessionJson} onChange={(event) => setSessionJson(event.target.value)} rows={5} style={{ ...inputStyle, padding: 8 }} /></label><button type="button" disabled={busy} onClick={() => void saveSharedSession()} style={secondaryButtonStyle}>Save shared account session</button></details>
+        {autonomousRun && <div style={{ ...fieldsStyle, marginTop: 10 }}><span>{autonomousRun.missions.length} missions</span><span>{autonomousRun.states.length} states</span><span>{autonomousRun.transitions.length} transitions</span></div>}
       </section>
 
       <section style={panelStyle}>

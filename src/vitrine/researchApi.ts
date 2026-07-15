@@ -14,6 +14,9 @@ import type {
   CrawlRetryMode,
   CrawlRunDetailView,
   CrawlRunView,
+  CreateAutonomousRunRequest,
+  AutonomousRunDetailView,
+  CrawlSessionView,
   CreateCrawlRunRequest,
 } from './types';
 
@@ -120,6 +123,25 @@ export const cancelCrawlRun = (runId: string): Promise<CrawlRunView> =>
   json(`/api/crawl/runs/${crawlPath(runId)}/cancel`, { method: 'POST' });
 export const retryCrawlRun = (runId: string, mode: CrawlRetryMode): Promise<CrawlRunView> =>
   json(`/api/crawl/runs/${crawlPath(runId)}/retry`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ mode }) });
+
+export const createAutonomousRun = (app: string, request: CreateAutonomousRunRequest): Promise<CrawlRunView> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/autonomous-runs`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(request) });
+export const getAutonomousRun = (runId: string): Promise<AutonomousRunDetailView> =>
+  json(`/api/crawl/autonomous-runs/${crawlPath(runId)}`);
+export const pauseAutonomousRun = (runId: string): Promise<AutonomousRunDetailView> =>
+  json(`/api/crawl/autonomous-runs/${crawlPath(runId)}/pause`, { method: 'POST' });
+export const cancelAutonomousRun = (runId: string): Promise<CrawlRunView> =>
+  json(`/api/crawl/autonomous-runs/${crawlPath(runId)}/cancel`, { method: 'POST' });
+export const resumeAutonomousRun = (runId: string, allowAllAcknowledged: boolean): Promise<AutonomousRunDetailView> =>
+  json(`/api/crawl/autonomous-runs/${crawlPath(runId)}/resume`, {
+    method: 'POST', headers: jsonHeaders, body: JSON.stringify({ allowAllAcknowledged }),
+  });
+export const saveCrawlSession = (app: string, storageState: unknown): Promise<CrawlSessionView> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/session`, {
+    method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ storageState }),
+  });
+export const getCrawlSession = (app: string): Promise<CrawlSessionView> =>
+  json(`/api/crawl/apps/${crawlPath(app)}/session`);
 
 export const requestCrawlRepair = (runId: string, request: CrawlRepairRequest): Promise<CrawlRepairView> =>
   json(`/api/crawl/runs/${crawlPath(runId)}/repairs`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(request) });

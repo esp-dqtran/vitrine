@@ -209,6 +209,106 @@ test("keeps every crawl administration route admin-only before dependencies run"
   assert.equal(dependencyCalls, 0);
 });
 
+test("creates and inspects an admin-only autonomous crawl without exposing session ciphertext", async (t) => {
+  const createdInputs: unknown[] = [];
+  const published: unknown[] = [];
+  const detail = {
+    run: crawlRun({
+      id: "42", app: "linear", plan_id: null, run_kind: "autonomous", allow_all: true,
+      environment: { homepageUrl: "https://app.test/", provider: "chatgpt", requiredSecrets: ["APP_TEST_EMAIL"] },
+    }),
+    missions: [], states: [], transitions: [],
+  };
+  const makeApp = (currentUser: typeof admin | typeof user) => createApiApp({
+    resolveSession: async () => currentUser,
+    ensureActiveAppVersion: async () => ({ id: 8 }),
+    createAutonomousRun: async (input: unknown) => { createdInputs.push(input); return detail.run as never; },
+    getAutonomousRun: async () => detail as never,
+    publishJob: async (job: unknown) => { published.push(job); },
+  } as never);
+  const deniedServer = await serve(makeApp(user));
+  const adminServer = await serve(makeApp(admin));
+  t.after(() => Promise.all([close(deniedServer.server), close(adminServer.server)]).then(() => undefined));
+  const body = {
+    homepageUrl: "https://app.test",
+    platform: "web",
+    provider: "chatgpt",
+    requiredSecrets: ["APP_TEST_EMAIL"],
+    allowAll: true,
+    allowAllAcknowledged: true,
+    ceilings: { runtimeMinutes: 120, actions: 500, modelRequests: 50, storageBytes: 100_000_000 },
+    agentConcurrency: 3,
+  };
+  const denied = await fetch(`${deniedServer.base}/crawl/apps/linear/autonomous-runs`, {
+    method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+  assert.equal(denied.status, 403);
+  const created = await fetch(`${adminServer.base}/crawl/apps/linear/autonomous-runs`, {
+    method: "POST", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+  assert.equal(created.status, 202);
+  const view = await created.json();
+  assert.equal(view.allow_all, true);
+  assert.equal(JSON.stringify(view).includes("encrypted_storage_state"), false);
+  assert.equal(createdInputs.length, 1);
+  assert.deepEqual(published, [{ type: "autonomous-crawl-app", name: "linear", runId: "42" }]);
+
+  const inspected = await fetch(`${adminServer.base}/crawl/autonomous-runs/42`, { headers: adminCookie });
+  assert.equal(inspected.status, 200);
+  assert.equal(JSON.stringify(await inspected.json()).includes("encrypted_storage_state"), false);
+});
+
+test("rejects unsafe autonomous inputs before creating a parent run", async (t) => {
+  let creates = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    ensureActiveAppVersion: async () => ({ id: 8 }),
+    createAutonomousRun: async () => { creates++; return crawlRun() as never; },
+  } as never));
+  t.after(() => close(server));
+  const valid = {
+    homepageUrl: "https://app.test", platform: "web", provider: "chatgpt", requiredSecrets: [],
+    allowAll: true, allowAllAcknowledged: true,
+    ceilings: { runtimeMinutes: 60, actions: 100, modelRequests: 20, storageBytes: 1_000_000 }, agentConcurrency: 3,
+  };
+  for (const body of [
+    { ...valid, homepageUrl: "http://127.0.0.1" },
+    { ...valid, allowAllAcknowledged: false },
+    { ...valid, password: "secret" },
+    { ...valid, ceilings: { ...valid.ceilings, actions: 0 } },
+    { ...valid, agentConcurrency: 9 },
+    { ...valid, requiredSecrets: ["secret-value@example.com"] },
+  ]) {
+    const response = await fetch(`${base}/crawl/apps/linear/autonomous-runs`, {
+      method: "POST", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify(body),
+    });
+    assert.equal(response.status, 400);
+  }
+  assert.equal(creates, 0);
+});
+
+test("encrypts shared crawl sessions and returns metadata only", async (t) => {
+  let encrypted = "";
+  const session = { id: "5", app_id: 4, encrypted_storage_state: "", state_version: 2, updated_by: admin.id, updated_at: new Date("2026-07-16T00:00:00Z") };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    crawlSessionEncryptionKey: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+    saveCrawlAccountSession: async (_app: string, value: string) => { encrypted = value; return { ...session, encrypted_storage_state: value } as never; },
+    getCrawlAccountSession: async () => ({ ...session, encrypted_storage_state: encrypted }) as never,
+  } as never));
+  t.after(() => close(server));
+  const storageState = { cookies: [{ name: "session", value: "secret", domain: "app.test", path: "/", expires: -1, httpOnly: true, secure: true, sameSite: "Lax" }], origins: [] };
+  const saved = await fetch(`${base}/crawl/apps/linear/session`, {
+    method: "PUT", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify({ storageState }),
+  });
+  assert.equal(saved.status, 200);
+  assert.doesNotMatch(encrypted, /secret/);
+  assert.equal(JSON.stringify(await saved.json()).includes("encrypted_storage_state"), false);
+  const viewed = await fetch(`${base}/crawl/apps/linear/session`, { headers: adminCookie });
+  assert.equal(viewed.status, 200);
+  assert.equal(JSON.stringify(await viewed.json()).includes("encrypted_storage_state"), false);
+});
+
 test("validates crawl slugs, public URLs, plans, modes, ids, and repair requests", async (t) => {
   let dependencyCalls = 0;
   const touched = async () => {

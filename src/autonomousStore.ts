@@ -85,6 +85,15 @@ export interface AutonomousRunDetail {
   transitions: CrawlTransitionRecord[];
 }
 
+export interface CrawlAccountSessionRecord {
+  id: string;
+  app_id: number;
+  encrypted_storage_state: string;
+  state_version: number;
+  updated_by: number | null;
+  updated_at: Date;
+}
+
 export interface AutonomousStore {
   createAutonomousRun(input: CreateAutonomousRunInput): Promise<CrawlRunRecord>;
   saveDossier(runId: string, dossier: AppDossier): Promise<CrawlDossierRecord>;
@@ -102,6 +111,10 @@ export interface AutonomousStore {
   saveAutonomousFlows(runId: string, flows: DesignFlow[]): Promise<DesignFlow[]>;
   requestPause(runId: string): Promise<void>;
   clearPause(runId: string): Promise<void>;
+  cancelRun(runId: string): Promise<CrawlRunRecord>;
+  markInterrupted(runId: string, reason: string): Promise<void>;
+  saveAccountSession(app: string, encryptedStorageState: string, userId: number): Promise<CrawlAccountSessionRecord>;
+  accountSession(app: string): Promise<CrawlAccountSessionRecord | undefined>;
 }
 
 interface StoreDependencies {
@@ -492,6 +505,60 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     );
   });
 
+  const cancelRun = (runId: string): Promise<CrawlRunRecord> => deps.withTransaction(async (client) => {
+    const updated = await client.query<CrawlRunRecord>(
+      `UPDATE crawl_runs SET status = 'cancelled', cancel_requested_at = COALESCE(cancel_requested_at, now()),
+         worker_id = NULL, finished_at = now(), updated_at = now()
+       WHERE id = $1 AND run_kind = 'autonomous' AND status NOT IN ('succeeded', 'failed', 'cancelled')
+       RETURNING *`,
+      [runId],
+    );
+    if (!updated.rowCount) {
+      const existing = await client.query<CrawlRunRecord>(`${runSelect} WHERE cr.id = $1 AND cr.run_kind = 'autonomous'`, [runId]);
+      if (!existing.rowCount) throw new Error("Autonomous run not found");
+      return existing.rows[0];
+    }
+    await client.query(
+      `UPDATE crawl_missions SET status = 'cancelled', worker_id = NULL, heartbeat_at = NULL,
+         lease_expires_at = NULL, updated_at = now()
+       WHERE run_id = $1 AND status IN ('queued', 'running', 'interrupted')`,
+      [runId],
+    );
+    await client.query("DELETE FROM crawl_account_leases WHERE run_id = $1", [runId]);
+    return updated.rows[0];
+  });
+
+  const markInterrupted = async (runId: string, reason: string): Promise<void> => {
+    const updated = await deps.query(
+      `UPDATE crawl_runs SET status = 'interrupted', environment = environment || $2::jsonb,
+         worker_id = NULL, updated_at = now()
+       WHERE id = $1 AND run_kind = 'autonomous' AND status IN ('queued', 'running', 'interrupted')`,
+      [runId, JSON.stringify({ reason: nonEmpty(reason, "Interruption reason") })],
+    );
+    if (!updated.rowCount) throw new Error("Autonomous run not found");
+  };
+
+  const saveAccountSession = async (app: string, encryptedStorageState: string, userId: number): Promise<CrawlAccountSessionRecord> => {
+    const saved = await deps.query<CrawlAccountSessionRecord>(
+      `INSERT INTO crawl_account_sessions (app_id, encrypted_storage_state, state_version, updated_by)
+       SELECT id, $2, 1, $3 FROM apps WHERE name = $1
+       ON CONFLICT (app_id) DO UPDATE SET encrypted_storage_state = EXCLUDED.encrypted_storage_state,
+         state_version = crawl_account_sessions.state_version + 1, updated_by = EXCLUDED.updated_by, updated_at = now()
+       RETURNING *`,
+      [nonEmpty(app, "App"), nonEmpty(encryptedStorageState, "Encrypted storage state"), userId],
+    );
+    if (!saved.rowCount) throw new Error("Crawl session app not found");
+    return saved.rows[0];
+  };
+
+  const accountSession = async (app: string): Promise<CrawlAccountSessionRecord | undefined> => {
+    const result = await deps.query<CrawlAccountSessionRecord>(
+      `SELECT cas.* FROM crawl_account_sessions cas JOIN apps a ON a.id = cas.app_id WHERE a.name = $1`,
+      [nonEmpty(app, "App")],
+    );
+    return result.rows[0];
+  };
+
   return {
     createAutonomousRun,
     saveDossier,
@@ -509,5 +576,9 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     saveAutonomousFlows,
     requestPause,
     clearPause,
+    cancelRun,
+    markInterrupted,
+    saveAccountSession,
+    accountSession,
   };
 }

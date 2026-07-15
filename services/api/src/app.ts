@@ -23,6 +23,7 @@ import {
   removeCollectionItem,
   deleteCollection,
   createAppVersion,
+  ensureActiveAppVersion,
   listAppVersions,
   getVersionPublicationBlockers,
   submitAppVersionForReview,
@@ -99,6 +100,8 @@ import {
   type CrawlRunStepRecord,
 } from "../../../src/crawlStore.ts";
 import type { StepActual, StepFailure } from "../../../src/smartCrawler.ts";
+import { createAutonomousStore } from "../../../src/autonomousStore.ts";
+import { encryptStorageState, type StorageState } from "../../../src/crawlSession.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -108,6 +111,7 @@ const disabledBilling: BillingService = {
   handleWebhook: async () => { throw new Error("Billing is not configured"); },
 };
 const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
+const apiAutonomousStore = createAutonomousStore();
 
 type RepairProvider = ResearchProvider;
 interface CrawlRepairRequest {
@@ -258,6 +262,16 @@ const defaults = {
   cancelCrawlRun: apiCrawlRunService.cancel,
   retryCrawlRun: apiCrawlRunService.retry,
   markQueuedCrawlRunInterrupted,
+  ensureActiveAppVersion,
+  createAutonomousRun: apiAutonomousStore.createAutonomousRun,
+  getAutonomousRun: apiAutonomousStore.autonomousRunDetail,
+  pauseAutonomousRun: apiAutonomousStore.requestPause,
+  resumeAutonomousRun: apiAutonomousStore.clearPause,
+  cancelAutonomousRun: apiAutonomousStore.cancelRun,
+  markAutonomousRunInterrupted: apiAutonomousStore.markInterrupted,
+  saveCrawlAccountSession: apiAutonomousStore.saveAccountSession,
+  getCrawlAccountSession: apiAutonomousStore.accountSession,
+  crawlSessionEncryptionKey: process.env.CRAWL_SESSION_ENCRYPTION_KEY,
   requestCrawlRepair,
   applyCrawlRepair,
   rejectCrawlRepair,
@@ -377,6 +391,14 @@ function record(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
     : undefined;
+}
+
+function boundedInteger(value: unknown, minimum: number, maximum: number): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum ? value : undefined;
+}
+
+function safeSessionView(session: { id: string; state_version: number; updated_at: Date }): { id: string; stateVersion: number; updatedAt: Date } {
+  return { id: session.id, stateVersion: session.state_version, updatedAt: session.updated_at };
 }
 
 function exactBody(value: unknown, allowed: readonly string[]): Record<string, unknown> | undefined {
@@ -748,6 +770,181 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     res.status(202).json({ jobId, app: appSlug, homepageUrl });
+  });
+
+  app.post("/crawl/apps/:app/autonomous-runs", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, [
+      "homepageUrl", "platform", "provider", "sessionId", "requiredSecrets", "allowAll",
+      "allowAllAcknowledged", "ceilings", "agentConcurrency",
+    ]);
+    const homepageUrl = publicHttpUrl(body?.homepageUrl);
+    const platform = platformQuery(body?.platform);
+    const provider = body?.provider;
+    const ceilings = record(body?.ceilings);
+    const sessionId = body?.sessionId === undefined ? undefined : crawlId(String(body.sessionId));
+    const requiredSecrets = Array.isArray(body?.requiredSecrets)
+      && body.requiredSecrets.length <= 20
+      && body.requiredSecrets.every((name) => typeof name === "string" && /^[A-Z][A-Z0-9_]*$/.test(name))
+      && new Set(body.requiredSecrets).size === body.requiredSecrets.length
+      ? body.requiredSecrets as string[]
+      : undefined;
+    const parsedCeilings = ceilings ? {
+      runtimeMinutes: boundedInteger(ceilings.runtimeMinutes, 1, 1_440),
+      actions: boundedInteger(ceilings.actions, 1, 10_000),
+      modelRequests: boundedInteger(ceilings.modelRequests, 1, 1_000),
+      storageBytes: boundedInteger(ceilings.storageBytes, 1, 10_000_000_000),
+    } : undefined;
+    const agentConcurrency = boundedInteger(body?.agentConcurrency, 1, 8);
+    if (
+      !isAppSlug(appSlug) || !body || !homepageUrl || !platform
+      || !repairProviders.has(provider as RepairProvider)
+      || requiredSecrets === undefined || typeof body.allowAll !== "boolean"
+      || typeof body.allowAllAcknowledged !== "boolean"
+      || (body.allowAll && body.allowAllAcknowledged !== true)
+      || !parsedCeilings || Object.values(parsedCeilings).some((value) => value === undefined)
+      || !agentConcurrency || (body.sessionId !== undefined && !sessionId)
+    ) {
+      res.status(400).json({ error: "invalid autonomous crawl request" });
+      return;
+    }
+    if (sessionId) {
+      const session = await deps.getCrawlAccountSession(appSlug);
+      if (!session || session.id !== sessionId) {
+        res.status(409).json({ error: "crawl account session not found" });
+        return;
+      }
+    }
+    try {
+      const version = await deps.ensureActiveAppVersion(appSlug, platform, res.locals.user.id, homepageUrl);
+      const run = await deps.createAutonomousRun({
+        app: appSlug,
+        platform,
+        versionId: version.id,
+        createdBy: res.locals.user.id,
+        homepageUrl,
+        allowAll: body.allowAll,
+        environment: {
+          provider,
+          ...(sessionId ? { sessionId } : {}),
+          requiredSecrets,
+          ceilings: parsedCeilings,
+          agentConcurrency,
+        },
+      });
+      try {
+        await deps.publishJob({ type: "autonomous-crawl-app", name: appSlug, runId: String(run.id) });
+      } catch {
+        await deps.markAutonomousRunInterrupted(String(run.id), "transport_unavailable");
+        res.status(503).json({ error: "autonomous crawl transport unavailable", runId: String(run.id), versionId: run.version_id });
+        return;
+      }
+      res.status(202).json(run);
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/crawl/autonomous-runs/:runId", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    if (!runId) {
+      res.status(400).json({ error: "invalid autonomous run id" });
+      return;
+    }
+    const detail = await deps.getAutonomousRun(runId);
+    if (!detail) res.status(404).json({ error: "autonomous run not found" });
+    else res.json(detail);
+  });
+
+  app.post("/crawl/autonomous-runs/:runId/pause", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    if (!runId) {
+      res.status(400).json({ error: "invalid autonomous run id" });
+      return;
+    }
+    try {
+      await deps.pauseAutonomousRun(runId);
+      res.json(await deps.getAutonomousRun(runId));
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/crawl/autonomous-runs/:runId/cancel", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    if (!runId) {
+      res.status(400).json({ error: "invalid autonomous run id" });
+      return;
+    }
+    try {
+      res.json(await deps.cancelAutonomousRun(runId));
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/crawl/autonomous-runs/:runId/resume", requireAdmin, async (req, res) => {
+    const runId = crawlId(String(req.params.runId));
+    const body = exactBody(req.body, ["allowAllAcknowledged"]);
+    if (!runId || !body || typeof body.allowAllAcknowledged !== "boolean") {
+      res.status(400).json({ error: "invalid autonomous resume request" });
+      return;
+    }
+    const detail = await deps.getAutonomousRun(runId);
+    if (!detail) {
+      res.status(404).json({ error: "autonomous run not found" });
+      return;
+    }
+    if (detail.run.allow_all && body.allowAllAcknowledged !== true) {
+      res.status(400).json({ error: "allow_all must be acknowledged again before resume" });
+      return;
+    }
+    try {
+      await deps.resumeAutonomousRun(runId);
+      try {
+        await deps.publishJob({ type: "autonomous-crawl-app", name: detail.run.app, runId });
+      } catch {
+        await deps.markAutonomousRunInterrupted(runId, "transport_unavailable");
+        res.status(503).json({ error: "autonomous crawl transport unavailable", runId });
+        return;
+      }
+      res.status(202).json(await deps.getAutonomousRun(runId));
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.put("/crawl/apps/:app/session", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    const body = exactBody(req.body, ["storageState"]);
+    const storageState = record(body?.storageState);
+    if (!isAppSlug(appSlug) || !storageState || !Array.isArray(storageState.cookies) || !Array.isArray(storageState.origins)
+      || JSON.stringify(storageState).length > 1_000_000) {
+      res.status(400).json({ error: "invalid crawl storage state" });
+      return;
+    }
+    if (!deps.crawlSessionEncryptionKey) {
+      res.status(503).json({ error: "crawl session encryption is not configured" });
+      return;
+    }
+    try {
+      const encrypted = encryptStorageState(storageState as unknown as StorageState, deps.crawlSessionEncryptionKey);
+      const saved = await deps.saveCrawlAccountSession(appSlug, encrypted, res.locals.user.id);
+      res.json(safeSessionView(saved));
+    } catch (error) {
+      res.status(409).json({ error: (error as Error).message });
+    }
+  });
+
+  app.get("/crawl/apps/:app/session", requireAdmin, async (req, res) => {
+    const appSlug = String(req.params.app);
+    if (!isAppSlug(appSlug)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    const session = await deps.getCrawlAccountSession(appSlug);
+    if (!session) res.status(404).json({ error: "crawl account session not found" });
+    else res.json(safeSessionView(session));
   });
 
   app.get("/crawl/apps/:app/plans", requireAdmin, async (req, res) => {

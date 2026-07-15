@@ -1,4 +1,5 @@
 import type { CrawlPlan, CrawlStep } from '../crawlPlan';
+import type { Platform } from '../platformFromUrl';
 
 export interface Screen {
   id: number;
@@ -186,7 +187,12 @@ export interface CrawlRunView {
   id: string;
   app: string;
   version_id: number;
-  plan_id: string;
+  plan_id: string | null;
+  run_kind: 'planned' | 'autonomous';
+  parent_run_id: string | null;
+  platform: Platform;
+  allow_all: boolean;
+  pause_requested_at: string | null;
   status: CrawlRunStatus;
   current_flow_id: string | null;
   current_step_id: string | null;
@@ -203,6 +209,32 @@ export interface CrawlRunView {
   started_at: string | null;
   finished_at: string | null;
   updated_at: string;
+}
+
+export interface CreateAutonomousRunRequest {
+  homepageUrl: string;
+  platform: Platform;
+  provider: CrawlResearchProvider;
+  sessionId?: string;
+  requiredSecrets: string[];
+  allowAll: boolean;
+  allowAllAcknowledged: boolean;
+  ceilings: { runtimeMinutes: number; actions: number; modelRequests: number; storageBytes: number };
+  agentConcurrency: number;
+}
+
+export interface AutonomousRunDetailView {
+  run: CrawlRunView;
+  dossier?: unknown;
+  missions: Array<{ id: string; status: string; goal: string; productArea: string; worker_id: string | null }>;
+  states: unknown[];
+  transitions: unknown[];
+}
+
+export interface CrawlSessionView {
+  id: string;
+  stateVersion: number;
+  updatedAt: string;
 }
 
 export interface CrawlRunDetailView {

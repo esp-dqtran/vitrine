@@ -46,6 +46,11 @@ function runView(status: CrawlRunStatus): CrawlRunDetailView {
       app: "atlassian",
       version_id: 8,
       plan_id: "11",
+      run_kind: "planned",
+      parent_run_id: null,
+      platform: "web",
+      allow_all: false,
+      pause_requested_at: null,
       status,
       current_flow_id: status === "running" ? "browse-products" : null,
       current_step_id: status === "running" ? "open-software" : null,
@@ -167,6 +172,12 @@ test("renders the empty curator workflow with app and homepage inputs", () => {
   assert.match(html, /Run/);
   assert.match(html, /Evidence and failures/);
   assert.match(html, /Draft and publication/);
+  assert.match(html, /Autonomous discovery/);
+  assert.match(html, /Provider/);
+  assert.match(html, /Agent concurrency/);
+  assert.match(html, /Allow all actions/);
+  assert.match(html, /Start autonomous crawl/);
+  assert.match(html, /Shared account session/);
 });
 
 test("renders queued, running, and error research job states", () => {
