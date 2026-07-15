@@ -28,6 +28,7 @@ test("groups images, preserves metadata, maps local media, and caps screens", ()
   assert.equal(app.totalScreens, 121);
   assert.equal(app.screens.length, 120);
   assert.equal(app.screens[0].url, "/api/media/linear/0123456789abcdef");
+  assert.equal(app.screens[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
   assert.equal(app.screens[0].description, "Login screen");
   assert.equal(app.screens[0].id, 1);
   assert.equal(app.screens[0].type, "Login");
@@ -78,6 +79,7 @@ test("builds cursor-paginated app detail", () => {
   const first = buildAppDetailPage(images, "linear", undefined, 2);
   assert.equal(first?.screens.length, 2);
   assert.ok(first?.nextCursor);
+  assert.equal(first?.screens[0].thumbnailUrl, "/api/media/linear/0000000000000001?variant=thumb");
   const second = buildAppDetailPage(images, "linear", first?.nextCursor ?? undefined, 2);
   assert.deepEqual(second?.screens.map(({ id }) => id), [3, 4]);
   assert.equal(second?.nextCursor, null);

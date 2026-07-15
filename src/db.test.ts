@@ -133,7 +133,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   });
   assert.equal((await appImages("airbnb"))[0].analysis?.pageType, "Login");
 
-  await saveAppFlows("airbnb", [{
+  await saveAppFlows("airbnb", "web", [{
     id: "login",
     title: "Login",
     description: "Authenticate with email",
@@ -143,61 +143,61 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
       { label: "Enter password", evidence: [airbnbSearchId] },
     ],
   }]);
-  assert.deepEqual((await getAppFlows("airbnb"))[0].steps.map((step) => step.evidence[0]), [airbnbLoginId, airbnbSearchId]);
+  assert.deepEqual((await getAppFlows("airbnb", "web"))[0].steps.map((step) => step.evidence[0]), [airbnbLoginId, airbnbSearchId]);
 
-  await saveAppFlows("airbnb", []);
-  assert.deepEqual(await getAppFlows("airbnb"), []);
+  await saveAppFlows("airbnb", "web", []);
+  assert.deepEqual(await getAppFlows("airbnb", "web"), []);
 
-  await saveDesignSystem("airbnb", {
+  await saveDesignSystem("airbnb", "web", {
     app: "airbnb",
     generatedAt: "2026-07-10T00:00:00.000Z",
     tokens: [{ id: "color-primary", kind: "color", name: "Primary", value: "#FF5A5F", role: "primary action", evidence: [airbnbLoginId] }],
     components: [],
     flows: [],
   });
-  assert.equal((await getDesignSystem("airbnb"))?.tokens[0].value, "#FF5A5F");
+  assert.equal((await getDesignSystem("airbnb", "web"))?.tokens[0].value, "#FF5A5F");
 
-  await saveDesignSystem("airbnb", {
+  await saveDesignSystem("airbnb", "web", {
     app: "airbnb",
     generatedAt: "2026-07-10T01:00:00.000Z",
     tokens: [{ id: "color-primary", kind: "color", name: "Primary", value: "#E31C5F", role: "primary action", evidence: [airbnbLoginId] }],
     components: [],
     flows: [],
   });
-  assert.equal((await getDesignSystem("airbnb"))?.tokens[0].value, "#E31C5F");
+  assert.equal((await getDesignSystem("airbnb", "web"))?.tokens[0].value, "#E31C5F");
   assert.deepEqual((await listDesignSystems()).map(({ app }) => app), ["airbnb"]);
   assert.deepEqual((await listAppFlowSets()).map(({ app }) => app), ["airbnb"]);
 
-  const firstVersion = (await listAppVersions("airbnb"))[0];
+  const firstVersion = (await listAppVersions("airbnb", "web"))[0];
   assert.equal(firstVersion.status, "draft");
   assert.deepEqual(await getVersionPublicationBlockers(firstVersion.id), []);
   assert.equal((await submitAppVersionForReview(firstVersion.id, -101)).status, "in_review");
   assert.equal((await publishAppVersion(firstVersion.id, -101)).status, "published");
   assert.equal((await publishedImages()).filter(({ app }) => app === "airbnb").length, 2);
-  assert.equal((await getVersionDesignSystem("airbnb", 1))?.snapshot.tokens[0].value, "#E31C5F");
+  assert.equal((await getVersionDesignSystem("airbnb", "web", 1))?.snapshot.tokens[0].value, "#E31C5F");
 
-  const secondVersion = await createAppVersion("airbnb", -101, "https://mobbin.com/apps/airbnb/version/screens");
+  const secondVersion = await createAppVersion("airbnb", "web", -101, "https://mobbin.com/apps/airbnb/version/screens");
   assert.equal(secondVersion.version_number, 2);
   assert.equal(secondVersion.status, "draft");
-  assert.equal((await listAppVersions("airbnb"))[0].version_number, 2);
+  assert.equal((await listAppVersions("airbnb", "web"))[0].version_number, 2);
   assert.equal(secondVersion.screen_count, 2);
-  assert.equal((await ensureActiveAppVersion("airbnb", -101)).id, secondVersion.id);
+  assert.equal((await ensureActiveAppVersion("airbnb", "web", -101)).id, secondVersion.id);
   const [ensuredDraftA, ensuredDraftB] = await Promise.all([
-    ensureActiveAppVersion("ensure-draft-app", -101, "https://example.com/source-a"),
-    ensureActiveAppVersion("ensure-draft-app", -101, "https://example.com/source-b"),
+    ensureActiveAppVersion("ensure-draft-app", "web", -101, "https://example.com/source-a"),
+    ensureActiveAppVersion("ensure-draft-app", "web", -101, "https://example.com/source-b"),
   ]);
   assert.equal(ensuredDraftA.id, ensuredDraftB.id);
   assert.equal(ensuredDraftA.status, "draft");
-  assert.equal((await listAppVersions("ensure-draft-app")).length, 1);
+  assert.equal((await listAppVersions("ensure-draft-app", "web")).length, 1);
 
   const publishedBefore = (await publishedImages()).filter(({ app }) => app === "airbnb");
-  const publishedDesignBefore = await getVersionDesignSystem("airbnb");
-  const publishedIdBefore = (await listAppVersions("airbnb")).find(({ status }) => status === "published")?.id;
+  const publishedDesignBefore = await getVersionDesignSystem("airbnb", "web");
+  const publishedIdBefore = (await listAppVersions("airbnb", "web")).find(({ status }) => status === "published")?.id;
   assert.ok(publishedDesignBefore);
   assert.ok(publishedIdBefore);
 
   const draftImageId = await insertImage("airbnb", "web", "https://cdn.example.com/draft-failure.png");
-  await saveDesignSystem("airbnb", {
+  await saveDesignSystem("airbnb", "web", {
     app: "airbnb",
     generatedAt: "2026-07-12T00:00:00.000Z",
     tokens: [{ id: "color-primary", kind: "color", name: "Primary", value: "#000000", role: "draft only", evidence: [draftImageId] }],
@@ -247,9 +247,9 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     (await publishedImages()).filter(({ app }) => app === "airbnb").map(({ id }) => id),
     publishedBefore.map(({ id }) => id),
   );
-  assert.deepEqual(await getVersionDesignSystem("airbnb"), publishedDesignBefore);
+  assert.deepEqual(await getVersionDesignSystem("airbnb", "web"), publishedDesignBefore);
   assert.equal(
-    (await listAppVersions("airbnb")).find(({ status }) => status === "published")?.id,
+    (await listAppVersions("airbnb", "web")).find(({ status }) => status === "published")?.id,
     publishedIdBefore,
   );
 
@@ -268,7 +268,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     visibleStates: ["default"],
     componentNames: ["Dashboard"],
   });
-  await saveDesignSystem("coordination-app", {
+  await saveDesignSystem("coordination-app", "web", {
     app: "coordination-app",
     generatedAt: "2026-07-12T02:00:00.000Z",
     tokens: [{
@@ -282,8 +282,8 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     components: [],
     flows: [],
   });
-  await saveAppFlows("coordination-app", []);
-  const coordinationV1 = (await listAppVersions("coordination-app"))[0];
+  await saveAppFlows("coordination-app", "web", []);
+  const coordinationV1 = (await listAppVersions("coordination-app", "web"))[0];
   const coordinationDraftPlan = await saveDraftPlan({
     app: "coordination-app",
     revision: 1,
@@ -317,7 +317,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal((await publishAppVersion(coordinationV1.id, -103)).status, "published");
   assert.equal((await getRun(queuedAtPublish.id))?.status, "cancelled");
 
-  const coordinationV2 = await createAppVersion("coordination-app", -101, "https://coordination.example/v2");
+  const coordinationV2 = await createAppVersion("coordination-app", "web", -101, "https://coordination.example/v2");
   const runningAtPublish = await createRun({
     app: "coordination-app",
     versionId: coordinationV2.id,
@@ -327,7 +327,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal((await claimRun("publication-worker"))?.id, runningAtPublish.id);
   await submitAppVersionForReview(coordinationV2.id, -101);
   await assert.rejects(() => publishAppVersion(coordinationV2.id, -103), /active crawl/i);
-  assert.equal((await listAppVersions("coordination-app"))[0].status, "in_review");
+  assert.equal((await listAppVersions("coordination-app", "web"))[0].status, "in_review");
   const cancellationRequested = await getRun(runningAtPublish.id);
   assert.equal(cancellationRequested?.status, "running");
   assert.ok(cancellationRequested?.cancel_requested_at);
@@ -365,7 +365,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     /lease|running|terminal/i,
   );
 
-  const raceVersion = await createAppVersion("coordination-app", -101, "https://coordination.example/race");
+  const raceVersion = await createAppVersion("coordination-app", "web", -101, "https://coordination.example/race");
   await submitAppVersionForReview(raceVersion.id, -101);
   const raceApp = await query<{ app_id: number }>("SELECT app_id FROM app_versions WHERE id = $1", [raceVersion.id]);
   const writer = await pool.connect();

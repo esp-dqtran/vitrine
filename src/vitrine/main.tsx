@@ -1,32 +1,29 @@
-import { StrictMode, useSyncExternalStore } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Spinner } from '@astryxdesign/core';
+import { Spinner, Theme, defineTheme } from '@astryxdesign/core';
 import { App } from './App';
 import { AuthProvider, useAuth } from './AuthProvider';
 import { Home } from './Home';
 import { Pricing } from './Pricing';
 import { SignIn } from './SignIn';
+import { navigate, useRoute } from './router';
+import { ThemeModeProvider, useThemeMode } from './theme';
 import './styles.css';
 
-document.documentElement.setAttribute('data-astryx-theme', 'neutral');
-document.documentElement.style.colorScheme = 'light';
+// No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
+// This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
+const appTheme = defineTheme({ name: 'neutral' });
 
-// ponytail: hash routing, swap for a router when there are more than a couple of pages
-const subscribeHash = (fn: () => void) => {
-  window.addEventListener('hashchange', fn);
-  return () => window.removeEventListener('hashchange', fn);
-};
-
-const goHome = () => { window.location.hash = ''; };
-const goPricing = () => { window.location.hash = '#pricing'; };
-const goSignIn = () => { window.location.hash = '#signin'; };
+const goApps = () => navigate({ name: 'apps' });
+const goPricing = () => navigate({ name: 'pricing' });
+const goSignIn = () => navigate({ name: 'signin' });
 
 function Root() {
   const { user, loading, authenticate, completeLogin } = useAuth();
-  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash);
+  const route = useRoute();
 
-  if (hash === '#pricing') {
-    return <Pricing onBrowse={user ? goHome : goSignIn} onSignIn={goSignIn} />;
+  if (route.name === 'pricing') {
+    return <Pricing onBrowse={user ? goApps : goSignIn} onSignIn={goSignIn} />;
   }
 
   if (loading) {
@@ -39,7 +36,11 @@ function Root() {
 
   // Logged-in users always land in the catalog; the marketing pages are the logged-out front door.
   if (user) return <App />;
-  if (hash === '#signin') return <SignIn authenticate={authenticate} onSignedIn={completeLogin} />;
+  // A deep link into the catalog (e.g. someone shared an app's URL) needs an account too —
+  // send it through sign-in rather than the marketing page, path intact for App to pick up.
+  if (route.name === 'signin' || route.name === 'apps' || route.name === 'app' || route.name === 'admin') {
+    return <SignIn authenticate={authenticate} onSignedIn={completeLogin} />;
+  }
   return (
     <Home
       onBrowse={goSignIn}
@@ -54,10 +55,21 @@ function Root() {
   );
 }
 
+function ThemedRoot() {
+  const { mode } = useThemeMode();
+  return (
+    <Theme theme={appTheme} mode={mode}>
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
+    </Theme>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <Root />
-    </AuthProvider>
+    <ThemeModeProvider>
+      <ThemedRoot />
+    </ThemeModeProvider>
   </StrictMode>,
 );

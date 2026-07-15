@@ -58,6 +58,6 @@ export function parseFlowManifest(raw: string, allowedImageIds: ReadonlySet<numb
 export async function importFlowManifest(app: string, path: string): Promise<number> {
   const images = await appImages(app);
   const flows = parseFlowManifest(readFileSync(path, "utf8"), new Set(images.map((image) => image.id)));
-  await saveAppFlows(app, flows);
+  await saveAppFlows(app, "web", flows);
   return flows.length;
 }

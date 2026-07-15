@@ -16,7 +16,6 @@ export interface CatalogSearchItem {
   states: string[];
   layoutPatterns: string[];
   componentNames: string[];
-  responsiveViewport?: string;
   appCategory?: string;
   searchText: string;
 }
@@ -30,7 +29,6 @@ export interface CatalogSearchOptions {
   state?: string;
   layout?: string;
   component?: string;
-  viewport?: string;
   appCategory?: string;
   limit?: number;
 }
@@ -52,7 +50,6 @@ export interface CatalogSearchResult {
     states: string[];
     layouts: string[];
     components: string[];
-    viewports: string[];
     appCategories: string[];
   };
 }
@@ -105,7 +102,6 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
       states: analysis?.visibleStates ?? [],
       layoutPatterns: analysis?.layoutPatterns ?? [],
       componentNames: analysis?.componentNames ?? [],
-      responsiveViewport: analysis?.responsiveViewport,
       appCategory: appCategories[image.app],
       searchText: [
         image.app, title, image.description, analysis?.description, analysis?.purpose,
@@ -113,7 +109,7 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
         ...(analysis?.componentNames ?? []),
         ...(analysis?.visibleText ?? []), ...(analysis?.layoutPatterns ?? []), ...(analysis?.icons ?? []),
         ...(analysis?.imagery ?? []), ...(analysis?.contentPatterns ?? []), ...(analysis?.interactionPatterns ?? []),
-        analysis?.responsiveViewport, appCategories[image.app],
+        appCategories[image.app],
       ].filter(Boolean).join(" "),
     });
   }
@@ -188,7 +184,6 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
     states: unique(index.flatMap(({ states }) => states)).sort(),
     layouts: unique(index.flatMap(({ layoutPatterns }) => layoutPatterns)).sort(),
     components: unique(index.flatMap(({ componentNames }) => componentNames)).sort(),
-    viewports: unique(index.flatMap(({ responsiveViewport }) => responsiveViewport ? [responsiveViewport] : [])).sort(),
     appCategories: unique(index.flatMap(({ appCategory }) => appCategory ? [appCategory] : [])).sort(),
   };
   for (const item of index) facets.kinds[item.kind] += 1;
@@ -205,7 +200,6 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
       && (!options.state || item.states.includes(options.state))
       && (!options.layout || item.layoutPatterns.includes(options.layout))
       && (!options.component || item.componentNames.includes(options.component))
-      && (!options.viewport || item.responsiveViewport === options.viewport)
       && (!options.appCategory || item.appCategory === options.appCategory))
     .sort((a, b) => b.score - a.score || kindOrder.indexOf(a.item.kind) - kindOrder.indexOf(b.item.kind) || a.item.title.localeCompare(b.item.title))
     .slice(0, Math.min(Math.max(options.limit ?? 50, 1), 100))

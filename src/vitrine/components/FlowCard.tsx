@@ -1,56 +1,65 @@
 import { useState } from 'react';
-import { Badge, Icon, Text } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { PlaceholderImage } from './PlaceholderImage';
 
 export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onOpen: () => void }) {
   const [hovered, setHovered] = useState(false);
+  const thumb = flow.steps[0]?.evidence[0];
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onOpen}
       style={{
-        padding: 20,
+        position: 'relative',
+        aspectRatio: '16/10',
         borderRadius: 'var(--radius-container)',
+        overflow: 'hidden',
+        background: 'var(--color-background-muted)',
         border: '1px solid var(--color-border)',
-        background: 'var(--color-background-surface)',
         boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
         cursor: 'pointer',
-        transition: 'transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s cubic-bezier(.16,1,.3,1)',
-        transform: hovered ? 'translateY(-3px)' : 'none',
+        transition: 'transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1)',
+        transform: hovered ? 'translateY(-4px)' : 'none',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 18, overflow: 'hidden' }}>
-        {flow.steps.map((step, index) => (
-          <div key={`${step.label}-${step.evidence[0]?.imageId ?? index}`} style={{ display: 'flex', alignItems: 'center' }}>
-            <div
-              aria-label={step.label}
-              style={{
-                position: 'relative',
-                flex: '0 0 108px',
-                aspectRatio: '16/10',
-                borderRadius: 10,
-                overflow: 'hidden',
-                background: 'var(--color-background-muted)',
-                border: '1px solid var(--color-border)',
-              }}
-            >
-              <PlaceholderImage src={step.evidence[0]?.imageUrl} />
-            </div>
-            {index < flow.steps.length - 1 && (
-              <div style={{ flex: '0 0 auto', padding: '0 8px' }}>
-                <Icon icon="chevronRight" size="sm" color="secondary" />
-              </div>
-            )}
-          </div>
-        ))}
+      <PlaceholderImage
+        src={thumb?.imageUrl}
+        style={{ transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 2,
+          padding: '3px 8px',
+          borderRadius: 999,
+          background: 'rgba(24,24,27,.72)',
+          color: '#fff',
+          fontSize: 10.5,
+          fontWeight: 600,
+          backdropFilter: 'blur(4px)',
+        }}
+      >
+        {flow.steps.length} {flow.steps.length === 1 ? 'step' : 'steps'}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 8 }}>{flow.title}</div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-        {flow.tags.map((tag) => <Badge key={tag} variant="neutral" label={tag} />)}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          padding: '24px 10px 10px',
+          background: 'linear-gradient(to top, rgba(0,0,0,.7), transparent)',
+          pointerEvents: 'none',
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {flow.title}
+        </div>
       </div>
-      <Text type="body" color="secondary" style={{ maxWidth: 640 }}>{flow.description}</Text>
     </div>
   );
 }

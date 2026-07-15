@@ -1,9 +1,10 @@
-import { appHasImages, createJob, getJob, setJobStatus } from "../../../src/db.ts";
+import { appHasImages, appPlatforms, createJob, getJob, setJobStatus } from "../../../src/db.ts";
 import { discoverApps } from "../../../src/discoverApps.ts";
 import { crawlBulkDownload, crawlFlowsDownload } from "../../../src/bulkDownload.ts";
 import { caption } from "../../../src/caption.ts";
 import { synthesize } from "../../../src/synthesize.ts";
 import { publishJob, type Job } from "../../../src/queue.ts";
+import { isPlatform, platformFromUrl } from "../../../src/platformFromUrl.ts";
 import type { StageOutcome } from "../../../src/progress.ts";
 import { CrawlRunInterruptedError, type CrawlRunService } from "../../../src/crawlRun.ts";
 import { researchAppJob, type ResearchAppJobInput } from "../../../src/crawlJobs.ts";
@@ -15,6 +16,7 @@ const SUPPLEMENTARY_GRID_WAIT_MS = 20_000;
 
 const defaults = {
   appHasImages,
+  appPlatforms,
   createJob,
   getJob,
   setJobStatus,
@@ -40,12 +42,12 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     await deps.publishJob({ ...job, jobId });
   }
 
-  async function handle(job: Job): Promise<StageOutcome> {
+  async function handle(job: Exclude<Job, { type: "smart-crawl-app" }>): Promise<StageOutcome> {
     if (job.type === "discover-catalog") {
       const apps = await deps.discoverApps();
       for (const target of apps) {
         if (!(await deps.appHasImages(target.name))) {
-          await enqueue({ type: "import-app", name: target.name, url: target.url }, job.jobId);
+          await enqueue({ type: "import-app", name: target.name, url: target.url, platform: platformFromUrl(target.url) }, job.jobId);
         }
       }
       return { status: "done" };
@@ -54,16 +56,17 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     if (job.type === "import-app") {
       // An import crawls all three Mobbin tabs. Screens are required; UI Elements and Flows
       // are supplementary — an empty or failing tab must not fail the whole import, but a
-      // user cancel still halts the pipeline.
-      const screens = await deps.crawlBulkDownload(job.url, job.name, "screens");
+      // user cancel still halts the pipeline. The confirmed platform (chosen at import time)
+      // always overrides each crawl's own URL-based guess.
+      const screens = await deps.crawlBulkDownload(job.url, job.name, "screens", undefined, undefined, job.platform);
       if (screens.status !== "done") return screens;
 
       // Login is established now, so give the supplementary tabs a short grid-wait: an app
       // that simply has no UI Elements / Flows tab fails fast instead of hanging.
-      const uiElements = await deps.crawlBulkDownload(job.url, job.name, "ui-elements", SUPPLEMENTARY_GRID_WAIT_MS);
+      const uiElements = await deps.crawlBulkDownload(job.url, job.name, "ui-elements", SUPPLEMENTARY_GRID_WAIT_MS, undefined, job.platform);
       if (uiElements.status === "cancelled") return uiElements;
 
-      const flows = await deps.crawlFlowsDownload(job.url, job.name, SUPPLEMENTARY_GRID_WAIT_MS);
+      const flows = await deps.crawlFlowsDownload(job.url, job.name, SUPPLEMENTARY_GRID_WAIT_MS, undefined, job.platform);
       if (flows.status === "cancelled") return flows;
 
       await enqueue({ type: "caption-app", name: job.name }, job.jobId);
@@ -73,7 +76,12 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     if (job.type === "caption-app") {
       const outcome = await deps.caption(DEFAULT_PROVIDER, undefined, job.name);
       if (outcome.status === "done") {
-        await enqueue({ type: "synthesize-app", name: job.name }, job.jobId);
+        // Captioning is one app-wide batch (cheap, no reason to split), but each platform's
+        // design system is synthesized independently — refresh every platform present.
+        const platforms = (await deps.appPlatforms(job.name)).filter(isPlatform);
+        for (const platform of platforms) {
+          await enqueue({ type: "synthesize-app", name: job.name, platform }, job.jobId);
+        }
       }
       return outcome;
     }
@@ -88,7 +96,7 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
       return { status: "done" };
     }
 
-    return deps.synthesize(job.name, DEFAULT_PROVIDER);
+    return deps.synthesize(job.name, job.platform, DEFAULT_PROVIDER);
   }
 
   return async function trackedHandleJob(job: Job): Promise<void> {

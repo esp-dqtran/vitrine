@@ -107,3 +107,22 @@ export async function resolveSession(token: string): Promise<AuthUser | undefine
 export async function deleteSession(token: string): Promise<void> {
   await query("DELETE FROM sessions WHERE token_hash = $1", [hashSessionToken(token)]);
 }
+
+export async function changePassword(
+  userId: number,
+  currentPassword: string,
+  newPassword: string
+): Promise<boolean> {
+  const result = await query<{ password_hash: string }>(
+    "SELECT password_hash FROM users WHERE id = $1",
+    [userId]
+  );
+  const row = result.rows[0];
+  if (!row || !(await verifyPassword(currentPassword, row.password_hash))) return false;
+  const passwordHash = await hashPassword(newPassword);
+  await query("UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2", [
+    passwordHash,
+    userId,
+  ]);
+  return true;
+}

@@ -1,12 +1,15 @@
-import { type Page, type Download } from "playwright";
+import { type Page, type Download, type Locator } from "playwright";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { getAppFlows, insertImage, saveAppFlows, setAppMeta, type ImageKind } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
-import { waitUntilVisible, getExpectedAlt, launchMobbinContext, platformFromUrl } from "./crawler.ts";
-import { imageObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "./objectStore.ts";
+import { waitUntilVisible, getExpectedAlt, launchMobbinContext } from "./crawler.ts";
+import { platformFromUrl, type Platform } from "./platformFromUrl.ts";
+import { imageObjectKey, thumbnailObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "./objectStore.ts";
+import { stripMobbinWatermark } from "./mobbinWatermark.ts";
+import { generateThumbnail } from "./imageThumbnail.ts";
 
 const LOGIN_WAIT_MS = 30 * 60_000; // time to log in manually in the opened window
 const SCROLL_STEP = 500;
@@ -14,6 +17,7 @@ const SCROLL_DELAY_MS = 400;
 const MAX_SCROLL_ITERATIONS = 500; // ponytail: hard cap so a page with truly infinite scroll can't hang forever
 const STABLE_AT_BOTTOM_STREAK = 6;
 const DOWNLOAD_WAIT_MS = 5 * 60_000;
+const DOWNLOAD_QUIET_MS = 500; // settle time after the first download to catch multi-file exports
 
 export type BulkTab = "screens" | "ui-elements";
 
@@ -126,15 +130,41 @@ async function clickDownloadControl(page: Page): Promise<boolean> {
 
 // Screens tab: Mobbin's app-level "Download all screens" lives in the "..." (More actions)
 // menu and grabs every screen with no per-card selection — the direct toolbar button is
-// disabled until cards are selected, so we go straight through the menu here.
-async function clickDownloadAllMenu(page: Page): Promise<boolean> {
-  const more = page.locator('button[aria-label="More actions"]').first();
+// disabled until cards are selected, so we go straight through the menu here. The menu item
+// itself is a submenu trigger (not a direct action) — hovering it opens a version submenu
+// whose first option is the latest version, which is what actually starts the download.
+// Individual flow rows on the Flows tab expose the identical "More actions" menu — the
+// `more` param lets callers scope it to a specific row instead of the page-level toolbar.
+async function clickDownloadAllMenu(page: Page, more: Locator = page.locator('button[aria-label="More actions"]').first()): Promise<boolean> {
+  // Backgrounded/unfocused tabs can throttle the hover-triggered submenu's render,
+  // so the version flyout below may not mount in time — force focus first.
+  await page.bringToFront();
   if ((await more.count()) === 0) return false;
   await more.click();
   const item = page.getByRole("menuitem", { name: /download all screens/i });
   await item.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
   if ((await item.count()) === 0) return false;
-  await item.first().click();
+  const menusBeforeHover = await page.getByRole("menu").count();
+  await item.first().hover();
+  // Wait for a genuinely NEW menu to mount before reading "the last one" — otherwise
+  // a race can resolve to the still-open outer menu and click its first item
+  // ("Visit ...") instead of the version submenu that hasn't rendered yet.
+  await page.waitForFunction(
+    (expected) => document.querySelectorAll('[role="menu"]').length > expected,
+    menusBeforeHover,
+    { timeout: 8000 },
+  ).catch(() => {});
+  const submenu = page.getByRole("menu").last();
+  const latestVersion = submenu.getByRole("menuitem").first();
+  // The submenu container can mount before its own content (Mobbin fetches the
+  // version list async) — .count() is an instant snapshot with no retry, so it can
+  // read 0 a moment before the item actually renders. waitFor() actually retries.
+  // Observed under sustained load: the version list can sit on a "Loading..." placeholder
+  // for several seconds before resolving — 9s gives it real room before we give up and
+  // fall back to multi-select.
+  await latestVersion.waitFor({ state: "visible", timeout: 9000 }).catch(() => {});
+  if ((await latestVersion.count()) === 0) return false;
+  await latestVersion.click();
   return true;
 }
 
@@ -156,10 +186,14 @@ async function triggerAndSaveDownloads(page: Page, dir: string, trigger: (p: Pag
   page.on("download", onDownload);
   try {
     if (!(await trigger(page))) return [];
+    // Poll the listener-backed array rather than page.waitForEvent — the download can fire
+    // in the gap between trigger() resolving and a fresh waitForEvent() call being armed,
+    // which would miss it and wrongly report "no download started". The `downloads` array
+    // is race-free since the listener above was attached before trigger() ran.
     let lastCount = -1;
     const deadline = Date.now() + DOWNLOAD_WAIT_MS;
     while (Date.now() < deadline) {
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(DOWNLOAD_QUIET_MS);
       if (downloads.length > 0 && downloads.length === lastCount) break;
       lastCount = downloads.length;
     }
@@ -193,6 +227,7 @@ export interface BulkObjectDependencies {
   objectStore: ObjectStore;
   insertImage: typeof insertImage;
   attachImage(imageId: number, metadata: ObjectMetadata): Promise<void>;
+  attachThumbnail(imageId: number, metadata: ObjectMetadata): Promise<void>;
 }
 
 const IMAGE_TYPE: Record<string, { extension: "png" | "jpg" | "webp"; contentType: StoredContentType }> = {
@@ -234,7 +269,10 @@ export async function ingestDownloadedImages(
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   for (const rel of entries) {
     const full = `${sourceDir}/${rel}`;
-    const body = readFileSync(full);
+    // Mobbin's bottom watermark bar shows up on UI Element exports too (not just Screens/
+    // flow steps — some "elements" are full-page captures, not cropped tiles). Strip
+    // unconditionally; stripMobbinWatermark only crops when it actually detects the bar.
+    const body = await stripMobbinWatermark(readFileSync(full));
     const sha256 = createHash("sha256").update(body).digest("hex");
     const legacyHash = sha256.slice(0, 16);
     const type = IMAGE_TYPE[rel.split(".").pop()?.toLowerCase() ?? ""];
@@ -258,6 +296,23 @@ export async function ingestDownloadedImages(
     const stored = await dependencies.objectStore.put({ ...metadata, body });
     if (!sameObjectMetadata(stored.metadata, metadata)) throw new Error("Uploaded bulk image metadata does not match the downloaded bytes");
     await dependencies.attachImage(imageId, metadata);
+    // Best-effort: grid views fall back to the full-resolution image via COALESCE when no
+    // thumbnail is attached, so a resize hiccup here must not fail the whole ingest.
+    try {
+      const thumbnail = await generateThumbnail(body);
+      const thumbnailSha256 = createHash("sha256").update(thumbnail).digest("hex");
+      const thumbnailMetadata: ObjectMetadata = {
+        key: thumbnailObjectKey(imageId, thumbnailSha256),
+        sha256: thumbnailSha256,
+        byteSize: thumbnail.byteLength,
+        contentType: "image/jpeg",
+        accessClass: "protected",
+      };
+      await dependencies.objectStore.put({ ...thumbnailMetadata, body: thumbnail });
+      await dependencies.attachThumbnail(imageId, thumbnailMetadata);
+    } catch (error) {
+      console.warn(`[${appName}] Thumbnail generation failed for image ${imageId}: ${error}`);
+    }
     if (stored.created) imported += 1;
     imageIds.push(imageId);
   }
@@ -267,13 +322,19 @@ export async function ingestDownloadedImages(
 // gridWaitMs defaults to the long login window (first crawl waits for a manual sign-in).
 // A caller that has already established login (e.g. after the screens tab) passes a short
 // timeout so a tab the app simply doesn't have fails fast instead of hanging 30 minutes.
-export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies): Promise<StageOutcome> {
+export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform): Promise<StageOutcome> {
   clearCancel();
-  const platform = platformFromUrl(appUrl);
+  const platform = platformOverride ?? platformFromUrl(appUrl);
   const kind: ImageKind = tab === "ui-elements" ? "ui_element" : "screen";
   const label = tab === "ui-elements" ? "UI elements" : "screens";
   const context = await launchMobbinContext();
-  const page = context.pages()[0] ?? (await context.newPage());
+  // A stale/restored tab left over from an earlier session can sit in the profile's
+  // session-restore state — start from a genuinely fresh, focused page so the
+  // hover-triggered download submenu below reliably renders (backgrounded/stale
+  // tabs were observed to silently drop it).
+  for (const stale of context.pages()) await stale.close().catch(() => {});
+  const page = await context.newPage();
+  await page.bringToFront();
   await page.goto(tabUrl(appUrl, tab), { waitUntil: "domcontentloaded" });
   try {
     await waitUntilVisible(page, 'a[href*="/screens/"]', gridWaitMs, `the ${label} grid`);
@@ -308,17 +369,12 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   };
 
   const downloadDir = `data/downloads/${appName}`;
-  let savedPaths: string[];
 
-  if (tab === "screens") {
-    // Screens: app-level "Download all screens" from the ⋮ More actions menu — no selection.
-    if (isCancelRequested()) return cancelledOutcome();
-    console.log(`[${appName}] Downloading all screens via the More actions menu...`);
-    writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: "Downloading" });
-    savedPaths = await triggerAndSaveDownloads(page, downloadDir, clickDownloadAllMenu);
-  } else {
-    // UI Elements: a single selection pass, sanity-checked against the count Mobbin displays,
-    // then the bottom-toolbar Download button (no app-level "download all" on this tab).
+  // Multi-select + bottom-toolbar Download — the only path UI Elements ever had (no app-level
+  // "download all" there), and a fallback for Screens when the More-actions version submenu
+  // gets stuck (observed: Mobbin's version-list fetch can hang indefinitely under sustained
+  // bulk-export load, independent of page/session health — the grid itself still loads fine).
+  const selectAndDownloadAll = async (): Promise<string[]> => {
     const appAltPrefix = (await getExpectedAlt(page)).replace(/ screen$/, "");
     console.log(`[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: `Selecting ${label}` });
@@ -331,10 +387,28 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
       console.warn(`[${appName}] One pass selected ${selected}/${shown} ${label} — some cards may have been missed.`);
     }
 
-    if (isCancelRequested()) return cancelledOutcome();
+    if (isCancelRequested()) return [];
     console.log(`[${appName}] Triggering download for ${selected} selected ${label}...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: selected, status: "running", message: "Downloading" });
-    savedPaths = await triggerAndSaveDownloads(page, downloadDir);
+    return triggerAndSaveDownloads(page, downloadDir);
+  };
+
+  let savedPaths: string[];
+
+  if (tab === "screens") {
+    // Screens: try the app-level "Download all screens" menu first — fast, no selection needed.
+    if (isCancelRequested()) return cancelledOutcome();
+    console.log(`[${appName}] Downloading all screens via the More actions menu...`);
+    writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: "Downloading" });
+    savedPaths = await triggerAndSaveDownloads(page, downloadDir, clickDownloadAllMenu);
+
+    if (savedPaths.length === 0) {
+      if (isCancelRequested()) return cancelledOutcome();
+      console.warn(`[${appName}] Download-all menu produced nothing — falling back to multi-select.`);
+      savedPaths = await selectAndDownloadAll();
+    }
+  } else {
+    savedPaths = await selectAndDownloadAll();
   }
 
   if (savedPaths.length === 0) {
@@ -360,107 +434,185 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   return { status: "done" };
 }
 
-// Enumerate the flow cards on the app's Flows tab. Same virtualized-grid scroll dance as
-// screens, but link collection only — Mobbin has no cross-flow multi-select (zero
-// aria-pressed toggles on this tab), so each flow is downloaded from its own page below.
-async function collectFlowLinks(page: Page): Promise<Array<{ id: string; title: string; url: string }>> {
-  const seen = new Map<string, { id: string; title: string; url: string }>();
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(500);
-
-  let stableAtBottom = 0;
-  for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < 3; i++) {
-    const batch = await page.$$eval('a[href*="/flows/"]', (anchors) =>
-      anchors.map((a) => ({
-        href: a.getAttribute("href") ?? "",
-        title: (a.querySelector("img")?.getAttribute("alt") || a.textContent || "").trim(),
-      }))
-    );
-    for (const { href, title } of batch) {
-      const id = href.split("/").filter(Boolean).pop() ?? "";
-      if (!id || id === "flows" || seen.has(id)) continue;
-      seen.set(id, { id, title: title || `Flow ${seen.size + 1}`, url: new URL(href, page.url()).toString() });
-    }
-
-    const atBottom = await page.evaluate(
-      () => window.scrollY + window.innerHeight >= document.body.scrollHeight - 2
-    );
-    stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
-
-    await page.evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.7)));
-    await page.waitForTimeout(400);
-  }
-  return [...seen.values()];
+// Each flow renders inline on the Flows tab itself (no separate per-flow page needed) as a
+// "group/cell" container with a screenshot filmstrip and its own hover-revealed Save/Copy/
+// More actions row — identical menu to the Screens tab. One flow's filmstrip can carry
+// several <a href="/flows/<id>"> anchors (one per thumbnail), all pointing at the same id.
+function flowCellLocator(page: Page, flowId: string): Locator {
+  return page.locator('[class*="group/cell"]').filter({ has: page.locator(`a[href*="/flows/${flowId}"]`) }).first();
 }
 
-// Visits each flow page and uses its own "Download all screens" export, then records the
-// flow in app_flows with steps pointing at the ingested images (in export order).
-export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies): Promise<StageOutcome> {
+// Scans the flow rows currently mounted in the DOM (virtualized — only a handful are ever
+// mounted at once), deduped by id since a flow's filmstrip carries multiple matching anchors.
+// Mobbin renders each row's heading as "<title> from <category>" (category omitted for
+// top-level flows) — the title is its own bold span, and its parent holds the full text.
+async function discoverFlowRows(page: Page): Promise<Array<{ id: string; title: string; category: string }>> {
+  return page.evaluate(() => {
+    const seen = new Map<string, { title: string; category: string }>();
+    for (const a of Array.from(document.querySelectorAll('a[href*="/flows/"]'))) {
+      const href = a.getAttribute("href") ?? "";
+      if (href.endsWith("/flows")) continue;
+      const id = href.split("/").filter(Boolean).pop() ?? "";
+      if (!id || seen.has(id)) continue;
+      const cell = a.closest('[class*="group/cell"]');
+      const titleEl = cell?.querySelector(".text-body-bold.text-text-primary");
+      const title = titleEl?.textContent?.trim() ?? "";
+      const fullText = titleEl?.parentElement?.textContent?.trim() ?? title;
+      const category = fullText.startsWith(title) ? fullText.slice(title.length).replace(/^\s*from\s*/i, "").trim() : "";
+      seen.set(id, { title, category });
+    }
+    return [...seen.entries()].map(([id, { title, category }]) => ({ id, title: title || `Flow ${id}`, category }));
+  });
+}
+
+// Reveals and clicks a specific flow row's own "More actions" menu (Save/Copy/More actions
+// only render on hover), reusing the same hover-submenu dance as the Screens tab.
+async function downloadFlowRow(page: Page, cell: Locator): Promise<boolean> {
+  await cell.hover();
+  const more = cell.getByRole("button", { name: "More actions" });
+  if ((await more.count()) === 0) return false;
+  return clickDownloadAllMenu(page, more);
+}
+
+// Flows dominate total crawl time (each row needs its own hover + menu + version-fetch
+// round trip), so instead of one page working the grid top-to-bottom, FLOW_LANES pages
+// share it — each scrolls the same grid independently and claims a disjoint, stable subset
+// of rows by hashing the row id, so lanes never race for the same flow.
+// ponytail: fixed pool size, not a knob. Mobbin's version-menu endpoint has throttled under
+// sustained bulk-menu load before (see clickDownloadAllMenu) — start modest; raise if this
+// holds up under real load, lower if "Loading..."/no-download failures climb.
+const FLOW_LANES = 2;
+
+function shardOf(id: string, lanes: number): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (Math.imul(h, 31) + id.charCodeAt(i)) | 0;
+  return Math.abs(h) % lanes;
+}
+
+// Scrolls through the Flows tab across FLOW_LANES concurrent pages, downloading each
+// newly-revealed flow inline from its own row (no per-flow page navigation), and records
+// each in app_flows with steps pointing at the ingested images (in export order).
+export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform): Promise<StageOutcome> {
   clearCancel();
-  const platform = platformFromUrl(appUrl);
+  const platform = platformOverride ?? platformFromUrl(appUrl);
   const context = await launchMobbinContext();
-  const page = context.pages()[0] ?? (await context.newPage());
-  await page.goto(tabUrl(appUrl, "flows"), { waitUntil: "domcontentloaded" });
+  // A stale/restored tab left over from an earlier session can sit in the profile's
+  // session-restore state — start from a genuinely fresh, focused page so the
+  // hover-triggered menus below reliably render.
+  for (const stale of context.pages()) await stale.close().catch(() => {});
+
+  const probe = await context.newPage();
+  await probe.bringToFront();
+  await probe.goto(tabUrl(appUrl, "flows"), { waitUntil: "domcontentloaded" });
   try {
-    await waitUntilVisible(page, 'a[href*="/flows/"]', gridWaitMs, "the flows grid");
+    await waitUntilVisible(probe, 'a[href*="/flows/"]', gridWaitMs, "the flows grid");
   } catch (error) {
     await context.close();
     return { status: "error", message: (error as Error).message };
   }
 
-  const flowLinks = await collectFlowLinks(page);
-  console.log(`[${appName}] Found ${flowLinks.length} flow(s). Downloading each flow's screens...`);
-  writeProgress({ stage: "crawl", app: appName, done: 0, total: flowLinks.length, status: "running", message: "Downloading flows" });
-
   const downloadRoot = `data/downloads/${appName}-flows`;
   const crawled: DesignFlow[] = [];
+  const seen = new Set<string>(); // every row id any lane has discovered, for progress totals
   let done = 0;
-  for (const flow of flowLinks) {
-    if (isCancelRequested()) break;
-    try {
-      await page.goto(flow.url, { waitUntil: "domcontentloaded" });
-      await page.waitForTimeout(1500);
-      const dir = `${downloadRoot}/${flow.id}`;
-      const savedPaths = await triggerAndSaveDownloads(page, dir);
-      if (savedPaths.length === 0) {
-        console.warn(`[${appName}] No download started for flow "${flow.title}" (${flow.url}) — skipping.`);
-        continue;
+  let cancelled = false;
+
+  async function runLane(page: Page, laneIndex: number): Promise<void> {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    const laneSeen = new Set<string>();
+    let stableAtBottom = 0;
+
+    for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
+      if (isCancelRequested()) { cancelled = true; break; }
+      const rows = await discoverFlowRows(page);
+      for (const row of rows) seen.add(row.id);
+      const mine = rows.filter((row) => !laneSeen.has(row.id) && shardOf(row.id, FLOW_LANES) === laneIndex);
+
+      const pending: Promise<void>[] = [];
+      for (const row of mine) {
+        if (isCancelRequested()) { cancelled = true; break; }
+        laneSeen.add(row.id);
+        const flowUrl = new URL(`/flows/${row.id}`, appUrl).toString();
+        const viewport = page.viewportSize();
+        let savedPaths: string[];
+        try {
+          const cell = flowCellLocator(page, row.id);
+          await cell.scrollIntoViewIfNeeded().catch(() => {});
+          savedPaths = await triggerAndSaveDownloads(page, `${downloadRoot}/${row.id}`, () => downloadFlowRow(page, cell));
+        } catch (error) {
+          console.warn(`[${appName}] Error on flow ${row.id}: ${error}. Skipping.`);
+          done++;
+          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+          continue;
+        }
+        if (savedPaths.length === 0) {
+          console.warn(`[${appName}] No download started for flow "${row.title}" (${row.id}) — skipping.`);
+          done++;
+          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+          continue;
+        }
+        // Hash/upload/DB-insert don't touch the page, so let them run in the background
+        // while this lane moves on to its next flow's hover/click instead of blocking on them.
+        const dir = `${downloadRoot}/${row.id}`;
+        const extractDir = `${dir}/_extracted`;
+        pending.push(
+          (async () => {
+            const imageIds: number[] = [];
+            for (const path of savedPaths) {
+              const sourceDir = extractIfArchive(path, extractDir) ? extractDir : dir;
+              imageIds.push(...(await ingestDownloadedImages(sourceDir, appName, platform, flowUrl, viewport, "flow_step", storage)).imageIds);
+            }
+            if (imageIds.length === 0) return;
+            crawled.push({
+              id: `mobbin-flow-${row.id}`,
+              title: row.title,
+              category: row.category || undefined,
+              description: "",
+              tags: [],
+              steps: imageIds.map((imageId, index) => ({ label: `Step ${index + 1}`, evidence: [imageId] })),
+            });
+            console.log(`[${appName}] Flow "${row.title}": ${imageIds.length} step(s).`);
+          })()
+            .catch((error) => console.warn(`[${appName}] Error ingesting flow ${row.id}: ${error}. Skipping.`))
+            .finally(() => {
+              done++;
+              writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+            })
+        );
       }
-      const extractDir = `${dir}/_extracted`;
-      const imageIds: number[] = [];
-      for (const path of savedPaths) {
-        const sourceDir = extractIfArchive(path, extractDir) ? extractDir : dir;
-        imageIds.push(...(await ingestDownloadedImages(sourceDir, appName, platform, flow.url, page.viewportSize(), "screen", storage)).imageIds);
-      }
-      if (imageIds.length === 0) continue;
-      crawled.push({
-        id: `mobbin-flow-${flow.id}`,
-        title: flow.title,
-        description: `Imported from Mobbin: ${flow.url}`,
-        tags: [],
-        steps: imageIds.map((imageId, index) => ({ label: `Step ${index + 1}`, evidence: [imageId] })),
-      });
-      console.log(`[${appName}] Flow "${flow.title}": ${imageIds.length} step(s).`);
-    } catch (error) {
-      console.warn(`[${appName}] Error on flow ${flow.id}: ${error}. Skipping.`);
-    } finally {
-      done++;
-      writeProgress({ stage: "crawl", app: appName, done, total: flowLinks.length, status: "running", message: "Downloading flows" });
+      await Promise.all(pending);
+
+      const atBottom = await page.evaluate(
+        () => window.scrollY + window.innerHeight >= document.body.scrollHeight - 2
+      );
+      stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
+
+      await page.evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.7)));
+      await page.waitForTimeout(400);
     }
   }
+
+  const extraPages = await Promise.all(Array.from({ length: FLOW_LANES - 1 }, () => context.newPage()));
+  await Promise.all(extraPages.map(async (page) => {
+    await page.goto(tabUrl(appUrl, "flows"), { waitUntil: "domcontentloaded" });
+    await waitUntilVisible(page, 'a[href*="/flows/"]', 15_000, "the flows grid").catch(() => {});
+  }));
+  await Promise.all([probe, ...extraPages].map((page, laneIndex) => runLane(page, laneIndex)));
+
   rmSync(downloadRoot, { recursive: true, force: true });
 
   if (crawled.length > 0) {
-    await saveAppFlows(appName, mergeFlows(await getAppFlows(appName), crawled));
+    await saveAppFlows(appName, platform, mergeFlows(await getAppFlows(appName, platform), crawled));
   }
 
   await context.close();
-  if (isCancelRequested()) {
+  if (cancelled || isCancelRequested()) {
     console.log(`[${appName}] Cancelled. ${crawled.length} flow(s) imported before cancel.`);
-    writeProgress({ stage: "crawl", app: appName, done, total: flowLinks.length, status: "cancelled", message: "Cancelled by user" });
+    writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "cancelled", message: "Cancelled by user" });
     return { status: "cancelled", message: "Cancelled by user" };
   }
-  console.log(`[${appName}] Done. Imported ${crawled.length}/${flowLinks.length} flow(s).`);
-  writeProgress({ stage: "crawl", app: appName, done: flowLinks.length, total: flowLinks.length, status: "done" });
+  console.log(`[${appName}] Done. Imported ${crawled.length}/${seen.size} flow(s).`);
+  writeProgress({ stage: "crawl", app: appName, done: seen.size, total: seen.size, status: "done" });
   return { status: "done" };
 }

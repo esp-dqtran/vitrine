@@ -1,7 +1,7 @@
 import type { CrawledImage } from './db.ts';
-import type { DesignComponent, DesignSystemSnapshot, TokenKind } from './designSystem.ts';
+import type { DesignComponent, DesignSystemSnapshot, DesignToken, TokenKind } from './designSystem.ts';
 
-export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react';
+export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react' | 'design-md';
 export type ExportScope =
   | { kind: 'design-system' }
   | { kind: 'foundation-category'; id: string }
@@ -98,6 +98,54 @@ function react(snapshot: ReturnType<typeof scopeSnapshot>): string {
   return `import type { ReactNode } from 'react';\nimport './${slug(snapshot.app)}-tokens.css';\n\n${bodies.join('\n\n')}\n`;
 }
 
+function designMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
+  const byKind = (kind: TokenKind): DesignToken[] => snapshot.tokens.filter((token) => token.kind === kind);
+  const yamlBlock = (label: string, tokens: DesignToken[]) => tokens.length
+    ? `${label}:\n${tokens.map((token) => `  ${slug(token.name)}: ${JSON.stringify(token.value)} # ${token.role}`).join('\n')}\n`
+    : '';
+  const frontmatter = [
+    `version: alpha`,
+    `name: ${JSON.stringify(`${slug(snapshot.app)}-design-analysis`)}`,
+    `description: ${JSON.stringify(`Design system observed by Astryx across ${snapshot.images.length} evidence screen(s) of ${snapshot.app}.`)}`,
+    '',
+    yamlBlock('colors', byKind('color')),
+    yamlBlock('typography', byKind('typography')),
+    yamlBlock('spacing', byKind('spacing')),
+    yamlBlock('rounded', byKind('radius')),
+    yamlBlock('borders', byKind('border')),
+    yamlBlock('effects', byKind('effect')),
+  ].filter(Boolean).join('\n');
+
+  const components = snapshot.components.map((component) => {
+    const variants = component.variants.map((variant) => {
+      const r = variant.reconstruction;
+      const props = r ? Object.entries({ layout: r.layoutMode, width: r.width, height: r.height, padding: r.padding, gap: r.gap, fill: r.fill, stroke: r.stroke, radius: r.radius })
+        .filter(([, value]) => value !== undefined).map(([key, value]) => `${key}: ${value}`).join(', ') : '';
+      return `- **${variant.name}** — ${variant.description}${props ? ` (${props})` : ''}`;
+    }).join('\n');
+    const anatomy = component.anatomy?.length ? `\nAnatomy: ${component.anatomy.join(', ')}\n` : '';
+    return `### ${component.name} (${component.category})\n${component.description}\n${anatomy}\n${variants}`;
+  }).join('\n\n');
+
+  const rulesByKind = new Map<string, string[]>();
+  for (const rule of snapshot.rules || []) {
+    const items = rulesByKind.get(rule.kind) ?? [];
+    items.push(`- **${rule.name}**: ${rule.description}`);
+    rulesByKind.set(rule.kind, items);
+  }
+  const patterns = [...rulesByKind.entries()]
+    .map(([kind, items]) => `### ${kind[0].toUpperCase()}${kind.slice(1)}\n${items.join('\n')}`)
+    .join('\n\n');
+
+  const promptGuide = byKind('color').map((token) => `- ${token.name}: \`${token.value}\` — ${token.role}`).join('\n');
+
+  return `---\n${frontmatter}---\n\n` +
+    `## Overview\n\nObserved across ${snapshot.images.length} evidence screen(s) of **${snapshot.app}**, generated ${snapshot.generatedAt}.\n\n` +
+    `## Components\n\n${components || '_No components observed in this scope._'}\n\n` +
+    `## Patterns\n\n${patterns || '_No rules observed in this scope._'}\n\n` +
+    `## Agent Prompt Guide\n\nWhen building UI for ${snapshot.app}, reference these observed colors:\n\n${promptGuide || '_No color tokens observed in this scope._'}\n`;
+}
+
 function figmaCode(snapshot: ReturnType<typeof scopeSnapshot>): string {
   const data = JSON.stringify({
     app: snapshot.app,
@@ -181,6 +229,7 @@ export function buildExportArtifact(
     tailwind: { suffix: 'tailwind.config.js', mime: 'text/javascript', content: tailwind(scoped) },
     'component-spec': { suffix: 'component-spec.json', mime: 'application/json', content: componentSpecs(scoped) },
     react: { suffix: 'components.tsx', mime: 'text/typescript', content: react(scoped) },
+    'design-md': { suffix: 'DESIGN.md', mime: 'text/markdown', content: designMd(scoped) },
   };
   const output = outputs[format];
   return { filename: `${app}-${output.suffix}`, mime: output.mime, content: Buffer.from(output.content) };

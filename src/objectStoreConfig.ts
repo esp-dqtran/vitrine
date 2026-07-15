@@ -12,6 +12,12 @@ export type ObjectStoreConfig =
       region: string;
       prefix: string;
       endpoint?: string;
+      // Presigned GetObject URLs are handed to browsers, which can't resolve a Docker-internal
+      // hostname (e.g. "minio") the way the server itself can — this lets signing use a
+      // separately-reachable host/port while the server's own S3 calls keep using `endpoint`.
+      // SigV4 validates against whatever Host the request actually carries, so signing with a
+      // different host than `endpoint` is safe as long as both route to the same object store.
+      publicEndpoint?: string;
       forcePathStyle: boolean;
       accessKeyId?: string;
       secretAccessKey?: string;
@@ -41,6 +47,27 @@ function safePrefix(value: string | undefined): string {
     throw new Error("OBJECT_STORE_S3_PREFIX is invalid");
   }
   return prefix;
+}
+
+function parseEndpoint(environment: NodeJS.ProcessEnv, name: string, production: boolean): string | undefined {
+  const raw = environment[name]?.trim();
+  if (!raw) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  if (!parsed.hostname || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new Error(`${name} is invalid`);
+  }
+  if (production && parsed.protocol !== "https:") {
+    throw new Error(`Production object storage endpoint (${name}) must use HTTPS`);
+  }
+  if (!production && parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Object storage endpoint (${name}) must use HTTP or HTTPS`);
+  }
+  return parsed.toString();
 }
 
 export function objectStoreConfigFromEnvironment(
@@ -73,25 +100,8 @@ export function objectStoreConfigFromEnvironment(
     throw new Error("S3 path-style endpoints are not allowed in production");
   }
 
-  let endpoint: string | undefined;
-  if (environment.OBJECT_STORE_S3_ENDPOINT?.trim()) {
-    let parsed: URL;
-    try {
-      parsed = new URL(environment.OBJECT_STORE_S3_ENDPOINT.trim());
-    } catch {
-      throw new Error("OBJECT_STORE_S3_ENDPOINT must be a valid URL");
-    }
-    if (!parsed.hostname || parsed.username || parsed.password || parsed.search || parsed.hash) {
-      throw new Error("OBJECT_STORE_S3_ENDPOINT is invalid");
-    }
-    if (production && parsed.protocol !== "https:") {
-      throw new Error("Production object storage endpoint must use HTTPS");
-    }
-    if (!production && parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new Error("Object storage endpoint must use HTTP or HTTPS");
-    }
-    endpoint = parsed.toString();
-  }
+  const endpoint = parseEndpoint(environment, "OBJECT_STORE_S3_ENDPOINT", production);
+  const publicEndpoint = parseEndpoint(environment, "OBJECT_STORE_S3_PUBLIC_ENDPOINT", production);
 
   const accessKeyId = environment.OBJECT_STORE_ACCESS_KEY_ID?.trim();
   const secretAccessKey = environment.OBJECT_STORE_SECRET_ACCESS_KEY?.trim();
@@ -104,6 +114,7 @@ export function objectStoreConfigFromEnvironment(
     region,
     prefix,
     ...(endpoint ? { endpoint } : {}),
+    ...(publicEndpoint ? { publicEndpoint } : {}),
     forcePathStyle,
     ...(accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : {}),
   };
@@ -111,18 +122,25 @@ export function objectStoreConfigFromEnvironment(
 
 export function createObjectStore(config: ObjectStoreConfig): ObjectStore {
   if (config.backend === "local") return new LocalObjectStore(config.root);
+  const credentials = config.accessKeyId && config.secretAccessKey
+    ? { credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey } }
+    : {};
   const client = new S3Client({
     region: config.region,
     ...(config.endpoint ? { endpoint: config.endpoint } : {}),
     forcePathStyle: config.forcePathStyle,
-    ...(config.accessKeyId && config.secretAccessKey
-      ? { credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey } }
-      : {}),
+    ...credentials,
   });
+  // Presigned URLs are handed to browsers, which need a host they can actually reach —
+  // sign with a second client pointed at `publicEndpoint` when the server's own reachable
+  // endpoint differs from it (e.g. a Docker-internal hostname vs. the host-published port).
+  const signingClient = config.publicEndpoint
+    ? new S3Client({ region: config.region, endpoint: config.publicEndpoint, forcePathStyle: config.forcePathStyle, ...credentials })
+    : client;
   return new S3ObjectStore({
     bucket: config.bucket,
     prefix: config.prefix,
     send: (command) => client.send(command as never),
-    sign: (command, expiresSeconds) => getSignedUrl(client, command, { expiresIn: expiresSeconds }),
+    sign: (command, expiresSeconds) => getSignedUrl(signingClient, command, { expiresIn: expiresSeconds }),
   });
 }

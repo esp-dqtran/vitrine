@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { imageExists, insertImage } from "./db.ts";
 import { clearCancel, isCancelRequested, writeProgress } from "./progress.ts";
 import { runPool } from "./pool.ts";
+import { platformFromUrl } from "./platformFromUrl.ts";
 
 const MAX_SCROLL_ITERATIONS = 500; // ponytail: hard cap so a page with truly infinite scroll can't hang forever
 const LOGIN_WAIT_MS = 30 * 60_000; // time to log in manually in the opened window
@@ -118,15 +119,6 @@ async function collectScreenIds(page: Page): Promise<Set<string>> {
   return own;
 }
 
-// Mobbin's own app-detail URLs embed the platform right in the slug, e.g.
-// ".../apps/linear-ios-<uuid>/<versionId>/screens" — pull it from there instead of asking
-// callers to pass it separately. Falls back to "web" for URLs that don't match (e.g. a
-// hand-typed URL, or bulk-download's appUrl reused verbatim).
-export function platformFromUrl(url: string): string {
-  const slug = new URL(url).pathname.split("/").filter(Boolean)[1] ?? "";
-  const match = slug.match(/-(web|ios|android)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-  return match ? match[1].toLowerCase() : "web";
-}
 
 // Crawls one app's screens into `context` (which the caller owns — launches it, logs in
 // once, and closes it when done). This is the part that's the same whether we're crawling

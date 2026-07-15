@@ -10,7 +10,7 @@ import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
-const publishedVersion = { id: 1, app: "linear", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
+const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
 const previewSha256 = createHash("sha256").update("image").digest("hex");
 const previewMetadata: ObjectMetadata = {
@@ -672,7 +672,7 @@ test("serves a hydrated structured design system", async (t) => {
   );
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/design-systems/linear`, { headers: adminCookie });
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminCookie });
   assert.equal(response.status, 200);
   const snapshot = await response.json();
   assert.equal(snapshot.tokens[0].evidence[0].imageUrl, "/api/media/linear/0123456789abcdef");
@@ -730,7 +730,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
   const figma = await fetch(`${base}/design-systems/linear/exports`, {
-    method: "POST", headers, body: JSON.stringify({ format: "figma", selection: { kind: "design-system" } }),
+    method: "POST", headers, body: JSON.stringify({ format: "figma", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(figma.status, 200);
   assert.equal(Buffer.from(await figma.arrayBuffer()).subarray(0, 2).toString(), "PK");
@@ -738,7 +738,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
   assert.equal(figma.headers.get("content-type"), "application/zip");
 
   const json = await fetch(`${base}/design-systems/linear/exports`, {
-    method: "POST", headers, body: JSON.stringify({ format: "json", selection: { kind: "component-family", id: "button" } }),
+    method: "POST", headers, body: JSON.stringify({ format: "json", platform: "web", selection: { kind: "component-family", id: "button" } }),
   });
   assert.equal(json.status, 200);
   assert.equal((await json.json()).components.length, 1);
@@ -755,7 +755,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     assert.deepEqual(durable[index], { exportId: 41 + index, metadata: persistedMetadata });
   }
   assert.equal((await fetch(`${base}/design-systems/linear/exports`, {
-    method: "POST", headers, body: JSON.stringify({ format: "pdf", selection: { kind: "design-system" } }),
+    method: "POST", headers, body: JSON.stringify({ format: "pdf", platform: "web", selection: { kind: "design-system" } }),
   })).status, 400);
 });
 
@@ -788,7 +788,7 @@ test("does not fall back to legacy media when an associated object fails verific
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" },
-    body: JSON.stringify({ format: "figma", selection: { kind: "design-system" } }),
+    body: JSON.stringify({ format: "figma", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "Export storage unavailable" });
@@ -857,7 +857,7 @@ test("does not complete an export when object upload fails", async (t) => {
   const response = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST",
     headers: { cookie: "astryx_session=user", "content-type": "application/json" },
-    body: JSON.stringify({ format: "json", selection: { kind: "design-system" } }),
+    body: JSON.stringify({ format: "json", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 503);
   assert.deepEqual(completed, []);
@@ -958,28 +958,28 @@ test("creates user-owned collections and edits item notes", async (t) => {
 });
 
 test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
-  const version = { id: 12, app: "linear", version_number: 2, label: "v2", source_url: null, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
+  const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
   const { base, server } = await serve(createApiApp({
     resolveSession: async (token) => token === "admin" ? admin : user,
     createAppVersion: async () => version,
     createJob: async () => 44,
     publishJob: async () => undefined,
-    listAppVersions: async (_app, only) => { publishedOnly = only; return only ? [] : [version]; },
+    listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
   }));
   t.after(() => close(server));
   const jsonHeaders = { ...adminCookie, "content-type": "application/json" };
-  const created = await fetch(`${base}/apps/linear/versions`, { method: "POST", headers: jsonHeaders, body: JSON.stringify({ sourceUrl: "https://mobbin.com/apps/linear/version/screens" }) });
+  const created = await fetch(`${base}/apps/linear/versions`, { method: "POST", headers: jsonHeaders, body: JSON.stringify({ platform: "web", sourceUrl: "https://mobbin.com/apps/linear/version/screens" }) });
   assert.equal(created.status, 201);
   assert.equal((await created.json()).status, "draft");
   assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminCookie })).status, 200);
   assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminCookie })).status, 200);
   assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminCookie })).json()).status, "published");
 
-  const designerVersions = await fetch(`${base}/apps/linear/versions`, { headers: { cookie: "astryx_session=user" } });
+  const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { cookie: "astryx_session=user" } });
   assert.equal(designerVersions.status, 200);
   assert.equal(publishedOnly, true);
 });
@@ -990,9 +990,36 @@ test("returns 404 when an app has no structured design system", async (t) => {
   );
   t.after(() => close(server));
   assert.equal(
-    (await fetch(`${base}/design-systems/linear`, { headers: adminCookie })).status,
+    (await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminCookie })).status,
     404
   );
+});
+
+test("serves crawled flows even when an app has not been through AI synthesis", async (t) => {
+  const { base, server } = await serve(
+    createApiApp({
+      resolveSession: async () => admin,
+      getDesignSystem: async () => undefined,
+      appImages: async () => [
+        { id: 7, app: "lang-chain", platform: "web", image_url: "mobbin-bulk:0123456789abcdef", description: null },
+      ],
+      getAppFlows: async () => [{
+        id: "onboarding",
+        title: "Onboarding",
+        description: "Crawled from Mobbin",
+        tags: [],
+        steps: [{ label: "Step 1", evidence: [7] }],
+      }],
+    })
+  );
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/design-systems/lang-chain?platform=web`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  const snapshot = await response.json();
+  assert.deepEqual(snapshot.components, []);
+  assert.equal(snapshot.flows[0].title, "Onboarding");
+  assert.equal(snapshot.flows[0].steps[0].evidence[0].imageUrl, "/api/media/lang-chain/0123456789abcdef");
 });
 
 test("serves local bulk media", async (t) => {
@@ -1050,7 +1077,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
     rmSync(dataDir, { recursive: true, force: true });
   });
 
-  const snapshot = await (await fetch(`${base}/design-systems/linear`, {
+  const snapshot = await (await fetch(`${base}/design-systems/linear?platform=web`, {
     headers: { cookie: "astryx_session=owner" },
   })).json();
   const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
@@ -1154,7 +1181,7 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
   const signedStore: ObjectStore = {
     ...localObjectStore,
     signedGetUrl: async (_key, expires) => {
-      assert.equal(expires, 60);
+      assert.equal(expires, 300);
       return "https://objects.example/signed";
     },
   };
@@ -1170,7 +1197,23 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
   });
   assert.equal(response.status, 302);
   assert.equal(response.headers.get("location"), "https://objects.example/signed");
-  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.equal(response.headers.get("cache-control"), "private, max-age=280");
+});
+
+test("passes the thumb variant through to the object lookup, defaulting to full otherwise", async (t) => {
+  const seenVariants: Array<string | undefined> = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    objectStore: localObjectStore,
+    adminImageObject: async (input) => {
+      seenVariants.push(input.variant);
+      return { ...previewMetadata, accessClass: "protected" };
+    },
+  }));
+  t.after(() => close(server));
+  await fetch(`${base}/media/linear/0123456789abcdef?variant=thumb`, { headers: adminCookie, redirect: "manual" });
+  await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminCookie, redirect: "manual" });
+  assert.deepEqual(seenVariants, ["thumb", "full"]);
 });
 
 test("gates customer app detail and unlocks a Free app", async (t) => {
@@ -1420,7 +1463,7 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
     },
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/apps/linear/exports/reservations`, {
+  const response = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
     headers: { cookie: "astryx_session=user", "content-type": "application/json" },
     body: JSON.stringify({ kind: "screens", ids: [7] }),
@@ -1442,13 +1485,13 @@ test("rejects oversized or unavailable export reservations", async (t) => {
   }));
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
-  const invalid = await fetch(`${base}/apps/linear/exports/reservations`, {
+  const invalid = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
     headers,
     body: JSON.stringify({ kind: "screens", ids: Array.from({ length: 11 }, (_, i) => i + 1) }),
   });
   assert.equal(invalid.status, 400);
-  const locked = await fetch(`${base}/apps/linear/exports/reservations`, {
+  const locked = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
     headers,
     body: JSON.stringify({ kind: "component-family", id: "buttons" }),
@@ -1476,7 +1519,7 @@ test("rejects component exports that do not belong to the app design system", as
     },
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/apps/linear/exports/reservations`, {
+  const response = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
     headers: { cookie: "astryx_session=user", "content-type": "application/json" },
     body: JSON.stringify({ kind: "component-family", id: "buttons" }),

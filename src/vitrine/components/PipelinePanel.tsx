@@ -3,6 +3,7 @@ import { Badge, Button, Card, Text, TextInput } from '@astryxdesign/core';
 import { groupPipelines } from '../jobs';
 import type { Job } from '../types';
 import { useJobs } from '../useJobs';
+import { platformFromUrl } from '../../platformFromUrl';
 
 const STAGE_LABEL: Record<Job['type'], string> = {
   'import-app': 'Import screenshots',
@@ -41,7 +42,7 @@ export function PipelinePanel({ onPipelineDone }: { onPipelineDone: () => void |
   const submit = async () => {
     setSubmitError(null);
     try {
-      await submitImport(name.trim(), url.trim());
+      await submitImport(name.trim(), url.trim(), platformFromUrl(url.trim()));
       setUrl('');
     } catch (cause) {
       setSubmitError((cause as Error).message);

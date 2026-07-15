@@ -1,15 +1,17 @@
 import { useState } from 'react';
+import { Selector } from '@astryxdesign/core';
 import type { DesignSystemSnapshot, EvidenceView, TokenKind } from '../../designSystem';
 import type { ExportFormat, ExportScope } from '../../exportEngine';
+import type { Platform } from '../../platformFromUrl';
 import { requestExport } from '../researchApi';
 import type { Screen } from '../types';
 
 const secondary: Array<[ExportFormat, string]> = [
-  ['json', 'JSON tokens'], ['css', 'CSS variables'], ['tailwind', 'Tailwind theme'], ['component-spec', 'Component specs'], ['react', 'React scaffold'],
+  ['json', 'JSON tokens'], ['css', 'CSS variables'], ['tailwind', 'Tailwind theme'], ['component-spec', 'Component specs'], ['react', 'React scaffold'], ['design-md', 'DESIGN.md'],
 ];
 const categoryIds: Record<TokenKind, string> = { color: 'colors', typography: 'typography', spacing: 'spacing', radius: 'radii', border: 'borders', effect: 'effects' };
 
-export function ExportPanel({ app, snapshot, screens = [] }: { app: string; snapshot?: DesignSystemSnapshot<EvidenceView> | null; screens?: Screen[] }) {
+export function ExportPanel({ app, platform = 'web', snapshot, screens = [] }: { app: string; platform?: Platform; snapshot?: DesignSystemSnapshot<EvidenceView> | null; screens?: Screen[] }) {
   const [scope, setScope] = useState<ExportScope>({ kind: 'design-system' });
   const [busy, setBusy] = useState<ExportFormat | null>(null);
   const [message, setMessage] = useState('');
@@ -18,7 +20,7 @@ export function ExportPanel({ app, snapshot, screens = [] }: { app: string; snap
   const run = async (format: ExportFormat) => {
     setBusy(format); setMessage('');
     try {
-      const { blob, filename } = await requestExport(app, format, scope);
+      const { blob, filename } = await requestExport(app, platform, format, scope);
       const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
       setMessage(`${filename} is ready.`);
     } catch (error) { setMessage((error as Error).message); }
@@ -39,7 +41,7 @@ export function ExportPanel({ app, snapshot, screens = [] }: { app: string; snap
     <section style={{ display: 'grid', gap: 20, paddingTop: 28 }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'end', flexWrap: 'wrap' }}>
         <div style={{ flex: 1 }}><h2 style={{ margin: 0 }}>Editable design handoff</h2><p style={{ margin: '7px 0 0', color: 'var(--color-text-secondary)' }}>Every generated asset keeps its observed evidence IDs. Missing states are never added.</p></div>
-        <label style={{ display: 'grid', gap: 5, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>Export scope<select value={scopeValue} onChange={(event) => changeScope(event.target.value)} style={{ height: 38, minWidth: 250, border: '1px solid var(--color-border)', borderRadius: 9, background: 'var(--color-background-surface)', color: 'var(--color-text-primary)', padding: '0 10px' }}>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+        <Selector label="Export scope" value={scopeValue} onChange={changeScope} options={options} width={250} />
       </div>
       <div style={{ padding: 22, borderRadius: 16, background: 'linear-gradient(135deg,#5b38f0,#8b5cf6)', color: '#fff' }}>
         <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', opacity: .8 }}>Primary export</div>

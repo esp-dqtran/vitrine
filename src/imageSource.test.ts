@@ -54,3 +54,14 @@ test("maps only local bulk references to the media API", () => {
   assert.equal(publicImageUrl("linear", "javascript:alert(1)"), "");
   assert.equal(publicImageUrl("linear", "https://user:secret@cdn.example.com/a.png"), "");
 });
+
+test("appends a thumb variant query for local bulk references, leaves external URLs untouched", () => {
+  assert.equal(
+    publicImageUrl("linear", "mobbin-bulk:0123456789abcdef", "thumb"),
+    "/api/media/linear/0123456789abcdef?variant=thumb"
+  );
+  assert.equal(
+    publicImageUrl("linear", "https://cdn.example.com/a.png", "thumb"),
+    "https://cdn.example.com/a.png"
+  );
+});

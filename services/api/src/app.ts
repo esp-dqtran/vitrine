@@ -36,12 +36,14 @@ import {
 } from "../../../src/db.ts";
 import {
   authenticateUser,
+  changePassword,
   createSession,
   deleteSession,
   resolveSession,
   resolveSessionState,
 } from "../../../src/authStore.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
+import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
@@ -260,6 +262,7 @@ const defaults = {
   rejectCrawlRepair,
   isCrawlSecretConfigured: (name: string) => typeof process.env[name] === "string" && process.env[name]!.length > 0,
   authenticateUser,
+  changePassword,
   createSession,
   resolveSession,
   resolveSessionState,
@@ -332,6 +335,10 @@ const BIGINT_MAX = 9_223_372_036_854_775_807n;
 
 function optionalQuery(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function platformQuery(value: unknown): Platform | undefined {
+  return typeof value === "string" && isPlatform(value) ? value : undefined;
 }
 
 function positiveId(value: string): number | undefined {
@@ -501,9 +508,13 @@ async function sendStoredObject(
 ): Promise<void> {
   res.setHeader("Content-Type", metadata.contentType);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const signed = metadata.accessClass === "internal" ? undefined : await store.signedGetUrl(metadata.key, 60);
+  // 300s is S3ObjectStore's own hard ceiling on presigned URL lifetime (a deliberate security
+  // limit, not just a default) — matching it here lets the redirect itself be cached for
+  // nearly that long. Content is immutable per hash, so repeat views/reloads within the
+  // window reuse the cached redirect instead of re-signing and re-fetching from scratch.
+  const signed = metadata.accessClass === "internal" ? undefined : await store.signedGetUrl(metadata.key, 300);
   if (signed) {
-    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Cache-Control", "private, max-age=280");
     res.status(302).setHeader("Location", signed).end();
     return;
   }
@@ -973,40 +984,58 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  const protectedMediaUrl = (userId: number, appSlug: string, source: string): string => {
+  const protectedMediaUrl = (userId: number, appSlug: string, source: string, variant?: "thumb"): string => {
     const parsed = parseImageSource(source);
     if (!parsed) return "";
     if (parsed.kind === "external") return parsed.url;
     const hash = parsed.hash;
     const expiresAt = deps.nowSeconds() + 300;
     const token = createMediaToken(deps.mediaSigningSecret, { userId, app: appSlug, hash, expiresAt });
-    return `/api/media/${appSlug}/${hash}?expires=${expiresAt}&token=${encodeURIComponent(token)}`;
+    const variantParam = variant ? `&variant=${variant}` : "";
+    return `/api/media/${appSlug}/${hash}?expires=${expiresAt}&token=${encodeURIComponent(token)}${variantParam}`;
   };
 
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
 
-  app.get("/apps/:app/versions", async (req, res) => {
-    const appSlug = String(req.params.app);
-    if (!isAppSlug(appSlug)) {
-      res.status(400).json({ error: "invalid app slug" });
+  app.post("/auth/password", async (req, res) => {
+    const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
+    const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: "New password must be at least 8 characters" });
       return;
     }
-    res.json(await deps.listAppVersions(appSlug, res.locals.user.role !== "admin"));
+    const ok = await deps.changePassword(res.locals.user.id, currentPassword, newPassword);
+    if (!ok) {
+      res.status(401).json({ error: "Current password is incorrect" });
+      return;
+    }
+    res.status(204).end();
+  });
+
+  app.get("/apps/:app/versions", async (req, res) => {
+    const appSlug = String(req.params.app);
+    const platform = platformQuery(req.query.platform);
+    if (!isAppSlug(appSlug) || !platform) {
+      res.status(400).json({ error: "invalid app slug or platform" });
+      return;
+    }
+    res.json(await deps.listAppVersions(appSlug, platform, res.locals.user.role !== "admin"));
   });
 
   app.post("/apps/:app/versions", requireAdmin, async (req, res) => {
     const appSlug = String(req.params.app);
+    const platform = platformQuery(req.body?.platform);
     const sourceUrl = boundedText(req.body?.sourceUrl, 2000);
-    if (!isAppSlug(appSlug) || sourceUrl === undefined || (sourceUrl && !validMobbinScreensUrl(sourceUrl))) {
+    if (!isAppSlug(appSlug) || !platform || sourceUrl === undefined || (sourceUrl && !validMobbinScreensUrl(sourceUrl))) {
       res.status(400).json({ error: "invalid recapture request" });
       return;
     }
     try {
-      const version = await deps.createAppVersion(appSlug, res.locals.user.id, sourceUrl || undefined);
+      const version = await deps.createAppVersion(appSlug, platform, res.locals.user.id, sourceUrl || undefined);
       if (sourceUrl) {
         if (!await requireStorageReady(res)) return;
-        const jobId = await deps.createJob("import-app", { name: appSlug, url: sourceUrl, versionId: version.id });
-        try { await deps.publishJob({ type: "import-app", name: appSlug, url: sourceUrl, jobId }); }
+        const jobId = await deps.createJob("import-app", { name: appSlug, url: sourceUrl, platform, versionId: version.id });
+        try { await deps.publishJob({ type: "import-app", name: appSlug, url: sourceUrl, platform, jobId }); }
         catch (error) {
           await deps.setJobStatus(jobId, "error", (error as Error).message);
           res.status(503).json({ error: (error as Error).message, version, jobId });
@@ -1052,19 +1081,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.post("/apps/:app/review-actions", requireAdmin, async (req, res) => {
     const appSlug = String(req.params.app);
-    if (!isAppSlug(appSlug) || !req.body || typeof req.body !== "object") {
+    const platform = platformQuery(req.query.platform);
+    if (!isAppSlug(appSlug) || !platform || !req.body || typeof req.body !== "object") {
       res.status(400).json({ error: "invalid curator action" });
       return;
     }
-    const snapshot = await deps.getDesignSystem(appSlug);
+    const snapshot = await deps.getDesignSystem(appSlug, platform);
     if (!snapshot) {
       res.status(404).json({ error: "design system not found" });
       return;
     }
     try {
-      const reviewed = applyCuratorAction({ ...snapshot, flows: await deps.getAppFlows(appSlug) }, req.body as CuratorAction);
-      await deps.saveDesignSystem(appSlug, { ...reviewed, flows: [] });
-      await deps.saveAppFlows(appSlug, reviewed.flows);
+      const reviewed = applyCuratorAction({ ...snapshot, flows: await deps.getAppFlows(appSlug, platform) }, req.body as CuratorAction);
+      await deps.saveDesignSystem(appSlug, platform, { ...reviewed, flows: [] });
+      await deps.saveAppFlows(appSlug, platform, reviewed.flows);
       res.json(reviewed);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -1109,7 +1139,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       state: optionalQuery(req.query.state),
       layout: optionalQuery(req.query.layout),
       component: optionalQuery(req.query.component),
-      viewport: optionalQuery(req.query.viewport),
       appCategory: optionalQuery(req.query.appCategory),
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
     }));
@@ -1250,8 +1279,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.post("/design-systems/:app/exports", async (req, res) => {
     const appSlug = req.params.app;
     const format = req.body?.format;
+    const platform = platformQuery(req.body?.platform);
     const selection = parseExportSelection(req.body?.selection);
-    if (!isAppSlug(appSlug) || !exportFormats.has(format) || !selection) {
+    if (!isAppSlug(appSlug) || !platform || !exportFormats.has(format) || !selection) {
       res.status(400).json({ error: "invalid export request" });
       return;
     }
@@ -1263,15 +1293,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(503).json({ error: "Export storage unavailable" });
       return;
     }
-    const versioned = res.locals.user.role === "admin" ? undefined : await deps.getVersionDesignSystem(appSlug);
-    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug) : undefined);
-    if (!snapshot) {
+    const versioned = res.locals.user.role === "admin" ? undefined : await deps.getVersionDesignSystem(appSlug, platform);
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug, platform) : undefined);
+    const [flows, images] = versioned
+      ? [versioned.flows, await deps.versionImages(appSlug, platform, versioned.version.version_number, ["screen", "flow_step"])] as const
+      : await Promise.all([deps.getAppFlows(appSlug, platform), deps.appImages(appSlug, ["screen", "flow_step"])]);
+    if (!snapshot && flows.length === 0) {
       res.status(404).json({ error: "design system not found" });
       return;
     }
-    const [flows, images] = versioned
-      ? [versioned.flows, await deps.versionImages(appSlug, versioned.version.version_number)] as const
-      : await Promise.all([deps.getAppFlows(appSlug), deps.appImages(appSlug)]);
+    const effectiveSnapshot = snapshot ?? { app: appSlug, generatedAt: new Date().toISOString(), tokens: [], components: [], flows: [] };
     const store = deps.objectStore;
     let exportImages;
     try {
@@ -1291,7 +1322,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     let artifact;
     try {
-      artifact = buildExportArtifact({ ...snapshot, flows }, exportImages, format, selection);
+      artifact = buildExportArtifact({ ...effectiveSnapshot, flows }, exportImages, format, selection);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
       return;
@@ -1379,8 +1410,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.post("/apps/:app/exports/reservations", async (req, res) => {
-    if (!isAppSlug(req.params.app)) {
-      res.status(400).json({ error: "invalid app slug" });
+    const platform = platformQuery(req.query.platform);
+    if (!isAppSlug(req.params.app) || !platform) {
+      res.status(400).json({ error: "invalid app slug or platform" });
       return;
     }
     const selection = parseExportSelection(req.body);
@@ -1399,7 +1431,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         return;
       }
     } else if (selection.kind !== "design-system") {
-      const snapshot = await deps.getDesignSystem(req.params.app);
+      const snapshot = await deps.getDesignSystem(req.params.app, platform);
       const foundationKinds: Record<string, string> = {
         colors: "color",
         typography: "typography",
@@ -1479,24 +1511,29 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    // Defaults to "web" when the caller doesn't specify — screens across all platforms are
+    // still browsable unscoped (see sourceImages fallback below); this only affects which
+    // single version's screens get selected when the caller asks for one.
+    const platform = platformQuery(req.query.platform) ?? "web";
     const requestedVersion = optionalQuery(req.query.version) ? Number(req.query.version) : undefined;
     if (requestedVersion !== undefined && (!Number.isInteger(requestedVersion) || requestedVersion < 1)) {
       res.status(400).json({ error: "invalid version" });
       return;
     }
-    const versions = await deps.listAppVersions(req.params.app, res.locals.user.role !== "admin");
+    const kind = req.query.kind === "ui_element" ? "ui_element" : "screen";
+    const versions = await deps.listAppVersions(req.params.app, platform, res.locals.user.role !== "admin");
     const selectedVersion = requestedVersion === undefined
       ? versions.find(({ status }) => status === "published")
       : versions.find(({ version_number }) => version_number === requestedVersion);
     const sourceImages = selectedVersion
-      ? await deps.versionImages(req.params.app, selectedVersion.version_number)
-      : res.locals.user.role === "admin" ? await deps.allImages() : [];
+      ? await deps.versionImages(req.params.app, platform, selectedVersion.version_number, kind)
+      : res.locals.user.role === "admin" ? await deps.allImages(kind) : [];
     const page = buildAppDetailPage(
       sourceImages,
       req.params.app,
       cursor,
       limit,
-      (appSlug, source) => protectedMediaUrl(res.locals.user.id, appSlug, source),
+      (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
     );
     if (!page) res.status(404).json({ error: "app not found" });
     else {
@@ -1543,26 +1580,31 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.post("/jobs", requireAdmin, async (req, res) => {
     const { type, name, url } = req.body ?? {};
+    const platform = platformQuery(req.body?.platform) ?? (typeof url === "string" ? platformFromUrl(url) : undefined);
     if (!JOB_TYPES.includes(type)) {
       res.status(400).json({ error: `type must be one of: ${JOB_TYPES.join(", ")}` });
       return;
     }
-    if (type === "import-app" && (!isAppSlug(name) || !validMobbinScreensUrl(url))) {
+    if (type === "import-app" && (!isAppSlug(name) || !validMobbinScreensUrl(url) || !platform)) {
       res.status(400).json({
-        error: "import-app requires a lowercase app slug and an HTTPS Mobbin screens URL",
+        error: "import-app requires a lowercase app slug, an HTTPS Mobbin screens URL, and a platform",
       });
       return;
     }
-    if ((type === "caption-app" || type === "synthesize-app") && !isAppSlug(name)) {
+    if (type === "caption-app" && !isAppSlug(name)) {
       res.status(400).json({ error: `${type} requires a lowercase app slug` });
       return;
     }
+    if (type === "synthesize-app" && (!isAppSlug(name) || !platform)) {
+      res.status(400).json({ error: `${type} requires a lowercase app slug and a platform` });
+      return;
+    }
 
-    const payload = { name, url };
+    const payload = { name, url, platform };
     if (!await requireStorageReady(res)) return;
     const id = await deps.createJob(type, payload);
     try {
-      await deps.publishJob({ type, name, url, jobId: id } as Job);
+      await deps.publishJob({ type, name, url, platform, jobId: id } as Job);
     } catch (error) {
       const message = (error as Error).message;
       await deps.setJobStatus(id, "error", message);
@@ -1592,8 +1634,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/design-systems/:app", async (req, res) => {
     const appSlug = req.params.app;
-    if (!isAppSlug(appSlug)) {
-      res.status(400).json({ error: "invalid app slug" });
+    const platform = platformQuery(req.query.platform);
+    if (!isAppSlug(appSlug) || !platform) {
+      res.status(400).json({ error: "invalid app slug or platform" });
       return;
     }
     if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
@@ -1606,26 +1649,31 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     if (res.locals.user.role !== "admin" && requestedVersion !== undefined) {
-      const published = await deps.listAppVersions(appSlug, true);
+      const published = await deps.listAppVersions(appSlug, platform, true);
       if (!published.some(({ version_number }) => version_number === requestedVersion)) {
         res.status(404).json({ error: "published design system version not found" });
         return;
       }
     }
     const versioned = requestedVersion !== undefined || res.locals.user.role !== "admin"
-      ? await deps.getVersionDesignSystem(appSlug, requestedVersion)
+      ? await deps.getVersionDesignSystem(appSlug, platform, requestedVersion)
       : undefined;
-    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug) : undefined);
-    if (!snapshot) {
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug, platform) : undefined);
+    const flows = versioned?.flows ?? await deps.getAppFlows(appSlug, platform);
+    // Flows come from the crawl and don't require AI synthesis — don't hide them behind a
+    // missing design-system snapshot (e.g. an app that's only been through crawl-only import).
+    if (!snapshot && flows.length === 0) {
       res.status(404).json({ error: "design system not found" });
       return;
     }
-    const flows = versioned?.flows ?? await deps.getAppFlows(appSlug);
-    const images = versioned ? await deps.versionImages(appSlug, versioned.version.version_number) : await deps.appImages(appSlug);
+    const effectiveSnapshot = snapshot ?? { app: appSlug, generatedAt: new Date().toISOString(), tokens: [], components: [], flows: [] };
+    const images = versioned
+      ? await deps.versionImages(appSlug, platform, versioned.version.version_number, ["screen", "flow_step"])
+      : await deps.appImages(appSlug, ["screen", "flow_step"]);
     const hydrated = res.locals.user.role === "admin"
-      ? hydrateDesignSystem({ ...snapshot, flows }, images)
+      ? hydrateDesignSystem({ ...effectiveSnapshot, flows }, images)
       : hydrateDesignSystem(
-          { ...snapshot, flows },
+          { ...effectiveSnapshot, flows },
           images,
           (app, source) => protectedMediaUrl(res.locals.user.id, app, source),
         );
@@ -1637,6 +1685,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid media reference" });
       return;
     }
+    const variant = req.query.variant === "thumb" ? "thumb" : "full";
     if (res.locals.user.role !== "admin") {
       const media = mediaLimiter.check(`user:${res.locals.user.id}`);
       if (!media.allowed) {
@@ -1670,8 +1719,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     if (deps.objectStore) {
       const metadata = res.locals.user.role === "admin"
-        ? await deps.adminImageObject({ app: req.params.app, hash: req.params.hash })
-        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: req.params.hash });
+        ? await deps.adminImageObject({ app: req.params.app, hash: req.params.hash, variant })
+        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: req.params.hash, variant });
       if (metadata) {
         try {
           await sendStoredObject(deps.objectStore, metadata, res);

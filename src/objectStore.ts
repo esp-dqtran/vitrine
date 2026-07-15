@@ -75,6 +75,13 @@ export function imageObjectKey(imageId: number, sha256: string, extension: strin
   return `images/${imageId}/${sha256}.${checkedExtension(extension)}`;
 }
 
+export function thumbnailObjectKey(imageId: number, sha256: string): string {
+  if (!Number.isSafeInteger(imageId) || imageId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid image object identity");
+  }
+  return `thumbnails/${imageId}/${sha256}.jpg`;
+}
+
 export function failureObjectKey(runId: string, flowId: string, stepId: string, sha256: string): string {
   if (!/^[1-9][0-9]*$/.test(runId) || !SHA256_PATTERN.test(sha256)) {
     throw new Error("Invalid failure object identity");

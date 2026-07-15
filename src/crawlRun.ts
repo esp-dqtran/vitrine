@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { chromium, type Page } from "playwright";
 import { urlMatchesExpectation, type CrawlFlow, type CrawlPlan, type CrawlStep } from "./crawlPlan.ts";
-import { ensureActiveAppVersion, getAppFlows as getStoredAppFlows } from "./db.ts";
+import { ensureActiveAppVersion, getAppFlows as getStoredAppFlows$ } from "./db.ts";
 import {
   attachFailureObject as attachStoredFailureObject,
   claimRunById as claimStoredRunById,
@@ -55,6 +55,12 @@ import {
   type RunnerHooks,
   type StepActual,
 } from "./smartCrawler.ts";
+
+// The smart-crawler captures a target app's own live website — it has no Mobbin platform
+// concept, so it always operates on the "web" platform bucket.
+const getStoredAppFlows = (app: string) => getStoredAppFlows$(app, "web");
+const ensureActiveAppVersionWeb = (app: string, userId?: number, sourceUrl?: string) =>
+  ensureActiveAppVersion(app, "web", userId, sourceUrl);
 
 export interface CompletedCaptureIdentity {
   status: "completed";
@@ -593,7 +599,7 @@ export interface CrawlRunService {
 function defaultServiceStore(): CrawlRunServiceStore {
   return {
     getPlan: getStoredPlan,
-    ensureActiveVersion: ensureActiveAppVersion,
+    ensureActiveVersion: ensureActiveAppVersionWeb,
     createRun: createStoredRun,
     getRun: getStoredRun,
     claimRunById: claimStoredRunById,

@@ -43,6 +43,7 @@ test("successful import creates a caption child linked to the import", async () 
     type: "import-app",
     name: "linear",
     url: "https://mobbin.com/apps/a/b/screens",
+    platform: "web",
     jobId: 7,
   });
   assert.deepEqual(h.crawls, ["screens", "ui-elements", "flows"]);
@@ -58,6 +59,7 @@ test("failed import does not create a caption child and remains retryable", asyn
       type: "import-app",
       name: "linear",
       url: "https://mobbin.com/apps/a/b/screens",
+      platform: "web",
       jobId: 7,
     }),
     /error/
@@ -74,6 +76,7 @@ test("cancelled import does not advance or retry", async () => {
     type: "import-app",
     name: "linear",
     url: "https://mobbin.com/apps/a/b/screens",
+    platform: "web",
     jobId: 7,
   });
   assert.deepEqual(h.crawls, ["screens"]);

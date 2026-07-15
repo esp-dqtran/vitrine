@@ -45,8 +45,11 @@ export function findBulkImage(dataDir: string, app: string, hash: string): strin
   return undefined;
 }
 
-export function publicImageUrl(app: string, source: string): string {
+export function publicImageUrl(app: string, source: string, variant?: "thumb"): string {
   const parsed = parseImageSource(source);
-  if (parsed?.kind === "legacy" && isAppSlug(app)) return `/api/media/${app}/${parsed.hash}`;
+  if (parsed?.kind === "legacy" && isAppSlug(app)) {
+    return `/api/media/${app}/${parsed.hash}${variant ? `?variant=${variant}` : ""}`;
+  }
+  // External sources (e.g. curated icon URLs) have no separate thumbnail — same URL either way.
   return parsed?.kind === "external" ? parsed.url : "";
 }

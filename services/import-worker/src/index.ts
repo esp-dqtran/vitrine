@@ -1,7 +1,7 @@
 import { consumeJobs } from "../../../src/queue.ts";
 import { insertImage, pool } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
-import { attachImageObject, imageObjectById } from "../../../src/objectStoreDb.ts";
+import { attachImageObject, attachThumbnailObject, imageObjectById } from "../../../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
 import { verifyObjectStoreReady } from "../../../src/objectStorageReady.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../../../src/bulkDownload.ts";
@@ -28,6 +28,14 @@ const bulkStorage: BulkObjectDependencies = {
       client.release();
     }
   },
+  attachThumbnail: async (imageId, metadata) => {
+    const client = await pool.connect();
+    try {
+      await attachThumbnailObject(client, { imageId, metadata });
+    } finally {
+      client.release();
+    }
+  },
 };
 
 await startImportWorker({
@@ -41,8 +49,8 @@ await startImportWorker({
   consume: async () => {
     console.log("[import-worker] Waiting for jobs...");
     await consumeJobs(createPipelineHandler({
-      crawlBulkDownload: (url, name, tab, waitMs) => crawlBulkDownload(url, name, tab, waitMs, bulkStorage),
-      crawlFlowsDownload: (url, name, waitMs) => crawlFlowsDownload(url, name, waitMs, bulkStorage),
+      crawlBulkDownload: (url, name, tab, waitMs, _storage, platform) => crawlBulkDownload(url, name, tab, waitMs, bulkStorage, platform),
+      crawlFlowsDownload: (url, name, waitMs, _storage, platform) => crawlFlowsDownload(url, name, waitMs, bulkStorage, platform),
       caption: (provider, limit, app) => caption(provider, limit, app, {
         objectStore,
         resolveObjectMetadata: (image) => imageObjectById(image.id),

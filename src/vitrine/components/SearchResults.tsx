@@ -1,7 +1,7 @@
+import { Selector } from '@astryxdesign/core';
 import type { CatalogEntityKind, CatalogSearchResult } from '../../catalogResearch';
 import type { ResearchCollection } from '../../db';
 import type { SearchFilters } from '../researchApi';
-import { CollectionPicker } from './CollectionPicker';
 
 const GROUPS: Array<[CatalogEntityKind, string]> = [
   ['screen', 'Screens'], ['flow', 'Flows'], ['component', 'Components'], ['token', 'Foundations'],
@@ -17,33 +17,37 @@ interface SearchResultsProps {
   onCollectionsChange: (collections: ResearchCollection[]) => void;
 }
 
-export function SearchResults({ result, filters, onFiltersChange, onOpen, collections, onCollectionsChange }: SearchResultsProps) {
+export function SearchResults({ result, filters, onFiltersChange, onOpen }: SearchResultsProps) {
   const select = (label: string, key: keyof SearchFilters, values: string[]) => (
-    <label style={{ display: 'grid', gap: 4, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>
-      {label}
-      <select value={filters[key] ?? ''} onChange={(event) => onFiltersChange({ ...filters, [key]: event.target.value || undefined })} style={selectStyle}>
-        <option value="">All {label.toLowerCase()}</option>
-        {values.map((value) => <option key={value}>{value}</option>)}
-      </select>
-    </label>
+    <Selector
+      label={label}
+      size="sm"
+      hasClear
+      value={filters[key] ?? null}
+      onChange={(value) => onFiltersChange({ ...filters, [key]: value ?? undefined })}
+      placeholder={`All ${label.toLowerCase()}`}
+      options={values}
+    />
   );
   return (
     <section aria-label="Catalog search results" style={{ margin: '2px 0 28px', padding: 18, border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-background-surface)' }}>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'end', marginBottom: 20 }}>
-        <label style={{ display: 'grid', gap: 4, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>
-          Type
-          <select value={filters.kind} onChange={(event) => onFiltersChange({ ...filters, kind: event.target.value as SearchFilters['kind'] })} style={selectStyle}>
-            <option value="all">All types</option>
-            {GROUPS.map(([kind, label]) => <option key={kind} value={kind}>{label} ({result.facets.kinds[kind]})</option>)}
-          </select>
-        </label>
+        <Selector
+          label="Type"
+          size="sm"
+          value={filters.kind}
+          onChange={(value) => onFiltersChange({ ...filters, kind: value as SearchFilters['kind'] })}
+          options={[
+            { value: 'all', label: 'All types' },
+            ...GROUPS.map(([kind, label]) => ({ value: kind, label: `${label} (${result.facets.kinds[kind]})` })),
+          ]}
+        />
         {select('Theme', 'theme', result.facets.themes)}
         {select('Page type', 'pageType', result.facets.pageTypes)}
         {select('Product area', 'productArea', result.facets.productAreas)}
         {select('State', 'state', result.facets.states)}
         {select('Layout', 'layout', result.facets.layouts)}
         {select('Component', 'component', result.facets.components)}
-        {select('Viewport', 'viewport', result.facets.viewports)}
         {select('App category', 'appCategory', result.facets.appCategories)}
         <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{result.items.length} matches</span>
       </div>
@@ -61,11 +65,6 @@ export function SearchResults({ result, filters, onFiltersChange, onOpen, collec
                     <div style={{ marginTop: 3, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{item.description}</div>
                     <div style={{ marginTop: 5, fontSize: 11.5, color: 'var(--color-text-disabled)' }}>{item.evidenceIds.length} source{item.evidenceIds.length === 1 ? '' : 's'} · observed evidence</div>
                   </button>
-                  <CollectionPicker
-                    reference={{ kind: item.kind, app: item.app, referenceId: item.id, title: item.title }}
-                    collections={collections}
-                    onCollectionsChange={onCollectionsChange}
-                  />
                 </article>
               ))}
             </div>
@@ -75,5 +74,3 @@ export function SearchResults({ result, filters, onFiltersChange, onOpen, collec
     </section>
   );
 }
-
-const selectStyle = { height: 34, minWidth: 130, border: '1px solid var(--color-border)', borderRadius: 8, background: 'var(--color-background-surface)', color: 'var(--color-text-primary)', padding: '0 9px', font: 'inherit', fontSize: 12.5 };

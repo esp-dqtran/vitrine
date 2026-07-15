@@ -1,10 +1,11 @@
-import type { CatalogComparison, CatalogSearchResult, CatalogEntityKind } from '../catalogResearch';
+import type { CatalogSearchResult, CatalogEntityKind } from '../catalogResearch';
 import type { CollectionItemKind, ResearchCollection } from '../db';
 import type { AppVersion } from '../db';
 import type { ExportFormat, ExportScope } from '../exportEngine';
 import type { CuratorAction } from '../curatorReview';
 import type { DesignSystemSnapshot } from '../designSystem';
 import type { CrawlPlan } from '../crawlPlan';
+import type { Platform } from '../platformFromUrl';
 import type {
   CrawlPlanView,
   CrawlRepairRequest,
@@ -24,7 +25,6 @@ export interface SearchFilters {
   state?: string;
   layout?: string;
   component?: string;
-  viewport?: string;
   appCategory?: string;
 }
 
@@ -55,13 +55,8 @@ export function searchCatalog(query: string, filters: SearchFilters, signal?: Ab
   if (filters.state) params.set('state', filters.state);
   if (filters.layout) params.set('layout', filters.layout);
   if (filters.component) params.set('component', filters.component);
-  if (filters.viewport) params.set('viewport', filters.viewport);
   if (filters.appCategory) params.set('appCategory', filters.appCategory);
   return json(`/api/search?${params}`, { signal });
-}
-
-export function compareApps(apps: string[]): Promise<CatalogComparison> {
-  return json(`/api/compare?apps=${encodeURIComponent(apps.join(','))}`);
 }
 
 export const listCollections = (): Promise<ResearchCollection[]> => json('/api/collections');
@@ -75,9 +70,9 @@ export const updateCollectionItemNotes = (collectionId: number, itemId: number, 
 export const removeCollectionItem = (collectionId: number, itemId: number): Promise<void> =>
   json(`/api/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' });
 
-export async function requestExport(app: string, format: ExportFormat, selection: ExportScope): Promise<{ blob: Blob; filename: string }> {
+export async function requestExport(app: string, platform: Platform, format: ExportFormat, selection: ExportScope): Promise<{ blob: Blob; filename: string }> {
   const response = await fetch(`/api/design-systems/${app}/exports`, {
-    method: 'POST', headers: jsonHeaders, body: JSON.stringify({ format, selection }),
+    method: 'POST', headers: jsonHeaders, body: JSON.stringify({ format, platform, selection }),
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -88,14 +83,14 @@ export async function requestExport(app: string, format: ExportFormat, selection
   return { blob: await response.blob(), filename };
 }
 
-export const listAppVersions = (app: string): Promise<AppVersion[]> => json(`/api/apps/${app}/versions`);
-export const createAppVersion = (app: string, sourceUrl: string): Promise<AppVersion> =>
-  json(`/api/apps/${app}/versions`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ sourceUrl }) });
+export const listAppVersions = (app: string, platform: Platform): Promise<AppVersion[]> => json(`/api/apps/${app}/versions?platform=${platform}`);
+export const createAppVersion = (app: string, platform: Platform, sourceUrl: string): Promise<AppVersion> =>
+  json(`/api/apps/${app}/versions`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ platform, sourceUrl }) });
 export const getVersionBlockers = (versionId: number): Promise<{ blockers: Array<{ code: string; message: string }> }> => json(`/api/versions/${versionId}/blockers`);
 export const submitVersion = (versionId: number): Promise<AppVersion> => json(`/api/versions/${versionId}/submit`, { method: 'POST' });
 export const publishVersion = (versionId: number): Promise<AppVersion> => json(`/api/versions/${versionId}/publish`, { method: 'POST' });
-export const applyReviewAction = (app: string, action: CuratorAction): Promise<DesignSystemSnapshot> =>
-  json(`/api/apps/${app}/review-actions`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(action) });
+export const applyReviewAction = (app: string, platform: Platform, action: CuratorAction): Promise<DesignSystemSnapshot> =>
+  json(`/api/apps/${app}/review-actions?platform=${platform}`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(action) });
 
 const crawlPath = (value: string) => encodeURIComponent(value);
 

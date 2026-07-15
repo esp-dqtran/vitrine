@@ -18,8 +18,9 @@ export interface CatalogScreen {
   platform: string;
   description: string | null;
   url: string | null;
+  /** Resized grid-tile preview; falls back to the full image server-side if none was generated. */
+  thumbnailUrl: string | null;
   sourceUrl: string | null;
-  viewport: string;
   layoutPatterns: string[];
   componentNames: string[];
   visibleText: string[];
@@ -59,9 +60,10 @@ function screen(
   app: string,
   image: CrawledImage,
   previewRank?: number,
-  imageUrl: (app: string, source: string) => string = publicImageUrl,
+  imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
 ): CatalogScreen {
   const hash = bulkImageHash(image.image_url);
+  const previewUrl = hash ? `/api/preview-media/${app}/${previewRank}` : null;
   return {
     id: image.id,
     type: image.analysis?.pageType ?? "Unclassified",
@@ -71,16 +73,14 @@ function screen(
     platform: image.platform,
     description: image.description,
     sourceUrl: image.capture_url ?? null,
-    viewport: image.analysis?.responsiveViewport ?? (image.viewport_width ? `${image.viewport_width}×${image.viewport_height ?? '?'}` : 'unknown'),
     layoutPatterns: image.analysis?.layoutPatterns ?? [],
     componentNames: image.analysis?.componentNames ?? [],
     visibleText: image.analysis?.visibleText ?? [],
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,
-    url: previewRank
-      ? hash ? `/api/preview-media/${app}/${previewRank}` : null
-      : imageUrl(app, image.image_url),
+    url: previewRank ? previewUrl : imageUrl(app, image.image_url),
+    thumbnailUrl: previewRank ? previewUrl : imageUrl(app, image.image_url, "thumb"),
   };
 }
 
@@ -145,7 +145,7 @@ export function buildAppDetailPage(
   appSlug: string,
   cursor?: string,
   requestedLimit = 24,
-  imageUrl: (app: string, source: string) => string = publicImageUrl,
+  imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
 ): { app: CatalogApp; screens: CatalogScreen[]; nextCursor: string | null } | undefined {
   const appImages = groups(images).get(appSlug)?.sort((a, b) => a.id - b.id);
   if (!appImages) return undefined;
@@ -175,24 +175,7 @@ export function buildGalleryApps(images: CrawledImage[]) {
       totalScreens: appImages.length,
       websiteUrl: meta.websiteUrl,
       iconUrl: appImages[0]?.icon_url ?? null,
-      screens: appImages.slice(0, MAX_SCREENS_PER_APP).map((image) => ({
-        id: image.id,
-        type: image.analysis?.pageType ?? "Unclassified",
-        productArea: image.analysis?.productArea ?? "Unclassified",
-        theme: image.analysis?.theme ?? "mixed",
-        visibleStates: image.analysis?.visibleStates ?? [],
-        platform: image.platform,
-        description: image.description,
-        sourceUrl: image.capture_url ?? null,
-        viewport: image.analysis?.responsiveViewport ?? (image.viewport_width ? `${image.viewport_width}×${image.viewport_height ?? '?'}` : 'unknown'),
-        layoutPatterns: image.analysis?.layoutPatterns ?? [],
-        componentNames: image.analysis?.componentNames ?? [],
-        visibleText: image.analysis?.visibleText ?? [],
-        capturedAt: image.captured_at ?? null,
-        stateContext: image.state_context ?? null,
-        confidence: image.analysis?.confidence ?? null,
-        url: publicImageUrl(app, image.image_url),
-      })),
+      screens: appImages.slice(0, MAX_SCREENS_PER_APP).map((image) => screen(app, image)),
     };
   });
 }

@@ -71,6 +71,24 @@ test("allows development MinIO but rejects insecure or path-style production end
   }), /path-style.*production/i);
 });
 
+test("parses a separate public endpoint for signing browser-facing URLs", () => {
+  assert.deepEqual(objectStoreConfigFromEnvironment({
+    NODE_ENV: "development", OBJECT_STORE_BACKEND: "s3", OBJECT_STORE_S3_BUCKET: "astryx",
+    OBJECT_STORE_S3_REGION: "us-east-1", OBJECT_STORE_S3_ENDPOINT: "http://minio:9000",
+    OBJECT_STORE_S3_PUBLIC_ENDPOINT: "http://localhost:9000",
+    OBJECT_STORE_S3_FORCE_PATH_STYLE: "true", OBJECT_STORE_ACCESS_KEY_ID: "key",
+    OBJECT_STORE_SECRET_ACCESS_KEY: "secret",
+  }), {
+    backend: "s3", bucket: "astryx", region: "us-east-1", prefix: "",
+    endpoint: "http://minio:9000/", publicEndpoint: "http://localhost:9000/", forcePathStyle: true,
+    accessKeyId: "key", secretAccessKey: "secret",
+  });
+  assert.throws(() => objectStoreConfigFromEnvironment({
+    NODE_ENV: "production", OBJECT_STORE_BACKEND: "s3", OBJECT_STORE_S3_BUCKET: "astryx",
+    OBJECT_STORE_S3_REGION: "us-east-1", OBJECT_STORE_S3_PUBLIC_ENDPOINT: "http://minio:9000",
+  }), /HTTPS/i);
+});
+
 test("rejects unknown backends and unsafe prefixes", () => {
   assert.throws(() => objectStoreConfigFromEnvironment({ OBJECT_STORE_BACKEND: "memory" }), /backend/i);
   assert.throws(() => objectStoreConfigFromEnvironment({

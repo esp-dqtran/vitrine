@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Selector } from "@astryxdesign/core";
 import { parseCrawlPlan, type CrawlPlan, type CrawlStep } from "../../crawlPlan";
 import type {
   CrawlPlanView,
@@ -450,7 +451,13 @@ function AdminCrawlWorkspace({
         {canStartPlan && (
           <div style={{ display: "grid", gap: 10 }}>
             <div style={fieldsStyle}>
-              <label style={fieldStyle}>Execution mode<select value={headless ? "headless" : "headed"} onChange={(event) => setHeadless(event.target.value === "headless")} style={inputStyle}><option value="headless">Headless</option><option value="headed">Headed</option></select></label>
+              <Selector
+                label="Execution mode"
+                size="sm"
+                value={headless ? "headless" : "headed"}
+                onChange={(value) => setHeadless(value === "headless")}
+                options={[{ value: "headless", label: "Headless" }, { value: "headed", label: "Headed" }]}
+              />
               <span style={badgeStyle}>Chromium</span><span style={mutedStyle}>Safe flows only by default</span>
             </div>
             {displayedPlan?.flows.some((flow) => !flow.safe) && <div style={{ display: "grid", gap: 7 }}>
@@ -529,22 +536,22 @@ function AdminCrawlWorkspace({
   );
 }
 
-const workspaceStyle = { display: "grid", gap: 14, color: "#fff" };
+const workspaceStyle = { display: "grid", gap: 14, color: "var(--color-text-primary)" };
 const titleStyle = { margin: "0 0 4px", fontSize: 22 };
-const mutedStyle = { margin: "6px 0 0", color: "#a1a1aa", fontSize: 13 };
-const panelStyle = { padding: 16, border: "1px solid rgba(255,255,255,.13)", borderRadius: 13, background: "rgba(255,255,255,.055)" };
+const mutedStyle = { margin: "6px 0 0", color: "var(--color-text-secondary)", fontSize: 13 };
+const panelStyle = { padding: 16, border: "1px solid var(--color-border)", borderRadius: 13, background: "var(--color-background-muted)" };
 const fieldsStyle = { display: "flex", alignItems: "end", gap: 10, flexWrap: "wrap" as const };
-const fieldStyle = { display: "grid", gap: 5, flex: 1, minWidth: 180, color: "#d4d4d8", fontSize: 12 };
-const inputStyle = { minHeight: 36, border: "1px solid rgba(255,255,255,.2)", borderRadius: 8, padding: "0 10px", background: "#202024", color: "#fff", font: "inherit" };
-const buttonStyle = { minHeight: 36, border: "1px solid rgba(255,255,255,.25)", borderRadius: 8, padding: "0 12px", background: "#fff", color: "#18181b", cursor: "pointer", font: "inherit", fontWeight: 650 };
-const secondaryButtonStyle = { ...buttonStyle, background: "rgba(255,255,255,.07)", color: "#fff" };
-const nestedStyle = { padding: 12, border: "1px solid rgba(255,255,255,.1)", borderRadius: 9, background: "rgba(0,0,0,.12)" };
-const badgeStyle = { display: "inline-flex", alignItems: "center", minHeight: 24, border: "1px solid rgba(255,255,255,.16)", borderRadius: 999, padding: "0 8px", color: "#d4d4d8", fontSize: 11 };
-const smallHeadingStyle = { display: "block", marginBottom: 6, color: "#d4d4d8", fontSize: 12 };
-const listStyle = { display: "grid", gap: 5, margin: "6px 0 0", paddingLeft: 20, color: "#d4d4d8", fontSize: 12 };
-const linkStyle = { color: "#c4b5fd" };
-const warningStyle = { margin: "8px 0", color: "#fbbf24", fontSize: 12 };
-const preStyle = { maxHeight: 240, overflow: "auto", padding: 10, borderRadius: 8, background: "rgba(0,0,0,.22)", color: "#d4d4d8", fontSize: 11, whiteSpace: "pre-wrap" as const };
+const fieldStyle = { display: "grid", gap: 5, flex: 1, minWidth: 180, color: "var(--color-text-secondary)", fontSize: 12 };
+const inputStyle = { minHeight: 36, border: "1px solid var(--color-border)", borderRadius: 8, padding: "0 10px", background: "var(--color-background-body)", color: "var(--color-text-primary)", font: "inherit" };
+const buttonStyle = { minHeight: 36, border: "1px solid var(--color-border-emphasized)", borderRadius: 8, padding: "0 12px", background: "var(--color-text-primary)", color: "var(--color-background-surface)", cursor: "pointer", font: "inherit", fontWeight: 650 };
+const secondaryButtonStyle = { ...buttonStyle, background: "var(--color-background-muted)", color: "var(--color-text-primary)" };
+const nestedStyle = { padding: 12, border: "1px solid var(--color-border)", borderRadius: 9, background: "var(--color-background-muted)" };
+const badgeStyle = { display: "inline-flex", alignItems: "center", minHeight: 24, border: "1px solid var(--color-border)", borderRadius: 999, padding: "0 8px", color: "var(--color-text-secondary)", fontSize: 11 };
+const smallHeadingStyle = { display: "block", marginBottom: 6, color: "var(--color-text-secondary)", fontSize: 12 };
+const listStyle = { display: "grid", gap: 5, margin: "6px 0 0", paddingLeft: 20, color: "var(--color-text-secondary)", fontSize: 12 };
+const linkStyle = { color: "var(--color-text-purple)" };
+const warningStyle = { margin: "8px 0", color: "var(--color-text-yellow)", fontSize: 12 };
+const preStyle = { maxHeight: 240, overflow: "auto", padding: 10, borderRadius: 8, background: "var(--color-background-muted)", color: "var(--color-text-secondary)", fontSize: 11, whiteSpace: "pre-wrap" as const };
 const cardGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 };
 const terminalStatuses = new Set(["succeeded", "failed", "cancelled", "interrupted"]);
 const settledRunStatuses = new Set(["succeeded", "failed", "cancelled"]);

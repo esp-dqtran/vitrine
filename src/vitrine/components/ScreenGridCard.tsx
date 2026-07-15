@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlaceholderImage } from './PlaceholderImage';
 import type { Screen } from '../types';
+import { screenAspectRatio } from '../screenAspect';
 
 interface ScreenGridCardProps {
   screen: Screen;
@@ -18,7 +19,7 @@ export function ScreenGridCard({ screen, accent, delay, onOpen }: ScreenGridCard
       onClick={onOpen}
       style={{
         position: 'relative',
-        aspectRatio: '16/10',
+        aspectRatio: screenAspectRatio(screen.platform),
         borderRadius: 'var(--radius-container)',
         overflow: 'hidden',
         background: 'var(--color-background-muted)',
@@ -31,12 +32,12 @@ export function ScreenGridCard({ screen, accent, delay, onOpen }: ScreenGridCard
       }}
     >
       <PlaceholderImage
-        src={screen.url}
+        src={screen.thumbnailUrl ?? screen.url}
         accent={accent}
         style={{ transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
       />
       <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
-        {[screen.productArea, screen.viewport, ...(screen.visibleStates ?? []).slice(0, 1)].filter(Boolean).map((label) => <span key={label} style={{ padding: '3px 7px', borderRadius: 999, background: 'rgba(24,24,27,.72)', color: '#fff', fontSize: 10.5, backdropFilter: 'blur(4px)' }}>{label}</span>)}
+        {[screen.productArea, ...(screen.visibleStates ?? []).slice(0, 1)].filter((label) => Boolean(label) && label !== 'Unclassified').map((label) => <span key={label} style={{ padding: '3px 7px', borderRadius: 999, background: 'rgba(24,24,27,.72)', color: '#fff', fontSize: 10.5, backdropFilter: 'blur(4px)' }}>{label}</span>)}
       </div>
     </div>
   );

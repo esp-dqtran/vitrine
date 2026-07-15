@@ -42,6 +42,18 @@ test('renders secondary formats from the same scoped snapshot', () => {
   assert.equal(JSON.parse(buildExportArtifact(snapshot, images, 'json', whole).content.toString()).tokens.length, 2);
 });
 
+test('renders a DESIGN.md with token frontmatter and observed components', () => {
+  const text = buildExportArtifact(snapshot, images, 'design-md', whole).content.toString();
+  assert.match(text, /^---\n/);
+  assert.match(text, /name: "linear-design-analysis"/);
+  assert.match(text, /colors:\n {2}accent: "#5E6AD2" # Primary action/);
+  assert.match(text, /spacing:\n {2}space-8: "8px" # Control gap/);
+  assert.match(text, /### Button \(Actions\)/);
+  assert.match(text, /\*\*Primary\*\* — Filled action/);
+  assert.match(text, /## Agent Prompt Guide/);
+  assert.match(text, /- Accent: `#5E6AD2` — Primary action/);
+});
+
 test('exports only the selected observed family or foundation category', () => {
   const family = buildExportArtifact(snapshot, images, 'json', { kind: 'component-family', id: 'button' });
   const familyJson = JSON.parse(family.content.toString());

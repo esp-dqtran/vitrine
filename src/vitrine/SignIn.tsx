@@ -34,10 +34,10 @@ function CheckIcon() {
 function Wordmark() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-      <div style={{ width: 26, height: 26, borderRadius: 8, background: '#171717', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-        <div style={{ width: 11, height: 11, borderRadius: 3, background: '#fff' }} />
+      <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+        <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} />
       </div>
-      <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: '#171717' }}>Vitrine</span>
+      <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
     </div>
   );
 }
@@ -569,7 +569,7 @@ export function SignIn({
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: '#fff' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: 'var(--color-background-surface)' }}>
       <div style={{ flex: '1 1 480px', minWidth: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 32px' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ marginBottom: 44, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) both' }}>

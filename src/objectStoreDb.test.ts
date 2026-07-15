@@ -3,6 +3,7 @@ import test from "node:test";
 import type { PoolClient, QueryResult } from "pg";
 import {
   attachImageObject,
+  attachThumbnailObject,
   adminImageObject,
   crawlFailureObject,
   entitledImageObject,
@@ -157,6 +158,60 @@ test("admin object lookup remains app-scoped without published-only filtering", 
   assert.match(captured!.sql, /JOIN platforms p[\s\S]+JOIN apps a/);
   assert.doesNotMatch(captured!.sql, /object_key\s*=\s*\$\d/);
   assert.doesNotMatch(captured!.sql, /status = 'published'/);
+});
+
+test("thumbnail variant lookup joins on the thumbnail key, falling back to the full object", async () => {
+  let captured: { sql: string; values?: readonly unknown[] } | undefined;
+  const query: DatabaseQuery = async (sql, values) => {
+    captured = { sql, values };
+    return result([{ object_key: metadata.key, sha256: metadata.sha256, byte_size: 123, content_type: metadata.contentType, access_class: "internal" }]);
+  };
+  await adminImageObject({ app: "alpha", hash: "0123456789abcdef", variant: "thumb" }, query);
+  assert.match(captured!.sql, /so\.object_key = COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
+});
+
+test("omitting variant (or passing 'full') joins on the full object key only", async () => {
+  let captured: { sql: string; values?: readonly unknown[] } | undefined;
+  const query: DatabaseQuery = async (sql, values) => {
+    captured = { sql, values };
+    return result([{ object_key: metadata.key, sha256: metadata.sha256, byte_size: 123, content_type: metadata.contentType, access_class: "internal" }]);
+  };
+  await adminImageObject({ app: "alpha", hash: "0123456789abcdef" }, query);
+  assert.match(captured!.sql, /so\.object_key = i\.object_key/);
+  assert.doesNotMatch(captured!.sql, /thumbnail_object_key/);
+});
+
+test("attaches a thumbnail without touching the image's full-resolution object", async () => {
+  const calls: Array<{ sql: string; values?: unknown[] }> = [];
+  const client = {
+    async query(sql: string, values?: unknown[]) {
+      calls.push({ sql, values });
+      if (sql.includes("INSERT INTO stored_objects")) return result([{ object_key: metadata.key }]);
+      if (sql.includes("UPDATE images")) return result([{ id: 7 }]);
+      return result();
+    },
+  } as unknown as PoolClient;
+
+  await attachThumbnailObject(client, { imageId: 7, metadata });
+
+  assert.deepEqual(calls.map(({ sql }) => sql.trim().split(/\s+/)[0]), ["BEGIN", "INSERT", "UPDATE", "COMMIT"]);
+  assert.match(calls[2].sql, /SET thumbnail_object_key = \$2/);
+  assert.deepEqual(calls[2].values, [7, metadata.key]);
+});
+
+test("attaching a thumbnail to a missing image rolls back", async () => {
+  const calls: string[] = [];
+  const client = {
+    async query(sql: string) {
+      calls.push(sql);
+      if (sql.includes("INSERT INTO stored_objects")) return result([{ object_key: metadata.key }]);
+      if (sql.includes("UPDATE images")) return result([], 0);
+      return result();
+    },
+  } as unknown as PoolClient;
+
+  await assert.rejects(attachThumbnailObject(client, { imageId: 404, metadata }), /image not found/i);
+  assert.equal(calls.at(-1), "ROLLBACK");
 });
 
 test("trusted worker lookup resolves metadata by image id without accepting a key", async () => {

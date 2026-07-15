@@ -1,5 +1,6 @@
 import { ArrowButton } from './ArrowButton';
 import { PlaceholderImage } from './PlaceholderImage';
+import { screenAspectRatio } from '../screenAspect';
 
 interface LightboxItem {
   /** Real image URL, when the item comes from a crawl. */
@@ -8,6 +9,7 @@ interface LightboxItem {
   seed?: string;
   type: string;
   caption: string;
+  platform?: string;
 }
 
 interface LightboxProps {
@@ -66,7 +68,8 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
         style={{
           position: 'relative',
           width: 'min(880px, 90vw)',
-          aspectRatio: '16/10',
+          aspectRatio: screenAspectRatio(item.platform ?? 'web'),
+          maxHeight: '80vh',
           borderRadius: 14,
           overflow: 'hidden',
           background: 'var(--color-background-muted)',
@@ -74,7 +77,7 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
           animation: 'vtScaleIn .3s cubic-bezier(.16,1,.3,1) both',
         }}
       >
-        <PlaceholderImage src={item.url} seed={item.seed} />
+        <PlaceholderImage src={item.url} seed={item.seed} style={{ objectFit: 'contain' }} />
         {total > 1 && <ArrowButton direction="left" visible onClick={() => onNavigate(index - 1)} />}
         {total > 1 && <ArrowButton direction="right" visible onClick={() => onNavigate(index + 1)} />}
       </div>

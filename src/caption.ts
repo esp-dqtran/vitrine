@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { uncaptionedImages, saveScreenAnalysis } from "./db.ts";
-import { CAPTION_PROMPT } from "./prompt.ts";
+import { buildCaptionPrompt } from "./prompt.ts";
 import { startChatPool } from "./llmChat.ts";
 import { runPool } from "./pool.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
@@ -12,7 +12,7 @@ import { parseScreenAnalysis } from "./screenAnalysis.ts";
 
 export const parseCaptionReply = parseScreenAnalysis;
 
-export type CaptionImage = { id: number; app: string; image_url: string };
+export type CaptionImage = { id: number; app: string; platform: string; image_url: string };
 
 const CAPTION_IMAGE_EXTENSIONS = new Set(["png", "jpg", "webp"]);
 
@@ -116,7 +116,7 @@ export async function caption(
       try {
         const reply = await withDownloaded(
           image,
-          (filePath) => session.ask(CAPTION_PROMPT, filePath),
+          (filePath) => session.ask(buildCaptionPrompt(image.platform), filePath),
           dependencies,
         );
         await saveScreenAnalysis(image.id, parseCaptionReply(reply));

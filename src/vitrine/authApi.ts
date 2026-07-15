@@ -30,3 +30,15 @@ export async function logout(): Promise<void> {
   const response = await fetch("/api/auth/logout", { method: "POST" });
   if (!response.ok) throw new Error(`Logout returned ${response.status}`);
 }
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const response = await fetch("/api/auth/password", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error ?? `Password change returned ${response.status}`);
+  }
+}

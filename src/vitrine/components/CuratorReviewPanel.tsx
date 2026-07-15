@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import type { DesignSystemSnapshot, EvidenceView } from '../../designSystem';
 import type { CuratorAction } from '../../curatorReview';
+import type { Platform } from '../../platformFromUrl';
 import { applyReviewAction } from '../researchApi';
 import { loadDesignSystem } from '../useDesignSystem';
 
-export function CuratorReviewPanel({ app, snapshot }: { app: string; snapshot: DesignSystemSnapshot<EvidenceView> | null }) {
+export function CuratorReviewPanel({ app, platform, snapshot }: { app: string; platform: Platform; snapshot: DesignSystemSnapshot<EvidenceView> | null }) {
   const [working, setWorking] = useState(snapshot);
   const [message, setMessage] = useState('');
   useEffect(() => setWorking(snapshot), [snapshot]);
   if (!working) return <p>No working design system to review.</p>;
-  const act = async (action: CuratorAction) => { try { await applyReviewAction(app, action); setWorking(await loadDesignSystem(app)); setMessage('Saved without changing evidence links.'); } catch (error) { setMessage((error as Error).message); } };
+  const act = async (action: CuratorAction) => { try { await applyReviewAction(app, platform, action); setWorking(await loadDesignSystem(app, platform)); setMessage('Saved without changing evidence links.'); } catch (error) { setMessage((error as Error).message); } };
   const rename = (kind: 'token' | 'component' | 'variant' | 'rule', id: string, current: string, componentId?: string) => { const name = window.prompt('Reviewed name', current)?.trim(); if (name) void act({ type: 'rename', kind, id, name, componentId }); };
   const reject = (kind: 'token' | 'component' | 'variant' | 'rule', id: string, componentId?: string) => { if (window.confirm('Reject this extracted item? Its source screen remains in the version.')) void act({ type: 'reject', kind, id, componentId }); };
   const merge = () => { const ids = window.prompt('Component ids to merge, comma separated')?.split(',').map((value) => value.trim()).filter(Boolean); if (!ids || ids.length < 2) return; const targetId = window.prompt('Merged component id', ids[0])?.trim(); const name = window.prompt('Merged component name')?.trim(); if (targetId && name) void act({ type: 'merge-components', ids, targetId, name }); };

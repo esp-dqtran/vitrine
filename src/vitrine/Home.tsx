@@ -251,11 +251,11 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           gap: 20,
           padding: '11px 12px 11px 22px',
           borderRadius: 999,
-          background: 'rgba(255,255,255,0.55)',
+          background: 'light-dark(rgba(255,255,255,0.55), rgba(31,31,34,0.65))',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.6)',
-          boxShadow: '0 8px 30px rgba(24,24,27,0.08), inset 0 1px 0 rgba(255,255,255,0.5)',
+          border: '1px solid light-dark(rgba(255,255,255,0.6), rgba(255,255,255,0.1))',
+          boxShadow: 'light-dark(0 8px 30px rgba(24,24,27,0.08), 0 8px 30px rgba(0,0,0,0.4)), inset 0 1px 0 light-dark(rgba(255,255,255,0.5), rgba(255,255,255,0.06))',
         }}
       >
         <button type="button" onClick={onBrowse} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>

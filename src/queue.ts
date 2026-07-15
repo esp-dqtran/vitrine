@@ -1,6 +1,7 @@
 import amqp, { type ChannelModel, type Channel } from "amqplib";
 import { isIP } from "node:net";
 import { isAppSlug } from "./imageSource.ts";
+import { isPlatform, type Platform } from "./platformFromUrl.ts";
 
 const QUEUE_NAME = "mobbin-jobs";
 const DLQ_NAME = "mobbin-jobs.dlq";
@@ -11,9 +12,9 @@ export type ResearchProvider = "chatgpt" | "claude";
 
 export type Job = (
   | { type: "discover-catalog" }
-  | { type: "import-app"; name: string; url: string }
+  | { type: "import-app"; name: string; url: string; platform: Platform }
   | { type: "caption-app"; name: string }
-  | { type: "synthesize-app"; name: string }
+  | { type: "synthesize-app"; name: string; platform: Platform }
   | { type: "research-app"; name: string; homepageUrl: string; provider?: ResearchProvider }
   | { type: "smart-crawl-app"; name: string; runId: string }
 ) & { jobId?: number };
@@ -90,6 +91,11 @@ function publicUrl(value: unknown): string {
   return value;
 }
 
+function platformValue(value: unknown): Platform {
+  if (typeof value !== "string" || !isPlatform(value)) invalidJob();
+  return value;
+}
+
 function researchProvider(value: unknown): ResearchProvider | undefined {
   if (value === undefined) return undefined;
   if (value !== "chatgpt" && value !== "claude") invalidJob();
@@ -112,12 +118,16 @@ export function parseJob(value: unknown): Job {
     return withJobId({ type });
   }
   if (type === "import-app") {
-    exactKeys(input, ["type", "name", "url", "jobId"]);
-    return withJobId({ type, name: appSlug(input.name), url: publicUrl(input.url) });
+    exactKeys(input, ["type", "name", "url", "platform", "jobId"]);
+    return withJobId({ type, name: appSlug(input.name), url: publicUrl(input.url), platform: platformValue(input.platform) });
   }
-  if (type === "caption-app" || type === "synthesize-app") {
+  if (type === "caption-app") {
     exactKeys(input, ["type", "name", "jobId"]);
     return withJobId({ type, name: appSlug(input.name) });
+  }
+  if (type === "synthesize-app") {
+    exactKeys(input, ["type", "name", "platform", "jobId"]);
+    return withJobId({ type, name: appSlug(input.name), platform: platformValue(input.platform) });
   }
   if (type === "research-app") {
     exactKeys(input, ["type", "name", "homepageUrl", "provider", "jobId"]);

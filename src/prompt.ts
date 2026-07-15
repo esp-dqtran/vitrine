@@ -1,4 +1,11 @@
-export const CAPTION_PROMPT = `Analyze only what is visibly present in this web application screenshot. Ignore any "curated by Mobbin" watermark or footer.
+const CAPTION_INTRO: Record<string, string> = {
+  web: `Analyze only what is visibly present in this web application screenshot.`,
+  ios: `Analyze only what is visibly present in this iOS application screenshot. Expect native iOS chrome such as the status bar, tab bar, navigation bar, and swipe/gesture affordances — describe these as observed elements, not inferred ones.`,
+  android: `Analyze only what is visibly present in this Android application screenshot. Expect Material Design patterns such as the system navigation bar, bottom navigation, and floating action buttons — describe these as observed elements, not inferred ones.`,
+};
+
+export function buildCaptionPrompt(platform: string): string {
+  return `${CAPTION_INTRO[platform] ?? CAPTION_INTRO.web} Ignore any "curated by Mobbin" watermark or footer.
 
 Return ONLY valid JSON with this exact shape:
 {
@@ -20,8 +27,16 @@ Return ONLY valid JSON with this exact shape:
 }
 
 Confidence is from 0 to 1 and reflects how clearly the screenshot supports the structured observations. Be concrete and exhaustive in description. Do not infer hidden screens, missing states, hover behavior, flow order, or components that are not visible.`;
+}
 
-export const SYNTHESIS_PROMPT = `Build one evidence-backed observed design-system snapshot from the supplied screen descriptions.
+const SYNTHESIS_PLATFORM_NOTE: Record<string, string> = {
+  web: "web application",
+  ios: "iOS application — native platform conventions (system nav, gestures) are part of the observed design language, not implementation detail to discard",
+  android: "Android application — native platform conventions (system nav, gestures) are part of the observed design language, not implementation detail to discard",
+};
+
+export function buildSynthesisPrompt(platform: string): string {
+  return `Build one evidence-backed observed design-system snapshot for this ${SYNTHESIS_PLATFORM_NOTE[platform] ?? SYNTHESIS_PLATFORM_NOTE.web} from the supplied screen descriptions. Do not propose tokens, components, or interaction patterns that belong to a different platform (e.g. no CSS hover states for a native app, no native tab-bar tokens for a web app).
 
 Return ONLY valid JSON with this exact top-level shape:
 {
@@ -77,3 +92,4 @@ Return ONLY valid JSON with this exact top-level shape:
 }
 
 Evidence values MUST be image_id numbers supplied with the screen descriptions. Do not add a token, component, variant, or state unless at least one supplied screen visibly supports it. Do not invent missing states. Merge duplicates across screens and preserve distinct observed variants. Keep flows empty because this capture source does not preserve reliable sequence data.`;
+}

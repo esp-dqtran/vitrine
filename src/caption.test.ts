@@ -40,7 +40,7 @@ test("rejects an unstructured caption reply", () => {
 test("materializes object-backed captions in a private temporary file and removes it", async () => {
   let filePath = "";
   const result = await withDownloaded(
-    { id: 1, app: "Test", image_url: "mobbin-bulk:abc" },
+    { id: 1, app: "Test", platform: "web", image_url: "mobbin-bulk:abc" },
     async (path) => {
       filePath = path;
       assert.equal(statSync(dirname(path)).mode & 0o777, 0o700);
@@ -61,7 +61,7 @@ test("removes object-backed temporary files when captioning fails", async () => 
   let directory = "";
   await assert.rejects(
     withDownloaded(
-      { id: 1, app: "Test", image_url: "mobbin-bulk:abc" },
+      { id: 1, app: "Test", platform: "web", image_url: "mobbin-bulk:abc" },
       async (path) => {
         directory = dirname(path);
         throw new Error("provider failed");
@@ -79,7 +79,7 @@ test("removes object-backed temporary files when captioning fails", async () => 
 test("rejects object bytes that do not match associated metadata", async () => {
   await assert.rejects(
     withDownloaded(
-      { id: 1, app: "Test", image_url: "mobbin-bulk:abc" },
+      { id: 1, app: "Test", platform: "web", image_url: "mobbin-bulk:abc" },
       async () => assert.fail("caption callback must not receive unverified bytes"),
       {
         objectStore: storeReturning(Buffer.from("wrong")),
@@ -98,7 +98,7 @@ test("keeps the remote-image fallback when no object is associated", async () =>
   });
   try {
     await withDownloaded(
-      { id: 2, app: "test", image_url: "https://example.test/image.webp" },
+      { id: 2, app: "test", platform: "web", image_url: "https://example.test/image.webp" },
       async (path) => {
         filePath = path;
         assert.equal(existsSync(path), true);

@@ -6,9 +6,6 @@ interface HeroButtonProps {
   children: ReactNode;
 }
 
-// ponytail: bespoke translucent CTA for the dark hero backdrop — Astryx Button
-// reads theme tokens, which don't give a legible result over a fixed-dark image
-// hero. Kept intentionally outside the design system for this one surface.
 export function HeroButton({ primary, onClick, children }: HeroButtonProps) {
   const [hover, setHover] = useState(false);
   const [active, setActive] = useState(false);
@@ -32,9 +29,9 @@ export function HeroButton({ primary, onClick, children }: HeroButtonProps) {
         cursor: 'pointer',
         transition: 'transform .18s cubic-bezier(.16,1,.3,1), background .15s ease',
         transform: active ? 'scale(0.96)' : hover ? 'scale(1.03)' : 'scale(1)',
-        border: primary ? 'none' : '1px solid rgba(255,255,255,0.25)',
-        background: primary ? (hover ? '#f2f2f2' : '#fff') : hover ? 'rgba(255,255,255,0.08)' : 'transparent',
-        color: primary ? '#18181b' : '#fff',
+        border: primary ? 'none' : '1px solid var(--color-border-emphasized)',
+        background: primary ? (hover ? 'var(--color-text-secondary)' : 'var(--color-text-primary)') : hover ? 'var(--color-background-muted)' : 'transparent',
+        color: primary ? 'var(--color-background-surface)' : 'var(--color-text-primary)',
       }}
     >
       {children}

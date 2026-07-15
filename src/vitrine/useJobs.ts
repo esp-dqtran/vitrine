@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Job } from './types';
+import type { Platform } from '../platformFromUrl';
 
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -22,11 +23,11 @@ export function useJobs() {
     return () => window.clearInterval(id);
   }, [jobs, refresh]);
 
-  const submitImport = async (name: string, url: string) => {
+  const submitImport = async (name: string, url: string, platform: Platform) => {
     const response = await fetch('/api/jobs', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ type: 'import-app', name, url }),
+      body: JSON.stringify({ type: 'import-app', name, url, platform }),
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? `Import returned ${response.status}`);

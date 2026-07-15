@@ -1,5 +1,5 @@
 import { appImages, saveDesignSystem, type CrawledImage } from "./db.ts";
-import { SYNTHESIS_PROMPT } from "./prompt.ts";
+import { buildSynthesisPrompt } from "./prompt.ts";
 import { startChatSession } from "./llmChat.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
 import { parseDesignSystemSnapshot } from "./designSystem.ts";
@@ -8,21 +8,21 @@ import { parseDesignSystemSnapshot } from "./designSystem.ts";
 // starts truncating replies, lower it if the merged doc grows large enough to blow the batch.
 const BATCH_SIZE = 15;
 
-export function buildSynthesisPrompt(current: string, batch: CrawledImage[]): string {
+export function buildBatchPrompt(platform: string, current: string, batch: CrawledImage[]): string {
   const screens = batch
     .map((image) => `--- image_id=${image.id} source=${image.image_url} ---\n${image.description}`)
     .join("\n\n");
   const context = current
     ? `Here is the existing structured snapshot. Merge the new observations into it without losing valid evidence:\n\n${current}`
     : "Create the first structured snapshot from these observations.";
-  return `${SYNTHESIS_PROMPT}\n\n${context}\n\n${screens}`;
+  return `${buildSynthesisPrompt(platform)}\n\n${context}\n\n${screens}`;
 }
 
-export async function synthesize(app: string, providerName: string): Promise<StageOutcome> {
+export async function synthesize(app: string, platform: string, providerName: string): Promise<StageOutcome> {
   clearCancel();
-  const images = (await appImages(app)).filter((image) => image.description);
+  const images = (await appImages(app)).filter((image) => image.description && image.platform === platform);
   if (images.length === 0) {
-    console.log(`No captioned images for "${app}" yet — run "npm run caption" first.`);
+    console.log(`No captioned "${platform}" images for "${app}" yet — run "npm run caption" first.`);
     return { status: "done" };
   }
 
@@ -44,9 +44,9 @@ export async function synthesize(app: string, providerName: string): Promise<Sta
     }
     const batch = images.slice(i, i + BATCH_SIZE);
     try {
-      const raw = await session.ask(buildSynthesisPrompt(current, batch));
+      const raw = await session.ask(buildBatchPrompt(platform, current, batch));
       const snapshot = parseDesignSystemSnapshot(raw, app, allowedImageIds);
-      await saveDesignSystem(app, snapshot);
+      await saveDesignSystem(app, platform, snapshot);
       current = JSON.stringify(snapshot);
       batchesDone++;
       console.log(`Merged batch ${batchesDone}/${batches} -> PostgreSQL`);

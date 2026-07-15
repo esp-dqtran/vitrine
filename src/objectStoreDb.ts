@@ -74,14 +74,22 @@ export async function attachImageObject(
   }
 }
 
+// Thumbnails are a serving optimization, not a distinct access-controlled object: joining on
+// COALESCE(thumbnail_object_key, object_key) when a thumbnail was requested means callers get
+// the small version when one exists and transparently fall back to full-res otherwise — no
+// separate "does it have a thumbnail" branch needed at the call site.
+const imageObjectJoin = (variant: "full" | "thumb") => variant === "thumb"
+  ? "so.object_key = COALESCE(i.thumbnail_object_key, i.object_key)"
+  : "so.object_key = i.object_key";
+
 export async function entitledImageObject(
-  input: { userId: number; app: string; hash: string },
+  input: { userId: number; app: string; hash: string; variant?: "full" | "thumb" },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
   const result = await runQuery(
     `SELECT ${METADATA_COLUMNS}
-     FROM stored_objects so
-     JOIN images i ON i.object_key = so.object_key
+     FROM images i
+     JOIN stored_objects so ON ${imageObjectJoin(input.variant ?? "full")}
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
      JOIN LATERAL (
@@ -117,13 +125,13 @@ export async function entitledImageObject(
 }
 
 export async function adminImageObject(
-  input: { app: string; hash: string },
+  input: { app: string; hash: string; variant?: "full" | "thumb" },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
   const result = await runQuery(
     `SELECT ${METADATA_COLUMNS}
-     FROM stored_objects so
-     JOIN images i ON i.object_key = so.object_key
+     FROM images i
+     JOIN stored_objects so ON ${imageObjectJoin(input.variant ?? "full")}
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
      WHERE a.name = $1
@@ -133,6 +141,40 @@ export async function adminImageObject(
     [input.app, input.hash],
   );
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
+}
+
+export async function attachThumbnailObject(
+  client: PoolClient,
+  input: { imageId: number; metadata: ObjectMetadata },
+): Promise<void> {
+  const { metadata } = input;
+  validateObjectMetadata(metadata);
+  if (!Number.isSafeInteger(input.imageId) || input.imageId <= 0) throw new Error("Invalid image ID");
+  await client.query("BEGIN");
+  try {
+    const stored = await client.query(
+      `INSERT INTO stored_objects (object_key, sha256, byte_size, content_type, access_class)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (object_key) DO UPDATE SET object_key = EXCLUDED.object_key
+       WHERE stored_objects.sha256 = EXCLUDED.sha256
+         AND stored_objects.byte_size = EXCLUDED.byte_size
+         AND stored_objects.content_type = EXCLUDED.content_type
+         AND stored_objects.access_class = EXCLUDED.access_class
+       RETURNING object_key`,
+      [metadata.key, metadata.sha256, metadata.byteSize, metadata.contentType, metadata.accessClass],
+    );
+    if (stored.rowCount !== 1) throw new Error("Object key already exists with different metadata");
+
+    const associated = await client.query(
+      `UPDATE images SET thumbnail_object_key = $2 WHERE id = $1 RETURNING id`,
+      [input.imageId, metadata.key],
+    );
+    if (associated.rowCount !== 1) throw new Error("Image not found");
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  }
 }
 
 export async function imageObjectById(

@@ -102,7 +102,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
       [imageUrl],
     )).rowCount, 1);
 
-    const version = (await db.listAppVersions("durable-app"))[0];
+    const version = (await db.listAppVersions("durable-app", "web"))[0];
     assert.equal(version.status, "draft");
 
     const planV1 = {
@@ -155,7 +155,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
     const approvedHash = approved.content_hash;
 
     await db.insertImage("wrong-app", "web", "https://cdn.example.com/wrong.png");
-    const wrongVersion = (await db.listAppVersions("wrong-app"))[0];
+    const wrongVersion = (await db.listAppVersions("wrong-app", "web"))[0];
     await assert.rejects(
       () => store.createRun({ app: "wrong-app", versionId: wrongVersion.id, planId: approved.id, environment: {} }),
       /same app/i,
@@ -670,7 +670,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
         Buffer.from("first run pixels"),
       );
 
-      await db.saveAppFlows("durable-app", [
+      await db.saveAppFlows("durable-app", "web", [
         { id: "manual", title: "Manual", description: "Retain me", tags: ["manual"], steps: [{ label: "Old", evidence: [imageId] }] },
         { id: "core", title: "Stale core", description: "Replace me", tags: [], steps: [{ label: "Old", evidence: [imageId] }] },
       ]);
@@ -681,7 +681,7 @@ test("durable crawl lifecycle keeps plans, runs, evidence, and repairs consisten
         { label: "home", evidence: [firstReplay.imageId] },
         { label: "dashboard", evidence: [bundle.imageId] },
       ]);
-      assert.deepEqual(await db.getAppFlows("durable-app"), finalized);
+      assert.deepEqual(await db.getAppFlows("durable-app", "web"), finalized);
     } finally {
       rmSync(replayDataDir, { recursive: true, force: true });
     }

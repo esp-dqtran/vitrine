@@ -69,6 +69,8 @@ export interface DesignComponent<T = number> {
 export interface DesignFlow<T = number> {
   id: string;
   title: string;
+  /** Parent grouping observed on Mobbin (e.g. "Run detail" for "Copying a code from Run detail"); absent for top-level flows. */
+  category?: string;
   description: string;
   tags: string[];
   steps: Array<{ label: string; interaction?: string; evidence: T[] }>;

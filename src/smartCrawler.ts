@@ -875,8 +875,8 @@ async function launchAppContext(appName: string, dataDir: string): Promise<Brows
 async function persistAssembledFlows(app: string, executed: CrawlFlow[], ledger: Array<{ ref: string; stateContext: string }>): Promise<void> {
   const images = await appImages(app);
   const refToImageId = new Map(images.map((image) => [image.image_url, image.id]));
-  const flows = assembleFlows(executed, ledger, refToImageId, await getAppFlows(app));
-  if (flows.length > 0) await saveAppFlows(app, flows);
+  const flows = assembleFlows(executed, ledger, refToImageId, await getAppFlows(app, "web"));
+  if (flows.length > 0) await saveAppFlows(app, "web", flows);
 }
 
 type ProgressWriter = (state: Omit<ProgressState, "updatedAt">) => void;

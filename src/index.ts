@@ -11,6 +11,7 @@ import { startChatSession } from "./llmChat.ts";
 import { insertImage, pool } from "./db.ts";
 import { attachImageObject, imageObjectById } from "./objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
+import { isPlatform } from "./platformFromUrl.ts";
 
 function objectDependencies(): { bulk: BulkObjectDependencies & LegacyCaptureDependencies; caption: Parameters<typeof caption>[3] } {
   const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -90,12 +91,12 @@ switch (command) {
     break;
   }
   case "synthesize": {
-    const [app, provider] = rest;
-    if (!app) {
-      console.error("Usage: npm run synthesize -- <app> [chatgpt|claude|gemini]");
+    const [app, platform, provider] = rest;
+    if (!app || !platform || !isPlatform(platform)) {
+      console.error("Usage: npm run synthesize -- <app> <ios|android|web> [chatgpt|claude|gemini]");
       process.exit(1);
     }
-    await synthesize(app, provider ?? "chatgpt");
+    await synthesize(app, platform, provider ?? "chatgpt");
     break;
   }
   case "import-flows": {

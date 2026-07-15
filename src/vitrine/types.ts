@@ -9,8 +9,9 @@ export interface Screen {
   platform: string;
   description: string | null;
   url: string;
+  /** Resized grid-tile preview; use for dense grids, fall back to `url` for lightbox/full view. */
+  thumbnailUrl?: string | null;
   sourceUrl?: string | null;
-  viewport?: string;
   layoutPatterns?: string[];
   componentNames?: string[];
   visibleText?: string[];
@@ -29,6 +30,8 @@ export interface App {
   websiteUrl?: string | null;
   iconUrl?: string | null;
 }
+
+export type RowStatus = 'Queued' | 'In progress' | 'Complete' | 'Needs attention' | 'Cancelled';
 
 export interface ElementItem {
   category: string;

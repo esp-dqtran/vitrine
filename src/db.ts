@@ -119,9 +119,9 @@ export async function appHasImages(app: string): Promise<boolean> {
   return res.rowCount! > 0;
 }
 
-export async function uncaptionedImages(app?: string): Promise<{ id: number; app: string; image_url: string }[]> {
-  const res = await query<{ id: number; app: string; image_url: string }>(
-    `SELECT i.id, a.name AS app, i.image_url FROM images i
+export async function uncaptionedImages(app?: string): Promise<{ id: number; app: string; platform: string; image_url: string }[]> {
+  const res = await query<{ id: number; app: string; platform: string; image_url: string }>(
+    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url FROM images i
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
      WHERE i.description IS NULL
@@ -130,6 +130,14 @@ export async function uncaptionedImages(app?: string): Promise<{ id: number; app
     [app ?? null]
   );
   return res.rows;
+}
+
+export async function appPlatforms(app: string): Promise<string[]> {
+  const res = await query<{ name: string }>(
+    `SELECT p.name FROM platforms p JOIN apps a ON a.id = p.app_id WHERE a.name = $1 ORDER BY p.name`,
+    [app]
+  );
+  return res.rows.map(({ name }) => name);
 }
 
 export async function saveDescription(id: number, description: string): Promise<void> {
@@ -154,7 +162,10 @@ export async function setAppMeta(app: string, meta: { iconUrl?: string | null; c
   );
 }
 
-export type ImageKind = "screen" | "ui_element";
+// "flow_step" is a screenshot captured via a flow's own export rather than the Screens tab —
+// visually identical to a "screen" but kept distinct so it doesn't inflate the Screens count/
+// listing. Evidence hydration (design-system, export) still needs to resolve both kinds.
+export type ImageKind = "screen" | "ui_element" | "flow_step";
 
 export interface CrawledImage {
   id: number;
@@ -173,47 +184,50 @@ export interface CrawledImage {
   captured_at?: string | null;
 }
 
-export async function allImages(): Promise<CrawledImage[]> {
+export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
+  const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url, a.category,
        i.image_url AS capture_url, i.created_at AS captured_at
      FROM images i
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
-     WHERE i.kind = 'screen'
-     ORDER BY i.created_at ASC`
+     WHERE i.kind = ANY($1::text[])
+     ORDER BY i.created_at ASC`,
+    [kinds]
   );
   return res.rows;
 }
 
-export async function appImages(app: string, kind: ImageKind = "screen"): Promise<CrawledImage[]> {
+export async function appImages(app: string, kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
+  const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url, a.category,
        i.image_url AS capture_url, i.created_at AS captured_at
      FROM images i
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
-     WHERE a.name = $1 AND i.kind = $2 ORDER BY i.created_at ASC`,
-    [app, kind]
+     WHERE a.name = $1 AND i.kind = ANY($2::text[]) ORDER BY i.created_at ASC`,
+    [app, kinds]
   );
   return res.rows;
 }
 
-export async function saveDesignSystem(app: string, snapshot: DesignSystemSnapshot): Promise<void> {
+export async function saveDesignSystem(app: string, platform: string, snapshot: DesignSystemSnapshot): Promise<void> {
   await query(
-    `INSERT INTO design_systems (app_id, snapshot)
-     SELECT id, $2::jsonb FROM apps WHERE name = $1
-     ON CONFLICT (app_id) DO UPDATE SET snapshot = EXCLUDED.snapshot, updated_at = now()`,
-    [app, JSON.stringify(snapshot)]
+    `INSERT INTO design_systems (app_id, platform, snapshot)
+     SELECT id, $2, $3::jsonb FROM apps WHERE name = $1
+     ON CONFLICT (app_id, platform) DO UPDATE SET snapshot = EXCLUDED.snapshot, updated_at = now()`,
+    [app, platform, JSON.stringify(snapshot)]
   );
 }
 
-export async function getDesignSystem(app: string): Promise<DesignSystemSnapshot | undefined> {
+export async function getDesignSystem(app: string, platform: string): Promise<DesignSystemSnapshot | undefined> {
   const res = await query<{ snapshot: DesignSystemSnapshot }>(
     `SELECT ds.snapshot
      FROM design_systems ds JOIN apps a ON a.id = ds.app_id
-     WHERE a.name = $1`,
-    [app]
+     WHERE a.name = $1 AND ds.platform = $2`,
+    [app, platform]
   );
   return res.rows[0]?.snapshot;
 }
@@ -225,19 +239,19 @@ export async function listDesignSystems(): Promise<DesignSystemSnapshot[]> {
   return res.rows.map(({ snapshot }) => snapshot);
 }
 
-export async function saveAppFlows(app: string, flows: DesignFlow[]): Promise<void> {
+export async function saveAppFlows(app: string, platform: string, flows: DesignFlow[]): Promise<void> {
   await query(
-    `INSERT INTO app_flows (app_id, flows)
-     SELECT id, $2::jsonb FROM apps WHERE name = $1
-     ON CONFLICT (app_id) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-    [app, JSON.stringify(flows)]
+    `INSERT INTO app_flows (app_id, platform, flows)
+     SELECT id, $2, $3::jsonb FROM apps WHERE name = $1
+     ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
+    [app, platform, JSON.stringify(flows)]
   );
 }
 
-export async function getAppFlows(app: string): Promise<DesignFlow[]> {
+export async function getAppFlows(app: string, platform: string): Promise<DesignFlow[]> {
   const res = await query<{ flows: DesignFlow[] }>(
-    `SELECT f.flows FROM app_flows f JOIN apps a ON a.id = f.app_id WHERE a.name = $1`,
-    [app]
+    `SELECT f.flows FROM app_flows f JOIN apps a ON a.id = f.app_id WHERE a.name = $1 AND f.platform = $2`,
+    [app, platform]
   );
   return res.rows[0]?.flows ?? [];
 }
@@ -252,6 +266,7 @@ export async function listAppFlowSets(): Promise<Array<{ app: string; flows: Des
 export interface AppVersion {
   id: number;
   app: string;
+  platform: string;
   version_number: number;
   label: string;
   source_url: string | null;
@@ -267,7 +282,7 @@ export interface AppVersion {
   flow_count: number;
 }
 
-const versionSelect = `SELECT av.id, a.name AS app, av.version_number, av.label, av.source_url, av.status,
+const versionSelect = `SELECT av.id, a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
   COUNT(DISTINCT vi.image_id) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
   COUNT(DISTINCT vi.image_id) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count,
@@ -279,14 +294,14 @@ const versionSelect = `SELECT av.id, a.name AS app, av.version_number, av.label,
   LEFT JOIN images i ON i.id = vi.image_id
   LEFT JOIN design_system_versions dsv ON dsv.version_id = av.id
   LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
-  LEFT JOIN design_systems ds ON ds.app_id = av.app_id
-  LEFT JOIN app_flows af ON af.app_id = av.app_id`;
+  LEFT JOIN design_systems ds ON ds.app_id = av.app_id AND ds.platform = av.platform
+  LEFT JOIN app_flows af ON af.app_id = av.app_id AND af.platform = av.platform`;
 
-export async function listAppVersions(app: string, publishedOnly = false): Promise<AppVersion[]> {
+export async function listAppVersions(app: string, platform: string, publishedOnly = false): Promise<AppVersion[]> {
   const res = await query<AppVersion>(
-    `${versionSelect} WHERE a.name = $1 AND ($2::boolean = false OR av.status = 'published')
+    `${versionSelect} WHERE a.name = $1 AND av.platform = $2 AND ($3::boolean = false OR av.status = 'published')
      GROUP BY av.id, a.name, dsv.snapshot, afv.flows, ds.snapshot, af.flows ORDER BY av.version_number DESC`,
-    [app, publishedOnly]
+    [app, platform, publishedOnly]
   );
   return res.rows;
 }
@@ -298,38 +313,38 @@ async function appVersionById(id: number): Promise<AppVersion | undefined> {
   return res.rows[0];
 }
 
-export async function createAppVersion(app: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
+export async function createAppVersion(app: string, platform: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
   const id = await withTransaction(async (client) => {
     const appRow = await client.query<{ id: number }>(
       `INSERT INTO apps (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`, [app]
     );
     const appId = appRow.rows[0].id;
     const active = await client.query<{ id: number }>(
-      `SELECT id FROM app_versions WHERE app_id = $1 AND status IN ('draft', 'in_review') LIMIT 1`, [appId]
+      `SELECT id FROM app_versions WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review') LIMIT 1`, [appId, platform]
     );
-    if (active.rowCount) throw new Error('This app already has an active draft or review version');
+    if (active.rowCount) throw new Error('This app already has an active draft or review version for this platform');
     const created = await client.query<{ id: number }>(
-      `INSERT INTO app_versions (app_id, version_number, label, source_url, status, created_by)
-       SELECT $1, COALESCE(MAX(version_number), 0) + 1, 'v' || (COALESCE(MAX(version_number), 0) + 1), $2, 'draft', $3
-       FROM app_versions WHERE app_id = $1 RETURNING id`,
-      [appId, sourceUrl ?? null, userId ?? null]
+      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by)
+       SELECT $1, $2, COALESCE(MAX(version_number), 0) + 1, 'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4
+       FROM app_versions WHERE app_id = $1 AND platform = $2 RETURNING id`,
+      [appId, platform, sourceUrl ?? null, userId ?? null]
     );
     const versionId = created.rows[0].id;
     await client.query(
       `INSERT INTO version_images (version_id, image_id, captured_at, source_url, viewport_width, viewport_height, state_context)
        SELECT $1, vi.image_id, now(), vi.source_url, vi.viewport_width, vi.viewport_height, vi.state_context
        FROM version_images vi JOIN app_versions prior ON prior.id = vi.version_id
-       WHERE prior.app_id = $2 AND prior.status = 'published'
-         AND prior.version_number = (SELECT MAX(version_number) FROM app_versions WHERE app_id = $2 AND status = 'published')
+       WHERE prior.app_id = $2 AND prior.platform = $3 AND prior.status = 'published'
+         AND prior.version_number = (SELECT MAX(version_number) FROM app_versions WHERE app_id = $2 AND platform = $3 AND status = 'published')
        ON CONFLICT DO NOTHING`,
-      [versionId, appId]
+      [versionId, appId, platform]
     );
     return versionId;
   });
   return (await appVersionById(id))!;
 }
 
-export async function ensureActiveAppVersion(app: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
+export async function ensureActiveAppVersion(app: string, platform: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
   const id = await withTransaction(async (client) => {
     // The harmless conflict update locks this app, serializing concurrent ensure calls.
     const appRow = await client.query<{ id: number }>(
@@ -340,17 +355,17 @@ export async function ensureActiveAppVersion(app: string, userId?: number, sourc
     const appId = appRow.rows[0].id;
     const active = await client.query<{ id: number }>(
       `SELECT id FROM app_versions
-       WHERE app_id = $1 AND status IN ('draft', 'in_review')
+       WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
        ORDER BY version_number DESC LIMIT 1`,
-      [appId],
+      [appId, platform],
     );
     if (active.rowCount) return active.rows[0].id;
     const created = await client.query<{ id: number }>(
-      `INSERT INTO app_versions (app_id, version_number, label, source_url, status, created_by)
-       SELECT $1, COALESCE(MAX(version_number), 0) + 1,
-         'v' || (COALESCE(MAX(version_number), 0) + 1), $2, 'draft', $3
-       FROM app_versions WHERE app_id = $1 RETURNING id`,
-      [appId, sourceUrl ?? null, userId ?? null],
+      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by)
+       SELECT $1, $2, COALESCE(MAX(version_number), 0) + 1,
+         'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4
+       FROM app_versions WHERE app_id = $1 AND platform = $2 RETURNING id`,
+      [appId, platform, sourceUrl ?? null, userId ?? null],
     );
     return created.rows[0].id;
   });
@@ -364,8 +379,8 @@ async function publicationCandidate(versionId: number) {
     `SELECT i.id, i.analysis FROM version_images vi JOIN images i ON i.id = vi.image_id
      WHERE vi.version_id = $1 AND i.kind = 'screen'`, [versionId]
   );
-  const snapshot = await getDesignSystem(version.app);
-  const flows = await getAppFlows(version.app);
+  const snapshot = await getDesignSystem(version.app, version.platform);
+  const flows = await getAppFlows(version.app, version.platform);
   return { version, images: images.rows, snapshot, flows };
 }
 
@@ -468,20 +483,20 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
   return (await appVersionById(versionId))!;
 }
 
-export async function getVersionDesignSystem(app: string, versionNumber?: number): Promise<{
+export async function getVersionDesignSystem(app: string, platform: string, versionNumber?: number): Promise<{
   version: AppVersion;
   snapshot: DesignSystemSnapshot;
   flows: DesignFlow[];
 } | undefined> {
-  const versions = await listAppVersions(app);
+  const versions = await listAppVersions(app, platform);
   const version = versionNumber == null
     ? versions.find(({ status }) => status === 'published')
     : versions.find(({ version_number }) => version_number === versionNumber);
   if (!version) return undefined;
   if (version.status === 'draft' || version.status === 'in_review') {
-    const snapshot = await getDesignSystem(app);
+    const snapshot = await getDesignSystem(app, platform);
     if (!snapshot) return undefined;
-    return { version, snapshot, flows: await getAppFlows(app) };
+    return { version, snapshot, flows: await getAppFlows(app, platform) };
   }
   const res = await query<{ snapshot: DesignSystemSnapshot; flows: DesignFlow[] }>(
     `SELECT dsv.snapshot, COALESCE(afv.flows, '[]'::jsonb) AS flows
@@ -491,17 +506,18 @@ export async function getVersionDesignSystem(app: string, versionNumber?: number
   return res.rows[0] ? { version, ...res.rows[0] } : undefined;
 }
 
-export async function versionImages(app: string, versionNumber?: number): Promise<CrawledImage[]> {
+export async function versionImages(app: string, platform: string, versionNumber?: number, kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
+  const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
        vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height, vi.state_context, vi.captured_at
      FROM app_versions av JOIN apps a ON a.id = av.app_id
      JOIN version_images vi ON vi.version_id = av.id JOIN images i ON i.id = vi.image_id
      JOIN platforms p ON p.id = i.platform_id
-     WHERE i.kind = 'screen' AND a.name = $1 AND av.version_number = COALESCE($2, (
-       SELECT MAX(latest.version_number) FROM app_versions latest WHERE latest.app_id = a.id AND latest.status = 'published'
+     WHERE i.kind = ANY($4::text[]) AND a.name = $1 AND av.platform = $2 AND av.version_number = COALESCE($3, (
+       SELECT MAX(latest.version_number) FROM app_versions latest WHERE latest.app_id = a.id AND latest.platform = $2 AND latest.status = 'published'
      )) ORDER BY i.id`,
-    [app, versionNumber ?? null]
+    [app, platform, versionNumber ?? null, kinds]
   );
   return res.rows;
 }
