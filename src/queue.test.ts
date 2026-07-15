@@ -25,6 +25,24 @@ test("queue accepts identifier-only durable crawler jobs and preserves BIGINT ru
     name: "atlassian",
     runId: "9223372036854775807",
   });
+  assert.deepEqual(parseJob({
+    type: "autonomous-crawl-app",
+    name: "linear",
+    runId: "42",
+  }), {
+    type: "autonomous-crawl-app",
+    name: "linear",
+    runId: "42",
+  });
+});
+
+test("autonomous queue jobs reject embedded credentials and mission data", () => {
+  for (const value of [
+    { type: "autonomous-crawl-app", name: "linear", runId: "42", password: "secret" },
+    { type: "autonomous-crawl-app", name: "linear", runId: "42", url: "https://app.test" },
+    { type: "autonomous-crawl-app", name: "linear", runId: "42", mission: {} },
+    { type: "autonomous-crawl-app", name: "linear", runId: 42 },
+  ]) assert.throws(() => parseJob(value), /invalid queue job/i);
 });
 
 test("queue rejects embedded plans, secret fields, non-string run ids, and non-public research URLs", () => {

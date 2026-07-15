@@ -17,6 +17,7 @@ export type Job = (
   | { type: "synthesize-app"; name: string; platform: Platform }
   | { type: "research-app"; name: string; homepageUrl: string; provider?: ResearchProvider }
   | { type: "smart-crawl-app"; name: string; runId: string }
+  | { type: "autonomous-crawl-app"; name: string; runId: string }
 ) & { jobId?: number };
 
 let connection: ChannelModel | undefined;
@@ -140,6 +141,11 @@ export function parseJob(value: unknown): Job {
     });
   }
   if (type === "smart-crawl-app") {
+    exactKeys(input, ["type", "name", "runId", "jobId"]);
+    if (typeof input.runId !== "string" || !/^[1-9]\d*$/.test(input.runId)) invalidJob();
+    return withJobId({ type, name: appSlug(input.name), runId: input.runId });
+  }
+  if (type === "autonomous-crawl-app") {
     exactKeys(input, ["type", "name", "runId", "jobId"]);
     if (typeof input.runId !== "string" || !/^[1-9]\d*$/.test(input.runId)) invalidJob();
     return withJobId({ type, name: appSlug(input.name), runId: input.runId });

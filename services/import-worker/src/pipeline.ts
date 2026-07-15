@@ -30,6 +30,11 @@ const defaults = {
   crawlRunService: {
     execute: async () => { throw new Error("Crawl run service is not configured"); },
   } as Pick<CrawlRunService, "execute">,
+  autonomousOrchestrator: {
+    run: async (_runId: string): Promise<{ runId: string; status: "succeeded" | "interrupted" | "cancelled" | "failed" }> => {
+      throw new Error("Autonomous orchestrator is not configured");
+    },
+  },
 };
 type PipelineDeps = typeof defaults;
 
@@ -42,7 +47,7 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     await deps.publishJob({ ...job, jobId });
   }
 
-  async function handle(job: Exclude<Job, { type: "smart-crawl-app" }>): Promise<StageOutcome> {
+  async function handle(job: Exclude<Job, { type: "smart-crawl-app" | "autonomous-crawl-app" }>): Promise<StageOutcome> {
     if (job.type === "discover-catalog") {
       const apps = await deps.discoverApps();
       for (const target of apps) {
@@ -116,6 +121,20 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
       } catch (error) {
         if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
         if (error instanceof CrawlRunInterruptedError) throw error;
+      }
+      return;
+    }
+
+    if (job.type === "autonomous-crawl-app") {
+      try {
+        const run = await deps.autonomousOrchestrator.run(job.runId);
+        if (job.jobId != null) {
+          const status = run.status === "succeeded" ? "done" : run.status === "cancelled" ? "cancelled" : "error";
+          await deps.setJobStatus(job.jobId, status, status === "error" ? `Autonomous crawl run ${run.status}` : undefined);
+        }
+      } catch (error) {
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
+        throw error;
       }
       return;
     }

@@ -154,3 +154,36 @@ test("only CrawlRunInterruptedError escapes smart-crawl for bounded queue retry"
   await nonRetryable.handler({ type: "smart-crawl-app", name: "atlassian", runId: "404", jobId: 23 });
   assert.deepEqual(nonRetryable.statuses.map(([, status]) => status), ["running", "error"]);
 });
+
+test("dispatches autonomous work through the durable orchestrator", async () => {
+  const calls: string[] = [];
+  const statuses: string[] = [];
+  const handler = createPipelineHandler({
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (_id, status) => { statuses.push(status); },
+    autonomousOrchestrator: {
+      run: async (runId) => {
+        calls.push(runId);
+        return { runId, status: "succeeded" as const };
+      },
+    },
+  });
+  await handler({ type: "autonomous-crawl-app", name: "linear", runId: "42", jobId: 24 });
+  assert.deepEqual(calls, ["42"]);
+  assert.deepEqual(statuses, ["running", "done"]);
+});
+
+test("autonomous infrastructure interruptions remain retryable with the same run id", async () => {
+  const interruption = new Error("discovery browser lost");
+  const statuses: string[] = [];
+  const handler = createPipelineHandler({
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (_id, status) => { statuses.push(status); },
+    autonomousOrchestrator: { run: async () => { throw interruption; } },
+  });
+  await assert.rejects(
+    () => handler({ type: "autonomous-crawl-app", name: "linear", runId: "42", jobId: 25 }),
+    (error) => error === interruption,
+  );
+  assert.deepEqual(statuses, ["running", "error"]);
+});
