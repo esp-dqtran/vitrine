@@ -467,6 +467,7 @@ test("owned flow executor closes its page and context after success, failure, an
       env?: Record<string, string | undefined>;
       executeStep?: typeof interpretStep;
       resumes?: ReadonlyMap<string, { stepIndex: number; url: string }>;
+      afterRun?: (context: BrowserContext, results: FlowRunResult[]) => Promise<void>;
     }
   ) => Promise<FlowRunResult[]>;
   const executeOwned = (smartCrawlerModule as typeof smartCrawlerModule & { executeFlowsInOwnedContext?: ExecuteOwned })
@@ -492,6 +493,11 @@ test("owned flow executor closes its page and context after success, failure, an
         return ownedContext;
       },
       hooks,
+      afterRun: async (context, results) => {
+        assert.equal(context, ownedContext);
+        assert.equal(results.length, 1);
+        assert.equal(ownedPage.isClosed(), false);
+      },
       executeStep: async (activePage) => ({ status: "completed", page: activePage, actual: completedActual(activePage) }),
     });
 

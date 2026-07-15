@@ -843,6 +843,7 @@ export interface ExecuteFlowsInOwnedContextOptions {
   env?: Record<string, string | undefined>;
   executeStep?: StepExecutor;
   resumes?: ReadonlyMap<string, FlowResume>;
+  afterRun?: (context: BrowserContext, results: FlowRunResult[]) => Promise<void>;
 }
 
 export async function executeFlowsInOwnedContext(
@@ -865,6 +866,7 @@ export async function executeFlowsInOwnedContext(
           })
         );
       }
+      await options.afterRun?.(context, results);
       return results;
     } finally {
       if (!page.isClosed()) await page.close().catch(() => {});

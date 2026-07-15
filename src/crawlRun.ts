@@ -46,6 +46,7 @@ import type { DesignFlow } from "./designSystem.ts";
 import { isAppSlug } from "./imageSource.ts";
 import { failureObjectKey, imageObjectKey, LocalObjectStore, type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
+import type { StorageState } from "./crawlSession.ts";
 import {
   executeFlowsInOwnedContext,
   isTransientBrowserError,
@@ -594,6 +595,8 @@ export interface CrawlRunServiceDependencies {
     secretValues: readonly string[],
   ) => Promise<string | undefined>;
   finalizeRun?: (input: FinalizeCanonicalRunInput) => Promise<DesignFlow[]>;
+  loadStorageState?: (run: CrawlRunRecord) => Promise<StorageState | undefined>;
+  saveStorageState?: (run: CrawlRunRecord, state: StorageState) => Promise<void>;
 }
 
 export interface CrawlRunService {
@@ -708,22 +711,49 @@ export function resolveCrawlProfileDir(
   return root ? join(root, app) : join(dataDir, `browser-profile-${app}`);
 }
 
-function defaultBrowserExecutor(dataDir: string, runtimeEnv: Record<string, string | undefined>): CrawlBrowserExecutor {
+function defaultBrowserExecutor(
+  dataDir: string,
+  runtimeEnv: Record<string, string | undefined>,
+  loadStorageState?: (run: CrawlRunRecord) => Promise<StorageState | undefined>,
+  saveStorageState?: (run: CrawlRunRecord, state: StorageState) => Promise<void>,
+): CrawlBrowserExecutor {
   return async ({ run, plan, flows, resumes, hooks, env }) => {
     if (run.environment.browserName && run.environment.browserName !== "chromium") {
       throw new Error("Durable crawling currently supports Chromium only");
     }
-    return executeFlowsInOwnedContext(plan, flows, {
-      createContext: () => chromium.launchPersistentContext(resolveCrawlProfileDir(dataDir, run.app, runtimeEnv), {
-        headless: run.environment.headless ?? true,
-        ...(run.environment.viewport ? { viewport: run.environment.viewport } : {}),
-        ...(run.environment.locale ? { locale: run.environment.locale } : {}),
-        ...(run.environment.timezone ? { timezoneId: run.environment.timezone } : {}),
-      }),
-      hooks,
-      env,
-      resumes,
-    });
+    let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+    try {
+      return await executeFlowsInOwnedContext(plan, flows, {
+        createContext: async () => {
+          if (run.parent_run_id) {
+            browser = await chromium.launch({ headless: run.environment.headless ?? true });
+            const storageState = await loadStorageState?.(run);
+            return browser.newContext({
+              ...(storageState ? { storageState } : {}),
+              ...(run.environment.viewport ? { viewport: run.environment.viewport } : {}),
+              ...(run.environment.locale ? { locale: run.environment.locale } : {}),
+              ...(run.environment.timezone ? { timezoneId: run.environment.timezone } : {}),
+            });
+          }
+          return chromium.launchPersistentContext(resolveCrawlProfileDir(dataDir, run.app, runtimeEnv), {
+            headless: run.environment.headless ?? true,
+            ...(run.environment.viewport ? { viewport: run.environment.viewport } : {}),
+            ...(run.environment.locale ? { locale: run.environment.locale } : {}),
+            ...(run.environment.timezone ? { timezoneId: run.environment.timezone } : {}),
+          });
+        },
+        hooks,
+        env,
+        resumes,
+        afterRun: async (context, results) => {
+          if (run.environment.captureStorageState && results.every(({ status }) => status === "completed")) {
+            await saveStorageState?.(run, await context.storageState());
+          }
+        },
+      });
+    } finally {
+      await browser?.close().catch(() => {});
+    }
   };
 }
 
@@ -817,7 +847,12 @@ export function createCrawlRunService(options: CrawlRunServiceDependencies): Cra
     objectStore,
     attachFailureObject: options.attachFailureObject ?? attachStoredFailureObject,
   };
-  const executeBrowser = options.executeBrowser ?? defaultBrowserExecutor(dataDir, runtimeEnv);
+  const executeBrowser = options.executeBrowser ?? defaultBrowserExecutor(
+    dataDir,
+    runtimeEnv,
+    options.loadStorageState,
+    options.saveStorageState,
+  );
   const captureState = options.captureState ?? ((page, identity, secretValues) =>
     captureValidatedState(page as unknown as ScreenshotPage, identity, { dataDir, objectStore, secretValues }));
   const captureFailure = options.captureFailure ?? ((page, run, flow, step, secretValues) =>

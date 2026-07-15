@@ -153,6 +153,37 @@ test("checkpoints a login observation and requests the authentication lease", as
   assert.equal(result.status, "authentication_required");
 });
 
+test("executes an authentication recovery episode after the lease is acquired", async () => {
+  const events: string[] = [];
+  const result = await executeAgentEpisode({
+    app: "agent-app",
+    startUrl: "https://app.test/login",
+    parentRunId: "parent-1",
+    mission,
+    observation: { ...observation, url: "https://app.test/login", title: "Sign in" },
+    allowAll: true,
+    recoverAuthentication: true,
+    decision: {
+      action: "fill",
+      role: "textbox",
+      name: "Email",
+      value: "$APP_TEST_EMAIL",
+      expectedState: "Email entered",
+      expectedVisible: { role: "textbox", name: "Email" },
+      mode: "read",
+    },
+  }, {
+    saveAutonomousPlan: async () => { events.push("save"); return { id: "plan-1" }; },
+    createChildRun: async () => { events.push("child"); return { id: "child-1" }; },
+    executeRun: async (id) => { events.push("execute"); return { id }; },
+    readEpisodeResult: async (runId, missionId) => ({ runId, missionId, status: "succeeded" as const }),
+    checkpointMission: async () => assert.fail("authorized recovery must execute the authentication plan"),
+    requestAuthenticationLease: async () => assert.fail("caller already owns the authentication lease"),
+  });
+  assert.deepEqual(events, ["save", "child", "execute"]);
+  assert.equal(result.status, "succeeded");
+});
+
 test("keeps named authentication secrets in the existing runtime substitution path", () => {
   const plan = buildEpisodePlan({
     app: "agent-app",

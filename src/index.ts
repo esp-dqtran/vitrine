@@ -9,7 +9,7 @@ import { recordApp, smartCrawl, type LegacyCaptureDependencies } from "./smartCr
 import { repairFlow, researchApp } from "./appResearch.ts";
 import { startChatSession } from "./llmChat.ts";
 import { insertImage, pool } from "./db.ts";
-import { attachImageObject, imageObjectById } from "./objectStoreDb.ts";
+import { attachImageObject, attachThumbnailObject, imageObjectById } from "./objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "./objectStoreConfig.ts";
 import { isPlatform } from "./platformFromUrl.ts";
 
@@ -23,6 +23,14 @@ function objectDependencies(): { bulk: BulkObjectDependencies & LegacyCaptureDep
         const client = await pool.connect();
         try {
           await attachImageObject(client, { imageId, metadata });
+        } finally {
+          client.release();
+        }
+      },
+      attachThumbnail: async (imageId, metadata) => {
+        const client = await pool.connect();
+        try {
+          await attachThumbnailObject(client, { imageId, metadata });
         } finally {
           client.release();
         }

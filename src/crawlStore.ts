@@ -26,6 +26,7 @@ export interface CrawlRunEnvironment {
   unsafeApproved: boolean;
   disposableAccountAcknowledged: boolean;
   allowSideEffects: boolean;
+  captureStorageState?: boolean;
 }
 
 export type CrawlRunEnvironmentInput = Omit<
@@ -291,7 +292,7 @@ const RETRY_MODES = new Set<RetryMode>(["all", "failed", "remaining"]);
 const SECRET_KEY = /password|passwd|pwd|secret|token|api.?key|private.?key|authorization|cookie|session.?id/i;
 const SECRET_VALUE = /\bBearer\s+\S+|-----BEGIN [^-]*PRIVATE KEY-----|(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^/\s:@]+:[^@\s]+@|\bAKIA[0-9A-Z]{16}\b|\b[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\b/;
 const ENVIRONMENT_STRING_KEYS = ["browserName", "browserVersion", "platform", "workerVersion", "locale", "timezone"] as const;
-const ENVIRONMENT_BOOLEAN_KEYS = ["unsafeApproved", "disposableAccountAcknowledged", "allowSideEffects"] as const;
+const ENVIRONMENT_BOOLEAN_KEYS = ["unsafeApproved", "disposableAccountAcknowledged", "allowSideEffects", "captureStorageState"] as const;
 const ENVIRONMENT_KEYS = new Set<string>([
   "headless",
   "viewport",
@@ -527,6 +528,90 @@ export async function approvePlan(id: string, userId: number): Promise<CrawlPlan
       [id, serializePlan(approved), hashPlan(approved), userId],
     );
     return (await clientPlan(client, id))!;
+  });
+}
+
+export async function saveAutonomousEpisodePlan(
+  value: unknown,
+  parentRunId: string,
+  missionId: string,
+): Promise<CrawlPlanRecord> {
+  const parsed = parsedPlan(value);
+  if (!parsed.reviewed || parsed.flows.length !== 1 || parsed.flows[0].steps.length < 1 || parsed.flows[0].steps.length > 5) {
+    throw new Error("Autonomous episode plans must be reviewed and contain one bounded flow");
+  }
+  return withTransaction(async (client) => {
+    const parent = await client.query<{ app_id: number; app: string; environment: Record<string, unknown> }>(
+      `SELECT cr.app_id, a.name AS app, cr.environment
+       FROM crawl_runs cr JOIN apps a ON a.id = cr.app_id
+       WHERE cr.id = $1 AND cr.run_kind = 'autonomous' FOR SHARE OF cr`,
+      [parentRunId],
+    );
+    if (!parent.rowCount || parent.rows[0].app !== parsed.app) throw new Error("Autonomous parent and episode plan app do not match");
+    const mission = await client.query("SELECT 1 FROM crawl_missions WHERE id = $1 AND run_id = $2 FOR SHARE", [missionId, parentRunId]);
+    if (!mission.rowCount) throw new Error("Autonomous mission does not belong to the parent run");
+    await client.query("SELECT id FROM apps WHERE id = $1 FOR UPDATE", [parent.rows[0].app_id]);
+    const revision = await client.query<{ revision: number }>(
+      "SELECT COALESCE(MAX(revision), 0) + 1 AS revision FROM crawl_plans WHERE app_id = $1",
+      [parent.rows[0].app_id],
+    );
+    const plan = parsedPlan({ ...parsed, revision: revision.rows[0].revision, reviewed: true });
+    const createdBy = Number(parent.rows[0].environment.createdBy);
+    const created = await client.query<{ id: string }>(
+      `INSERT INTO crawl_plans
+         (app_id, revision, plan, content_hash, status, research_metadata, created_by, approved_by, approved_at)
+       VALUES ($1, $2, $3::jsonb, $4, 'approved', $5::jsonb, $6, $6, now()) RETURNING id`,
+      [
+        parent.rows[0].app_id,
+        plan.revision,
+        serializePlan(plan),
+        hashPlan(plan),
+        JSON.stringify({ autonomousParentRunId: parentRunId, missionId }),
+        Number.isSafeInteger(createdBy) && createdBy > 0 ? createdBy : null,
+      ],
+    );
+    return (await clientPlan(client, created.rows[0].id))!;
+  });
+}
+
+export async function createAutonomousChildRun(input: {
+  parentRunId: string;
+  missionId: string;
+  planId: string;
+  allowSideEffects: boolean;
+  captureStorageState?: boolean;
+}): Promise<CrawlRunRecord> {
+  return withTransaction(async (client) => {
+    const parent = await client.query<CrawlRunRecord>(
+      `${runSelect} WHERE cr.id = $1 AND cr.run_kind = 'autonomous' FOR SHARE OF cr`,
+      [input.parentRunId],
+    );
+    if (!parent.rowCount) throw new Error("Autonomous parent run not found");
+    const mission = await client.query<{ mode: string }>(
+      "SELECT mode FROM crawl_missions WHERE id = $1 AND run_id = $2 FOR SHARE",
+      [input.missionId, input.parentRunId],
+    );
+    if (!mission.rowCount) throw new Error("Autonomous mission does not belong to the parent run");
+    if (mission.rows[0].mode === "mutate" && !parent.rows[0].allow_all) throw new Error("Autonomous parent does not allow mutations");
+    const plan = await client.query<CrawlPlanRow>(`${planSelect} WHERE cp.id = $1 AND cp.status = 'approved' FOR SHARE OF cp`, [input.planId]);
+    if (!plan.rowCount || plan.rows[0].app_id !== parent.rows[0].app_id) throw new Error("Autonomous episode plan does not belong to the parent app");
+    const environment: CrawlRunEnvironment = {
+      headless: true,
+      browserName: "chromium",
+      platform: parent.rows[0].platform,
+      requestedFlowIds: [],
+      unsafeApproved: input.allowSideEffects,
+      disposableAccountAcknowledged: input.allowSideEffects,
+      allowSideEffects: input.allowSideEffects,
+      captureStorageState: input.captureStorageState ?? false,
+    };
+    const created = await client.query<{ id: string }>(
+      `INSERT INTO crawl_runs
+         (app_id, version_id, plan_id, status, run_kind, parent_run_id, platform, allow_all, environment)
+       VALUES ($1, $2, $3, 'queued', 'planned', $4, $5, false, $6::jsonb) RETURNING id`,
+      [parent.rows[0].app_id, parent.rows[0].version_id, input.planId, input.parentRunId, parent.rows[0].platform, JSON.stringify(environment)],
+    );
+    return (await clientRun(client, created.rows[0].id))!;
   });
 }
 

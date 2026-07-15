@@ -46,6 +46,7 @@ export interface BuildEpisodePlanInput {
 
 export interface AgentEpisodeInput extends BuildEpisodePlanInput {
   parentRunId: string;
+  recoverAuthentication?: boolean;
 }
 
 export interface EpisodeResult {
@@ -60,7 +61,7 @@ export interface AuthenticationRequiredEpisodeResult extends EpisodeResult {
 
 export interface AgentEpisodeDependencies<T extends EpisodeResult = EpisodeResult> {
   saveAutonomousPlan(plan: CrawlPlan, parentRunId: string, missionId: string): Promise<{ id: string }>;
-  createChildRun(input: { parentRunId: string; missionId: string; planId: string; allowSideEffects: boolean }): Promise<{ id: string }>;
+  createChildRun(input: { parentRunId: string; missionId: string; planId: string; allowSideEffects: boolean; captureStorageState?: boolean }): Promise<{ id: string }>;
   executeRun(childRunId: string): Promise<{ id: string }>;
   readEpisodeResult(childRunId: string, missionId: string): Promise<T>;
   checkpointMission(missionId: string, checkpoint: { reason: "authentication_required"; observation: AgentObservation }): Promise<void>;
@@ -224,7 +225,7 @@ export async function executeAgentEpisode<T extends EpisodeResult>(
     await dependencies.requestAuthenticationLease(input.parentRunId, input.mission.id);
     return { runId: input.parentRunId, missionId: input.mission.id, status: "authentication_required" };
   };
-  if (isAuthenticationObservation(input.observation)) return authenticationRequired();
+  if (isAuthenticationObservation(input.observation) && !input.recoverAuthentication) return authenticationRequired();
   const plan = buildEpisodePlan(input);
   const storedPlan = await dependencies.saveAutonomousPlan(plan, input.parentRunId, input.mission.id);
   const child = await dependencies.createChildRun({
@@ -232,6 +233,7 @@ export async function executeAgentEpisode<T extends EpisodeResult>(
     missionId: input.mission.id,
     planId: storedPlan.id,
     allowSideEffects: input.allowAll,
+    captureStorageState: input.recoverAuthentication,
   });
   const run = await dependencies.executeRun(child.id);
   const result = await dependencies.readEpisodeResult(run.id, input.mission.id);
