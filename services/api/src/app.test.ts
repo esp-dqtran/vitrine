@@ -1091,7 +1091,12 @@ test("runs the admin draft-review-publish workflow and hides drafts from designe
 
 test("returns 404 when an app has no structured design system", async (t) => {
   const { base, server } = await serve(
-    createApiApp({ resolveSession: async () => admin, getDesignSystem: async () => undefined })
+    createApiApp({
+      resolveSession: async () => admin,
+      getDesignSystem: async () => undefined,
+      getAppFlows: async () => [],
+      appImages: async () => [],
+    })
   );
   t.after(() => close(server));
   assert.equal(
