@@ -16,6 +16,8 @@
     "db:verify": "node --experimental-strip-types scripts/verify-migrations.ts",
     "db:backup": "node --experimental-strip-types scripts/db-backup.ts",
     "db:restore-verify": "node --experimental-strip-types scripts/db-restore-verify.ts",
+    "catalog-db:audit": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --dry-run",
+    "catalog-db:merge": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --apply",
     "storage:migrate": "node --experimental-strip-types scripts/migrate-media-to-objects.ts",
     "storage:verify": "node --experimental-strip-types scripts/verify-object-storage.ts",
     "storage:gc": "node --experimental-strip-types scripts/object-gc.ts",

@@ -35,6 +35,13 @@ function metadataFrom(row: MetadataRow | undefined): ObjectMetadata | undefined 
   return metadata;
 }
 
+function sameObjectContent(left: ObjectMetadata, right: ObjectMetadata): boolean {
+  return left.sha256 === right.sha256
+    && left.byteSize === right.byteSize
+    && left.contentType === right.contentType
+    && left.accessClass === right.accessClass;
+}
+
 const METADATA_COLUMNS = `so.object_key, so.sha256, so.byte_size,
   so.content_type, so.access_class`;
 
@@ -66,7 +73,18 @@ export async function attachImageObject(
        RETURNING id`,
       [input.imageId, metadata.key],
     );
-    if (associated.rowCount !== 1) throw new Error("Image not found or already attached to another object");
+    if (associated.rowCount !== 1) {
+      const existing = await client.query<MetadataRow>(
+        `SELECT ${METADATA_COLUMNS}
+         FROM images i JOIN stored_objects so ON so.object_key = i.object_key
+         WHERE i.id = $1`,
+        [input.imageId],
+      );
+      const attached = metadataFrom(existing.rows[0]);
+      if (!attached || !sameObjectContent(attached, metadata)) {
+        throw new Error("Image not found or already attached to another object");
+      }
+    }
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");

@@ -96,6 +96,30 @@ test("rolls back metadata when the image association fails", async () => {
   assert.equal(calls.includes("COMMIT"), false);
 });
 
+test("accepts an existing image attachment when the stored bytes are identical", async () => {
+  const calls: string[] = [];
+  const client = {
+    async query(sql: string) {
+      calls.push(sql);
+      if (sql.includes("INSERT INTO stored_objects")) return result([{ object_key: metadata.key }]);
+      if (sql.includes("UPDATE images")) return result([], 0);
+      if (sql.includes("JOIN stored_objects")) return result([{
+        object_key: "images/99/aaaaaaaaaaaaaaaa.png",
+        sha256: metadata.sha256,
+        byte_size: String(metadata.byteSize),
+        content_type: metadata.contentType,
+        access_class: metadata.accessClass,
+      }]);
+      return result();
+    },
+  } as unknown as PoolClient;
+
+  await attachImageObject(client, { imageId: 7, metadata });
+
+  assert.equal(calls.at(-1), "COMMIT");
+  assert.equal(calls.includes("ROLLBACK"), false);
+});
+
 test("customer image lookup is app-scoped, entitled, and in the latest published version", async () => {
   let captured: { sql: string; values?: readonly unknown[] } | undefined;
   const query: DatabaseQuery = async (sql, values) => {
