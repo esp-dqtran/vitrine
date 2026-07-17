@@ -40,6 +40,8 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
       style={{
         position: 'relative',
         aspectRatio: '16 / 10',
+        contentVisibility: 'auto', // skip layout/paint for offscreen cards
+        containIntrinsicSize: 'auto 240px', // reserve height so the scrollbar stays stable
         borderRadius: 'var(--radius-container)',
         overflow: 'hidden',
         background: 'var(--color-background-muted)',

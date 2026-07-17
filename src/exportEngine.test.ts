@@ -42,6 +42,27 @@ test('renders secondary formats from the same scoped snapshot', () => {
   assert.equal(JSON.parse(buildExportArtifact(snapshot, images, 'json', whole).content.toString()).tokens.length, 2);
 });
 
+test('react export renders real observed styling from reconstruction data, not an empty wrapper', () => {
+  const styled: DesignSystemSnapshot = {
+    ...snapshot,
+    components: [{
+      id: 'button', name: 'Button', category: 'Actions', description: 'Triggers an action',
+      variants: [{
+        id: 'primary', name: 'Primary', description: 'Filled action', evidence: [7],
+        reconstruction: { layoutMode: 'HORIZONTAL', width: 120, height: 40, padding: 12, gap: 8, fill: '#5E6AD2', radius: 8, visibleText: 'Continue' },
+      }],
+    }],
+  };
+  const text = buildExportArtifact(styled, images, 'react', whole).content.toString();
+  assert.match(text, /ButtonStyles/);
+  assert.match(text, /background: "#5E6AD2"/);
+  assert.match(text, /width: 120/);
+  assert.match(text, /borderRadius: 8/);
+  assert.match(text, /ButtonLabels/);
+  assert.match(text, /"Continue"/);
+  assert.doesNotMatch(text, /<div data-astryx-component="button" data-observed-variant={observedVariant}>{children}<\/div>/);
+});
+
 test('renders a DESIGN.md with token frontmatter and observed components', () => {
   const text = buildExportArtifact(snapshot, images, 'design-md', whole).content.toString();
   assert.match(text, /^---\n/);
@@ -52,6 +73,40 @@ test('renders a DESIGN.md with token frontmatter and observed components', () =>
   assert.match(text, /\*\*Primary\*\* — Filled action/);
   assert.match(text, /## Agent Prompt Guide/);
   assert.match(text, /- Accent: `#5E6AD2` — Primary action/);
+});
+
+test('renders a FLOW.md PM doc with an index and evidence-cited steps', () => {
+  const text = buildExportArtifact(snapshot, images, 'flow-md', whole).content.toString();
+  assert.match(text, /^---\n/);
+  assert.match(text, /title: "linear product flows"/);
+  assert.match(text, /flows: 1/);
+  assert.match(text, /## Flow index\n\n1\. \[Sign in\]\(#sign-in\) · 1 step\(s\)/);
+  assert.match(text, /## Sign in/);
+  assert.match(text, /_Auth_/);
+  assert.match(text, /1\. \*\*Submit\*\*/);
+  assert.match(text, /_Seen on: Workspace toolbar_/);
+});
+
+test('FLOW.md surfaces flow verification status when provenance is present', () => {
+  const withProvenance: DesignSystemSnapshot = {
+    ...snapshot,
+    flows: [{
+      ...snapshot.flows[0],
+      provenance: { autonomousRunId: 'r1', missionId: 'm1', confidence: 0.9, sourceUrls: ['https://ex.com/x'], validationStatus: 'uncertain' },
+    }],
+  };
+  const text = buildExportArtifact(withProvenance, images, 'flow-md', whole).content.toString();
+  assert.match(text, /\*\*Status:\*\* uncertain · confidence 90% · \[source\]\(https:\/\/ex\.com\/x\)/);
+});
+
+test('FLOW.md does not repeat a tag that duplicates the flow category', () => {
+  const dupe: DesignSystemSnapshot = {
+    ...snapshot,
+    flows: [{ id: 'f', title: 'Repair', category: 'Retention', description: '', tags: ['Retention', 'Monetization'], steps: [{ label: 'Go', evidence: [7] }] }],
+  };
+  const text = buildExportArtifact(dupe, images, 'flow-md', whole).content.toString();
+  assert.match(text, /_Retention · Monetization_/);
+  assert.doesNotMatch(text, /Retention · Monetization · Retention|Retention · Retention/);
 });
 
 test('exports only the selected observed family or foundation category', () => {

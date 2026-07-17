@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { Button, Heading, Text, TextInput, type InputStatus } from '@astryxdesign/core';
+import { Button, Heading, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
 
 function EyeIcon({ off }: { off: boolean }) {
@@ -42,7 +42,7 @@ function Wordmark() {
   );
 }
 
-function PasswordField({ value, onChange, status }: { value: string; onChange: (v: string) => void; status?: InputStatus }) {
+function PasswordField({ value, onChange, status, label = 'Password' }: { value: string; onChange: (v: string) => void; status?: InputStatus; label?: string }) {
   const [show, setShow] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -63,7 +63,7 @@ function PasswordField({ value, onChange, status }: { value: string; onChange: (
 
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
-      <TextInput label="Password" type={show ? 'text' : 'password'} value={value} onChange={onChange} placeholder="••••••••" status={status} />
+      <TextInput label={label} type={show ? 'text' : 'password'} value={value} onChange={onChange} placeholder="••••••••" status={status} />
       <button
         ref={btnRef}
         type="button"
@@ -521,15 +521,24 @@ function Showcase() {
 
 export function SignIn({
   authenticate,
+  register,
   onSignedIn,
 }: {
   authenticate: (email: string, password: string) => Promise<AuthUser>;
+  register: (email: string, password: string) => Promise<AuthUser>;
   onSignedIn: (user: AuthUser) => void;
 }) {
+  // Below md, the decorative Showcase panel (3D tilt/parallax that's meaningless on
+  // touch anyway) is dropped so the form gets the full viewport width instead of
+  // squeezing two flex columns into less than their combined minWidth.
+  const isCompact = useMediaQuery('(max-width: 768px)', false);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [emailStatus, setEmailStatus] = useState<InputStatus | undefined>(undefined);
   const [passwordStatus, setPasswordStatus] = useState<InputStatus | undefined>(undefined);
+  const [confirmPasswordStatus, setConfirmPasswordStatus] = useState<InputStatus | undefined>(undefined);
   const [shakeNonce, setShakeNonce] = useState(0);
   const [success, setSuccess] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | null>(null);
@@ -540,16 +549,36 @@ export function SignIn({
     return () => clearTimeout(timeout);
   }, [success, authenticatedUser, onSignedIn]);
 
+  const toggleMode = () => {
+    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
+    setPassword('');
+    setConfirmPassword('');
+    setEmailStatus(undefined);
+    setPasswordStatus(undefined);
+    setConfirmPasswordStatus(undefined);
+  };
+
   const validate = () => {
     let ok = true;
     if (!email.trim() || !email.includes('@')) {
       setEmailStatus({ type: 'error', message: 'Enter a valid email address' });
       ok = false;
     } else setEmailStatus(undefined);
-    if (!password) {
+
+    if (mode === 'signup') {
+      if (password.length < 8) {
+        setPasswordStatus({ type: 'error', message: 'Password must be at least 8 characters' });
+        ok = false;
+      } else setPasswordStatus(undefined);
+      if (confirmPassword !== password) {
+        setConfirmPasswordStatus({ type: 'error', message: 'Passwords do not match' });
+        ok = false;
+      } else setConfirmPasswordStatus(undefined);
+    } else if (!password) {
       setPasswordStatus({ type: 'error', message: 'Enter your password' });
       ok = false;
     } else setPasswordStatus(undefined);
+
     return ok;
   };
 
@@ -559,18 +588,23 @@ export function SignIn({
       return;
     }
     try {
-      const user = await authenticate(email.trim(), password);
-      setAuthenticatedUser(user);
+      const authedUser = mode === 'signup'
+        ? await register(email.trim(), password)
+        : await authenticate(email.trim(), password);
+      setAuthenticatedUser(authedUser);
       setSuccess(true);
-    } catch {
-      setPasswordStatus({ type: 'error', message: 'Invalid email or password' });
+    } catch (reason) {
+      setPasswordStatus({
+        type: 'error',
+        message: mode === 'signup' ? (reason as Error).message : 'Invalid email or password',
+      });
       setShakeNonce((nonce) => nonce + 1);
     }
   };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: 'var(--color-background-surface)' }}>
-      <div style={{ flex: '1 1 480px', minWidth: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 32px' }}>
+      <div style={{ flex: isCompact ? '1 1 auto' : '1 1 480px', minWidth: isCompact ? 0 : 380, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 32px' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ marginBottom: 44, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) both' }}>
             <Wordmark />
@@ -581,10 +615,12 @@ export function SignIn({
           ) : (
             <>
               <div style={{ marginBottom: 30, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both' }}>
-                <Heading level={1}>Welcome back</Heading>
+                <Heading level={1}>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</Heading>
                 <div style={{ marginTop: 8 }}>
                   <Text type="large" color="secondary">
-                    Sign in to pick up your saved screens and boards.
+                    {mode === 'signup'
+                      ? 'Sign up to start saving screens and boards.'
+                      : 'Sign in to pick up your saved screens and boards.'}
                   </Text>
                 </div>
               </div>
@@ -602,19 +638,49 @@ export function SignIn({
                 >
                   <PasswordField value={password} onChange={setPassword} status={passwordStatus} />
                 </div>
+                {mode === 'signup' && (
+                  <div
+                    key={'confirm-pw-wrap-' + shakeNonce}
+                    style={{ animation: shakeNonce ? 'vtShake .4s .04s cubic-bezier(.36,.07,.19,.97) both, vtFadeUp .5s cubic-bezier(.16,1,.3,1) .18s both' : 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .18s both' }}
+                  >
+                    <PasswordField value={confirmPassword} onChange={setConfirmPassword} status={confirmPasswordStatus} label="Confirm password" />
+                  </div>
+                )}
 
                 <div style={{ marginTop: 6, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .2s both' }}>
-                  <Button type="submit" variant="primary" size="lg" label="Sign in" clickAction={submitAction} style={{ width: '100%' }} />
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    label={mode === 'signup' ? 'Create account' : 'Sign in'}
+                    clickAction={submitAction}
+                    style={{ width: '100%' }}
+                  />
                 </div>
               </form>
+
+              <div style={{ marginTop: 18, textAlign: 'center', animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .25s both' }}>
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'inherit', fontSize: 13, color: 'var(--color-text-secondary)' }}
+                >
+                  {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
+                  <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>
+                    {mode === 'signup' ? 'Sign in' : 'Sign up'}
+                  </span>
+                </button>
+              </div>
             </>
           )}
         </div>
       </div>
 
-      <div style={{ flex: '1 1 55%', minWidth: 0 }}>
-        <Showcase />
-      </div>
+      {!isCompact && (
+        <div style={{ flex: '1 1 55%', minWidth: 0 }}>
+          <Showcase />
+        </div>
+      )}
     </div>
   );
 }

@@ -19,7 +19,8 @@ export type StoredContentType =
   | "application/zip"
   | "text/css"
   | "text/javascript"
-  | "text/typescript";
+  | "text/typescript"
+  | "text/markdown";
 
 export type ObjectAccessClass = "protected" | "public-preview" | "internal";
 
@@ -53,6 +54,7 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "text/css",
   "text/javascript",
   "text/typescript",
+  "text/markdown",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);
 const EXTENSIONS = new Set(["png", "jpg", "webp", "json", "zip", "css", "js", "tsx"]);
@@ -94,6 +96,13 @@ export function exportObjectKey(exportId: string, sha256: string, extension: str
     throw new Error("Invalid export object identity");
   }
   return `exports/${exportId}/${sha256}.${checkedExtension(extension)}`;
+}
+
+export function researchUploadObjectKey(userId: number, sha256: string, extension: string): string {
+  if (!Number.isSafeInteger(userId) || userId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid research upload identity");
+  }
+  return `research/${userId}/${sha256}.${checkedExtension(extension)}`;
 }
 
 function validateKey(key: string): void {

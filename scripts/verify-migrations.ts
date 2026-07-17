@@ -48,10 +48,31 @@ const OBJECT_STORAGE_TABLES = [
   "stored_objects",
 ] as const;
 
-const ADDED_NULLABLE_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
-  images: ["object_key"],
+const AUTONOMOUS_CRAWLER_TABLES = [
+  "crawl_account_leases",
+  "crawl_account_sessions",
+  "crawl_dossiers",
+  "crawl_missions",
+  "crawl_states",
+  "crawl_transitions",
+] as const;
+
+const RESEARCH_PROJECT_TABLES = [
+  "research_project_items",
+  "research_project_lanes",
+  "research_project_syntheses",
+  "research_projects",
+] as const;
+
+const ADDED_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
+  app_flows: ["platform"],
+  app_versions: ["platform"],
+  crawl_runs: ["run_kind", "parent_run_id", "platform", "allow_all", "pause_requested_at"],
+  design_systems: ["platform"],
+  images: ["object_key", "thumbnail_object_key"],
   exports: ["object_key"],
   crawl_run_steps: ["failure_object_key"],
+  users: ["clerk_user_id"],
 };
 
 const SEQUENCE_MAX_ID = {
@@ -174,7 +195,7 @@ async function captureUpgradeState(pool: pg.Pool): Promise<UpgradeState> {
       `SELECT count(*)::integer AS count FROM ${identifier}`,
     );
     counts[table] = count.rows[0].count;
-    const omitted = ADDED_NULLABLE_COLUMNS[table as keyof typeof TABLE_ORDER] ?? [];
+    const omitted = ADDED_COLUMNS[table as keyof typeof TABLE_ORDER] ?? [];
     const value = omitted.length
       ? `to_jsonb(ordered_row) - ARRAY[${omitted.map((column) => `'${column}'`).join(", ")}]::text[]`
       : "to_jsonb(ordered_row)";
@@ -219,7 +240,13 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
     await pool.query("SET TIME ZONE 'UTC'");
     await applyMigrations(pool);
     await assertMigrationsCurrent(pool);
-    const expectedTables = [...Object.keys(TABLE_ORDER), ...OBJECT_STORAGE_TABLES, "schema_migrations"].sort();
+    const expectedTables = [
+      ...Object.keys(TABLE_ORDER),
+      ...OBJECT_STORAGE_TABLES,
+      ...AUTONOMOUS_CRAWLER_TABLES,
+      ...RESEARCH_PROJECT_TABLES,
+      "schema_migrations",
+    ].sort();
     const tables = await publicTables(pool);
     assert.deepEqual(tables, expectedTables, "empty install created an unexpected table set");
     const rerun = await applyMigrations(pool);

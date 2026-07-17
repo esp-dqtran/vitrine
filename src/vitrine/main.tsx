@@ -19,7 +19,7 @@ const goPricing = () => navigate({ name: 'pricing' });
 const goSignIn = () => navigate({ name: 'signin' });
 
 function Root() {
-  const { user, loading, authenticate, completeLogin } = useAuth();
+  const { user, loading, authenticate, register, completeLogin } = useAuth();
   const route = useRoute();
 
   if (route.name === 'pricing') {
@@ -38,8 +38,8 @@ function Root() {
   if (user) return <App />;
   // A deep link into the catalog (e.g. someone shared an app's URL) needs an account too —
   // send it through sign-in rather than the marketing page, path intact for App to pick up.
-  if (route.name === 'signin' || route.name === 'apps' || route.name === 'app' || route.name === 'admin') {
-    return <SignIn authenticate={authenticate} onSignedIn={completeLogin} />;
+  if (route.name === 'signin' || route.name === 'apps' || route.name === 'app' || route.name === 'projects' || route.name === 'project' || route.name === 'admin') {
+    return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} />;
   }
   return (
     <Home

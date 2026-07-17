@@ -28,6 +28,7 @@ import { insertImage, pool, query } from "../src/db.ts";
 import { attachImageObject, attachThumbnailObject } from "../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../src/bulkDownload.ts";
+import { launchMobbinContext } from "../src/crawler.ts";
 
 const STATE_PATH = WORKER_ID ? `data/catalog-import-state-${WORKER_ID}.json` : "data/catalog-import-state.json";
 const LOG_PREFIX = WORKER_ID ? `w${WORKER_ID}:` : "";
@@ -165,11 +166,14 @@ for (const job of state.jobs) {
 
   const url = `https://mobbin.com/apps/${job.slug}-${job.platform}-${job.mobbinId}/latest/screens`;
   log(`Importing "${job.appName}" (${job.platform}) -> ${job.slug}`);
+  // One browser context reused across all 3 phases instead of a fresh Chromium launch
+  // per phase — same session, just skips paying cold-start cost 3x per app.
+  const jobContext = await launchMobbinContext();
   try {
-    const screens = await crawlBulkDownload(url, job.slug, "screens", 60_000, storage, job.platform);
+    const screens = await crawlBulkDownload(url, job.slug, "screens", 60_000, storage, job.platform, jobContext);
     if (screens.status !== "done") throw new Error(`screens: ${screens.status} ${screens.message ?? ""}`);
-    await crawlBulkDownload(url, job.slug, "ui-elements", 20_000, storage, job.platform);
-    await crawlFlowsDownload(url, job.slug, 20_000, storage, job.platform);
+    await crawlBulkDownload(url, job.slug, "ui-elements", 20_000, storage, job.platform, jobContext);
+    await crawlFlowsDownload(url, job.slug, 20_000, storage, job.platform, jobContext);
     job.status = "done";
     consecutiveFailures = 0;
     log(`Done: ${job.slug} (${job.platform})`);
@@ -178,6 +182,8 @@ for (const job of state.jobs) {
     job.error = String((error as Error)?.message ?? error);
     consecutiveFailures++;
     log(`FAILED: ${job.slug} (${job.platform}) — ${job.error}`);
+  } finally {
+    await jobContext.close().catch(() => {});
   }
   job.finishedAt = new Date().toISOString();
   saveState(state);

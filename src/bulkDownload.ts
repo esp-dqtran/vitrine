@@ -1,4 +1,4 @@
-import { type Page, type Download, type Locator } from "playwright";
+import { type Page, type Download, type Locator, type BrowserContext } from "playwright";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -30,6 +30,33 @@ export function tabUrl(appUrl: string, tab: BulkTab | "flows"): string {
   else parts.push(tab);
   url.pathname = `/${parts.join("/")}`;
   return url.toString();
+}
+
+// Opening a brand-new tab and navigating it has been observed to hang past Playwright's
+// default 30s navigation timeout under sustained multi-worker load, even when the same
+// context already navigated other tabs of the same app fine — a transient server-side or
+// session hiccup, not a hard block. Observed to sometimes outlast a single immediate retry,
+// so this backs off between attempts to give it real room to clear. Callers close any stale
+// pages from a prior run themselves before calling this, matching their existing per-phase
+// page lifecycle.
+const NAV_RETRY_BACKOFF_MS = [0, 10_000, 20_000];
+async function newPageAndGoto(context: BrowserContext, appName: string, url: string, gridSelector: string, gridWaitMs: number, gridLabel: string): Promise<Page> {
+  let lastError: Error | undefined;
+  for (let attempt = 1; attempt <= NAV_RETRY_BACKOFF_MS.length; attempt++) {
+    if (NAV_RETRY_BACKOFF_MS[attempt - 1] > 0) await new Promise((r) => setTimeout(r, NAV_RETRY_BACKOFF_MS[attempt - 1]));
+    const page = await context.newPage();
+    await page.bringToFront();
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+      await waitUntilVisible(page, gridSelector, gridWaitMs, gridLabel);
+      return page;
+    } catch (error) {
+      await page.close().catch(() => {});
+      lastError = error as Error;
+      if (attempt < NAV_RETRY_BACKOFF_MS.length) console.warn(`[${appName}] ${gridLabel} navigation failed (attempt ${attempt}), retrying: ${lastError.message.split("\n")[0]}`);
+    }
+  }
+  throw lastError;
 }
 
 // Newest flow definition wins on id collision; everything else is kept.
@@ -177,6 +204,19 @@ async function shownTotalCount(page: Page): Promise<number | null> {
   });
 }
 
+// Mobbin enforces a device limit and can pop a full-viewport "New device detected" modal
+// at any time — our worker profiles share one cloned login, which trips it periodically.
+// The modal's backdrop sits above everything and silently eats any real (hit-tested)
+// Playwright click underneath, which is what actually produced the `locator.click:
+// Timeout 30000ms exceeded` failures on the download buttons — not Mobbin throttling the
+// download itself. Dismiss it before the click every download path funnels through.
+async function dismissDeviceLimitModal(page: Page): Promise<void> {
+  const skip = page.getByRole("dialog").getByRole("button", { name: "Skip" });
+  if ((await skip.count()) > 0) {
+    await skip.first().click({ timeout: 3000 }).catch(() => {});
+  }
+}
+
 // Mobbin's export might come back as one zip, or as several individual file downloads —
 // we don't assume which, we just collect every `download` event until they stop arriving.
 async function triggerAndSaveDownloads(page: Page, dir: string, trigger: (p: Page) => Promise<boolean> = clickDownloadControl): Promise<string[]> {
@@ -185,6 +225,7 @@ async function triggerAndSaveDownloads(page: Page, dir: string, trigger: (p: Pag
   const onDownload = (d: Download) => downloads.push(d);
   page.on("download", onDownload);
   try {
+    await dismissDeviceLimitModal(page);
     if (!(await trigger(page))) return [];
     // Poll the listener-backed array rather than page.waitForEvent — the download can fire
     // in the gap between trigger() resolving and a fresh waitForEvent() call being armed,
@@ -209,12 +250,20 @@ async function triggerAndSaveDownloads(page: Page, dir: string, trigger: (p: Pag
   }
 }
 
-// ponytail: shells out to the system `unzip` (present on macOS/Linux by default) rather
-// than adding a zip-parsing dependency for what's a one-line job.
-function extractIfArchive(filePath: string, destDir: string): boolean {
+// ponytail: shells out to a system archive tool rather than adding a zip-parsing dependency
+// for what's a one-line job.
+export function extractIfArchive(filePath: string, destDir: string): boolean {
   if (!filePath.toLowerCase().endsWith(".zip")) return false;
   mkdirSync(destDir, { recursive: true });
-  execSync(`unzip -o ${JSON.stringify(filePath)} -d ${JSON.stringify(destDir)}`);
+  // Mobbin's zip entries can carry non-ASCII filenames (e.g. "Condé Nast"), correctly
+  // UTF-8-flagged — but macOS's bundled unzip (Apple's modified Info-ZIP 6.00) mishandles
+  // them regardless of locale and throws "Illegal byte sequence". macOS's bundled `tar`
+  // (libarchive-based, auto-detects zip) extracts the same entries correctly, so prefer it
+  // there; Linux's GNU tar has no zip support, so keep unzip on every other platform.
+  const cmd = process.platform === "darwin"
+    ? `tar -xf ${JSON.stringify(filePath)} -C ${JSON.stringify(destDir)}`
+    : `unzip -o ${JSON.stringify(filePath)} -d ${JSON.stringify(destDir)}`;
+  execSync(cmd);
   return true;
 }
 
@@ -322,24 +371,26 @@ export async function ingestDownloadedImages(
 // gridWaitMs defaults to the long login window (first crawl waits for a manual sign-in).
 // A caller that has already established login (e.g. after the screens tab) passes a short
 // timeout so a tab the app simply doesn't have fails fast instead of hanging 30 minutes.
-export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform): Promise<StageOutcome> {
+// sharedContext lets a caller doing multiple phases for the same app (screens, then
+// ui-elements, then flows) reuse one already-launched browser instead of paying Chromium's
+// cold-start cost per phase — the caller owns close() in that case, not this function.
+export async function crawlBulkDownload(appUrl: string, appName: string, tab: BulkTab = "screens", gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform, sharedContext?: BrowserContext): Promise<StageOutcome> {
   clearCancel();
   const platform = platformOverride ?? platformFromUrl(appUrl);
   const kind: ImageKind = tab === "ui-elements" ? "ui_element" : "screen";
   const label = tab === "ui-elements" ? "UI elements" : "screens";
-  const context = await launchMobbinContext();
+  const context = sharedContext ?? await launchMobbinContext();
+  const closeContext = async () => { if (!sharedContext) await context.close(); };
   // A stale/restored tab left over from an earlier session can sit in the profile's
   // session-restore state — start from a genuinely fresh, focused page so the
   // hover-triggered download submenu below reliably renders (backgrounded/stale
   // tabs were observed to silently drop it).
   for (const stale of context.pages()) await stale.close().catch(() => {});
-  const page = await context.newPage();
-  await page.bringToFront();
-  await page.goto(tabUrl(appUrl, tab), { waitUntil: "domcontentloaded" });
+  let page: Page;
   try {
-    await waitUntilVisible(page, 'a[href*="/screens/"]', gridWaitMs, `the ${label} grid`);
+    page = await newPageAndGoto(context, appName, tabUrl(appUrl, tab), 'a[href*="/screens/"]', gridWaitMs, `the ${label} grid`);
   } catch (error) {
-    await context.close();
+    await closeContext();
     return { status: "error", message: (error as Error).message };
   }
 
@@ -364,11 +415,15 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   const cancelledOutcome = async (): Promise<StageOutcome> => {
     console.log(`[${appName}] Cancelled before download.`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "cancelled", message: "Cancelled by user" });
-    await context.close();
+    await closeContext();
     return { status: "cancelled", message: "Cancelled by user" };
   };
 
   const downloadDir = `data/downloads/${appName}`;
+  // A prior attempt at this same app (interrupted mid-download, or failed after extracting
+  // but before the success-path cleanup below) can leave stale files here — start every
+  // attempt from a guaranteed-clean directory so a retry never mixes old and new downloads.
+  rmSync(downloadDir, { recursive: true, force: true });
 
   // Multi-select + bottom-toolbar Download — the only path UI Elements ever had (no app-level
   // "download all" there), and a fallback for Screens when the More-actions version submenu
@@ -379,12 +434,25 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     console.log(`[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: `Selecting ${label}` });
 
-    const { clicked, skipped } = await selectAllOwnCards(page, appAltPrefix);
+    const { skipped } = await selectAllOwnCards(page, appAltPrefix);
     const shown = await shownTotalCount(page);
-    const selected = (await toolbarSelectedCount(page)) ?? clicked;
-    console.log(`[${appName}] One pass: selected ${selected} of ${shown ?? "?"} ${label} (${skipped} filtered as other-app).`);
+    let selected = (await toolbarSelectedCount(page)) ?? 0;
+    console.log(`[${appName}] Pass 1: selected ${selected} of ${shown ?? "?"} ${label} (${skipped} filtered as other-app).`);
+    // A single scroll pass can miss cards whose checkbox hadn't finished rendering when that
+    // tick ran (lazy-loaded content racing the scroll). Re-run — it only clicks cards still
+    // showing aria-pressed="false", so this is strictly additive — until the toolbar count
+    // matches Mobbin's own total or two passes in a row make no further progress (means
+    // whatever's left is genuinely unselectable, e.g. cross-app cards Mobbin's total doesn't
+    // exclude, not worth looping forever over).
+    for (let extraPass = 0; extraPass < 5 && shown != null && selected < shown; extraPass++) {
+      await selectAllOwnCards(page, appAltPrefix);
+      const reselected = (await toolbarSelectedCount(page)) ?? selected;
+      if (reselected <= selected) break;
+      selected = reselected;
+      console.log(`[${appName}] Pass ${extraPass + 2}: selected ${selected} of ${shown} ${label}.`);
+    }
     if (shown != null && selected < shown) {
-      console.warn(`[${appName}] One pass selected ${selected}/${shown} ${label} — some cards may have been missed.`);
+      console.warn(`[${appName}] Selected ${selected}/${shown} ${label} after retries — some cards may be genuinely unselectable.`);
     }
 
     if (isCancelRequested()) return [];
@@ -414,7 +482,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   if (savedPaths.length === 0) {
     console.warn(`[${appName}] No download started — check the download control selectors are still correct.`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "error", message: "No download started" });
-    await context.close();
+    await closeContext();
     return { status: "error", message: "No download started" };
   }
 
@@ -430,7 +498,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   console.log(`[${appName}] Done. Imported ${imported} ${label} image(s) via bulk download.`);
   writeProgress({ stage: "crawl", app: appName, done: imported, total: imported, status: "done" });
 
-  await context.close();
+  await closeContext();
   return { status: "done" };
 }
 
@@ -479,9 +547,10 @@ async function downloadFlowRow(page: Page, cell: Locator): Promise<boolean> {
 // share it — each scrolls the same grid independently and claims a disjoint, stable subset
 // of rows by hashing the row id, so lanes never race for the same flow.
 // ponytail: fixed pool size, not a knob. Mobbin's version-menu endpoint has throttled under
-// sustained bulk-menu load before (see clickDownloadAllMenu) — start modest; raise if this
-// holds up under real load, lower if "Loading..."/no-download failures climb.
-const FLOW_LANES = 2;
+// sustained bulk-menu load before (see clickDownloadAllMenu) — 2 lanes ran stably for hours
+// in production with no throttle-shaped failures, so bumped to 3; lower again if
+// "Loading..."/no-download failures climb.
+const FLOW_LANES = 3;
 
 function shardOf(id: string, lanes: number): number {
   let h = 0;
@@ -492,22 +561,21 @@ function shardOf(id: string, lanes: number): number {
 // Scrolls through the Flows tab across FLOW_LANES concurrent pages, downloading each
 // newly-revealed flow inline from its own row (no per-flow page navigation), and records
 // each in app_flows with steps pointing at the ingested images (in export order).
-export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform): Promise<StageOutcome> {
+export async function crawlFlowsDownload(appUrl: string, appName: string, gridWaitMs: number = LOGIN_WAIT_MS, storage?: BulkObjectDependencies, platformOverride?: Platform, sharedContext?: BrowserContext): Promise<StageOutcome> {
   clearCancel();
   const platform = platformOverride ?? platformFromUrl(appUrl);
-  const context = await launchMobbinContext();
+  const context = sharedContext ?? await launchMobbinContext();
+  const closeContext = async () => { if (!sharedContext) await context.close(); };
   // A stale/restored tab left over from an earlier session can sit in the profile's
   // session-restore state — start from a genuinely fresh, focused page so the
   // hover-triggered menus below reliably render.
   for (const stale of context.pages()) await stale.close().catch(() => {});
 
-  const probe = await context.newPage();
-  await probe.bringToFront();
-  await probe.goto(tabUrl(appUrl, "flows"), { waitUntil: "domcontentloaded" });
+  let probe: Page;
   try {
-    await waitUntilVisible(probe, 'a[href*="/flows/"]', gridWaitMs, "the flows grid");
+    probe = await newPageAndGoto(context, appName, tabUrl(appUrl, "flows"), 'a[href*="/flows/"]', gridWaitMs, "the flows grid");
   } catch (error) {
-    await context.close();
+    await closeContext();
     return { status: "error", message: (error as Error).message };
   }
 
@@ -606,7 +674,10 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
     await saveAppFlows(appName, platform, mergeFlows(await getAppFlows(appName, platform), crawled));
   }
 
-  await context.close();
+  // Lane pages are this function's own — close them regardless of who owns the context,
+  // so a caller reusing the context for another phase doesn't inherit stray open tabs.
+  for (const page of [probe, ...extraPages]) await page.close().catch(() => {});
+  await closeContext();
   if (cancelled || isCancelRequested()) {
     console.log(`[${appName}] Cancelled. ${crawled.length} flow(s) imported before cancel.`);
     writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "cancelled", message: "Cancelled by user" });

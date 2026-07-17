@@ -140,7 +140,10 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
       // ChatGPT (at least) briefly renders a logged-out shell before hydrating into the
       // authenticated UI — wait for the real (and actually logged-in) input, don't guess a delay.
       await waitForCount(page, provider.textInput, 15_000);
-      if (!(await isLoggedIn(page, provider))) {
+      // Image uploads are login-gated by the provider itself, so only require real login
+      // when this call actually attaches a file — a guest session's working (but upload-less)
+      // textarea is enough for a text-only prompt.
+      if (filePath && !(await isLoggedIn(page, provider))) {
         throw new Error(`Logged out of ${providerName} mid-run — log back in and re-run to pick up where this left off.`);
       }
       if (filePath) {
@@ -206,7 +209,10 @@ export function chatSessionHeadless(env: Record<string, string | undefined> = pr
   return env.HEADLESS === "true";
 }
 
-export async function startChatSession(providerName: string): Promise<ChatSession> {
+export async function startChatSession(
+  providerName: string,
+  options: { requireLogin?: boolean } = {},
+): Promise<ChatSession> {
   const provider = getProvider(providerName);
 
   const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
@@ -215,7 +221,14 @@ export async function startChatSession(providerName: string): Promise<ChatSessio
   const page = context.pages()[0] ?? (await context.newPage());
   await page.bringToFront(); // make sure the window isn't missed behind others
   await page.goto(provider.url, { waitUntil: "domcontentloaded" });
-  await waitForLogin(page, provider, LOGIN_WAIT_MS);
+  // Guest mode still renders a working (upload-less) textarea, so a caller that only
+  // needs text prompts can skip waiting on a login that may never come — `ask()` only
+  // enforces real login itself when a call actually attaches a file.
+  if (options.requireLogin ?? true) {
+    await waitForLogin(page, provider, LOGIN_WAIT_MS);
+  } else {
+    await waitForCount(page, provider.textInput, 15_000);
+  }
 
   return bindSession(page, providerName, provider, () => context.close());
 }

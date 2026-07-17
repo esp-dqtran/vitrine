@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { Badge, Button, Divider, Heading, SegmentedControl, SegmentedControlItem, Text } from '@astryxdesign/core';
+import { Badge, Button, Divider, DropdownMenu, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
 
@@ -223,6 +223,7 @@ function Section({ style, children }: { style?: CSSProperties; children: ReactNo
 }
 
 export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn: () => void }) {
+  const isCompactNav = useMediaQuery('(max-width: 640px)', false);
   const [yearly, setYearly] = useState(false);
   const proPrice = yearly ? '$70' : '$7';
   const proNote = yearly ? '/year' : '/month';
@@ -248,10 +249,22 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
             </div>
             <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 28, flex: '0 0 auto' }}>
-            <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-text-primary)', paddingBottom: 2 }}>Pricing</span>
-            <button type="button" onClick={onSignIn} style={navLink}>Sign in</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
+            {isCompactNav ? (
+              <DropdownMenu
+                button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
+                items={[
+                  { label: 'Browse', onClick: onBrowse },
+                  { label: 'Sign in', onClick: onSignIn },
+                ]}
+              />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+                <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-text-primary)', paddingBottom: 2 }}>Pricing</span>
+                <button type="button" onClick={onSignIn} style={navLink}>Sign in</button>
+              </div>
+            )}
             <Button variant="primary" size="sm" label="Get started" clickAction={onSignIn} />
           </div>
         </Section>
@@ -307,30 +320,35 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
         <div style={{ marginBottom: 24 }}>
           <Heading level={2}>Compare plans</Heading>
         </div>
-        <div
-          style={{
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-container)',
-            overflow: 'hidden',
-            background: 'var(--color-background-card, var(--color-background-surface))',
-            boxShadow: 'var(--shadow-low)',
-          }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', background: 'var(--color-background-muted)', borderBottom: '1px solid var(--color-border)' }}>
-            <div style={{ padding: '14px 20px' }}><Text type="label" color="secondary">Feature</Text></div>
-            <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Free</Text></div>
-            <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Pro</Text></div>
-          </div>
-          {COMPARE_ROWS.map(([label, freeVal, proVal], i) => (
-            <div
-              key={label}
-              style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', borderBottom: i < COMPARE_ROWS.length - 1 ? '1px solid var(--color-border)' : 'none' }}
-            >
-              <div style={{ padding: '16px 20px' }}><Text type="body">{label}</Text></div>
-              <Cell value={freeVal} />
-              <Cell value={proVal} />
+        {/* Horizontal scroll (not a JS breakpoint) so the 3-column grid never squeezes
+            illegibly — it only kicks in once real content width exceeds the viewport. */}
+        <div style={{ overflowX: 'auto' }}>
+          <div
+            style={{
+              minWidth: 480,
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-container)',
+              overflow: 'hidden',
+              background: 'var(--color-background-card, var(--color-background-surface))',
+              boxShadow: 'var(--shadow-low)',
+            }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', background: 'var(--color-background-muted)', borderBottom: '1px solid var(--color-border)' }}>
+              <div style={{ padding: '14px 20px' }}><Text type="label" color="secondary">Feature</Text></div>
+              <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Free</Text></div>
+              <div style={{ padding: '14px 20px', textAlign: 'center' }}><Text weight="semibold">Pro</Text></div>
             </div>
-          ))}
+            {COMPARE_ROWS.map(([label, freeVal, proVal], i) => (
+              <div
+                key={label}
+                style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', borderBottom: i < COMPARE_ROWS.length - 1 ? '1px solid var(--color-border)' : 'none' }}
+              >
+                <div style={{ padding: '16px 20px' }}><Text type="body">{label}</Text></div>
+                <Cell value={freeVal} />
+                <Cell value={proVal} />
+              </div>
+            ))}
+          </div>
         </div>
         <div style={{ marginTop: 20, padding: 20, borderRadius: 'var(--radius-container)', background: 'var(--color-background-muted)' }}>
           <Text type="label" color="secondary">Not part of the initial launch: </Text>

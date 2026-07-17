@@ -2,8 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, statSync } from "node:fs";
 import { dirname } from "node:path";
-import { parseCaptionReply, withDownloaded } from "./caption.ts";
+import { captionWithRetry, parseCaptionReply, withDownloaded } from "./caption.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
+import type { ChatSession } from "./llmChat.ts";
+
+const validCaptionJson = JSON.stringify({
+  description: "A dark settings page.",
+  purpose: "Manage account preferences",
+  pageType: "Settings",
+  productArea: "Account",
+  theme: "dark",
+  visibleStates: [],
+  componentNames: [],
+});
 
 const objectMetadata: ObjectMetadata = {
   key: "images/1/abc.png",
@@ -35,6 +46,35 @@ test("parses a structured caption reply", () => {
 
 test("rejects an unstructured caption reply", () => {
   assert.throws(() => parseCaptionReply("A dark settings page."), /valid JSON/);
+});
+
+test("captionWithRetry re-asks exactly once on invalid output, then succeeds or gives up", async () => {
+  // first reply invalid (e.g. an unescaped quote from on-screen copy broke the JSON), second valid
+  let calls = 0;
+  const flaky = {
+    ask: async (prompt: string) => {
+      calls++;
+      if (calls === 1) return '{"description": "says "Breaking News" here'; // malformed
+      assert.ok(prompt.includes("failed validation"), "retry prompt must carry the validator error");
+      return validCaptionJson;
+    },
+    close: async () => {},
+  } as ChatSession;
+  const analysis = await captionWithRetry(flaky, "ios", "/tmp/screen.png");
+  assert.equal(calls, 2);
+  assert.equal(analysis.productArea, "Account");
+
+  // always invalid -> gives up after the single retry
+  let stubborn = 0;
+  const alwaysBroken = {
+    ask: async () => {
+      stubborn++;
+      return "still not json";
+    },
+    close: async () => {},
+  } as ChatSession;
+  await assert.rejects(captionWithRetry(alwaysBroken, "ios", "/tmp/screen.png"), /valid JSON/);
+  assert.equal(stubborn, 2);
 });
 
 test("materializes object-backed captions in a private temporary file and removes it", async () => {

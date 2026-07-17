@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button, DropdownMenu, EmptyState, Spinner } from '@astryxdesign/core';
+import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { AppCard } from './components/AppCard';
 import { ImportingAppCard } from './components/ImportingAppCard';
@@ -15,12 +15,26 @@ import { ImportDialog, buildPipelineRows, knownPlatformsFor } from './components
 import { PageHeader } from './components/PageHeader';
 import { Sidebar } from './components/Sidebar';
 import { UnlockModal } from './components/UnlockModal';
+import { UsersPage } from './components/UsersPage';
+import { ResearchProjectsPage } from './components/ResearchProjectsPage';
+import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { useApps } from './useApps';
 import { useJobs } from './useJobs';
 import { listCollections, searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import type { CatalogSearchResult } from '../catalogResearch';
 import type { ResearchCollection } from '../db';
+
+function AppCardSkeleton({ index }: { index: number }) {
+  return (
+    <div style={{ position: 'relative', aspectRatio: '16 / 10', borderRadius: 'var(--radius-container)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+      <Skeleton width="100%" height="100%" radius="none" index={index} />
+      <div style={{ position: 'absolute', left: 10, bottom: 10 }}>
+        <Skeleton width={130} height={26} radius="rounded" index={index} />
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   const { user, logout } = useAuth();
@@ -46,6 +60,7 @@ export function App() {
   const [entitlements, setEntitlements] = useState<{ plan: 'free' | 'pro'; freeUnlocks: string[]; freeUnlocksRemaining: number } | null>(null);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const seenSynthesized = useRef<Set<number>>(new Set());
+  const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
 
   // Refresh the app list when a synthesize completes (new captured/analyzed screens landed).
   useEffect(() => {
@@ -114,6 +129,7 @@ export function App() {
         button={{ label: user?.email ?? '', size: 'sm', variant: 'ghost' }}
         hasChevron
         items={[
+          ...(researchProjectsEnabled ? [{ label: 'Research projects', onClick: () => navigate({ name: 'projects' }) }] : []),
           { label: `Collections${collections.length ? ` (${collections.length})` : ''}`, onClick: () => setCollectionsOpen(true) },
           { label: 'Settings', onClick: () => setSettingsOpen(true) },
           { type: 'divider' },
@@ -123,25 +139,48 @@ export function App() {
     </div>
   );
 
-  // Admins get a left sidebar to jump between screens without typing URLs.
+  // Admins get a left sidebar to jump between screens without typing URLs. AppShell
+  // collapses it behind a hamburger + drawer below its md breakpoint automatically —
+  // no manual responsive logic needed here.
   const frame = (node: ReactNode) =>
     isAdmin ? (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar
-          email={user?.email ?? ''}
-          collectionsCount={collections.length}
-          onOpenCollections={() => setCollectionsOpen(true)}
-          onOpenSettings={() => setSettingsOpen(true)}
-          onLogout={logout}
-        />
-        <div style={{ flex: '1 1 auto', minWidth: 0 }}>{node}</div>
-      </div>
+      <AppShell
+        variant="section"
+        sideNav={
+          <Sidebar
+            email={user?.email ?? ''}
+            collectionsCount={collections.length}
+            onOpenCollections={() => setCollectionsOpen(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onLogout={logout}
+          />
+        }
+      >
+        {node}
+      </AppShell>
     ) : node;
+
+  if (route.name === 'admin' && isAdmin) {
+    return frame(<UsersPage />);
+  }
+
+  if (researchProjectsEnabled && route.name === 'projects') {
+    return frame(<ResearchProjectsPage />);
+  }
+  if (researchProjectsEnabled && route.name === 'project') {
+    return frame(<ResearchProjectPage projectId={route.projectId} />);
+  }
 
   if (loading) {
     return frame(
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <Spinner size="lg" />
+      <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}>
+        {isAdmin && <PageHeader title="Apps" description="Browse captured screens, UI elements, and flows across every imported app." />}
+        <div style={{ padding: '22px 0 14px' }}>
+          <Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
+          {Array.from({ length: 9 }, (_, i) => <AppCardSkeleton key={i} index={i} />)}
+        </div>
       </div>,
     );
   }
@@ -213,7 +252,9 @@ export function App() {
               zIndex: 10,
               background: 'color-mix(in srgb, var(--color-background-body) 92%, transparent)',
               backdropFilter: 'blur(10px)',
-              padding: '22px 0 14px',
+              borderBottom: '1px solid var(--color-border)',
+              padding: '22px 28px 14px',
+              margin: '0 -28px',
               display: 'flex',
               flexDirection: 'column',
               gap: 14,

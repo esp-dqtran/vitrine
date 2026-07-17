@@ -54,7 +54,7 @@ export function VersionPanel({ app, platform, role, versions, selectedVersion, o
         {active.status === 'draft' && <button type="button" onClick={() => void act('submit')} style={lightButton}>Submit for review</button>}
         {active.status === 'in_review' && <button type="button" onClick={() => void act('publish')} style={{ ...lightButton, background: 'var(--color-text-primary)', color: 'var(--color-background-surface)' }}>Publish</button>}
       </div>}
-      {recapture && <div style={{ display: 'flex', gap: 8, marginTop: 10 }}><input value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="Mobbin web screens URL" style={{ flex: 1, minWidth: 260, border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 9px', background: 'var(--color-background-surface)', color: 'var(--color-text-primary)', font: 'inherit', fontSize: 12 }} /><button type="button" onClick={() => void start()} style={lightButton}>Create draft</button></div>}
+      {recapture && <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><input value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="Mobbin web screens URL" style={{ flex: 1, minWidth: 260, border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 9px', background: 'var(--color-background-surface)', color: 'var(--color-text-primary)', font: 'inherit', fontSize: 12 }} /><button type="button" onClick={() => void start()} style={lightButton}>Create draft</button></div>}
       {message && <div role="status" style={{ marginTop: 8, color: 'var(--color-text-secondary)', fontSize: 11 }}>{message}</div>}
     </section>
   );

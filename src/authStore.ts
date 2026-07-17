@@ -45,6 +45,18 @@ export async function seedAdmin(email: string, password: string): Promise<AuthUs
   return safeUser(admin);
 }
 
+export async function registerUser(email: string, password: string): Promise<AuthUser | undefined> {
+  const passwordHash = await hashPassword(password);
+  const result = await query<AuthUser>(
+    `INSERT INTO users (email, password_hash, role, active, updated_at)
+     VALUES ($1, $2, 'user', true, now())
+     ON CONFLICT (email) DO NOTHING
+     RETURNING id, email, role`,
+    [normalizeEmail(email), passwordHash]
+  );
+  return result.rows[0] ? safeUser(result.rows[0]) : undefined;
+}
+
 export async function authenticateUser(
   email: string,
   password: string

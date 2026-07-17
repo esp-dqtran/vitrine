@@ -40,9 +40,11 @@ import {
   changePassword,
   createSession,
   deleteSession,
+  registerUser,
   resolveSession,
   resolveSessionState,
 } from "../../../src/authStore.ts";
+import { getDailySignups, getGrowthStats, listUsersForAdmin } from "../../../src/adminStats.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel } from "../../../src/progress.ts";
@@ -102,6 +104,12 @@ import {
 import type { StepActual, StepFailure } from "../../../src/smartCrawler.ts";
 import { createAutonomousStore } from "../../../src/autonomousStore.ts";
 import { encryptStorageState, type StorageState } from "../../../src/crawlSession.ts";
+import { createResearchProjectStore } from "../../../src/researchProjectStore.ts";
+import { createOrganizationStore } from "../../../src/organizationStore.ts";
+import { createResearchSynthesisProvider } from "../../../src/researchSynthesisProvider.ts";
+import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
+import { mountResearchProjectRoutes } from "./researchProjects.ts";
+import { mountOrganizationRoutes } from "./organizations.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -277,6 +285,7 @@ const defaults = {
   rejectCrawlRepair,
   isCrawlSecretConfigured: (name: string) => typeof process.env[name] === "string" && process.env[name]!.length > 0,
   authenticateUser,
+  registerUser,
   changePassword,
   createSession,
   resolveSession,
@@ -287,6 +296,9 @@ const defaults = {
   getAccountEntitlements,
   recordAccessEvent,
   reserveExportOperation,
+  listUsersForAdmin,
+  getGrowthStats,
+  getDailySignups,
   billing: disabledBilling,
   generalRateLimit: 300,
   mediaRateLimit: 500,
@@ -302,6 +314,12 @@ const defaults = {
   legacyImageReference,
   publishedPreviewObject,
   imageObjectById,
+  researchProjectStore: createResearchProjectStore(),
+  researchSynthesisProvider: createResearchSynthesisProvider(),
+  researchProjectsEnabled: process.env.RESEARCH_PROJECTS_ENABLED === "true",
+  organizationStore: createOrganizationStore(),
+  organizationsEnabled: process.env.TEAMS_ENABLED === "true",
+  listResearchCandidates: undefined as ((userId: number) => Promise<ResearchSuggestionCandidate[]>) | undefined,
 };
 type ApiDeps = typeof defaults;
 
@@ -335,13 +353,14 @@ function parseExportSelection(value: unknown): ExportSelection | undefined {
 
 const catalogKinds = new Set<CatalogEntityKind>(["app", "screen", "component", "token", "flow", "pattern"]);
 const collectionKinds = new Set(["app", "screen", "component", "token", "flow", "pattern"] as const);
-const exportFormats = new Set<ExportFormat>(["figma", "json", "css", "tailwind", "component-spec", "react"]);
+const exportFormats = new Set<ExportFormat>(["figma", "json", "css", "tailwind", "component-spec", "react", "design-md", "flow-md"]);
 const exportStorageTypes = new Map<string, { contentType: StoredContentType; extension: string }>([
   ["application/zip", { contentType: "application/zip", extension: "zip" }],
   ["application/json", { contentType: "application/json", extension: "json" }],
   ["text/css", { contentType: "text/css", extension: "css" }],
   ["text/javascript", { contentType: "text/javascript", extension: "js" }],
   ["text/typescript", { contentType: "text/typescript", extension: "tsx" }],
+  ["text/markdown", { contentType: "text/markdown", extension: "md" }],
 ]);
 const crawlPlanStatuses = new Set(["draft", "approved", "superseded"]);
 const crawlRunStatuses = new Set(["queued", "running", "succeeded", "failed", "cancelled", "interrupted"]);
@@ -640,6 +659,26 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.cookie(SESSION_COOKIE, session.token, cookieOptions).json(user);
   });
 
+  app.post("/auth/signup", async (req, res) => {
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: "Enter a valid email address" });
+      return;
+    }
+    if (password.length < 8) {
+      res.status(400).json({ error: "Password must be at least 8 characters" });
+      return;
+    }
+    const user = await deps.registerUser(email, password);
+    if (!user) {
+      res.status(409).json({ error: "An account with this email already exists" });
+      return;
+    }
+    const session = await deps.createSession(user.id);
+    res.cookie(SESSION_COOKIE, session.token, cookieOptions).json(user);
+  });
+
   app.post("/auth/logout", async (req, res) => {
     const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
     if (token) await deps.deleteSession(token);
@@ -650,6 +689,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
     const [images, previews] = await Promise.all([deps.publishedImages(), deps.publishedPreviewImages()]);
+    res.setHeader("Cache-Control", "private, max-age=280");
     res.json(buildCatalogPage(images, cursor, limit, previews));
   });
 
@@ -731,6 +771,60 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  const listResearchCandidates = deps.listResearchCandidates ?? (async () => {
+    const images = await deps.publishedImages();
+    const versionEntries = await Promise.all(
+      [...new Set(images.map(({ app, platform }) => `${app}\u0000${platform}`))].map(async (key) => {
+        const [appName, platform] = key.split("\u0000");
+        const published = (await deps.listAppVersions(appName, platform, true))
+          .find(({ status }) => status === "published");
+        return [key, published?.id] as const;
+      }),
+    );
+    const versions = new Map(versionEntries);
+    return images.flatMap((image): ResearchSuggestionCandidate[] => {
+      const versionId = versions.get(`${image.app}\u0000${image.platform}`);
+      if (!versionId || !["ios", "android", "web"].includes(image.platform)) return [];
+      const analysis = image.analysis;
+      return [{
+        id: `screen:${image.id}`,
+        kind: "screen",
+        app: image.app,
+        platform: image.platform as "ios" | "android" | "web",
+        title: analysis?.pageType || image.description || `Screen ${image.id}`,
+        description: analysis?.description || image.description || "",
+        appCategory: image.category ?? undefined,
+        productArea: analysis?.productArea,
+        pageType: analysis?.pageType,
+        tags: analysis?.contentPatterns ?? [],
+        states: analysis?.visibleStates ?? [],
+        components: analysis?.componentNames ?? [],
+        layouts: analysis?.layoutPatterns ?? [],
+        visibleText: analysis?.visibleText ?? [],
+        capturedAt: image.captured_at ?? undefined,
+        sourcePath: `/apps/${encodeURIComponent(image.app)}?screen=${image.id}`,
+        imageId: image.id,
+        versionId,
+      }];
+    });
+  });
+
+  mountResearchProjectRoutes(app, {
+    store: deps.researchProjectStore,
+    enabled: deps.researchProjectsEnabled,
+    objectStore: deps.objectStore,
+    synthesisProvider: deps.researchSynthesisProvider,
+    canAccessApp: deps.canAccessApp,
+    listPublishedCandidates: listResearchCandidates,
+    getPrivateObject: deps.researchProjectStore.getPrivateObject,
+    recordEvent: deps.recordAccessEvent,
+  });
+
+  mountOrganizationRoutes(app, {
+    store: deps.organizationStore,
+    enabled: deps.organizationsEnabled,
+  });
 
   const publishCrawlTransport = async (
     run: Awaited<ReturnType<typeof deps.createCrawlRun>>,
@@ -1814,6 +1908,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/jobs", requireAdmin, async (_req, res) => {
     res.json(await deps.listJobs());
+  });
+
+  app.get("/users", requireAdmin, async (_req, res) => {
+    res.json(await deps.listUsersForAdmin());
+  });
+
+  app.get("/users/growth", requireAdmin, async (_req, res) => {
+    const [stats, dailySignups] = await Promise.all([deps.getGrowthStats(), deps.getDailySignups()]);
+    res.json({ stats, dailySignups });
   });
 
   app.post("/jobs/:id/cancel", requireAdmin, async (req, res) => {

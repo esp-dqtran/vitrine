@@ -26,9 +26,9 @@ export function useApps(role: 'admin' | 'user' | undefined) {
         if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
         const page = await response.json() as CatalogResponse;
         results.push(...page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens })));
+        setApps([...results]); // paint each page as it arrives instead of awaiting the whole catalog
         cursor = page.nextCursor;
       } while (cursor);
-      setApps(results);
     })().catch((err: Error) => {
         setError(err.message);
       });

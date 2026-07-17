@@ -1357,11 +1357,43 @@ test("keeps the old gallery and pipeline state admin-only", async (t) => {
     resolveSession: async () => user,
     allImages: async () => catalogImages,
     listJobs: async () => [],
+    listUsersForAdmin: async () => { throw new Error("should not be called"); },
+    getGrowthStats: async () => { throw new Error("should not be called"); },
+    getDailySignups: async () => { throw new Error("should not be called"); },
   }));
   t.after(() => close(server));
-  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress"]) {
+  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress", "/users", "/users/growth"]) {
     assert.equal((await fetch(`${base}${path}`, { headers: { cookie: "astryx_session=user" } })).status, 403);
   }
+});
+
+test("returns users and growth stats for an admin", async (t) => {
+  const growthStats = {
+    total_users: 12,
+    new_users_7d: 3,
+    active_subscribers: 2,
+    dau: 4,
+    wau: 8,
+    total_free_unlocks: 5,
+  };
+  const dailySignups = [{ day: "2026-07-15", signups: 1 }];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    listUsersForAdmin: async () => [
+      { id: 2, email: user.email, role: "user", active: true, created_at: "2026-07-14T00:00:00.000Z", subscription_status: null },
+    ],
+    getGrowthStats: async () => growthStats,
+    getDailySignups: async () => dailySignups,
+  }));
+  t.after(() => close(server));
+
+  const users = await fetch(`${base}/users`, { headers: adminCookie });
+  assert.equal(users.status, 200);
+  assert.equal((await users.json()).length, 1);
+
+  const growth = await fetch(`${base}/users/growth`, { headers: adminCookie });
+  assert.equal(growth.status, 200);
+  assert.deepEqual(await growth.json(), { stats: growthStats, dailySignups });
 });
 
 test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
@@ -1416,6 +1448,58 @@ test("returns one generic login failure", async (t) => {
   });
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: "Invalid email or password" });
+});
+
+test("signs up a new user with a secure cookie", async (t) => {
+  const newUser = { id: 3, email: "new@example.com", role: "user" as const };
+  const { base, server } = await serve(
+    createApiApp({
+      registerUser: async (email, password) =>
+        email === newUser.email && password === "a long enough password" ? newUser : undefined,
+      createSession: async () => ({ token: "signup-session-token", expiresAt: new Date() }),
+    })
+  );
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: newUser.email, password: "a long enough password" }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), newUser);
+  const cookie = response.headers.get("set-cookie") ?? "";
+  assert.match(cookie, /astryx_session=signup-session-token/);
+  assert.match(cookie, /HttpOnly/i);
+});
+
+test("rejects a duplicate email and invalid signup input", async (t) => {
+  const { base, server } = await serve(
+    createApiApp({ registerUser: async () => undefined })
+  );
+  t.after(() => close(server));
+
+  const duplicate = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "taken@example.com", password: "a long enough password" }),
+  });
+  assert.equal(duplicate.status, 409);
+  assert.deepEqual(await duplicate.json(), { error: "An account with this email already exists" });
+
+  const badEmail = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "not-an-email", password: "a long enough password" }),
+  });
+  assert.equal(badEmail.status, 400);
+
+  const shortPassword = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "person@example.com", password: "short" }),
+  });
+  assert.equal(shortPassword.status, 400);
 });
 
 test("explains when a normal-user session was evicted", async (t) => {

@@ -77,9 +77,26 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
   const [stateFilter, setStateFilter] = useState('All');
   const [lightbox, setLightbox] = useState<LightboxState>(null);
 
+  // version arrives explicitly (not read from `selectedVersion` state) so this can run
+  // inside `selectVersion` itself, at the exact moment Screens' own version is resolved —
+  // matching Screens' fetch-once-version-is-known timing instead of racing it.
+  const loadElements = async (version?: number) => {
+    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${version ? `version=${version}&` : ''}limit=48`);
+    if (response.ok) {
+      const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
+      setElementImages(data.screens);
+      setElementsCursor(data.nextCursor);
+    }
+  };
+
   const selectVersion = async (version: number) => {
     setSelectedVersion(version);
-    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&version=${version}&limit=48`);
+    setElementImages(null);
+    setElementsCursor(null);
+    const [response] = await Promise.all([
+      fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&version=${version}&limit=48`),
+      loadElements(version),
+    ]);
     if (response.ok) {
       const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
       setVersionScreens(data.screens);
@@ -99,15 +116,6 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
       }
     } finally {
       setLoadingMore(false);
-    }
-  };
-
-  const loadElements = async () => {
-    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${selectedVersion ? `version=${selectedVersion}&` : ''}limit=48`);
-    if (response.ok) {
-      const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-      setElementImages(data.screens);
-      setElementsCursor(data.nextCursor);
     }
   };
 
@@ -131,9 +139,12 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
       setVersions(items);
       const latest = items.find(({ status }) => status === 'published') ?? items[0];
       if (latest) void selectVersion(latest.version_number);
+      else {
+        setElementImages(null);
+        setElementsCursor(null);
+        void loadElements();
+      }
     }).catch(() => setVersions([]));
-    setElementImages(null);
-    setElementsCursor(null);
   }, [app.id, selectedPlatform]);
 
   const types = Array.from(new Set(screens.map((s) => s.type)));
@@ -173,15 +184,6 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [section, nextCursor, loadingMore, selectedVersion]);
-
-  // Prefetch raw UI element crops in the background as soon as the app opens, the same
-  // way `screens` arrives pre-loaded via the `app` prop — otherwise this tab has a cold,
-  // visibly slower start than Screens (list fetch, then per-image fetches) purely because
-  // it was the only section still waiting for a click before starting its first request.
-  useEffect(() => {
-    if (elementImages !== null) return;
-    void loadElements();
-  }, [app.id, selectedPlatform, selectedVersion]);
 
   useEffect(() => {
     if (section !== 'elements' || !elementsCursor) return;
@@ -349,6 +351,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
               gap: 28,
               borderBottom: '1px solid var(--color-border)',
               animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .2s both',
+              overflowX: 'auto',
             }}
           >
             {(
@@ -381,6 +384,8 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                   color: section === id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                   padding: '0 0 14px',
                   transition: 'color .15s ease',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {label}
@@ -497,7 +502,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
           ) : section === 'export' ? (
             <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
           ) : section === 'flows' ? (
-            <FlowsPanel flows={flows} />
+            <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} />
           ) : section === 'screens' ? (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>

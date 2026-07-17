@@ -118,12 +118,15 @@ switch (command) {
     break;
   }
   case "research": {
-    const [appName, homepageUrl, provider] = rest;
+    const guest = rest.includes("--guest");
+    const [appName, homepageUrl, provider] = rest.filter((arg) => arg !== "--guest");
     if (!appName || !homepageUrl) {
-      console.error("Usage: npm run research -- <appName> <homepageUrl> [chatgpt|claude|gemini]");
+      console.error("Usage: npm run research -- <appName> <homepageUrl> [chatgpt|claude|gemini] [--guest]");
       process.exit(1);
     }
-    const session = await startChatSession(provider ?? "chatgpt");
+    // research/draftPlan is text-only (no screenshots attached), so a logged-out guest
+    // session works — pass --guest to skip the login wait entirely.
+    const session = await startChatSession(provider ?? "chatgpt", { requireLogin: !guest });
     try {
       await researchApp(appName, homepageUrl, session.ask);
     } finally {
@@ -150,12 +153,16 @@ switch (command) {
     break;
   }
   case "repair-flow": {
-    const [appName, flowId, provider] = rest;
+    const guest = rest.includes("--guest");
+    const [appName, flowId, provider] = rest.filter((arg) => arg !== "--guest");
     if (!appName || !flowId) {
-      console.error("Usage: npm run repair-flow -- <appName> <flowId> [chatgpt|claude|gemini]");
+      console.error("Usage: npm run repair-flow -- <appName> <flowId> [chatgpt|claude|gemini] [--guest]");
       process.exit(1);
     }
-    const session = await startChatSession(provider ?? "chatgpt");
+    // repairFlow only attaches a screenshot when one exists for this failure — with --guest,
+    // a call that needs one will fail with a clear "Logged out" error rather than silently
+    // proceeding without the image context.
+    const session = await startChatSession(provider ?? "chatgpt", { requireLogin: !guest });
     const confirm = async (message: string): Promise<boolean> => {
       const { createInterface } = await import("node:readline/promises");
       const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -172,7 +179,7 @@ switch (command) {
   }
   default:
     console.error(
-      "Usage: npm run crawl -- <mobbinAppScreensUrl> [appName]\n       npm run crawl -- --file <apps.json>\n       npm run crawl-bulk -- <mobbinAppScreensUrl> [appName]\n       npm run crawl-elements -- <mobbinAppUrl> [appName]\n       npm run crawl-flows -- <mobbinAppUrl> [appName]\n       npm run export-storage-state -- [outPath]\n       npm run discover-apps -- [outPath] [web,ios,android]\n       npm run caption -- [chatgpt|claude|gemini] [limit]\n       npm run synthesize -- <app> [chatgpt|claude|gemini]\n       npm run import-flows -- <app> <manifest.json>\n       npm run research -- <appName> <homepageUrl> [provider]\n       npm run smart-crawl -- <appName>\n       npm run record -- <appName> <startUrl>\n       npm run repair-flow -- <appName> <flowId> [provider]"
+      "Usage: npm run crawl -- <mobbinAppScreensUrl> [appName]\n       npm run crawl -- --file <apps.json>\n       npm run crawl-bulk -- <mobbinAppScreensUrl> [appName]\n       npm run crawl-elements -- <mobbinAppUrl> [appName]\n       npm run crawl-flows -- <mobbinAppUrl> [appName]\n       npm run export-storage-state -- [outPath]\n       npm run discover-apps -- [outPath] [web,ios,android]\n       npm run caption -- [chatgpt|claude|gemini] [limit]\n       npm run synthesize -- <app> [chatgpt|claude|gemini]\n       npm run import-flows -- <app> <manifest.json>\n       npm run research -- <appName> <homepageUrl> [provider] [--guest]\n       npm run smart-crawl -- <appName>\n       npm run record -- <appName> <startUrl>\n       npm run repair-flow -- <appName> <flowId> [provider] [--guest]"
     );
     process.exit(1);
 }

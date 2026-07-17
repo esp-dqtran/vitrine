@@ -10,6 +10,7 @@ import {
   failureObjectKey,
   imageObjectKey,
   LocalObjectStore,
+  researchUploadObjectKey,
   type ObjectMetadata,
 } from "./objectStore.ts";
 
@@ -41,6 +42,12 @@ test("builds deterministic image and export keys from validated identities", () 
   const digest = "a".repeat(64);
   assert.equal(imageObjectKey(301, digest, "webp"), `images/301/${digest}.webp`);
   assert.equal(exportObjectKey("42", digest, "json"), `exports/42/${digest}.json`);
+});
+
+test("research keys are owner scoped", () => {
+  const digest = "a".repeat(64);
+  assert.equal(researchUploadObjectKey(42, digest, "png"), `research/42/${digest}.png`);
+  assert.throws(() => researchUploadObjectKey(0, digest, "png"), /invalid research upload identity/i);
 });
 
 test("rejects invalid image IDs, export IDs, hashes, and extensions", () => {

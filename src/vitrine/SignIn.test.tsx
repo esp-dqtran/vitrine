@@ -7,6 +7,7 @@ test("renders only the real email/password authentication controls", () => {
   const html = renderToStaticMarkup(
     <SignIn
       authenticate={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
+      register={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
       onSignedIn={() => {}}
     />
   );

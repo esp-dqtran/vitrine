@@ -43,6 +43,13 @@ test('makes editable Figma the primary export and keeps code formats secondary',
   assert.match(html, /Tailwind/);
 });
 
+test('surfaces a dedicated FLOW.md product-manager export card', () => {
+  const html = renderToStaticMarkup(<ExportPanel app="linear" />);
+  assert.match(html, /For product managers/);
+  assert.match(html, /Product flow documentation/);
+  assert.match(html, /Export FLOW\.md/);
+});
+
 test('shows capture counts and curator review actions without exposing draft as published', () => {
   const html = renderToStaticMarkup(<VersionPanel app="linear" platform="web" role="admin" versions={[
     { id: 2, app: 'linear', platform: 'web', version_number: 2, label: 'v2', source_url: null, status: 'draft', notes: '', captured_at: '2026-07-11T00:00:00.000Z', submitted_at: null, published_at: null, screen_count: 12, analyzed_count: 10, component_count: 4, token_count: 8, flow_count: 2 },

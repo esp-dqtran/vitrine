@@ -3,6 +3,7 @@ import {
   getCurrentUser,
   login as requestLogin,
   logout as requestLogout,
+  signup as requestSignup,
   type AuthUser,
 } from "./authApi";
 
@@ -10,6 +11,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   authenticate(email: string, password: string): Promise<AuthUser>;
+  register(email: string, password: string): Promise<AuthUser>;
   completeLogin(user: AuthUser): void;
   logout(): Promise<void>;
 }
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         authenticate: requestLogin,
+        register: requestSignup,
         completeLogin: setUser,
         logout: async () => {
           await requestLogout();

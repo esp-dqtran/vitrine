@@ -1,7 +1,7 @@
 import type { CrawledImage } from './db.ts';
-import type { DesignComponent, DesignSystemSnapshot, DesignToken, TokenKind } from './designSystem.ts';
+import type { ComponentVariant, DesignComponent, DesignSystemSnapshot, DesignToken, TokenKind } from './designSystem.ts';
 
-export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react' | 'design-md';
+export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react' | 'design-md' | 'flow-md';
 export type ExportScope =
   | { kind: 'design-system' }
   | { kind: 'foundation-category'; id: string }
@@ -89,13 +89,41 @@ function componentSpecs(snapshot: ReturnType<typeof scopeSnapshot>): string {
   }, null, 2);
 }
 
+// Mirrors what figmaCode() already does with the same reconstruction spec, just as a
+// React inline-style object literal instead of Figma node properties.
+function reconstructionStyleLiteral(r: ComponentVariant['reconstruction']): string {
+  if (!r) return '{}';
+  const entries: string[] = [];
+  if (r.layoutMode) {
+    entries.push(`display: 'flex'`, `flexDirection: ${JSON.stringify(r.layoutMode === 'HORIZONTAL' ? 'row' : 'column')}`);
+  }
+  if (Number.isFinite(r.gap)) entries.push(`gap: ${r.gap}`);
+  if (Number.isFinite(r.padding)) entries.push(`padding: ${r.padding}`);
+  if (Number.isFinite(r.width) && r.width! > 0) entries.push(`width: ${r.width}`);
+  if (Number.isFinite(r.height) && r.height! > 0) entries.push(`height: ${r.height}`);
+  if (r.fill) entries.push(`background: ${JSON.stringify(r.fill)}`);
+  if (r.stroke) entries.push(`border: ${JSON.stringify(`1px solid ${r.stroke}`)}`);
+  if (Number.isFinite(r.radius)) entries.push(`borderRadius: ${r.radius}`);
+  return entries.length ? `{ ${entries.join(', ')} }` : '{}';
+}
+
 function react(snapshot: ReturnType<typeof scopeSnapshot>): string {
   const bodies = snapshot.components.map((component) => {
     const name = pascal(component.name);
     const states = component.variants.map(({ name: variant }) => JSON.stringify(variant)).join(' | ') || 'never';
-    return `export interface ${name}Props {\n  observedVariant: ${states};\n  children?: ReactNode;\n}\n\n/** ${component.description.replace(/\*\//g, '* /')} Evidence: ${evidenceForComponent(component).join(', ')} */\nexport function ${name}({ observedVariant, children }: ${name}Props) {\n  return <div data-astryx-component=${JSON.stringify(component.id)} data-observed-variant={observedVariant}>{children}</div>;\n}`;
+    const styles = component.variants
+      .map((variant) => `  ${JSON.stringify(variant.name)}: ${reconstructionStyleLiteral(variant.reconstruction)}`)
+      .join(',\n');
+    const labelled = component.variants.filter((variant) => variant.reconstruction?.visibleText);
+    const labels = labelled
+      .map((variant) => `  ${JSON.stringify(variant.name)}: ${JSON.stringify(variant.reconstruction!.visibleText)}`)
+      .join(',\n');
+    const fallback = labelled.length ? `${name}Labels[observedVariant]` : 'null';
+    return `const ${name}Styles: Record<${states || 'string'}, CSSProperties> = {\n${styles}\n};\n${
+      labelled.length ? `const ${name}Labels: Partial<Record<${states || 'string'}, string>> = {\n${labels}\n};\n` : ''
+    }\n/** ${component.description.replace(/\*\//g, '* /')} Evidence: ${evidenceForComponent(component).join(', ')} */\nexport interface ${name}Props {\n  observedVariant: ${states};\n  children?: ReactNode;\n}\n\nexport function ${name}({ observedVariant, children }: ${name}Props) {\n  return (\n    <div data-astryx-component=${JSON.stringify(component.id)} data-observed-variant={observedVariant} style={${name}Styles[observedVariant]}>\n      {children ?? ${fallback}}\n    </div>\n  );\n}`;
   });
-  return `import type { ReactNode } from 'react';\nimport './${slug(snapshot.app)}-tokens.css';\n\n${bodies.join('\n\n')}\n`;
+  return `import type { CSSProperties, ReactNode } from 'react';\nimport './${slug(snapshot.app)}-tokens.css';\n\n${bodies.join('\n\n')}\n`;
 }
 
 function designMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
@@ -144,6 +172,49 @@ function designMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
     `## Components\n\n${components || '_No components observed in this scope._'}\n\n` +
     `## Patterns\n\n${patterns || '_No rules observed in this scope._'}\n\n` +
     `## Agent Prompt Guide\n\nWhen building UI for ${snapshot.app}, reference these observed colors:\n\n${promptGuide || '_No color tokens observed in this scope._'}\n`;
+}
+
+// PM-facing product flow documentation. Renders the app's observed flows as an
+// ordered, evidence-cited journey doc (a "PRD reference") from the same snapshot
+// the design exports use — no new data, just a reader-first view of snapshot.flows.
+function flowMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
+  const screenName = new Map(snapshot.images.map(({ id, description }) => [id, description]));
+  const evidence = (ids: number[]): string =>
+    ids.map((id) => screenName.get(id) || `screen #${id}`).join('; ');
+  const flows = snapshot.flows;
+
+  const frontmatter = [
+    `title: ${JSON.stringify(`${snapshot.app} product flows`)}`,
+    `description: ${JSON.stringify(`${flows.length} observed user flow(s) across ${snapshot.app}, documented by Astryx from ${snapshot.images.length} evidence screen(s).`)}`,
+    `app: ${JSON.stringify(snapshot.app)}`,
+    `flows: ${flows.length}`,
+    `generated: ${JSON.stringify(snapshot.generatedAt)}`,
+  ].join('\n');
+
+  const index = flows.length
+    ? flows.map((flow, i) => `${i + 1}. [${flow.title}](#${slug(flow.title)})${flow.category ? ` — _${flow.category}_` : ''} · ${flow.steps.length} step(s)`).join('\n')
+    : '_No flows observed in this scope._';
+
+  const sections = flows.map((flow) => {
+    const meta = [...new Map([flow.category, ...(flow.tags || [])].filter(Boolean).map((v) => [v!.toLowerCase(), v!])).values()].join(' · ');
+    const p = flow.provenance;
+    const status = p
+      ? `> **Status:** ${p.validationStatus} · confidence ${Math.round(p.confidence * 100)}%${p.sourceUrls[0] ? ` · [source](${p.sourceUrls[0]})` : ''}\n\n`
+      : '';
+    const steps = flow.steps.length
+      ? flow.steps.map((step, i) => {
+          const interaction = step.interaction ? ` — ${step.interaction}` : '';
+          const seen = evidence(step.evidence);
+          return `${i + 1}. **${step.label}**${interaction}${seen ? `  \n   _Seen on: ${seen}_` : ''}`;
+        }).join('\n')
+      : '_No steps recorded._';
+    return `## ${flow.title}\n${meta ? `_${meta}_\n\n` : ''}${status}${flow.description || ''}\n\n**User journey**\n\n${steps}`;
+  }).join('\n\n');
+
+  return `---\n${frontmatter}\n---\n\n` +
+    `# ${snapshot.app} — Product Flows\n\n` +
+    `> ${flows.length} user journey(s) reconstructed by Astryx from observed evidence. Every step cites the screen(s) it was seen on.\n\n` +
+    `## Flow index\n\n${index}\n\n${sections}\n`;
 }
 
 function figmaCode(snapshot: ReturnType<typeof scopeSnapshot>): string {
@@ -230,6 +301,7 @@ export function buildExportArtifact(
     'component-spec': { suffix: 'component-spec.json', mime: 'application/json', content: componentSpecs(scoped) },
     react: { suffix: 'components.tsx', mime: 'text/typescript', content: react(scoped) },
     'design-md': { suffix: 'DESIGN.md', mime: 'text/markdown', content: designMd(scoped) },
+    'flow-md': { suffix: 'FLOW.md', mime: 'text/markdown', content: flowMd(scoped) },
   };
   const output = outputs[format];
   return { filename: `${app}-${output.suffix}`, mime: output.mime, content: Buffer.from(output.content) };

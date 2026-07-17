@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, mkdir, rm, writeFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { tabUrl, mergeFlows, ingestDownloadedImages } from "./bulkDownload.ts";
+import { tabUrl, mergeFlows, ingestDownloadedImages, extractIfArchive } from "./bulkDownload.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 
@@ -20,6 +21,21 @@ test("mergeFlows replaces by id and keeps the rest", () => {
   const flow = (id: string, title: string): DesignFlow => ({ id, title, description: "d", tags: [], steps: [{ label: "Step 1", evidence: [1] }] });
   const merged = mergeFlows([flow("a", "old"), flow("b", "keep")], [flow("a", "new"), flow("c", "added")]);
   assert.deepEqual(merged.map(({ id, title }) => `${id}:${title}`), ["a:new", "b:keep", "c:added"]);
+});
+
+test("extractIfArchive extracts zip entries with non-ASCII filenames", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "astryx-zip-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const srcDir = join(root, "src");
+  await mkdir(srcDir);
+  const entryName = "Condé Nast Spotlight.png";
+  await writeFile(join(srcDir, entryName), "not really a png, just bytes");
+  const zipPath = join(root, "archive.zip");
+  execFileSync("zip", ["-j", zipPath, join(srcDir, entryName)]);
+
+  const destDir = join(root, "dest");
+  assert.equal(extractIfArchive(zipPath, destDir), true);
+  assert.deepEqual(await readdir(destDir), [entryName]);
 });
 
 test("bulk ingestion uploads verified bytes before attaching the image, then attaches a thumbnail", async (t) => {

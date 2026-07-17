@@ -3,12 +3,12 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { uncaptionedImages, saveScreenAnalysis } from "./db.ts";
 import { buildCaptionPrompt } from "./prompt.ts";
-import { startChatPool } from "./llmChat.ts";
+import { startChatPool, type ChatAttachment, type ChatSession } from "./llmChat.ts";
 import { runPool } from "./pool.ts";
 import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
 import { bulkImageHash, findBulkImage } from "./imageSource.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
-import { parseScreenAnalysis } from "./screenAnalysis.ts";
+import { parseScreenAnalysis, type ScreenAnalysis } from "./screenAnalysis.ts";
 
 export const parseCaptionReply = parseScreenAnalysis;
 
@@ -83,6 +83,29 @@ export async function withDownloaded<T>(
   return withTemporaryFile(Buffer.from(await res.arrayBuffer()), ext, fn);
 }
 
+// Vision replies sometimes embed an unescaped quote from on-screen copy (e.g. a headline)
+// and break the JSON — same re-ask-once-with-the-error pattern as appResearch.ts's draftPlan,
+// since a fresh `ask()` call has no history to lean on, so the full prompt is resent either way.
+export async function captionWithRetry(
+  session: ChatSession,
+  platform: string,
+  filePath: string | ChatAttachment,
+): Promise<ScreenAnalysis> {
+  const prompt = buildCaptionPrompt(platform);
+  let reply = await session.ask(prompt, filePath);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return parseCaptionReply(reply);
+    } catch (error) {
+      if (attempt >= 1) throw error;
+      reply = await session.ask(
+        `${prompt}\n\nYour previous reply failed validation with: ${(error as Error).message}\nReply again with corrected raw JSON only.`,
+        filePath,
+      );
+    }
+  }
+}
+
 // ponytail: fixed pool size, not measured against the provider's actual rate limits —
 // lower it if messages start failing/getting flagged, raise it if it stays clean. Kept
 // below the crawler's concurrency since a chat provider is more likely to notice/throttle
@@ -114,12 +137,12 @@ export async function caption(
     sessions,
     async (session, image) => {
       try {
-        const reply = await withDownloaded(
+        const analysis = await withDownloaded(
           image,
-          (filePath) => session.ask(buildCaptionPrompt(image.platform), filePath),
+          (filePath) => captionWithRetry(session, image.platform, filePath),
           dependencies,
         );
-        await saveScreenAnalysis(image.id, parseCaptionReply(reply));
+        await saveScreenAnalysis(image.id, analysis);
         done++;
         console.log(`Captioned ${image.image_url} (${done}/${images.length})`);
       } catch (err) {

@@ -73,6 +73,30 @@ export interface JobPipeline {
   stages: Job[];
 }
 
+export interface AdminUser {
+  [key: string]: unknown;
+  id: number;
+  email: string;
+  role: 'admin' | 'user';
+  active: boolean;
+  created_at: string;
+  subscription_status: string | null;
+}
+
+export interface GrowthStats {
+  total_users: number;
+  new_users_7d: number;
+  active_subscribers: number;
+  dau: number;
+  wau: number;
+  total_free_unlocks: number;
+}
+
+export interface DailySignupPoint {
+  day: string;
+  signups: number;
+}
+
 export type CrawlPlanStatus = 'draft' | 'approved' | 'superseded';
 export type CrawlRunStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled' | 'interrupted';
 export type CrawlRunStepStatus = 'queued' | 'running' | 'completed' | 'skipped' | 'failed';

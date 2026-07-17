@@ -268,6 +268,25 @@ test("autonomous crawler migration defines durable missions and shared-account l
   assert.match(sql, /lease_expires_at TIMESTAMPTZ/);
 });
 
+test("research migration defines owner-scoped ordered evidence", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0007_research_projects.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of [
+    "research_projects",
+    "research_project_lanes",
+    "research_project_items",
+    "research_project_syntheses",
+  ]) {
+    assert.match(sql, new RegExp(`CREATE TABLE ${table}\\b`));
+  }
+  assert.match(sql, /user_id INTEGER NOT NULL REFERENCES users\(id\) ON DELETE CASCADE/);
+  assert.match(sql, /UNIQUE \(project_id, position\)/);
+  assert.match(sql, /UNIQUE \(lane_id, position\)/);
+  assert.match(sql, /private_object_key TEXT REFERENCES stored_objects\(object_key\)/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {

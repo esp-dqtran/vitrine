@@ -35,7 +35,10 @@ const REFERENCES_SQL = `
   SELECT object_key FROM exports WHERE object_key IS NOT NULL
   UNION
   SELECT failure_object_key AS object_key
-  FROM crawl_run_steps WHERE failure_object_key IS NOT NULL`;
+  FROM crawl_run_steps WHERE failure_object_key IS NOT NULL
+  UNION
+  SELECT rpi.private_object_key AS object_key
+  FROM research_project_items rpi WHERE rpi.private_object_key IS NOT NULL`;
 
 function metadataFromRow(row: Record<string, unknown>): ObjectMetadata {
   return {

@@ -232,6 +232,7 @@ test("PostgreSQL snapshot uses repeatable read and all durable reference columns
   assert.match(sql, /images[\s\S]*object_key/);
   assert.match(sql, /exports[\s\S]*object_key/);
   assert.match(sql, /crawl_run_steps[\s\S]*failure_object_key/);
+  assert.match(sql, /research_project_items[\s\S]*private_object_key/);
   assert.equal(calls.at(-1), "COMMIT");
   assert.equal(calls.includes("ROLLBACK"), false);
 });

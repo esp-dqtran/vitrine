@@ -1,3 +1,5 @@
+import type { DesignSystemSnapshot } from "./designSystem.ts";
+
 const CAPTION_INTRO: Record<string, string> = {
   web: `Analyze only what is visibly present in this web application screenshot.`,
   ios: `Analyze only what is visibly present in this iOS application screenshot. Expect native iOS chrome such as the status bar, tab bar, navigation bar, and swipe/gesture affordances — describe these as observed elements, not inferred ones.`,
@@ -92,4 +94,16 @@ Return ONLY valid JSON with this exact top-level shape:
 }
 
 Evidence values MUST be image_id numbers supplied with the screen descriptions. Do not add a token, component, variant, or state unless at least one supplied screen visibly supports it. Do not invent missing states. Merge duplicates across screens and preserve distinct observed variants. Keep flows empty because this capture source does not preserve reliable sequence data.`;
+}
+
+export function buildMergePrompt(platform: string, a: DesignSystemSnapshot, b: DesignSystemSnapshot): string {
+  return `${buildSynthesisPrompt(platform)}
+
+You are merging two independently observed structured snapshots of the SAME ${SYNTHESIS_PLATFORM_NOTE[platform] ?? SYNTHESIS_PLATFORM_NOTE.web} into one. Each snapshot below was built from a different subset of screens, so the same token, component, or rule may appear in both under a different id or slightly different wording — merge those into a single entry and union their "evidence" arrays rather than keeping duplicates. Keep every distinct observed variant from either snapshot. Return one JSON object in the exact shape above containing only the merged result — not a diff, not commentary.
+
+Snapshot A:
+${JSON.stringify(a)}
+
+Snapshot B:
+${JSON.stringify(b)}`;
 }

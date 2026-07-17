@@ -82,6 +82,37 @@ Administrators can open an app's Intelligent crawler workspace, enter a public a
 
 Generate `CRAWL_SESSION_ENCRYPTION_KEY` with `openssl rand -base64 32` before uploading a session. Queue messages contain only the app slug and durable parent run ID; browser state, credentials, dossiers, and missions remain in encrypted/database-backed storage. See [Autonomous crawler operations](docs/operations/autonomous-crawler.md) for setup, safety controls, recovery, and acceptance procedures.
 
+## Research Projects and Decision Canvas
+
+Research Projects turn catalog evidence into a personal designer workspace. A designer starts with a research question, gathers entitled catalog screens or private screenshots, compares them in two to five ordered lanes, records a decision and rationale, generates an evidence-cited synthesis, and downloads an authenticated `DESIGN.md` handoff.
+
+Enable both sides of the feature together:
+
+```dotenv
+RESEARCH_PROJECTS_ENABLED=true
+VITE_RESEARCH_PROJECTS_ENABLED=true
+```
+
+AI synthesis is optional. Without the three provider variables below, projects, evidence, decisions, uploads, and Markdown export continue to work; only synthesis returns `503`.
+
+```dotenv
+RESEARCH_LLM_BASE_URL=https://api.openai.com/v1
+RESEARCH_LLM_API_KEY=<secret>
+RESEARCH_LLM_MODEL=<json-capable-model>
+```
+
+Synthesis is synchronous with a 60-second request limit and retries one invalid response. Every generated observation, difference, alternative, recommendation, and requirement must cite evidence selected in the project. Existing app entitlements remain authoritative. Private PNG, JPEG, and WebP uploads are owner-only, limited to 10 MiB each, stored as protected objects, and never added to the shared catalog.
+
+Research activation metrics record only the user ID, action, numeric volume, and outcome. Questions, notes, filenames, image contents, generated text, and designer decisions are not written to analytics events.
+
+## Product flow documentation (`FLOW.md`) for product managers
+
+Astryx reconstructs the same app three ways for three readers: designers export an editable design system (Figma/tokens), developers export tokens as code (CSS/Tailwind/JSON/React), and product managers export **`FLOW.md`** — the app's observed user flows as an ordered, evidence-cited Markdown doc, a PRD-ready reference.
+
+The `FLOW.md` export renders every observed flow with a clickable index, then per-flow sections carrying category, tags, description, and a numbered user journey where each step names the screen(s) it was seen on. When the autonomous crawler recorded provenance, each flow also shows its verification status (`complete` / `uncertain` / `incomplete`), confidence, and source — so a PM can tell a verified flow from a draft.
+
+PMs reach it from an app's **Flows** tab ("Export FLOW.md"); it is also available in the design-system export panel. Like all catalog exports it requires a Pro entitlement and counts against the export fair-use limit.
+
 ## Bulk-importing apps from Mobbin (optional, advanced)
 
 `scripts/catalog-import.ts` is a standalone, resumable script that crawls Mobbin's full app catalog directly (outside the queue/worker system) — useful for large batch imports. It requires an authenticated Mobbin browser profile (Playwright persistent context) and a real S3 bucket; not needed to just run the app against existing data.

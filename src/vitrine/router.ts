@@ -6,6 +6,8 @@ export type Route =
   | { name: 'signin' }
   | { name: 'apps' }
   | { name: 'app'; appId: string; section?: string }
+  | { name: 'projects' }
+  | { name: 'project'; projectId: number }
   | { name: 'admin' };
 
 function subscribe(fn: () => void) {
@@ -13,11 +15,19 @@ function subscribe(fn: () => void) {
   return () => window.removeEventListener('popstate', fn);
 }
 
-function parse(pathname: string): Route {
+export function parseRoutePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/pricing') return { name: 'pricing' };
   if (path === '/signin') return { name: 'signin' };
   if (path === '/apps') return { name: 'apps' };
+  if (path === '/projects') return { name: 'projects' };
+  const projectMatch = path.match(/^\/projects\/([^/]+)$/);
+  if (projectMatch) {
+    const projectId = Number(projectMatch[1]);
+    return Number.isSafeInteger(projectId) && projectId > 0
+      ? { name: 'project', projectId }
+      : { name: 'landing' };
+  }
   if (path === '/admin') return { name: 'admin' };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
   if (appMatch) return { name: 'app', appId: decodeURIComponent(appMatch[1]), section: appMatch[2] };
@@ -30,6 +40,8 @@ export function routeToPath(route: Route): string {
     case 'pricing': return '/pricing';
     case 'signin': return '/signin';
     case 'apps': return '/apps';
+    case 'projects': return '/projects';
+    case 'project': return `/projects/${route.projectId}`;
     case 'admin': return '/admin';
     case 'app': return `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${route.section}` : ''}`;
   }
@@ -45,5 +57,5 @@ export function navigate(route: Route) {
 
 export function useRoute(): Route {
   const pathname = useSyncExternalStore(subscribe, () => window.location.pathname);
-  return parse(pathname);
+  return parseRoutePath(pathname);
 }

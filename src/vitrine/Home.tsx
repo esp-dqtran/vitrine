@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { Badge, Button, Divider, Heading, Text } from '@astryxdesign/core';
+import { Badge, Button, Divider, DropdownMenu, Heading, Icon, Text, useMediaQuery } from '@astryxdesign/core';
 import { PlaceholderImage } from './components/PlaceholderImage';
 
 const wrap: CSSProperties = { maxWidth: 1160, margin: '0 auto', padding: '0 32px' };
@@ -234,6 +234,7 @@ function PatternTabs() {
 const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 };
 
 export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void; onSearch: (q: string) => void }) {
+  const isCompactNav = useMediaQuery('(max-width: 640px)', false);
   return (
     <div style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
       {/* header — glass pill nav */}
@@ -264,11 +265,22 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           </div>
           <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
-          <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
-          <button type="button" onClick={onPricing} style={navLink}>Pricing</button>
-          <button type="button" onClick={onLogin} style={navLink}>Log in</button>
-        </div>
+        {isCompactNav ? (
+          <DropdownMenu
+            button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
+            items={[
+              { label: 'Browse', onClick: onBrowse },
+              { label: 'Pricing', onClick: onPricing },
+              { label: 'Log in', onClick: onLogin },
+            ]}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
+            <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
+            <button type="button" onClick={onPricing} style={navLink}>Pricing</button>
+            <button type="button" onClick={onLogin} style={navLink}>Log in</button>
+          </div>
+        )}
       </div>
 
       {/* hero */}

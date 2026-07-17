@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: Number(process.env.PORT) || 5173,
+    // ngrok's free-tier subdomain changes on every restart — allow the whole domain rather
+    // than pinning one hostname that'll go stale next time the tunnel is recreated.
+    allowedHosts: [".ngrok-free.app"],
     proxy: {
       "/api": {
         target: API_TARGET,

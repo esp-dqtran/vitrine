@@ -201,7 +201,7 @@ export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promi
   return res.rows;
 }
 
-export async function appImages(app: string, kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
+export async function appImages(app: string, kind: ImageKind | ImageKind[] = "screen", platform?: string): Promise<CrawledImage[]> {
   const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url, a.category,
@@ -209,8 +209,9 @@ export async function appImages(app: string, kind: ImageKind | ImageKind[] = "sc
      FROM images i
      JOIN platforms p ON p.id = i.platform_id
      JOIN apps a ON a.id = p.app_id
-     WHERE a.name = $1 AND i.kind = ANY($2::text[]) ORDER BY i.created_at ASC`,
-    [app, kinds]
+     WHERE a.name = $1 AND i.kind = ANY($2::text[]) AND ($3::text IS NULL OR p.name = $3)
+     ORDER BY i.created_at ASC`,
+    [app, kinds, platform ?? null]
   );
   return res.rows;
 }
