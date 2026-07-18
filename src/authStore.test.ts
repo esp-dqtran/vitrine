@@ -1,6 +1,7 @@
 import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import pg from "pg";
+import { applyMigrations } from "./migrations.ts";
 
 const ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres";
 const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_test";
@@ -19,6 +20,13 @@ async function ensureTestDb(): Promise<string | undefined> {
   } finally {
     await client.end();
   }
+  const pool = new pg.Pool({ connectionString: TEST_URL });
+  try {
+    await applyMigrations(pool);
+  } finally {
+    await pool.end();
+  }
+  return undefined;
 }
 
 const skipReason = await ensureTestDb();
