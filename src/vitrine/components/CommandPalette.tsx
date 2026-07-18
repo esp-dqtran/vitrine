@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Button, ClickableCard, Dialog, Icon, IconButton, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
 import type { App } from '../types';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { loadDesignSystem } from '../useDesignSystem';
@@ -8,59 +9,53 @@ import { PlaceholderImage } from './PlaceholderImage';
 
 type Nav = 'trending' | 'categories' | 'screens' | 'elements' | 'flows';
 
-const NAV_ITEMS: Array<{ id: Nav; label: string; icon: ReactElement }> = [
-  { id: 'trending', label: 'Trending', icon: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" /> },
-  { id: 'categories', label: 'Categories', icon: <><rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="8" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" /><rect x="13" y="13" width="8" height="8" rx="1.5" /></> },
-  { id: 'screens', label: 'Screens', icon: <><rect x="3" y="4" width="18" height="14" rx="2" /><path d="M3 8h18" /></> },
-  { id: 'elements', label: 'UI Elements', icon: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /></> },
-  { id: 'flows', label: 'Flows', icon: <><circle cx="5" cy="12" r="3" /><circle cx="19" cy="12" r="3" /><path d="M8 12h8" /></> },
+const NAV_ITEMS: Array<{ id: Nav; label: string; icon: IconName }> = [
+  { id: 'trending', label: 'Trending', icon: 'arrowUp' },
+  { id: 'categories', label: 'Categories', icon: 'viewColumns' },
+  { id: 'screens', label: 'Screens', icon: 'viewColumns' },
+  { id: 'elements', label: 'UI Elements', icon: 'wrench' },
+  { id: 'flows', label: 'Flows', icon: 'arrowsUpDown' },
 ];
-
-function NavIcon({ children }: { children: ReactElement }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      {children}
-    </svg>
-  );
-}
 
 const SECTION_LABEL: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)', margin: '22px 0 12px' };
 const TILE_GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 14 };
 
 function AppTile({ app, onSelect }: { app: App; onSelect: () => void }) {
   return (
-    <button
-      type="button"
+    <ClickableCard
+      label={`Open ${app.app}`}
       onClick={onSelect}
+      padding={3}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        padding: '12px 8px', borderRadius: 12, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+        borderRadius: 12, background: 'transparent', border: 'none',
       }}
     >
       <div style={{ width: 56, height: 56, borderRadius: 16, background: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{app.app[0]}</span>
       </div>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-primary)', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{app.app}</span>
-    </button>
+    </ClickableCard>
   );
 }
 
 function ScreenCard({ app, index, onSelect }: { app: App; index: number; onSelect: () => void }) {
   const screen = app.screens[index];
   return (
-    <button
-      type="button"
+    <ClickableCard
+      label={`Open ${screen.type}`}
       onClick={onSelect}
+      padding={0}
       style={{
         border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-background-muted)',
-        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', padding: 0, overflow: 'hidden',
+        textAlign: 'left', overflow: 'hidden',
       }}
     >
       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--color-text-primary)', padding: '10px 12px 8px' }}>{screen.type}</div>
       <div style={{ position: 'relative', aspectRatio: '4/3', margin: 8, borderRadius: 8, overflow: 'hidden', background: 'var(--color-background-muted)' }}>
         <PlaceholderImage src={screen.url} accent={app.accent} />
       </div>
-    </button>
+    </ClickableCard>
   );
 }
 
@@ -138,19 +133,7 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
   const selectFlow = (appId: string) => { onClose(); onSelectFlow(appId); };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.16, ease: 'easeOut' }}
-      onMouseDown={(e) => { if (!panelRef.current?.contains(e.target as Node)) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 80,
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        paddingTop: '8vh', paddingLeft: 20, paddingRight: 20,
-        background: 'var(--color-overlay)', backdropFilter: 'blur(6px)',
-      }}
-    >
+    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} purpose="info" width="min(1040px, calc(100vw - 40px))" maxHeight="82vh" padding={0}>
       <motion.div
         ref={panelRef}
         initial={{ opacity: 0, scale: 0.95 }}
@@ -159,31 +142,31 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         onMouseDown={(e) => e.stopPropagation()}
         style={{
-          width: 'min(1040px, 100%)', maxHeight: '82vh', display: 'flex', flexDirection: 'column',
+          width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column',
           background: 'var(--color-background-surface)', border: '1px solid var(--color-border)', borderRadius: 20,
           boxShadow: 'var(--shadow-high)', overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', borderBottom: '1px solid var(--color-border)' }}>
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--color-icon-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
-          </svg>
-          <input
+          <div style={{ flex: 1 }}><TextInput
             ref={inputRef}
+            label="Search catalog"
+            isLabelHidden
             value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
+            onChange={onQueryChange}
             placeholder="Search apps, screens, UI elements, flows or keywords…"
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 18, color: 'var(--color-text-primary)', fontFamily: 'inherit' }}
-          />
+            startIcon={<Icon icon="search" size="sm" />}
+            hasClear={Boolean(query)}
+            width="100%"
+          /></div>
           <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 7px' }}>Esc</span>
-          <button
-            type="button"
+          <IconButton
+            label="Close"
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            aria-label="Close"
-            style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-background-muted)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
+          />
         </div>
 
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -191,21 +174,17 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
             {NAV_ITEMS.map((item) => {
               const active = nav === item.id;
               return (
-                <button
+                <ToggleButton
                   key={item.id}
-                  type="button"
-                  onClick={() => setNav(item.id)}
+                  label={item.label}
+                  icon={<Icon icon={item.icon} size="sm" />}
+                  isPressed={active}
+                  onPressedChange={() => setNav(item.id)}
+                  size="sm"
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9,
-                    fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                    background: active ? 'var(--color-background-muted)' : 'transparent',
-                    color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                    transition: 'background .12s ease, color .12s ease',
+                    width: '100%', justifyContent: 'flex-start', borderRadius: 9,
                   }}
-                >
-                  <NavIcon>{item.icon}</NavIcon>
-                  {item.label}
-                </button>
+                />
               );
             })}
             <div style={{ flex: 1 }} />
@@ -256,15 +235,14 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
                 <div style={SECTION_LABEL}>Categories</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {categories.map(([cat, count]) => (
-                    <button
+                    <Button
                       key={cat}
-                      type="button"
+                      label={cat}
+                      size="sm"
                       onClick={() => selectCategory(cat)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px 9px 16px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-background-muted)', color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      {cat}
-                      <span style={{ fontSize: 11.5, fontWeight: 600, background: 'var(--color-background-muted)', color: 'var(--color-text-secondary)', borderRadius: 999, padding: '1px 7px' }}>{count}</span>
-                    </button>
+                      endContent={<span style={{ fontSize: 11.5, fontWeight: 600, background: 'var(--color-background-muted)', color: 'var(--color-text-secondary)', borderRadius: 999, padding: '1px 7px' }}>{count}</span>}
+                      style={{ borderRadius: 10 }}
+                    />
                   ))}
                 </div>
               </>
@@ -292,15 +270,14 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {Object.entries(flowsByApp ?? {}).flatMap(([appId, flows]) => flows.map((flow) => (
-                      <button
+                      <Button
                         key={`${appId}-${flow.id}`}
-                        type="button"
+                        label={flow.title}
+                        size="sm"
                         onClick={() => selectFlow(appId)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-background-muted)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
-                      >
-                        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{flow.title}</span>
-                        <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{flow.steps.length} steps</span>
-                      </button>
+                        endContent={<span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{flow.steps.length} steps</span>}
+                        style={{ width: '100%', justifyContent: 'space-between', borderRadius: 10 }}
+                      />
                     )))}
                     {flowsByApp && Object.values(flowsByApp).every((flows) => flows.length === 0) && (
                       <div style={{ color: 'var(--color-text-disabled)', fontSize: 14 }}>No flows observed yet.</div>
@@ -312,6 +289,6 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </Dialog>
   );
 }

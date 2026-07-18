@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { Icon, Selector, Spinner } from '@astryxdesign/core';
+import { Button, Icon, Selector, Spinner, ToggleButton } from '@astryxdesign/core';
 import type { App } from '../types';
 import type { ResearchCollection } from '../../db';
 import type { AppVersion } from '../../db';
@@ -220,28 +220,17 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     >
       <div style={{ background: 'var(--color-background-surface)' }}>
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '22px 40px 0' }}>
-          <button
-            type="button"
+          <Button
+            label="Back to all apps"
+            icon={<Icon icon="chevronLeft" size="sm" />}
+            variant="ghost"
+            size="sm"
             onClick={onBack}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 10px 6px 6px',
               borderRadius: 8,
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 13.5,
-              fontWeight: 500,
-              color: 'var(--color-text-secondary)',
               marginBottom: 28,
             }}
-          >
-            <Icon icon="chevronLeft" size="sm" />
-            Back to all apps
-          </button>
+          />
           <motion.div
             layoutId={`app-icon-${app.id}`}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
@@ -283,24 +272,16 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((p) => (
-                  <button
+                  <ToggleButton
                     key={p}
-                    type="button"
-                    onClick={() => setSelectedPlatform(p)}
+                    label={PLATFORM_LABEL[p]}
+                    isPressed={p === selectedPlatform}
+                    onPressedChange={() => setSelectedPlatform(p)}
+                    size="sm"
                     style={{
-                      border: 'none',
                       borderRadius: 999,
-                      padding: '3px 10px',
-                      cursor: appPlatforms.length > 1 ? 'pointer' : 'default',
-                      font: 'inherit',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      background: p === selectedPlatform ? 'var(--color-text-primary)' : 'var(--color-background-muted)',
-                      color: p === selectedPlatform ? 'var(--color-background-surface)' : 'var(--color-text-primary)',
                     }}
-                  >
-                    {PLATFORM_LABEL[p]}
-                  </button>
+                  />
                 ))}
               </div>
             </div>
@@ -342,29 +323,22 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                 ...(role === 'admin' ? [['review', 'Review'] as const] : []),
               ] as const
             ).map(([id, label]) => (
-              <button
+              <ToggleButton
                 key={id}
                 ref={registerTab(id)}
-                type="button"
-                onClick={() => {
-                  setSection(id);
-                }}
+                label={label}
+                isPressed={section === id}
+                onPressedChange={() => setSection(id)}
+                size="sm"
                 style={{
-                  fontFamily: 'inherit',
                   background: 'none',
                   border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 14.5,
-                  fontWeight: 600,
                   color: section === id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                   padding: '0 0 14px',
-                  transition: 'color .15s ease',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
                 }}
-              >
-                {label}
-              </button>
+              />
             ))}
             <div
               ref={indicatorRef}
@@ -395,24 +369,15 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
               {['All', ...types].map((t) => {
                 const active = typeFilter === t;
                 return (
-                  <button
+                  <ToggleButton
                     key={t}
-                    type="button"
-                    onClick={() => setTypeFilter(t)}
+                    label={t}
+                    isPressed={active}
+                    onPressedChange={() => setTypeFilter(t)}
+                    size="sm"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '6px 7px 6px 12px',
                       borderRadius: 9,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      border: `1px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border)'}`,
-                      background: active ? 'var(--color-text-primary)' : 'var(--color-background-muted)',
                       color: active ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
-                      fontFamily: 'inherit',
-                      transition: 'background .18s cubic-bezier(.16,1,.3,1), border-color .18s cubic-bezier(.16,1,.3,1)',
                     }}
                   >
                     {t}
@@ -428,7 +393,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                     >
                       {typeCounts(t)}
                     </span>
-                  </button>
+                  </ToggleButton>
                 );
               })}
             </div>
