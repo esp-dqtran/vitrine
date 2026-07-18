@@ -37,8 +37,15 @@ export function FlowViewer({
                 <PlaceholderImage src={step.evidence[0]?.imageUrl} />
                 <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, width: 22, height: 22, borderRadius: 11, background: '#18181b', color: '#fff', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{index + 1}</div>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{step.label}</div>
-              {step.interaction && <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)' }}>Observed interaction: {step.interaction}</div>}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{step.label}</div>
+                {step.interaction && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, fontSize: 11.5, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                    <span aria-hidden style={{ flex: '0 0 auto', color: 'var(--color-text-disabled)' }}>&rarr;</span>
+                    <span>{step.interaction}</span>
+                  </div>
+                )}
+              </div>
             </div>
             {index < flow.steps.length - 1 && <div style={{ height: 146, padding: '0 10px', display: 'flex', alignItems: 'center' }}><Icon icon="chevronRight" size="sm" color="secondary" /></div>}
           </div>

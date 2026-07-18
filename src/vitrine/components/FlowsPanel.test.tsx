@@ -22,10 +22,10 @@ test("renders each flow as a compact card with its title, step count, and lead i
   assert.match(html, /\/api\/media\/linear\/0123456789abcdef/);
 });
 
-test("offers a FLOW.md export only when app and platform are known", () => {
-  assert.doesNotMatch(renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} />), /Export FLOW\.md/);
+test("offers the FLOW.md editor only when app and platform are known", () => {
+  assert.doesNotMatch(renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} />), /Open FLOW\.md/);
   const withApp = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} app="linear" platform="web" />);
-  assert.match(withApp, /Export FLOW\.md/);
+  assert.match(withApp, /Open FLOW\.md/);
 });
 
 test("FlowViewer renders curator-ordered flow steps with real evidence images", () => {

@@ -1,6 +1,11 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Badge, Button, Divider, DropdownMenu, Heading, Icon, Text, useMediaQuery } from '@astryxdesign/core';
 import { PlaceholderImage } from './components/PlaceholderImage';
+import { useFloatDrift } from './useFloatDrift';
+import { useRevealOnScroll } from './useRevealOnScroll';
+import { useSlidingIndicator } from './useSlidingIndicator';
 
 const wrap: CSSProperties = { maxWidth: 1160, margin: '0 auto', padding: '0 32px' };
 
@@ -10,14 +15,18 @@ function Section({ style, children }: { style?: CSSProperties; children: ReactNo
 
 // ---------- hero icon mark (layered, floating above the headline) ----------
 function HeroIconStack() {
+  const backRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
+  useFloatDrift(backRef, { rotate: -9, dx: 8, dy: 14, rswing: 5, duration: 6.4, delay: -1.6 });
+  useFloatDrift(frontRef, { dx: 8, dy: 14, rswing: 4, duration: 6.4 });
   return (
     <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto', animation: 'hmFadeUp .55s cubic-bezier(.16,1,.3,1) both' }}>
       <div
-        className="hm-floating"
-        style={{ position: 'absolute', inset: 6, borderRadius: 24, background: 'var(--color-background-muted)', transform: 'rotate(-9deg) translate(-3px,-4px)', animation: 'hmFloatY 6.4s ease-in-out -1.6s infinite' }}
+        ref={backRef}
+        style={{ position: 'absolute', inset: 6, borderRadius: 24, background: 'var(--color-background-muted)', willChange: 'transform' }}
       />
       <div
-        className="hm-floating"
+        ref={frontRef}
         style={{
           position: 'absolute',
           inset: 0,
@@ -27,7 +36,7 @@ function HeroIconStack() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          animation: 'hmFloatY 6.4s ease-in-out infinite',
+          willChange: 'transform',
         }}
       >
         <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff', transform: 'rotate(-12deg)', boxShadow: '0 3px 8px rgba(0,0,0,0.18)' }} />
@@ -158,32 +167,68 @@ const STATS = [
   { n: '160+', label: 'UI elements' },
 ];
 const STAT_ICONS = [
-  { glyph: 'coin', color: '#3b6ef6', size: 44, top: '4%', left: '8%', dur: 5.6, delay: -1.2 },
-  { glyph: 'wave', color: '#d94f4f', size: 34, top: '10%', right: '10%', dur: 4.6, delay: -3.1 },
-  { glyph: 'terminal', color: '#18181b', size: 38, top: '62%', left: '4%', dur: 6.2, delay: -2.0 },
-  { glyph: 'swatch', color: '#e0518a', size: 36, top: '66%', right: '6%', dur: 5.1, delay: -0.6 },
-  { glyph: 'radar', color: '#0891b2', size: 30, top: '36%', left: '16%', dur: 7.0, delay: -4.2 },
-  { glyph: 'layers', color: '#7c3aed', size: 32, top: '40%', right: '18%', dur: 5.4, delay: -1.8 },
+  { glyph: 'coin', color: '#3b6ef6', size: 44, top: '4%', left: '8%', dur: 5.6, delay: -1.2, rotate: -6, rswing: 8 },
+  { glyph: 'wave', color: '#d94f4f', size: 34, top: '10%', right: '10%', dur: 4.6, delay: -3.1, rotate: 5, rswing: 7 },
+  { glyph: 'terminal', color: '#18181b', size: 38, top: '62%', left: '4%', dur: 6.2, delay: -2.0, rotate: -4, rswing: 6 },
+  { glyph: 'swatch', color: '#e0518a', size: 36, top: '66%', right: '6%', dur: 5.1, delay: -0.6, rotate: 7, rswing: 9 },
+  { glyph: 'radar', color: '#0891b2', size: 30, top: '36%', left: '16%', dur: 7.0, delay: -4.2, rotate: -8, rswing: 5 },
+  { glyph: 'layers', color: '#7c3aed', size: 32, top: '40%', right: '18%', dur: 5.4, delay: -1.8, rotate: 6, rswing: 8 },
 ];
+
+function FloatIcon({ ic }: { ic: (typeof STAT_ICONS)[number] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFloatDrift(ref, { rotate: ic.rotate, dx: Math.round(ic.size * 0.3), dy: 16, rswing: ic.rswing, duration: ic.dur, delay: ic.delay });
+  return (
+    <div
+      ref={ref}
+      style={{ position: 'absolute', top: ic.top, left: ic.left, right: ic.right, width: ic.size, height: ic.size, borderRadius: Math.round(ic.size * 0.28), background: ic.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 22px rgba(0,0,0,0.14)', willChange: 'transform' }}
+    >
+      {GLYPHS[ic.glyph](Math.round(ic.size * 0.44))}
+    </div>
+  );
+}
+
+// Counts up from 0 to the number embedded in `value` (e.g. "160+") the first time
+// it scrolls into view, then leaves the authored string (suffix and all) in place.
+function CountUpNumber({ value }: { value: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const match = value.match(/^(\d+)(.*)$/);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !match) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2];
+    const counter = { n: 0 };
+    el.textContent = `0${suffix}`;
+    const trigger = ScrollTrigger.create({
+      trigger: el,
+      start: 'top 90%',
+      once: true,
+      onEnter: () => gsap.to(counter, {
+        n: target,
+        duration: 1.1,
+        ease: 'power2.out',
+        onUpdate: () => { el.textContent = `${Math.round(counter.n)}${suffix}`; },
+      }),
+    });
+    return () => trigger.kill();
+  }, [match?.[0]]);
+
+  return <div ref={ref} style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>{value}</div>;
+}
 
 function StatsBlock() {
   return (
     <div style={{ position: 'relative', textAlign: 'center', padding: '32px 20px' }}>
-      {STAT_ICONS.map((ic, i) => (
-        <div
-          key={i}
-          className="hm-floating"
-          style={{ position: 'absolute', top: ic.top, left: ic.left, right: ic.right, width: ic.size, height: ic.size, borderRadius: Math.round(ic.size * 0.28), background: ic.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 22px rgba(0,0,0,0.14)', animation: `hmFloatY ${ic.dur}s ease-in-out ${ic.delay}s infinite` }}
-        >
-          {GLYPHS[ic.glyph](Math.round(ic.size * 0.44))}
-        </div>
-      ))}
+      {STAT_ICONS.map((ic, i) => <FloatIcon key={i} ic={ic} />)}
       <div style={{ position: 'relative', zIndex: 2 }}>
         <Text type="large" color="secondary">A growing library of</Text>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 44, marginTop: 14, flexWrap: 'wrap' }}>
           {STATS.map((s) => (
             <div key={s.label}>
-              <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>{s.n}</div>
+              <CountUpNumber value={s.n} />
               <div style={{ fontSize: 14, color: 'var(--color-text-disabled)', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -204,14 +249,17 @@ const PATTERN_TABS = [
 function PatternTabs() {
   const [active, setActive] = useState('screens');
   const tab = PATTERN_TABS.find((t) => t.key === active)!;
+  const { indicatorRef, registerItem } = useSlidingIndicator(active, { wraps: true });
   return (
     <div>
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 28, padding: 5, background: 'var(--color-background-muted)', borderRadius: 999, width: 'fit-content' }}>
+      <div style={{ position: 'relative', display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 28, padding: 5, background: 'var(--color-background-muted)', borderRadius: 999, width: 'fit-content' }}>
+        <div ref={indicatorRef} style={{ position: 'absolute', top: 0, left: 0, borderRadius: 999, background: 'var(--color-text-primary)', pointerEvents: 'none' }} />
         {PATTERN_TABS.map((t) => (
           <button
             key={t.key}
+            ref={registerItem(t.key)}
             onClick={() => setActive(t.key)}
-            style={{ fontFamily: 'inherit', cursor: 'pointer', border: 'none', borderRadius: 999, padding: '9px 18px', fontSize: 14, fontWeight: 600, background: active === t.key ? 'var(--color-text-primary)' : 'transparent', color: active === t.key ? 'var(--color-background-surface)' : 'var(--color-text-secondary)', transition: 'background .2s ease, color .2s ease' }}
+            style={{ position: 'relative', fontFamily: 'inherit', cursor: 'pointer', border: 'none', borderRadius: 999, padding: '9px 18px', fontSize: 14, fontWeight: 600, background: 'transparent', color: active === t.key ? 'var(--color-background-surface)' : 'var(--color-text-secondary)', transition: 'color .2s ease' }}
           >
             {t.label}
           </button>
@@ -235,6 +283,14 @@ const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--co
 
 export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void; onSearch: (q: string) => void }) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
+  const marqueeRef = useRef<HTMLDivElement>(null);
+  const patternsRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  useRevealOnScroll(marqueeRef);
+  useRevealOnScroll(patternsRef);
+  useRevealOnScroll(statsRef);
+  useRevealOnScroll(ctaRef);
   return (
     <div style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
       {/* header — glass pill nav */}
@@ -300,12 +356,12 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
       </Section>
 
       {/* app icon marquee */}
-      <div style={{ padding: '96px 0 88px', animation: 'hmFadeUp .5s cubic-bezier(.16,1,.3,1) .2s both' }}>
+      <div ref={marqueeRef} style={{ padding: '96px 0 88px' }}>
         <IconMarquee />
       </div>
 
       {/* find patterns (tabbed) */}
-      <div style={{ background: 'var(--color-background-card, var(--color-background-surface))', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+      <div ref={patternsRef} style={{ background: 'var(--color-background-card, var(--color-background-surface))', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <Section style={{ padding: '80px 32px' }}>
           <div style={{ maxWidth: 560, marginBottom: 40 }}>
             <Heading level={2}>Find design patterns in seconds</Heading>
@@ -319,11 +375,13 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
 
       {/* stats block */}
       <Section style={{ padding: '56px 32px 24px' }}>
-        <StatsBlock />
+        <div ref={statsRef}>
+          <StatsBlock />
+        </div>
       </Section>
 
       {/* final CTA band */}
-      <div style={{ background: '#171717' }}>
+      <div ref={ctaRef} style={{ background: '#171717' }}>
         <Section style={{ padding: '72px 32px', textAlign: 'center' }}>
           <Heading level={2}><span style={{ color: '#fff' }}>Start studying the apps you admire.</span></Heading>
           <div style={{ margin: '12px auto 28px', maxWidth: 460 }}>

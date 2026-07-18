@@ -23,19 +23,22 @@ interface AppCardProps {
 export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
   const [hovered, setHovered] = useState(false);
   const [index, setIndex] = useState(0);
+  // Only slide 0 is ever visible until the user interacts; defer loading the other
+  // preview images until first hover/tap so an on-screen card fetches one image, not five.
+  const [activated, setActivated] = useState(false);
   // ponytail: card preview caps at 5 screens regardless of how many the app
   // has — the dot/arrow carousel isn't built for hundreds of screens. The full
   // set is still browsable on the detail page.
   const screens = app.screens.slice(0, 5);
   const count = screens.length;
-  const go = (i: number) => setIndex(((i % count) + count) % count);
+  const go = (i: number) => { setActivated(true); setIndex(((i % count) + count) % count); };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => { setHovered(true); setActivated(true); }}
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
@@ -64,7 +67,7 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
         >
           {screens.map((s, i) => (
             <div key={i} style={{ flex: `0 0 ${100 / count}%`, height: '100%', position: 'relative' }}>
-              <PlaceholderImage src={s.url} accent={app.accent} />
+              {(i === 0 || activated) && <PlaceholderImage src={s.url} accent={app.accent} />}
             </div>
           ))}
         </div>

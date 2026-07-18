@@ -240,6 +240,7 @@ export async function completeExport(exportId: number, metadata: ObjectMetadata)
     "text/css": "css",
     "text/javascript": "js",
     "text/typescript": "tsx",
+    "text/markdown": "md",
   };
   const extension = extensionByType[metadata.contentType];
   if (

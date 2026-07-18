@@ -112,29 +112,11 @@ body {
   }
 }
 
-@keyframes hmFloatY {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-16px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
 @keyframes hmMarqueeL {
   from {
     transform: translateX(0);
   }
   to {
     transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hm-floating {
-    animation: none !important;
   }
 }

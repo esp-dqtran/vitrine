@@ -37,6 +37,24 @@ test("parses production S3 with the default credential chain", () => {
   });
 });
 
+test("reads the AWS_S3_* namespaced credential pair when OBJECT_STORE_* creds are unset", () => {
+  const config = objectStoreConfigFromEnvironment({
+    NODE_ENV: "development",
+    OBJECT_STORE_BACKEND: "s3",
+    OBJECT_STORE_S3_BUCKET: "astryx",
+    OBJECT_STORE_S3_REGION: "us-east-1",
+    AWS_S3_ACCESS_KEY_ID: "aws-key",
+    AWS_S3_SECRET_ACCESS_KEY: "aws-secret",
+  });
+  assert.equal(config.backend === "s3" && config.accessKeyId, "aws-key");
+  assert.equal(config.backend === "s3" && config.secretAccessKey, "aws-secret");
+  // A lone AWS_S3_* key is still an incomplete pair.
+  assert.throws(() => objectStoreConfigFromEnvironment({
+    NODE_ENV: "development", OBJECT_STORE_BACKEND: "s3", OBJECT_STORE_S3_BUCKET: "astryx",
+    OBJECT_STORE_S3_REGION: "us-east-1", AWS_S3_ACCESS_KEY_ID: "aws-key",
+  }), /pair/);
+});
+
 test("requires complete S3 configuration and credential pairs", () => {
   assert.throws(() => objectStoreConfigFromEnvironment({
     NODE_ENV: "production", OBJECT_STORE_BACKEND: "s3", OBJECT_STORE_S3_REGION: "us-east-1",

@@ -6,6 +6,7 @@ import type { App } from '../types';
 import type { ResearchCollection } from '../../db';
 import type { AppVersion } from '../../db';
 import { useDesignSystem } from '../useDesignSystem';
+import { useSlidingIndicator } from '../useSlidingIndicator';
 import { ComponentsPanel } from './ComponentsPanel';
 import { FlowsPanel } from './FlowsPanel';
 import { HeroButton } from './HeroButton';
@@ -158,18 +159,8 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     && (componentFilter === 'All' || screen.componentNames?.includes(componentFilter))
     && (stateFilter === 'All' || screen.visibleStates.includes(stateFilter)));
 
-  const tabRefs = useRef<Record<Section, HTMLButtonElement | null>>({
-    overview: null,
-    screens: null,
-    elements: null,
-    flows: null,
-    'design-system': null,
-    export: null,
-    review: null,
-  });
-  const indicatorRef = useRef<HTMLDivElement>(null);
+  const { indicatorRef, registerItem: registerTab } = useSlidingIndicator<Section>(section);
   const contentRef = useRef<HTMLDivElement>(null);
-  const isFirstTabRender = useRef(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const elementsSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -195,20 +186,6 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [section, elementsCursor, elementsLoadingMore, selectedVersion]);
-
-  // Slide the tab underline to whichever tab is active.
-  useLayoutEffect(() => {
-    const tab = tabRefs.current[section];
-    const indicator = indicatorRef.current;
-    if (!tab || !indicator) return;
-    const target = { x: tab.offsetLeft, width: tab.offsetWidth };
-    if (isFirstTabRender.current) {
-      gsap.set(indicator, target);
-      isFirstTabRender.current = false;
-    } else {
-      gsap.to(indicator, { ...target, duration: 0.35, ease: 'power3.out' });
-    }
-  }, [section]);
 
   // Fade the panel content in on every section change.
   useLayoutEffect(() => {
@@ -367,9 +344,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
             ).map(([id, label]) => (
               <button
                 key={id}
-                ref={(el) => {
-                  tabRefs.current[id] = el;
-                }}
+                ref={registerTab(id)}
                 type="button"
                 onClick={() => {
                   setSection(id);

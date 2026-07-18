@@ -24,6 +24,7 @@ export function PlaceholderImage({ src, accent, style }: PlaceholderImageProps) 
       src={src}
       alt=""
       loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
       style={{
         position: 'absolute',

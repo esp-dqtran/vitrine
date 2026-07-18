@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import gsap from 'gsap';
 import { Button, Heading, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
+import { useFloatDrift } from './useFloatDrift';
 
 function EyeIcon({ off }: { off: boolean }) {
   return (
@@ -215,42 +216,7 @@ function FloatingIcon({ logo, label, color, size, rotate, style, duration, delay
   // vtFadeUp entrance animates transform with fill-mode `both`, and a CSS
   // animation's applied value outranks inline styles — it would pin whatever
   // we write here (GSAP or otherwise) at identity for good.
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    gsap.set(el, { rotate, x: 0, y: 0 });
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    // One yoyo'd sinusoid per axis, rather than a single `keyframes` tween:
-    // keyframes' per-segment ease (`easeEach`) defaults to power1.inOut, which
-    // parks the tile at a dead stop on every keyframe boundary. A yoyo'd
-    // sine.inOut is a true sinusoid — velocity passes through the reversal
-    // continuously, so there is no stutter anywhere in the loop.
-    //
-    // The periods are deliberately incommensurate (1 : 1.32 : 0.86). Equal
-    // periods would let all three axes hit their extremes together and freeze
-    // the tile in lockstep; detuned, the composite path never repeats exactly
-    // and never fully stops. Amplitudes are centred on the authored position
-    // (±half) so the icon drifts around where it was placed, not away from it.
-    const spin = (from: object, to: object, period: number, offset: number) =>
-      gsap.fromTo(el, from, {
-        ...to,
-        duration: period,
-        delay: delay + offset,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
-
-    const tweens = [
-      spin({ y: -dy / 2 }, { y: dy / 2 }, duration, 0),
-      spin({ x: -dx / 2 }, { x: dx / 2 }, duration * 1.32, 0.21),
-      spin({ rotate: rotate - rswing }, { rotate: rotate + rswing }, duration * 0.86, 0.13),
-    ];
-    return () => {
-      tweens.forEach((t) => t.kill());
-    };
-  }, [rotate, dx, dy, rswing, duration, delay]);
+  useFloatDrift(ref, { rotate, dx, dy, duration, delay, rswing });
 
   return (
     <div

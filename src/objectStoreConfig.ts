@@ -103,8 +103,11 @@ export function objectStoreConfigFromEnvironment(
   const endpoint = parseEndpoint(environment, "OBJECT_STORE_S3_ENDPOINT", production);
   const publicEndpoint = parseEndpoint(environment, "OBJECT_STORE_S3_PUBLIC_ENDPOINT", production);
 
-  const accessKeyId = environment.OBJECT_STORE_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = environment.OBJECT_STORE_SECRET_ACCESS_KEY?.trim();
+  // Prefer the OBJECT_STORE_* names; fall back to the AWS_S3_* namespaced pair
+  // (our .env convention) so several services' AWS keys can coexist in one file.
+  // Both unset → the SDK's default credential chain (AWS_PROFILE / ~/.aws) still applies.
+  const accessKeyId = (environment.OBJECT_STORE_ACCESS_KEY_ID ?? environment.AWS_S3_ACCESS_KEY_ID)?.trim();
+  const secretAccessKey = (environment.OBJECT_STORE_SECRET_ACCESS_KEY ?? environment.AWS_S3_SECRET_ACCESS_KEY)?.trim();
   if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) {
     throw new Error("Object storage credentials must be provided as a pair");
   }

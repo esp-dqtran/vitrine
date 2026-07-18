@@ -11,10 +11,11 @@ x-object-store-env: &object-store-env
   AWS_PROFILE: ${AWS_PROFILE:-vitrine-ai-prod}
 
 services:
-  # Decommissioned as the live DB (migrated to Supabase — see DATABASE_URL below/.env) but
-  # left defined, undropped, and un-depended-upon as a rollback path. No service references
-  # it anymore; start it manually (`docker compose up postgres`) if you need to fall back.
+  # Decommissioned as the live DB (migrated to Supabase — see DATABASE_URL below/.env). Kept
+  # behind the `legacy-db` profile as a rollback path so it never starts on a plain
+  # `docker compose up`; start it with `docker compose --profile legacy-db up postgres`.
   postgres:
+    profiles: ["legacy-db"]
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: astryx
@@ -42,65 +43,6 @@ services:
       timeout: 10s
       retries: 10
 
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-astryx-root}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-astryx-root-password-change-me}
-    ports:
-      - "${MINIO_API_HOST_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
-    volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/ready >/dev/null || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  minio-init:
-    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-astryx-root}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-astryx-root-password-change-me}
-      OBJECT_STORE_S3_BUCKET: ${OBJECT_STORE_S3_BUCKET:-astryx-media}
-      OBJECT_STORE_ACCESS_KEY_ID: ${MINIO_APP_ACCESS_KEY:-astryx-app}
-      OBJECT_STORE_SECRET_ACCESS_KEY: ${MINIO_APP_SECRET_KEY:-astryx-app-password-change-me}
-    entrypoint:
-      - /bin/sh
-      - -ec
-      - |
-        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
-        mc mb --ignore-existing "local/$$OBJECT_STORE_S3_BUCKET"
-        mc version enable "local/$$OBJECT_STORE_S3_BUCKET"
-        cat >/tmp/astryx-policy.json <<EOF
-        {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": ["s3:ListBucket"],
-              "Resource": ["arn:aws:s3:::$$OBJECT_STORE_S3_BUCKET"]
-            },
-            {
-              "Effect": "Allow",
-              "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-              "Resource": ["arn:aws:s3:::$$OBJECT_STORE_S3_BUCKET/*"]
-            }
-          ]
-        }
-        EOF
-        mc admin policy create local astryx-app /tmp/astryx-policy.json || mc admin policy info local astryx-app >/dev/null
-        mc admin user info local "$$OBJECT_STORE_ACCESS_KEY_ID" >/dev/null 2>&1 \
-          || mc admin user add local "$$OBJECT_STORE_ACCESS_KEY_ID" "$$OBJECT_STORE_SECRET_ACCESS_KEY"
-        mc admin policy attach local astryx-app --user "$$OBJECT_STORE_ACCESS_KEY_ID"
-        mc ready local
-    depends_on:
-      minio:
-        condition: service_healthy
-    restart: "no"
-
   migrate:
     build:
       context: .
@@ -127,6 +69,8 @@ services:
       STRIPE_PRO_YEARLY_PRICE_ID: ${STRIPE_PRO_YEARLY_PRICE_ID:-price_local_yearly}
       APP_URL: ${APP_URL:-http://localhost:5173}
       MEDIA_SIGNING_SECRET: ${MEDIA_SIGNING_SECRET:-local-media-signing-secret-32-bytes}
+      # Required by billingConfigFromEnv at boot (base64 of 32 bytes). Override in prod.
+      CRAWL_SESSION_ENCRYPTION_KEY: ${CRAWL_SESSION_ENCRYPTION_KEY:-i4cY3peMFMHgctXIOGOELMMaZI+PjSsh8e/rU9bgmBU=}
       GENERAL_RATE_LIMIT: ${GENERAL_RATE_LIMIT:-300}
       MEDIA_RATE_LIMIT: ${MEDIA_RATE_LIMIT:-500}
       APP_TRAVERSAL_LIMIT: ${APP_TRAVERSAL_LIMIT:-20}
@@ -147,7 +91,10 @@ services:
       retries: 6
     restart: on-failure
 
+  # Not part of the default api/rabbitmq/worker stack. Gated behind the `discover` profile;
+  # run with `docker compose --profile discover up discover`.
   discover:
+    profiles: ["discover"]
     build:
       context: .
       dockerfile: services/discover/Dockerfile
@@ -206,8 +153,6 @@ services:
     volumes:
       - ./data:/app/data:ro
     depends_on:
-      minio-init:
-        condition: service_completed_successfully
       migrate:
         condition: service_completed_successfully
     restart: "no"
@@ -222,8 +167,6 @@ services:
       <<: *object-store-env
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
     depends_on:
-      minio-init:
-        condition: service_completed_successfully
       migrate:
         condition: service_completed_successfully
     restart: "no"

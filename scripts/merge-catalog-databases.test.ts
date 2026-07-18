@@ -94,3 +94,38 @@ test("sameObjectContent allows different storage keys for identical bytes", () =
   assert.equal(sameObjectContent(left, { ...left, object_key: "images/2/content.png" }), true);
   assert.equal(sameObjectContent(left, { ...left, object_key: "images/2/content.png", byte_size: 124 }), false);
 });
+
+test("flow evidence remapping replaces nested image ids without changing other fields", async () => {
+  const merger = await import("./merge-catalog-databases.ts") as Record<string, unknown>;
+  assert.equal(typeof merger.remapFlowEvidence, "function");
+  const remap = merger.remapFlowEvidence as (flows: unknown, resolve: (id: number) => number) => unknown;
+  const original = [{
+    id: "checkout",
+    title: "Checkout",
+    tags: ["commerce"],
+    steps: [
+      { label: "Cart", evidence: [11] },
+      { label: "Pay", evidence: [22, 11] },
+    ],
+  }];
+
+  assert.deepEqual(remap(original, (id) => new Map([[11, 101], [22, 202]]).get(id)!), [{
+    id: "checkout",
+    title: "Checkout",
+    tags: ["commerce"],
+    steps: [
+      { label: "Cart", evidence: [101] },
+      { label: "Pay", evidence: [202, 101] },
+    ],
+  }]);
+  assert.deepEqual(original[0]!.steps[0]!.evidence, [11], "repair must not mutate its input");
+});
+
+test("flow evidence remapping aborts when an evidence id cannot be resolved", async () => {
+  const merger = await import("./merge-catalog-databases.ts") as Record<string, unknown>;
+  const remap = merger.remapFlowEvidence as (flows: unknown, resolve: (id: number) => number) => unknown;
+  assert.throws(
+    () => remap([{ id: "broken", steps: [{ evidence: [999] }] }], () => { throw new Error("unresolved 999"); }),
+    /unresolved 999/,
+  );
+});
