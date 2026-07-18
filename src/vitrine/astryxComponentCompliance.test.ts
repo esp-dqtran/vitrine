@@ -12,22 +12,15 @@ const allowedNativeControls = {
   'Home.tsx': { button: 9, input: 1 },
   'Pricing.tsx': { button: 6 },
   'SignIn.tsx': { button: 2 },
-  'components/CollectionsPanel.tsx': { button: 5, input: 1, textarea: 1 },
   'components/CommandPalette.tsx': { button: 6, input: 1 },
   'components/CrawlWorkspacePanel.tsx': { button: 15, input: 9, textarea: 2, select: 2 },
-  'components/CuratorReviewPanel.tsx': { button: 8 },
   'components/DecisionCanvas.tsx': { button: 2, input: 1, textarea: 1 },
   'components/EvidenceCard.tsx': { button: 4, input: 2, textarea: 1 },
   'components/EvidenceDrawer.tsx': { button: 2, input: 2, select: 1 },
-  'components/ExportPanel.tsx': { button: 4, input: 2 },
-  'components/FlowDocEditor.tsx': { button: 3, textarea: 1 },
-  'components/FlowsPanel.tsx': { button: 1 },
   'components/ProjectInsightsPanel.tsx': { button: 4, textarea: 4 },
   'components/ResearchProjectPage.tsx': { button: 2 },
   'components/ResearchProjectsPage.tsx': { button: 3, input: 2, select: 1 },
   'components/ScreenDetail.tsx': { button: 4 },
-  'components/SettingsPanel.tsx': { button: 3, input: 2 },
-  'components/VersionPanel.tsx': { button: 5, input: 1 },
 } as const;
 
 function productionTsxFiles(directory: string): string[] {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EmptyState } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { Platform } from '../../platformFromUrl';
 import { FlowCard } from './FlowCard';
@@ -49,7 +49,7 @@ export function FlowsPanel({ flows, app, platform }: { flows: DesignFlow<Evidenc
           </div>
         ) : <span />}
         {app && platform && (
-          <button type="button" onClick={() => setEditingDoc(true)} title="Open the ordered, evidence-cited product flow document (FLOW.md) to edit, preview, save, or download — a PRD-ready reference for product managers." style={{ border: '1px solid var(--color-border)', borderRadius: 999, padding: '9px 16px', background: 'var(--color-text-primary)', color: 'var(--color-background-surface)', cursor: 'pointer', font: 'inherit', fontWeight: 700, fontSize: 12.5, whiteSpace: 'nowrap' }}>Open FLOW.md</button>
+          <Button label="Open FLOW.md" variant="primary" size="sm" tooltip="Open the ordered, evidence-cited product flow document to edit, preview, save, or download." onClick={() => setEditingDoc(true)} style={{ borderRadius: 999 }} />
         )}
       </div>
       {filtered.length === 0 ? (
