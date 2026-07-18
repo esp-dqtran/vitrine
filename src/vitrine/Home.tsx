@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Badge, Button, Divider, DropdownMenu, Heading, Icon, Text, useMediaQuery } from '@astryxdesign/core';
+import { Badge, Button, Divider, DropdownMenu, Heading, Icon, IconButton, Text, TextInput, ToggleButton, useMediaQuery } from '@astryxdesign/core';
 import { PlaceholderImage } from './components/PlaceholderImage';
 import { useFloatDrift } from './useFloatDrift';
 import { useRevealOnScroll } from './useRevealOnScroll';
@@ -134,26 +134,11 @@ function HeroSearchBar({ onSearch }: { onSearch: (q: string) => void }) {
   const go = () => onSearch(value.trim());
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 6px 6px 20px', borderRadius: 999, background: 'var(--color-background-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-low)' }}>
-        <svg viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="var(--color-text-disabled)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: '0 0 auto' }}>
-          <circle cx={11} cy={11} r={7} />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') go();
-          }}
-          placeholder="Search apps, screens, flows…"
-          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', padding: '10px 0' }}
-        />
-        <button onClick={go} aria-label="Search" style={{ width: 38, height: 38, borderRadius: '50%', border: 'none', background: 'var(--color-text-primary)', color: 'var(--color-background-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: '0 0 auto' }}>
-          <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 6 15 12 9 18" />
-          </svg>
-        </button>
+      <div style={{ display: 'flex', alignItems: 'end', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TextInput label="Search apps, screens, and flows" isLabelHidden value={value} onChange={setValue} onEnter={go} placeholder="Search apps, screens, flows…" startIcon={<Icon icon="search" />} width="100%" />
+        </div>
+        <IconButton label="Search" icon={<Icon icon="chevronRight" />} variant="primary" onClick={go} />
       </div>
     </div>
   );
@@ -255,14 +240,14 @@ function PatternTabs() {
       <div style={{ position: 'relative', display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 28, padding: 5, background: 'var(--color-background-muted)', borderRadius: 999, width: 'fit-content' }}>
         <div ref={indicatorRef} style={{ position: 'absolute', top: 0, left: 0, borderRadius: 999, background: 'var(--color-text-primary)', pointerEvents: 'none' }} />
         {PATTERN_TABS.map((t) => (
-          <button
+          <ToggleButton
             key={t.key}
             ref={registerItem(t.key)}
-            onClick={() => setActive(t.key)}
-            style={{ position: 'relative', fontFamily: 'inherit', cursor: 'pointer', border: 'none', borderRadius: 999, padding: '9px 18px', fontSize: 14, fontWeight: 600, background: 'transparent', color: active === t.key ? 'var(--color-background-surface)' : 'var(--color-text-secondary)', transition: 'color .2s ease' }}
-          >
-            {t.label}
-          </button>
+            label={t.label}
+            isPressed={active === t.key}
+            onPressedChange={() => setActive(t.key)}
+            style={{ position: 'relative', borderRadius: 999 }}
+          />
         ))}
       </div>
       <div style={{ marginBottom: 24, maxWidth: 520 }}>
@@ -279,7 +264,7 @@ function PatternTabs() {
   );
 }
 
-const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 };
+const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' };
 
 export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void; onSearch: (q: string) => void }) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
@@ -315,12 +300,7 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           boxShadow: 'light-dark(0 8px 30px rgba(24,24,27,0.08), 0 8px 30px rgba(0,0,0,0.4)), inset 0 1px 0 light-dark(rgba(255,255,255,0.5), rgba(255,255,255,0.06))',
         }}
       >
-        <button type="button" onClick={onBrowse} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-background-surface)' }} />
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
-        </button>
+        <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-background-surface)' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
         {isCompactNav ? (
           <DropdownMenu
             button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
@@ -332,9 +312,9 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
-            <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
-            <button type="button" onClick={onPricing} style={navLink}>Pricing</button>
-            <button type="button" onClick={onLogin} style={navLink}>Log in</button>
+            <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
+            <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
+            <Button label="Log in" variant="ghost" onClick={onLogin} style={navLink} />
           </div>
         )}
       </div>
@@ -397,9 +377,9 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
         <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <Text type="supporting" color="secondary">Vitrine · a research library of observed application design systems.</Text>
           <div style={{ display: 'flex', gap: 20 }}>
-            <button type="button" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }}>Browse</button>
-            <button type="button" onClick={onPricing} style={{ ...navLink, fontSize: 13 }}>Pricing</button>
-            <button type="button" onClick={onLogin} style={{ ...navLink, fontSize: 13 }}>Sign in</button>
+            <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Sign in" variant="ghost" size="sm" onClick={onLogin} style={{ ...navLink, fontSize: 13 }} />
           </div>
         </div>
       </Section>

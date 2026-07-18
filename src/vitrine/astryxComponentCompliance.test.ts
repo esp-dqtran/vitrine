@@ -8,11 +8,7 @@ import ts from 'typescript';
 const vitrineRoot = dirname(fileURLToPath(import.meta.url));
 const nativeTags = new Set(['button', 'input', 'textarea', 'select']);
 
-const allowedNativeControls = {
-  'Home.tsx': { button: 9, input: 1 },
-  'Pricing.tsx': { button: 6 },
-  'SignIn.tsx': { button: 2 },
-} as const;
+const allowedNativeControls = {} as const;
 
 function productionTsxFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true })

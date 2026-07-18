@@ -1,36 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { Button, Heading, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
+import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
 import { useFloatDrift } from './useFloatDrift';
-
-function EyeIcon({ off }: { off: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={17} height={17}>
-      {off ? (
-        <>
-          <path d="M3 3l18 18" />
-          <path d="M10.6 10.7a2.5 2.5 0 003.5 3.5" />
-          <path d="M6.6 6.7C4.5 8.1 3 10 3 12c0 0 3.5 7 9 7 1.7 0 3.2-.5 4.5-1.3" />
-          <path d="M9.9 4.6A9.7 9.7 0 0112 4c5.5 0 9 7 9 7-.5 1-1.3 2.2-2.4 3.3" />
-        </>
-      ) : (
-        <>
-          <path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z" />
-          <circle cx={12} cy={12} r={2.6} />
-        </>
-      )}
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width={30} height={30} fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="5 13 10 18 19 7" style={{ strokeDasharray: 32, strokeDashoffset: 32, animation: 'vtDraw .5s .15s cubic-bezier(.65,0,.35,1) forwards' }} />
-    </svg>
-  );
-}
 
 function Wordmark() {
   return (
@@ -65,28 +37,19 @@ function PasswordField({ value, onChange, status, label = 'Password' }: { value:
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
       <TextInput label={label} type={show ? 'text' : 'password'} value={value} onChange={onChange} placeholder="••••••••" status={status} />
-      <button
+      <IconButton
         ref={btnRef}
         type="button"
         onClick={() => setShow((s) => !s)}
-        aria-label={show ? 'Hide password' : 'Show password'}
+        label={show ? 'Hide password' : 'Show password'}
+        icon={<Icon icon="eyeSlash" size="sm" />}
+        variant="ghost"
+        size="sm"
         style={{
           position: 'absolute',
-          width: 26,
-          height: 26,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           transform: 'translateY(-50%)',
-          border: 'none',
-          background: 'transparent',
-          borderRadius: 7,
-          cursor: 'pointer',
-          color: 'var(--color-text-secondary)',
         }}
-      >
-        <EyeIcon off={show} />
-      </button>
+      />
     </div>
   );
 }
@@ -100,6 +63,7 @@ function SuccessPanel() {
           height: 60,
           borderRadius: '50%',
           background: '#16a34a',
+          color: '#fff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -107,7 +71,7 @@ function SuccessPanel() {
           animation: 'vtRingPop .5s cubic-bezier(.16,1,.3,1) both',
         }}
       >
-        <CheckIcon />
+        <Icon icon="check" size="lg" color="inherit" />
       </div>
       <Heading level={1}>You&rsquo;re in</Heading>
       <Text type="large" color="secondary">
@@ -626,16 +590,13 @@ export function SignIn({
               </form>
 
               <div style={{ marginTop: 18, textAlign: 'center', animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .25s both' }}>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={toggleMode}
-                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'inherit', fontSize: 13, color: 'var(--color-text-secondary)' }}
-                >
-                  {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
-                  <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>
-                    {mode === 'signup' ? 'Sign in' : 'Sign up'}
-                  </span>
-                </button>
+                  label={mode === 'signup' ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+                />
               </div>
             </>
           )}
