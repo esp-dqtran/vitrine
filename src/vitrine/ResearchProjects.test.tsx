@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ResearchProjectsView } from "./components/ResearchProjectsPage.tsx";
@@ -90,6 +91,32 @@ test("offers keyboard-safe evidence movement", () => {
   assert.match(html, /Move earlier/);
   assert.match(html, /Move later/);
   assert.match(html, /Move to Alternative B/);
+});
+
+test("exposes responsive decision-canvas layout hooks", () => {
+  const html = renderToStaticMarkup(
+    <DecisionCanvas workspace={workspaceFixture()} disabled={false} actions={canvasActions} />,
+  );
+
+  assert.match(html, /class="research-decision-canvas"/);
+  assert.match(html, /class="research-decision-canvas__lanes"/);
+});
+
+test("defines tablet and phone research-canvas layouts", () => {
+  const css = readFileSync(new URL("./styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    css,
+    /\.research-project-workspace\s*\{[^}]*grid-template-columns:\s*280px minmax\(0, 1fr\) 320px;/s,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*1100px\)\s*\{[\s\S]*?\.research-project-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.research-decision-canvas__lanes\s*\{[^}]*grid-auto-flow:\s*row;[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*overflow-x:\s*visible;/,
+  );
 });
 
 test("shows suggestion reasons and bounded screenshot upload", () => {

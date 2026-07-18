@@ -84,14 +84,14 @@ export function ResearchProjectPage({ projectId }: { projectId: number }) {
   };
 
   return (
-    <main style={{ maxWidth: 1500, margin: '0 auto', padding: '24px 28px 64px' }}>
+    <main className="research-project-page">
       <button type="button" onClick={() => navigate({ name: 'projects' })} style={backStyle}>← Projects</button>
       <header style={{ margin: '18px 0 24px' }}>
         <h1 style={{ margin: 0, fontSize: 28 }}>{workspace.title}</h1>
         <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontSize: 16 }}>{workspace.question}</p>
       </header>
       {message && <p role="alert" style={{ color: 'var(--color-text-danger)' }}>{message}</p>}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px minmax(0, 1fr) 320px', gap: 16, alignItems: 'start' }}>
+      <div className="research-project-workspace">
         <EvidenceDrawer workspace={workspace} disabled={busy} onChange={setWorkspace} />
         <DecisionCanvas workspace={workspace} disabled={busy} actions={actions} />
         <ProjectInsightsPanel key={workspace.revision} workspace={workspace} disabled={busy} actions={insightActions} />

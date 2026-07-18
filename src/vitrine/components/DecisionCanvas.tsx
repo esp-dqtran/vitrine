@@ -20,7 +20,7 @@ export function DecisionCanvas({ workspace, disabled, actions }: {
     if (title) void actions.addLane(title);
   };
   return (
-    <section aria-label="Decision canvas" style={{ minWidth: 0 }}>
+    <section aria-label="Decision canvas" className="research-decision-canvas">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <div>
           <strong>Comparison lanes</strong>
@@ -28,7 +28,7 @@ export function DecisionCanvas({ workspace, disabled, actions }: {
         </div>
         <button type="button" disabled={disabled || workspace.lanes.length >= RESEARCH_LIMITS.lanesMax} onClick={addLane} style={buttonStyle}>Add lane</button>
       </div>
-      <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(280px, 1fr)', gap: 14, overflowX: 'auto', paddingBottom: 12 }}>
+      <div className="research-decision-canvas__lanes">
         {workspace.lanes.map((lane) => (
           <section key={lane.id} style={{ padding: 13, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-background-surface)', display: 'grid', alignContent: 'start', gap: 10 }}>
             <input aria-label="Lane title" defaultValue={lane.title} disabled={disabled} onBlur={(event) => { if (event.target.value.trim() !== lane.title) void actions.updateLane(lane.id, { title: event.target.value }); }} style={titleStyle} />
