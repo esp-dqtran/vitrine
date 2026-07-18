@@ -22,7 +22,7 @@ function PasswordField({ value, onChange, status, label = 'Password' }: { value:
 
   // TextInput's own layout (label height, description, status message) isn't
   // part of its public API, so a hardcoded `top` guess drifts out of line with
-  // the actual <input> box. Measure the real input instead and center against it.
+  // the actual input box. Measure the rendered field instead and center against it.
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
     const btn = btnRef.current;
