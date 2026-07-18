@@ -12,7 +12,6 @@ const allowedNativeControls = {
   'Home.tsx': { button: 9, input: 1 },
   'Pricing.tsx': { button: 6 },
   'SignIn.tsx': { button: 2 },
-  'components/CrawlWorkspacePanel.tsx': { button: 15, input: 9, textarea: 2, select: 2 },
 } as const;
 
 function productionTsxFiles(directory: string): string[] {

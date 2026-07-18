@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Selector } from "@astryxdesign/core";
+import { Button, CheckboxInput, Selector, TextArea, TextInput } from "@astryxdesign/core";
 import { parseCrawlPlan, type CrawlPlan, type CrawlStep } from "../../crawlPlan";
 import type {
   CrawlPlanView,
@@ -441,15 +441,9 @@ function AdminCrawlWorkspace({
       <section style={panelStyle}>
         <h3>Research and plan</h3>
         <div style={fieldsStyle}>
-          <label style={fieldStyle}>
-            App slug
-            <input name="app" value={app} onChange={(event) => setApp(event.target.value)} style={inputStyle} />
-          </label>
-          <label style={{ ...fieldStyle, flex: 2 }}>
-            Public homepage
-            <input name="homepageUrl" type="url" value={homepageUrl} onChange={(event) => setHomepageUrl(event.target.value)} placeholder="https://www.example.com" style={inputStyle} />
-          </label>
-          <button type="button" disabled={busy || !app.trim() || !homepageUrl.trim()} onClick={() => void generateResearch()} style={buttonStyle}>{plan ? "Regenerate research" : "Generate research"}</button>
+          <div style={fieldStyle}><TextInput label="App slug" htmlName="app" value={app} onChange={setApp} width="100%" /></div>
+          <div style={{ ...fieldStyle, flex: 2 }}><TextInput label="Public homepage" htmlName="homepageUrl" value={homepageUrl} onChange={setHomepageUrl} placeholder="https://www.example.com" width="100%" /></div>
+          <Button variant="primary" label={plan ? "Regenerate research" : "Generate research"} isDisabled={busy || !app.trim() || !homepageUrl.trim()} isLoading={busy} clickAction={generateResearch} />
         </div>
         {researchJob && (
           <p role="status" style={researchJob.status === "error" ? warningStyle : mutedStyle}>
@@ -486,13 +480,10 @@ function AdminCrawlWorkspace({
                 </article>
               ))}
             </div>
-            <label style={fieldStyle}>
-              Editable plan JSON
-              <textarea aria-label="Editable plan JSON" value={planJson} onChange={(event) => setPlanJson(event.target.value)} rows={18} spellCheck={false} style={{ ...inputStyle, padding: 10, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 }} />
-            </label>
+            <TextArea label="Editable plan JSON" value={planJson} onChange={setPlanJson} rows={18} hasSpellCheck={false} width="100%" style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 }} />
             <div style={fieldsStyle}>
-              <button type="button" disabled={busy} onClick={() => void saveRevision()} style={secondaryButtonStyle}>Save revision</button>
-              {plan.status !== "approved" && <button type="button" disabled={busy} onClick={() => void approve()} style={buttonStyle}>Approve plan</button>}
+              <Button label="Save revision" isDisabled={busy} isLoading={busy} clickAction={saveRevision} />
+              {plan.status !== "approved" && <Button variant="primary" label="Approve plan" isDisabled={busy} isLoading={busy} clickAction={approve} />}
             </div>
           </div>
         ) : <p style={mutedStyle}>No crawl plan yet.</p>}
@@ -502,23 +493,23 @@ function AdminCrawlWorkspace({
         <h3>Autonomous discovery</h3>
         <p style={mutedStyle}>Research the app, delegate deep flow discovery to multiple agents, and retain only evidence-backed candidates.</p>
         <div style={fieldsStyle}>
-          <label style={fieldStyle}>Provider<select value={autonomousProvider} onChange={(event) => setAutonomousProvider(event.target.value as CrawlResearchProvider)} style={inputStyle}><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option></select></label>
-          <label style={fieldStyle}>Platform<select value={autonomousPlatform} onChange={(event) => setAutonomousPlatform(event.target.value as typeof autonomousPlatform)} style={inputStyle}><option value="web">Web</option><option value="ios">iOS</option><option value="android">Android</option></select></label>
-          <label style={fieldStyle}>Agent concurrency<input type="number" min={1} max={8} value={agentConcurrency} onChange={(event) => setAgentConcurrency(Number(event.target.value))} style={inputStyle} /></label>
-          <label style={{ ...fieldStyle, flex: 2 }}>Secret names (comma separated)<input value={requiredSecretNames} onChange={(event) => setRequiredSecretNames(event.target.value)} placeholder="APP_TEST_EMAIL, APP_TEST_PASSWORD" style={inputStyle} /></label>
+          <div style={fieldStyle}><Selector label="Provider" value={autonomousProvider} onChange={(value) => setAutonomousProvider(value as CrawlResearchProvider)} options={[{ value: "chatgpt", label: "ChatGPT" }, { value: "claude", label: "Claude" }]} width="100%" /></div>
+          <div style={fieldStyle}><Selector label="Platform" value={autonomousPlatform} onChange={(value) => setAutonomousPlatform(value as typeof autonomousPlatform)} options={[{ value: "web", label: "Web" }, { value: "ios", label: "iOS" }, { value: "android", label: "Android" }]} width="100%" /></div>
+          <div style={fieldStyle}><Selector label="Agent concurrency" value={String(agentConcurrency)} onChange={(value) => setAgentConcurrency(Number(value))} options={Array.from({ length: 8 }, (_, index) => String(index + 1))} width="100%" /></div>
+          <div style={{ ...fieldStyle, flex: 2 }}><TextInput label="Secret names (comma separated)" value={requiredSecretNames} onChange={setRequiredSecretNames} placeholder="APP_TEST_EMAIL, APP_TEST_PASSWORD" width="100%" /></div>
         </div>
         <div style={{ display: "grid", gap: 7, marginTop: 10 }}>
-          <label><input type="checkbox" checked={allowAll} onChange={(event) => { setAllowAll(event.target.checked); if (!event.target.checked) setAllowAllAcknowledged(false); }} /> Allow all actions</label>
-          <label><input type="checkbox" checked={allowAllAcknowledged} disabled={!allowAll} onChange={(event) => setAllowAllAcknowledged(event.target.checked)} /> I acknowledge this shared test account may be mutated</label>
+          <CheckboxInput label="Allow all actions" value={allowAll} onChange={(checked) => { setAllowAll(checked); if (!checked) setAllowAllAcknowledged(false); }} />
+          <CheckboxInput label="I acknowledge this shared test account may be mutated" value={allowAllAcknowledged} isDisabled={!allowAll} onChange={setAllowAllAcknowledged} />
         </div>
         <div style={{ ...fieldsStyle, marginTop: 10 }}>
-          <button type="button" disabled={busy || !app.trim() || !homepageUrl.trim() || (allowAll && !allowAllAcknowledged)} onClick={() => void startAutonomous()} style={buttonStyle}>Start autonomous crawl</button>
+          <Button variant="primary" label="Start autonomous crawl" isDisabled={busy || !app.trim() || !homepageUrl.trim() || (allowAll && !allowAllAcknowledged)} isLoading={busy} clickAction={startAutonomous} />
           {autonomousRun && <><span style={badgeStyle}>Run {autonomousRun.run.id}</span><span style={badgeStyle}>{label(autonomousRun.run.status)}</span></>}
-          {autonomousRun && ["queued", "running"].includes(autonomousRun.run.status) && <button type="button" disabled={busy} onClick={() => void perform(async () => { setAutonomousRun(await workspaceCommands.pauseAutonomous(autonomousRun.run.id)); })} style={secondaryButtonStyle}>Pause</button>}
-          {autonomousRun?.run.status === "interrupted" && <button type="button" disabled={busy} onClick={() => void perform(async () => { setAutonomousRun(await workspaceCommands.resumeAutonomous(autonomousRun.run.id, allowAllAcknowledged)); })} style={secondaryButtonStyle}>Resume</button>}
-          {autonomousRun && !["succeeded", "failed", "cancelled"].includes(autonomousRun.run.status) && <button type="button" disabled={busy} onClick={() => void perform(async () => { const updated = await workspaceCommands.cancelAutonomous(autonomousRun.run.id); setAutonomousRun({ ...autonomousRun, run: updated }); })} style={secondaryButtonStyle}>Cancel autonomous run</button>}
+          {autonomousRun && ["queued", "running"].includes(autonomousRun.run.status) && <Button label="Pause" isDisabled={busy} clickAction={() => perform(async () => { setAutonomousRun(await workspaceCommands.pauseAutonomous(autonomousRun.run.id)); })} />}
+          {autonomousRun?.run.status === "interrupted" && <Button label="Resume" isDisabled={busy} clickAction={() => perform(async () => { setAutonomousRun(await workspaceCommands.resumeAutonomous(autonomousRun.run.id, allowAllAcknowledged)); })} />}
+          {autonomousRun && !["succeeded", "failed", "cancelled"].includes(autonomousRun.run.status) && <Button variant="destructive" label="Cancel autonomous run" isDisabled={busy} clickAction={() => perform(async () => { const updated = await workspaceCommands.cancelAutonomous(autonomousRun.run.id); setAutonomousRun({ ...autonomousRun, run: updated }); })} />}
         </div>
-        <details style={{ marginTop: 12 }}><summary>Shared account session · {sessionStatus}</summary><label style={fieldStyle}>Playwright storage state<textarea value={sessionJson} onChange={(event) => setSessionJson(event.target.value)} rows={5} style={{ ...inputStyle, padding: 8 }} /></label><button type="button" disabled={busy} onClick={() => void saveSharedSession()} style={secondaryButtonStyle}>Save shared account session</button></details>
+        <details style={{ marginTop: 12 }}><summary>Shared account session · {sessionStatus}</summary><TextArea label="Playwright storage state" value={sessionJson} onChange={setSessionJson} rows={5} width="100%" /><Button label="Save shared account session" isDisabled={busy} isLoading={busy} clickAction={saveSharedSession} /></details>
         {autonomousRun && <div style={{ ...fieldsStyle, marginTop: 10 }}><span>{autonomousRun.missions.length} missions</span><span>{autonomousRun.states.length} states</span><span>{autonomousRun.transitions.length} transitions</span></div>}
       </section>
 
@@ -541,9 +532,9 @@ function AdminCrawlWorkspace({
               <p style={mutedStyle}>Current: <code>{run.run.current_flow_id}</code> / <code>{run.run.current_step_id}</code></p>
             )}
             <div style={fieldsStyle}>
-              {(run.run.status === "queued" || run.run.status === "running") && <button type="button" disabled={busy} onClick={() => void cancel()} style={secondaryButtonStyle}>Cancel run</button>}
-              {terminalStatuses.has(run.run.status) && run.run.failed_count > 0 && <button type="button" disabled={busy} onClick={() => void retry("failed")} style={secondaryButtonStyle}>Retry failed flows</button>}
-              {terminalStatuses.has(run.run.status) && <button type="button" disabled={busy} onClick={() => void retry("full")} style={secondaryButtonStyle}>Retry full run</button>}
+              {(run.run.status === "queued" || run.run.status === "running") && <Button variant="destructive" label="Cancel run" isDisabled={busy} clickAction={cancel} />}
+              {terminalStatuses.has(run.run.status) && run.run.failed_count > 0 && <Button label="Retry failed flows" isDisabled={busy} clickAction={() => retry("failed")} />}
+              {terminalStatuses.has(run.run.status) && <Button label="Retry full run" isDisabled={busy} clickAction={() => retry("full")} />}
             </div>
           </div>
         ) : !canStartPlan ? <p style={mutedStyle}>Approve a plan before starting a crawl.</p> : null}
@@ -560,12 +551,12 @@ function AdminCrawlWorkspace({
               <span style={badgeStyle}>Chromium</span><span style={mutedStyle}>Safe flows only by default</span>
             </div>
             {displayedPlan?.flows.some((flow) => !flow.safe) && <div style={{ display: "grid", gap: 7 }}>
-              <label><input type="checkbox" checked={unsafeApproved} onChange={(event) => setUnsafeApproved(event.target.checked)} /> Approve unsafe read-only prefix</label>
-              <label><input type="checkbox" checked={disposableAccountAcknowledged} onChange={(event) => setDisposableAccountAcknowledged(event.target.checked)} /> Disposable test account acknowledged</label>
-              <label><input type="checkbox" checked={allowSideEffects} disabled={!unsafeApproved || !disposableAccountAcknowledged} onChange={(event) => setAllowSideEffects(event.target.checked)} /> Allow declared side-effect steps</label>
+              <CheckboxInput label="Approve unsafe read-only prefix" value={unsafeApproved} onChange={setUnsafeApproved} />
+              <CheckboxInput label="Disposable test account acknowledged" value={disposableAccountAcknowledged} onChange={setDisposableAccountAcknowledged} />
+              <CheckboxInput label="Allow declared side-effect steps" value={allowSideEffects} isDisabled={!unsafeApproved || !disposableAccountAcknowledged} onChange={setAllowSideEffects} />
               <span style={warningStyle}>The server also requires TEST_ACCOUNT=1 and every declared secret. Side effects stay disabled unless all gates pass.</span>
             </div>}
-            <button type="button" disabled={busy} onClick={() => void start()} style={{ ...buttonStyle, justifySelf: "start" }}>Start crawl</button>
+            <Button variant="primary" label="Start crawl" isDisabled={busy} isLoading={busy} clickAction={start} style={{ justifySelf: "start" }} />
           </div>
         )}
       </section>
@@ -596,7 +587,7 @@ function AdminCrawlWorkspace({
               <details><summary>Actual</summary><pre style={preStyle}>{JSON.stringify(step.actual, null, 2)}</pre></details>
               <div style={fieldsStyle}>
                 {step.failureScreenshotUrl && <a href={step.failureScreenshotUrl} target="_blank" rel="noreferrer" style={linkStyle}>Failure screenshot</a>}
-                <button type="button" disabled={busy} onClick={() => void proposeRepair(step.flow_id, step.step_id)} style={secondaryButtonStyle}>Request repair</button>
+                <Button label="Request repair" size="sm" isDisabled={busy} clickAction={() => proposeRepair(step.flow_id, step.step_id)} />
               </div>
             </article>
           );
@@ -615,7 +606,7 @@ function AdminCrawlWorkspace({
               </div>
               {repair.status === "proposed" && <>
                 <p style={mutedStyle}>Applying this repair creates a new unapproved revision.</p>
-                <div style={fieldsStyle}><button type="button" disabled={busy} onClick={() => void reviewRepair(repair, "apply")} style={buttonStyle}>Apply repair</button><button type="button" disabled={busy} onClick={() => void reviewRepair(repair, "reject")} style={secondaryButtonStyle}>Reject repair</button></div>
+                <div style={fieldsStyle}><Button variant="primary" label="Apply repair" isDisabled={busy} clickAction={() => reviewRepair(repair, "apply")} /><Button variant="destructive" label="Reject repair" isDisabled={busy} clickAction={() => reviewRepair(repair, "reject")} /></div>
               </>}
             </article>
           );
@@ -641,9 +632,6 @@ const mutedStyle = { margin: "6px 0 0", color: "var(--color-text-secondary)", fo
 const panelStyle = { padding: 16, border: "1px solid var(--color-border)", borderRadius: 13, background: "var(--color-background-muted)" };
 const fieldsStyle = { display: "flex", alignItems: "end", gap: 10, flexWrap: "wrap" as const };
 const fieldStyle = { display: "grid", gap: 5, flex: 1, minWidth: 180, color: "var(--color-text-secondary)", fontSize: 12 };
-const inputStyle = { minHeight: 36, border: "1px solid var(--color-border)", borderRadius: 8, padding: "0 10px", background: "var(--color-background-body)", color: "var(--color-text-primary)", font: "inherit" };
-const buttonStyle = { minHeight: 36, border: "1px solid var(--color-border-emphasized)", borderRadius: 8, padding: "0 12px", background: "var(--color-text-primary)", color: "var(--color-background-surface)", cursor: "pointer", font: "inherit", fontWeight: 650 };
-const secondaryButtonStyle = { ...buttonStyle, background: "var(--color-background-muted)", color: "var(--color-text-primary)" };
 const nestedStyle = { padding: 12, border: "1px solid var(--color-border)", borderRadius: 9, background: "var(--color-background-muted)" };
 const badgeStyle = { display: "inline-flex", alignItems: "center", minHeight: 24, border: "1px solid var(--color-border)", borderRadius: 999, padding: "0 8px", color: "var(--color-text-secondary)", fontSize: 11 };
 const smallHeadingStyle = { display: "block", marginBottom: 6, color: "var(--color-text-secondary)", fontSize: 12 };
