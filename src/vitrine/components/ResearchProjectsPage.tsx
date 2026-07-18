@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, ClickableCard, EmptyState, Selector, Spinner, TextInput } from '@astryxdesign/core';
 import type { CreateResearchProjectInput, ResearchPlatform, ResearchProjectSummary } from '../../researchProject.ts';
 import {
   createResearchProject,
@@ -49,14 +49,9 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
       <section style={{ display: 'grid', gap: 12, padding: 18, border: '1px solid var(--color-border)', borderRadius: 14, background: 'var(--color-background-surface)', margin: '18px 0 28px' }}>
         <strong>Start with a design question</strong>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px, .7fr) minmax(260px, 1.5fr) 150px auto', gap: 10 }}>
-          <input aria-label="Project title" placeholder="Project title" value={title} onChange={(event) => setTitle(event.target.value)} style={inputStyle} />
-          <input aria-label="Research question" placeholder="What are you trying to decide?" value={question} onChange={(event) => setQuestion(event.target.value)} style={inputStyle} />
-          <select aria-label="Platform" value={platformFilter} onChange={(event) => setPlatformFilter(event.target.value as ResearchPlatform)} style={inputStyle}>
-            <option value="all">All platforms</option>
-            <option value="web">Web</option>
-            <option value="ios">iOS</option>
-            <option value="android">Android</option>
-          </select>
+          <TextInput label="Project title" isLabelHidden placeholder="Project title" value={title} onChange={setTitle} width="100%" />
+          <TextInput label="Research question" isLabelHidden placeholder="What are you trying to decide?" value={question} onChange={setQuestion} width="100%" />
+          <Selector label="Platform" isLabelHidden value={platformFilter} onChange={(value) => setPlatformFilter(value as ResearchPlatform)} options={[{ value: 'all', label: 'All platforms' }, { value: 'web', label: 'Web' }, { value: 'ios', label: 'iOS' }, { value: 'android', label: 'Android' }]} />
           <Button variant="primary" label="Create project" isDisabled={!title.trim() || !question.trim()} isLoading={creating} clickAction={submit} />
         </div>
       </section>
@@ -69,11 +64,11 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
           {projects.map((project) => (
-            <article key={project.id} style={{ padding: 18, border: '1px solid var(--color-border)', borderRadius: 14, background: 'var(--color-background-surface)', display: 'grid', gap: 12 }}>
-              <button type="button" onClick={() => actions.open(project.id)} style={{ border: 0, padding: 0, background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+            <ClickableCard key={project.id} label={`Open ${project.title}`} onClick={() => actions.open(project.id)} padding={4} style={{ display: 'grid', gap: 12 }}>
+              <div style={{ color: 'inherit', textAlign: 'left' }}>
                 <strong style={{ fontSize: 17 }}>{project.title}</strong>
                 <p style={{ margin: '7px 0 0', color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>{project.question}</p>
-              </button>
+              </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', color: 'var(--color-text-secondary)', fontSize: 12 }}>
                 <span>{project.platformFilter === 'all' ? 'All platforms' : project.platformFilter}</span>
                 <span>·</span>
@@ -82,10 +77,10 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
                 <span>{project.synthesisState === 'stale' ? 'Synthesis stale' : project.synthesisState === 'current' ? 'Synthesis current' : 'Not synthesized'}</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => void actions.duplicate(project.id)} style={smallButton}>Duplicate</button>
-                <button type="button" onClick={() => void actions.remove(project.id)} style={smallButton}>Delete</button>
+                <Button label="Duplicate" size="sm" clickAction={() => actions.duplicate(project.id)} />
+                <Button label="Delete" variant="destructive" size="sm" clickAction={() => actions.remove(project.id)} />
               </div>
-            </article>
+            </ClickableCard>
           ))}
         </div>
       )}
@@ -115,6 +110,3 @@ export function ResearchProjectsPage() {
     remove: async (projectId) => { await deleteResearchProject(projectId); await refresh(); },
   }} />;
 }
-
-const inputStyle = { border: '1px solid var(--color-border)', borderRadius: 9, padding: '10px 11px', color: 'var(--color-text-primary)', background: 'var(--color-background-body)', minWidth: 0 } as const;
-const smallButton = { border: '1px solid var(--color-border)', borderRadius: 8, padding: '6px 9px', background: 'transparent', color: 'var(--color-text-secondary)', cursor: 'pointer' } as const;

@@ -14,12 +14,6 @@ const allowedNativeControls = {
   'SignIn.tsx': { button: 2 },
   'components/CommandPalette.tsx': { button: 6, input: 1 },
   'components/CrawlWorkspacePanel.tsx': { button: 15, input: 9, textarea: 2, select: 2 },
-  'components/DecisionCanvas.tsx': { button: 2, input: 1, textarea: 1 },
-  'components/EvidenceCard.tsx': { button: 4, input: 2, textarea: 1 },
-  'components/EvidenceDrawer.tsx': { button: 2, input: 2, select: 1 },
-  'components/ProjectInsightsPanel.tsx': { button: 4, textarea: 4 },
-  'components/ResearchProjectPage.tsx': { button: 2 },
-  'components/ResearchProjectsPage.tsx': { button: 3, input: 2, select: 1 },
   'components/ScreenDetail.tsx': { button: 4 },
 } as const;
 
