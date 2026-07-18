@@ -20,6 +20,7 @@ test("renders each flow as a compact card with its title, step count, and lead i
   assert.match(html, /Login/);
   assert.match(html, /2 steps/);
   assert.match(html, /\/api\/media\/linear\/0123456789abcdef/);
+  assert.match(html, /aria-label="Open Login flow"/);
 });
 
 test("offers the FLOW.md editor only when app and platform are known", () => {

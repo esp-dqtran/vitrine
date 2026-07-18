@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Badge, ClickableCard, Icon, Text, ToggleButton, type BadgeVariant } from '@astryxdesign/core';
 import { ArrowButton } from './ArrowButton';
 import { PlaceholderImage } from './PlaceholderImage';
 import type { App, RowStatus } from '../types';
 
-const STATUS_COLOR: Record<RowStatus, string> = {
-  Queued: '#71717a',
-  'In progress': '#2563eb',
-  Complete: '#16a34a',
-  'Needs attention': '#dc2626',
-  Cancelled: '#71717a',
+const STATUS_VARIANT: Record<RowStatus, BadgeVariant> = {
+  Queued: 'neutral',
+  'In progress': 'info',
+  Complete: 'success',
+  'Needs attention': 'error',
+  Cancelled: 'neutral',
 };
 
 interface AppCardProps {
@@ -45,18 +46,15 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
         aspectRatio: '16 / 10',
         contentVisibility: 'auto', // skip layout/paint for offscreen cards
         containIntrinsicSize: 'auto 240px', // reserve height so the scrollbar stays stable
-        borderRadius: 'var(--radius-container)',
-        overflow: 'hidden',
-        background: 'var(--color-background-muted)',
-        border: '1px solid var(--color-border)',
-        boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
-        transition: 'transform .28s cubic-bezier(.16,1,.3,1), box-shadow .28s cubic-bezier(.16,1,.3,1)',
+        transition: 'transform .28s cubic-bezier(.16,1,.3,1)',
         transform: hovered ? 'translateY(-6px) scale(1.01)' : 'none',
       }}
     >
-      <div onClick={() => onOpen()} style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}>
+      <ClickableCard label={`Open ${app.app}`} onClick={onOpen} padding={0} variant="muted" height="100%" style={{ position: 'relative', overflow: 'hidden', boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)' }}>
         <div
           style={{
+            position: 'absolute',
+            inset: 0,
             display: 'flex',
             width: `${count * 100}%`,
             height: '100%',
@@ -71,7 +69,6 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
             </div>
           ))}
         </div>
-      </div>
 
       <div
         style={{
@@ -92,28 +89,12 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
         <motion.div layoutId={`app-icon-${app.id}`} style={{ width: 20, height: 20, borderRadius: 6, background: app.iconUrl ? 'transparent' : app.accent, flex: '0 0 auto', overflow: 'hidden', position: 'relative' }}>
           {app.iconUrl && <img src={app.iconUrl} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />}
         </motion.div>
-        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#18181b' }}>{app.app}</span>
-        {progressLabel && status && status !== 'Complete' && <span style={{ fontSize: 11, color: '#71717a' }}>· {progressLabel}</span>}
+        <Text type="supporting" weight="semibold"><span style={{ color: '#18181b' }}>{app.app}</span></Text>
+        {progressLabel && status && status !== 'Complete' && <Text type="supporting"><span style={{ color: '#71717a' }}>· {progressLabel}</span></Text>}
       </div>
 
       {status && status !== 'Complete' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 2,
-            padding: '3px 9px',
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 600,
-            color: '#fff',
-            background: STATUS_COLOR[status],
-            boxShadow: 'var(--shadow-low)',
-          }}
-        >
-          {status}
-        </div>
+        <Badge label={status} variant={STATUS_VARIANT[status]} style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, boxShadow: 'var(--shadow-low)' }} />
       )}
 
       <div
@@ -130,19 +111,7 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
           pointerEvents: 'none',
         }}
       >
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#fff',
-            padding: '8px 16px',
-            borderRadius: 999,
-            background: 'rgba(24,24,27,0.55)',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          View screens
-        </span>
+        <Badge label="View screens" variant="neutral" style={{ color: '#fff', background: 'rgba(24,24,27,0.55)', backdropFilter: 'blur(4px)' }} />
       </div>
 
       {count > 1 && <ArrowButton direction="left" visible={hovered} onClick={() => go(index - 1)} />}
@@ -150,25 +119,31 @@ export function AppCard({ app, onOpen, status, progressLabel }: AppCardProps) {
       {count > 1 && (
         <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 5, zIndex: 3 }}>
           {screens.map((_, i) => (
-            <div
+            <ToggleButton
               key={i}
-              onClick={(e) => {
+              label={`Show preview ${i + 1}`}
+              isPressed={i === index}
+              isIconOnly
+              size="sm"
+              icon={<Icon icon="stop" size="sm" />}
+              onPressedChange={(_, e) => {
                 e.stopPropagation();
                 go(i);
               }}
               style={{
                 width: i === index ? 14 : 5,
                 height: 5,
-                borderRadius: 3,
-                background: i === index ? '#fff' : 'rgba(255,255,255,0.55)',
-                cursor: 'pointer',
+                minWidth: i === index ? 14 : 5,
+                minHeight: 5,
+                padding: 0,
+                color: i === index ? '#fff' : 'rgba(255,255,255,0.55)',
                 transition: 'width .15s ease',
-                boxShadow: '0 0 0 1px rgba(0,0,0,0.15)',
               }}
             />
           ))}
         </div>
       )}
+      </ClickableCard>
     </motion.div>
   );
 }

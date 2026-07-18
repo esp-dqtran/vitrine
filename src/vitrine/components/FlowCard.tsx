@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Badge, ClickableCard, Text } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { PlaceholderImage } from './PlaceholderImage';
 
@@ -6,19 +7,18 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
   const [hovered, setHovered] = useState(false);
   const thumb = flow.steps[0]?.evidence[0];
   return (
-    <div
+    <ClickableCard
+      label={`Open ${flow.title} flow`}
+      onClick={onOpen}
+      padding={0}
+      variant="muted"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={onOpen}
       style={{
         position: 'relative',
         aspectRatio: '16/10',
-        borderRadius: 'var(--radius-container)',
         overflow: 'hidden',
-        background: 'var(--color-background-muted)',
-        border: '1px solid var(--color-border)',
         boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
-        cursor: 'pointer',
         transition: 'transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1)',
         transform: hovered ? 'translateY(-4px)' : 'none',
       }}
@@ -27,23 +27,7 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
         src={thumb?.imageUrl}
         style={{ transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          zIndex: 2,
-          padding: '3px 8px',
-          borderRadius: 999,
-          background: 'rgba(24,24,27,.72)',
-          color: '#fff',
-          fontSize: 10.5,
-          fontWeight: 600,
-          backdropFilter: 'blur(4px)',
-        }}
-      >
-        {flow.steps.length} {flow.steps.length === 1 ? 'step' : 'steps'}
-      </div>
+      <Badge label={`${flow.steps.length} ${flow.steps.length === 1 ? 'step' : 'steps'}`} variant="neutral" style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, color: '#fff', background: 'rgba(24,24,27,.72)', backdropFilter: 'blur(4px)' }} />
       <div
         style={{
           position: 'absolute',
@@ -56,10 +40,8 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
           pointerEvents: 'none',
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {flow.title}
-        </div>
+        <Text type="supporting" weight="semibold"><span style={{ color: '#fff' }}>{flow.title}</span></Text>
       </div>
-    </div>
+    </ClickableCard>
   );
 }
