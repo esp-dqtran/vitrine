@@ -1,4 +1,4 @@
-import { Selector } from '@astryxdesign/core';
+import { ClickableCard, Selector } from '@astryxdesign/core';
 import type { CatalogEntityKind, CatalogSearchResult } from '../../catalogResearch';
 import type { ResearchCollection } from '../../db';
 import type { SearchFilters } from '../researchApi';
@@ -59,13 +59,13 @@ export function SearchResults({ result, filters, onFiltersChange, onOpen }: Sear
             <h2 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 8px' }}>{label}</h2>
             <div style={{ display: 'grid', gap: 8 }}>
               {items.map((item) => (
-                <article key={item.id} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 12, border: '1px solid var(--color-border)', borderRadius: 11 }}>
-                  <button type="button" onClick={() => onOpen(item.app, item.id)} style={{ flex: 1, border: 0, padding: 0, background: 'transparent', textAlign: 'left', cursor: 'pointer', color: 'inherit' }}>
+                <ClickableCard key={item.id} label={`Open ${item.title}`} onClick={() => onOpen(item.app, item.id)} padding={3} style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  <div style={{ flex: 1, textAlign: 'left', color: 'inherit' }}>
                     <div style={{ fontSize: 14, fontWeight: 650 }}>{item.title} <span style={{ fontSize: 12, color: 'var(--color-text-disabled)', fontWeight: 500 }}>· {item.app}</span></div>
                     <div style={{ marginTop: 3, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{item.description}</div>
                     <div style={{ marginTop: 5, fontSize: 11.5, color: 'var(--color-text-disabled)' }}>{item.evidenceIds.length} source{item.evidenceIds.length === 1 ? '' : 's'} · observed evidence</div>
-                  </button>
-                </article>
+                  </div>
+                </ClickableCard>
               ))}
             </div>
           </div>

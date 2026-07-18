@@ -1,3 +1,4 @@
+import { Dialog, Icon, IconButton } from '@astryxdesign/core';
 import { ArrowButton } from './ArrowButton';
 import { PlaceholderImage } from './PlaceholderImage';
 import { screenAspectRatio } from '../screenAspect';
@@ -22,47 +23,25 @@ interface LightboxProps {
 
 export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxProps) {
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(10,10,11,0.94)',
-        zIndex: 50,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-        animation: 'vtOverlayIn .2s ease both',
-      }}
-    >
-      <button
-        type="button"
+    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', background: 'rgba(10,10,11,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, boxSizing: 'border-box' }}>
+      <IconButton
+        label="Close"
+        icon={<Icon icon="close" size="sm" />}
+        variant="ghost"
         onClick={(e) => {
           e.stopPropagation();
           onClose();
         }}
-        aria-label="Close"
         style={{
           position: 'absolute',
           top: 20,
           right: 24,
-          width: 36,
-          height: 36,
           borderRadius: '50%',
-          border: 'none',
           background: 'rgba(255,255,255,0.1)',
           color: '#fff',
-          fontSize: 16,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
         }}
-      >
-        ✕
-      </button>
+      />
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -84,6 +63,7 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
       <div style={{ marginTop: 16, fontSize: 13.5, color: '#d4d4d8' }}>
         {item.caption} — {index + 1} of {total}
       </div>
-    </div>
+      </div>
+    </Dialog>
   );
 }

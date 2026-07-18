@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Icon } from '@astryxdesign/core';
+import { Badge, Button, Icon } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { PlaceholderImage } from './PlaceholderImage';
 import { Lightbox } from './Lightbox';
@@ -18,9 +18,7 @@ export function FlowViewer({
 
   return (
     <div>
-      <button type="button" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px 6px 6px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-secondary)', marginBottom: 20 }}>
-        <Icon icon="chevronLeft" size="sm" /> Back to flows
-      </button>
+      <Button label="Back to flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} style={{ marginBottom: 20 }} />
       {flow.category && <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{flow.category}</div>}
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 10 }}>{flow.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 32 }}>

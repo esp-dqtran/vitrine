@@ -1,3 +1,4 @@
+import { ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator';
 
 interface FilterChipsProps<T extends string> {
@@ -16,26 +17,19 @@ export function FilterChips<T extends string>({ options, value, onChange, counts
         const active = value === option;
         const count = counts?.[option];
         return (
-          <button
+          <ToggleButton
             key={option}
             ref={registerItem(option)}
-            type="button"
-            onClick={() => onChange(option)}
+            label={option}
+            isPressed={active}
+            onPressedChange={() => onChange(option)}
+            size="sm"
             style={{
               position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: count == null ? '7px 14px' : '7px 8px 7px 14px',
               borderRadius: 9,
-              fontSize: 13.5,
-              fontWeight: 500,
-              cursor: 'pointer',
               whiteSpace: 'nowrap',
               flex: '0 0 auto',
-              fontFamily: 'inherit',
               background: 'transparent',
-              border: `1px solid ${active ? 'transparent' : 'var(--color-border)'}`,
               color: active ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
               transition: 'color .12s ease, border-color .12s ease',
             }}
@@ -55,7 +49,7 @@ export function FilterChips<T extends string>({ options, value, onChange, counts
                 {count}
               </span>
             )}
-          </button>
+          </ToggleButton>
         );
       })}
     </div>
