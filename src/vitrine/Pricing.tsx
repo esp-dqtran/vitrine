@@ -4,21 +4,7 @@ import { Badge, Button, Divider, DropdownMenu, Heading, Icon, SegmentedControl, 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
 
 function Check({ on }: { on: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={on ? 'var(--color-icon-green, #007004)' : 'var(--color-border-emphasized)'}
-      strokeWidth={2.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      width={16}
-      height={16}
-      style={{ flex: '0 0 auto' }}
-    >
-      {on ? <polyline points="20 6 9 17 4 12" /> : <line x1={5} y1={12} x2={19} y2={12} />}
-    </svg>
-  );
+  return <Icon icon={on ? 'check' : 'close'} size="sm" color={on ? 'success' : 'secondary'} />;
 }
 
 function FeatureRow({ text }: { text: string }) {
@@ -86,52 +72,23 @@ const FAQS = [
 ];
 
 function FaqRow({ q, a, open, onToggle, isLast }: { q: string; a: string; open: boolean; onToggle: () => void; isLast: boolean }) {
-  const [hover, setHover] = useState(false);
   return (
     <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--color-border)' }}>
-      <button
-        type="button"
+      <Button
+        label={q}
+        variant="ghost"
         onClick={onToggle}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
         aria-expanded={open}
+        endContent={<span style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .2s cubic-bezier(.16,1,.3,1)' }}><Icon icon="chevronDown" size="sm" /></span>}
         style={{
-          display: 'flex',
-          alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 16,
-          padding: '20px 4px',
-          border: 'none',
-          background: hover ? 'var(--color-background-muted)' : 'transparent',
-          cursor: 'pointer',
           textAlign: 'left',
-          fontFamily: 'inherit',
-          borderRadius: 'var(--radius-element)',
-          transition: 'background .15s ease',
-          margin: '0 -4px',
-          width: 'calc(100% + 8px)',
+          width: '100%',
+          padding: '20px 12px',
+          fontSize: 15.5,
+          fontWeight: 600,
         }}
-      >
-        <span style={{ fontSize: 15.5, fontWeight: 600, color: 'var(--color-text-primary)', paddingLeft: 12 }}>{q}</span>
-        <span
-          style={{
-            flex: '0 0 auto',
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 8,
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform .2s cubic-bezier(.16,1,.3,1)',
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </span>
-      </button>
+      />
       <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows .22s cubic-bezier(.16,1,.3,1)' }}>
         <div style={{ overflow: 'hidden' }}>
           <div style={{ padding: '0 12px 22px', maxWidth: 700 }}>
@@ -228,7 +185,7 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
   const proPrice = yearly ? '$70' : '$7';
   const proNote = yearly ? '/year' : '/month';
   const proSub = yearly ? 'billed yearly · save $14 vs monthly' : 'billed monthly';
-  const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' };
+  const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)' };
 
   return (
     <div style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
@@ -243,12 +200,7 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
         }}
       >
         <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <button type="button" onClick={onBrowse} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-              <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} />
-            </div>
-            <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
-          </button>
+          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
               <DropdownMenu
@@ -260,9 +212,9 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
               />
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-                <button type="button" onClick={onBrowse} style={navLink}>Browse</button>
+                <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-text-primary)', paddingBottom: 2 }}>Pricing</span>
-                <button type="button" onClick={onSignIn} style={navLink}>Sign in</button>
+                <Button label="Sign in" variant="ghost" onClick={onSignIn} style={navLink} />
               </div>
             )}
             <Button variant="primary" size="sm" label="Get started" clickAction={onSignIn} />
@@ -373,8 +325,8 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
         <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <Text type="supporting" color="secondary">Vitrine · a research library of observed application design systems.</Text>
           <div style={{ display: 'flex', gap: 20 }}>
-            <button type="button" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }}>Browse</button>
-            <button type="button" onClick={onSignIn} style={{ ...navLink, fontSize: 13 }}>Sign in</button>
+            <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Sign in" variant="ghost" size="sm" onClick={onSignIn} style={{ ...navLink, fontSize: 13 }} />
           </div>
         </div>
       </Section>

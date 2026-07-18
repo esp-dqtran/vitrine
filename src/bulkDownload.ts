@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { getAppFlows, insertImage, saveAppFlows, setAppMeta, type ImageKind } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
-import { clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
+import { catalogCaptureTarget, clearCancel, isCancelRequested, writeProgress, type StageOutcome } from "./progress.ts";
 import { waitUntilVisible, getExpectedAlt, launchMobbinContext } from "./crawler.ts";
 import { platformFromUrl, type Platform } from "./platformFromUrl.ts";
 import { imageObjectKey, thumbnailObjectKey, type ObjectMetadata, type ObjectStore, type StoredContentType } from "./objectStore.ts";
@@ -32,6 +32,10 @@ export function tabUrl(appUrl: string, tab: BulkTab | "flows"): string {
   return url.toString();
 }
 
+export function catalogDownloadRoot(appName: string, platform: Platform, phase: "bulk" | "flows"): string {
+  return `data/downloads/${appName}-${platform}${phase === "flows" ? "-flows" : ""}`;
+}
+
 // Opening a brand-new tab and navigating it has been observed to hang past Playwright's
 // default 30s navigation timeout under sustained multi-worker load, even when the same
 // context already navigated other tabs of the same app fine — a transient server-side or
@@ -40,16 +44,43 @@ export function tabUrl(appUrl: string, tab: BulkTab | "flows"): string {
 // pages from a prior run themselves before calling this, matching their existing per-phase
 // page lifecycle.
 const NAV_RETRY_BACKOFF_MS = [0, 10_000, 20_000];
-async function newPageAndGoto(context: BrowserContext, appName: string, url: string, gridSelector: string, gridWaitMs: number, gridLabel: string): Promise<Page> {
+
+export async function waitForGridOrRedirect(
+  waitForGrid: () => Promise<void>,
+  waitForRedirect: () => Promise<void>,
+): Promise<"grid" | "redirect"> {
+  return Promise.race([
+    waitForGrid().then(() => "grid" as const),
+    waitForRedirect().then(() => "redirect" as const),
+  ]);
+}
+
+async function newPageAndGoto(
+  context: BrowserContext,
+  appName: string,
+  url: string,
+  gridSelector: string,
+  gridWaitMs: number,
+  gridLabel: string,
+  acceptUrlWithoutGrid?: (url: string) => boolean,
+): Promise<Page> {
   let lastError: Error | undefined;
   for (let attempt = 1; attempt <= NAV_RETRY_BACKOFF_MS.length; attempt++) {
     if (NAV_RETRY_BACKOFF_MS[attempt - 1] > 0) await new Promise((r) => setTimeout(r, NAV_RETRY_BACKOFF_MS[attempt - 1]));
     const page = await context.newPage();
-    await page.bringToFront();
-    try {
-      await page.goto(url, { waitUntil: "domcontentloaded" });
-      await waitUntilVisible(page, gridSelector, gridWaitMs, gridLabel);
-      return page;
+      await page.bringToFront();
+      try {
+        await page.goto(url, { waitUntil: "domcontentloaded" });
+        if (acceptUrlWithoutGrid?.(page.url())) return page;
+        if (acceptUrlWithoutGrid) {
+          await waitForGridOrRedirect(
+            () => waitUntilVisible(page, gridSelector, gridWaitMs, gridLabel),
+            () => page.waitForURL((finalUrl) => acceptUrlWithoutGrid(finalUrl.toString()), { timeout: gridWaitMs }).then(() => {}),
+          );
+        } else {
+          await waitUntilVisible(page, gridSelector, gridWaitMs, gridLabel);
+        }
+        return page;
     } catch (error) {
       await page.close().catch(() => {});
       lastError = error as Error;
@@ -66,6 +97,26 @@ export function mergeFlows(existing: DesignFlow[], incoming: DesignFlow[]): Desi
   return [...byId.values()];
 }
 
+export function isFlowlessRedirect(requestedUrl: string, finalUrl: string): boolean {
+  const requested = new URL(requestedUrl);
+  const final = new URL(finalUrl);
+  return requested.hostname === final.hostname
+    && requested.pathname.endsWith("/flows")
+    && final.pathname.startsWith("/apps/")
+    && final.pathname.endsWith("/screens");
+}
+
+export function flowStageCoverage(
+  seenRowIds: Iterable<string>,
+  existing: readonly DesignFlow[],
+  incoming: readonly DesignFlow[],
+): { captured: number; complete: boolean; missingRowIds: string[] } {
+  const available = new Set([...existing, ...incoming].map((flow) => flow.id));
+  const missingRowIds = [...seenRowIds].filter((rowId) => !available.has(`mobbin-flow-${rowId}`));
+  const captured = [...seenRowIds].length - missingRowIds.length;
+  return { captured, complete: missingRowIds.length === 0, missingRowIds };
+}
+
 // Runs entirely as discrete Playwright evaluate() calls, one per scroll step — NOT one big
 // injected JS loop. That distinction matters: driving this same interaction through the
 // Chrome extension's CDP-instrumented tab caused click-triggered re-renders to degrade
@@ -77,7 +128,11 @@ export function mergeFlows(existing: DesignFlow[], incoming: DesignFlow[]): Desi
 // matched by alt-text *prefix* (the app's display name) because screens are titled
 // "<App> screen" while element crops vary — the prefix still excludes the "More like
 // <other app>" recommendation carousel.
-async function selectAllOwnCards(page: Page, appAltPrefix: string): Promise<{ clicked: number; skipped: number }> {
+export function shouldSelectCard(tab: BulkTab, cardAlt: string, appAltPrefix: string): boolean {
+  return tab === "ui-elements" || cardAlt.toLowerCase().startsWith(appAltPrefix.toLowerCase());
+}
+
+async function selectAllOwnCards(page: Page, appAltPrefix: string, tab: BulkTab): Promise<{ clicked: number; skipped: number }> {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500);
 
@@ -85,7 +140,7 @@ async function selectAllOwnCards(page: Page, appAltPrefix: string): Promise<{ cl
   let totalSkipped = 0;
   let stableAtBottom = 0;
   for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
-    const { clicked, skipped } = await page.evaluate((prefix) => {
+    const { clicked, skipped } = await page.evaluate(({ prefix, includeEveryCard }) => {
       // Only grids that actually hold screen links — excludes the unrelated "similar apps"
       // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
       const grids = Array.from(document.querySelectorAll("div.grid")).filter(
@@ -98,7 +153,7 @@ async function selectAllOwnCards(page: Page, appAltPrefix: string): Promise<{ cl
           const cardAlt = (a.querySelector("img")?.getAttribute("alt") || "").toLowerCase();
           const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
           if (!checkbox) continue;
-          if (!cardAlt.startsWith(prefix)) {
+          if (!includeEveryCard && !cardAlt.startsWith(prefix)) {
             skipped++;
             continue;
           }
@@ -107,7 +162,7 @@ async function selectAllOwnCards(page: Page, appAltPrefix: string): Promise<{ cl
         }
       }
       return { clicked, skipped };
-    }, appAltPrefix);
+    }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements" });
     totalClicked += clicked;
     totalSkipped += skipped;
 
@@ -301,6 +356,11 @@ function hasExpectedImageSignature(body: Uint8Array, contentType: StoredContentT
     && Buffer.from(body.subarray(8, 12)).toString("ascii") === "WEBP";
 }
 
+export function bulkImageReference(kind: ImageKind, legacyHash: string, occurrence: number): string {
+  if (kind === "screen" && occurrence === 1) return `mobbin-bulk:${legacyHash}`;
+  return `mobbin-bulk:${kind}:${legacyHash}${occurrence > 1 ? `:${occurrence}` : ""}`;
+}
+
 export async function ingestDownloadedImages(
   sourceDir: string,
   appName: string,
@@ -313,6 +373,7 @@ export async function ingestDownloadedImages(
   if (!dependencies) throw new Error("Object storage is required for bulk ingestion");
   let imported = 0;
   const imageIds: number[] = [];
+  const occurrences = new Map<string, number>();
   const entries = (existsSync(sourceDir) ? (readdirSync(sourceDir, { recursive: true }) as string[]) : [])
     .filter((rel) => /\.(png|jpe?g|webp)$/i.test(rel))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
@@ -324,6 +385,8 @@ export async function ingestDownloadedImages(
     const body = await stripMobbinWatermark(readFileSync(full));
     const sha256 = createHash("sha256").update(body).digest("hex");
     const legacyHash = sha256.slice(0, 16);
+    const occurrence = (occurrences.get(legacyHash) ?? 0) + 1;
+    occurrences.set(legacyHash, occurrence);
     const type = IMAGE_TYPE[rel.split(".").pop()?.toLowerCase() ?? ""];
     if (!type) throw new Error("Unsupported downloaded image type");
     if (!hasExpectedImageSignature(body, type.contentType)) {
@@ -332,7 +395,7 @@ export async function ingestDownloadedImages(
     const imageId = await dependencies.insertImage(
       appName,
       platform,
-      `mobbin-bulk:${legacyHash}`,
+      bulkImageReference(kind, legacyHash, occurrence),
       { sourceUrl, viewportWidth: viewport?.width, viewportHeight: viewport?.height, kind },
     );
     const metadata: ObjectMetadata = {
@@ -411,6 +474,11 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     const category = catLink ? (catLink.textContent ?? "").trim() || null : null;
     return { iconUrl, category };
   }).catch(() => ({ iconUrl: null as string | null, category: null as string | null }));
+  const discovered = await shownTotalCount(page);
+  if (discovered === null) {
+    await closeContext();
+    return { status: "error", message: `Mobbin did not expose an auditable ${label} count` };
+  }
 
   const cancelledOutcome = async (): Promise<StageOutcome> => {
     console.log(`[${appName}] Cancelled before download.`);
@@ -419,11 +487,12 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     return { status: "cancelled", message: "Cancelled by user" };
   };
 
-  const downloadDir = `data/downloads/${appName}`;
+  const downloadDir = catalogDownloadRoot(appName, platform, "bulk");
   // A prior attempt at this same app (interrupted mid-download, or failed after extracting
   // but before the success-path cleanup below) can leave stale files here — start every
   // attempt from a guaranteed-clean directory so a retry never mixes old and new downloads.
   rmSync(downloadDir, { recursive: true, force: true });
+  let selectedForDownload: number | null = null;
 
   // Multi-select + bottom-toolbar Download — the only path UI Elements ever had (no app-level
   // "download all" there), and a fallback for Screens when the More-actions version submenu
@@ -431,10 +500,12 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   // bulk-export load, independent of page/session health — the grid itself still loads fine).
   const selectAndDownloadAll = async (): Promise<string[]> => {
     const appAltPrefix = (await getExpectedAlt(page)).replace(/ screen$/, "");
-    console.log(`[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
+    console.log(tab === "ui-elements"
+      ? `[${appName}] Selecting every ${label} card...`
+      : `[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: `Selecting ${label}` });
 
-    const { skipped } = await selectAllOwnCards(page, appAltPrefix);
+    const { skipped } = await selectAllOwnCards(page, appAltPrefix, tab);
     const shown = await shownTotalCount(page);
     let selected = (await toolbarSelectedCount(page)) ?? 0;
     console.log(`[${appName}] Pass 1: selected ${selected} of ${shown ?? "?"} ${label} (${skipped} filtered as other-app).`);
@@ -445,7 +516,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     // whatever's left is genuinely unselectable, e.g. cross-app cards Mobbin's total doesn't
     // exclude, not worth looping forever over).
     for (let extraPass = 0; extraPass < 5 && shown != null && selected < shown; extraPass++) {
-      await selectAllOwnCards(page, appAltPrefix);
+      await selectAllOwnCards(page, appAltPrefix, tab);
       const reselected = (await toolbarSelectedCount(page)) ?? selected;
       if (reselected <= selected) break;
       selected = reselected;
@@ -456,6 +527,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     }
 
     if (isCancelRequested()) return [];
+    selectedForDownload = selected;
     console.log(`[${appName}] Triggering download for ${selected} selected ${label}...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: selected, status: "running", message: "Downloading" });
     return triggerAndSaveDownloads(page, downloadDir);
@@ -488,18 +560,37 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
 
   const extractDir = `${downloadDir}/_extracted`;
   let imported = 0;
+  const capturedIds = new Set<number>();
   for (const path of savedPaths) {
     const sourceDir = extractIfArchive(path, extractDir) ? extractDir : downloadDir;
-    imported += (await ingestDownloadedImages(sourceDir, appName, platform, appUrl, page.viewportSize(), kind, storage)).imported;
+    const ingested = await ingestDownloadedImages(sourceDir, appName, platform, appUrl, page.viewportSize(), kind, storage);
+    imported += ingested.imported;
+    for (const imageId of ingested.imageIds) capturedIds.add(imageId);
   }
 
   rmSync(downloadDir, { recursive: true, force: true });
   if (imported > 0 && (pageMeta.iconUrl || pageMeta.category)) await setAppMeta(appName, pageMeta).catch(() => {});
-  console.log(`[${appName}] Done. Imported ${imported} ${label} image(s) via bulk download.`);
-  writeProgress({ stage: "crawl", app: appName, done: imported, total: imported, status: "done" });
+  const target = catalogCaptureTarget(tab, discovered, selectedForDownload);
+  const captured = capturedIds.size;
+  const complete = captured === target;
+  const shownSuffix = tab === "ui-elements" && target !== discovered ? `; Mobbin showed ${discovered} cards` : "";
+  console.log(`[${appName}] ${complete ? "Done" : "Incomplete"}. Captured ${captured}/${target} ${label} image(s) via bulk download (${imported} new object(s)${shownSuffix}).`);
+  writeProgress({
+    stage: "crawl",
+    app: appName,
+    done: captured,
+    total: target,
+    status: complete ? "done" : "error",
+    message: complete ? undefined : `Captured ${captured}/${target}`,
+  });
 
   await closeContext();
-  return { status: "done" };
+  return {
+    status: complete ? "done" : "error",
+    message: complete ? undefined : `Captured ${captured}/${target} ${label}`,
+    discovered: target,
+    captured,
+  };
 }
 
 // Each flow renders inline on the Flows tab itself (no separate per-flow page needed) as a
@@ -572,14 +663,35 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
   for (const stale of context.pages()) await stale.close().catch(() => {});
 
   let probe: Page;
+  const requestedFlowUrl = tabUrl(appUrl, "flows");
   try {
-    probe = await newPageAndGoto(context, appName, tabUrl(appUrl, "flows"), 'a[href*="/flows/"]', gridWaitMs, "the flows grid");
+    probe = await newPageAndGoto(
+      context,
+      appName,
+      requestedFlowUrl,
+      'a[href*="/flows/"]',
+      gridWaitMs,
+      "the flows grid",
+      (finalUrl) => isFlowlessRedirect(requestedFlowUrl, finalUrl),
+    );
   } catch (error) {
     await closeContext();
     return { status: "error", message: (error as Error).message };
   }
 
-  const downloadRoot = `data/downloads/${appName}-flows`;
+  if (isFlowlessRedirect(requestedFlowUrl, probe.url())) {
+    console.log(`[${appName}] Done. Mobbin has 0 flows for this app.`);
+    writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "done" });
+    await probe.close().catch(() => {});
+    await closeContext();
+    return { status: "done", discovered: 0, captured: 0 };
+  }
+
+  const downloadRoot = catalogDownloadRoot(appName, platform, "flows");
+  const existingFlows = await getAppFlows(appName, platform);
+  const existingRowIds = new Set(existingFlows.flatMap((flow) =>
+    flow.id.startsWith("mobbin-flow-") ? [flow.id.slice("mobbin-flow-".length)] : [],
+  ));
   const crawled: DesignFlow[] = [];
   const seen = new Set<string>(); // every row id any lane has discovered, for progress totals
   let done = 0;
@@ -601,6 +713,11 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
       for (const row of mine) {
         if (isCancelRequested()) { cancelled = true; break; }
         laneSeen.add(row.id);
+        if (existingRowIds.has(row.id)) {
+          done++;
+          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Verifying flows" });
+          continue;
+        }
         const flowUrl = new URL(`/flows/${row.id}`, appUrl).toString();
         const viewport = page.viewportSize();
         let savedPaths: string[];
@@ -671,7 +788,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
   rmSync(downloadRoot, { recursive: true, force: true });
 
   if (crawled.length > 0) {
-    await saveAppFlows(appName, platform, mergeFlows(await getAppFlows(appName, platform), crawled));
+    await saveAppFlows(appName, platform, mergeFlows(existingFlows, crawled));
   }
 
   // Lane pages are this function's own — close them regardless of who owns the context,
@@ -683,7 +800,20 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
     writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "cancelled", message: "Cancelled by user" });
     return { status: "cancelled", message: "Cancelled by user" };
   }
-  console.log(`[${appName}] Done. Imported ${crawled.length}/${seen.size} flow(s).`);
-  writeProgress({ stage: "crawl", app: appName, done: seen.size, total: seen.size, status: "done" });
-  return { status: "done" };
+  const coverage = flowStageCoverage(seen, existingFlows, crawled);
+  console.log(`[${appName}] ${coverage.complete ? "Done" : "Incomplete"}. Verified ${coverage.captured}/${seen.size} flow(s); downloaded ${crawled.length} in this pass.`);
+  writeProgress({
+    stage: "crawl",
+    app: appName,
+    done: coverage.captured,
+    total: seen.size,
+    status: coverage.complete ? "done" : "error",
+    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${seen.size} flows`,
+  });
+  return {
+    status: coverage.complete ? "done" : "error",
+    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${seen.size} flows`,
+    discovered: seen.size,
+    captured: coverage.captured,
+  };
 }

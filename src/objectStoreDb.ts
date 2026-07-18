@@ -250,7 +250,7 @@ export async function publishedPreviewObject(
      JOIN app_preview_images api ON api.version_id = published.id
      JOIN images i ON i.id = api.image_id
      JOIN platforms p ON p.id = i.platform_id AND p.app_id = a.id
-     JOIN stored_objects so ON so.object_key = i.object_key
+     JOIN stored_objects so ON ${imageObjectJoin("thumb")}
      WHERE a.name = $1 AND api.rank = $2
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,

@@ -78,6 +78,32 @@ export function mergeFlowArrays(target: unknown, source: unknown): unknown[] {
   return [...merged, ...sourceById.values()];
 }
 
+export function remapFlowEvidence(flows: unknown, resolve: (imageId: number) => number): unknown[] {
+  if (!Array.isArray(flows)) return [];
+  return flows.map((flow) => {
+    if (!flow || typeof flow !== "object" || Array.isArray(flow)) return flow;
+    const record = flow as JsonObject;
+    if (!Array.isArray(record.steps)) return { ...record };
+    return {
+      ...record,
+      steps: record.steps.map((step) => {
+        if (!step || typeof step !== "object" || Array.isArray(step)) return step;
+        const stepRecord = step as JsonObject;
+        if (!Array.isArray(stepRecord.evidence)) return { ...stepRecord };
+        return {
+          ...stepRecord,
+          evidence: stepRecord.evidence.map((imageId) => {
+            if (!Number.isSafeInteger(imageId) || Number(imageId) <= 0) {
+              throw new Error(`Invalid flow evidence image id: ${String(imageId)}`);
+            }
+            return resolve(Number(imageId));
+          }),
+        };
+      }),
+    };
+  });
+}
+
 export interface ObjectMetadataRow {
   object_key: string;
   sha256: string;
@@ -111,6 +137,7 @@ interface PlatformRow {
 }
 
 interface ImageRow {
+  source_id: number;
   app: string;
   platform: string;
   image_url: string;
@@ -178,7 +205,7 @@ async function loadCatalog(database: Queryable, includeUnreferencedObjects = fal
          WHERE av.status IN ('draft', 'in_review')
          ORDER BY vi.image_id, av.version_number DESC
        )
-       SELECT a.name AS app, p.name AS platform, i.image_url, i.description, i.analysis,
+       SELECT i.id AS source_id, a.name AS app, p.name AS platform, i.image_url, i.description, i.analysis,
          i.kind, i.created_at, i.object_key, i.thumbnail_object_key,
          capture.captured_at, capture.source_url, capture.viewport_width,
          capture.viewport_height, capture.state_context
@@ -366,9 +393,35 @@ async function mergeVersionImages(client: PoolClient, rows: ImageRow[]): Promise
   }
 }
 
-async function mergeFlows(client: PoolClient, rows: FlowRow[]): Promise<void> {
+async function targetImageIds(client: PoolClient, rows: ImageRow[]): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
   for (const batch of chunks(rows, BATCH_SIZE)) {
-    const pairs = batch.map(({ app, platform }) => ({ app, platform }));
+    const mapped = await client.query<{ source_id: number; app: string; platform: string; target_id: number }>(
+      `SELECT x.source_id, x.app, x.platform, i.id AS target_id
+       FROM jsonb_to_recordset($1::jsonb) AS x(source_id bigint, app text, platform text, image_url text)
+       JOIN apps a ON a.name = x.app
+       JOIN platforms p ON p.app_id = a.id AND p.name = x.platform
+       JOIN images i ON i.platform_id = p.id AND i.image_url = x.image_url`,
+      [JSON.stringify(batch)],
+    );
+    for (const row of mapped.rows) {
+      result.set(naturalKey(row.app, row.platform, String(row.source_id)), Number(row.target_id));
+    }
+  }
+  return result;
+}
+
+async function mergeFlows(client: PoolClient, rows: FlowRow[], imageIds: Map<string, number>): Promise<void> {
+  for (const batch of chunks(rows, BATCH_SIZE)) {
+    const translated = batch.map((row) => ({
+      ...row,
+      flows: remapFlowEvidence(row.flows, (sourceId) => {
+        const targetId = imageIds.get(naturalKey(row.app, row.platform, String(sourceId)));
+        if (!targetId) throw new Error(`Missing target image for flow evidence ${row.app}/${row.platform}/${sourceId}`);
+        return targetId;
+      }),
+    }));
+    const pairs = translated.map(({ app, platform }) => ({ app, platform }));
     const existing = await client.query<FlowRow>(
       `SELECT a.name AS app, f.platform, f.flows, f.updated_at
        FROM jsonb_to_recordset($1::jsonb) AS x(app text, platform text)
@@ -379,7 +432,7 @@ async function mergeFlows(client: PoolClient, rows: FlowRow[]): Promise<void> {
     const existingByKey = new Map(
       existing.rows.map((row) => [naturalKey(row.app, row.platform), row.flows]),
     );
-    const merged = batch.map((row) => ({
+    const merged = translated.map((row) => ({
       ...row,
       flows: mergeFlowArrays(existingByKey.get(naturalKey(row.app, row.platform)), row.flows),
     }));
@@ -406,9 +459,10 @@ async function applyMerge(target: pg.Pool, source: CatalogRows): Promise<void> {
     await mergePlatforms(client, source.platforms);
     await mergeObjects(client, source.objects);
     await mergeImages(client, source.images);
+    const imageIds = await targetImageIds(client, source.images);
     await ensureDraftVersions(client, source.platforms);
     await mergeVersionImages(client, source.images);
-    await mergeFlows(client, source.flows);
+    await mergeFlows(client, source.flows, imageIds);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");

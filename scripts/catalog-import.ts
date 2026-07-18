@@ -28,6 +28,14 @@ import { insertImage, pool, query } from "../src/db.ts";
 import { attachImageObject, attachThumbnailObject } from "../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../src/bulkDownload.ts";
+import { disambiguateCatalogSlugs } from "../src/catalogIdentity.ts";
+import {
+  assertCatalogStageComplete,
+  catalogRepairPlan,
+  markCatalogPhaseComplete,
+  shouldRunCatalogJob,
+  type CatalogRepairPhases,
+} from "../src/progress.ts";
 import { launchMobbinContext } from "../src/crawler.ts";
 
 const STATE_PATH = WORKER_ID ? `data/catalog-import-state-${WORKER_ID}.json` : "data/catalog-import-state.json";
@@ -45,6 +53,8 @@ interface Job {
   status: JobStatus;
   error?: string;
   finishedAt?: string;
+  repair?: CatalogRepairPhases;
+  verification?: Partial<Record<"screens" | "uiElements" | "flows", { discovered: number; captured: number }>>;
 }
 interface State {
   generatedAt: string;
@@ -86,7 +96,7 @@ async function fetchCatalog(): Promise<Job[]> {
     }
   }
   await context.close();
-  return jobs;
+  return disambiguateCatalogSlugs(jobs);
 }
 
 async function alreadyImported(slug: string, platform: Platform): Promise<boolean> {
@@ -157,8 +167,9 @@ if (!state) {
 }
 
 let consecutiveFailures = 0;
+const repairOnly = process.env.CATALOG_REPAIR_ONLY === "1";
 for (const job of state.jobs) {
-  if (job.status !== "pending") continue;
+  if (!shouldRunCatalogJob(repairOnly, job)) continue;
   if (stopRequested) {
     log("Stopping: shutdown requested, current job finished cleanly.");
     break;
@@ -170,10 +181,31 @@ for (const job of state.jobs) {
   // per phase — same session, just skips paying cold-start cost 3x per app.
   const jobContext = await launchMobbinContext();
   try {
-    const screens = await crawlBulkDownload(url, job.slug, "screens", 60_000, storage, job.platform, jobContext);
-    if (screens.status !== "done") throw new Error(`screens: ${screens.status} ${screens.message ?? ""}`);
-    await crawlBulkDownload(url, job.slug, "ui-elements", 20_000, storage, job.platform, jobContext);
-    await crawlFlowsDownload(url, job.slug, 20_000, storage, job.platform, jobContext);
+    job.repair = catalogRepairPlan(job.repair);
+    job.verification ??= {};
+    saveState(state);
+    if (job.repair.screens) {
+      const screens = await crawlBulkDownload(url, job.slug, "screens", 60_000, storage, job.platform, jobContext);
+      assertCatalogStageComplete("screens", screens);
+      job.verification.screens = { discovered: screens.discovered, captured: screens.captured };
+      job.repair = markCatalogPhaseComplete(job.repair, "screens");
+      saveState(state);
+    }
+    if (job.repair.uiElements) {
+      const uiElements = await crawlBulkDownload(url, job.slug, "ui-elements", 20_000, storage, job.platform, jobContext);
+      assertCatalogStageComplete("ui-elements", uiElements);
+      job.verification.uiElements = { discovered: uiElements.discovered, captured: uiElements.captured };
+      job.repair = markCatalogPhaseComplete(job.repair, "uiElements");
+      saveState(state);
+    }
+    if (job.repair.flows) {
+      const flows = await crawlFlowsDownload(url, job.slug, 20_000, storage, job.platform, jobContext);
+      assertCatalogStageComplete("flows", flows);
+      job.verification.flows = { discovered: flows.discovered, captured: flows.captured };
+      job.repair = markCatalogPhaseComplete(job.repair, "flows");
+      saveState(state);
+    }
+    delete job.repair;
     job.status = "done";
     consecutiveFailures = 0;
     log(`Done: ${job.slug} (${job.platform})`);

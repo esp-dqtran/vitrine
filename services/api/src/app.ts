@@ -13,6 +13,8 @@ import {
   listDesignSystems,
   appImages,
   getAppFlows,
+  getFlowDocument,
+  saveFlowDocument,
   saveDesignSystem,
   saveAppFlows,
   listAppFlowSets,
@@ -230,6 +232,8 @@ const defaults = {
   listDesignSystems,
   appImages,
   getAppFlows,
+  getFlowDocument,
+  saveFlowDocument,
   saveDesignSystem,
   saveAppFlows,
   listAppFlowSets,
@@ -1669,6 +1673,59 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.setHeader("Content-Disposition", `attachment; filename="${artifact.filename}"`);
     res.setHeader("X-Astryx-Export-Used", String(reservation.used));
     res.send(artifact.content);
+  });
+
+  // Editable FLOW.md: GET returns the saved PM copy, or the freshly generated
+  // default (saved:false) when none has been saved yet; PUT upserts the edit.
+  // Generation needs only flows + screen descriptions, so no object store here.
+  app.get("/design-systems/:app/flow-doc", async (req, res) => {
+    const appSlug = req.params.app;
+    const platform = platformQuery(req.query.platform);
+    if (!isAppSlug(appSlug) || !platform) {
+      res.status(400).json({ error: "invalid flow-doc request" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const saved = await deps.getFlowDocument(appSlug, platform);
+    if (saved) {
+      res.json({ body: saved.body, saved: true, updatedAt: saved.updatedAt });
+      return;
+    }
+    const [flows, images] = await Promise.all([
+      deps.getAppFlows(appSlug, platform),
+      deps.appImages(appSlug, ["screen", "flow_step"]),
+    ]);
+    const snapshot = { app: appSlug, generatedAt: new Date().toISOString(), tokens: [], components: [], flows };
+    const artifact = buildExportArtifact(
+      snapshot,
+      images.map(({ id, image_url, description }) => ({ id, image_url, description })),
+      "flow-md",
+      { kind: "design-system" },
+    );
+    res.json({ body: artifact.content.toString("utf8"), saved: false });
+  });
+
+  app.put("/design-systems/:app/flow-doc", async (req, res) => {
+    const appSlug = req.params.app;
+    const platform = platformQuery(req.body?.platform);
+    const body = req.body?.body;
+    if (!isAppSlug(appSlug) || !platform || typeof body !== "string" || body.length > 512 * 1024) {
+      res.status(400).json({ error: "invalid flow-doc" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    try {
+      const updatedAt = await deps.saveFlowDocument(appSlug, platform, body, res.locals.user.id);
+      res.json({ saved: true, updatedAt });
+    } catch {
+      res.status(404).json({ error: "app not found" });
+    }
   });
 
   app.get("/exports/:id", async (req, res) => {

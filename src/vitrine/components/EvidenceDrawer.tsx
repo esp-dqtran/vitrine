@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Button, Card, FileInput, Selector, TextInput } from '@astryxdesign/core';
 import { RESEARCH_LIMITS, type ResearchProjectWorkspace } from '../../researchProject.ts';
 import type { ResearchSuggestion } from '../../researchSuggestions.ts';
 import {
@@ -16,6 +17,7 @@ export function EvidenceDrawer({ workspace, disabled, onChange, initialSuggestio
   const [suggestions, setSuggestions] = useState<ResearchSuggestion[]>(initialSuggestions ?? []);
   const [query, setQuery] = useState('');
   const [targetLaneId, setTargetLaneId] = useState(workspace.lanes[0]?.id ?? 0);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function EvidenceDrawer({ workspace, disabled, onChange, initialSuggestio
     }
   };
 
-  const upload = async (file: File | undefined) => {
+  const upload = async (file: File | null) => {
     if (!file || !targetLaneId) return;
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
       setMessage('Choose a PNG, JPEG, or WebP screenshot.');
@@ -82,32 +84,24 @@ export function EvidenceDrawer({ workspace, disabled, onChange, initialSuggestio
   return (
     <aside style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: 13, background: 'var(--color-background-surface)', alignSelf: 'start', display: 'grid', gap: 11 }}>
       <div><strong>Evidence</strong><div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginTop: 3 }}>Search the published catalog or add your own screenshot.</div></div>
-      <select aria-label="Target lane" value={targetLaneId} disabled={disabled} onChange={(event) => setTargetLaneId(Number(event.target.value))} style={fieldStyle}>
-        {workspace.lanes.map((lane) => <option key={lane.id} value={lane.id}>{lane.title}</option>)}
-      </select>
+      <Selector label="Target lane" value={String(targetLaneId)} isDisabled={disabled} onChange={(value) => setTargetLaneId(Number(value))} options={workspace.lanes.map((lane) => ({ value: String(lane.id), label: lane.title }))} size="sm" />
       <div style={{ display: 'flex', gap: 6 }}>
-        <input aria-label="Search evidence" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={workspace.question} style={{ ...fieldStyle, minWidth: 0 }} />
-        <button type="button" disabled={disabled} onClick={() => void search()} style={buttonStyle}>Search</button>
+        <div style={{ flex: 1, minWidth: 0 }}><TextInput label="Search evidence" isLabelHidden value={query} onChange={setQuery} placeholder={workspace.question} width="100%" /></div>
+        <Button label="Search" size="sm" isDisabled={disabled} clickAction={search} />
       </div>
-      <label style={{ border: '1px dashed var(--color-border)', borderRadius: 9, padding: 10, textAlign: 'center', cursor: disabled ? 'default' : 'pointer', fontSize: 12 }}>
-        Upload private screenshot
-        <input type="file" hidden disabled={disabled} accept="image/png,image/jpeg,image/webp" onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ''; }} />
-      </label>
+      <FileInput label="Upload private screenshot" value={uploadFile} onChange={(files) => setUploadFile(files as File | null)} changeAction={async (files) => { await upload(files as File | null); setUploadFile(null); }} accept="image/png,image/jpeg,image/webp" maxSize={RESEARCH_LIMITS.uploadBytesMax} isDisabled={disabled} mode="input" />
       {message && <div role="status" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{message}</div>}
       <div style={{ display: 'grid', gap: 8, maxHeight: '65vh', overflowY: 'auto' }}>
         {suggestions.map((suggestion) => (
-          <article key={suggestion.id} style={{ border: '1px solid var(--color-border)', borderRadius: 9, padding: 10, display: 'grid', gap: 6 }}>
+          <Card key={suggestion.id} padding={2} style={{ display: 'grid', gap: 6 }}>
             <strong style={{ fontSize: 12 }}>{suggestion.title}</strong>
             <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{suggestion.app} · {suggestion.platform}</span>
             <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Matched: {suggestion.matchedFields.join(', ')}</span>
-            <button type="button" disabled={disabled || !targetLaneId} onClick={() => void add(suggestion)} style={buttonStyle}>Add evidence</button>
-          </article>
+            <Button label="Add evidence" size="sm" isDisabled={disabled || !targetLaneId} clickAction={() => add(suggestion)} />
+          </Card>
         ))}
         {!suggestions.length && <div style={{ padding: 12, color: 'var(--color-text-secondary)', fontSize: 12 }}>No suggestions yet. Try a more specific product question.</div>}
       </div>
     </aside>
   );
 }
-
-const fieldStyle = { border: '1px solid var(--color-border)', borderRadius: 8, padding: '8px 9px', background: 'var(--color-background-body)', color: 'var(--color-text-primary)', font: 'inherit', fontSize: 12 } as const;
-const buttonStyle = { border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 9px', background: 'transparent', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: 12 } as const;

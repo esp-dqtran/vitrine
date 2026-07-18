@@ -2,6 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ImportDialog, appRow, buildPipelineRows } from './components/ImportDialog.tsx';
+import { AppCard } from './components/AppCard.tsx';
+import { ImportingAppCard } from './components/ImportingAppCard.tsx';
+import { PlaceholderImage } from './components/PlaceholderImage.tsx';
 import type { App, Job, Screen } from './types.ts';
 
 const screen = (id: number, over: Partial<Screen> = {}): Screen => ({
@@ -47,4 +50,18 @@ test('renders the import dialog with a platform selector', () => {
   assert.match(html, /Import from URL/);
   assert.match(html, /Mobbin screens URL/);
   assert.match(html, /Platform/);
+});
+
+test('app cards expose a keyboard action separately from carousel controls', () => {
+  const html = renderToStaticMarkup(<AppCard app={apps[0]} onOpen={() => undefined} />);
+  assert.match(html, /aria-label="Open DoneApp"/);
+  assert.match(html, /aria-label="Previous screen"/);
+  assert.match(html, /aria-label="Next screen"/);
+});
+
+test('loading and unavailable cards keep explicit accessible labels', () => {
+  const row = { ...appRow(apps[1]), status: 'In progress' as const };
+  const html = renderToStaticMarkup(<><ImportingAppCard row={row} /><PlaceholderImage /></>);
+  assert.match(html, /aria-label="PartialApp import In progress"/);
+  assert.match(html, /aria-label="Captured preview unavailable"/);
 });

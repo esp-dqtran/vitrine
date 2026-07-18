@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { EmptyState } from '@astryxdesign/core';
 
 interface PlaceholderImageProps {
   /** Real image URL — pass this when there's crawled data (src/db.ts). */
@@ -17,13 +18,14 @@ export function PlaceholderImage({ src, accent, style }: PlaceholderImageProps) 
   useEffect(() => { setFailed(false); }, [src]);
 
   if (!src || failed) {
-    return <div aria-label="Captured preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))`, color: 'var(--color-text-disabled)', fontSize: 11.5, letterSpacing: '.03em', ...style }}><span>Observed preview unavailable</span></div>;
+    return <EmptyState title="Observed preview unavailable" headingLevel={4} isCompact aria-label="Captured preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))`, ...style }} />;
   }
   return (
     <img
       src={src}
       alt=""
       loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
       style={{
         position: 'absolute',

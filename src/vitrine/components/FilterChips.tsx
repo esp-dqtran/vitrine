@@ -1,3 +1,6 @@
+import { ToggleButton } from '@astryxdesign/core';
+import { useSlidingIndicator } from '../useSlidingIndicator';
+
 interface FilterChipsProps<T extends string> {
   options: readonly T[];
   value: T;
@@ -6,32 +9,29 @@ interface FilterChipsProps<T extends string> {
 }
 
 export function FilterChips<T extends string>({ options, value, onChange, counts }: FilterChipsProps<T>) {
+  const { indicatorRef, registerItem } = useSlidingIndicator(value, { wraps: true });
   return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{ position: 'relative', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div ref={indicatorRef} style={{ position: 'absolute', top: 0, left: 0, borderRadius: 9, background: 'var(--color-text-primary)', pointerEvents: 'none' }} />
       {options.map((option) => {
         const active = value === option;
         const count = counts?.[option];
         return (
-          <button
+          <ToggleButton
             key={option}
-            type="button"
-            onClick={() => onChange(option)}
+            ref={registerItem(option)}
+            label={option}
+            isPressed={active}
+            onPressedChange={() => onChange(option)}
+            size="sm"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: count == null ? '7px 14px' : '7px 8px 7px 14px',
+              position: 'relative',
               borderRadius: 9,
-              fontSize: 13.5,
-              fontWeight: 500,
-              cursor: 'pointer',
               whiteSpace: 'nowrap',
               flex: '0 0 auto',
-              fontFamily: 'inherit',
-              border: `1px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border)'}`,
-              background: active ? 'var(--color-text-primary)' : 'var(--color-background-surface)',
+              background: 'transparent',
               color: active ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
-              transition: 'background .12s ease, border-color .12s ease',
+              transition: 'color .12s ease, border-color .12s ease',
             }}
           >
             {option}
@@ -49,7 +49,7 @@ export function FilterChips<T extends string>({ options, value, onChange, counts
                 {count}
               </span>
             )}
-          </button>
+          </ToggleButton>
         );
       })}
     </div>

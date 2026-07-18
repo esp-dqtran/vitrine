@@ -5,7 +5,16 @@ import { mkdtemp, mkdir, rm, writeFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { tabUrl, mergeFlows, ingestDownloadedImages, extractIfArchive } from "./bulkDownload.ts";
+import {
+  tabUrl,
+  mergeFlows,
+  ingestDownloadedImages,
+  extractIfArchive,
+  catalogDownloadRoot,
+  isFlowlessRedirect,
+  flowStageCoverage,
+  waitForGridOrRedirect,
+} from "./bulkDownload.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 
@@ -15,6 +24,51 @@ test("tabUrl swaps or appends the tab segment", () => {
   assert.equal(tabUrl(base, "flows"), "https://mobbin.com/apps/linear-ios-1234/abcd/flows");
   assert.equal(tabUrl("https://mobbin.com/apps/linear-ios-1234/abcd/flows", "screens"), base);
   assert.equal(tabUrl("https://mobbin.com/apps/linear-ios-1234/abcd", "flows"), "https://mobbin.com/apps/linear-ios-1234/abcd/flows");
+});
+
+test("parallel catalog jobs isolate temporary downloads by platform and phase", () => {
+  assert.equal(catalogDownloadRoot("threads", "ios", "bulk"), "data/downloads/threads-ios");
+  assert.equal(catalogDownloadRoot("threads", "web", "bulk"), "data/downloads/threads-web");
+  assert.equal(catalogDownloadRoot("threads", "ios", "flows"), "data/downloads/threads-ios-flows");
+});
+
+test("flow navigation recognizes Mobbin redirecting an app with no flows back to screens", () => {
+  const requested = "https://mobbin.com/apps/product-hunt-ios-id/latest/flows";
+  assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/apps/product-hunt-ios-id/version/screens"), true);
+  assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/apps/product-hunt-ios-id/version/flows"), false);
+  assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/login"), false);
+});
+
+test("flow navigation accepts a delayed client-side redirect before the grid timeout", async () => {
+  const result = await waitForGridOrRedirect(
+    () => new Promise<void>((resolve) => setTimeout(resolve, 30)),
+    () => new Promise<void>((resolve) => setTimeout(resolve, 1)),
+  );
+  assert.equal(result, "redirect");
+});
+
+test("flow retry counts existing Mobbin flows and downloads only missing rows", () => {
+  const flow = (id: string): DesignFlow => ({ id, title: id, description: "", tags: [], steps: [] });
+  const seen = ["a", "b", "c"];
+  assert.deepEqual(flowStageCoverage(seen, [flow("mobbin-flow-a"), flow("manual-flow")], [flow("mobbin-flow-b")]), {
+    captured: 2,
+    complete: false,
+    missingRowIds: ["c"],
+  });
+  assert.deepEqual(flowStageCoverage(seen, [flow("mobbin-flow-a"), flow("mobbin-flow-b")], [flow("mobbin-flow-c")]), {
+    captured: 3,
+    complete: true,
+    missingRowIds: [],
+  });
+});
+
+test("UI element selection keeps every Mobbin card regardless of alt text", async () => {
+  const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
+  assert.equal(typeof bulk.shouldSelectCard, "function");
+  const shouldSelect = bulk.shouldSelectCard as (tab: string, cardAlt: string, appPrefix: string) => boolean;
+  assert.equal(shouldSelect("ui-elements", "Button / Primary", "linear"), true);
+  assert.equal(shouldSelect("screens", "Not Linear screen", "linear"), false);
+  assert.equal(shouldSelect("screens", "Linear screen", "linear"), true);
 });
 
 test("mergeFlows replaces by id and keeps the rest", () => {
@@ -77,6 +131,40 @@ test("bulk ingestion uploads verified bytes before attaching the image, then att
   assert.match(thumbnailUploaded!.key, /^thumbnails\/17\/[0-9a-f]{64}\.jpg$/);
   assert.equal(thumbnailUploaded!.contentType, "image/jpeg");
   assert.ok(thumbnailUploaded!.byteSize < uploaded!.byteSize, "thumbnail should be smaller than the full image");
+});
+
+test("bulk ingestion keeps artifact kinds and duplicate occurrences distinct", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "astryx-bulk-identity-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: "white" } }).png().toBuffer();
+  await writeFile(join(root, "01.png"), png);
+  await writeFile(join(root, "02.png"), png);
+  const references: string[] = [];
+  const dependencies = {
+    objectStore: {
+      put: async (input: ObjectMetadata & { body: Uint8Array }) => ({ created: true, metadata: input }),
+    } as unknown as ObjectStore,
+    insertImage: async (_app: string, _platform: string, reference: string) => {
+      references.push(reference);
+      return references.length;
+    },
+    attachImage: async () => {},
+    attachThumbnail: async () => {},
+  };
+
+  await ingestDownloadedImages(root, "linear", "web", "https://mobbin.com/linear/screens", null, "screen", dependencies);
+  await ingestDownloadedImages(root, "linear", "web", "https://mobbin.com/linear/ui-elements", null, "ui_element", dependencies);
+  await ingestDownloadedImages(root, "linear", "web", "https://mobbin.com/linear/flows/one", null, "flow_step", dependencies);
+
+  const hash = references[0]!.slice("mobbin-bulk:".length);
+  assert.deepEqual(references, [
+    `mobbin-bulk:${hash}`,
+    `mobbin-bulk:screen:${hash}:2`,
+    `mobbin-bulk:ui_element:${hash}`,
+    `mobbin-bulk:ui_element:${hash}:2`,
+    `mobbin-bulk:flow_step:${hash}`,
+    `mobbin-bulk:flow_step:${hash}:2`,
+  ]);
 });
 
 test("bulk upload failure leaves no usable object association", async (t) => {

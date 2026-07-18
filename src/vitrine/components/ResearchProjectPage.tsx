@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Spinner } from '@astryxdesign/core';
+import { Button, Spinner } from '@astryxdesign/core';
 import type { ResearchProjectWorkspace } from '../../researchProject.ts';
 import {
   ResearchProjectApiError,
@@ -48,7 +48,7 @@ export function ResearchProjectPage({ projectId }: { projectId: number }) {
   };
 
   if (loading) return <div style={{ minHeight: 420, display: 'grid', placeItems: 'center' }}><Spinner size="lg" /></div>;
-  if (!workspace) return <main style={{ padding: 28 }}><button type="button" onClick={() => navigate({ name: 'projects' })}>Back to projects</button><p role="alert">{message || 'Research project not found.'}</p></main>;
+  if (!workspace) return <main style={{ padding: 28 }}><Button label="Back to projects" variant="ghost" onClick={() => navigate({ name: 'projects' })} /><p role="alert">{message || 'Research project not found.'}</p></main>;
 
   const actions: DecisionCanvasActions = {
     addLane: (title) => mutate((current) => createResearchLane(current.id, current.revision, title)),
@@ -85,7 +85,7 @@ export function ResearchProjectPage({ projectId }: { projectId: number }) {
 
   return (
     <main className="research-project-page">
-      <button type="button" onClick={() => navigate({ name: 'projects' })} style={backStyle}>← Projects</button>
+      <Button label="Projects" variant="ghost" size="sm" onClick={() => navigate({ name: 'projects' })} />
       <header style={{ margin: '18px 0 24px' }}>
         <h1 style={{ margin: 0, fontSize: 28 }}>{workspace.title}</h1>
         <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontSize: 16 }}>{workspace.question}</p>
@@ -99,5 +99,3 @@ export function ResearchProjectPage({ projectId }: { projectId: number }) {
     </main>
   );
 }
-
-const backStyle = { border: 0, background: 'transparent', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: 0 } as const;

@@ -1,3 +1,4 @@
+import { Badge, Card, EmptyState, Heading, Text } from '@astryxdesign/core';
 import type { DesignSystemSnapshot, EvidenceView } from '../../designSystem';
 import type { Screen } from '../types';
 
@@ -7,18 +8,16 @@ export function OverviewPanel({ snapshot, screens }: { snapshot: DesignSystemSna
   const typography = tokens.filter(({ kind }) => kind === 'typography').slice(0, 4);
   const rhythm = tokens.filter(({ kind }) => kind === 'spacing' || kind === 'radius').slice(0, 6);
   const layouts = [...new Set(screens.flatMap(({ layoutPatterns }) => layoutPatterns ?? []))].slice(0, 8);
-  const card = (title: string, values: Array<{ id: string; name: string; value?: string }>) => (
-    <section style={{ padding: 18, border: '1px solid var(--color-border)', borderRadius: 13 }}><h3 style={{ margin: '0 0 12px', fontSize: 14 }}>{title}</h3>{values.length ? <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{values.map((value) => <span key={value.id} style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--color-background-muted)', fontSize: 12 }}>{value.name}{value.value ? ` · ${value.value}` : ''}</span>)}</div> : <span style={{ color: 'var(--color-text-disabled)', fontSize: 12 }}>Not observed in captured screens</span>}</section>
-  );
+  const card = (title: string, values: Array<{ id: string; name: string; value?: string }>) => <Card padding={4} role="region" aria-label={title}><Heading level={3}>{title}</Heading>{values.length ? <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>{values.map((value) => <Badge key={value.id} label={`${value.name}${value.value ? ` · ${value.value}` : ''}`} variant="neutral" />)}</div> : <EmptyState title="Not observed in captured screens" headingLevel={4} isCompact />}</Card>;
   return (
     <div style={{ display: 'grid', gap: 18, paddingTop: 28 }}>
-      <div><h2 style={{ margin: 0 }}>Complete observed design system</h2><p style={{ margin: '7px 0 0', color: 'var(--color-text-secondary)' }}>Reconstructed from {screens.length} captured web screen{screens.length === 1 ? '' : 's'}. Uncaptured patterns and states are unavailable, not inferred.</p></div>
+      <div><Heading level={2}>Complete observed design system</Heading><div style={{ marginTop: 7 }}><Text type="body" color="secondary">Reconstructed from {screens.length} captured web screen{screens.length === 1 ? '' : 's'}. Uncaptured patterns and states are unavailable, not inferred.</Text></div></div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12 }}>
         {card('Primary colors', colors)}{card('Typography preview', typography)}{card('Spacing and radii', rhythm)}
         {card('Key components', (snapshot?.components ?? []).slice(0, 8).map(({ id, name }) => ({ id, name })))}
         {card('Main layout patterns', layouts.map((name) => ({ id: name, name })))}
       </div>
-      <div style={{ display: 'flex', gap: 22, color: 'var(--color-text-secondary)', fontSize: 12.5 }}><span>{screens.length} analyzed screens</span><span>{snapshot?.flows.length ?? 0} curated flows</span><span>{snapshot?.components.length ?? 0} components</span></div>
+      <div style={{ display: 'flex', gap: 22 }}><Text type="supporting" color="secondary">{screens.length} analyzed screens</Text><Text type="supporting" color="secondary">{snapshot?.flows.length ?? 0} curated flows</Text><Text type="supporting" color="secondary">{snapshot?.components.length ?? 0} components</Text></div>
     </div>
   );
 }

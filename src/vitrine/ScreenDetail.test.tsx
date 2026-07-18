@@ -24,7 +24,7 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
-  assert.match(html, /<button[^>]*>\s*Design System\s*<\/button>/);
+  assert.match(html, /aria-label="Design System"/);
   assert.doesNotMatch(html, /Crawler/);
 });
 

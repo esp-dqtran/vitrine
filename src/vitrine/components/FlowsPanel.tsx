@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { EmptyState } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { Platform } from '../../platformFromUrl';
-import { requestExport } from '../researchApi';
 import { FlowCard } from './FlowCard';
+import { FlowDocEditor } from './FlowDocEditor';
 import { FlowViewer } from './FlowViewer';
 import { SearchInput } from './SearchInput';
 
@@ -25,19 +25,9 @@ function groupByCategory(flows: DesignFlow<EvidenceView>[]) {
 export function FlowsPanel({ flows, app, platform }: { flows: DesignFlow<EvidenceView>[]; app?: string; platform?: Platform }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [exporting, setExporting] = useState(false);
-  const [exportMessage, setExportMessage] = useState('');
+  const [editingDoc, setEditingDoc] = useState(false);
 
-  const exportFlowDoc = async () => {
-    if (!app || !platform) return;
-    setExporting(true); setExportMessage('');
-    try {
-      const { blob, filename } = await requestExport(app, platform, 'flow-md', { kind: 'design-system' });
-      const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
-      setExportMessage(`${filename} is ready.`);
-    } catch (error) { setExportMessage((error as Error).message); }
-    finally { setExporting(false); }
-  };
+  if (editingDoc && app && platform) return <FlowDocEditor app={app} platform={platform} onBack={() => setEditingDoc(false)} />;
 
   const selected = flows.find((flow) => flow.id === selectedId);
   if (selected) return <FlowViewer flow={selected} onBack={() => setSelectedId(null)} />;
@@ -59,10 +49,7 @@ export function FlowsPanel({ flows, app, platform }: { flows: DesignFlow<Evidenc
           </div>
         ) : <span />}
         {app && platform && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {exportMessage && <span role="status" style={{ fontSize: 12, color: exportMessage.includes('ready') ? 'var(--color-text-success)' : 'var(--color-text-danger)' }}>{exportMessage}</span>}
-            <button type="button" onClick={() => void exportFlowDoc()} disabled={exporting} title="Ordered, evidence-cited product flow documentation (Markdown) — a PRD-ready reference for product managers." style={{ border: '1px solid var(--color-border)', borderRadius: 999, padding: '9px 16px', background: 'var(--color-text-primary)', color: 'var(--color-background-surface)', cursor: exporting ? 'default' : 'pointer', font: 'inherit', fontWeight: 700, fontSize: 12.5, whiteSpace: 'nowrap' }}>{exporting ? 'Exporting…' : 'Export FLOW.md'}</button>
-          </div>
+          <Button label="Open FLOW.md" variant="primary" size="sm" tooltip="Open the ordered, evidence-cited product flow document to edit, preview, save, or download." onClick={() => setEditingDoc(true)} style={{ borderRadius: 999 }} />
         )}
       </div>
       {filtered.length === 0 ? (

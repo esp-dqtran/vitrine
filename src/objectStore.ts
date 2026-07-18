@@ -57,7 +57,7 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "text/markdown",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);
-const EXTENSIONS = new Set(["png", "jpg", "webp", "json", "zip", "css", "js", "tsx"]);
+const EXTENSIONS = new Set(["png", "jpg", "webp", "json", "zip", "css", "js", "tsx", "md"]);
 
 function encodeKeyPart(value: string): string {
   const bytes = Buffer.from(value, "utf8");
