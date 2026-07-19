@@ -67,6 +67,32 @@ export function catalogPersistenceRepair(
   };
 }
 
+export class CatalogPersistenceError extends Error {
+  readonly repair: CatalogRepairPhases;
+
+  constructor(repair: CatalogRepairPhases, message: string) {
+    super(message);
+    this.name = "CatalogPersistenceError";
+    this.repair = repair;
+  }
+}
+
+export function assertCatalogPersistenceComplete(
+  expected: CatalogArtifactCounts,
+  persisted: CatalogPersistenceSnapshot,
+): void {
+  const repair = catalogPersistenceRepair(expected, persisted);
+  if (!repair.screens && !repair.uiElements && !repair.flows) return;
+  throw new CatalogPersistenceError(
+    repair,
+    `Persisted verification failed: screens ${persisted.screens}/${expected.screens ?? "?"}, `
+      + `UI elements ${persisted.uiElements}/${expected.uiElements ?? "?"}, `
+      + `flows ${persisted.flows}/${expected.flows ?? "?"}, `
+      + `invalid flow references ${persisted.invalidFlowReferences}, `
+      + `missing objects ${persisted.missingScreenObjects + persisted.missingUiElementObjects + persisted.missingFlowObjects}`,
+  );
+}
+
 export async function loadCatalogPersistence(
   pool: Pick<pg.Pool, "query">,
   jobs: Array<{ app: string; platform: string }>,

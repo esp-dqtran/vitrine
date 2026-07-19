@@ -30,6 +30,13 @@ import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/obje
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../src/bulkDownload.ts";
 import { disambiguateCatalogSlugs } from "../src/catalogIdentity.ts";
 import {
+  assertCatalogPersistenceComplete,
+  CatalogPersistenceError,
+  catalogJobKey,
+  emptyCatalogPersistence,
+  loadCatalogPersistence,
+} from "../src/catalogVerification.ts";
+import {
   assertCatalogStageComplete,
   catalogRepairPlan,
   markCatalogPhaseComplete,
@@ -40,7 +47,6 @@ import { launchMobbinContext } from "../src/crawler.ts";
 
 const STATE_PATH = WORKER_ID ? `data/catalog-import-state-${WORKER_ID}.json` : "data/catalog-import-state.json";
 const LOG_PREFIX = WORKER_ID ? `w${WORKER_ID}:` : "";
-const CONSECUTIVE_FAILURE_LIMIT = 5;
 const INTER_APP_DELAY_MS = 8_000;
 
 type Platform = "web" | "ios" | "android";
@@ -166,7 +172,6 @@ if (!state) {
     `${state.jobs.filter((j) => j.status === "skipped").length} skipped.`);
 }
 
-let consecutiveFailures = 0;
 const repairOnly = process.env.CATALOG_REPAIR_ONLY === "1";
 for (const job of state.jobs) {
   if (!shouldRunCatalogJob(repairOnly, job)) continue;
@@ -205,14 +210,26 @@ for (const job of state.jobs) {
       job.repair = markCatalogPhaseComplete(job.repair, "flows");
       saveState(state);
     }
+    const expected = {
+      screens: job.verification.screens?.discovered,
+      uiElements: job.verification.uiElements?.discovered,
+      flows: job.verification.flows?.discovered,
+    };
+    const persistedByJob = await loadCatalogPersistence(pool, [{ app: job.slug, platform: job.platform }]);
+    const persisted = persistedByJob.get(catalogJobKey(job.slug, job.platform))
+      ?? emptyCatalogPersistence(job.slug, job.platform);
+    try {
+      assertCatalogPersistenceComplete(expected, persisted);
+    } catch (error) {
+      if (error instanceof CatalogPersistenceError) job.repair = error.repair;
+      throw error;
+    }
     delete job.repair;
     job.status = "done";
-    consecutiveFailures = 0;
     log(`Done: ${job.slug} (${job.platform})`);
   } catch (error) {
     job.status = "failed";
     job.error = String((error as Error)?.message ?? error);
-    consecutiveFailures++;
     log(`FAILED: ${job.slug} (${job.platform}) — ${job.error}`);
   } finally {
     await jobContext.close().catch(() => {});
@@ -220,11 +237,6 @@ for (const job of state.jobs) {
   job.finishedAt = new Date().toISOString();
   saveState(state);
 
-  if (consecutiveFailures >= CONSECUTIVE_FAILURE_LIMIT) {
-    log(`Stopping: ${consecutiveFailures} consecutive failures — Mobbin may be blocking/rate-limiting. ` +
-      `Re-run this script later to resume from where it left off.`);
-    break;
-  }
   await new Promise((r) => setTimeout(r, INTER_APP_DELAY_MS));
 }
 

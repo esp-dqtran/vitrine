@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 test("catalog stage gate rejects partial and unsuccessful outcomes", async () => {
@@ -85,6 +86,11 @@ test("repair-only workers never start untouched catalog jobs", async () => {
   assert.equal(shouldRun(true, { status: "pending" }), false);
   assert.equal(shouldRun(false, { status: "pending" }), true);
   assert.equal(shouldRun(false, { status: "done", repair: { screens: true, uiElements: true, flows: true } }), false);
+});
+
+test("catalog app failures never add a worker failure-count shutdown", () => {
+  const importer = readFileSync(new URL("../scripts/catalog-import.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(importer, /CONSECUTIVE_FAILURE_LIMIT|consecutiveFailures/);
 });
 
 test("catalog integrity summary counts repair markers in every job status", async () => {

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { catalogPersistenceRepair, type CatalogPersistenceSnapshot } from "./catalogVerification.ts";
+import {
+  assertCatalogPersistenceComplete,
+  CatalogPersistenceError,
+  catalogPersistenceRepair,
+  type CatalogPersistenceSnapshot,
+} from "./catalogVerification.ts";
 
 const complete: CatalogPersistenceSnapshot = {
   app: "airalo",
@@ -71,4 +76,30 @@ test("persistence loader requires object backing and normalizes database counter
     missingUiElementObjects: 2,
     missingFlowObjects: 3,
   });
+});
+
+test("persisted verification error retains exact repair phases", () => {
+  assert.throws(
+    () => assertCatalogPersistenceComplete(
+      { screens: 144, uiElements: 144, flows: 36 },
+      {
+        app: "5-minute-journal",
+        platform: "ios",
+        screens: 144,
+        uiElements: 136,
+        flows: 0,
+        invalidFlowReferences: 0,
+        missingScreenObjects: 0,
+        missingUiElementObjects: 0,
+        missingFlowObjects: 0,
+      },
+    ),
+    (error: unknown) => {
+      assert.ok(error instanceof CatalogPersistenceError);
+      assert.deepEqual(error.repair, { screens: false, uiElements: true, flows: true });
+      assert.match(error.message, /UI elements 136\/144/);
+      assert.match(error.message, /flows 0\/36/);
+      return true;
+    },
+  );
 });
