@@ -12,5 +12,6 @@ test('uses the Vitrine brand mark as the browser favicon', async () => {
   assert.match(favicon, /viewBox="0 0 32 32"/);
   assert.match(favicon, /#0064E0/);
   assert.match(favicon, /#3E9EFB/);
+  assert.equal(favicon.match(/\.inner\s*\{\s*fill:/g)?.length, 1);
   assert.match(favicon, /<rect x="10" y="10" width="12" height="12" rx="4"/);
 });
