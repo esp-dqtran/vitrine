@@ -1,6 +1,49 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "./gallery.ts";
+import {
+  buildAdminGalleryApps,
+  buildAppMetadata,
+  buildCatalogPage,
+  buildEvidencePage,
+  buildGalleryApps,
+} from "./gallery.ts";
+
+test("builds app metadata without section payloads", () => {
+  const app = buildAppMetadata({
+    app: "claude",
+    icon_url: "https://cdn.example.com/claude.png",
+    category: "AI",
+    total_screens: 120,
+    total_ui_elements: 31,
+    total_flows: 7,
+    analyzed_screens: 115,
+    last_captured_at: "2026-07-19T00:00:00.000Z",
+    available_platforms: ["ios", "android"],
+  });
+
+  assert.equal(app.app, "Claude");
+  assert.equal(app.totalScreens, 120);
+  assert.equal(app.totalUiElements, 31);
+  assert.equal(app.totalFlows, 7);
+  assert.deepEqual(app.platforms, ["ios", "android"]);
+  assert.equal("screens" in app, false);
+});
+
+test("builds an evidence page without re-paginating it", () => {
+  const page = buildEvidencePage({
+    rows: [{
+      id: 2,
+      app: "claude",
+      platform: "ios",
+      image_url: "mobbin-bulk:0000000000000002",
+      description: "Composer",
+    }],
+    nextCursor: "Mg",
+  });
+
+  assert.deepEqual(page.screens.map(({ id }) => id), [2]);
+  assert.equal(page.nextCursor, "Mg");
+});
 
 test("groups images, preserves metadata, maps local media, and caps screens", () => {
   const images = Array.from({ length: 121 }, (_, index) => ({
@@ -100,23 +143,4 @@ test("builds paginated public previews without source image fields", () => {
   assert.equal(second.apps.length, 6);
   assert.equal(second.nextCursor, null);
   assert.notEqual(second.apps[0].id, first.apps[0].id);
-});
-
-test("builds cursor-paginated app detail", () => {
-  const images = Array.from({ length: 4 }, (_, index) => ({
-    id: index + 1,
-    app: "linear",
-    platform: "web",
-    image_url: `mobbin-bulk:${String(index + 1).padStart(16, "0")}`,
-    description: null,
-    analysis: null,
-  }));
-  const first = buildAppDetailPage(images, "linear", undefined, 2);
-  assert.equal(first?.screens.length, 2);
-  assert.ok(first?.nextCursor);
-  assert.equal(first?.screens[0].thumbnailUrl, "/api/media/linear/0000000000000001?variant=thumb");
-  const second = buildAppDetailPage(images, "linear", first?.nextCursor ?? undefined, 2);
-  assert.deepEqual(second?.screens.map(({ id }) => id), [3, 4]);
-  assert.equal(second?.nextCursor, null);
-  assert.equal(buildAppDetailPage(images, "missing"), undefined);
 });

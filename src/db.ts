@@ -193,6 +193,196 @@ export interface CrawledImage {
   captured_at?: string | null;
 }
 
+export interface AppMetadataRow {
+  app: string;
+  icon_url: string | null;
+  category: string | null;
+  total_screens: number;
+  total_ui_elements: number;
+  total_flows: number;
+  analyzed_screens: number;
+  last_captured_at: string | null;
+  available_platforms: string[];
+}
+
+export interface AppEvidencePage {
+  rows: CrawledImage[];
+  nextCursor: string | null;
+}
+
+function encodeImageCursor(id: number): string {
+  return Buffer.from(String(id), "utf8").toString("base64url");
+}
+
+function decodeImageCursor(cursor: string): number {
+  if (!/^[A-Za-z0-9_-]+$/.test(cursor)) throw new RangeError("invalid image cursor");
+  const id = Number(Buffer.from(cursor, "base64url").toString("utf8"));
+  if (!Number.isSafeInteger(id) || id < 1) throw new RangeError("invalid image cursor");
+  return id;
+}
+
+export async function appMetadata(app: string, publishedOnly = false): Promise<AppMetadataRow | null> {
+  const res = await query<AppMetadataRow>(
+    `WITH target AS (
+       SELECT id, name, icon_url, category FROM apps WHERE name = $1
+     ), latest_versions AS (
+       SELECT DISTINCT ON (av.platform) av.id, av.platform
+       FROM app_versions av JOIN target t ON t.id = av.app_id
+       WHERE av.status = 'published'
+       ORDER BY av.platform, av.version_number DESC
+     ), eligible_images AS (
+       SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
+       FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
+       WHERE $2::boolean = false
+       UNION ALL
+       SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
+       FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
+       JOIN images i ON i.id = vi.image_id
+       WHERE $2::boolean = true
+     ), eligible_flows AS (
+       SELECT COALESCE(jsonb_array_length(af.flows), 0)::integer AS flow_count
+       FROM target t JOIN app_flows af ON af.app_id = t.id
+       WHERE $2::boolean = false
+       UNION ALL
+       SELECT COALESCE(jsonb_array_length(afv.flows), 0)::integer
+       FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
+       WHERE $2::boolean = true
+     )
+     SELECT t.name AS app, t.icon_url, t.category,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'screen')::integer AS total_screens,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'ui_element')::integer AS total_ui_elements,
+       COALESCE((SELECT SUM(flow_count) FROM eligible_flows), 0)::integer AS total_flows,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'screen' AND ei.analysis IS NOT NULL)::integer AS analyzed_screens,
+       MAX(ei.captured_at) AS last_captured_at,
+       COALESCE((
+         SELECT array_agg(platform ORDER BY CASE platform WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END, platform)
+         FROM (SELECT DISTINCT platform FROM eligible_images WHERE platform IS NOT NULL) available
+       ), ARRAY[]::text[]) AS available_platforms
+     FROM target t LEFT JOIN eligible_images ei ON true
+     GROUP BY t.id, t.name, t.icon_url, t.category`,
+    [app, publishedOnly],
+  );
+  return res.rows[0] ?? null;
+}
+
+export async function appEvidencePage(input: {
+  app: string;
+  kind: "screen" | "ui_element";
+  platform: string;
+  versionNumber?: number | null;
+  cursor?: string | null;
+  limit?: number;
+  publishedOnly?: boolean;
+}): Promise<AppEvidencePage> {
+  const requestedLimit = Math.min(Math.max(Math.floor(input.limit ?? 48), 1), 48);
+  const cursorId = input.cursor ? decodeImageCursor(input.cursor) : null;
+  const res = await query<CrawledImage>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $3
+         AND (($4::integer IS NOT NULL AND av.version_number = $4)
+           OR ($4::integer IS NULL AND av.status = 'published'))
+         AND ($5::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC LIMIT 1
+     ), eligible AS (
+       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+         a.icon_url, a.category, i.image_url AS capture_url, i.created_at AS captured_at,
+         NULL::integer AS viewport_width, NULL::integer AS viewport_height, NULL::text AS state_context
+       FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
+       WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
+         AND $4::integer IS NULL AND $5::boolean = false
+       UNION ALL
+       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+         a.icon_url, a.category, COALESCE(vi.source_url, i.image_url) AS capture_url, vi.captured_at,
+         vi.viewport_width, vi.viewport_height, vi.state_context
+       FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
+       JOIN images i ON i.id = vi.image_id JOIN platforms p ON p.id = i.platform_id
+       JOIN apps a ON a.id = p.app_id
+       WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
+     )
+     SELECT * FROM eligible
+     WHERE ($6::integer IS NULL OR id > $6)
+     ORDER BY id
+     LIMIT $7`,
+    [
+      input.app,
+      input.kind,
+      input.platform,
+      input.versionNumber ?? null,
+      input.publishedOnly ?? false,
+      cursorId,
+      requestedLimit + 1,
+    ],
+  );
+  const hasMore = res.rows.length > requestedLimit;
+  const rows = hasMore ? res.rows.slice(0, requestedLimit) : res.rows;
+  return {
+    rows,
+    nextCursor: hasMore && rows.length ? encodeImageCursor(rows[rows.length - 1].id) : null,
+  };
+}
+
+export async function getVersionFlows(
+  app: string,
+  platform: string,
+  versionNumber?: number | null,
+  publishedOnly = false,
+): Promise<DesignFlow[]> {
+  if (versionNumber == null && !publishedOnly) return getAppFlows(app, platform);
+  const res = await query<{ flows: DesignFlow[] }>(
+    `SELECT COALESCE(
+       CASE WHEN av.status IN ('draft', 'in_review') THEN af.flows ELSE afv.flows END,
+       '[]'::jsonb
+     ) AS flows
+     FROM app_versions av JOIN apps a ON a.id = av.app_id
+     LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
+     LEFT JOIN app_flows af ON af.app_id = av.app_id AND af.platform = av.platform
+     WHERE a.name = $1 AND av.platform = $2
+       AND (($3::integer IS NOT NULL AND av.version_number = $3)
+         OR ($3::integer IS NULL AND av.status = 'published'))
+       AND ($4::boolean = false OR av.status = 'published')
+     ORDER BY av.version_number DESC LIMIT 1`,
+    [app, platform, versionNumber ?? null, publishedOnly],
+  );
+  return res.rows[0]?.flows ?? [];
+}
+
+export async function flowEvidenceImages(input: {
+  app: string;
+  platform: string;
+  versionNumber?: number | null;
+  imageIds: number[];
+  publishedOnly?: boolean;
+}): Promise<CrawledImage[]> {
+  const ids = [...new Set(input.imageIds.filter((id) => Number.isSafeInteger(id) && id > 0))];
+  if (!ids.length) return [];
+  const res = await query<CrawledImage>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC LIMIT 1
+     )
+     SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       a.icon_url, a.category,
+       COALESCE(vi.source_url, i.image_url) AS capture_url,
+       COALESCE(vi.captured_at, i.created_at) AS captured_at,
+       vi.viewport_width, vi.viewport_height, vi.state_context
+     FROM images i JOIN platforms p ON p.id = i.platform_id JOIN apps a ON a.id = p.app_id
+     LEFT JOIN selected_version sv ON true
+     LEFT JOIN version_images vi ON vi.version_id = sv.id AND vi.image_id = i.id
+     WHERE a.name = $1 AND p.name = $2 AND i.id = ANY($5::integer[])
+       AND ((($3::integer IS NULL AND $4::boolean = false) OR vi.image_id IS NOT NULL))
+     ORDER BY i.id`,
+    [input.app, input.platform, input.versionNumber ?? null, input.publishedOnly ?? false, ids],
+  );
+  return res.rows;
+}
+
 export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
   const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(

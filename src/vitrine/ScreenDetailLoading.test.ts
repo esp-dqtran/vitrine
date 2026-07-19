@@ -2,20 +2,22 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-test('reuses initial detail version and cursor', async () => {
-  const source = await readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
-  assert.match(source, /initialVersion/);
-  assert.match(source, /initialNextCursor/);
-  assert.match(source, /useState<number \| undefined>\(initialVersion\?\.version_number\)/);
-  assert.match(source, /useState\(Boolean\(initialVersion\)\)/);
-  assert.match(source, /selectedVersion === undefined && versionScreens !== null/);
+test('keeps Overview free of section and design-system activation', async () => {
+  const [detail, sectionHook] = await Promise.all([
+    readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useAppSectionData.ts', import.meta.url), 'utf8').catch(() => ''),
+  ]);
+  assert.match(detail, /<AppOverviewPanel app=\{app\}/);
+  assert.match(sectionHook, /case 'overview': return \[\]/);
+  assert.doesNotMatch(detail, /initialVersion|initialNextCursor|app\.screens/);
 });
 
-test('loads raw UI elements only from the elements section', async () => {
-  const source = await readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
-  assert.match(source, /section !== 'elements'/);
-  assert.match(source, /designSystemStatus === 'loading'/);
-  assert.doesNotMatch(source, /Promise\.all\(\[\s*fetch\([^\]]+loadElements/);
+test('maps visible sections to dedicated lazy dependencies', async () => {
+  const source = await readFile(new URL('./useAppSectionData.ts', import.meta.url), 'utf8').catch(() => '');
+  assert.match(source, /case 'screens': return \['versions', 'screens'\]/);
+  assert.match(source, /case 'elements': return \['versions', 'ui-elements'\]/);
+  assert.match(source, /case 'flows': return \['versions', 'flows'\]/);
+  assert.match(source, /case 'export': return \['versions', 'design-system', 'screens'\]/);
 });
 
 test('synchronizes the visible section when browser history changes the route', async () => {

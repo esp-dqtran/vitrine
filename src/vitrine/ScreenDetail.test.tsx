@@ -16,7 +16,8 @@ test('offers the generated design system alongside screens, elements, and flows'
         cat: 'Productivity',
         accent: '#5E6AD2',
         totalScreens: 0,
-        screens: [],
+        totalUiElements: 0,
+        totalFlows: 0,
       }}
       onBack={() => {}}
     />
@@ -39,6 +40,28 @@ test('animates the active platform indicator and platform content', () => {
   assert.match(source, /\}, \[section, selectedPlatform\]\);/);
 });
 
+test('renders metadata-only aggregate counts on Overview', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
+      app={{
+        id: 'claude', app: 'Claude', cat: 'AI', accent: '#d97757',
+        totalScreens: 120, totalUiElements: 31, totalFlows: 7,
+        analyzedScreens: 115, platforms: ['ios', 'android'],
+      }}
+      onBack={() => undefined}
+    />
+  );
+  assert.match(html, /120/);
+  assert.match(html, /31/);
+  assert.match(html, /7/);
+  assert.match(html, /115 analyzed/);
+  assert.doesNotMatch(html, /Capture versions/);
+  assert.doesNotMatch(html, /Complete observed design system/);
+});
+
 test('shows every platform reported by app metadata even when the first screen page is web-only', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
@@ -51,8 +74,9 @@ test('shows every platform reported by app metadata even when the first screen p
         cat: 'Shopping',
         accent: '#000000',
         totalScreens: 615,
+        totalUiElements: 80,
+        totalFlows: 20,
         platforms: ['web', 'ios', 'android'],
-        screens: [],
       }}
       onBack={() => {}}
     />

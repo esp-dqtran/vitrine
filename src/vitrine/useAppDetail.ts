@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchAppDetailPage, type AppDetailPage } from './appsApi';
+import { fetchAppMetadata } from './appsApi';
+import type { AppMetadata } from './types';
 
 export function useAppDetail(appId: string | undefined, enabled: boolean) {
-  const [detail, setDetail] = useState<AppDetailPage | null>(null);
+  const [detail, setDetail] = useState<AppMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -10,7 +11,7 @@ export function useAppDetail(appId: string | undefined, enabled: boolean) {
     const controller = new AbortController();
     setDetail(null);
     setError(null);
-    fetchAppDetailPage(appId, controller.signal)
+    fetchAppMetadata(appId, controller.signal)
       .then(setDetail)
       .catch((cause: Error) => {
         if (cause.name !== 'AbortError') setError(cause.message);

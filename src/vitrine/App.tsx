@@ -272,7 +272,7 @@ export function App() {
       (cat === 'All' || r.cat === cat) &&
       (!query || `${r.name} ${r.cat} ${r.app?.screens.map((s) => s.type).join(' ') ?? ''}`.toLowerCase().includes(query)),
   );
-  const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail?.app : undefined;
+  const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail ?? undefined : undefined;
 
   return frame(
     <>
@@ -283,8 +283,6 @@ export function App() {
           app={detailApp}
           role={user?.role ?? 'user'}
           initialSection={route.name === 'app' ? route.section : undefined}
-          initialVersion={detail?.version}
-          initialNextCursor={detail?.nextCursor}
           onSectionChange={(section) => navigate({ name: 'app', appId: detailApp.id, section })}
           onBack={() => navigate({ name: 'apps' })}
           collections={collections}

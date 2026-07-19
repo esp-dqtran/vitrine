@@ -1,365 +1,207 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { Button, Icon, Selector, Spinner, ToggleButton } from '@astryxdesign/core';
-import type { App } from '../types';
+import { Button, EmptyState, Icon, Selector, Spinner, ToggleButton } from '@astryxdesign/core';
 import type { ResearchCollection } from '../../db';
-import type { AppVersion } from '../../db';
+import type { Platform } from '../../platformFromUrl';
+import { PLATFORM_LABEL } from '../../platformFromUrl';
+import type { DesignFlow, EvidenceView } from '../../designSystem';
+import type { AppMetadata, Screen } from '../types';
+import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useSlidingIndicator } from '../useSlidingIndicator';
-import { ComponentsPanel } from './ComponentsPanel';
+import { AppOverviewPanel } from './AppOverviewPanel';
+import { CuratorReviewPanel } from './CuratorReviewPanel';
+import { ExportPanel } from './ExportPanel';
 import { FlowsPanel } from './FlowsPanel';
 import { HeroButton } from './HeroButton';
 import { Lightbox } from './Lightbox';
 import { ScreenGridCard } from './ScreenGridCard';
 import { ScrollToTopButton } from './ScrollToTopButton';
-import { ExportPanel } from './ExportPanel';
 import { VersionPanel } from './VersionPanel';
-import { OverviewPanel } from './OverviewPanel';
-import { CuratorReviewPanel } from './CuratorReviewPanel';
-import { listAppVersions } from '../researchApi';
-import { PLATFORM_LABEL, type Platform } from '../../platformFromUrl';
 
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
 
-type Section = 'overview' | 'screens' | 'elements' | 'flows' | 'design-system' | 'export' | 'review';
 type LightboxState = { index: number } | null;
+const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
 
-const SECTIONS: Section[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
-
-const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): Section => {
-  const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as Section);
-  return (allowed ? initialSection : 'overview') as Section;
+const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
+  const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as DetailSection);
+  return (allowed ? initialSection : 'overview') as DetailSection;
 };
 
 interface ScreenDetailProps {
-  app: App;
+  app: AppMetadata;
   onBack: () => void;
   collections: ResearchCollection[];
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   role: 'admin' | 'user';
   initialSection?: string;
-  initialVersion?: AppVersion | null;
-  initialNextCursor?: string | null;
-  onSectionChange?: (section: Section) => void;
+  onSectionChange?: (section: DetailSection) => void;
 }
 
-export function ScreenDetail({ app, onBack, role, initialSection, initialVersion, initialNextCursor, onSectionChange }: ScreenDetailProps) {
-  const appPlatforms = [...new Set(app.platforms?.length ? app.platforms : app.screens.map((s) => s.platform))].filter(
-    (p): p is Platform => p === 'ios' || p === 'android' || p === 'web',
+export function ScreenDetail({ app, onBack, role, initialSection, onSectionChange }: ScreenDetailProps) {
+  const appPlatforms = (app.platforms ?? []).filter(
+    (platform): platform is Platform => platform === 'ios' || platform === 'android' || platform === 'web',
   );
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(() => {
-    const screenPlatform = app.screens[0]?.platform;
-    return screenPlatform === 'ios' || screenPlatform === 'android' || screenPlatform === 'web'
-      ? screenPlatform
-      : appPlatforms[0] ?? 'web';
-  });
-  const platformTabRefs = useRef<Partial<Record<Platform, HTMLButtonElement>>>({});
-  const [versions, setVersions] = useState<AppVersion[]>(initialVersion ? [initialVersion] : []);
-  const [selectedVersion, setSelectedVersion] = useState<number | undefined>(initialVersion?.version_number);
-  const [versionResolved, setVersionResolved] = useState(Boolean(initialVersion));
-  const [versionScreens, setVersionScreens] = useState<App['screens'] | null>(app.screens);
-  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor ?? null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  // Raw UI Element crops — shown directly (like Screens) until this app has been
-  // analyzed into named components; ComponentsPanel takes over once that exists.
-  const [elementImages, setElementImages] = useState<App['screens'] | null>(null);
-  const [elementsCursor, setElementsCursor] = useState<string | null>(null);
-  const [elementsLoadingMore, setElementsLoadingMore] = useState(false);
-  const [elementsError, setElementsError] = useState<string | null>(null);
-  const [elementLightbox, setElementLightbox] = useState<LightboxState>(null);
-  // Platform is the first-layer filter for the whole screen — scope screens to it
-  // up front so every section below (Overview, Screens, Elements, Flows) agrees,
-  // even during the brief window before the platform-scoped version fetch resolves.
-  const screens = (versionScreens ?? app.screens).filter((s) => s.platform === selectedPlatform);
-  const count = screens.length;
-  const { snapshot, status: designSystemStatus } = useDesignSystem(app.id, selectedPlatform, selectedVersion, versionResolved);
-  const components = snapshot?.components ?? [];
-  const flows = snapshot?.flows ?? [];
-
-  const [section, setSectionState] = useState<Section>(() => resolveSection(initialSection, role));
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(appPlatforms[0] ?? 'web');
+  const [selectedVersion, setSelectedVersion] = useState<number | undefined>();
+  const [section, setSectionState] = useState<DetailSection>(() => resolveSection(initialSection, role));
   useEffect(() => setSectionState(resolveSection(initialSection, role)), [initialSection, role]);
-  const setSection = (next: Section) => {
+  const setSection = (next: DetailSection) => {
     setSectionState(next);
     onSectionChange?.(next);
   };
+
+  const sectionData = useAppSectionData({
+    appId: app.id,
+    activeSection: section,
+    platform: selectedPlatform,
+    selectedVersion,
+  });
+  const needsDesignSystem = section === 'design-system' || section === 'export' || section === 'review';
+  const { snapshot, status: designSystemStatus, error: designSystemError, retry: retryDesignSystem, invalidate: invalidateDesignSystem } = useDesignSystem(
+    app.id,
+    selectedPlatform,
+    sectionData.resolvedVersion,
+    needsDesignSystem && !sectionData.versionsLoading,
+  );
+
+  const evidence = sectionData.state.data && 'screens' in sectionData.state.data
+    ? sectionData.state.data
+    : null;
+  const screens = evidence?.screens ?? [];
+  const flows = sectionData.state.data && 'flows' in sectionData.state.data
+    ? sectionData.state.data.flows
+    : [] as DesignFlow<EvidenceView>[];
+  const nextCursor = evidence?.nextCursor ?? null;
+  const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useState('All');
   const [layoutFilter, setLayoutFilter] = useState('All');
   const [componentFilter, setComponentFilter] = useState('All');
   const [stateFilter, setStateFilter] = useState('All');
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const platformTabRefs = useRef<Partial<Record<Platform, HTMLButtonElement>>>({});
+  const contentRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // version arrives explicitly (not read from `selectedVersion` state) so this can run
-  // inside `selectVersion` itself, at the exact moment Screens' own version is resolved —
-  // matching Screens' fetch-once-version-is-known timing instead of racing it.
-  const loadElements = async (version?: number, signal?: AbortSignal) => {
-    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${version ? `version=${version}&` : ''}limit=48`, { signal });
-    if (!response.ok) throw new Error(`UI elements returned ${response.status}`);
-    const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-    setElementImages(data.screens);
-    setElementsCursor(data.nextCursor);
-  };
-
-  const selectVersion = async (version?: number) => {
-    setSelectedVersion(version);
-    setVersionResolved(true);
-    setElementImages(null);
-    setElementsCursor(null);
-    setElementsError(null);
-    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&${version ? `version=${version}&` : ''}limit=48`);
-    if (response.ok) {
-      const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-      setVersionScreens(data.screens);
-      setNextCursor(data.nextCursor);
-    }
-  };
-
-  const loadMoreScreens = async () => {
-    if (!nextCursor || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&${selectedVersion ? `version=${selectedVersion}&` : ''}cursor=${encodeURIComponent(nextCursor)}&limit=48`);
-      if (response.ok) {
-        const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-        setVersionScreens((prev) => [...(prev ?? app.screens), ...data.screens]);
-        setNextCursor(data.nextCursor);
-      }
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const loadMoreElements = async () => {
-    if (!elementsCursor || elementsLoadingMore) return;
-    setElementsLoadingMore(true);
-    try {
-      const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${selectedVersion ? `version=${selectedVersion}&` : ''}cursor=${encodeURIComponent(elementsCursor)}&limit=48`);
-      if (response.ok) {
-        const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-        setElementImages((prev) => [...(prev ?? []), ...data.screens]);
-        setElementsCursor(data.nextCursor);
-      }
-    } finally {
-      setElementsLoadingMore(false);
-    }
-  };
-
-  useEffect(() => {
-    listAppVersions(app.id, selectedPlatform).then((items) => {
-      setVersions(items);
-      const latest = items.find(({ status }) => status === 'published') ?? items[0];
-      if (selectedVersion === undefined && versionScreens !== null) {
-        setSelectedVersion(latest?.version_number);
-        setVersionResolved(true);
-        return;
-      }
-      if (versionScreens !== null && selectedVersion === latest?.version_number) {
-        setVersionResolved(true);
-        return;
-      }
-      void selectVersion(latest?.version_number);
-    }).catch(() => {
-      setVersions([]);
-      setVersionResolved(true);
-    });
-  }, [app.id, selectedPlatform]);
-
-  useEffect(() => {
-    if (section !== 'elements' || designSystemStatus === 'loading' || components.length > 0 || elementImages !== null) return;
-    const controller = new AbortController();
-    setElementsError(null);
-    void loadElements(selectedVersion, controller.signal).catch((cause: Error) => {
-      if (cause.name !== 'AbortError') setElementsError(cause.message);
-    });
-    return () => controller.abort();
-  }, [section, designSystemStatus, components.length, elementImages, selectedPlatform, selectedVersion]);
-
-  const selectPlatform = (platform: Platform) => {
-    setSelectedPlatform(platform);
-    setSelectedVersion(undefined);
-    setVersionResolved(false);
-    setVersionScreens(null);
-    setNextCursor(null);
-    setElementImages(null);
-    setElementsCursor(null);
-    setElementsError(null);
-  };
-
-  const types = Array.from(new Set(screens.map((s) => s.type)));
-  const typeCounts = (t: string) => (t === 'All' ? count : screens.filter((s) => s.type === t).length);
-  const layouts = [...new Set(screens.flatMap((screen) => screen.layoutPatterns ?? []))];
-  const screenComponents = [...new Set(screens.flatMap((screen) => screen.componentNames ?? []))];
-  const states = [...new Set(screens.flatMap((screen) => screen.visibleStates))];
+  const types = [...new Set(screens.map(({ type }) => type))];
+  const layouts = [...new Set(screens.flatMap(({ layoutPatterns }) => layoutPatterns ?? []))];
+  const screenComponents = [...new Set(screens.flatMap(({ componentNames }) => componentNames ?? []))];
+  const states = [...new Set(screens.flatMap(({ visibleStates }) => visibleStates))];
   const filtered = screens.filter((screen) =>
     (typeFilter === 'All' || screen.type === typeFilter)
     && (layoutFilter === 'All' || screen.layoutPatterns?.includes(layoutFilter))
     && (componentFilter === 'All' || screen.componentNames?.includes(componentFilter))
     && (stateFilter === 'All' || screen.visibleStates.includes(stateFilter)));
 
-  const { indicatorRef, registerItem: registerTab } = useSlidingIndicator<Section>(section);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const elementsSentinelRef = useRef<HTMLDivElement>(null);
+  const { indicatorRef, registerItem: registerTab } = useSlidingIndicator<DetailSection>(section);
 
-  // Fetch the next page of screens as the sentinel at the bottom of the grid scrolls into view.
+  const selectPlatform = (platform: Platform) => {
+    setSelectedPlatform(platform);
+    setSelectedVersion(undefined);
+    setLightbox(null);
+  };
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try { await sectionData.loadNext(); }
+    finally { setLoadingMore(false); }
+  };
+
   useEffect(() => {
-    if (section !== 'screens' || !nextCursor) return;
+    if ((section !== 'screens' && section !== 'elements') || !nextCursor) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void loadMoreScreens();
+      if (entries[0]?.isIntersecting) void loadMore();
     }, { rootMargin: '400px' });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [section, nextCursor, loadingMore, selectedVersion]);
+  }, [section, nextCursor, loadingMore, sectionData.resolvedVersion]);
 
-  useEffect(() => {
-    if (section !== 'elements' || !elementsCursor) return;
-    const sentinel = elementsSentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void loadMoreElements();
-    }, { rootMargin: '400px' });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [section, elementsCursor, elementsLoadingMore, selectedVersion]);
-
-  // Keep section changes and platform switches quick enough to preserve context.
   useLayoutEffect(() => {
     if (!contentRef.current) return;
-    const tween = gsap.fromTo(
-      contentRef.current,
-      { opacity: 0, y: 6 },
-      { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', overwrite: 'auto' },
-    );
+    const tween = gsap.fromTo(contentRef.current, { opacity: 0, y: 6 }, {
+      opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', overwrite: 'auto',
+    });
     return () => { tween.kill(); };
   }, [section, selectedPlatform]);
 
-  const goLightbox = (i: number) =>
-    setLightbox((lb) => {
-      if (!lb) return lb;
-      return { index: ((i % count) + count) % count };
-    });
+  const goLightbox = (index: number) => {
+    if (!screens.length) return;
+    setLightbox({ index: ((index % screens.length) + screens.length) % screens.length });
+  };
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (lightbox !== null) {
-        if (e.key === 'Escape') setLightbox(null);
-        else if (e.key === 'ArrowLeft') goLightbox(lightbox.index - 1);
-        else if (e.key === 'ArrowRight') goLightbox(lightbox.index + 1);
-      } else if (e.key === 'Escape') onBack();
+    const onKey = (event: KeyboardEvent) => {
+      if (lightbox) {
+        if (event.key === 'Escape') setLightbox(null);
+        else if (event.key === 'ArrowLeft') goLightbox(lightbox.index - 1);
+        else if (event.key === 'ArrowRight') goLightbox(lightbox.index + 1);
+      } else if (event.key === 'Escape') onBack();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox]);
+  }, [lightbox, screens.length, onBack]);
+
+  const sectionLoading = sectionData.versionsLoading || sectionData.state.status === 'loading' || (needsDesignSystem && designSystemStatus === 'loading');
+  const sectionError = sectionData.state.status === 'error' ? sectionData.state.error : null;
+  const renderEvidence = (items: Screen[], emptyTitle: string) => items.length ? (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: section === 'elements' ? 'repeat(auto-fill,minmax(200px,1fr))' : 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
+        {(section === 'screens' ? filtered : items).map((screen, index) => (
+          <ScreenGridCard
+            key={screen.id}
+            screen={screen}
+            accent={app.accent}
+            delay={Math.min(index * 0.04, 0.32)}
+            onOpen={() => setLightbox({ index: screens.indexOf(screen) })}
+          />
+        ))}
+      </div>
+      {nextCursor && <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div>}
+    </>
+  ) : <EmptyState title={emptyTitle} isCompact />;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 18 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 18 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
       <div style={{ background: 'var(--color-background-surface)' }}>
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '22px 40px 0' }}>
-          <Button
-            label="Back to all apps"
-            icon={<Icon icon="chevronLeft" size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            style={{
-              borderRadius: 8,
-              marginBottom: 28,
-            }}
-          />
+          <Button label="Back to all apps" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} style={{ borderRadius: 8, marginBottom: 28 }} />
           <motion.div
             layoutId={`app-icon-${app.id}`}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 22,
-              background: app.iconUrl ? 'transparent' : app.accent,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 24,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-              overflow: 'hidden',
-              position: 'relative',
-            }}
+            style={{ width: 88, height: 88, borderRadius: 22, background: app.iconUrl ? 'transparent' : app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', overflow: 'hidden', position: 'relative' }}
           >
             {app.iconUrl
-              ? <img src={app.iconUrl} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+              ? <img src={app.iconUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
               : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{app.app[0]}</span>}
           </motion.div>
-          <h1
-            style={{
-              fontSize: 42,
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              letterSpacing: '-0.02em',
-              margin: '0 0 24px',
-              lineHeight: 1.05,
-              animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both',
-            }}
-          >
-            {app.app}
-          </h1>
-          <div style={{ display: 'flex', gap: 40, marginBottom: 28, flexWrap: 'wrap', animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .1s both' }}>
+          <h1 style={{ fontSize: 42, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', margin: '0 0 24px', lineHeight: 1.05 }}>{app.app}</h1>
+          <div style={{ display: 'flex', gap: 40, marginBottom: 28, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Platform
-              </span>
-              <div
-                role="tablist"
-                aria-label="Platform"
-                style={{
-                  display: 'inline-flex',
-                  gap: 2,
-                  padding: 3,
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 999,
-                  background: 'var(--color-background-muted)',
-                }}
-              >
-                {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((p, index, platforms) => (
-                  <div key={p} role="presentation" style={{ position: 'relative' }}>
-                    {p === selectedPlatform && (
-                      <motion.div
-                        layoutId="platform-active-indicator"
-                        transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: 999,
-                          background: 'var(--color-background-surface)',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
-                          pointerEvents: 'none',
-                        }}
-                      />
-                    )}
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Platform</span>
+              <div role="tablist" aria-label="Platform" style={{ display: 'inline-flex', gap: 2, padding: 3, border: '1px solid var(--color-border)', borderRadius: 999, background: 'var(--color-background-muted)' }}>
+                {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((platform, index, platforms) => (
+                  <div key={platform} role="presentation" style={{ position: 'relative' }}>
+                    {platform === selectedPlatform && <motion.div layoutId="platform-active-indicator" transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }} style={{ position: 'absolute', inset: 0, borderRadius: 999, background: 'var(--color-background-surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.18)', pointerEvents: 'none' }} />}
                     <ToggleButton
-                      ref={(node) => { platformTabRefs.current[p] = node ?? undefined; }}
-                      label={PLATFORM_LABEL[p]}
-                      isPressed={p === selectedPlatform}
-                      onPressedChange={() => selectPlatform(p)}
+                      ref={(node) => { platformTabRefs.current[platform] = node ?? undefined; }}
+                      label={PLATFORM_LABEL[platform]}
+                      isPressed={platform === selectedPlatform}
+                      onPressedChange={() => selectPlatform(platform)}
                       role="tab"
                       aria-pressed={undefined}
-                      aria-selected={p === selectedPlatform}
-                      tabIndex={p === selectedPlatform ? 0 : -1}
+                      aria-selected={platform === selectedPlatform}
+                      aria-label={PLATFORM_LABEL[platform]}
+                      tabIndex={platform === selectedPlatform ? 0 : -1}
                       onKeyDown={(event) => {
                         const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-                        const targetIndex = event.key === 'Home'
-                          ? 0
-                          : event.key === 'End'
-                            ? platforms.length - 1
-                            : offset
-                              ? (index + offset + platforms.length) % platforms.length
-                              : -1;
+                        const targetIndex = event.key === 'Home' ? 0 : event.key === 'End' ? platforms.length - 1 : offset ? (index + offset + platforms.length) % platforms.length : -1;
                         if (targetIndex < 0) return;
                         event.preventDefault();
                         const nextPlatform = platforms[targetIndex];
@@ -367,248 +209,75 @@ export function ScreenDetail({ app, onBack, role, initialSection, initialVersion
                         platformTabRefs.current[nextPlatform]?.focus();
                       }}
                       size="sm"
-                      style={{
-                        position: 'relative',
-                        zIndex: 1,
-                        border: 'none',
-                        borderRadius: 999,
-                        background: 'transparent',
-                      }}
+                      style={{ position: 'relative', zIndex: 1, border: 'none', borderRadius: 999, background: 'transparent' }}
                     />
                   </div>
                 ))}
               </div>
             </div>
-            {([
-              ['Category', app.cat],
-              ['Screens', String(app.totalScreens)],
-            ] as const).map(([label, val]) => (
+            {([['Category', app.cat], ['Screens', String(app.totalScreens)]] as const).map(([label, value]) => (
               <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {label}
-                </span>
-                <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)' }}>{val}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>{label}</span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)' }}>{value}</span>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 28, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .15s both' }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
             <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton>
             {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}
           </div>
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 28,
-              borderBottom: '1px solid var(--color-border)',
-              animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .2s both',
-              overflowX: 'auto',
-            }}
-          >
-            {(
-              [
-                ['overview', 'Overview'],
-                ['screens', 'Screens'],
-                ['elements', 'UI Elements'],
-                ['flows', 'Flows'],
-                ['design-system', 'Design System'],
-                ['export', 'Export'],
-                ...(role === 'admin' ? [['review', 'Review'] as const] : []),
-              ] as const
-            ).map(([id, label]) => (
-              <ToggleButton
-                key={id}
-                ref={registerTab(id)}
-                label={label}
-                isPressed={section === id}
-                onPressedChange={() => setSection(id)}
-                size="sm"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: section === id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  padding: '0 0 14px',
-                  flexShrink: 0,
-                  whiteSpace: 'nowrap',
-                }}
-              />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 28, borderBottom: '1px solid var(--color-border)', overflowX: 'auto' }}>
+            {([
+              ['overview', 'Overview'], ['screens', 'Screens'], ['elements', 'UI Elements'], ['flows', 'Flows'],
+              ['design-system', 'Design System'], ['export', 'Export'], ...(role === 'admin' ? [['review', 'Review'] as const] : []),
+            ] as const).map(([id, label]) => (
+              <ToggleButton key={id} ref={registerTab(id)} label={label} isPressed={section === id} onPressedChange={() => setSection(id)} size="sm" style={{ background: 'none', border: 'none', color: section === id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', padding: '0 0 14px', flexShrink: 0, whiteSpace: 'nowrap' }} />
             ))}
-            <div
-              ref={indicatorRef}
-              style={{ position: 'absolute', bottom: -1, left: 0, height: 2, background: 'var(--color-text-primary)', borderRadius: 1, pointerEvents: 'none' }}
-            />
+            <div ref={indicatorRef} style={{ position: 'absolute', bottom: -1, left: 0, height: 2, background: 'var(--color-text-primary)', borderRadius: 1, pointerEvents: 'none' }} />
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', paddingBottom: 14 }}>
-              {section === 'overview'
-                ? ''
-                : section === 'design-system'
-                ? 'Design system document'
-                : section === 'export'
-                  ? 'Editable observed assets'
-                : section === 'review'
-                  ? 'Curator controls'
-                : section === 'screens'
-                ? `Showing ${filtered.length}${app.totalScreens > count ? ` of ${app.totalScreens}` : ''} screens`
-                : section === 'elements'
-                  ? components.length > 0
-                    ? `${components.length} components`
-                    : `${(elementImages ?? []).length} UI elements`
-                  : `${flows.length} flows`}
+              {section === 'screens' ? `${screens.length} screens` : section === 'elements' ? `${screens.length} UI elements` : section === 'flows' ? `${flows.length} flows` : ''}
             </span>
           </div>
-
-          {section === 'screens' && types.length > 1 ? (
-            <div style={{ display: 'flex', gap: 8, padding: '16px 0', flexWrap: 'wrap', animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .25s both' }}>
-              {['All', ...types].map((t) => {
-                const active = typeFilter === t;
-                return (
-                  <ToggleButton
-                    key={t}
-                    label={t}
-                    isPressed={active}
-                    onPressedChange={() => setTypeFilter(t)}
-                    size="sm"
-                    style={{
-                      borderRadius: 9,
-                      color: active ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
-                    }}
-                  >
-                    {t}
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '1px 6px',
-                        borderRadius: 999,
-                        background: active ? 'color-mix(in srgb, var(--color-background-surface) 22%, transparent)' : 'var(--color-background-muted)',
-                        color: active ? 'inherit' : 'var(--color-text-secondary)',
-                      }}
-                    >
-                      {typeCounts(t)}
-                    </span>
-                  </ToggleButton>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{ height: 16 }} />
-          )}
-          {section === 'screens' && (
-            <div style={{ display: 'flex', gap: 8, padding: '0 0 16px', flexWrap: 'wrap' }}>
-              {([
-                ['Layout', layoutFilter, setLayoutFilter, layouts],
-                ['Component', componentFilter, setComponentFilter, screenComponents],
-                ['State', stateFilter, setStateFilter, states],
-              ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? (
-                <Selector key={label} label={label} size="sm" value={value} onChange={change} options={['All', ...options]} />
-              ) : null)}
-            </div>
-          )}
+          {section === 'screens' && types.length > 1 && <div style={{ display: 'flex', gap: 8, padding: '16px 0', flexWrap: 'wrap' }}>{['All', ...types].map((type) => <ToggleButton key={type} label={type} isPressed={typeFilter === type} onPressedChange={() => setTypeFilter(type)} size="sm" />)}</div>}
+          {section === 'screens' && <div style={{ display: 'flex', gap: 8, padding: '16px 0', flexWrap: 'wrap' }}>{([
+            ['Layout', layoutFilter, setLayoutFilter, layouts], ['Component', componentFilter, setComponentFilter, screenComponents], ['State', stateFilter, setStateFilter, states],
+          ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? <Selector key={label} label={label} size="sm" value={value} onChange={change} options={['All', ...options]} /> : null)}</div>}
         </div>
       </div>
 
       <div style={{ background: section === 'screens' ? 'var(--color-background-body)' : 'var(--color-background-surface)', minHeight: 400 }}>
-        <div
-          ref={contentRef}
-          style={{
-            maxWidth: 1360,
-            margin: '0 auto',
-            padding:
-              section === 'screens'
-                ? '32px 40px 72px'
-                : section === 'overview' || section === 'elements' || section === 'design-system' || section === 'export' || section === 'review'
-                  ? '8px 40px 80px'
-                  : '32px 40px 80px',
-          }}
-        >
-          {section === 'overview' ? (
-            <>
-              <VersionPanel app={app.id} platform={selectedPlatform} role={role} versions={versions} selectedVersion={selectedVersion} onVersionsChange={setVersions} onSelect={(version) => void selectVersion(version)} />
-              <OverviewPanel snapshot={snapshot} screens={screens} />
-            </>
-          ) : section === 'review' ? (
-            <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
-          ) : section === 'design-system' ? (
-            <Suspense fallback={<Spinner size="lg" />}>
-              <DesignSystemPanel snapshot={snapshot} status={designSystemStatus} />
-            </Suspense>
-          ) : section === 'export' ? (
-            <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-          ) : section === 'flows' ? (
-            <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} />
-          ) : section === 'screens' ? (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
-                {filtered.map((s) => {
-                  const i = screens.indexOf(s);
-                  const delay = Math.min(i * 0.04, 0.32);
-                  return (
-                    <ScreenGridCard key={i} screen={s} accent={app.accent} delay={delay} onOpen={() => setLightbox({ index: i })} />
-                  );
-                })}
-              </div>
-              {nextCursor && (
-                <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
-                  {loadingMore && <Spinner size="sm" />}
-                </div>
-              )}
-            </>
-          ) : components.length > 0 ? (
-            <ComponentsPanel components={components} />
-          ) : (
-            <>
-              {elementsError && <div role="alert" style={{ padding: '12px 0', color: 'var(--color-text-danger)' }}>{elementsError}</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 20 }}>
-                {(elementImages ?? []).map((s, i) => (
-                  <ScreenGridCard key={i} screen={s} accent={app.accent} delay={Math.min(i * 0.04, 0.32)} onOpen={() => setElementLightbox({ index: i })} />
-                ))}
-              </div>
-              {elementsCursor && (
-                <div ref={elementsSentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
-                  {elementsLoadingMore && <Spinner size="sm" />}
-                </div>
-              )}
-              {elementImages !== null && elementImages.length === 0 && (
-                <ComponentsPanel components={components} />
-              )}
-            </>
+        <div ref={contentRef} style={{ maxWidth: 1360, margin: '0 auto', padding: section === 'screens' ? '32px 40px 72px' : '8px 40px 80px' }}>
+          {section !== 'overview' && sectionData.versions !== null && (
+            <VersionPanel
+              app={app.id}
+              platform={selectedPlatform}
+              role={role}
+              versions={sectionData.versions}
+              selectedVersion={sectionData.resolvedVersion}
+              onVersionsChange={(items) => {
+                if (sectionData.resolvedVersion !== undefined) sectionData.invalidateVersion(selectedPlatform, sectionData.resolvedVersion);
+                invalidateDesignSystem();
+                sectionData.setVersions(items);
+              }}
+              onSelect={setSelectedVersion}
+            />
           )}
+          {section === 'overview' ? <AppOverviewPanel app={app} />
+            : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
+              : sectionLoading ? <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
+                : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
+                  : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
+                    : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
+                      : section === 'flows' ? (flows.length ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} /> : <EmptyState title="No flows captured" isCompact />)
+                        : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
         </div>
       </div>
 
-      {elementLightbox !== null &&
-        (() => {
-          const items = elementImages ?? [];
-          const lbItem = items[elementLightbox.index];
-          if (!lbItem) return null;
-          return (
-            <Lightbox
-              item={{ url: lbItem.url, type: lbItem.type, caption: lbItem.description ?? lbItem.type, platform: lbItem.platform }}
-              index={elementLightbox.index}
-              total={items.length}
-              onClose={() => setElementLightbox(null)}
-              onNavigate={(i) => setElementLightbox((lb) => {
-                if (!lb || items.length === 0) return lb;
-                return { index: ((i % items.length) + items.length) % items.length };
-              })}
-            />
-          );
-        })()}
-
-      {lightbox !== null &&
-        (() => {
-          const lbItem = screens[lightbox.index];
-          return (
-            <Lightbox
-              item={{ url: lbItem.url, type: lbItem.type, caption: lbItem.description ?? lbItem.type, platform: lbItem.platform }}
-              index={lightbox.index}
-              total={screens.length}
-              onClose={() => setLightbox(null)}
-              onNavigate={goLightbox}
-            />
-          );
-        })()}
+      {lightbox && screens[lightbox.index] && (() => {
+        const item = screens[lightbox.index];
+        return <Lightbox item={{ url: item.url, type: item.type, caption: item.description ?? item.type, platform: item.platform }} index={lightbox.index} total={screens.length} onClose={() => setLightbox(null)} onNavigate={goLightbox} />;
+      })()}
       <ScrollToTopButton />
     </motion.div>
   );

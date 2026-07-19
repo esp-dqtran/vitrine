@@ -46,6 +46,38 @@ export interface CatalogPage {
   nextCursor: string | null;
 }
 
+export interface CatalogAppMetadata {
+  id: string;
+  app: string;
+  cat: string;
+  accent: string;
+  totalScreens: number;
+  totalUiElements: number;
+  totalFlows: number;
+  platforms: string[];
+  analyzedScreens: number;
+  lastCapturedAt: string | null;
+  websiteUrl: string | null;
+  iconUrl: string | null;
+}
+
+export interface AppMetadataRecord {
+  app: string;
+  icon_url: string | null;
+  category: string | null;
+  total_screens: number;
+  total_ui_elements: number;
+  total_flows: number;
+  analyzed_screens: number;
+  last_captured_at: string | null;
+  available_platforms: string[];
+}
+
+export interface EvidencePageRecord {
+  rows: CrawledImage[];
+  nextCursor: string | null;
+}
+
 function appMeta(app: string) {
   if (APP_META[app]) return APP_META[app];
   const hue = [...app].reduce((sum, character) => sum + character.charCodeAt(0), 0);
@@ -119,6 +151,34 @@ function catalogApp(app: string, images: CrawledImage[], previews: PublishedPrev
   };
 }
 
+export function buildAppMetadata(row: AppMetadataRecord): CatalogAppMetadata {
+  const meta = appMeta(row.app);
+  return {
+    id: row.app,
+    app: meta.label,
+    cat: row.category ?? meta.cat,
+    accent: meta.accent,
+    totalScreens: row.total_screens,
+    totalUiElements: row.total_ui_elements,
+    totalFlows: row.total_flows,
+    platforms: row.available_platforms,
+    analyzedScreens: row.analyzed_screens,
+    lastCapturedAt: row.last_captured_at,
+    websiteUrl: meta.websiteUrl,
+    iconUrl: row.icon_url,
+  };
+}
+
+export function buildEvidencePage(page: EvidencePageRecord): {
+  screens: CatalogScreen[];
+  nextCursor: string | null;
+} {
+  return {
+    screens: page.rows.map((image) => screen(image.app, image)),
+    nextCursor: page.nextCursor,
+  };
+}
+
 export function buildCatalogPage(
   images: CrawledImage[],
   cursor?: string,
@@ -139,28 +199,6 @@ export function buildCatalogPage(
       (previewsByApp.get(name) ?? []) as PublishedPreviewImage[],
     )),
     nextCursor: start + limit < names.length ? encodeCursor(pageNames.at(-1) ?? "") : null,
-  };
-}
-
-export function buildAppDetailPage(
-  images: CrawledImage[],
-  appSlug: string,
-  cursor?: string,
-  requestedLimit = 24,
-  imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
-): { app: CatalogApp; screens: CatalogScreen[]; nextCursor: string | null } | undefined {
-  const appImages = groups(images).get(appSlug)?.sort((a, b) => a.id - b.id);
-  if (!appImages) return undefined;
-  const after = Number(decodeCursor(cursor) ?? 0);
-  const start = appImages.findIndex(({ id }) => id > after);
-  const limit = Math.min(Math.max(requestedLimit, 1), 48);
-  const page = appImages.slice(start < 0 ? appImages.length : start, (start < 0 ? appImages.length : start) + limit);
-  return {
-    app: catalogApp(appSlug, appImages),
-    screens: page.map((image) => screen(appSlug, image, undefined, imageUrl)),
-    nextCursor: page.length === limit && page.at(-1)!.id < appImages.at(-1)!.id
-      ? encodeCursor(String(page.at(-1)!.id))
-      : null,
   };
 }
 

@@ -38,6 +38,10 @@ import {
   publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
+  appMetadata,
+  appEvidencePage,
+  getVersionFlows,
+  flowEvidenceImages,
 } from "../../../src/db.ts";
 import {
   authenticateUser,
@@ -65,7 +69,7 @@ import { isPlatform, platformFromUrl, type Platform } from "../../../src/platfor
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
-import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
+import { buildAdminGalleryApps, buildAppMetadata, buildCatalogPage, buildEvidencePage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -269,6 +273,10 @@ const defaults = {
   publishedPreviewImages,
   listPublishedDesignSystems,
   listPublishedFlowSets,
+  appMetadata,
+  appEvidencePage,
+  getVersionFlows,
+  flowEvidenceImages,
   createExport,
   completeExport,
   failExport,
@@ -1927,19 +1935,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.status(status).json(result);
   });
 
-  app.get("/apps/:app", async (req, res) => {
-    if (!isAppSlug(req.params.app)) {
+  const authorizeAppDetail = async (req: express.Request, res: express.Response): Promise<boolean> => {
+    const appSlug = String(req.params.app);
+    if (!isAppSlug(appSlug)) {
       res.status(400).json({ error: "invalid app slug" });
-      return;
+      return false;
     }
     if (res.locals.user.role !== "admin") {
-      const traversal = traversalLimiter.check(`user:${res.locals.user.id}`, req.params.app);
+      const traversal = traversalLimiter.check(`user:${res.locals.user.id}`, appSlug);
       if (!traversal.allowed) {
         res.setHeader("Retry-After", String(traversal.retryAfterSeconds));
         await deps.recordAccessEvent({
           userId: res.locals.user.id,
           ipPrefix: ipPrefix(req.ip ?? "unknown"),
-          appSlug: req.params.app,
+          appSlug,
           featureKey: "library",
           action: "app-detail",
           outcome: "blocked",
@@ -1949,58 +1958,169 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           code: "verification_required",
           retryAfterSeconds: traversal.retryAfterSeconds,
         });
-        return;
+        return false;
       }
     }
-    if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
+    if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
-      return;
+      return false;
     }
-    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
-    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    // Defaults to "web" when the caller doesn't specify — screens across all platforms are
-    // still browsable unscoped (see sourceImages fallback below); this only affects which
-    // single version's screens get selected when the caller asks for one.
-    const platform = platformQuery(req.query.platform) ?? "web";
-    const requestedVersion = optionalQuery(req.query.version) ? Number(req.query.version) : undefined;
+    return true;
+  };
+
+  const resolveAppSection = async (req: express.Request, res: express.Response) => {
+    const platformValue = optionalQuery(req.query.platform);
+    if (platformValue && !isPlatform(platformValue)) {
+      res.status(400).json({ error: "invalid platform" });
+      return undefined;
+    }
+    const platforms = await deps.appPlatforms(req.params.app);
+    const platform = (platformValue as Platform | undefined) ?? platforms.find(isPlatform);
+    if (!platform) {
+      res.status(404).json({ error: "app platform not found" });
+      return undefined;
+    }
+    const versionValue = optionalQuery(req.query.version);
+    const requestedVersion = versionValue === undefined ? undefined : Number(versionValue);
     if (requestedVersion !== undefined && (!Number.isInteger(requestedVersion) || requestedVersion < 1)) {
       res.status(400).json({ error: "invalid version" });
-      return;
+      return undefined;
     }
-    const kind = req.query.kind === "ui_element" ? "ui_element" : "screen";
-    const [versions, availablePlatforms] = await Promise.all([
-      deps.listAppVersions(req.params.app, platform, res.locals.user.role !== "admin"),
-      deps.appPlatforms(req.params.app),
-    ]);
-    const selectedVersion = requestedVersion === undefined
+    const publishedOnly = res.locals.user.role !== "admin";
+    const versions = await deps.listAppVersions(req.params.app, platform, publishedOnly);
+    const version = requestedVersion === undefined
       ? versions.find(({ status }) => status === "published")
       : versions.find(({ version_number }) => version_number === requestedVersion);
-    const sourceImages = selectedVersion
-      ? await deps.versionImages(req.params.app, platform, selectedVersion.version_number, kind)
-      : res.locals.user.role === "admin" ? await deps.appImages(req.params.app, kind) : [];
-    const page = buildAppDetailPage(
-      sourceImages,
-      req.params.app,
-      cursor,
-      limit,
-      (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
-    );
-    if (!page) res.status(404).json({ error: "app not found" });
-    else {
-      await deps.recordAccessEvent({
-        userId: res.locals.user.id,
-        ipPrefix: ipPrefix(req.ip ?? "unknown"),
-        appSlug: req.params.app,
-        featureKey: "library",
-        action: "app-detail",
-        outcome: "success",
-      });
-      res.json({
-        ...page,
-        app: { ...page.app, platforms: availablePlatforms },
-        version: selectedVersion ?? null,
-      });
+    if (requestedVersion !== undefined && !version) {
+      res.status(404).json({ error: publishedOnly ? "published app version not found" : "app version not found" });
+      return undefined;
     }
+    if (publishedOnly && !version) {
+      res.status(404).json({ error: "published app version not found" });
+      return undefined;
+    }
+    return { platform, version, publishedOnly };
+  };
+
+  const recordAppDetailSuccess = async (req: express.Request, res: express.Response) => {
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug: req.params.app,
+      featureKey: "library",
+      action: "app-detail",
+      outcome: "success",
+    });
+  };
+
+  app.get("/apps/:app/screens", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit"].includes(key))) {
+      res.status(400).json({ error: "invalid screens query" });
+      return;
+    }
+    const section = await resolveAppSection(req, res);
+    if (!section) return;
+    const limit = req.query.limit === undefined ? 48 : Number(req.query.limit);
+    const cursor = optionalQuery(req.query.cursor);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 48 || (req.query.cursor !== undefined && !cursor)) {
+      res.status(400).json({ error: "invalid pagination" });
+      return;
+    }
+    try {
+      const page = buildEvidencePage(await deps.appEvidencePage({
+        app: req.params.app,
+        kind: "screen",
+        platform: section.platform,
+        versionNumber: section.version?.version_number,
+        cursor,
+        limit,
+        publishedOnly: section.publishedOnly,
+      }));
+      await recordAppDetailSuccess(req, res);
+      res.json({ ...page, platform: section.platform, version: section.version ?? null });
+    } catch (error) {
+      if (error instanceof RangeError) res.status(400).json({ error: error.message });
+      else throw error;
+    }
+  });
+
+  app.get("/apps/:app/ui-elements", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).some((key) => !["platform", "version", "cursor", "limit"].includes(key))) {
+      res.status(400).json({ error: "invalid UI elements query" });
+      return;
+    }
+    const section = await resolveAppSection(req, res);
+    if (!section) return;
+    const limit = req.query.limit === undefined ? 48 : Number(req.query.limit);
+    const cursor = optionalQuery(req.query.cursor);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 48 || (req.query.cursor !== undefined && !cursor)) {
+      res.status(400).json({ error: "invalid pagination" });
+      return;
+    }
+    try {
+      const page = buildEvidencePage(await deps.appEvidencePage({
+        app: req.params.app,
+        kind: "ui_element",
+        platform: section.platform,
+        versionNumber: section.version?.version_number,
+        cursor,
+        limit,
+        publishedOnly: section.publishedOnly,
+      }));
+      await recordAppDetailSuccess(req, res);
+      res.json({ ...page, platform: section.platform, version: section.version ?? null });
+    } catch (error) {
+      if (error instanceof RangeError) res.status(400).json({ error: error.message });
+      else throw error;
+    }
+  });
+
+  app.get("/apps/:app/flows", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).some((key) => !["platform", "version"].includes(key))) {
+      res.status(400).json({ error: "invalid flows query" });
+      return;
+    }
+    const section = await resolveAppSection(req, res);
+    if (!section) return;
+    const flows = await deps.getVersionFlows(
+      req.params.app,
+      section.platform,
+      section.version?.version_number,
+      section.publishedOnly,
+    );
+    const imageIds = [...new Set(flows.flatMap((flow) => flow.steps.flatMap(({ evidence }) =>
+      evidence.filter((id): id is number => typeof id === "number" && Number.isSafeInteger(id) && id > 0))))];
+    const images = await deps.flowEvidenceImages({
+      app: req.params.app,
+      platform: section.platform,
+      versionNumber: section.version?.version_number,
+      imageIds,
+      publishedOnly: section.publishedOnly,
+    });
+    const emptySnapshot = { app: req.params.app, generatedAt: new Date().toISOString(), tokens: [], components: [], flows };
+    const hydrated = res.locals.user.role === "admin"
+      ? hydrateDesignSystem(emptySnapshot, images)
+      : hydrateDesignSystem(emptySnapshot, images, (appSlug, source) => protectedMediaUrl(res.locals.user.id, appSlug, source));
+    await recordAppDetailSuccess(req, res);
+    res.json({ flows: hydrated.flows, platform: section.platform, version: section.version ?? null });
+  });
+
+  app.get("/apps/:app", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).length) {
+      res.status(400).json({ error: "app metadata does not accept section query parameters" });
+      return;
+    }
+    const row = await deps.appMetadata(req.params.app, res.locals.user.role !== "admin");
+    if (!row) {
+      res.status(404).json({ error: "app not found" });
+      return;
+    }
+    await recordAppDetailSuccess(req, res);
+    res.json({ app: buildAppMetadata(row) });
   });
 
   app.get("/apps", requireAdmin, async (req, res) => {

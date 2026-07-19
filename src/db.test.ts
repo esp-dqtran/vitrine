@@ -60,6 +60,10 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     getVersionDesignSystem,
     listPublishedDesignSystems,
     listPublishedFlowSets,
+    appMetadata,
+    appEvidencePage,
+    getVersionFlows,
+    flowEvidenceImages,
     versionImages,
     publishedImages,
     pool,
@@ -93,6 +97,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, role = EXCLUDED.role`);
 
   const scopedWebImage = await insertImage("scope-app", "web", "https://cdn.example.com/scope-web.png");
+  const scopedWebElement = await insertImage("scope-app", "web", "https://cdn.example.com/scope-web-element.png", { kind: "ui_element" });
   const scopedIosImage = await insertImage("scope-app", "ios", "https://cdn.example.com/scope-ios.png");
   const scopedWebVersion = (await listAppVersions("scope-app", "web"))[0];
   const scopedIosVersion = (await listAppVersions("scope-app", "ios"))[0];
@@ -158,6 +163,33 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.deepEqual(
     (await listPublishedFlowSets()).map(({ flows }) => flows[0].id).sort(),
     ["ios-flow", "web-flow-v2"],
+  );
+  const adminMetadata = await appMetadata("scope-app", false);
+  assert.equal(adminMetadata?.total_screens, 2);
+  assert.equal(adminMetadata?.total_ui_elements, 1);
+  assert.equal(adminMetadata?.total_flows, 2);
+  assert.deepEqual(adminMetadata?.available_platforms, ["web", "ios"]);
+  const customerMetadata = await appMetadata("scope-app", true);
+  assert.equal(customerMetadata?.total_screens, 2);
+  assert.equal(customerMetadata?.total_ui_elements, 1);
+  assert.equal(customerMetadata?.total_flows, 2);
+  const webElements = await appEvidencePage({
+    app: "scope-app", platform: "web", kind: "ui_element",
+    versionNumber: scopedWebV2.version_number, publishedOnly: true, limit: 48,
+  });
+  assert.deepEqual(webElements.rows.map(({ id }) => id), [scopedWebElement]);
+  assert.equal(webElements.nextCursor, null);
+  const webFlows = await getVersionFlows("scope-app", "web", scopedWebV2.version_number, true);
+  assert.deepEqual(webFlows.map(({ id }) => id), ["web-flow-v2"]);
+  const flowImages = await flowEvidenceImages({
+    app: "scope-app", platform: "web", versionNumber: scopedWebV2.version_number,
+    imageIds: [scopedWebImage, scopedIosImage], publishedOnly: true,
+  });
+  assert.deepEqual(flowImages.map(({ id }) => id), [scopedWebImage]);
+  const scopedWebDraft = await createAppVersion("scope-app", "web", -103, "https://example.com/web-v3");
+  assert.deepEqual(
+    (await getVersionFlows("scope-app", "web", scopedWebDraft.version_number, false)).map(({ id }) => id),
+    ["web-flow-v2"],
   );
 
   await query("TRUNCATE crawl_repairs, crawl_run_steps, crawl_evidence, crawl_runs, crawl_plans, collection_items, collections, app_flow_versions, design_system_versions, version_images, app_versions, app_flows, design_systems, apps, platforms, images RESTART IDENTITY CASCADE");

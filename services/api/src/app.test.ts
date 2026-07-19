@@ -1496,10 +1496,11 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   let unlocked = false;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
-    allImages: async () => catalogImages,
-    listAppVersions: async (app) => [{ ...publishedVersion, app }],
-    versionImages: async () => catalogImages,
-    appPlatforms: async () => ["web", "ios", "android"],
+    appMetadata: async (app) => ({
+      app, icon_url: null, category: null, total_screens: 1, total_ui_elements: 0,
+      total_flows: 0, analyzed_screens: 0, last_captured_at: null,
+      available_platforms: ["web", "ios", "android"],
+    }),
     canAccessApp: async () => unlocked,
     unlockFreeApp: async () => {
       unlocked = true;
@@ -1521,26 +1522,112 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   assert.deepEqual((await detail.json()).app.platforms, ["web", "ios", "android"]);
 });
 
-test("uses app-scoped images for an admin app without a published version", async (t) => {
-  let requested: { app: string; kind?: string | string[]; platform?: string } | undefined;
+test("returns app metadata without invoking section dependencies", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    appMetadata: async () => ({
+      app: "linear",
+      icon_url: "https://cdn.example.com/linear.png",
+      category: "Productivity",
+      total_screens: 236,
+      total_ui_elements: 41,
+      total_flows: 12,
+      analyzed_screens: 200,
+      last_captured_at: "2026-07-19T01:00:00.000Z",
+      available_platforms: ["ios", "android"],
+    }),
+    listAppVersions: async () => { throw new Error("must not load versions"); },
+    appEvidencePage: async () => { throw new Error("must not load evidence"); },
+    getVersionFlows: async () => { throw new Error("must not load flows"); },
+    getVersionDesignSystem: async () => { throw new Error("must not load design system"); },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps/linear`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.app.totalScreens, 236);
+  assert.equal(body.app.totalUiElements, 41);
+  assert.equal(body.app.totalFlows, 12);
+  assert.equal("screens" in body.app, false);
+  assert.equal("version" in body, false);
+  assert.equal("nextCursor" in body, false);
+  assert.equal((await fetch(`${base}/apps/linear?limit=48`, { headers: adminCookie })).status, 400);
+});
+
+test("loads screens and UI elements from dedicated paged endpoints", async (t) => {
+  const calls: Array<{ kind: string; limit?: number }> = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => ["ios"],
+    listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
+    appEvidencePage: async (input) => {
+      calls.push({ kind: input.kind, limit: input.limit });
+      return { rows: catalogImages.map((image) => ({ ...image, platform: "ios", kind: input.kind })), nextCursor: "next" };
+    },
+    getVersionFlows: async () => { throw new Error("must not load flows"); },
+    getVersionDesignSystem: async () => { throw new Error("must not load design system"); },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&limit=48`, { headers: adminCookie });
+  const elements = await fetch(`${base}/apps/linear/ui-elements?platform=ios&version=1&limit=24`, { headers: adminCookie });
+  assert.equal(screens.status, 200);
+  assert.equal(elements.status, 200);
+  assert.deepEqual(calls, [{ kind: "screen", limit: 48 }, { kind: "ui_element", limit: 24 }]);
+  assert.equal((await screens.json()).screens.length, 1);
+  assert.equal((await elements.json()).nextCursor, "next");
+});
+
+test("loads flows without loading a design-system snapshot", async (t) => {
+  let evidenceIds: number[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => ["ios"],
+    listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
+    getVersionFlows: async () => [{
+      id: "login", title: "Login", description: "Authenticate", tags: [],
+      steps: [{ label: "Enter email", evidence: [7] }],
+    }],
+    flowEvidenceImages: async ({ imageIds }) => {
+      evidenceIds = imageIds;
+      return catalogImages.map((image) => ({ ...image, platform: "ios" }));
+    },
+    getVersionDesignSystem: async () => { throw new Error("must not load design system"); },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps/linear/flows?platform=ios&version=1`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  assert.deepEqual(evidenceIds, [7]);
+  assert.equal((await response.json()).flows[0].id, "login");
+});
+
+test("uses app-scoped evidence for an admin app without a published version", async (t) => {
+  let requested: { app: string; kind: string; platform: string } | undefined;
   const platformMetadata = { appPlatforms: async () => ["web"] };
   const { base, server } = await serve(createApiApp({
     ...platformMetadata,
     resolveSession: async () => admin,
     canAccessApp: async () => true,
     listAppVersions: async (app) => [{ ...publishedVersion, app, status: "draft" }],
-    allImages: async () => { throw new Error("global image scan must not run for app detail"); },
-    appImages: async (app, kind, platform) => {
-      requested = { app, kind, platform };
-      return catalogImages.filter((image) => image.app === app);
+    appEvidencePage: async (input) => {
+      requested = { app: input.app, kind: input.kind, platform: input.platform };
+      return { rows: catalogImages.filter((image) => image.app === input.app), nextCursor: null };
     },
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps/linear?limit=1`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps/linear/screens?platform=web&limit=1`, { headers: adminCookie });
   assert.equal(response.status, 200);
-  assert.deepEqual(requested, { app: "linear", kind: "screen", platform: undefined });
+  assert.deepEqual(requested, { app: "linear", kind: "screen", platform: "web" });
   assert.equal((await response.json()).screens.length, 1);
 });
 

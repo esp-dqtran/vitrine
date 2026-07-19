@@ -21,7 +21,7 @@ export interface Screen {
   confidence?: number | null;
 }
 
-export interface App {
+export interface AppSummary {
   id: string;
   app: string;
   cat: string;
@@ -30,9 +30,17 @@ export interface App {
   platforms?: Platform[];
   analyzedScreens?: number;
   lastCapturedAt?: string | null;
-  screens: Screen[];
   websiteUrl?: string | null;
   iconUrl?: string | null;
+}
+
+export interface AppMetadata extends AppSummary {
+  totalUiElements: number;
+  totalFlows: number;
+}
+
+export interface App extends AppSummary {
+  screens: Screen[];
 }
 
 export type RowStatus = 'Queued' | 'In progress' | 'Complete' | 'Needs attention' | 'Cancelled';

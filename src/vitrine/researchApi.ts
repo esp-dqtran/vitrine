@@ -107,7 +107,8 @@ export async function requestExport(app: string, platform: Platform, format: Exp
   return { blob: await response.blob(), filename };
 }
 
-export const listAppVersions = (app: string, platform: Platform): Promise<AppVersion[]> => json(`/api/apps/${app}/versions?platform=${platform}`);
+export const listAppVersions = (app: string, platform: Platform, signal?: AbortSignal): Promise<AppVersion[]> =>
+  json(`/api/apps/${app}/versions?platform=${platform}`, { signal });
 export const createAppVersion = (app: string, platform: Platform, sourceUrl: string): Promise<AppVersion> =>
   json(`/api/apps/${app}/versions`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ platform, sourceUrl }) });
 export const getVersionBlockers = (versionId: number): Promise<{ blockers: Array<{ code: string; message: string }> }> => json(`/api/versions/${versionId}/blockers`);

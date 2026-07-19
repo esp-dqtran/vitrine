@@ -44,8 +44,10 @@ test('separates gallery and detail route loaders', async () => {
   assert.match(appSource, /useApps\(user\?\.role, route\.name === 'apps'\)/);
   assert.match(appSource, /useAppDetail\(\s*route\.name === 'app' \? route\.appId : undefined,/);
   assert.doesNotMatch(gallerySource, /requestedAppId|fetchAppDetail|mergeApp/);
-  assert.match(detailSource, /fetchAppDetailPage/);
+  assert.match(detailSource, /fetchAppMetadata/);
+  assert.doesNotMatch(detailSource, /fetchAppDetailPage|limit=48/);
   assert.doesNotMatch(detailSource, /fetch\(['"]\/api\/apps['"]/);
+  assert.doesNotMatch(appSource, /initialVersion=|initialNextCursor=/);
 });
 
 test('does not reload a retained gallery merely because it is re-enabled', async () => {
