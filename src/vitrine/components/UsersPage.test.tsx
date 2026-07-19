@@ -20,8 +20,8 @@ test("renders the member-first Option 2 hierarchy from real API fields", () => {
   assert.match(html, /Manage members and monitor growth/);
   assert.match(html, /2 members/);
   assert.match(html, /Manage members and monitor growth\.<\/p><span>2 members<\/span>/);
-  assert.match(html, /aria-label="Search members"/);
-  assert.match(html, /aria-label="Filter members"/);
+  assert.match(html, /<label[^>]*>Search members<\/label>/);
+  assert.match(html, /<label[^>]*>Filter members<\/label>/);
   assert.match(html, /Administrators/);
   assert.match(html, /Members/);
   assert.match(html, /admin@gmail\.com/);

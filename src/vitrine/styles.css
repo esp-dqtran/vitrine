@@ -307,47 +307,14 @@ body {
   margin-bottom: 28px;
 }
 
-.admin-users-search,
-.admin-users-filter {
-  min-height: 46px;
-  border: 1px solid var(--color-border);
-  border-radius: 11px;
-  outline: none;
-  background: var(--color-background-surface);
-  color: var(--color-text-primary);
-  font: inherit;
-  font-size: 14px;
-  transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
-}
-
-.admin-users-search {
+.admin-users-search-control {
   flex: 1 1 320px;
   width: 100%;
   min-width: 180px;
-  padding: 0 15px;
 }
 
-.admin-users-search::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 0.82;
-}
-
-.admin-users-filter {
+.admin-users-filter-control {
   flex: 0 0 180px;
-  padding: 0 36px 0 14px;
-  cursor: pointer;
-}
-
-.admin-users-search:hover,
-.admin-users-filter:hover {
-  border-color: color-mix(in srgb, var(--color-text-secondary) 65%, var(--color-border));
-}
-
-.admin-users-search:focus-visible,
-.admin-users-filter:focus-visible,
-.admin-users-empty button:focus-visible {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .admin-users-groups {
@@ -550,18 +517,9 @@ body {
   font-size: 14px;
 }
 
-.admin-users-empty button,
-.admin-users-error button {
+.admin-users-empty [role="button"],
+.admin-users-error [role="button"] {
   margin-top: 8px;
-  min-height: 38px;
-  padding: 0 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  background: var(--color-background-surface);
-  color: var(--color-text-primary);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
 }
 
 .admin-users-state {
@@ -631,8 +589,8 @@ body {
     margin-bottom: 24px;
   }
 
-  .admin-users-search,
-  .admin-users-filter {
+  .admin-users-search-control,
+  .admin-users-filter-control {
     flex-basis: auto;
     width: 100%;
     min-width: 0;

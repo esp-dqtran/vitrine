@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Badge, Spinner } from '@astryxdesign/core';
+import { Badge, Button, Icon, Selector, Spinner, TextInput } from '@astryxdesign/core';
 import { useUsersGrowth } from '../useUsersGrowth';
 import {
   filterAdminUsers,
@@ -71,24 +71,27 @@ function MemberDirectory({ users }: { users: AdminUser[] }) {
       </div>
 
       <div className="admin-users-toolbar">
-        <input
-          className="admin-users-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          aria-label="Search members"
-          placeholder="Search by email…"
-        />
-        <select
-          className="admin-users-filter"
-          value={filter}
-          onChange={(event) => setFilter(event.target.value as UserFilter)}
-          aria-label="Filter members"
-        >
-          {Object.entries(USER_FILTER_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
+        <div className="admin-users-search-control">
+          <TextInput
+            label="Search members"
+            isLabelHidden
+            value={query}
+            onChange={setQuery}
+            placeholder="Search by email…"
+            startIcon={<Icon icon="search" size="sm" />}
+            hasClear={Boolean(query)}
+            width="100%"
+          />
+        </div>
+        <div className="admin-users-filter-control">
+          <Selector
+            label="Filter members"
+            isLabelHidden
+            value={filter}
+            onChange={(value) => setFilter(value as UserFilter)}
+            options={Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({ value, label }))}
+          />
+        </div>
       </div>
 
       {users.length === 0 ? (
@@ -100,7 +103,7 @@ function MemberDirectory({ users }: { users: AdminUser[] }) {
         <div className="admin-users-empty">
           <h3>No members match these filters</h3>
           <p>Try another email or reset the current segment.</p>
-          {hasFilters && <button type="button" onClick={clearFilters}>Clear filters</button>}
+          {hasFilters && <Button label="Clear filters" size="sm" clickAction={clearFilters} />}
         </div>
       ) : (
         <div className="admin-users-groups">
@@ -220,7 +223,7 @@ export function UsersPage() {
       <div className="admin-users-state admin-users-error">
         <h1>Could not load users</h1>
         <p>{error ?? 'The user data is unavailable right now.'}</p>
-        <button type="button" onClick={() => void refresh()}>Try again</button>
+        <Button label="Try again" clickAction={() => void refresh()} />
       </div>
     );
   }

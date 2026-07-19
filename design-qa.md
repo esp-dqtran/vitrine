@@ -35,6 +35,12 @@ A separate desktop crop was not needed because the 1440 × 1024 source and imple
 - Search by email, Administrators, Pro, Free, Disabled, and Clear filters were exercised in the live page. The controls update the current in-memory user set without navigation.
 - Browser console error check returned zero errors.
 
+### Pass 3
+
+- The full repository suite caught the initial native search, selector, and retry controls against the Astryx component-compliance baseline.
+- Replaced those controls with the design-system `TextInput`, `Selector`, `Button`, and `Icon` components while preserving the approved layout.
+- Re-ran search and Administrators filtering through the rendered design-system controls. At 390px, the title remains at 121px, the toolbar remains stacked, Growth pulse follows the directory, and `scrollWidth === clientWidth`.
+
 ## Required fidelity surfaces
 
 - Fonts and typography: Uses the existing Figtree stack. Display, section, row, metadata, and metric weights preserve the source hierarchy; dense row text remains 12–14px and the page title remains the only display-sized text.
