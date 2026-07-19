@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { AppCard } from './components/AppCard';
-import { ImportingAppCard } from './components/ImportingAppCard';
 import { ProgressBanner } from './components/ProgressBanner';
 import { ScreenDetail } from './components/ScreenDetail';
 import { CommandPalette } from './components/CommandPalette';
@@ -11,7 +10,7 @@ import { SearchTrigger } from './components/SearchTrigger';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { ImportDialog, buildPipelineRows, knownPlatformsFor } from './components/ImportDialog';
+import { ImportDialog, appRow, knownPlatformsFor } from './components/ImportDialog';
 import { PageHeader } from './components/PageHeader';
 import { Sidebar } from './components/Sidebar';
 import { UnlockModal } from './components/UnlockModal';
@@ -19,7 +18,7 @@ import { UsersPage } from './components/UsersPage';
 import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { useApps } from './useApps';
-import { useJobs } from './useJobs';
+import { submitImportJob } from './jobsApi';
 import { listCollections, searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import type { CatalogSearchResult } from '../catalogResearch';
@@ -38,9 +37,8 @@ function AppCardSkeleton({ index }: { index: number }) {
 
 export function App() {
   const { user, logout } = useAuth();
-  const { apps, loading, error, refresh } = useApps(user?.role);
+  const { apps, loading, error } = useApps(user?.role);
   const isAdmin = user?.role === 'admin';
-  const { jobs, submitImport } = useJobs();
   const [importOpen, setImportOpen] = useState(false);
   const route = useRoute();
   const [cat, setCat] = useState('All');
@@ -59,17 +57,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<{ plan: 'free' | 'pro'; freeUnlocks: string[]; freeUnlocksRemaining: number } | null>(null);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
-  const seenSynthesized = useRef<Set<number>>(new Set());
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
-
-  // Refresh the app list when a synthesize completes (new captured/analyzed screens landed).
-  useEffect(() => {
-    let fresh = false;
-    for (const job of jobs) {
-      if (job.type === 'synthesize-app' && job.status === 'done' && !seenSynthesized.current.has(job.id)) { seenSynthesized.current.add(job.id); fresh = true; }
-    }
-    if (fresh) void refresh();
-  }, [jobs, refresh]);
 
   useEffect(() => {
     void listCollections().then(setCollections).catch(() => setCollections([]));
@@ -208,7 +196,7 @@ export function App() {
     );
   }
 
-  const rows = buildPipelineRows(apps, jobs);
+  const rows = apps.map(appRow);
   const query = q.trim().toLowerCase();
   const list = rows.filter(
     (r) =>
@@ -306,19 +294,15 @@ export function App() {
           <div style={{ padding: '6px 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{list.length} apps</div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
-            {list.map((r) =>
-              r.app ? (
-                <AppCard
-                  key={r.slug}
-                  app={r.app}
-                  onOpen={() => void openApp(r.slug)}
-                  status={isAdmin ? r.status : undefined}
-                  progressLabel={`${r.analyzed}/${r.captured} analyzed`}
-                />
-              ) : (
-                <ImportingAppCard key={r.slug} row={r} />
-              ),
-            )}
+            {list.map((r) => (
+              <AppCard
+                key={r.slug}
+                app={r.app!}
+                onOpen={() => void openApp(r.slug)}
+                status={isAdmin ? r.status : undefined}
+                progressLabel={`${r.analyzed}/${r.captured} analyzed`}
+              />
+            ))}
           </div>
         </motion.div>
       )}
@@ -343,7 +327,7 @@ export function App() {
       <ImportDialog
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        submitImport={submitImport}
+        submitImport={submitImportJob}
         knownPlatforms={knownPlatformsFor(apps)}
       />
     )}
