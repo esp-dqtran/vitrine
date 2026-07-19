@@ -50,13 +50,18 @@ export interface Flow {
 }
 
 export interface Progress {
-  stage: 'crawl' | 'caption' | 'synthesize';
+  id: string;
+  stage: 'crawl' | 'caption' | 'synthesize' | 'smart-crawl';
   app: string;
   done: number;
   total: number;
   status: 'running' | 'done' | 'error' | 'cancelled' | 'idle';
   message?: string;
   updatedAt: string;
+}
+
+export interface ProgressSnapshot {
+  entries: Progress[];
 }
 
 export interface Job {
