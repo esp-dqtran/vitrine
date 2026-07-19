@@ -47,7 +47,18 @@ import {
   resolveSession,
   resolveSessionState,
 } from "../../../src/authStore.ts";
-import { getDailySignups, getGrowthStats, listUsersForAdmin } from "../../../src/adminStats.ts";
+import { getDailySignups, getGrowthStats } from "../../../src/adminStats.ts";
+import {
+  ADMIN_USER_FILTERS,
+  listAdminUsersPage,
+  setAdminUserActive,
+  type AdminUserFilter,
+} from "../../../src/adminUsers.ts";
+import {
+  getFeatureUsageOverview,
+  getUserFeatureUsage,
+  parseUsageRange,
+} from "../../../src/featureUsage.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
@@ -303,7 +314,10 @@ const defaults = {
   getAccountEntitlements,
   recordAccessEvent,
   reserveExportOperation,
-  listUsersForAdmin,
+  listAdminUsersPage,
+  setAdminUserActive,
+  getFeatureUsageOverview,
+  getUserFeatureUsage,
   getGrowthStats,
   getDailySignups,
   billing: disabledBilling,
@@ -2008,13 +2022,81 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(await deps.listJobs());
   });
 
-  app.get("/users", requireAdmin, async (_req, res) => {
-    res.json(await deps.listUsersForAdmin());
+  app.get("/users", requireAdmin, async (req, res) => {
+    const limit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+    const filter = req.query.filter === undefined ? "all" : String(req.query.filter);
+    if (!Number.isInteger(limit) || !ADMIN_USER_FILTERS.has(filter as AdminUserFilter)) {
+      res.status(400).json({ error: "invalid user directory query" });
+      return;
+    }
+    try {
+      res.json(await deps.listAdminUsersPage({
+        limit,
+        cursor: optionalQuery(req.query.cursor),
+        query: optionalQuery(req.query.q),
+        filter: filter as AdminUserFilter,
+      }));
+    } catch (error) {
+      if ((error as Error).message === "Invalid user cursor") {
+        res.status(400).json({ error: "invalid user cursor" });
+        return;
+      }
+      throw error;
+    }
   });
 
   app.get("/users/growth", requireAdmin, async (_req, res) => {
     const [stats, dailySignups] = await Promise.all([deps.getGrowthStats(), deps.getDailySignups()]);
     res.json({ stats, dailySignups });
+  });
+
+  app.get("/users/usage", requireAdmin, async (req, res) => {
+    const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
+    if (!range) {
+      res.status(400).json({ error: "range must be 7d, 30d, or 90d" });
+      return;
+    }
+    res.json(await deps.getFeatureUsageOverview(range));
+  });
+
+  app.get("/users/:id/usage", requireAdmin, async (req, res) => {
+    const userId = positiveId(req.params.id);
+    const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
+    if (!userId || !range) {
+      res.status(400).json({ error: !userId ? "invalid user id" : "range must be 7d, 30d, or 90d" });
+      return;
+    }
+    const usage = await deps.getUserFeatureUsage(userId, range);
+    if (!usage) {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    res.json(usage);
+  });
+
+  app.patch("/users/:id/active", requireAdmin, async (req, res) => {
+    const userId = positiveId(req.params.id);
+    if (!userId || typeof req.body?.active !== "boolean") {
+      res.status(400).json({ error: "invalid account state request" });
+      return;
+    }
+    const result = await deps.setAdminUserActive({
+      actorUserId: res.locals.user.id,
+      userId,
+      active: req.body.active,
+    });
+    if (result.status === "not_found") {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    if (result.status === "forbidden") {
+      const error = result.reason === "self_disable"
+        ? "You cannot disable your own account"
+        : "The last active administrator cannot be disabled";
+      res.status(403).json({ error, code: result.reason });
+      return;
+    }
+    res.json(result.user);
   });
 
   app.post("/jobs/:id/cancel", requireAdmin, async (req, res) => {
