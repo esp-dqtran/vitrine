@@ -94,9 +94,9 @@ export function parseCatalogLogCounts(lines: readonly string[]): CatalogArtifact
     if (match) keepMax("screens", Number(match[1]));
     match = line.match(/Captured \d+\/(\d+) (screens|UI elements) image\(s\)/);
     if (match) keepMax(match[2] === "screens" ? "screens" : "uiElements", Number(match[1]));
-    match = line.match(/selected (\d+) of \d+ UI elements/i);
+    match = line.match(/selected \d+ of (\d+) UI elements/i);
     if (match) keepMax("uiElements", Number(match[1]));
-    match = line.match(/Imported \d+\/(\d+) flow\(s\)/);
+    match = line.match(/(?:Imported|Verified) \d+\/(\d+) flow\(s\)/);
     if (match) keepMax("flows", Number(match[1]));
   }
   return counts;

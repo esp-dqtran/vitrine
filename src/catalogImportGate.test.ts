@@ -63,11 +63,11 @@ test("catalog log parser reads legacy and verified Mobbin totals", async () => {
     "[gamma] Done. Imported 527 screens image(s) via bulk download.",
     "[gamma] Pass 1: selected 522 of 527 UI elements (5 filtered as other-app).",
     "[gamma] Done. Imported 41/42 flow(s).",
-  ]), { screens: 527, uiElements: 522, flows: 42 });
+  ]), { screens: 527, uiElements: 527, flows: 42 });
   assert.deepEqual(parse([
     "[gamma] Done. Captured 527/527 screens image(s) via bulk download (5 new object(s)).",
     "[gamma] Done. Captured 527/527 UI elements image(s) via bulk download (527 new object(s)).",
-    "[gamma] Done. Imported 42/42 flow(s).",
+    "[gamma] Done. Verified 42/42 flow(s); downloaded 42 in this pass.",
   ]), { screens: 527, uiElements: 527, flows: 42 });
 });
 
