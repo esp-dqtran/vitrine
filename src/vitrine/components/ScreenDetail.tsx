@@ -36,31 +36,35 @@ interface ScreenDetailProps {
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   role: 'admin' | 'user';
   initialSection?: string;
+  initialVersion?: AppVersion | null;
+  initialNextCursor?: string | null;
   onSectionChange?: (section: Section) => void;
 }
 
-export function ScreenDetail({ app, onBack, role, initialSection, onSectionChange }: ScreenDetailProps) {
+export function ScreenDetail({ app, onBack, role, initialSection, initialVersion, initialNextCursor, onSectionChange }: ScreenDetailProps) {
   const appPlatforms = [...new Set(app.screens.map((s) => s.platform))].filter(
     (p): p is Platform => p === 'ios' || p === 'android' || p === 'web',
   );
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>(appPlatforms[0] ?? 'web');
-  const [versions, setVersions] = useState<AppVersion[]>([]);
-  const [selectedVersion, setSelectedVersion] = useState<number>();
-  const [versionScreens, setVersionScreens] = useState<App['screens'] | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [versions, setVersions] = useState<AppVersion[]>(initialVersion ? [initialVersion] : []);
+  const [selectedVersion, setSelectedVersion] = useState<number | undefined>(initialVersion?.version_number);
+  const [versionResolved, setVersionResolved] = useState(Boolean(initialVersion));
+  const [versionScreens, setVersionScreens] = useState<App['screens'] | null>(app.screens);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor ?? null);
   const [loadingMore, setLoadingMore] = useState(false);
   // Raw UI Element crops — shown directly (like Screens) until this app has been
   // analyzed into named components; ComponentsPanel takes over once that exists.
   const [elementImages, setElementImages] = useState<App['screens'] | null>(null);
   const [elementsCursor, setElementsCursor] = useState<string | null>(null);
   const [elementsLoadingMore, setElementsLoadingMore] = useState(false);
+  const [elementsError, setElementsError] = useState<string | null>(null);
   const [elementLightbox, setElementLightbox] = useState<LightboxState>(null);
   // Platform is the first-layer filter for the whole screen — scope screens to it
   // up front so every section below (Overview, Screens, Elements, Flows) agrees,
   // even during the brief window before the platform-scoped version fetch resolves.
   const screens = (versionScreens ?? app.screens).filter((s) => s.platform === selectedPlatform);
   const count = screens.length;
-  const { snapshot, status: designSystemStatus } = useDesignSystem(app.id, selectedPlatform, selectedVersion);
+  const { snapshot, status: designSystemStatus } = useDesignSystem(app.id, selectedPlatform, selectedVersion, versionResolved);
   const components = snapshot?.components ?? [];
   const flows = snapshot?.flows ?? [];
 
@@ -81,23 +85,21 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
   // version arrives explicitly (not read from `selectedVersion` state) so this can run
   // inside `selectVersion` itself, at the exact moment Screens' own version is resolved —
   // matching Screens' fetch-once-version-is-known timing instead of racing it.
-  const loadElements = async (version?: number) => {
-    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${version ? `version=${version}&` : ''}limit=48`);
-    if (response.ok) {
-      const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
-      setElementImages(data.screens);
-      setElementsCursor(data.nextCursor);
-    }
+  const loadElements = async (version?: number, signal?: AbortSignal) => {
+    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&kind=ui_element&${version ? `version=${version}&` : ''}limit=48`, { signal });
+    if (!response.ok) throw new Error(`UI elements returned ${response.status}`);
+    const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
+    setElementImages(data.screens);
+    setElementsCursor(data.nextCursor);
   };
 
-  const selectVersion = async (version: number) => {
+  const selectVersion = async (version?: number) => {
     setSelectedVersion(version);
+    setVersionResolved(true);
     setElementImages(null);
     setElementsCursor(null);
-    const [response] = await Promise.all([
-      fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&version=${version}&limit=48`),
-      loadElements(version),
-    ]);
+    setElementsError(null);
+    const response = await fetch(`/api/apps/${app.id}?platform=${selectedPlatform}&${version ? `version=${version}&` : ''}limit=48`);
     if (response.ok) {
       const data = await response.json() as { screens: App['screens']; nextCursor: string | null };
       setVersionScreens(data.screens);
@@ -139,14 +141,42 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     listAppVersions(app.id, selectedPlatform).then((items) => {
       setVersions(items);
       const latest = items.find(({ status }) => status === 'published') ?? items[0];
-      if (latest) void selectVersion(latest.version_number);
-      else {
-        setElementImages(null);
-        setElementsCursor(null);
-        void loadElements();
+      if (selectedVersion === undefined && versionScreens !== null) {
+        setSelectedVersion(latest?.version_number);
+        setVersionResolved(true);
+        return;
       }
-    }).catch(() => setVersions([]));
+      if (versionScreens !== null && selectedVersion === latest?.version_number) {
+        setVersionResolved(true);
+        return;
+      }
+      void selectVersion(latest?.version_number);
+    }).catch(() => {
+      setVersions([]);
+      setVersionResolved(true);
+    });
   }, [app.id, selectedPlatform]);
+
+  useEffect(() => {
+    if (section !== 'elements' || designSystemStatus === 'loading' || components.length > 0 || elementImages !== null) return;
+    const controller = new AbortController();
+    setElementsError(null);
+    void loadElements(selectedVersion, controller.signal).catch((cause: Error) => {
+      if (cause.name !== 'AbortError') setElementsError(cause.message);
+    });
+    return () => controller.abort();
+  }, [section, designSystemStatus, components.length, elementImages, selectedPlatform, selectedVersion]);
+
+  const selectPlatform = (platform: Platform) => {
+    setSelectedPlatform(platform);
+    setSelectedVersion(undefined);
+    setVersionResolved(false);
+    setVersionScreens(null);
+    setNextCursor(null);
+    setElementImages(null);
+    setElementsCursor(null);
+    setElementsError(null);
+  };
 
   const types = Array.from(new Set(screens.map((s) => s.type)));
   const typeCounts = (t: string) => (t === 'All' ? count : screens.filter((s) => s.type === t).length);
@@ -276,7 +306,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                     key={p}
                     label={PLATFORM_LABEL[p]}
                     isPressed={p === selectedPlatform}
-                    onPressedChange={() => setSelectedPlatform(p)}
+                    onPressedChange={() => selectPlatform(p)}
                     size="sm"
                     style={{
                       borderRadius: 999,
@@ -464,6 +494,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
             <ComponentsPanel components={components} />
           ) : (
             <>
+              {elementsError && <div role="alert" style={{ padding: '12px 0', color: 'var(--color-text-danger)' }}>{elementsError}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 20 }}>
                 {(elementImages ?? []).map((s, i) => (
                   <ScreenGridCard key={i} screen={s} accent={app.accent} delay={Math.min(i * 0.04, 0.32)} onOpen={() => setElementLightbox({ index: i })} />

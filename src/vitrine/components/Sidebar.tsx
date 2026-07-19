@@ -11,7 +11,7 @@ const NAV_ITEMS: Array<{ label: string; route: Route; match: (route: Route) => b
 
 interface SidebarProps {
   email: string;
-  collectionsCount: number;
+  collectionsCount?: number;
   onOpenCollections: () => void;
   onOpenSettings: () => void;
   onLogout: () => void | Promise<void>;

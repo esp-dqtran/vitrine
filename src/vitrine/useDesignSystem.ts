@@ -17,11 +17,16 @@ export async function loadDesignSystem(
   return response.json() as Promise<DesignSystemSnapshot<EvidenceView>>;
 }
 
-export function useDesignSystem(appId: string, platform: Platform, version?: number) {
+export function useDesignSystem(appId: string, platform: Platform, version?: number, enabled = true) {
   const [snapshot, setSnapshot] = useState<DesignSystemSnapshot<EvidenceView> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "missing" | "error">("loading");
 
   useEffect(() => {
+    if (!enabled) {
+      setSnapshot(null);
+      setStatus("loading");
+      return;
+    }
     const controller = new AbortController();
     setSnapshot(null);
     setStatus("loading");
@@ -38,7 +43,7 @@ export function useDesignSystem(appId: string, platform: Platform, version?: num
         if (error.name !== "AbortError") setStatus("error");
       });
     return () => controller.abort();
-  }, [appId, platform, version]);
+  }, [appId, enabled, platform, version]);
 
   return { snapshot, status };
 }

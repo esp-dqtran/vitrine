@@ -19,11 +19,11 @@ import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
+import { useCollections } from './useCollections';
 import { submitImportJob } from './jobsApi';
-import { listCollections, searchCatalog, type SearchFilters } from './researchApi';
+import { searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import type { CatalogSearchResult } from '../catalogResearch';
-import type { ResearchCollection } from '../db';
 
 function AppCardSkeleton({ index }: { index: number }) {
   return (
@@ -53,18 +53,19 @@ export function App() {
   const [searchError, setSearchError] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchRetry, setSearchRetry] = useState(0);
-  const [collections, setCollections] = useState<ResearchCollection[]>([]);
+  const { collections, loaded: collectionsLoaded, ensureCollections, setCollections } = useCollections();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<{ plan: 'free' | 'pro'; freeUnlocks: string[]; freeUnlocksRemaining: number } | null>(null);
+  const [entitlementsResolved, setEntitlementsResolved] = useState(isAdmin);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
 
   const isFreeGated = (appId: string) =>
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
-  const detailGateLoading = route.name === 'app' && !isAdmin && entitlements === null;
+  const detailGateLoading = route.name === 'app' && !entitlementsResolved;
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
   const { apps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
@@ -73,9 +74,28 @@ export function App() {
   );
 
   useEffect(() => {
-    void listCollections().then(setCollections).catch(() => setCollections([]));
-    void fetch('/api/billing/subscription').then((response) => response.ok ? response.json() : null).then(setEntitlements).catch(() => setEntitlements(null));
-  }, []);
+    if (user?.role !== 'user') {
+      setEntitlements(null);
+      setEntitlementsResolved(true);
+      return;
+    }
+    setEntitlementsResolved(false);
+    void fetch('/api/billing/subscription')
+      .then((response) => response.ok ? response.json() : null)
+      .then(setEntitlements)
+      .catch(() => setEntitlements(null))
+      .finally(() => setEntitlementsResolved(true));
+  }, [user?.role]);
+
+  const openCollections = async () => {
+    await ensureCollections().catch(() => []);
+    setCollectionsOpen(true);
+  };
+
+  const openPalette = async () => {
+    await ensureCollections().catch(() => []);
+    setPaletteOpen(true);
+  };
 
   useEffect(() => {
     if (!q.trim()) {
@@ -139,7 +159,7 @@ export function App() {
         hasChevron
         items={[
           ...(researchProjectsEnabled ? [{ label: 'Research projects', onClick: () => navigate({ name: 'projects' }) }] : []),
-          { label: `Collections${collections.length ? ` (${collections.length})` : ''}`, onClick: () => setCollectionsOpen(true) },
+          { label: `Collections${collectionsLoaded && collections.length ? ` (${collections.length})` : ''}`, onClick: () => void openCollections() },
           { label: 'Settings', onClick: () => setSettingsOpen(true) },
           { type: 'divider' },
           { label: 'Log out', onClick: logout },
@@ -158,8 +178,8 @@ export function App() {
         sideNav={
           <Sidebar
             email={user?.email ?? ''}
-            collectionsCount={collections.length}
-            onOpenCollections={() => setCollectionsOpen(true)}
+            collectionsCount={collectionsLoaded ? collections.length : undefined}
+            onOpenCollections={() => void openCollections()}
             onOpenSettings={() => setSettingsOpen(true)}
             onLogout={logout}
           />
@@ -263,6 +283,8 @@ export function App() {
           app={detailApp}
           role={user?.role ?? 'user'}
           initialSection={route.name === 'app' ? route.section : undefined}
+          initialVersion={detail?.version}
+          initialNextCursor={detail?.nextCursor}
           onSectionChange={(section) => navigate({ name: 'app', appId: detailApp.id, section })}
           onBack={() => navigate({ name: 'apps' })}
           collections={collections}
@@ -319,7 +341,7 @@ export function App() {
               <SearchTrigger
                 label={q.trim() || cat !== 'All' ? `${list.length} apps · search or filter…` : 'Search apps, screens, UI elements, flows…'}
                 activeCategory={cat}
-                onOpen={() => setPaletteOpen(true)}
+                onOpen={() => void openPalette()}
                 onClearCategory={() => setCat('All')}
               />
               {!isAdmin && accountControls}
