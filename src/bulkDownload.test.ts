@@ -48,18 +48,27 @@ test("flow navigation accepts a delayed client-side redirect before the grid tim
   assert.equal(result, "redirect");
 });
 
-test("flow retry counts existing Mobbin flows and downloads only missing rows", () => {
+test("flow coverage fails when the crawl sees fewer rows than Mobbin shows", () => {
   const flow = (id: string): DesignFlow => ({ id, title: id, description: "", tags: [], steps: [] });
-  const seen = ["a", "b", "c"];
-  assert.deepEqual(flowStageCoverage(seen, [flow("mobbin-flow-a"), flow("manual-flow")], [flow("mobbin-flow-b")]), {
+  assert.deepEqual(flowStageCoverage(4, ["a", "b", "c"], [flow("mobbin-flow-a")], [
+    flow("mobbin-flow-b"), flow("mobbin-flow-c"),
+  ]), {
+    discovered: 4,
+    captured: 3,
+    complete: false,
+    missingRowIds: [],
+    undiscovered: 1,
+  });
+});
+
+test("flow coverage fails when a seen row was not persisted", () => {
+  const flow = (id: string): DesignFlow => ({ id, title: id, description: "", tags: [], steps: [] });
+  assert.deepEqual(flowStageCoverage(3, ["a", "b", "c"], [flow("mobbin-flow-a")], [flow("mobbin-flow-b")]), {
+    discovered: 3,
     captured: 2,
     complete: false,
     missingRowIds: ["c"],
-  });
-  assert.deepEqual(flowStageCoverage(seen, [flow("mobbin-flow-a"), flow("mobbin-flow-b")], [flow("mobbin-flow-c")]), {
-    captured: 3,
-    complete: true,
-    missingRowIds: [],
+    undiscovered: 0,
   });
 });
 

@@ -107,14 +107,23 @@ export function isFlowlessRedirect(requestedUrl: string, finalUrl: string): bool
 }
 
 export function flowStageCoverage(
+  expectedTotal: number,
   seenRowIds: Iterable<string>,
   existing: readonly DesignFlow[],
   incoming: readonly DesignFlow[],
-): { captured: number; complete: boolean; missingRowIds: string[] } {
+): { discovered: number; captured: number; complete: boolean; missingRowIds: string[]; undiscovered: number } {
+  const seen = [...new Set(seenRowIds)];
   const available = new Set([...existing, ...incoming].map((flow) => flow.id));
-  const missingRowIds = [...seenRowIds].filter((rowId) => !available.has(`mobbin-flow-${rowId}`));
-  const captured = [...seenRowIds].length - missingRowIds.length;
-  return { captured, complete: missingRowIds.length === 0, missingRowIds };
+  const missingRowIds = seen.filter((rowId) => !available.has(`mobbin-flow-${rowId}`));
+  const captured = seen.length - missingRowIds.length;
+  const undiscovered = Math.max(0, expectedTotal - seen.length);
+  return {
+    discovered: expectedTotal,
+    captured,
+    complete: seen.length === expectedTotal && captured === expectedTotal,
+    missingRowIds,
+    undiscovered,
+  };
 }
 
 interface FlowIngestionRetryOptions {
@@ -724,6 +733,15 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
     return { status: "done", discovered: 0, captured: 0 };
   }
 
+  const expectedTotal = await shownTotalCount(probe);
+  if (expectedTotal === null) {
+    const message = "Mobbin flow total is unavailable; refusing an unauditable import";
+    writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "error", message });
+    await probe.close().catch(() => {});
+    await closeContext();
+    return { status: "error", message };
+  }
+
   const downloadRoot = catalogDownloadRoot(appName, platform, "flows");
   const existingFlows = await getAppFlows(appName, platform);
   const existingRowIds = new Set(existingFlows.flatMap((flow) =>
@@ -752,7 +770,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         laneSeen.add(row.id);
         if (existingRowIds.has(row.id)) {
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Verifying flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Verifying flows" });
           continue;
         }
         const flowUrl = new URL(`/flows/${row.id}`, appUrl).toString();
@@ -765,13 +783,13 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         } catch (error) {
           console.warn(`[${appName}] Error on flow ${row.id}: ${error}. Skipping.`);
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
           continue;
         }
         if (savedPaths.length === 0) {
           console.warn(`[${appName}] No download started for flow "${row.title}" (${row.id}) — skipping.`);
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
           continue;
         }
         // Hash/upload/DB-insert don't touch the page, so let them run in the background
@@ -805,7 +823,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
             })
             .finally(() => {
               done++;
-              writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });
+              writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
             })
         );
       }
@@ -840,23 +858,23 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
   await closeContext();
   if (cancelled || isCancelRequested()) {
     console.log(`[${appName}] Cancelled. ${crawled.length} flow(s) imported before cancel.`);
-    writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "cancelled", message: "Cancelled by user" });
+    writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "cancelled", message: "Cancelled by user" });
     return { status: "cancelled", message: "Cancelled by user" };
   }
-  const coverage = flowStageCoverage(seen, existingFlows, crawled);
-  console.log(`[${appName}] ${coverage.complete ? "Done" : "Incomplete"}. Verified ${coverage.captured}/${seen.size} flow(s); downloaded ${crawled.length} in this pass.`);
+  const coverage = flowStageCoverage(expectedTotal, seen, existingFlows, crawled);
+  console.log(`[${appName}] ${coverage.complete ? "Done" : "Incomplete"}. Verified ${coverage.captured}/${coverage.discovered} flow(s); downloaded ${crawled.length} in this pass.`);
   writeProgress({
     stage: "crawl",
     app: appName,
     done: coverage.captured,
-    total: seen.size,
+    total: coverage.discovered,
     status: coverage.complete ? "done" : "error",
-    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${seen.size} flows`,
+    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${coverage.discovered} flows`,
   });
   return {
     status: coverage.complete ? "done" : "error",
-    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${seen.size} flows`,
-    discovered: seen.size,
+    message: coverage.complete ? undefined : `Verified ${coverage.captured}/${coverage.discovered} flows`,
+    discovered: coverage.discovered,
     captured: coverage.captured,
   };
 }
