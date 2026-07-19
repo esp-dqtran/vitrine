@@ -153,6 +153,87 @@ function close(server: Server): Promise<void> {
   });
 }
 
+async function readSseUntil(reader: ReadableStreamDefaultReader<Uint8Array>, pattern: RegExp): Promise<string> {
+  let output = "";
+  const deadline = Date.now() + 2_000;
+  while (!pattern.test(output)) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error(`Timed out waiting for SSE pattern ${pattern}`);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const result = await Promise.race([
+      reader.read(),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error("Timed out reading SSE stream")), remaining);
+      }),
+    ]).finally(() => clearTimeout(timeout));
+    if (result.done) throw new Error("SSE stream closed before the expected event");
+    output += new TextDecoder().decode(result.value);
+  }
+  return output;
+}
+
+async function waitForCondition(predicate: () => boolean): Promise<void> {
+  const deadline = Date.now() + 2_000;
+  while (!predicate()) {
+    if (Date.now() >= deadline) throw new Error("Timed out waiting for condition");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+test("keeps the progress stream admin-only without opening a subscription", async (t) => {
+  let subscriptions = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    readProgress: () => ({ entries: [] }),
+    subscribeProgress: () => {
+      subscriptions++;
+      return () => undefined;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/progress/stream`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(response.status, 403);
+  assert.equal(subscriptions, 0);
+});
+
+test("progress stream sends complete snapshots and cleans up its subscription", async (t) => {
+  const initial = {
+    entries: [{ id: "worker:1", stage: "crawl", app: "linear", done: 1, total: 4, status: "running", updatedAt: "2026-07-19T00:00:00.000Z" }],
+  } as const;
+  let listener: ((snapshot: typeof initial) => void) | undefined;
+  let unsubscribeCalls = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    readProgress: () => initial,
+    subscribeProgress: (next: (snapshot: typeof initial) => void) => {
+      listener = next;
+      return () => { unsubscribeCalls++; };
+    },
+  } as never));
+  t.after(() => close(server));
+  const controller = new AbortController();
+
+  const response = await fetch(`${base}/progress/stream`, {
+    headers: adminCookie,
+    signal: controller.signal,
+  });
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /text\/event-stream/);
+  const reader = response.body!.getReader();
+  const first = await readSseUntil(reader, /"app":"linear"/);
+  assert.match(first, /event: progress/);
+
+  listener?.({
+    entries: [{ ...initial.entries[0], app: "notion", done: 2 }],
+  });
+  const second = await readSseUntil(reader, /"app":"notion"/);
+  assert.match(second, /event: progress/);
+
+  controller.abort();
+  await waitForCondition(() => unsubscribeCalls === 1);
+});
+
 test("keeps every crawl administration route admin-only before dependencies run", async (t) => {
   let dependencyCalls = 0;
   const touched = async () => {

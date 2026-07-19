@@ -50,7 +50,7 @@ import {
 import { getDailySignups, getGrowthStats, listUsersForAdmin } from "../../../src/adminStats.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
-import { readProgress, requestCancel } from "../../../src/progress.ts";
+import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
@@ -262,6 +262,7 @@ const defaults = {
   authorizedExportObject,
   publishJob,
   readProgress,
+  subscribeProgress,
   requestCancel,
   listCrawlPlans,
   getCrawlPlan,
@@ -1925,6 +1926,27 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/progress", requireAdmin, (_req, res) => {
     res.json(deps.readProgress());
+  });
+
+  app.get("/progress/stream", requireAdmin, (_req, res) => {
+    res.status(200);
+    res.set({
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    res.flushHeaders();
+    const send = (snapshot = deps.readProgress()) => {
+      res.write(`event: progress\ndata: ${JSON.stringify(snapshot)}\n\n`);
+    };
+    send();
+    const unsubscribe = deps.subscribeProgress(send);
+    const heartbeat = setInterval(() => res.write(": heartbeat\n\n"), 25_000);
+    res.once("close", () => {
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
   });
 
   app.post("/progress/cancel", requireAdmin, (_req, res) => {
