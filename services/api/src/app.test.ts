@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import type { Server } from "node:http";
 import { createApiApp, createCrawlRepairRequester } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
+import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -1152,7 +1153,10 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
 
   const search = await fetch(`${base}/search?q=primary&kind=component`, { headers: { cookie: "astryx_session=user" } });
   assert.equal(search.status, 200);
-  assert.equal((await search.json()).items[0].id, "component:linear:button");
+  const searchBody = await search.json() as CatalogSearchResult;
+  assert.equal(searchBody.items[0].id, "component:linear:button");
+  assert.equal(searchBody.items[0].imageUrl, "/api/media/linear/0123456789abcdef");
+  assert.equal(searchBody.items[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
 
   const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { cookie: "astryx_session=user" } });
   assert.equal(compare.status, 200);

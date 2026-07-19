@@ -51,7 +51,7 @@ import { getDailySignups, getGrowthStats, listUsersForAdmin } from "../../../src
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
-import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
+import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
@@ -1424,12 +1424,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const allowedImages = images.filter(({ app }) => allowed.has(app));
     const appCategories = Object.fromEntries(buildGalleryApps(allowedImages).map(({ id, cat }) => [id, cat]));
-    res.json(searchCatalog({
-      images: allowedImages,
-      systems: systems.filter(({ app }) => allowed.has(app)),
-      flows: flows.filter(({ app }) => allowed.has(app)),
-      appCategories,
-    }, {
+    const searchOptions = {
       query: optionalQuery(req.query.q) ?? "",
       kind: requestedKind as CatalogEntityKind | "all",
       theme: optionalQuery(req.query.theme),
@@ -1440,7 +1435,26 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       component: optionalQuery(req.query.component),
       appCategory: optionalQuery(req.query.appCategory),
       limit: optionalQuery(req.query.limit) ? Number(req.query.limit) : undefined,
-    }));
+    };
+    const result = searchCatalog({
+      images: allowedImages,
+      systems: systems.filter(({ app }) => allowed.has(app)),
+      flows: flows.filter(({ app }) => allowed.has(app)),
+      appCategories,
+    }, searchOptions);
+    const imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    res.json({
+      ...result,
+      items: result.items.map((item) => {
+        const evidence = item.evidenceIds.map((id) => imagesById.get(id)).find((image) => image !== undefined);
+        if (!evidence) return item;
+        return {
+          ...item,
+          imageUrl: publicImageUrl(evidence.app, evidence.image_url),
+          thumbnailUrl: publicImageUrl(evidence.app, evidence.image_url, "thumb"),
+        };
+      }),
+    });
   });
 
   app.get("/compare", async (req, res) => {

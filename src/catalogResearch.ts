@@ -10,6 +10,8 @@ export interface CatalogSearchItem {
   title: string;
   description: string;
   evidenceIds: number[];
+  imageUrl?: string;
+  thumbnailUrl?: string;
   pageType?: string;
   productArea?: string;
   theme?: "light" | "dark" | "mixed";
@@ -40,18 +42,22 @@ export interface CatalogResearchSource {
   appCategories?: Record<string, string>;
 }
 
+export interface CatalogSearchFacets {
+  kinds: Record<CatalogEntityKind, number>;
+  themes: string[];
+  pageTypes: string[];
+  productAreas: string[];
+  states: string[];
+  layouts: string[];
+  components: string[];
+  appCategories: string[];
+}
+
+export type CatalogSearchResultItem = Omit<CatalogSearchItem, "searchText">;
+
 export interface CatalogSearchResult {
-  items: Array<Omit<CatalogSearchItem, "searchText">>;
-  facets: {
-    kinds: Record<CatalogEntityKind, number>;
-    themes: string[];
-    pageTypes: string[];
-    productAreas: string[];
-    states: string[];
-    layouts: string[];
-    components: string[];
-    appCategories: string[];
-  };
+  items: CatalogSearchResultItem[];
+  facets: CatalogSearchFacets;
 }
 
 const unique = <T>(values: T[]): T[] => [...new Set(values)];
