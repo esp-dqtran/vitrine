@@ -228,8 +228,7 @@ body {
 
 .admin-users-header {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: flex-start;
   gap: 24px;
   margin-bottom: 28px;
 }
@@ -259,10 +258,11 @@ body {
   line-height: 1.5;
 }
 
-.admin-users-header > span {
-  padding-bottom: 4px;
+.admin-users-header div > span {
+  display: block;
+  margin-top: 8px;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -611,7 +611,7 @@ body {
 
 @media (max-width: 640px) {
   .admin-users-page {
-    padding: 24px 16px 48px;
+    padding: 72px 16px 48px;
   }
 
   .admin-users-header {

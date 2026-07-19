@@ -51,12 +51,6 @@ export function groupAdminUsers(users: AdminUser[], filter: UserFilter): UserGro
 
 export function userInitial(email: string) {
   const localPart = email.trim().split("@")[0] ?? "";
-  const parts = localPart.split(/[._+-]+/).filter(Boolean);
-
-  if (parts.length > 1) {
-    return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toUpperCase();
-  }
-
   return localPart.slice(0, 1).toUpperCase() || "?";
 }
 

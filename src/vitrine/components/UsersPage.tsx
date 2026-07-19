@@ -188,8 +188,8 @@ export function UsersPageView({ users, growth }: { users: AdminUser[]; growth: U
         <div>
           <h1>Users</h1>
           <p>Manage members and monitor growth.</p>
+          <span>{statsLabel(users.length)}</span>
         </div>
-        <span>{statsLabel(growth.stats.total_users)}</span>
       </header>
 
       <div className="admin-users-layout">

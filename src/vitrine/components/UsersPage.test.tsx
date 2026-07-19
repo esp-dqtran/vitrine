@@ -11,7 +11,7 @@ test("renders the member-first Option 2 hierarchy from real API fields", () => {
       { id: 2, email: "pro@example.com", role: "user", active: true, created_at: "2026-07-15T00:00:00.000Z", subscription_status: "active" },
     ]}
     growth={{
-      stats: { total_users: 2, new_users_7d: 1, active_subscribers: 1, dau: 0, wau: 1, total_free_unlocks: 0 },
+      stats: { total_users: 1, new_users_7d: 1, active_subscribers: 1, dau: 0, wau: 1, total_free_unlocks: 0 },
       dailySignups: [{ day: "2026-07-19", signups: 1 }],
     }}
   />);
@@ -19,6 +19,7 @@ test("renders the member-first Option 2 hierarchy from real API fields", () => {
   assert.match(html, /<h1[^>]*>Users<\/h1>/);
   assert.match(html, /Manage members and monitor growth/);
   assert.match(html, /2 members/);
+  assert.match(html, /Manage members and monitor growth\.<\/p><span>2 members<\/span>/);
   assert.match(html, /aria-label="Search members"/);
   assert.match(html, /aria-label="Filter members"/);
   assert.match(html, /Administrators/);
@@ -60,5 +61,9 @@ test("defines the selected split layout and narrow responsive states", () => {
   assert.match(
     css,
     /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-toolbar\s*\{[^}]*align-items:\s*stretch;[^}]*flex-direction:\s*column;/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-page\s*\{[^}]*padding:\s*72px 16px 48px;/,
   );
 });

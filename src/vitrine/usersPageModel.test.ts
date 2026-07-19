@@ -40,7 +40,7 @@ test("groups the all-members view and keeps filtered results together", () => {
 
 test("formats only deterministic values available in the API", () => {
   assert.equal(userInitial("admin@gmail.com"), "A");
-  assert.equal(userInitial("growth.smoke@example.com"), "GS");
+  assert.equal(userInitial("growth.smoke@example.com"), "G");
   assert.equal(userInitial(""), "?");
   assert.equal(userPlanLabel(users[2]), "Pro");
   assert.equal(userPlanLabel(users[3]), "Free");
