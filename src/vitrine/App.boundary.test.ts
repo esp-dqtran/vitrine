@@ -21,4 +21,6 @@ test('loads additional admin app pages only when the gallery sentinel approaches
   assert.match(appSource, /IntersectionObserver/);
   assert.match(appSource, /appsSentinelRef/);
   assert.match(appSource, /void loadMore\(\)/);
+  assert.match(appSource, /<Spinner size="sm"/);
+  assert.doesNotMatch(appSource, /Loading more apps/);
 });

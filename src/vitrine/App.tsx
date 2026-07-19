@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
+import { AppShell, Button, DropdownMenu, EmptyState, Skeleton, Spinner } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { AppCard } from './components/AppCard';
 import { ProgressBanner } from './components/ProgressBanner';
@@ -317,7 +317,11 @@ export function App() {
             ))}
           </div>
           {isAdmin && hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
-          {isAdmin && loadingMore && <div style={{ padding: '0 0 40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading more apps…</div>}
+          {isAdmin && loadingMore && (
+            <div role="status" aria-label="Loading" style={{ display: 'flex', justifyContent: 'center', padding: '0 0 40px' }}>
+              <Spinner size="sm" aria-hidden="true" />
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
