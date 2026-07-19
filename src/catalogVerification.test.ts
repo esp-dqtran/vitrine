@@ -103,3 +103,57 @@ test("persisted verification error retains exact repair phases", () => {
     },
   );
 });
+
+test("audit reconciliation clears stale repair state for complete persisted data", async () => {
+  const verification = await import("./catalogVerification.ts") as Record<string, unknown>;
+  assert.equal(typeof verification.reconcileCatalogAuditJob, "function");
+  const reconcile = verification.reconcileCatalogAuditJob as
+    ((job: Record<string, unknown>, expected: unknown, persisted: unknown, finishedAt: string) => unknown);
+  const job: Record<string, unknown> = {
+    status: "pending",
+    repair: { screens: true, uiElements: true, flows: true },
+    error: "old failure",
+  };
+
+  const repair = reconcile(job, { screens: 89, uiElements: 89, flows: 32 }, complete, "2026-07-19T12:00:00.000Z");
+
+  assert.deepEqual(repair, { screens: false, uiElements: false, flows: false });
+  assert.deepEqual(job, {
+    status: "done",
+    finishedAt: "2026-07-19T12:00:00.000Z",
+    verification: {
+      screens: { discovered: 89, captured: 89 },
+      uiElements: { discovered: 89, captured: 89 },
+      flows: { discovered: 32, captured: 32 },
+    },
+  });
+});
+
+test("audit reconciliation queues exact persisted gaps", async () => {
+  const verification = await import("./catalogVerification.ts") as Record<string, unknown>;
+  assert.equal(typeof verification.reconcileCatalogAuditJob, "function");
+  const reconcile = verification.reconcileCatalogAuditJob as
+    ((job: Record<string, unknown>, expected: unknown, persisted: unknown, finishedAt: string) => unknown);
+  const job: Record<string, unknown> = {
+    status: "failed",
+    finishedAt: "old",
+    error: "old failure",
+  };
+
+  const repair = reconcile(job, { screens: 89, uiElements: 89, flows: 32 }, {
+    ...complete,
+    uiElements: 88,
+    missingFlowObjects: 1,
+  }, "2026-07-19T12:00:00.000Z");
+
+  assert.deepEqual(repair, { screens: false, uiElements: true, flows: true });
+  assert.deepEqual(job, {
+    status: "pending",
+    repair: { screens: false, uiElements: true, flows: true },
+    verification: {
+      screens: { discovered: 89, captured: 89 },
+      uiElements: { discovered: 89, captured: 88 },
+      flows: { discovered: 32, captured: 32 },
+    },
+  });
+});

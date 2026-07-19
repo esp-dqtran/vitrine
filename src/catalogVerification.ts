@@ -67,6 +67,44 @@ export function catalogPersistenceRepair(
   };
 }
 
+export interface CatalogAuditJobState {
+  status: string;
+  error?: string;
+  finishedAt?: string;
+  repair?: CatalogRepairPhases;
+  verification?: Partial<Record<"screens" | "uiElements" | "flows", { discovered: number; captured: number }>>;
+}
+
+export function reconcileCatalogAuditJob(
+  job: CatalogAuditJobState,
+  expected: CatalogArtifactCounts,
+  persisted: CatalogPersistenceSnapshot,
+  finishedAt: string,
+): CatalogRepairPhases {
+  const repair = catalogPersistenceRepair(expected, persisted);
+  job.verification ??= {};
+  const captured = {
+    screens: persisted.screens,
+    uiElements: persisted.uiElements,
+    flows: persisted.flows,
+  };
+  for (const phase of ["screens", "uiElements", "flows"] as const) {
+    const discovered = expected[phase];
+    if (discovered !== undefined) job.verification[phase] = { discovered, captured: captured[phase] };
+  }
+  delete job.error;
+  if (repair.screens || repair.uiElements || repair.flows) {
+    job.status = "pending";
+    job.repair = repair;
+    delete job.finishedAt;
+  } else {
+    job.status = "done";
+    job.finishedAt = finishedAt;
+    delete job.repair;
+  }
+  return repair;
+}
+
 export class CatalogPersistenceError extends Error {
   readonly repair: CatalogRepairPhases;
 

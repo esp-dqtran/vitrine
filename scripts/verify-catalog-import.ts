@@ -6,6 +6,7 @@ import {
   catalogPersistenceRepair,
   emptyCatalogPersistence,
   loadCatalogPersistence,
+  reconcileCatalogAuditJob,
 } from "../src/catalogVerification.ts";
 import {
   parseCatalogLogCounts,
@@ -101,13 +102,12 @@ export async function main(): Promise<void> {
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 2 });
   try {
     const persisted = await loadCatalogPersistence(pool, candidates.map(({ job }) => ({ app: job.slug, platform: job.platform })));
-    const queued = candidates.flatMap(({ worker, job }) => {
+    const assessed = candidates.map(({ worker, job }) => {
       const actual = persisted.get(catalogJobKey(job.slug, job.platform))
         ?? emptyCatalogPersistence(job.slug, job.platform);
       const expected = expectedCounts(logs.get(worker) ?? [], worker, job);
       const repair = catalogPersistenceRepair(expected, actual);
-      if (!repair.screens && !repair.uiElements && !repair.flows) return [];
-      return [{
+      return {
         worker,
         appName: job.appName,
         slug: job.slug,
@@ -123,24 +123,22 @@ export async function main(): Promise<void> {
           missingFlowObjects: actual.missingFlowObjects,
         },
         repair,
+        actual,
         job,
-      }];
+      };
     });
+    const queued = assessed.filter(({ repair }) => repair.screens || repair.uiElements || repair.flows);
 
     let backupDir: string | undefined;
-    if (writeQueue && queued.length > 0) {
+    if (writeQueue && assessed.length > 0) {
       backupDir = `data/backups/catalog-integrity-${new Date().toISOString().replace(/[:.]/g, "-")}`;
       mkdirSync(`${backupDir}/logs`, { recursive: true });
       for (const worker of workers) {
         copyFileSync(statePath(worker), `${backupDir}/catalog-import-state-${worker}.json`);
         if (existsSync(logPath(worker))) copyFileSync(logPath(worker), `${backupDir}/logs/catalog-import-${worker}.log`);
       }
-      for (const item of queued) {
-        item.job.status = "pending";
-        item.job.repair = item.repair;
-        delete item.job.error;
-        delete item.job.finishedAt;
-      }
+      const finishedAt = new Date().toISOString();
+      for (const item of assessed) reconcileCatalogAuditJob(item.job, item.expected, item.actual, finishedAt);
       for (const worker of workers) writeStateAtomically(statePath(worker), states.get(worker)!);
     }
 
@@ -165,7 +163,7 @@ export async function main(): Promise<void> {
       untouchedPendingJobs,
       phaseCounts,
       backupDir,
-      jobs: queued.map(({ job: _job, ...item }) => item),
+      jobs: queued.map(({ job: _job, actual: _actual, ...item }) => item),
     }, null, 2));
   } finally {
     await pool.end();
