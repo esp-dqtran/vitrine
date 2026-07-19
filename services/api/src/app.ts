@@ -1457,6 +1457,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       appCategories,
     }, searchOptions);
     const imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "search",
+      action: "catalog-search",
+      outcome: "success",
+    });
     res.json({
       ...result,
       items: result.items.map((item) => {
@@ -1505,7 +1511,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid collection" });
       return;
     }
-    res.status(201).json(await deps.createCollection(res.locals.user.id, name, description));
+    const collection = await deps.createCollection(res.locals.user.id, name, description);
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-created",
+      outcome: "created",
+    });
+    res.status(201).json(collection);
   });
 
   app.delete("/collections/:collectionId", async (req, res) => {
@@ -1518,6 +1531,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(404).json({ error: "collection not found" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-deleted",
+      outcome: "success",
+    });
     res.status(204).end();
   });
 
@@ -1540,7 +1559,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       kind, app: appName, referenceId, title, notes,
     });
     if (!item) res.status(404).json({ error: "collection not found" });
-    else res.status(201).json(item);
+    else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        featureKey: "collections",
+        action: "collection-item-added",
+        outcome: "created",
+      });
+      res.status(201).json(item);
+    }
   });
 
   app.patch("/collections/:collectionId/items/:itemId", async (req, res) => {
@@ -1553,7 +1580,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const item = await deps.updateCollectionItemNotes(res.locals.user.id, collectionId, itemId, notes);
     if (!item) res.status(404).json({ error: "collection item not found" });
-    else res.json(item);
+    else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        featureKey: "collections",
+        action: "collection-item-updated",
+        outcome: "success",
+      });
+      res.json(item);
+    }
   });
 
   app.delete("/collections/:collectionId/items/:itemId", async (req, res) => {
@@ -1567,6 +1602,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(404).json({ error: "collection item not found" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-item-removed",
+      outcome: "success",
+    });
     res.status(204).end();
   });
 
@@ -1663,13 +1704,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(429).json(reservation);
       return;
     }
-    await deps.recordAccessEvent({
-      userId: res.locals.user.id,
-      ipPrefix: ipPrefix(req.ip ?? "unknown"),
-      appSlug,
-      action: `export-${format}`,
-      outcome: "allowed",
-    });
     const storageType = exportStorageTypes.get(artifact.mime);
     if (!storageType) {
       res.status(500).json({ error: "Unsupported export artifact" });
@@ -1700,6 +1734,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(503).json({ error: "Export storage unavailable" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug,
+      featureKey: "design_systems",
+      action: `export-${format}`,
+      outcome: "completed",
+      metadata: { format },
+    });
     res.setHeader("Content-Type", artifact.mime);
     res.setHeader("Content-Disposition", `attachment; filename="${artifact.filename}"`);
     res.setHeader("X-Astryx-Export-Used", String(reservation.used));
@@ -1722,6 +1765,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const saved = await deps.getFlowDocument(appSlug, platform);
     if (saved) {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        appSlug,
+        featureKey: "flows",
+        action: "flow-document-view",
+        outcome: "success",
+      });
       res.json({ body: saved.body, saved: true, updatedAt: saved.updatedAt });
       return;
     }
@@ -1736,6 +1786,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       "flow-md",
       { kind: "design-system" },
     );
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      appSlug,
+      featureKey: "flows",
+      action: "flow-document-view",
+      outcome: "success",
+    });
     res.json({ body: artifact.content.toString("utf8"), saved: false });
   });
 
@@ -1845,8 +1902,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       userId: res.locals.user.id,
       ipPrefix: ipPrefix(req.ip ?? "unknown"),
       appSlug: req.params.app,
+      featureKey: "exports",
       action: "export-reservation",
-      outcome: "allowed",
+      outcome: "accepted",
     });
     res.status(201).json({ ...reservation, selection });
   });
@@ -1874,6 +1932,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           userId: res.locals.user.id,
           ipPrefix: ipPrefix(req.ip ?? "unknown"),
           appSlug: req.params.app,
+          featureKey: "library",
           action: "app-detail",
           outcome: "blocked",
         });
@@ -1921,8 +1980,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         userId: res.locals.user.id,
         ipPrefix: ipPrefix(req.ip ?? "unknown"),
         appSlug: req.params.app,
+        featureKey: "library",
         action: "app-detail",
-        outcome: "allowed",
+        outcome: "success",
       });
       res.json({ ...page, version: selectedVersion ?? null });
     }

@@ -72,7 +72,7 @@ const normalizedFeatureSql = `COALESCE(
   END
 )`;
 
-const countedOutcomesSql = "('success', 'created', 'accepted', 'completed')";
+const countedOutcomesSql = "('success', 'created', 'accepted', 'completed', 'allowed')";
 
 function share(uses: number, total: number): number {
   return total > 0 ? Number(((uses / total) * 100).toFixed(1)) : 0;

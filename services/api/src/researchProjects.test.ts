@@ -36,7 +36,7 @@ const store = {
   getProject: async () => workspace,
 } as unknown as ResearchProjectStore;
 
-async function serve(enabled = true): Promise<{ base: string; server: Server }> {
+async function serve(enabled = true, recordEvent?: (event: { featureKey?: string; action: string; outcome: string }) => Promise<void>): Promise<{ base: string; server: Server }> {
   const app = express();
   app.use(express.json());
   app.use((_req, res, next) => { res.locals.user = user; next(); });
@@ -45,6 +45,7 @@ async function serve(enabled = true): Promise<{ base: string; server: Server }> 
     enabled,
     canAccessApp: async () => true,
     listPublishedCandidates: async () => [],
+    recordEvent,
   });
   const server = app.listen(0);
   await new Promise<void>((resolve) => server.once("listening", resolve));
@@ -58,7 +59,8 @@ const close = (server: Server) => new Promise<void>((resolve, reject) => {
 });
 
 test("lists and creates owner-scoped research projects", async (t) => {
-  const { base, server } = await serve();
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
+  const { base, server } = await serve(true, async (event) => { events.push(event); });
   t.after(() => close(server));
 
   const listed = await fetch(`${base}/research-projects`);
@@ -72,6 +74,7 @@ test("lists and creates owner-scoped research projects", async (t) => {
   });
   assert.equal(created.status, 201);
   assert.equal((await created.json() as { title: string }).title, "SSO");
+  assert.deepEqual(events[0], { userId: user.id, featureKey: "research", action: "research_project_created", outcome: "created" });
 });
 
 test("feature flag hides every research route", async (t) => {

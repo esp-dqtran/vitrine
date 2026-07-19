@@ -877,6 +877,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     flows: [],
   };
   const durable: Array<{ exportId: number; metadata: ObjectMetadata }> = [];
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const uploaded: Array<ObjectMetadata & { body: Uint8Array }> = [];
   const evidenceBody = Buffer.from("object-backed-evidence");
   const evidenceMetadata: ObjectMetadata = {
@@ -902,7 +903,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     resolveSession: async () => user,
     canAccessApp: async () => true,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
-    recordAccessEvent: async () => undefined,
+    recordAccessEvent: async (event) => { events.push(event); },
     createExport: async () => ++nextExportId,
     completeExport: async (exportId, metadata) => { durable.push({ exportId, metadata }); },
     failExport: async () => undefined,
@@ -932,6 +933,10 @@ test("downloads a complete editable Figma library and secondary exports", async 
   assert.equal(uploaded.length, 2);
   assert.match(Buffer.from(uploaded[0].body).toString("utf8"), new RegExp(evidenceBody.toString("base64")));
   assert.deepEqual(durable.map(({ exportId }) => exportId), [41, 42]);
+  assert.deepEqual(events.map(({ featureKey, action, outcome }) => ({ featureKey, action, outcome })), [
+    { featureKey: "design_systems", action: "export-figma", outcome: "completed" },
+    { featureKey: "design_systems", action: "export-json", outcome: "completed" },
+  ]);
   for (let index = 0; index < uploaded.length; index++) {
     const metadata = uploaded[index];
     assert.equal(metadata.key, `exports/${41 + index}/${metadata.sha256}.${index === 0 ? "zip" : "json"}`);
@@ -982,6 +987,7 @@ test("flow-doc endpoint generates a default, then serves and updates the saved c
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    recordAccessEvent: async () => undefined,
     getAppFlows: async () => [{ id: "login", title: "Login", description: "", tags: [], steps: [{ label: "Enter email", evidence: [7] }] }],
     appImages: async () => catalogImages,
     getFlowDocument: async () => stored,
@@ -1131,6 +1137,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
       flows: [],
     },
   ];
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
@@ -1148,6 +1155,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
     }],
     listDesignSystems: async () => systems,
     listAppFlowSets: async () => [],
+    recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
 
@@ -1157,6 +1165,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal(searchBody.items[0].id, "component:linear:button");
   assert.equal(searchBody.items[0].imageUrl, "/api/media/linear/0123456789abcdef");
   assert.equal(searchBody.items[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
+  assert.deepEqual(events[0], { userId: user.id, featureKey: "search", action: "catalog-search", outcome: "success" });
 
   const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { cookie: "astryx_session=user" } });
   assert.equal(compare.status, 200);
@@ -1168,6 +1177,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
   const now = "2026-07-11T00:00:00.000Z";
   const collection = { id: 4, name: "Onboarding", description: "", created_at: now, updated_at: now, items: [] };
   let notes = "";
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
@@ -1189,6 +1199,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
     },
     removeCollectionItem: async () => true,
     deleteCollection: async () => true,
+    recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
@@ -1208,6 +1219,13 @@ test("creates user-owned collections and edits item notes", async (t) => {
   assert.equal(notes, "Reuse hierarchy");
   assert.equal((await fetch(`${base}/collections/4/items/9`, { method: "DELETE", headers })).status, 204);
   assert.equal((await fetch(`${base}/collections/4`, { method: "DELETE", headers })).status, 204);
+  assert.deepEqual(events.map(({ featureKey, action, outcome }) => ({ featureKey, action, outcome })), [
+    { featureKey: "collections", action: "collection-created", outcome: "created" },
+    { featureKey: "collections", action: "collection-item-added", outcome: "created" },
+    { featureKey: "collections", action: "collection-item-updated", outcome: "success" },
+    { featureKey: "collections", action: "collection-item-removed", outcome: "success" },
+    { featureKey: "collections", action: "collection-deleted", outcome: "success" },
+  ]);
 });
 
 test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
@@ -1869,7 +1887,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
 });
 
 test("blocks catalog-wide traversal and records a redacted audit event", async (t) => {
-  const events: Array<{ appSlug?: string; ipPrefix?: string; outcome: string }> = [];
+  const events: Array<{ appSlug?: string; ipPrefix?: string; featureKey?: string; action: string; outcome: string }> = [];
   const images = [
     ...catalogImages,
     { ...catalogImages[0], id: 8, app: "notion", image_url: "mobbin-bulk:1111111111111111" },
@@ -1893,15 +1911,17 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
   assert.equal(events.at(-1)?.appSlug, "notion");
   assert.equal(events.at(-1)?.outcome, "blocked");
   assert.match(events.at(-1)?.ipPrefix ?? "", /\/24$/);
+  assert.equal(events.find(({ outcome }) => outcome === "success")?.featureKey, "library");
 });
 
 test("reserves a validated selected export for entitled Pro", async (t) => {
   let receivedUserId: number | undefined;
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
     appImages: async () => catalogImages,
-    recordAccessEvent: async () => {},
+    recordAccessEvent: async (event) => { events.push(event); },
     reserveExportOperation: async (userId) => {
       receivedUserId = userId;
       return { status: "reserved", used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" };
@@ -1916,6 +1936,14 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
   assert.equal(response.status, 201);
   assert.equal(receivedUserId, user.id);
   assert.equal((await response.json()).status, "reserved");
+  assert.deepEqual(events[0], {
+    userId: user.id,
+    ipPrefix: "127.0.0.0/24",
+    appSlug: "linear",
+    featureKey: "exports",
+    action: "export-reservation",
+    outcome: "accepted",
+  });
 });
 
 test("rejects oversized or unavailable export reservations", async (t) => {

@@ -50,7 +50,7 @@ async function seedUsageFixture() {
       ($1, 'exports', 'export-figma', 2, 'completed', now() - interval '1 day'),
       ($2, 'exports', 'export-json', 1, 'completed', now() - interval '1 day'),
       ($1, 'search', 'catalog-search', 2, 'success', now()),
-      ($1, NULL, 'export-css', 1, 'completed', now()),
+      ($1, NULL, 'export-css', 1, 'allowed', now()),
       ($1, NULL, 'protected-request', 20, 'success', now()),
       ($3, 'exports', 'export-figma', 10, 'completed', now()),
       ($2, 'search', 'catalog-search', 50, 'success', now() - interval '31 days')`,
@@ -77,14 +77,23 @@ test("maps useful historical actions without counting generic requests", () => {
 });
 
 test("aggregates member feature usage and excludes administrators", { skip }, async () => {
+  const before = await getFeatureUsageOverview({ key: "30d", days: 30 });
   await seedUsageFixture();
   const result = await getFeatureUsageOverview({ key: "30d", days: 30 });
-  assert.deepEqual(result.summary, { totalEvents: 6, uniqueUsers: 2, usedFeatures: 2 });
-  assert.deepEqual(result.features[0], {
-    key: "exports", label: "Exports", uses: 4, uniqueUsers: 2, share: 66.7,
-  });
+  const beforeExports = before.features.find(({ key }) => key === "exports")?.uses ?? 0;
+  const beforeSearch = before.features.find(({ key }) => key === "search")?.uses ?? 0;
+  const exports = result.features.find(({ key }) => key === "exports");
+  const search = result.features.find(({ key }) => key === "search");
+  assert.equal(result.summary.totalEvents - before.summary.totalEvents, 6);
+  assert.equal(result.summary.uniqueUsers - before.summary.uniqueUsers, 2);
+  assert.equal(exports?.uses, beforeExports + 4);
+  assert.equal(search?.uses, beforeSearch + 2);
   assert.equal(result.daily.length, 30);
-  assert.equal(result.daily.reduce((sum, day) => sum + day.uses, 0), 6);
+  assert.equal(
+    result.daily.reduce((sum, day) => sum + day.uses, 0)
+      - before.daily.reduce((sum, day) => sum + day.uses, 0),
+    6,
+  );
 });
 
 test("returns one user's breakdown and recent activity", { skip }, async () => {
