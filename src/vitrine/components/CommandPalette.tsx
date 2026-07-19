@@ -314,11 +314,12 @@ export function CommandPalette({
       padding={0}
     >
       <div
+        className="command-palette-shell"
         onMouseDown={(event) => event.stopPropagation()}
         onKeyDownCapture={onPaletteKeyDown}
         style={{ width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', background: 'var(--color-background-surface)', border: '1px solid var(--color-border)', borderRadius: 20, boxShadow: 'var(--shadow-high)', overflow: 'hidden' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', borderBottom: '1px solid var(--color-border)' }}>
+        <div className="command-palette-header" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ flex: 1 }}>
             <TextInput
               ref={inputRef}
@@ -336,8 +337,8 @@ export function CommandPalette({
           <IconButton label="Close" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
         </div>
 
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <div style={{ width: 200, flex: '0 0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 2, borderRight: '1px solid var(--color-border)', overflowY: 'auto' }}>
+        <div className="command-palette-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          <div className="command-palette-sidebar" style={{ width: 200, flex: '0 0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 2, borderRight: '1px solid var(--color-border)', overflowY: 'auto' }}>
             {NAV_ITEMS.map((item) => (
               <ToggleButton
                 key={item.id}

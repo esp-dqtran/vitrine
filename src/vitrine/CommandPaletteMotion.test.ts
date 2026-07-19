@@ -21,4 +21,9 @@ test('keeps the search dialog mounted through its close animation', async () => 
   assert.match(source, /onKeyDownCapture/);
   assert.doesNotMatch(source, /appMatches/);
   assert.doesNotMatch(source, /screenMatches/);
+  assert.match(styles, /\.inspiration-result-grid/);
+  assert.match(styles, /\.inspiration-preview-layout/);
+  assert.match(styles, /@media \(max-width: 700px\)/);
+  assert.match(styles, /@keyframes inspiration-view-enter/);
+  assert.match(styles, /@keyframes inspiration-view-back/);
 });
