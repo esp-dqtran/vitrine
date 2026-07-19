@@ -25,6 +25,17 @@ test('loads additional admin app pages only when the gallery sentinel approaches
   assert.doesNotMatch(appSource, /Loading more apps/);
 });
 
+test('bootstraps an admin app deep link outside the first gallery page', async () => {
+  const [appSource, hookSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(appSource, /useApps\(\s*user\?\.role,\s*route\.name === 'app' \? route\.appId : undefined,?\s*\)/);
+  assert.match(hookSource, /fetchAppDetail\(requestedAppId/);
+  assert.match(hookSource, /mergeApp\(page\.apps, requestedApp\)/);
+});
+
 test('shares catalog search state with the inspiration modal', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

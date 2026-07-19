@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { fetchAppDetail, mergeApp } from './appsApi';
 import type { App } from './types';
 
 interface CatalogResponse {
@@ -6,27 +7,30 @@ interface CatalogResponse {
   nextCursor: string | null;
 }
 
-export function useApps(role: 'admin' | 'user' | undefined) {
+export function useApps(role: 'admin' | 'user' | undefined, requestedAppId?: string) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback((signal?: AbortSignal) => {
     setError(null);
     return (async () => {
       if (role === 'admin') {
-        const response = await fetch('/api/apps');
+        const response = await fetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = await response.json() as { apps: App[]; nextCursor: string | null };
-        setApps(page.apps);
+        const requestedApp = requestedAppId && !page.apps.some(({ id }) => id === requestedAppId)
+          ? await fetchAppDetail(requestedAppId, signal)
+          : undefined;
+        setApps(requestedApp ? mergeApp(page.apps, requestedApp) : page.apps);
         setNextCursor(page.nextCursor);
         return;
       }
       const results: App[] = [];
       let cursor: string | null = null;
       do {
-        const response = await fetch(`/api/catalog${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+        const response = await fetch(`/api/catalog${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, { signal });
         if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
         const page = await response.json() as CatalogResponse;
         results.push(...page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens })));
@@ -34,12 +38,14 @@ export function useApps(role: 'admin' | 'user' | undefined) {
         cursor = page.nextCursor;
       } while (cursor);
     })().catch((err: Error) => {
-        setError(err.message);
+        if (err.name !== 'AbortError') setError(err.message);
       });
-  }, [role]);
+  }, [requestedAppId, role]);
 
   useEffect(() => {
-    void refresh();
+    const controller = new AbortController();
+    void refresh(controller.signal);
+    return () => controller.abort();
   }, [refresh]);
 
   const loadMore = useCallback(async () => {

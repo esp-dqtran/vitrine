@@ -37,10 +37,13 @@ function AppCardSkeleton({ index }: { index: number }) {
 
 export function App() {
   const { user, logout } = useAuth();
-  const { apps, loading, loadingMore, hasMore, error, loadMore } = useApps(user?.role);
+  const route = useRoute();
+  const { apps, loading, loadingMore, hasMore, error, loadMore } = useApps(
+    user?.role,
+    route.name === 'app' ? route.appId : undefined,
+  );
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
-  const route = useRoute();
   const [cat, setCat] = useState('All');
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
   const [q, setQ] = useState(() => {
