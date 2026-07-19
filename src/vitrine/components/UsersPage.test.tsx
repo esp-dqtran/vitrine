@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { UserDirectory } from "./UserDirectory.tsx";
 import { UsersPageView } from "./UsersPage.tsx";
 
 const users = [
@@ -23,23 +24,38 @@ const usage = {
   daily: [{ day: "2026-07-19", uses: 14 }],
 };
 
+test("keeps directory filter state below the Users page render boundary", () => {
+  const pageSource = readFileSync(new URL("./UsersPage.tsx", import.meta.url), "utf8");
+  const containerUrl = new URL("./UsersDirectoryContainer.tsx", import.meta.url);
+  const containerSource = existsSync(containerUrl) ? readFileSync(containerUrl, "utf8") : "";
+
+  assert.doesNotMatch(pageSource, /useUsersDirectory/);
+  assert.match(pageSource, /directory=\{<UsersDirectoryContainer/);
+  assert.match(containerSource, /useState\(['"]{2}\)/);
+  assert.match(containerSource, /useState<UserFilter>\(['"]all['"]\)/);
+  assert.match(containerSource, /useUsersDirectory\(query,\s*filter\)/);
+});
+
 test("renders one unified, searchable directory with account actions", () => {
   const html = renderToStaticMarkup(<UsersPageView
-    users={users}
     total={12}
-    hasMore
-    loadingMore={false}
-    query=""
-    filter="all"
+    directory={<UserDirectory
+      users={users}
+      total={12}
+      hasMore
+      loadingMore={false}
+      query=""
+      filter="all"
+      onQueryChange={() => undefined}
+      onFilterChange={() => undefined}
+      onLoadMore={() => undefined}
+      onSetActive={async () => undefined}
+      onSelectUser={() => undefined}
+    />}
     growth={growth}
     usage={usage}
     range="30d"
-    onQueryChange={() => undefined}
-    onFilterChange={() => undefined}
-    onLoadMore={() => undefined}
-    onSetActive={async () => undefined}
     onRangeChange={() => undefined}
-    onSelectUser={() => undefined}
   />);
 
   assert.match(html, /<h1[^>]*>Users<\/h1>/);
@@ -58,23 +74,47 @@ test("renders one unified, searchable directory with account actions", () => {
 
 test("renders honest empty directory copy", () => {
   const html = renderToStaticMarkup(<UsersPageView
-    users={[]}
     total={0}
-    hasMore={false}
-    loadingMore={false}
-    query=""
-    filter="all"
+    directory={<UserDirectory
+      users={[]}
+      total={0}
+      hasMore={false}
+      loadingMore={false}
+      query=""
+      filter="all"
+      onQueryChange={() => undefined}
+      onFilterChange={() => undefined}
+      onLoadMore={() => undefined}
+      onSetActive={async () => undefined}
+      onSelectUser={() => undefined}
+    />}
     growth={growth}
     usage={usage}
     range="30d"
+    onRangeChange={() => undefined}
+  />);
+  assert.match(html, /No members yet/);
+});
+
+test("keeps existing rows visible while filtered results refresh", () => {
+  const html = renderToStaticMarkup(<UserDirectory
+    users={users}
+    total={12}
+    hasMore={false}
+    loadingMore={false}
+    refreshing
+    query="pro"
+    filter="active"
     onQueryChange={() => undefined}
     onFilterChange={() => undefined}
     onLoadMore={() => undefined}
     onSetActive={async () => undefined}
-    onRangeChange={() => undefined}
     onSelectUser={() => undefined}
   />);
-  assert.match(html, /No members yet/);
+
+  assert.match(html, /admin@gmail\.com/);
+  assert.match(html, /pro@example\.com/);
+  assert.match(html, /Updating/);
 });
 
 test("defines the split workspace and narrow responsive states", () => {
