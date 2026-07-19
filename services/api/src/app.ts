@@ -1966,7 +1966,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       : versions.find(({ version_number }) => version_number === requestedVersion);
     const sourceImages = selectedVersion
       ? await deps.versionImages(req.params.app, platform, selectedVersion.version_number, kind)
-      : res.locals.user.role === "admin" ? await deps.allImages(kind) : [];
+      : res.locals.user.role === "admin" ? await deps.appImages(req.params.app, kind) : [];
     const page = buildAppDetailPage(
       sourceImages,
       req.params.app,

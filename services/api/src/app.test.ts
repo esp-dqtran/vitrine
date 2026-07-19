@@ -1518,6 +1518,29 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   assert.equal((await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } })).status, 200);
 });
 
+test("uses app-scoped images for an admin app without a published version", async (t) => {
+  let requested: { app: string; kind: string | string[]; platform?: string } | undefined;
+  const platformMetadata = { appPlatforms: async () => ["web"] };
+  const { base, server } = await serve(createApiApp({
+    ...platformMetadata,
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    listAppVersions: async (app) => [{ ...publishedVersion, app, status: "draft" }],
+    allImages: async () => { throw new Error("global image scan must not run for app detail"); },
+    appImages: async (app, kind, platform) => {
+      requested = { app, kind, platform };
+      return catalogImages.filter((image) => image.app === app);
+    },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps/linear?limit=1`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  assert.deepEqual(requested, { app: "linear", kind: "screen", platform: undefined });
+  assert.equal((await response.json()).screens.length, 1);
+});
+
 test("keeps the old gallery and pipeline state admin-only", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
