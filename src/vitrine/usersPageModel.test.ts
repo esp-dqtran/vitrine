@@ -5,7 +5,6 @@ import {
   filterAdminUsers,
   formatConversion,
   formatJoinedDate,
-  groupAdminUsers,
   userInitial,
   userPlanLabel,
 } from "./usersPageModel.ts";
@@ -24,18 +23,6 @@ test("searches and filters users with composable real-data rules", () => {
   assert.deepEqual(filterAdminUsers(users, "", "free").map(({ id }) => id), [1, 2, 4]);
   assert.deepEqual(filterAdminUsers(users, "", "disabled").map(({ id }) => id), [4]);
   assert.deepEqual(filterAdminUsers(users, "disabled", "pro"), []);
-});
-
-test("groups the all-members view and keeps filtered results together", () => {
-  assert.deepEqual(
-    groupAdminUsers(users, "all").map(({ label, users }) => [label, users.length]),
-    [["Administrators", 1], ["Members", 3]],
-  );
-  assert.deepEqual(
-    groupAdminUsers([users[2]], "pro").map(({ label, users }) => [label, users.length]),
-    [["Pro members", 1]],
-  );
-  assert.deepEqual(groupAdminUsers([], "disabled"), []);
 });
 
 test("formats only deterministic values available in the API", () => {

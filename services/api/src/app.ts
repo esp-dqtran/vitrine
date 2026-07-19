@@ -2120,7 +2120,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.get("/users/:id/usage", requireAdmin, async (req, res) => {
-    const userId = positiveId(req.params.id);
+    const userId = positiveId(String(req.params.id));
     const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
     if (!userId || !range) {
       res.status(400).json({ error: !userId ? "invalid user id" : "range must be 7d, 30d, or 90d" });
@@ -2135,7 +2135,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.patch("/users/:id/active", requireAdmin, async (req, res) => {
-    const userId = positiveId(req.params.id);
+    const userId = positiveId(String(req.params.id));
     if (!userId || typeof req.body?.active !== "boolean") {
       res.status(400).json({ error: "invalid account state request" });
       return;
