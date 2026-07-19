@@ -117,6 +117,41 @@ export function flowStageCoverage(
   return { captured, complete: missingRowIds.length === 0, missingRowIds };
 }
 
+interface FlowIngestionRetryOptions {
+  attempts?: number;
+  baseDelayMs?: number;
+  sleep?: (delayMs: number) => Promise<void>;
+  onRetry?: (error: unknown, attempt: number, delayMs: number) => void;
+}
+
+function isTransientDatabaseSaturation(error: unknown): boolean {
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code?: unknown }).code ?? "")
+    : "";
+  const message = error instanceof Error ? error.message : String(error);
+  return code === "53300"
+    || /EMAXCONNSESSION|max clients reached|too many clients|remaining connection slots/i.test(message);
+}
+
+export async function retryTransientFlowIngestion<T>(
+  operation: () => Promise<T>,
+  options: FlowIngestionRetryOptions = {},
+): Promise<T> {
+  const attempts = Math.max(1, options.attempts ?? 6);
+  const baseDelayMs = Math.max(0, options.baseDelayMs ?? 1_000);
+  const sleep = options.sleep ?? ((delayMs: number) => new Promise<void>((resolve) => setTimeout(resolve, delayMs)));
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isTransientDatabaseSaturation(error) || attempt >= attempts) throw error;
+      const delayMs = Math.min(baseDelayMs * (2 ** (attempt - 1)), 8_000);
+      options.onRetry?.(error, attempt, delayMs);
+      await sleep(delayMs);
+    }
+  }
+}
+
 // Runs entirely as discrete Playwright evaluate() calls, one per scroll step — NOT one big
 // injected JS loop. That distinction matters: driving this same interaction through the
 // Chrome extension's CDP-instrumented tab caused click-triggered re-renders to degrade
@@ -742,7 +777,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         const dir = `${downloadRoot}/${row.id}`;
         const extractDir = `${dir}/_extracted`;
         pending.push(
-          (async () => {
+          retryTransientFlowIngestion(async () => {
             const imageIds: number[] = [];
             for (const path of savedPaths) {
               const sourceDir = extractIfArchive(path, extractDir) ? extractDir : dir;
@@ -758,8 +793,14 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
               steps: imageIds.map((imageId, index) => ({ label: `Step ${index + 1}`, evidence: [imageId] })),
             });
             console.log(`[${appName}] Flow "${row.title}": ${imageIds.length} step(s).`);
-          })()
-            .catch((error) => console.warn(`[${appName}] Error ingesting flow ${row.id}: ${error}. Skipping.`))
+          }, {
+            onRetry: (error, attempt, delayMs) => console.warn(
+              `[${appName}] Flow ${row.id} persistence is saturated (${error}); retry ${attempt + 1}/6 in ${delayMs}ms.`,
+            ),
+          })
+            .catch((error) => {
+              throw new Error(`Flow ${row.id} ingestion failed; refusing to skip it: ${error}`, { cause: error });
+            })
             .finally(() => {
               done++;
               writeProgress({ stage: "crawl", app: appName, done, total: seen.size, status: "running", message: "Downloading flows" });

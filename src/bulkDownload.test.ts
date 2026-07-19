@@ -13,6 +13,7 @@ import {
   catalogDownloadRoot,
   isFlowlessRedirect,
   flowStageCoverage,
+  retryTransientFlowIngestion,
   waitForGridOrRedirect,
 } from "./bulkDownload.ts";
 import type { DesignFlow } from "./designSystem.ts";
@@ -60,6 +61,53 @@ test("flow retry counts existing Mobbin flows and downloads only missing rows", 
     complete: true,
     missingRowIds: [],
   });
+});
+
+test("flow ingestion retries transient database saturation instead of skipping the flow", async () => {
+  let attempts = 0;
+  const delays: number[] = [];
+  const result = await retryTransientFlowIngestion(
+    async () => {
+      attempts++;
+      if (attempts < 3) throw new Error("(EMAXCONNSESSION) max clients reached in session mode");
+      return "persisted";
+    },
+    {
+      attempts: 4,
+      baseDelayMs: 10,
+      sleep: async (delayMs) => { delays.push(delayMs); },
+    },
+  );
+
+  assert.equal(result, "persisted");
+  assert.equal(attempts, 3);
+  assert.deepEqual(delays, [10, 20]);
+});
+
+test("flow ingestion fails immediately for non-transient errors", async () => {
+  let attempts = 0;
+  await assert.rejects(
+    retryTransientFlowIngestion(async () => {
+      attempts++;
+      throw new Error("downloaded image metadata mismatch");
+    }, { attempts: 4, baseDelayMs: 0, sleep: async () => {} }),
+    /metadata mismatch/,
+  );
+  assert.equal(attempts, 1);
+});
+
+test("flow ingestion rejects after transient retry exhaustion", async () => {
+  let attempts = 0;
+  await assert.rejects(
+    retryTransientFlowIngestion(async () => {
+      attempts++;
+      const error = new Error("too many clients already");
+      Object.assign(error, { code: "53300" });
+      throw error;
+    }, { attempts: 3, baseDelayMs: 0, sleep: async () => {} }),
+    /too many clients/,
+  );
+  assert.equal(attempts, 3);
 });
 
 test("UI element selection keeps every Mobbin card regardless of alt text", async () => {
