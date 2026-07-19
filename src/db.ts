@@ -1,4 +1,5 @@
 import pg from "pg";
+import { databasePoolOptions } from "./dbPoolConfig.ts";
 import type { DesignFlow, DesignSystemSnapshot } from "./designSystem.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
 import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
@@ -6,7 +7,7 @@ import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/astryx";
 
-export const pool = new pg.Pool({ connectionString: DATABASE_URL });
+export const pool = new pg.Pool({ connectionString: DATABASE_URL, ...databasePoolOptions(process.env) });
 
 export async function query<R extends pg.QueryResultRow = pg.QueryResultRow>(
   text: string,
