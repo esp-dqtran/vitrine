@@ -1,10 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchAppDetail, mergeApp } from './appsApi.ts';
+import { fetchAppDetailPage } from './appsApi.ts';
 
-test('loads an app detail by encoded slug and maps its screens', async () => {
+const screen = {
+  id: 1,
+  type: 'Home',
+  productArea: 'Feed',
+  theme: 'light' as const,
+  visibleStates: [],
+  platform: 'ios',
+  description: null,
+  url: '/media/1',
+};
+
+test('loads the first 48 detail screens with version and cursor metadata', async () => {
   let requested = '';
-  const app = await fetchAppDetail('quora mobile', undefined, async (input) => {
+  const detail = await fetchAppDetailPage('quora mobile', undefined, async (input) => {
     requested = String(input);
     return new Response(JSON.stringify({
       app: {
@@ -14,33 +25,28 @@ test('loads an app detail by encoded slug and maps its screens', async () => {
         accent: '#b92b27',
         totalScreens: 563,
       },
-      screens: [{
-        id: 1,
-        type: 'Home',
-        productArea: 'Feed',
-        theme: 'light',
-        visibleStates: [],
+      screens: [screen],
+      nextCursor: 'next-screen',
+      version: {
+        id: 7,
+        app: 'quora mobile',
         platform: 'ios',
-        description: null,
-        url: '/media/1',
-      }],
-      nextCursor: null,
+        version_number: 3,
+        status: 'published',
+      },
     }), { status: 200, headers: { 'content-type': 'application/json' } });
   });
 
-  assert.equal(requested, '/api/apps/quora%20mobile?limit=1');
-  assert.equal(app.id, 'quora mobile');
-  assert.equal(app.screens.length, 1);
+  assert.equal(requested, '/api/apps/quora%20mobile?limit=48');
+  assert.equal(detail.app.id, 'quora mobile');
+  assert.equal(detail.app.screens.length, 1);
+  assert.equal(detail.nextCursor, 'next-screen');
+  assert.equal(detail.version?.version_number, 3);
 });
 
-test('mergeApp adds a missing deep-linked app without duplicating an existing app', () => {
-  const linear = {
-    id: 'linear', app: 'Linear', cat: 'Productivity', accent: '#000', totalScreens: 1, screens: [],
-  };
-  const quora = {
-    id: 'quora', app: 'Quora', cat: 'Social', accent: '#b92b27', totalScreens: 1, screens: [],
-  };
-
-  assert.deepEqual(mergeApp([linear], quora).map(({ id }) => id), ['linear', 'quora']);
-  assert.equal(mergeApp([linear, quora], quora).length, 2);
+test('reports a detail API failure without converting it to empty data', async () => {
+  await assert.rejects(
+    () => fetchAppDetailPage('missing', undefined, async () => new Response(null, { status: 404 })),
+    /\/api\/apps\/missing returned 404/,
+  );
 });
