@@ -17,7 +17,7 @@
 - Modify: `src/progress.ts:105-108`
 - Modify: `src/bulkDownload.ts:608`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace the permissive UI-target test with:
 
@@ -29,13 +29,13 @@ test("UI completeness uses Mobbin's displayed total when fewer cards were select
 });
 ```
 
-- [ ] **Step 2: Run it and verify RED**
+- [x] **Step 2: Run it and verify RED**
 
 Run: `node --experimental-strip-types --test --test-name-pattern="UI completeness" src/catalogImportGate.test.ts`
 
 Expected: FAIL because the current helper accepts the selected-card count as the target.
 
-- [ ] **Step 3: Implement the minimal target rule**
+- [x] **Step 3: Implement the minimal target rule**
 
 Replace the helper with:
 
@@ -47,13 +47,13 @@ export function catalogCaptureTarget(shown: number): number {
 
 Update `crawlBulkDownload` to call `catalogCaptureTarget(discovered)`. Keep `selectedForDownload` only for diagnostic logging.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `node --experimental-strip-types --test src/catalogImportGate.test.ts src/bulkDownload.test.ts`
 
 Expected: PASS; a `136/144` UI import returns an error outcome.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/progress.ts src/catalogImportGate.test.ts src/bulkDownload.ts
@@ -67,7 +67,7 @@ git commit -m "fix: require full Mobbin UI element totals"
 - Modify: `src/bulkDownload.ts:109-118`
 - Modify: `src/bulkDownload.ts:702-859`
 
-- [ ] **Step 1: Write failing flow-total tests**
+- [x] **Step 1: Write failing flow-total tests**
 
 ```typescript
 test("flow coverage fails when the crawl sees fewer rows than Mobbin shows", () => {
@@ -95,13 +95,13 @@ test("flow coverage fails when a seen row was not persisted", () => {
 });
 ```
 
-- [ ] **Step 2: Run them and verify RED**
+- [x] **Step 2: Run them and verify RED**
 
 Run: `node --experimental-strip-types --test --test-name-pattern="flow coverage" src/bulkDownload.test.ts`
 
 Expected: FAIL because coverage does not accept Mobbin's displayed total.
 
-- [ ] **Step 3: Implement displayed-total coverage**
+- [x] **Step 3: Implement displayed-total coverage**
 
 ```typescript
 export function flowStageCoverage(
@@ -127,13 +127,13 @@ export function flowStageCoverage(
 
 After the zero-flow redirect check, call `shownTotalCount(probe)`. Return an error when it is `null`. Pass that value into `flowStageCoverage`, and return it as `StageOutcome.discovered`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `node --experimental-strip-types --test src/bulkDownload.test.ts`
 
 Expected: PASS for missing seen rows, wholly undiscovered rows, transient retries, and retry exhaustion.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/bulkDownload.ts src/bulkDownload.test.ts
@@ -147,7 +147,7 @@ git commit -m "fix: verify flows against Mobbin totals"
 - Create: `src/catalogVerification.test.ts`
 - Modify: `scripts/verify-catalog-import.ts:20-120`
 
-- [ ] **Step 1: Write failing pure-gate tests**
+- [x] **Step 1: Write failing pure-gate tests**
 
 ```typescript
 import assert from "node:assert/strict";
@@ -178,13 +178,13 @@ test("missing expected totals are unauditable", () => {
 });
 ```
 
-- [ ] **Step 2: Run them and verify RED**
+- [x] **Step 2: Run them and verify RED**
 
 Run: `node --experimental-strip-types --test src/catalogVerification.test.ts`
 
 Expected: FAIL because the shared module does not exist.
 
-- [ ] **Step 3: Implement the pure repair gate**
+- [x] **Step 3: Implement the pure repair gate**
 
 ```typescript
 export interface CatalogPersistenceSnapshot {
@@ -216,7 +216,7 @@ export function catalogPersistenceRepair(
 }
 ```
 
-- [ ] **Step 4: Implement one parameterized PostgreSQL loader**
+- [x] **Step 4: Implement one parameterized PostgreSQL loader**
 
 Move the existing `persistedCounts` CTE from `scripts/verify-catalog-import.ts` into `loadCatalogPersistence(db, jobs)`. Extend `image_counts` with:
 
@@ -233,7 +233,7 @@ count(*) FILTER (WHERE e IS NOT NULL AND i.id IS NOT NULL AND so.object_key IS N
 
 Return `Map<string, CatalogPersistenceSnapshot>` keyed by `${app}\u0000${platform}` and convert every numeric database field with `Number(...)`.
 
-- [ ] **Step 5: Make the audit use the shared loader and verify GREEN**
+- [x] **Step 5: Make the audit use the shared loader and verify GREEN**
 
 Remove the duplicate local loader from `scripts/verify-catalog-import.ts`. Import `catalogJobKey`, `catalogPersistenceRepair`, and `loadCatalogPersistence`; include missing-object counters in audit output and use `catalogPersistenceRepair` for queue decisions.
 
@@ -241,7 +241,7 @@ Run: `node --experimental-strip-types --test src/catalogVerification.test.ts src
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/catalogVerification.ts src/catalogVerification.test.ts scripts/verify-catalog-import.ts
@@ -255,7 +255,7 @@ git commit -m "feat: add persisted catalog verification gate"
 - Modify: `src/catalogVerification.test.ts`
 - Modify: `scripts/catalog-import.ts:169-228`
 
-- [ ] **Step 1: Write a failing persisted-verification error test**
+- [x] **Step 1: Write a failing persisted-verification error test**
 
 ```typescript
 test("persisted verification error retains exact repair phases", () => {
@@ -279,13 +279,13 @@ test("persisted verification error retains exact repair phases", () => {
 });
 ```
 
-- [ ] **Step 2: Run it and verify RED**
+- [x] **Step 2: Run it and verify RED**
 
 Run: `node --experimental-strip-types --test --test-name-pattern="persisted verification error" src/catalogVerification.test.ts`
 
 Expected: FAIL because `CatalogPersistenceError` and `assertCatalogPersistenceComplete` do not exist.
 
-- [ ] **Step 3: Implement a typed fail-closed assertion**
+- [x] **Step 3: Implement a typed fail-closed assertion**
 
 Add `CatalogPersistenceError`, whose public `repair` field contains the result of `catalogPersistenceRepair`. Add `assertCatalogPersistenceComplete(expected, persisted)`, which returns normally only when all three flags are false and otherwise throws `CatalogPersistenceError` with this exact message shape:
 
@@ -297,21 +297,21 @@ Add `CatalogPersistenceError`, whose public `repair` field contains the result o
   + `missing objects ${persisted.missingScreenObjects + persisted.missingUiElementObjects + persisted.missingFlowObjects}`
 ```
 
-- [ ] **Step 4: Run the persisted gate before setting `done`**
+- [x] **Step 4: Run the persisted gate before setting `done`**
 
 Immediately before `delete job.repair`, build expected counts from `job.verification`, load the current app-platform snapshot, and call `assertCatalogPersistenceComplete`. If it throws `CatalogPersistenceError`, assign `error.repair` to `job.repair` before rethrowing. Delete `job.repair` and set `done` only when the assertion returns normally.
 
-- [ ] **Step 5: Remove worker shutdown after consecutive app failures**
+- [x] **Step 5: Remove worker shutdown after consecutive app failures**
 
 Delete `consecutiveFailures`, `CONSECUTIVE_FAILURE_LIMIT`, and the consecutive-failure `break`. Keep the explicit `stopRequested` check. The existing loop then saves the failed app, waits the inter-app delay, and continues to the next job.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `node --experimental-strip-types --test src/catalogImportGate.test.ts src/catalogVerification.test.ts src/bulkDownload.test.ts`
 
 Expected: PASS; partial persisted data retains exact repair flags and no completeness failure can stop the worker.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/catalogVerification.ts src/catalogVerification.test.ts scripts/catalog-import.ts
@@ -323,25 +323,25 @@ git commit -m "fix: fail catalog jobs on persisted gaps"
 **Files:**
 - Verify only; no planned source changes.
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 Run: `npm test`
 
 Expected: all Node and TSX tests PASS.
 
-- [ ] **Step 2: Run the production build**
+- [x] **Step 2: Run the production build**
 
 Run: `npm run build`
 
 Expected: Vite build completes successfully.
 
-- [ ] **Step 3: Run a read-only live catalog audit**
+- [x] **Step 3: Run a read-only live catalog audit**
 
 Run: `CATALOG_WORKERS=2 node --env-file=.env --import tsx scripts/verify-catalog-import.ts`
 
 Expected: exit `0`; Airalo is not queued for flow repair while live data remains 32/32, and global invalid flow references remain `0`.
 
-- [ ] **Step 4: Inspect scope and commits**
+- [x] **Step 4: Inspect scope and commits**
 
 ```bash
 git status --short
