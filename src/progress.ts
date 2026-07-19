@@ -1,6 +1,7 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 
-const PROGRESS_PATH = "data/progress.json";
 const CANCEL_PATH = "data/cancel-requested";
 
 export interface ProgressState {
@@ -8,9 +9,22 @@ export interface ProgressState {
   app: string;
   done: number;
   total: number;
-  status: "running" | "done" | "error" | "cancelled";
+  status: "running" | "done" | "error" | "cancelled" | "idle";
   message?: string;
   updatedAt: string;
+}
+
+export interface ProgressEntry extends ProgressState {
+  id: string;
+}
+
+export interface ProgressSnapshot {
+  entries: ProgressEntry[];
+}
+
+export interface ProgressStoreOptions {
+  dataDir?: string;
+  workerId?: string;
 }
 
 export interface StageOutcome {
@@ -114,17 +128,80 @@ export function summarizeCatalogIntegrityState(
   };
 }
 
-export function writeProgress(state: Omit<ProgressState, "updatedAt">): void {
-  writeFileSync(PROGRESS_PATH, JSON.stringify({ ...state, updatedAt: new Date().toISOString() }));
+const progressStages = new Set<ProgressState["stage"]>(["crawl", "caption", "synthesize", "smart-crawl"]);
+const progressStatuses = new Set<ProgressState["status"]>(["running", "done", "error", "cancelled", "idle"]);
+
+function storeDataDir(options: ProgressStoreOptions): string {
+  return options.dataDir ?? process.env.DATA_DIR ?? "data";
 }
 
-export function readProgress(): ProgressState | null {
-  if (!existsSync(PROGRESS_PATH)) return null;
+function progressScope(workerId: string | undefined): string {
+  const normalized = (workerId?.trim() || "default")
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return normalized || "default";
+}
+
+function progressEntry(value: unknown, fallbackId?: string): ProgressEntry | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const item = value as Record<string, unknown>;
+  const id = typeof item.id === "string" && item.id ? item.id : fallbackId;
+  if (!id || typeof item.stage !== "string" || !progressStages.has(item.stage as ProgressState["stage"])) return null;
+  if (typeof item.app !== "string" || !item.app) return null;
+  if (!Number.isSafeInteger(item.done) || Number(item.done) < 0) return null;
+  if (!Number.isSafeInteger(item.total) || Number(item.total) < 0) return null;
+  if (typeof item.status !== "string" || !progressStatuses.has(item.status as ProgressState["status"])) return null;
+  if (typeof item.updatedAt !== "string" || !item.updatedAt) return null;
+  if (item.message !== undefined && typeof item.message !== "string") return null;
+  return {
+    id,
+    stage: item.stage as ProgressState["stage"],
+    app: item.app,
+    done: Number(item.done),
+    total: Number(item.total),
+    status: item.status as ProgressState["status"],
+    ...(typeof item.message === "string" ? { message: item.message } : {}),
+    updatedAt: item.updatedAt,
+  };
+}
+
+function readEntry(path: string, fallbackId?: string): ProgressEntry | null {
   try {
-    return JSON.parse(readFileSync(PROGRESS_PATH, "utf8"));
+    return progressEntry(JSON.parse(readFileSync(path, "utf8")), fallbackId);
   } catch {
-    return null; // mid-write or corrupted — the next poll picks up the next successful write
+    return null;
   }
+}
+
+export function writeProgress(
+  state: Omit<ProgressState, "updatedAt">,
+  options: ProgressStoreOptions = {},
+): void {
+  const scope = progressScope(options.workerId ?? process.env.WORKER_ID);
+  const directory = join(storeDataDir(options), "progress");
+  mkdirSync(directory, { recursive: true });
+  const target = join(directory, `${scope}.json`);
+  const temporary = join(directory, `.${scope}.${process.pid}.${randomUUID()}.tmp`);
+  const entry: ProgressEntry = { ...state, id: `worker:${scope}`, updatedAt: new Date().toISOString() };
+  writeFileSync(temporary, JSON.stringify(entry));
+  renameSync(temporary, target);
+}
+
+export function readProgress(options: ProgressStoreOptions = {}): ProgressSnapshot {
+  const dataDir = storeDataDir(options);
+  const directory = join(dataDir, "progress");
+  const entries = existsSync(directory)
+    ? readdirSync(directory)
+      .filter((name) => name.endsWith(".json"))
+      .map((name) => readEntry(join(directory, name)))
+      .filter((entry): entry is ProgressEntry => entry !== null)
+      .sort((left, right) => left.id.localeCompare(right.id))
+    : [];
+  if (entries.length) return { entries };
+
+  const legacy = readEntry(join(dataDir, "progress.json"), "worker:legacy");
+  return { entries: legacy ? [legacy] : [] };
 }
 
 // Cooperative cancellation: the pipeline process and the vite dev server are separate
