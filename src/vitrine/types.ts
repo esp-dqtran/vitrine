@@ -27,6 +27,8 @@ export interface App {
   cat: string;
   accent: string;
   totalScreens: number;
+  analyzedScreens?: number;
+  lastCapturedAt?: string | null;
   screens: Screen[];
   websiteUrl?: string | null;
   iconUrl?: string | null;

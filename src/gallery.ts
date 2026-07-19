@@ -1,4 +1,4 @@
-import type { CrawledImage, PublishedPreviewImage } from "./db.ts";
+import type { AdminGalleryImage, CrawledImage, PublishedPreviewImage } from "./db.ts";
 import { bulkImageHash, publicImageUrl } from "./imageSource.ts";
 
 const APP_META: Record<string, { label: string; cat: string; accent: string; websiteUrl: string }> = {
@@ -84,8 +84,8 @@ function screen(
   };
 }
 
-function groups(images: CrawledImage[]): Map<string, CrawledImage[]> {
-  const result = new Map<string, CrawledImage[]>();
+function groups<T extends CrawledImage>(images: T[]): Map<string, T[]> {
+  const result = new Map<string, T[]>();
   for (const image of images) result.set(image.app, [...(result.get(image.app) ?? []), image]);
   return result;
 }
@@ -176,6 +176,26 @@ export function buildGalleryApps(images: CrawledImage[]) {
       websiteUrl: meta.websiteUrl,
       iconUrl: appImages[0]?.icon_url ?? null,
       screens: appImages.slice(0, MAX_SCREENS_PER_APP).map((image) => screen(app, image)),
+    };
+  });
+}
+
+export function buildAdminGalleryApps(images: AdminGalleryImage[]) {
+  const byApp = groups(images);
+  return [...byApp.entries()].map(([app, appImages]) => {
+    const meta = appMeta(app);
+    const summary = appImages[0];
+    return {
+      id: app,
+      app: meta.label,
+      cat: summary?.category ?? meta.cat,
+      accent: meta.accent,
+      totalScreens: summary?.total_screens ?? 0,
+      analyzedScreens: summary?.analyzed_screens ?? 0,
+      lastCapturedAt: summary?.last_captured_at ?? null,
+      websiteUrl: meta.websiteUrl,
+      iconUrl: summary?.icon_url ?? null,
+      screens: appImages.slice(0, 5).map((image) => screen(app, image)),
     };
   });
 }

@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import {
   query,
   allImages,
+  adminAppPage,
   createJob,
   listJobs,
   getJob,
@@ -52,7 +53,7 @@ import { isPlatform, platformFromUrl, type Platform } from "../../../src/platfor
 import { readProgress, requestCancel } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
-import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
+import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -224,6 +225,7 @@ const requestCrawlRepair = createCrawlRepairRequester();
 const defaults = {
   query,
   allImages,
+  adminAppPage,
   createJob,
   listJobs,
   getJob,
@@ -1897,8 +1899,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  app.get("/apps", requireAdmin, async (_req, res) => {
-    res.json(buildGalleryApps(await deps.allImages()));
+  app.get("/apps", requireAdmin, async (req, res) => {
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const page = await deps.adminAppPage(cursor, limit);
+    res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor });
   });
 
   app.get("/images", requireAdmin, async (req, res) => {

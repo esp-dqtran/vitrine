@@ -9,6 +9,8 @@ interface CatalogResponse {
 export function useApps(role: 'admin' | 'user' | undefined) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const refresh = useCallback(() => {
     setError(null);
@@ -16,7 +18,9 @@ export function useApps(role: 'admin' | 'user' | undefined) {
       if (role === 'admin') {
         const response = await fetch('/api/apps');
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
-        setApps(await response.json() as App[]);
+        const page = await response.json() as { apps: App[]; nextCursor: string | null };
+        setApps(page.apps);
+        setNextCursor(page.nextCursor);
         return;
       }
       const results: App[] = [];
@@ -38,5 +42,21 @@ export function useApps(role: 'admin' | 'user' | undefined) {
     void refresh();
   }, [refresh]);
 
-  return { apps, loading: apps === null && !error, error, refresh };
+  const loadMore = useCallback(async () => {
+    if (role !== 'admin' || !nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const response = await fetch(`/api/apps?cursor=${encodeURIComponent(nextCursor)}`);
+      if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
+      const page = await response.json() as { apps: App[]; nextCursor: string | null };
+      setApps((current) => [...(current ?? []), ...page.apps]);
+      setNextCursor(page.nextCursor);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, nextCursor, role]);
+
+  return { apps, loading: apps === null && !error, loadingMore, hasMore: nextCursor !== null, error, refresh, loadMore };
 }

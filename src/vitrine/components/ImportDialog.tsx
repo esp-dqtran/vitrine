@@ -23,8 +23,8 @@ export interface RowVM {
 
 export function appRow(a: App): RowVM {
   const captured = a.totalScreens;
-  const analyzed = a.screens.filter((s) => s.confidence != null).length;
-  const lastSynced = a.screens.reduce<string | null>((m, s) => (s.capturedAt && (!m || s.capturedAt > m) ? s.capturedAt : m), null);
+  const analyzed = a.analyzedScreens ?? a.screens.filter((s) => s.confidence != null).length;
+  const lastSynced = a.lastCapturedAt ?? a.screens.reduce<string | null>((m, s) => (s.capturedAt && (!m || s.capturedAt > m) ? s.capturedAt : m), null);
   return { slug: a.id, name: a.app, cat: a.cat, accent: a.accent, iconUrl: a.iconUrl, captured, analyzed, lastSynced, status: captured > 0 && analyzed >= captured ? 'Complete' : 'In progress', app: a };
 }
 

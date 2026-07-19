@@ -9,3 +9,16 @@ test('keeps the Apps shell independent from job-list loading', async () => {
   assert.doesNotMatch(source, /\buseJobs\s*\(/);
   assert.doesNotMatch(source, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
+
+test('loads additional admin app pages only when the gallery sentinel approaches the viewport', async () => {
+  const [appSource, hookSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(hookSource, /loadMore/);
+  assert.match(hookSource, /nextCursor/);
+  assert.match(appSource, /IntersectionObserver/);
+  assert.match(appSource, /appsSentinelRef/);
+  assert.match(appSource, /void loadMore\(\)/);
+});

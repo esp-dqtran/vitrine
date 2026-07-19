@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
@@ -37,7 +37,7 @@ function AppCardSkeleton({ index }: { index: number }) {
 
 export function App() {
   const { user, logout } = useAuth();
-  const { apps, loading, error } = useApps(user?.role);
+  const { apps, loading, loadingMore, hasMore, error, loadMore } = useApps(user?.role);
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
   const route = useRoute();
@@ -57,6 +57,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<{ plan: 'free' | 'pro'; freeUnlocks: string[]; freeUnlocksRemaining: number } | null>(null);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
+  const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
 
   useEffect(() => {
@@ -78,6 +79,17 @@ export function App() {
     }, 180);
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [q, filters]);
+
+  useEffect(() => {
+    if (!isAdmin || route.name === 'app' || !hasMore || loadingMore) return;
+    const sentinel = appsSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) void loadMore();
+    }, { rootMargin: '600px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isAdmin, loadMore, loadingMore, route.name]);
 
   // Free accounts only get full access to apps they've spent an unlock on; a shared
   // deep link into an app must honor the same gate, not just the catalog card click.
@@ -304,6 +316,8 @@ export function App() {
               />
             ))}
           </div>
+          {isAdmin && hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
+          {isAdmin && loadingMore && <div style={{ padding: '0 0 40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading more apps…</div>}
         </motion.div>
       )}
     </AnimatePresence>

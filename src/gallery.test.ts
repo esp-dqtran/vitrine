@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "./gallery.ts";
+import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "./gallery.ts";
 
 test("groups images, preserves metadata, maps local media, and caps screens", () => {
   const images = Array.from({ length: 121 }, (_, index) => ({
@@ -35,6 +35,39 @@ test("groups images, preserves metadata, maps local media, and caps screens", ()
   assert.equal(app.screens[0].productArea, "Authentication");
   assert.equal(app.screens[0].theme, "light");
   assert.deepEqual(app.screens[0].visibleStates, ["focused input"]);
+});
+
+test("builds lightweight admin cards from database summaries", () => {
+  const images = Array.from({ length: 5 }, (_, index) => ({
+    id: index + 1,
+    app: "linear",
+    platform: "web",
+    image_url: `mobbin-bulk:${String(index + 1).padStart(16, "0")}`,
+    description: null,
+    analysis: index === 0 ? {
+      description: "Workspace",
+      purpose: "Manage work",
+      pageType: "Dashboard",
+      productArea: "Workspace",
+      theme: "light" as const,
+      visibleStates: [],
+      componentNames: [],
+      confidence: 0.9,
+    } : null,
+    category: "Productivity",
+    icon_url: "https://cdn.example.com/linear.png",
+    total_screens: 236,
+    analyzed_screens: 17,
+    last_captured_at: "2026-07-19T01:00:00.000Z",
+  }));
+
+  const [app] = buildAdminGalleryApps(images);
+
+  assert.equal(app.totalScreens, 236);
+  assert.equal(app.analyzedScreens, 17);
+  assert.equal(app.lastCapturedAt, "2026-07-19T01:00:00.000Z");
+  assert.equal(app.screens.length, 5);
+  assert.equal(app.iconUrl, "https://cdn.example.com/linear.png");
 });
 
 test("builds paginated public previews without source image fields", () => {

@@ -201,6 +201,68 @@ export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promi
   return res.rows;
 }
 
+export interface AdminGalleryImage extends CrawledImage {
+  total_screens: number;
+  analyzed_screens: number;
+  last_captured_at: string | null;
+  has_more?: boolean;
+}
+
+export interface AdminAppPage {
+  images: AdminGalleryImage[];
+  nextCursor: string | null;
+}
+
+export async function adminAppPage(cursor?: string, requestedLimit = 24): Promise<AdminAppPage> {
+  const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 24, 1), 48);
+  const res = await query<AdminGalleryImage>(
+    `WITH candidate_apps AS (
+       SELECT a.id, a.name, a.icon_url, a.category
+       FROM apps a
+       WHERE ($1::text IS NULL OR a.name > $1)
+         AND EXISTS (
+           SELECT 1 FROM platforms p JOIN images i ON i.platform_id = p.id
+           WHERE p.app_id = a.id AND i.kind = 'screen'
+         )
+       ORDER BY a.name
+       LIMIT ($2::integer + 1)
+     ), page_apps AS (
+       SELECT * FROM candidate_apps ORDER BY name LIMIT $2
+     ), counts AS (
+       SELECT pa.id AS app_id, COUNT(*)::integer AS total_screens,
+              COUNT(i.analysis)::integer AS analyzed_screens,
+              MAX(i.created_at) AS last_captured_at
+       FROM page_apps pa
+       JOIN platforms p ON p.app_id = pa.id
+       JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+       GROUP BY pa.id
+     ), ranked_images AS (
+       SELECT i.id, pa.name AS app, p.name AS platform, i.image_url, i.kind,
+              i.description, i.analysis, pa.icon_url, pa.category,
+              i.image_url AS capture_url, i.created_at AS captured_at,
+              ROW_NUMBER() OVER (PARTITION BY pa.id ORDER BY i.created_at ASC, i.id ASC) AS preview_rank,
+              pa.id AS app_id
+       FROM page_apps pa
+       JOIN platforms p ON p.app_id = pa.id
+       JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+     )
+     SELECT ri.id, ri.app, ri.platform, ri.image_url, ri.kind, ri.description, ri.analysis,
+            ri.icon_url, ri.category, ri.capture_url, ri.captured_at,
+            c.total_screens, c.analyzed_screens, c.last_captured_at,
+            ((SELECT COUNT(*) FROM candidate_apps) > $2)::boolean AS has_more
+     FROM ranked_images ri
+     JOIN counts c ON c.app_id = ri.app_id
+     WHERE ri.preview_rank <= 5
+     ORDER BY ri.app, ri.preview_rank`,
+    [cursor ?? null, limit],
+  );
+  const lastApp = res.rows.at(-1)?.app ?? null;
+  return {
+    images: res.rows,
+    nextCursor: res.rows[0]?.has_more && lastApp ? lastApp : null,
+  };
+}
+
 export async function appImages(app: string, kind: ImageKind | ImageKind[] = "screen", platform?: string): Promise<CrawledImage[]> {
   const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(

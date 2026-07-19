@@ -1430,6 +1430,37 @@ test("keeps the old gallery and pipeline state admin-only", async (t) => {
   }
 });
 
+test("paginates the admin app gallery without loading every image", async (t) => {
+  let requested: { cursor?: string; limit?: number } | undefined;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    allImages: async () => { throw new Error("legacy full-gallery query must not run"); },
+    adminAppPage: async (cursor, limit) => {
+      requested = { cursor, limit };
+      return {
+        images: [{
+          ...catalogImages[0],
+          total_screens: 236,
+          analyzed_screens: 17,
+          last_captured_at: "2026-07-19T01:00:00.000Z",
+        }],
+        nextCursor: "linear",
+      };
+    },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps?cursor=airbnb&limit=1`, { headers: adminCookie });
+  assert.equal(response.status, 200);
+  assert.deepEqual(requested, { cursor: "airbnb", limit: 1 });
+  const body = await response.json();
+  assert.equal(body.apps.length, 1);
+  assert.equal(body.apps[0].totalScreens, 236);
+  assert.equal(body.apps[0].analyzedScreens, 17);
+  assert.equal(body.apps[0].screens.length, 1);
+  assert.equal(body.nextCursor, "linear");
+});
+
 test("returns users and growth stats for an admin", async (t) => {
   const growthStats = {
     total_users: 12,
