@@ -102,8 +102,7 @@ export function parseCatalogLogCounts(lines: readonly string[]): CatalogArtifact
   return counts;
 }
 
-export function catalogCaptureTarget(tab: "screens" | "ui-elements", shown: number, selected: number | null): number {
-  if (tab === "ui-elements" && selected !== null) return selected;
+export function catalogCaptureTarget(shown: number): number {
   return shown;
 }
 

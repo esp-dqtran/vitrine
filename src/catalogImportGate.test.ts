@@ -70,12 +70,11 @@ test("catalog log parser reads legacy and verified Mobbin totals", async () => {
   ]), { screens: 527, uiElements: 527, flows: 42 });
 });
 
-test("UI completeness uses Mobbin's selectable export count, not duplicate cards shown", async () => {
+test("UI completeness uses Mobbin's displayed total when fewer cards were selected", async () => {
   const progress = await import("./progress.ts") as Record<string, unknown>;
   assert.equal(typeof progress.catalogCaptureTarget, "function");
-  const target = progress.catalogCaptureTarget as (tab: string, shown: number, selected: number | null) => number;
-  assert.equal(target("ui-elements", 1625, 1560), 1560);
-  assert.equal(target("screens", 527, null), 527);
+  const target = progress.catalogCaptureTarget as (shown: number) => number;
+  assert.equal(target(144), 144);
 });
 
 test("repair-only workers never start untouched catalog jobs", async () => {

@@ -605,10 +605,12 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
 
   rmSync(downloadDir, { recursive: true, force: true });
   if (imported > 0 && (pageMeta.iconUrl || pageMeta.category)) await setAppMeta(appName, pageMeta).catch(() => {});
-  const target = catalogCaptureTarget(tab, discovered, selectedForDownload);
+  const target = catalogCaptureTarget(discovered);
   const captured = capturedIds.size;
   const complete = captured === target;
-  const shownSuffix = tab === "ui-elements" && target !== discovered ? `; Mobbin showed ${discovered} cards` : "";
+  const shownSuffix = tab === "ui-elements" && selectedForDownload !== null && selectedForDownload !== discovered
+    ? `; selected ${selectedForDownload}/${discovered} cards`
+    : "";
   console.log(`[${appName}] ${complete ? "Done" : "Incomplete"}. Captured ${captured}/${target} ${label} image(s) via bulk download (${imported} new object(s)${shownSuffix}).`);
   writeProgress({
     stage: "crawl",
