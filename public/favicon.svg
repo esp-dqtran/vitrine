@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .outer { fill: #0064E0; }
+    .inner { fill: #FFFFFF; }
+    @media (prefers-color-scheme: dark) {
+      .outer { fill: #3E9EFB; }
+      .inner { fill: #0A0A0A; }
+    }
+  </style>
+  <rect width="32" height="32" rx="10" class="outer" />
+  <rect x="10" y="10" width="12" height="12" rx="4" class="inner" />
+</svg>
