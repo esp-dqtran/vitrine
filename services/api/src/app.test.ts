@@ -1499,6 +1499,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
     allImages: async () => catalogImages,
     listAppVersions: async (app) => [{ ...publishedVersion, app }],
     versionImages: async () => catalogImages,
+    appPlatforms: async () => ["web", "ios", "android"],
     canAccessApp: async () => unlocked,
     unlockFreeApp: async () => {
       unlocked = true;
@@ -1515,11 +1516,13 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
     headers: { cookie: "astryx_session=user" },
   });
   assert.equal(unlock.status, 201);
-  assert.equal((await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } })).status, 200);
+  const detail = await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(detail.status, 200);
+  assert.deepEqual((await detail.json()).app.platforms, ["web", "ios", "android"]);
 });
 
 test("uses app-scoped images for an admin app without a published version", async (t) => {
-  let requested: { app: string; kind: string | string[]; platform?: string } | undefined;
+  let requested: { app: string; kind?: string | string[]; platform?: string } | undefined;
   const platformMetadata = { appPlatforms: async () => ["web"] };
   const { base, server } = await serve(createApiApp({
     ...platformMetadata,
@@ -1571,8 +1574,10 @@ test("paginates the admin app gallery without loading every image", async (t) =>
           total_screens: 236,
           analyzed_screens: 17,
           last_captured_at: "2026-07-19T01:00:00.000Z",
+          available_platforms: ["ios"],
         }],
         nextCursor: "linear",
+        total: 562,
       };
     },
   }));
@@ -1587,6 +1592,7 @@ test("paginates the admin app gallery without loading every image", async (t) =>
   assert.equal(body.apps[0].analyzedScreens, 17);
   assert.equal(body.apps[0].screens.length, 1);
   assert.equal(body.nextCursor, "linear");
+  assert.equal(body.total, 562);
 });
 
 test("returns a paginated user directory and growth stats for an admin", async (t) => {

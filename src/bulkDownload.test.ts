@@ -149,6 +149,21 @@ test("extractIfArchive extracts zip entries with non-ASCII filenames", async (t)
   assert.deepEqual(await readdir(destDir), [entryName]);
 });
 
+test("extractIfArchive treats dollar signs in archive paths literally", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "astryx-zip-dollar-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const srcDir = join(root, "src");
+  await mkdir(srcDir);
+  const entryName = "flow.png";
+  await writeFile(join(srcDir, entryName), "flow bytes");
+  const zipPath = join(root, "Editing $DaveTag.zip");
+  execFileSync("zip", ["-j", zipPath, join(srcDir, entryName)]);
+
+  const destDir = join(root, "dest");
+  assert.equal(extractIfArchive(zipPath, destDir), true);
+  assert.deepEqual(await readdir(destDir), [entryName]);
+});
+
 test("bulk ingestion uploads verified bytes before attaching the image, then attaches a thumbnail", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "astryx-bulk-objects-"));
   t.after(() => rm(root, { recursive: true, force: true }));

@@ -137,7 +137,13 @@ export async function uncaptionedImages(app?: string): Promise<{ id: number; app
 
 export async function appPlatforms(app: string): Promise<string[]> {
   const res = await query<{ name: string }>(
-    `SELECT p.name FROM platforms p JOIN apps a ON a.id = p.app_id WHERE a.name = $1 ORDER BY p.name`,
+    `SELECT p.name
+     FROM platforms p
+     JOIN apps a ON a.id = p.app_id
+     JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+     WHERE a.name = $1
+     GROUP BY p.name
+     ORDER BY CASE p.name WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END, p.name`,
     [app]
   );
   return res.rows.map(({ name }) => name);
@@ -206,26 +212,34 @@ export interface AdminGalleryImage extends CrawledImage {
   total_screens: number;
   analyzed_screens: number;
   last_captured_at: string | null;
+  available_platforms: string[];
   has_more?: boolean;
 }
+
+type AdminGalleryPageRow = AdminGalleryImage & { total_apps: number };
 
 export interface AdminAppPage {
   images: AdminGalleryImage[];
   nextCursor: string | null;
+  total: number;
 }
 
 export async function adminAppPage(cursor?: string, requestedLimit = 24): Promise<AdminAppPage> {
   const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 24, 1), 48);
-  const res = await query<AdminGalleryImage>(
-    `WITH candidate_apps AS (
-       SELECT a.id, a.name, a.icon_url, a.category
+  const res = await query<AdminGalleryPageRow>(
+    `WITH all_apps AS (
+       SELECT a.id, a.name, a.icon_url, a.category,
+              COUNT(*) OVER()::integer AS total_apps
        FROM apps a
-       WHERE ($1::text IS NULL OR a.name > $1)
-         AND EXISTS (
+       WHERE EXISTS (
            SELECT 1 FROM platforms p JOIN images i ON i.platform_id = p.id
            WHERE p.app_id = a.id AND i.kind = 'screen'
          )
-       ORDER BY a.name
+     ), candidate_apps AS (
+       SELECT *
+       FROM all_apps
+       WHERE ($1::text IS NULL OR name > $1)
+       ORDER BY name
        LIMIT ($2::integer + 1)
      ), page_apps AS (
        SELECT * FROM candidate_apps ORDER BY name LIMIT $2
@@ -242,7 +256,7 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
               i.description, i.analysis, pa.icon_url, pa.category,
               i.image_url AS capture_url, i.created_at AS captured_at,
               ROW_NUMBER() OVER (PARTITION BY pa.id ORDER BY i.created_at ASC, i.id ASC) AS preview_rank,
-              pa.id AS app_id
+              pa.id AS app_id, pa.total_apps
        FROM page_apps pa
        JOIN platforms p ON p.app_id = pa.id
        JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
@@ -250,6 +264,15 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
      SELECT ri.id, ri.app, ri.platform, ri.image_url, ri.kind, ri.description, ri.analysis,
             ri.icon_url, ri.category, ri.capture_url, ri.captured_at,
             c.total_screens, c.analyzed_screens, c.last_captured_at,
+            ri.total_apps,
+            ARRAY(
+              SELECT p2.name
+              FROM platforms p2
+              JOIN images i2 ON i2.platform_id = p2.id AND i2.kind = 'screen'
+              WHERE p2.app_id = ri.app_id
+              GROUP BY p2.name
+              ORDER BY CASE p2.name WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END, p2.name
+            ) AS available_platforms,
             ((SELECT COUNT(*) FROM candidate_apps) > $2)::boolean AS has_more
      FROM ranked_images ri
      JOIN counts c ON c.app_id = ri.app_id
@@ -261,6 +284,7 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
   return {
     images: res.rows,
     nextCursor: res.rows[0]?.has_more && lastApp ? lastApp : null,
+    total: res.rows[0]?.total_apps ?? 0,
   };
 }
 

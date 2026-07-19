@@ -29,6 +29,11 @@ type LightboxState = { index: number } | null;
 
 const SECTIONS: Section[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
 
+const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): Section => {
+  const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as Section);
+  return (allowed ? initialSection : 'overview') as Section;
+};
+
 interface ScreenDetailProps {
   app: App;
   onBack: () => void;
@@ -42,10 +47,16 @@ interface ScreenDetailProps {
 }
 
 export function ScreenDetail({ app, onBack, role, initialSection, initialVersion, initialNextCursor, onSectionChange }: ScreenDetailProps) {
-  const appPlatforms = [...new Set(app.screens.map((s) => s.platform))].filter(
+  const appPlatforms = [...new Set(app.platforms?.length ? app.platforms : app.screens.map((s) => s.platform))].filter(
     (p): p is Platform => p === 'ios' || p === 'android' || p === 'web',
   );
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(appPlatforms[0] ?? 'web');
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(() => {
+    const screenPlatform = app.screens[0]?.platform;
+    return screenPlatform === 'ios' || screenPlatform === 'android' || screenPlatform === 'web'
+      ? screenPlatform
+      : appPlatforms[0] ?? 'web';
+  });
+  const platformTabRefs = useRef<Partial<Record<Platform, HTMLButtonElement>>>({});
   const [versions, setVersions] = useState<AppVersion[]>(initialVersion ? [initialVersion] : []);
   const [selectedVersion, setSelectedVersion] = useState<number | undefined>(initialVersion?.version_number);
   const [versionResolved, setVersionResolved] = useState(Boolean(initialVersion));
@@ -68,10 +79,8 @@ export function ScreenDetail({ app, onBack, role, initialSection, initialVersion
   const components = snapshot?.components ?? [];
   const flows = snapshot?.flows ?? [];
 
-  const [section, setSectionState] = useState<Section>(() => {
-    const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as Section);
-    return (allowed ? initialSection : 'overview') as Section;
-  });
+  const [section, setSectionState] = useState<Section>(() => resolveSection(initialSection, role));
+  useEffect(() => setSectionState(resolveSection(initialSection, role)), [initialSection, role]);
   const setSection = (next: Section) => {
     setSectionState(next);
     onSectionChange?.(next);
@@ -217,11 +226,16 @@ export function ScreenDetail({ app, onBack, role, initialSection, initialVersion
     return () => observer.disconnect();
   }, [section, elementsCursor, elementsLoadingMore, selectedVersion]);
 
-  // Fade the panel content in on every section change.
+  // Keep section changes and platform switches quick enough to preserve context.
   useLayoutEffect(() => {
     if (!contentRef.current) return;
-    gsap.fromTo(contentRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.32, ease: 'power2.out' });
-  }, [section]);
+    const tween = gsap.fromTo(
+      contentRef.current,
+      { opacity: 0, y: 6 },
+      { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', overwrite: 'auto' },
+    );
+    return () => { tween.kill(); };
+  }, [section, selectedPlatform]);
 
   const goLightbox = (i: number) =>
     setLightbox((lb) => {
@@ -300,18 +314,68 @@ export function ScreenDetail({ app, onBack, role, initialSection, initialVersion
               <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Platform
               </span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((p) => (
-                  <ToggleButton
-                    key={p}
-                    label={PLATFORM_LABEL[p]}
-                    isPressed={p === selectedPlatform}
-                    onPressedChange={() => selectPlatform(p)}
-                    size="sm"
-                    style={{
-                      borderRadius: 999,
-                    }}
-                  />
+              <div
+                role="tablist"
+                aria-label="Platform"
+                style={{
+                  display: 'inline-flex',
+                  gap: 2,
+                  padding: 3,
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 999,
+                  background: 'var(--color-background-muted)',
+                }}
+              >
+                {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((p, index, platforms) => (
+                  <div key={p} role="presentation" style={{ position: 'relative' }}>
+                    {p === selectedPlatform && (
+                      <motion.div
+                        layoutId="platform-active-indicator"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: 999,
+                          background: 'var(--color-background-surface)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    )}
+                    <ToggleButton
+                      ref={(node) => { platformTabRefs.current[p] = node ?? undefined; }}
+                      label={PLATFORM_LABEL[p]}
+                      isPressed={p === selectedPlatform}
+                      onPressedChange={() => selectPlatform(p)}
+                      role="tab"
+                      aria-pressed={undefined}
+                      aria-selected={p === selectedPlatform}
+                      tabIndex={p === selectedPlatform ? 0 : -1}
+                      onKeyDown={(event) => {
+                        const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+                        const targetIndex = event.key === 'Home'
+                          ? 0
+                          : event.key === 'End'
+                            ? platforms.length - 1
+                            : offset
+                              ? (index + offset + platforms.length) % platforms.length
+                              : -1;
+                        if (targetIndex < 0) return;
+                        event.preventDefault();
+                        const nextPlatform = platforms[targetIndex];
+                        selectPlatform(nextPlatform);
+                        platformTabRefs.current[nextPlatform]?.focus();
+                      }}
+                      size="sm"
+                      style={{
+                        position: 'relative',
+                        zIndex: 1,
+                        border: 'none',
+                        borderRadius: 999,
+                        background: 'transparent',
+                      }}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

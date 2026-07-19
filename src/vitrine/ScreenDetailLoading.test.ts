@@ -17,3 +17,8 @@ test('loads raw UI elements only from the elements section', async () => {
   assert.match(source, /designSystemStatus === 'loading'/);
   assert.doesNotMatch(source, /Promise\.all\(\[\s*fetch\([^\]]+loadElements/);
 });
+
+test('synchronizes the visible section when browser history changes the route', async () => {
+  const source = await readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.match(source, /useEffect\(\(\) => setSectionState\(resolveSection\(initialSection, role\)\), \[initialSection, role\]\)/);
+});

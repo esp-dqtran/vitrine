@@ -25,7 +25,11 @@ export function ArrowButton({ direction, onClick, visible }: ArrowButtonProps) {
         width: 30,
         height: 30,
         borderRadius: '50%',
-        background: 'rgba(255,255,255,0.92)',
+        // Theme tokens, not a hardcoded white: the icon is `color="primary"`, which
+        // resolves light in dark mode — on a fixed white pill that was white-on-white.
+        // The border keeps the pill legible against arbitrary screenshot imagery.
+        background: 'var(--color-background-surface)',
+        border: '1px solid var(--color-border)',
         boxShadow: 'var(--shadow-low)',
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',

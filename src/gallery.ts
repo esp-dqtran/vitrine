@@ -35,6 +35,7 @@ export interface CatalogApp {
   cat: string;
   accent: string;
   totalScreens: number;
+  platforms: string[];
   previewScreens: CatalogScreen[];
   websiteUrl: string | null;
   iconUrl: string | null;
@@ -109,6 +110,7 @@ function catalogApp(app: string, images: CrawledImage[], previews: PublishedPrev
     cat: images[0]?.category ?? meta.cat,
     accent: meta.accent,
     totalScreens: images.length,
+    platforms: [...new Set(images.map(({ platform }) => platform))],
     previewScreens: previews
       .sort((left, right) => left.preview_rank - right.preview_rank)
       .map((image) => screen(app, image, image.preview_rank)),
@@ -173,6 +175,7 @@ export function buildGalleryApps(images: CrawledImage[]) {
       cat: appImages[0]?.category ?? meta.cat,
       accent: meta.accent,
       totalScreens: appImages.length,
+      platforms: [...new Set(appImages.map(({ platform }) => platform))],
       websiteUrl: meta.websiteUrl,
       iconUrl: appImages[0]?.icon_url ?? null,
       screens: appImages.slice(0, MAX_SCREENS_PER_APP).map((image) => screen(app, image)),
@@ -191,6 +194,7 @@ export function buildAdminGalleryApps(images: AdminGalleryImage[]) {
       cat: summary?.category ?? meta.cat,
       accent: meta.accent,
       totalScreens: summary?.total_screens ?? 0,
+      platforms: summary?.available_platforms ?? [],
       analyzedScreens: summary?.analyzed_screens ?? 0,
       lastCapturedAt: summary?.last_captured_at ?? null,
       websiteUrl: meta.websiteUrl,

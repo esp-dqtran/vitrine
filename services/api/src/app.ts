@@ -13,6 +13,7 @@ import {
   getDesignSystem,
   listDesignSystems,
   appImages,
+  appPlatforms,
   getAppFlows,
   getFlowDocument,
   saveFlowDocument,
@@ -62,7 +63,7 @@ import {
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
-import { bulkImageHash, findBulkImage, isAppSlug, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
+import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppDetailPage, buildCatalogPage, buildGalleryApps } from "../../../src/gallery.ts";
 import {
@@ -244,6 +245,7 @@ const defaults = {
   getDesignSystem,
   listDesignSystems,
   appImages,
+  appPlatforms,
   getAppFlows,
   getFlowDocument,
   saveFlowDocument,
@@ -1304,8 +1306,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const hash = parsed.hash;
     const expiresAt = deps.nowSeconds() + 300;
     const token = createMediaToken(deps.mediaSigningSecret, { userId, app: appSlug, hash, expiresAt });
-    const variantParam = variant ? `&variant=${variant}` : "";
-    return `/api/media/${appSlug}/${hash}?expires=${expiresAt}&token=${encodeURIComponent(token)}${variantParam}`;
+    // kind/i must survive signing: a crop shares its source screen's hash, so dropping them
+    // here would silently resolve the element URL to the full screen. Signed over the hash
+    // only (like `variant`) — both qualifiers stay within the app the token already grants.
+    const params = new URLSearchParams({ expires: String(expiresAt), token });
+    if (variant) params.set("variant", variant);
+    if (parsed.imageKind) params.set("kind", parsed.imageKind);
+    if (parsed.index) params.set("i", parsed.index);
+    return `/api/media/${appSlug}/${hash}?${params.toString()}`;
   };
 
   app.get("/auth/me", (_req, res) => res.json(res.locals.user));
@@ -1960,7 +1968,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const kind = req.query.kind === "ui_element" ? "ui_element" : "screen";
-    const versions = await deps.listAppVersions(req.params.app, platform, res.locals.user.role !== "admin");
+    const [versions, availablePlatforms] = await Promise.all([
+      deps.listAppVersions(req.params.app, platform, res.locals.user.role !== "admin"),
+      deps.appPlatforms(req.params.app),
+    ]);
     const selectedVersion = requestedVersion === undefined
       ? versions.find(({ status }) => status === "published")
       : versions.find(({ version_number }) => version_number === requestedVersion);
@@ -1984,7 +1995,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         action: "app-detail",
         outcome: "success",
       });
-      res.json({ ...page, version: selectedVersion ?? null });
+      res.json({
+        ...page,
+        app: { ...page.app, platforms: availablePlatforms },
+        version: selectedVersion ?? null,
+      });
     }
   });
 
@@ -1992,7 +2007,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
     const page = await deps.adminAppPage(cursor, limit);
-    res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor });
+    res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor, total: page.total });
   });
 
   app.get("/images", requireAdmin, async (req, res) => {
@@ -2227,6 +2242,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const variant = req.query.variant === "thumb" ? "thumb" : "full";
+    // Derived crops (ui_element/flow_step) share their source screen's hash, so the kind — and
+    // the occurrence index when one screen yields several crops — is what disambiguates them.
+    // Validated here so the value is only ever composed from a known-safe shape.
+    const imageKind = typeof req.query.kind === "string" && /^[a-z_]+$/.test(req.query.kind)
+      ? req.query.kind
+      : undefined;
+    const imageIndex = typeof req.query.i === "string" && /^\d+$/.test(req.query.i)
+      ? req.query.i
+      : undefined;
+    const ref = legacyRefSuffix({ hash: req.params.hash, imageKind, index: imageIndex });
     if (res.locals.user.role !== "admin") {
       const media = mediaLimiter.check(`user:${res.locals.user.id}`);
       if (!media.allowed) {
@@ -2260,8 +2285,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     if (deps.objectStore) {
       const metadata = res.locals.user.role === "admin"
-        ? await deps.adminImageObject({ app: req.params.app, hash: req.params.hash, variant })
-        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: req.params.hash, variant });
+        ? await deps.adminImageObject({ app: req.params.app, hash: ref, variant })
+        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: ref, variant });
       if (metadata) {
         try {
           await sendStoredObject(deps.objectStore, metadata, res);
@@ -2272,7 +2297,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
       const legacy = await deps.legacyImageReference({
         app: req.params.app,
-        hash: req.params.hash,
+        hash: ref,
         publishedOnly: res.locals.user.role !== "admin",
       });
       if (!legacy) {

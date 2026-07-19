@@ -100,6 +100,10 @@ const imageObjectJoin = (variant: "full" | "thumb") => variant === "thumb"
   ? "so.object_key = COALESCE(i.thumbnail_object_key, i.object_key)"
   : "so.object_key = i.object_key";
 
+// `hash` in the three lookups below is the legacy-ref SUFFIX (see legacyRefSuffix): a bare
+// 16-hex hash for screens, or "<kind>:<hash>[:<index>]" for derived crops. Concatenating it
+// after the prefix reconstructs the exact stored image_url, so a ui_element can never resolve
+// to the screen it was cropped from — they share a hash and differ only by that qualifier.
 export async function entitledImageObject(
   input: { userId: number; app: string; hash: string; variant?: "full" | "thumb" },
   runQuery: DatabaseQuery = query,

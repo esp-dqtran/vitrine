@@ -59,6 +59,7 @@ test("builds lightweight admin cards from database summaries", () => {
     total_screens: 236,
     analyzed_screens: 17,
     last_captured_at: "2026-07-19T01:00:00.000Z",
+    available_platforms: ["web", "ios", "android"],
   }));
 
   const [app] = buildAdminGalleryApps(images);
@@ -68,6 +69,7 @@ test("builds lightweight admin cards from database summaries", () => {
   assert.equal(app.lastCapturedAt, "2026-07-19T01:00:00.000Z");
   assert.equal(app.screens.length, 5);
   assert.equal(app.iconUrl, "https://cdn.example.com/linear.png");
+  assert.deepEqual(app.platforms, ["web", "ios", "android"]);
 });
 
 test("builds paginated public previews without source image fields", () => {

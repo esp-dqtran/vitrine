@@ -1,5 +1,5 @@
 import { type Page, type Download, type Locator, type BrowserContext } from "playwright";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { getAppFlows, insertImage, saveAppFlows, setAppMeta, type ImageKind } from "./db.ts";
@@ -359,10 +359,10 @@ export function extractIfArchive(filePath: string, destDir: string): boolean {
   // them regardless of locale and throws "Illegal byte sequence". macOS's bundled `tar`
   // (libarchive-based, auto-detects zip) extracts the same entries correctly, so prefer it
   // there; Linux's GNU tar has no zip support, so keep unzip on every other platform.
-  const cmd = process.platform === "darwin"
-    ? `tar -xf ${JSON.stringify(filePath)} -C ${JSON.stringify(destDir)}`
-    : `unzip -o ${JSON.stringify(filePath)} -d ${JSON.stringify(destDir)}`;
-  execSync(cmd);
+  const [command, args] = process.platform === "darwin"
+    ? ["tar", ["-xf", filePath, "-C", destDir]] as const
+    : ["unzip", ["-o", filePath, "-d", destDir]] as const;
+  execFileSync(command, args);
   return true;
 }
 

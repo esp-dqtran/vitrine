@@ -10,6 +10,15 @@ test('keeps the Apps shell independent from job-list loading', async () => {
   assert.doesNotMatch(source, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 
+test('keeps the sticky Apps search container background transparent', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /background:\s*['"]color-mix\(in srgb, var\(--color-background-body\) 92%, transparent\)['"]/,
+  );
+});
+
 test('loads additional admin app pages only when the gallery sentinel approaches the viewport', async () => {
   const [appSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
@@ -42,6 +51,16 @@ test('separates gallery and detail route loaders', async () => {
 test('does not reload a retained gallery merely because it is re-enabled', async () => {
   const source = await readFile(new URL('./useApps.ts', import.meta.url), 'utf8');
   assert.match(source, /if \(!enabled \|\| apps !== null\) return/);
+});
+
+test('reports the loaded admin app count against the complete catalog total', async () => {
+  const [appSource, hookSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(hookSource, /totalApps/);
+  assert.match(appSource, /Showing \$\{list\.length\} of \$\{totalApps\} apps/);
 });
 
 test('shares catalog search state with the inspiration modal', async () => {

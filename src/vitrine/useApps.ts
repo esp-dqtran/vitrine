@@ -6,10 +6,17 @@ interface CatalogResponse {
   nextCursor: string | null;
 }
 
+interface AdminAppsResponse {
+  apps: App[];
+  nextCursor: string | null;
+  total: number;
+}
+
 export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [totalApps, setTotalApps] = useState<number | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
 
   const refresh = useCallback((signal?: AbortSignal) => {
@@ -18,9 +25,10 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       if (role === 'admin') {
         const response = await fetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
-        const page = await response.json() as { apps: App[]; nextCursor: string | null };
+        const page = await response.json() as AdminAppsResponse;
         setApps(page.apps);
         setNextCursor(page.nextCursor);
+        setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
         return;
       }
       const results: App[] = [];
@@ -31,6 +39,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
         const page = await response.json() as CatalogResponse;
         results.push(...page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens })));
         setApps([...results]); // paint each page as it arrives instead of awaiting the whole catalog
+        setTotalApps(results.length);
         cursor = page.nextCursor;
       } while (cursor);
     })().catch((err: Error) => {
@@ -51,9 +60,10 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     try {
       const response = await fetch(`/api/apps?cursor=${encodeURIComponent(nextCursor)}`);
       if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
-      const page = await response.json() as { apps: App[]; nextCursor: string | null };
+      const page = await response.json() as AdminAppsResponse;
       setApps((current) => [...(current ?? []), ...page.apps]);
       setNextCursor(page.nextCursor);
+      if (Number.isFinite(page.total)) setTotalApps(page.total);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -61,5 +71,5 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     }
   }, [loadingMore, nextCursor, role]);
 
-  return { apps, loading: apps === null && !error, loadingMore, hasMore: nextCursor !== null, error, refresh, loadMore };
+  return { apps, totalApps, loading: apps === null && !error, loadingMore, hasMore: nextCursor !== null, error, refresh, loadMore };
 }

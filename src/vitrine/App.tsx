@@ -67,7 +67,7 @@ export function App() {
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
   const detailGateLoading = route.name === 'app' && !entitlementsResolved;
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
-  const { apps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
+  const { apps, totalApps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
     route.name === 'app' ? route.appId : undefined,
     route.name === 'app' && !detailGateLoading && !detailLocked,
@@ -309,7 +309,6 @@ export function App() {
               position: 'sticky',
               top: 0,
               zIndex: 10,
-              background: 'color-mix(in srgb, var(--color-background-body) 92%, transparent)',
               backdropFilter: 'blur(10px)',
               borderBottom: '1px solid var(--color-border)',
               padding: '22px 28px 14px',
@@ -362,7 +361,11 @@ export function App() {
             />
           )}
 
-          <div style={{ padding: '6px 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{list.length} apps</div>
+          <div style={{ padding: '6px 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {isAdmin && !q.trim() && cat === 'All' && totalApps !== null
+              ? `Showing ${list.length} of ${totalApps} apps`
+              : `${list.length} apps`}
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
             {list.map((r) => (
@@ -389,7 +392,7 @@ export function App() {
       {settingsOpen && user && <SettingsPanel user={user} onClose={() => setSettingsOpen(false)} />}
       {paletteOpen && (
         <CommandPalette
-          apps={apps}
+          apps={apps ?? []}
           query={q}
           result={searchResult}
           searchLoading={searchLoading}

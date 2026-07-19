@@ -27,6 +27,7 @@ export interface App {
   cat: string;
   accent: string;
   totalScreens: number;
+  platforms?: Platform[];
   analyzedScreens?: number;
   lastCapturedAt?: string | null;
   screens: Screen[];
