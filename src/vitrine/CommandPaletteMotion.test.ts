@@ -14,4 +14,11 @@ test('keeps the search dialog mounted through its close animation', async () => 
   assert.match(styles, /@keyframes vitrine-command-palette-in/);
   assert.match(styles, /@keyframes vitrine-command-palette-out/);
   assert.match(styles, /\.command-palette-dialog\[data-closing="true"\]::backdrop/);
+  assert.match(source, /InspirationPrompts/);
+  assert.match(source, /InspirationResults/);
+  assert.match(source, /InspirationPreview/);
+  assert.match(source, /searchRelatedCatalog/);
+  assert.match(source, /onKeyDownCapture/);
+  assert.doesNotMatch(source, /appMatches/);
+  assert.doesNotMatch(source, /screenMatches/);
 });
