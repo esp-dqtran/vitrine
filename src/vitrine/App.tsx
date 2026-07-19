@@ -18,6 +18,7 @@ import { UsersPage } from './components/UsersPage';
 import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { useApps } from './useApps';
+import { useAppDetail } from './useAppDetail';
 import { submitImportJob } from './jobsApi';
 import { listCollections, searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
@@ -38,10 +39,6 @@ function AppCardSkeleton({ index }: { index: number }) {
 export function App() {
   const { user, logout } = useAuth();
   const route = useRoute();
-  const { apps, loading, loadingMore, hasMore, error, loadMore } = useApps(
-    user?.role,
-    route.name === 'app' ? route.appId : undefined,
-  );
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
   const [cat, setCat] = useState('All');
@@ -64,6 +61,16 @@ export function App() {
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
+
+  const isFreeGated = (appId: string) =>
+    user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
+  const detailGateLoading = route.name === 'app' && !isAdmin && entitlements === null;
+  const detailLocked = route.name === 'app' && isFreeGated(route.appId);
+  const { apps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
+  const { detail, loading: detailLoading, error: detailError } = useAppDetail(
+    route.name === 'app' ? route.appId : undefined,
+    route.name === 'app' && !detailGateLoading && !detailLocked,
+  );
 
   useEffect(() => {
     void listCollections().then(setCollections).catch(() => setCollections([]));
@@ -99,16 +106,12 @@ export function App() {
     return () => observer.disconnect();
   }, [hasMore, isAdmin, loadMore, loadingMore, route.name]);
 
-  // Free accounts only get full access to apps they've spent an unlock on; a shared
-  // deep link into an app must honor the same gate, not just the catalog card click.
-  const isFreeGated = (appId: string) =>
-    user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
   const openApp = async (appId: string) => {
     if (isFreeGated(appId)) {
       setUnlockTarget(appId);
       return;
     }
-    if (apps?.some(({ id }) => id === appId)) navigate({ name: 'app', appId });
+    navigate({ name: 'app', appId });
     setCollectionsOpen(false);
   };
 
@@ -120,17 +123,15 @@ export function App() {
     setEntitlements({ ...entitlements, freeUnlocks: [...entitlements.freeUnlocks, unlockTarget], freeUnlocksRemaining: result.remaining });
     const appId = unlockTarget;
     setUnlockTarget(null);
-    if (apps?.some(({ id }) => id === appId)) navigate({ name: 'app', appId });
+    navigate({ name: 'app', appId });
     setCollectionsOpen(false);
   };
 
-  // Landing straight on an app's URL (a shared link, a refresh) skips the click handler
-  // above, so re-run the same unlock gate here once apps/entitlements are loaded.
+  // Landing straight on a locked app URL skips the catalog click handler.
   useEffect(() => {
-    if (route.name !== 'app' || !apps) return;
-    if (apps.some(({ id }) => id === route.appId) && isFreeGated(route.appId)) void openApp(route.appId);
+    if (route.name === 'app' && isFreeGated(route.appId)) setUnlockTarget(route.appId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route.name, route.name === 'app' ? route.appId : undefined, apps, entitlements]);
+  }, [route.name, route.name === 'app' ? route.appId : undefined, entitlements]);
   const accountControls = (
     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
       <DropdownMenu
@@ -179,7 +180,7 @@ export function App() {
     return frame(<ResearchProjectPage projectId={route.projectId} />);
   }
 
-  if (loading) {
+  if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
     return frame(
       <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}>
         {isAdmin && <PageHeader title="Apps" description="Browse captured screens, UI elements, and flows across every imported app." />}
@@ -193,7 +194,35 @@ export function App() {
     );
   }
 
-  if (error || !apps || apps.length === 0) {
+  if (route.name === 'app' && detailLocked) {
+    return frame(
+      <>
+        <div style={{ minHeight: '100vh' }} />
+        {unlockTarget && entitlements && (
+          <UnlockModal
+            appId={unlockTarget}
+            remaining={entitlements.freeUnlocksRemaining}
+            onConfirm={confirmUnlock}
+            onClose={() => { setUnlockTarget(null); navigate({ name: 'apps' }); }}
+            onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
+          />
+        )}
+      </>,
+    );
+  }
+
+  if (route.name === 'app' && (detailError || !detail)) {
+    return frame(
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 }}>
+        <EmptyState
+          title="Could not load app details"
+          description={detailError ? `The app could not be loaded: ${detailError}` : 'No app detail data was returned.'}
+        />
+      </div>,
+    );
+  }
+
+  if (route.name === 'apps' && (appsError || !apps || apps.length === 0)) {
     return frame(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '20px 28px 0', width: '100%' }}>
@@ -202,10 +231,10 @@ export function App() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: 24 }}>
           <EmptyState
-            title={error ? 'Could not load crawled screens' : 'No screens crawled yet'}
+            title={appsError ? 'Could not load crawled screens' : 'No screens crawled yet'}
             description={
-              error
-                ? `The catalog could not be loaded: ${error}`
+              appsError
+                ? `The catalog could not be loaded: ${appsError}`
                 : isAdmin
                   ? 'Import captured web screens to build the first observed design system.'
                   : 'No curated web apps have been published yet.'
@@ -216,21 +245,21 @@ export function App() {
     );
   }
 
-  const rows = apps.map(appRow);
+  const rows = (apps ?? []).map(appRow);
   const query = q.trim().toLowerCase();
   const list = rows.filter(
     (r) =>
       (cat === 'All' || r.cat === cat) &&
       (!query || `${r.name} ${r.cat} ${r.app?.screens.map((s) => s.type).join(' ') ?? ''}`.toLowerCase().includes(query)),
   );
-  const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? apps.find((a) => a.id === route.appId) : undefined;
+  const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail?.app : undefined;
 
   return frame(
     <>
     <AnimatePresence mode="wait">
       {detailApp ? (
         <ScreenDetail
-          key="detail"
+          key={`detail-${detailApp.id}`}
           app={detailApp}
           role={user?.role ?? 'user'}
           initialSection={route.name === 'app' ? route.section : undefined}
@@ -360,7 +389,7 @@ export function App() {
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
         submitImport={submitImportJob}
-        knownPlatforms={knownPlatformsFor(apps)}
+        knownPlatforms={knownPlatformsFor(apps ?? [])}
       />
     )}
     {unlockTarget && entitlements && (

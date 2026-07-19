@@ -25,15 +25,23 @@ test('loads additional admin app pages only when the gallery sentinel approaches
   assert.doesNotMatch(appSource, /Loading more apps/);
 });
 
-test('bootstraps an admin app deep link outside the first gallery page', async () => {
-  const [appSource, hookSource] = await Promise.all([
+test('separates gallery and detail route loaders', async () => {
+  const [appSource, gallerySource, detailSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./useAppDetail.ts', import.meta.url), 'utf8').catch(() => ''),
   ]);
 
-  assert.match(appSource, /useApps\(\s*user\?\.role,\s*route\.name === 'app' \? route\.appId : undefined,?\s*\)/);
-  assert.match(hookSource, /fetchAppDetail\(requestedAppId/);
-  assert.match(hookSource, /mergeApp\(page\.apps, requestedApp\)/);
+  assert.match(appSource, /useApps\(user\?\.role, route\.name === 'apps'\)/);
+  assert.match(appSource, /useAppDetail\(\s*route\.name === 'app' \? route\.appId : undefined,/);
+  assert.doesNotMatch(gallerySource, /requestedAppId|fetchAppDetail|mergeApp/);
+  assert.match(detailSource, /fetchAppDetailPage/);
+  assert.doesNotMatch(detailSource, /fetch\(['"]\/api\/apps['"]/);
+});
+
+test('does not reload a retained gallery merely because it is re-enabled', async () => {
+  const source = await readFile(new URL('./useApps.ts', import.meta.url), 'utf8');
+  assert.match(source, /if \(!enabled \|\| apps !== null\) return/);
 });
 
 test('shares catalog search state with the inspiration modal', async () => {

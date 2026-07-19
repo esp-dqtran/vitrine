@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchAppDetail, mergeApp } from './appsApi';
 import type { App } from './types';
 
 interface CatalogResponse {
@@ -7,7 +6,7 @@ interface CatalogResponse {
   nextCursor: string | null;
 }
 
-export function useApps(role: 'admin' | 'user' | undefined, requestedAppId?: string) {
+export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -20,10 +19,7 @@ export function useApps(role: 'admin' | 'user' | undefined, requestedAppId?: str
         const response = await fetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = await response.json() as { apps: App[]; nextCursor: string | null };
-        const requestedApp = requestedAppId && !page.apps.some(({ id }) => id === requestedAppId)
-          ? await fetchAppDetail(requestedAppId, signal)
-          : undefined;
-        setApps(requestedApp ? mergeApp(page.apps, requestedApp) : page.apps);
+        setApps(page.apps);
         setNextCursor(page.nextCursor);
         return;
       }
@@ -40,13 +36,14 @@ export function useApps(role: 'admin' | 'user' | undefined, requestedAppId?: str
     })().catch((err: Error) => {
         if (err.name !== 'AbortError') setError(err.message);
       });
-  }, [requestedAppId, role]);
+  }, [role]);
 
   useEffect(() => {
+    if (!enabled || apps !== null) return;
     const controller = new AbortController();
     void refresh(controller.signal);
     return () => controller.abort();
-  }, [refresh]);
+  }, [apps, enabled, refresh]);
 
   const loadMore = useCallback(async () => {
     if (role !== 'admin' || !nextCursor || loadingMore) return;
