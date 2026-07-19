@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { UsersPageView } from "./UsersPage.tsx";
@@ -43,4 +44,21 @@ test("renders honest empty and filtered-empty copy", () => {
 
   assert.match(empty, /No members yet/);
   assert.doesNotMatch(empty, /No members match these filters/);
+});
+
+test("defines the selected split layout and narrow responsive states", () => {
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    css,
+    /\.admin-users-layout\s*\{[^}]*grid-template-columns:\s*minmax\(0, 2fr\) minmax\(300px, 1fr\);/s,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*1100px\)[\s\S]*?\.admin-users-layout\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-toolbar\s*\{[^}]*align-items:\s*stretch;[^}]*flex-direction:\s*column;/,
+  );
 });
