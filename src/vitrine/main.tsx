@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Spinner, Theme, defineTheme } from '@astryxdesign/core';
 import { App } from './App';
@@ -67,9 +66,7 @@ function ThemedRoot() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeModeProvider>
-      <ThemedRoot />
-    </ThemeModeProvider>
-  </StrictMode>,
+  <ThemeModeProvider>
+    <ThemedRoot />
+  </ThemeModeProvider>,
 );
