@@ -24,3 +24,13 @@ test('loads additional admin app pages only when the gallery sentinel approaches
   assert.match(appSource, /<Spinner size="sm"/);
   assert.doesNotMatch(appSource, /Loading more apps/);
 });
+
+test('shares catalog search state with the inspiration modal', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /searchLoading/);
+  assert.match(source, /searchRetry/);
+  assert.match(source, /result=\{searchResult\}/);
+  assert.match(source, /collections=\{collections\}/);
+  assert.match(source, /onCollectionsChange=\{setCollections\}/);
+});

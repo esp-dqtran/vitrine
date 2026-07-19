@@ -51,6 +51,8 @@ export function App() {
   const [filters, setFilters] = useState<SearchFilters>({ kind: 'all' });
   const [searchResult, setSearchResult] = useState<CatalogSearchResult | null>(null);
   const [searchError, setSearchError] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchRetry, setSearchRetry] = useState(0);
   const [collections, setCollections] = useState<ResearchCollection[]>([]);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -69,16 +71,19 @@ export function App() {
     if (!q.trim()) {
       setSearchResult(null);
       setSearchError('');
+      setSearchLoading(false);
       return;
     }
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
+      setSearchLoading(true);
       searchCatalog(q, filters, controller.signal)
         .then((result) => { setSearchResult(result); setSearchError(''); })
-        .catch((error: Error) => { if (error.name !== 'AbortError') setSearchError(error.message); });
+        .catch((error: Error) => { if (error.name !== 'AbortError') setSearchError(error.message); })
+        .finally(() => { if (!controller.signal.aborted) setSearchLoading(false); });
     }, 180);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [q, filters]);
+  }, [q, filters, searchRetry]);
 
   useEffect(() => {
     if (!isAdmin || route.name === 'app' || !hasMore || loadingMore) return;
@@ -332,7 +337,13 @@ export function App() {
         <CommandPalette
           apps={apps}
           query={q}
+          result={searchResult}
+          searchLoading={searchLoading}
+          searchError={searchError}
+          collections={collections}
+          onCollectionsChange={setCollections}
           onQueryChange={setQ}
+          onRetrySearch={() => setSearchRetry((value) => value + 1)}
           onClose={() => setPaletteOpen(false)}
           onSelectApp={(appId) => void openApp(appId)}
           onSelectScreen={(appId) => navigate({ name: 'app', appId, section: 'screens' })}
