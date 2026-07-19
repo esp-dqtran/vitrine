@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 
@@ -202,6 +202,34 @@ export function readProgress(options: ProgressStoreOptions = {}): ProgressSnapsh
 
   const legacy = readEntry(join(dataDir, "progress.json"), "worker:legacy");
   return { entries: legacy ? [legacy] : [] };
+}
+
+export function subscribeProgress(
+  listener: (snapshot: ProgressSnapshot) => void,
+  options: ProgressStoreOptions = {},
+): () => void {
+  const dataDir = storeDataDir(options);
+  const directory = join(dataDir, "progress");
+  mkdirSync(directory, { recursive: true });
+  let active = true;
+  let queued = false;
+  const notify = () => {
+    if (!active || queued) return;
+    queued = true;
+    queueMicrotask(() => {
+      queued = false;
+      if (active) listener(readProgress({ ...options, dataDir }));
+    });
+  };
+  const scopedWatcher = watch(directory, notify);
+  const legacyWatcher = watch(dataDir, (_event, filename) => {
+    if (String(filename ?? "") === "progress.json") notify();
+  });
+  return () => {
+    active = false;
+    scopedWatcher.close();
+    legacyWatcher.close();
+  };
 }
 
 // Cooperative cancellation: the pipeline process and the vite dev server are separate

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readProgress, writeProgress, type ProgressState } from "./progress.ts";
+import { readProgress, subscribeProgress, writeProgress, type ProgressSnapshot, type ProgressState } from "./progress.ts";
 
 function running(app: string): Omit<ProgressState, "updatedAt"> {
   return { stage: "crawl", app, done: 1, total: 4, status: "running", message: "Downloading" };
@@ -57,6 +57,35 @@ test("uses legacy progress only until a scoped worker record exists", () => {
     assert.deepEqual(readProgress({ dataDir }).entries.map(({ id, app }) => ({ id, app })), [
       { id: "worker:3", app: "figma" },
     ]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+async function waitForProgress(predicate: () => boolean): Promise<void> {
+  const deadline = Date.now() + 2_000;
+  while (!predicate()) {
+    if (Date.now() >= deadline) throw new Error("Timed out waiting for progress notification");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+test("pushes a complete snapshot after a scoped progress change and stops after unsubscribe", async () => {
+  const root = mkdtempSync(join(tmpdir(), "astryx-progress-"));
+  const dataDir = join(root, "data");
+  mkdirSync(dataDir);
+  const snapshots: ProgressSnapshot[] = [];
+
+  try {
+    const unsubscribe = subscribeProgress((snapshot) => snapshots.push(snapshot), { dataDir });
+    writeProgress(running("figma"), { dataDir, workerId: "4" });
+    await waitForProgress(() => snapshots.some(({ entries }) => entries.some(({ app }) => app === "figma")));
+
+    unsubscribe();
+    const count = snapshots.length;
+    writeProgress(running("slack"), { dataDir, workerId: "4" });
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(snapshots.length, count);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
