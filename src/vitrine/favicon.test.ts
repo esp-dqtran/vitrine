@@ -15,3 +15,22 @@ test('uses the Vitrine brand mark as the browser favicon', async () => {
   assert.equal(favicon.match(/\.inner\s*\{\s*fill:/g)?.length, 1);
   assert.match(favicon, /<rect x="10" y="10" width="12" height="12" rx="4"/);
 });
+
+test('keeps every in-app Vitrine mark center white in all themes', async () => {
+  const marks = [
+    ['./SignIn.tsx', 11],
+    ['./Home.tsx', 10],
+    ['./Pricing.tsx', 11],
+    ['./App.tsx', 11],
+    ['./components/Sidebar.tsx', 9],
+  ] as const;
+
+  for (const [path, size] of marks) {
+    const source = await readFile(new URL(path, import.meta.url), 'utf8');
+    assert.match(
+      source,
+      new RegExp(`width: ${size}, height: ${size}, borderRadius: \\d+, background: '#FFFFFF'`),
+      path,
+    );
+  }
+});

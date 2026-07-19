@@ -274,7 +274,7 @@ export function App() {
                       justifyContent: 'center',
                     }}
                   >
-                    <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} />
+                    <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />
                   </div>
                   <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
                 </div>

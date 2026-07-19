@@ -8,7 +8,7 @@ function Wordmark() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
       <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-        <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} />
+        <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />
       </div>
       <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
     </div>

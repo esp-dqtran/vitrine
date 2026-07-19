@@ -300,7 +300,7 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           boxShadow: 'light-dark(0 8px 30px rgba(24,24,27,0.08), 0 8px 30px rgba(0,0,0,0.4)), inset 0 1px 0 light-dark(rgba(255,255,255,0.5), rgba(255,255,255,0.06))',
         }}
       >
-        <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-background-surface)' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
+        <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: '#FFFFFF' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
         {isCompactNav ? (
           <DropdownMenu
             button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}

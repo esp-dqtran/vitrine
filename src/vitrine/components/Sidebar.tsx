@@ -20,7 +20,7 @@ interface SidebarProps {
 function WordmarkIcon() {
   return (
     <div style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 9, height: 9, borderRadius: 3, background: 'var(--color-background-surface)' }} />
+      <div style={{ width: 9, height: 9, borderRadius: 3, background: '#FFFFFF' }} />
     </div>
   );
 }

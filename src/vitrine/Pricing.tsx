@@ -200,7 +200,7 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
         }}
       >
         <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-background-surface)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
               <DropdownMenu
