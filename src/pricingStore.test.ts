@@ -220,3 +220,23 @@ test("returns completed exports only to their owner or an active admin", { skip 
   const generatingId = await createExport(userId, apps[0], undefined, { kind: "design-system" }, "json", "pending.json");
   assert.equal(await authorizedExportObject({ userId, exportId: generatingId }), undefined);
 });
+
+test("records stable feature keys and bounded event metadata", { skip }, async () => {
+  const { recordAccessEvent } = await import("./pricingStore.ts");
+  const { userId } = await fixture();
+
+  await recordAccessEvent({
+    userId,
+    featureKey: "exports",
+    action: "export-figma",
+    outcome: "completed",
+    metadata: { format: "figma" },
+  });
+
+  const result = await db.query(
+    `SELECT feature_key, metadata FROM access_events
+     WHERE user_id = $1 AND action = 'export-figma' ORDER BY id DESC LIMIT 1`,
+    [userId],
+  );
+  assert.deepEqual(result.rows[0], { feature_key: "exports", metadata: { format: "figma" } });
+});
