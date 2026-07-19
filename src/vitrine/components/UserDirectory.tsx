@@ -10,6 +10,7 @@ interface UserDirectoryProps {
   filter: UserFilter;
   hasMore: boolean;
   loadingMore: boolean;
+  refreshing?: boolean;
   onQueryChange: (value: string) => void;
   onFilterChange: (value: UserFilter) => void;
   onLoadMore: () => void;
@@ -97,7 +98,10 @@ export function UserDirectory(props: UserDirectoryProps) {
       <div className="admin-users-directory-heading">
         <div>
           <h2 id="admin-users-directory-title">Members</h2>
-          <p>{props.users.length} of {props.total} shown</p>
+          <p aria-live="polite">
+            {props.users.length} of {props.total} shown
+            {props.refreshing && <span className="admin-users-refreshing"> · Updating…</span>}
+          </p>
         </div>
       </div>
 
