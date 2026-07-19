@@ -1,4 +1,4 @@
-import type { CatalogSearchResult, CatalogEntityKind } from '../catalogResearch';
+import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem, CatalogEntityKind } from '../catalogResearch';
 import type { CollectionItemKind, ResearchCollection } from '../db';
 import type { AppVersion } from '../db';
 import type { ExportFormat, ExportScope } from '../exportEngine';
@@ -19,6 +19,7 @@ import type {
   CrawlSessionView,
   CreateCrawlRunRequest,
 } from './types';
+import { relatedSearchQuery } from './inspirationSearch.ts';
 
 export interface SearchFilters {
   kind: CatalogEntityKind | 'all';
@@ -60,6 +61,21 @@ export function searchCatalog(query: string, filters: SearchFilters, signal?: Ab
   if (filters.component) params.set('component', filters.component);
   if (filters.appCategory) params.set('appCategory', filters.appCategory);
   return json(`/api/search?${params}`, { signal });
+}
+
+export async function searchRelatedCatalog(item: CatalogSearchResultItem, signal?: AbortSignal): Promise<CatalogSearchResultItem[]> {
+  const params = new URLSearchParams({
+    q: relatedSearchQuery(item),
+    kind: 'all',
+    limit: '12',
+  });
+  const result = await json<CatalogSearchResult>(`/api/search?${params}`, { signal });
+  return result.items.filter((candidate) => candidate.id !== item.id).slice(0, 6);
+}
+
+export function compareCatalogApps(apps: string[], signal?: AbortSignal): Promise<CatalogComparison> {
+  const params = new URLSearchParams({ apps: apps.join(',') });
+  return json<CatalogComparison>(`/api/compare?${params}`, { signal });
 }
 
 export const listCollections = (): Promise<ResearchCollection[]> => json('/api/collections');
