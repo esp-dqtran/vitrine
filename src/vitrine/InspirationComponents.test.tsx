@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { InspirationPrompts } from "./components/InspirationPrompts.tsx";
 import { InspirationResults } from "./components/InspirationResults.tsx";
+import { InspirationPreview } from "./components/InspirationPreview.tsx";
+import { InspirationComparison } from "./components/InspirationComparison.tsx";
 
 test("renders inspiration prompts as actions", () => {
   const html = renderToStaticMarkup(<InspirationPrompts onSelect={() => undefined} />);
@@ -22,4 +24,34 @@ test("renders thumbnail-first grouped references", () => {
   assert.match(html, /Login/);
   assert.match(html, /linear/);
   assert.match(html, /aria-selected="true"/);
+});
+
+test("renders preview context and all three actions", () => {
+  const html = renderToStaticMarkup(<InspirationPreview
+    item={{ id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], states: [], layoutPatterns: [], componentNames: [], imageUrl: "/full.webp" }}
+    related={[]}
+    relatedLoading={false}
+    collections={[]}
+    onCollectionsChange={() => undefined}
+    onBack={() => undefined}
+    onOpen={() => undefined}
+    onCompare={() => undefined}
+    onSelectRelated={() => undefined}
+  />);
+  assert.match(html, /Back to results/);
+  assert.match(html, /Open/);
+  assert.match(html, /Compare/);
+  assert.match(html, /Save to collection/);
+  assert.match(html, /\/full\.webp/);
+  assert.match(html, /Flow context/);
+});
+
+test("renders an aligned catalog comparison", () => {
+  const html = renderToStaticMarkup(<InspirationComparison
+    comparison={{ apps: ["linear", "airbnb"], foundations: [{ id: "accent", label: "Accent", values: ["#111", "#222"], evidenceIds: [[], []] }], components: [], flows: [] }}
+    onBack={() => undefined}
+  />);
+  assert.match(html, /linear/);
+  assert.match(html, /airbnb/);
+  assert.match(html, /Accent/);
 });
