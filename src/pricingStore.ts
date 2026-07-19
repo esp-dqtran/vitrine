@@ -1,6 +1,7 @@
 import type { QueryResultRow } from "pg";
 import type { AuthUser } from "./authStore.ts";
 import { query, withTransaction } from "./db.ts";
+import { isFeatureKey, type FeatureKey } from "./featureUsage.ts";
 import { exportObjectKey, validateObjectMetadata, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
 import {
   effectivePlan,
@@ -333,21 +334,29 @@ export async function recordAccessEvent(input: {
   sessionHash?: string;
   ipPrefix?: string;
   appSlug?: string;
+  featureKey?: FeatureKey;
   action: string;
   volume?: number;
   outcome: string;
+  metadata?: Record<string, string | number | boolean | null>;
 }): Promise<void> {
+  if (input.featureKey !== undefined && !isFeatureKey(input.featureKey)) {
+    throw new Error(`Unknown feature key: ${String(input.featureKey)}`);
+  }
   await query(
-    `INSERT INTO access_events (user_id, session_hash, ip_prefix, app_slug, action, volume, outcome)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    `INSERT INTO access_events
+       (user_id, session_hash, ip_prefix, app_slug, feature_key, action, volume, outcome, metadata)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [
       input.userId ?? null,
       input.sessionHash ?? null,
       input.ipPrefix ?? null,
       input.appSlug ?? null,
+      input.featureKey ?? null,
       input.action,
       input.volume ?? 1,
       input.outcome,
+      input.metadata ?? {},
     ],
   );
 }

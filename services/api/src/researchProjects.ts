@@ -19,6 +19,7 @@ import {
 } from "../../../src/researchSynthesis.ts";
 import { storeResearchUpload } from "../../../src/researchUpload.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
+import type { FeatureKey } from "../../../src/featureUsage.ts";
 
 interface ResearchUser {
   id: number;
@@ -33,7 +34,7 @@ export interface ResearchProjectRouteDependencies {
   canAccessApp(user: ResearchUser, app: string): Promise<boolean>;
   listPublishedCandidates(userId: number): Promise<ResearchSuggestionCandidate[]>;
   getPrivateObject?(userId: number, projectId: number, itemId: number): Promise<ObjectMetadata | undefined>;
-  recordEvent?(input: { userId: number; action: string; outcome: string; volume?: number }): Promise<void>;
+  recordEvent?(input: { userId: number; featureKey: FeatureKey; action: string; outcome: string; volume?: number }): Promise<void>;
 }
 
 const platforms = new Set<ResearchPlatform>(["all", "ios", "android", "web"]);
@@ -117,7 +118,7 @@ export function mountResearchProjectRoutes(
       return;
     }
     const project = await deps.store.createProject(res.locals.user.id, { title, question, platformFilter });
-    await deps.recordEvent?.({ userId: res.locals.user.id, action: "research_project_created", outcome: "created" });
+    await deps.recordEvent?.({ userId: res.locals.user.id, featureKey: "research", action: "research_project_created", outcome: "created" });
     res.status(201).json(project);
   }));
 
@@ -348,6 +349,7 @@ export function mountResearchProjectRoutes(
       model: deps.synthesisProvider.model, schemaVersion: 1,
     });
     if (!synthesis) { res.status(409).json({ error: "Project changed during synthesis", code: "revision_conflict" }); return; }
+    await deps.recordEvent?.({ userId: res.locals.user.id, featureKey: "ai_analysis", action: "research_synthesis_created", outcome: "created" });
     res.status(201).json(synthesis);
   }));
 

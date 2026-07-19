@@ -90,6 +90,44 @@ export interface AdminUser {
   subscription_status: string | null;
 }
 
+export type UserFilter = 'all' | 'admin' | 'pro' | 'free' | 'disabled';
+export type UsageRangeKey = '7d' | '30d' | '90d';
+export type FeatureKey = 'library' | 'search' | 'collections' | 'exports' | 'research' | 'design_systems' | 'flows' | 'ai_analysis';
+
+export interface AdminUsersPage {
+  users: AdminUser[];
+  nextCursor: string | null;
+  total: number;
+}
+
+export interface FeatureUsageRow {
+  key: FeatureKey;
+  label: string;
+  uses: number;
+  uniqueUsers: number;
+  share: number;
+}
+
+export interface FeatureUsageOverview {
+  summary: { totalEvents: number; uniqueUsers: number; usedFeatures: number };
+  features: FeatureUsageRow[];
+  daily: Array<{ day: string; uses: number }>;
+}
+
+export interface UserFeatureUsage {
+  summary: { totalEvents: number; lastActiveAt: string | null };
+  features: FeatureUsageRow[];
+  recentEvents: Array<{
+    id: number;
+    featureKey: FeatureKey;
+    featureLabel: string;
+    action: string;
+    outcome: string;
+    appSlug: string | null;
+    createdAt: string;
+  }>;
+}
+
 export interface GrowthStats {
   total_users: number;
   new_users_7d: number;

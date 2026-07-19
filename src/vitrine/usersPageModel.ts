@@ -1,12 +1,4 @@
-import type { AdminUser } from "./types.ts";
-
-export type UserFilter = "all" | "admin" | "pro" | "free" | "disabled";
-
-export interface UserGroup {
-  key: string;
-  label: string;
-  users: AdminUser[];
-}
+import type { AdminUser, UserFilter } from "./types.ts";
 
 export const USER_FILTER_LABELS: Record<UserFilter, string> = {
   all: "All members",
@@ -33,20 +25,6 @@ export function filterAdminUsers(users: AdminUser[], query: string, filter: User
 
     return matchesQuery && matchesFilter;
   });
-}
-
-export function groupAdminUsers(users: AdminUser[], filter: UserFilter): UserGroup[] {
-  if (filter !== "all") {
-    return users.length ? [{ key: filter, label: USER_FILTER_LABELS[filter], users }] : [];
-  }
-
-  const administrators = users.filter(({ role }) => role === "admin");
-  const members = users.filter(({ role }) => role === "user");
-
-  return [
-    { key: "administrators", label: "Administrators", users: administrators },
-    { key: "members", label: "Members", users: members },
-  ].filter((group) => group.users.length > 0);
 }
 
 export function userInitial(email: string) {

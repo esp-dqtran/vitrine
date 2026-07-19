@@ -877,6 +877,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     flows: [],
   };
   const durable: Array<{ exportId: number; metadata: ObjectMetadata }> = [];
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const uploaded: Array<ObjectMetadata & { body: Uint8Array }> = [];
   const evidenceBody = Buffer.from("object-backed-evidence");
   const evidenceMetadata: ObjectMetadata = {
@@ -902,7 +903,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     resolveSession: async () => user,
     canAccessApp: async () => true,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
-    recordAccessEvent: async () => undefined,
+    recordAccessEvent: async (event) => { events.push(event); },
     createExport: async () => ++nextExportId,
     completeExport: async (exportId, metadata) => { durable.push({ exportId, metadata }); },
     failExport: async () => undefined,
@@ -932,6 +933,10 @@ test("downloads a complete editable Figma library and secondary exports", async 
   assert.equal(uploaded.length, 2);
   assert.match(Buffer.from(uploaded[0].body).toString("utf8"), new RegExp(evidenceBody.toString("base64")));
   assert.deepEqual(durable.map(({ exportId }) => exportId), [41, 42]);
+  assert.deepEqual(events.map(({ featureKey, action, outcome }) => ({ featureKey, action, outcome })), [
+    { featureKey: "design_systems", action: "export-figma", outcome: "completed" },
+    { featureKey: "design_systems", action: "export-json", outcome: "completed" },
+  ]);
   for (let index = 0; index < uploaded.length; index++) {
     const metadata = uploaded[index];
     assert.equal(metadata.key, `exports/${41 + index}/${metadata.sha256}.${index === 0 ? "zip" : "json"}`);
@@ -982,6 +987,7 @@ test("flow-doc endpoint generates a default, then serves and updates the saved c
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    recordAccessEvent: async () => undefined,
     getAppFlows: async () => [{ id: "login", title: "Login", description: "", tags: [], steps: [{ label: "Enter email", evidence: [7] }] }],
     appImages: async () => catalogImages,
     getFlowDocument: async () => stored,
@@ -1131,6 +1137,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
       flows: [],
     },
   ];
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
@@ -1148,6 +1155,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
     }],
     listDesignSystems: async () => systems,
     listAppFlowSets: async () => [],
+    recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
 
@@ -1157,6 +1165,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal(searchBody.items[0].id, "component:linear:button");
   assert.equal(searchBody.items[0].imageUrl, "/api/media/linear/0123456789abcdef");
   assert.equal(searchBody.items[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
+  assert.deepEqual(events[0], { userId: user.id, featureKey: "search", action: "catalog-search", outcome: "success" });
 
   const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { cookie: "astryx_session=user" } });
   assert.equal(compare.status, 200);
@@ -1168,6 +1177,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
   const now = "2026-07-11T00:00:00.000Z";
   const collection = { id: 4, name: "Onboarding", description: "", created_at: now, updated_at: now, items: [] };
   let notes = "";
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
@@ -1189,6 +1199,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
     },
     removeCollectionItem: async () => true,
     deleteCollection: async () => true,
+    recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
@@ -1208,6 +1219,13 @@ test("creates user-owned collections and edits item notes", async (t) => {
   assert.equal(notes, "Reuse hierarchy");
   assert.equal((await fetch(`${base}/collections/4/items/9`, { method: "DELETE", headers })).status, 204);
   assert.equal((await fetch(`${base}/collections/4`, { method: "DELETE", headers })).status, 204);
+  assert.deepEqual(events.map(({ featureKey, action, outcome }) => ({ featureKey, action, outcome })), [
+    { featureKey: "collections", action: "collection-created", outcome: "created" },
+    { featureKey: "collections", action: "collection-item-added", outcome: "created" },
+    { featureKey: "collections", action: "collection-item-updated", outcome: "success" },
+    { featureKey: "collections", action: "collection-item-removed", outcome: "success" },
+    { featureKey: "collections", action: "collection-deleted", outcome: "success" },
+  ]);
 });
 
 test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
@@ -1505,12 +1523,14 @@ test("keeps the old gallery and pipeline state admin-only", async (t) => {
     resolveSession: async () => user,
     allImages: async () => catalogImages,
     listJobs: async () => [],
-    listUsersForAdmin: async () => { throw new Error("should not be called"); },
+    listAdminUsersPage: async () => { throw new Error("should not be called"); },
+    getFeatureUsageOverview: async () => { throw new Error("should not be called"); },
+    getUserFeatureUsage: async () => { throw new Error("should not be called"); },
     getGrowthStats: async () => { throw new Error("should not be called"); },
     getDailySignups: async () => { throw new Error("should not be called"); },
   }));
   t.after(() => close(server));
-  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress", "/users", "/users/growth"]) {
+  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress", "/users", "/users/growth", "/users/usage", "/users/2/usage"]) {
     assert.equal((await fetch(`${base}${path}`, { headers: { cookie: "astryx_session=user" } })).status, 403);
   }
 });
@@ -1546,7 +1566,7 @@ test("paginates the admin app gallery without loading every image", async (t) =>
   assert.equal(body.nextCursor, "linear");
 });
 
-test("returns users and growth stats for an admin", async (t) => {
+test("returns a paginated user directory and growth stats for an admin", async (t) => {
   const growthStats = {
     total_users: 12,
     new_users_7d: 3,
@@ -1556,23 +1576,89 @@ test("returns users and growth stats for an admin", async (t) => {
     total_free_unlocks: 5,
   };
   const dailySignups = [{ day: "2026-07-15", signups: 1 }];
+  const userRow = { id: 2, email: user.email, role: "user" as const, active: true, created_at: "2026-07-14T00:00:00.000Z", subscription_status: null };
+  let requested: unknown;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => admin,
-    listUsersForAdmin: async () => [
-      { id: 2, email: user.email, role: "user", active: true, created_at: "2026-07-14T00:00:00.000Z", subscription_status: null },
-    ],
+    listAdminUsersPage: async (input) => {
+      requested = input;
+      return { users: [userRow], nextCursor: "next", total: 42 };
+    },
     getGrowthStats: async () => growthStats,
     getDailySignups: async () => dailySignups,
   }));
   t.after(() => close(server));
 
-  const users = await fetch(`${base}/users`, { headers: adminCookie });
+  const users = await fetch(`${base}/users?limit=30&q=pro&filter=pro`, { headers: adminCookie });
   assert.equal(users.status, 200);
-  assert.equal((await users.json()).length, 1);
+  assert.deepEqual(requested, { limit: 30, cursor: undefined, query: "pro", filter: "pro" });
+  assert.deepEqual(await users.json(), { users: [userRow], nextCursor: "next", total: 42 });
 
   const growth = await fetch(`${base}/users/growth`, { headers: adminCookie });
   assert.equal(growth.status, 200);
   assert.deepEqual(await growth.json(), { stats: growthStats, dailySignups });
+});
+
+test("updates account state and maps safety errors", async (t) => {
+  let requested: unknown;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    setAdminUserActive: async (input) => {
+      requested = input;
+      return { status: "forbidden", reason: "self_disable" };
+    },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/users/${admin.id}/active`, {
+    method: "PATCH",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ active: false }),
+  });
+  assert.equal(response.status, 403);
+  assert.deepEqual(requested, { actorUserId: admin.id, userId: admin.id, active: false });
+  assert.deepEqual(await response.json(), { error: "You cannot disable your own account", code: "self_disable" });
+});
+
+test("returns global and per-user usage for supported ranges", async (t) => {
+  const overview = {
+    summary: { totalEvents: 3, uniqueUsers: 1, usedFeatures: 1 },
+    features: [{ key: "exports" as const, label: "Exports", uses: 3, uniqueUsers: 1, share: 100 }],
+    daily: [{ day: "2026-07-19", uses: 3 }],
+  };
+  const detail = {
+    summary: { totalEvents: 3, lastActiveAt: "2026-07-19T08:00:00.000Z" },
+    features: overview.features,
+    recentEvents: [],
+  };
+  const requested: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    getFeatureUsageOverview: async (range) => { requested.push(["global", range]); return overview; },
+    getUserFeatureUsage: async (userId, range) => { requested.push(["user", userId, range]); return detail; },
+  }));
+  t.after(() => close(server));
+
+  const global = await fetch(`${base}/users/usage?range=30d`, { headers: adminCookie });
+  assert.equal(global.status, 200);
+  assert.deepEqual(await global.json(), overview);
+  const perUser = await fetch(`${base}/users/2/usage?range=7d`, { headers: adminCookie });
+  assert.equal(perUser.status, 200);
+  assert.deepEqual(await perUser.json(), detail);
+  assert.deepEqual(requested, [
+    ["global", { key: "30d", days: 30 }],
+    ["user", 2, { key: "7d", days: 7 }],
+  ]);
+});
+
+test("validates user analytics ranges and missing users", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    getUserFeatureUsage: async () => undefined,
+  }));
+  t.after(() => close(server));
+  assert.equal((await fetch(`${base}/users/usage?range=365d`, { headers: adminCookie })).status, 400);
+  assert.equal((await fetch(`${base}/users/999/usage?range=30d`, { headers: adminCookie })).status, 404);
 });
 
 test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
@@ -1801,7 +1887,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
 });
 
 test("blocks catalog-wide traversal and records a redacted audit event", async (t) => {
-  const events: Array<{ appSlug?: string; ipPrefix?: string; outcome: string }> = [];
+  const events: Array<{ appSlug?: string; ipPrefix?: string; featureKey?: string; action: string; outcome: string }> = [];
   const images = [
     ...catalogImages,
     { ...catalogImages[0], id: 8, app: "notion", image_url: "mobbin-bulk:1111111111111111" },
@@ -1825,15 +1911,17 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
   assert.equal(events.at(-1)?.appSlug, "notion");
   assert.equal(events.at(-1)?.outcome, "blocked");
   assert.match(events.at(-1)?.ipPrefix ?? "", /\/24$/);
+  assert.equal(events.find(({ outcome }) => outcome === "success")?.featureKey, "library");
 });
 
 test("reserves a validated selected export for entitled Pro", async (t) => {
   let receivedUserId: number | undefined;
+  const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
     appImages: async () => catalogImages,
-    recordAccessEvent: async () => {},
+    recordAccessEvent: async (event) => { events.push(event); },
     reserveExportOperation: async (userId) => {
       receivedUserId = userId;
       return { status: "reserved", used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" };
@@ -1848,6 +1936,14 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
   assert.equal(response.status, 201);
   assert.equal(receivedUserId, user.id);
   assert.equal((await response.json()).status, "reserved");
+  assert.deepEqual(events[0], {
+    userId: user.id,
+    ipPrefix: "127.0.0.0/24",
+    appSlug: "linear",
+    featureKey: "exports",
+    action: "export-reservation",
+    outcome: "accepted",
+  });
 });
 
 test("rejects oversized or unavailable export reservations", async (t) => {

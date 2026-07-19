@@ -47,7 +47,18 @@ import {
   resolveSession,
   resolveSessionState,
 } from "../../../src/authStore.ts";
-import { getDailySignups, getGrowthStats, listUsersForAdmin } from "../../../src/adminStats.ts";
+import { getDailySignups, getGrowthStats } from "../../../src/adminStats.ts";
+import {
+  ADMIN_USER_FILTERS,
+  listAdminUsersPage,
+  setAdminUserActive,
+  type AdminUserFilter,
+} from "../../../src/adminUsers.ts";
+import {
+  getFeatureUsageOverview,
+  getUserFeatureUsage,
+  parseUsageRange,
+} from "../../../src/featureUsage.ts";
 import { parseJob, publishJob, type Job, type ResearchProvider } from "../../../src/queue.ts";
 import { isPlatform, platformFromUrl, type Platform } from "../../../src/platformFromUrl.ts";
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
@@ -303,7 +314,10 @@ const defaults = {
   getAccountEntitlements,
   recordAccessEvent,
   reserveExportOperation,
-  listUsersForAdmin,
+  listAdminUsersPage,
+  setAdminUserActive,
+  getFeatureUsageOverview,
+  getUserFeatureUsage,
   getGrowthStats,
   getDailySignups,
   billing: disabledBilling,
@@ -1443,6 +1457,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       appCategories,
     }, searchOptions);
     const imagesById = new Map(allowedImages.map((image) => [image.id, image]));
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "search",
+      action: "catalog-search",
+      outcome: "success",
+    });
     res.json({
       ...result,
       items: result.items.map((item) => {
@@ -1491,7 +1511,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid collection" });
       return;
     }
-    res.status(201).json(await deps.createCollection(res.locals.user.id, name, description));
+    const collection = await deps.createCollection(res.locals.user.id, name, description);
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-created",
+      outcome: "created",
+    });
+    res.status(201).json(collection);
   });
 
   app.delete("/collections/:collectionId", async (req, res) => {
@@ -1504,6 +1531,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(404).json({ error: "collection not found" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-deleted",
+      outcome: "success",
+    });
     res.status(204).end();
   });
 
@@ -1526,7 +1559,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       kind, app: appName, referenceId, title, notes,
     });
     if (!item) res.status(404).json({ error: "collection not found" });
-    else res.status(201).json(item);
+    else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        featureKey: "collections",
+        action: "collection-item-added",
+        outcome: "created",
+      });
+      res.status(201).json(item);
+    }
   });
 
   app.patch("/collections/:collectionId/items/:itemId", async (req, res) => {
@@ -1539,7 +1580,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const item = await deps.updateCollectionItemNotes(res.locals.user.id, collectionId, itemId, notes);
     if (!item) res.status(404).json({ error: "collection item not found" });
-    else res.json(item);
+    else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        featureKey: "collections",
+        action: "collection-item-updated",
+        outcome: "success",
+      });
+      res.json(item);
+    }
   });
 
   app.delete("/collections/:collectionId/items/:itemId", async (req, res) => {
@@ -1553,6 +1602,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(404).json({ error: "collection item not found" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      featureKey: "collections",
+      action: "collection-item-removed",
+      outcome: "success",
+    });
     res.status(204).end();
   });
 
@@ -1649,13 +1704,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(429).json(reservation);
       return;
     }
-    await deps.recordAccessEvent({
-      userId: res.locals.user.id,
-      ipPrefix: ipPrefix(req.ip ?? "unknown"),
-      appSlug,
-      action: `export-${format}`,
-      outcome: "allowed",
-    });
     const storageType = exportStorageTypes.get(artifact.mime);
     if (!storageType) {
       res.status(500).json({ error: "Unsupported export artifact" });
@@ -1686,6 +1734,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(503).json({ error: "Export storage unavailable" });
       return;
     }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug,
+      featureKey: "design_systems",
+      action: `export-${format}`,
+      outcome: "completed",
+      metadata: { format },
+    });
     res.setHeader("Content-Type", artifact.mime);
     res.setHeader("Content-Disposition", `attachment; filename="${artifact.filename}"`);
     res.setHeader("X-Astryx-Export-Used", String(reservation.used));
@@ -1708,6 +1765,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     const saved = await deps.getFlowDocument(appSlug, platform);
     if (saved) {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        appSlug,
+        featureKey: "flows",
+        action: "flow-document-view",
+        outcome: "success",
+      });
       res.json({ body: saved.body, saved: true, updatedAt: saved.updatedAt });
       return;
     }
@@ -1722,6 +1786,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       "flow-md",
       { kind: "design-system" },
     );
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      appSlug,
+      featureKey: "flows",
+      action: "flow-document-view",
+      outcome: "success",
+    });
     res.json({ body: artifact.content.toString("utf8"), saved: false });
   });
 
@@ -1831,8 +1902,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       userId: res.locals.user.id,
       ipPrefix: ipPrefix(req.ip ?? "unknown"),
       appSlug: req.params.app,
+      featureKey: "exports",
       action: "export-reservation",
-      outcome: "allowed",
+      outcome: "accepted",
     });
     res.status(201).json({ ...reservation, selection });
   });
@@ -1860,6 +1932,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           userId: res.locals.user.id,
           ipPrefix: ipPrefix(req.ip ?? "unknown"),
           appSlug: req.params.app,
+          featureKey: "library",
           action: "app-detail",
           outcome: "blocked",
         });
@@ -1907,8 +1980,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         userId: res.locals.user.id,
         ipPrefix: ipPrefix(req.ip ?? "unknown"),
         appSlug: req.params.app,
+        featureKey: "library",
         action: "app-detail",
-        outcome: "allowed",
+        outcome: "success",
       });
       res.json({ ...page, version: selectedVersion ?? null });
     }
@@ -2008,13 +2082,81 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(await deps.listJobs());
   });
 
-  app.get("/users", requireAdmin, async (_req, res) => {
-    res.json(await deps.listUsersForAdmin());
+  app.get("/users", requireAdmin, async (req, res) => {
+    const limit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+    const filter = req.query.filter === undefined ? "all" : String(req.query.filter);
+    if (!Number.isInteger(limit) || !ADMIN_USER_FILTERS.has(filter as AdminUserFilter)) {
+      res.status(400).json({ error: "invalid user directory query" });
+      return;
+    }
+    try {
+      res.json(await deps.listAdminUsersPage({
+        limit,
+        cursor: optionalQuery(req.query.cursor),
+        query: optionalQuery(req.query.q),
+        filter: filter as AdminUserFilter,
+      }));
+    } catch (error) {
+      if ((error as Error).message === "Invalid user cursor") {
+        res.status(400).json({ error: "invalid user cursor" });
+        return;
+      }
+      throw error;
+    }
   });
 
   app.get("/users/growth", requireAdmin, async (_req, res) => {
     const [stats, dailySignups] = await Promise.all([deps.getGrowthStats(), deps.getDailySignups()]);
     res.json({ stats, dailySignups });
+  });
+
+  app.get("/users/usage", requireAdmin, async (req, res) => {
+    const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
+    if (!range) {
+      res.status(400).json({ error: "range must be 7d, 30d, or 90d" });
+      return;
+    }
+    res.json(await deps.getFeatureUsageOverview(range));
+  });
+
+  app.get("/users/:id/usage", requireAdmin, async (req, res) => {
+    const userId = positiveId(String(req.params.id));
+    const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
+    if (!userId || !range) {
+      res.status(400).json({ error: !userId ? "invalid user id" : "range must be 7d, 30d, or 90d" });
+      return;
+    }
+    const usage = await deps.getUserFeatureUsage(userId, range);
+    if (!usage) {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    res.json(usage);
+  });
+
+  app.patch("/users/:id/active", requireAdmin, async (req, res) => {
+    const userId = positiveId(String(req.params.id));
+    if (!userId || typeof req.body?.active !== "boolean") {
+      res.status(400).json({ error: "invalid account state request" });
+      return;
+    }
+    const result = await deps.setAdminUserActive({
+      actorUserId: res.locals.user.id,
+      userId,
+      active: req.body.active,
+    });
+    if (result.status === "not_found") {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+    if (result.status === "forbidden") {
+      const error = result.reason === "self_disable"
+        ? "You cannot disable your own account"
+        : "The last active administrator cannot be disabled";
+      res.status(403).json({ error, code: result.reason });
+      return;
+    }
+    res.json(result.user);
   });
 
   app.post("/jobs/:id/cancel", requireAdmin, async (req, res) => {

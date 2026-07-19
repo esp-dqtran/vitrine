@@ -1,24 +1,5 @@
 import { query } from "./db.ts";
 
-export interface AdminUserRow {
-  id: number;
-  email: string;
-  role: "admin" | "user";
-  active: boolean;
-  created_at: string;
-  subscription_status: string | null;
-}
-
-export async function listUsersForAdmin(): Promise<AdminUserRow[]> {
-  const result = await query<AdminUserRow>(
-    `SELECT u.id, u.email, u.role, u.active, u.created_at, s.status AS subscription_status
-     FROM users u
-     LEFT JOIN subscriptions s ON s.user_id = u.id
-     ORDER BY u.created_at DESC`
-  );
-  return result.rows;
-}
-
 export interface GrowthStats {
   total_users: number;
   new_users_7d: number;
