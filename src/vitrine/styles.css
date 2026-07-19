@@ -100,6 +100,52 @@ body {
   }
 }
 
+/* Search dialog — keep it mounted while both the surface and native backdrop exit. */
+.command-palette-dialog {
+  animation: vitrine-command-palette-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  transform-origin: center;
+}
+
+.command-palette-dialog::backdrop {
+  animation: vitrine-command-palette-backdrop-in 180ms ease-out both;
+}
+
+.command-palette-dialog[data-closing="true"] {
+  animation: vitrine-command-palette-out 150ms ease-in both !important;
+  pointer-events: none;
+}
+
+.command-palette-dialog[data-closing="true"]::backdrop {
+  animation: vitrine-command-palette-backdrop-out 150ms ease-in both;
+}
+
+@keyframes vitrine-command-palette-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes vitrine-command-palette-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+
+@keyframes vitrine-command-palette-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vitrine-command-palette-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-palette-dialog,
+  .command-palette-dialog::backdrop {
+    animation-duration: 1ms !important;
+  }
+}
+
 /* Home landing */
 @keyframes hmFadeUp {
   from {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button, ClickableCard, Dialog, Icon, IconButton, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
 import type { App } from '../types';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
@@ -73,7 +72,8 @@ interface CommandPaletteProps {
 export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectApp, onSelectScreen, onSelectCategory, onSelectFlow }: CommandPaletteProps) {
   const [nav, setNav] = useState<Nav>('trending');
   const inputRef = useRef<HTMLInputElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const afterCloseRef = useRef<(() => void) | null>(null);
+  const [closing, setClosing] = useState(false);
   const [flowsByApp, setFlowsByApp] = useState<Record<string, DesignFlow<EvidenceView>[]> | null>(null);
   const [flowsLoading, setFlowsLoading] = useState(false);
 
@@ -81,12 +81,6 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
     const t = window.setTimeout(() => inputRef.current?.focus(), 30);
     return () => window.clearTimeout(t);
   }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
 
   // ponytail: flows aren't attached to the catalog list apps carry, so browsing them here means
   // fetching each app's design-system snapshot on demand — fine for a handful of apps, would want
@@ -127,19 +121,38 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
   const elementMatches = searching ? elementChips.filter((name) => name.toLowerCase().includes(q)) : [];
   const hasMatches = appMatches.length > 0 || screenMatches.length > 0 || elementMatches.length > 0;
 
-  const selectApp = (appId: string) => { onClose(); onSelectApp(appId); };
-  const selectScreen = (appId: string, index: number) => { onClose(); onSelectScreen(appId, index); };
-  const selectCategory = (cat: string) => { onQueryChange(''); onClose(); onSelectCategory(cat); };
-  const selectFlow = (appId: string) => { onClose(); onSelectFlow(appId); };
+  const requestClose = (afterClose?: () => void) => {
+    if (closing) return;
+    afterCloseRef.current = afterClose ?? null;
+    setClosing(true);
+  };
+  const finishClose = () => {
+    const afterClose = afterCloseRef.current;
+    afterCloseRef.current = null;
+    onClose();
+    afterClose?.();
+  };
+
+  const selectApp = (appId: string) => requestClose(() => onSelectApp(appId));
+  const selectScreen = (appId: string, index: number) => requestClose(() => onSelectScreen(appId, index));
+  const selectCategory = (cat: string) => { onQueryChange(''); requestClose(() => onSelectCategory(cat)); };
+  const selectFlow = (appId: string) => requestClose(() => onSelectFlow(appId));
 
   return (
-    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} purpose="info" width="min(1040px, calc(100vw - 40px))" maxHeight="82vh" padding={0}>
-      <motion.div
-        ref={panelRef}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+    <Dialog
+      isOpen
+      className="command-palette-dialog"
+      data-closing={closing ? 'true' : undefined}
+      onAnimationEnd={(event) => {
+        if (closing && event.animationName === 'vitrine-command-palette-out') finishClose();
+      }}
+      onOpenChange={(open) => { if (!open) requestClose(); }}
+      purpose="info"
+      width="min(1040px, calc(100vw - 40px))"
+      maxHeight="82vh"
+      padding={0}
+    >
+      <div
         onMouseDown={(e) => e.stopPropagation()}
         style={{
           width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column',
@@ -165,7 +178,7 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
             icon={<Icon icon="close" size="sm" />}
             variant="ghost"
             size="sm"
-            onClick={onClose}
+            onClick={() => requestClose()}
           />
         </div>
 
@@ -288,7 +301,7 @@ export function CommandPalette({ apps, query, onQueryChange, onClose, onSelectAp
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     </Dialog>
   );
 }
