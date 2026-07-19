@@ -75,18 +75,23 @@ test("pushes a complete snapshot after a scoped progress change and stops after 
   const dataDir = join(root, "data");
   mkdirSync(dataDir);
   const snapshots: ProgressSnapshot[] = [];
+  let unsubscribe = () => undefined;
 
   try {
-    const unsubscribe = subscribeProgress((snapshot) => snapshots.push(snapshot), { dataDir });
+    unsubscribe = subscribeProgress((snapshot) => snapshots.push(snapshot), { dataDir });
     writeProgress(running("figma"), { dataDir, workerId: "4" });
     await waitForProgress(() => snapshots.some(({ entries }) => entries.some(({ app }) => app === "figma")));
+    writeProgress(running("notion"), { dataDir, workerId: "4" });
+    await waitForProgress(() => snapshots.some(({ entries }) => entries.some(({ app }) => app === "notion")));
 
     unsubscribe();
+    unsubscribe = () => undefined;
     const count = snapshots.length;
     writeProgress(running("slack"), { dataDir, workerId: "4" });
     await new Promise((resolve) => setTimeout(resolve, 80));
     assert.equal(snapshots.length, count);
   } finally {
+    unsubscribe();
     rmSync(root, { recursive: true, force: true });
   }
 });

@@ -225,8 +225,10 @@ export function subscribeProgress(
   const legacyWatcher = watch(dataDir, (_event, filename) => {
     if (String(filename ?? "") === "progress.json") notify();
   });
+  const catchup = setImmediate(notify);
   return () => {
     active = false;
+    clearImmediate(catchup);
     scopedWatcher.close();
     legacyWatcher.close();
   };
