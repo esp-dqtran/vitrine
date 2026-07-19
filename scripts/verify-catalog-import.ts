@@ -2,8 +2,13 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFil
 import { pathToFileURL } from "node:url";
 import pg from "pg";
 import {
+  catalogJobKey,
+  catalogPersistenceRepair,
+  emptyCatalogPersistence,
+  loadCatalogPersistence,
+} from "../src/catalogVerification.ts";
+import {
   parseCatalogLogCounts,
-  planCatalogRepair,
   summarizeCatalogIntegrityState,
   type CatalogArtifactCounts,
   type CatalogRepairPhases,
@@ -29,18 +34,8 @@ interface Job {
 
 interface State { generatedAt: string; jobs: Job[] }
 
-interface PersistedRow {
-  app: string;
-  platform: string;
-  screens: number;
-  ui_elements: number;
-  flows: number;
-  invalid_flow_references: number;
-}
-
 const statePath = (worker: string) => `data/catalog-import-state-${worker}.json`;
 const logPath = (worker: string) => `data/logs/catalog-import-${worker}.log`;
-const jobKey = (slug: string, platform: string) => `${slug}\u0000${platform}`;
 
 function logSegments(lines: readonly string[], worker: string, job: Job): string[] {
   const marker = `w${worker}:Importing "${job.appName}" (${job.platform})`;
@@ -63,51 +58,6 @@ function expectedCounts(lines: readonly string[], worker: string, job: Job): Cat
     uiElements: job.verification?.uiElements?.discovered ?? logged.uiElements,
     flows: job.verification?.flows?.discovered ?? logged.flows,
   };
-}
-
-async function persistedCounts(pool: pg.Pool, jobs: Array<{ app: string; platform: string }>): Promise<Map<string, PersistedRow>> {
-  const result = await pool.query<PersistedRow>(`
-    WITH wanted AS (
-      SELECT DISTINCT app, platform
-      FROM jsonb_to_recordset($1::jsonb) AS x(app text, platform text)
-    ), image_counts AS (
-      SELECT wanted.app, wanted.platform,
-             count(*) FILTER (WHERE i.kind = 'screen')::int AS screens,
-             count(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_elements
-      FROM wanted
-      LEFT JOIN apps a ON a.name = wanted.app
-      LEFT JOIN platforms p ON p.app_id = a.id AND p.name = wanted.platform
-      LEFT JOIN images i ON i.platform_id = p.id
-      GROUP BY wanted.app, wanted.platform
-    ), flow_counts AS (
-      SELECT wanted.app, wanted.platform,
-             COALESCE(jsonb_array_length(af.flows), 0)::int AS flows
-      FROM wanted
-      LEFT JOIN apps a ON a.name = wanted.app
-      LEFT JOIN app_flows af ON af.app_id = a.id AND af.platform = wanted.platform
-    ), invalid_refs AS (
-      SELECT wanted.app, wanted.platform,
-             count(*) FILTER (
-               WHERE e IS NOT NULL
-                 AND (i.id IS NULL OR evidence_platform.app_id <> a.id OR evidence_platform.name <> wanted.platform)
-             )::int AS invalid_flow_references
-      FROM wanted
-      LEFT JOIN apps a ON a.name = wanted.app
-      LEFT JOIN app_flows af ON af.app_id = a.id AND af.platform = wanted.platform
-      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(af.flows, '[]'::jsonb)) f ON true
-      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(f->'steps', '[]'::jsonb)) s ON true
-      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(s->'evidence', '[]'::jsonb)) e ON true
-      LEFT JOIN images i ON i.id = CASE WHEN e IS NULL THEN NULL ELSE (e #>> '{}')::bigint END
-      LEFT JOIN platforms evidence_platform ON evidence_platform.id = i.platform_id
-      GROUP BY wanted.app, wanted.platform
-    )
-    SELECT image_counts.app, image_counts.platform, image_counts.screens, image_counts.ui_elements,
-           flow_counts.flows, invalid_refs.invalid_flow_references
-    FROM image_counts
-    JOIN flow_counts USING (app, platform)
-    JOIN invalid_refs USING (app, platform)
-    ORDER BY image_counts.app, image_counts.platform`, [JSON.stringify(jobs)]);
-  return new Map(result.rows.map((row) => [jobKey(row.app, row.platform), row]));
 }
 
 async function globalInvalidFlowReferenceCount(pool: pg.Pool): Promise<number> {
@@ -150,17 +100,12 @@ export async function main(): Promise<void> {
   const candidates = allJobs.filter(({ job }) => job.status !== "pending" || job.repair !== undefined);
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 2 });
   try {
-    const persisted = await persistedCounts(pool, candidates.map(({ job }) => ({ app: job.slug, platform: job.platform })));
+    const persisted = await loadCatalogPersistence(pool, candidates.map(({ job }) => ({ app: job.slug, platform: job.platform })));
     const queued = candidates.flatMap(({ worker, job }) => {
-      const actual = persisted.get(jobKey(job.slug, job.platform)) ?? {
-        app: job.slug, platform: job.platform, screens: 0, ui_elements: 0, flows: 0, invalid_flow_references: 0,
-      };
+      const actual = persisted.get(catalogJobKey(job.slug, job.platform))
+        ?? emptyCatalogPersistence(job.slug, job.platform);
       const expected = expectedCounts(logs.get(worker) ?? [], worker, job);
-      const repair = planCatalogRepair({
-        expected,
-        persisted: { screens: Number(actual.screens), uiElements: Number(actual.ui_elements), flows: Number(actual.flows) },
-        invalidFlowReferences: Number(actual.invalid_flow_references),
-      });
+      const repair = catalogPersistenceRepair(expected, actual);
       if (!repair.screens && !repair.uiElements && !repair.flows) return [];
       return [{
         worker,
@@ -169,10 +114,13 @@ export async function main(): Promise<void> {
         platform: job.platform,
         expected,
         persisted: {
-          screens: Number(actual.screens),
-          uiElements: Number(actual.ui_elements),
-          flows: Number(actual.flows),
-          invalidFlowReferences: Number(actual.invalid_flow_references),
+          screens: actual.screens,
+          uiElements: actual.uiElements,
+          flows: actual.flows,
+          invalidFlowReferences: actual.invalidFlowReferences,
+          missingScreenObjects: actual.missingScreenObjects,
+          missingUiElementObjects: actual.missingUiElementObjects,
+          missingFlowObjects: actual.missingFlowObjects,
         },
         repair,
         job,
