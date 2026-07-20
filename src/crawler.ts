@@ -24,12 +24,44 @@ export interface AppTarget {
 // session even though every file is present and readable. Fixed by exporting the session via
 // Playwright's own storageState (portable — it works through the CDP session, not the OS
 // cookie store) and re-importing it into whatever fresh profile the container creates.
-export async function launchMobbinContext(): Promise<BrowserContext> {
-  const profileDir = process.env.MOBBIN_PROFILE_DIR ?? "data/browser-profile-mobbin";
+export interface MobbinContextOptions {
+  profileDir?: string;
+  storageStatePath?: string;
+  headless?: boolean;
+}
+
+export interface ResolvedMobbinContextOptions {
+  profileDir: string;
+  storageStatePath?: string;
+  headless: boolean;
+}
+
+export interface MobbinContextEnvironment {
+  MOBBIN_PROFILE_DIR?: string;
+  MOBBIN_STORAGE_STATE_PATH?: string;
+  HEADLESS?: string;
+}
+
+export function resolveMobbinContextOptions(
+  options: MobbinContextOptions = {},
+  environment: MobbinContextEnvironment = process.env,
+): ResolvedMobbinContextOptions {
+  return {
+    profileDir: options.profileDir ?? environment.MOBBIN_PROFILE_DIR ?? "data/browser-profile-mobbin",
+    storageStatePath: options.storageStatePath ?? environment.MOBBIN_STORAGE_STATE_PATH,
+    headless: options.headless ?? environment.HEADLESS === "true",
+  };
+}
+
+export async function launchMobbinContext(
+  options: MobbinContextOptions = {},
+): Promise<BrowserContext> {
+  const resolved = resolveMobbinContextOptions(options);
+  const profileDir = resolved.profileDir;
   const context = await chromium.launchPersistentContext(profileDir, {
-    headless: process.env.HEADLESS === "true",
+    headless: resolved.headless,
   });
-  const storageStatePath = process.env.MOBBIN_STORAGE_STATE_PATH;
+  const storageStatePath = resolved.storageStatePath;
   if (storageStatePath && existsSync(storageStatePath)) {
     await context.setStorageState(storageStatePath);
   }
