@@ -40,6 +40,12 @@ test('animates the active platform indicator and platform content', () => {
   assert.match(source, /\}, \[section, selectedPlatform\]\);/);
 });
 
+test('renders Apps through the shared reference detail shell', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.match(source, /import \{ ReferenceDetailShell \} from '.\/ReferenceDetailShell'/);
+  assert.match(source, /<ReferenceDetailShell/);
+});
+
 test('renders metadata-only aggregate counts on Overview', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
