@@ -11,6 +11,7 @@ import {
   imageObjectKey,
   LocalObjectStore,
   researchUploadObjectKey,
+  siteObjectKey,
   type ObjectMetadata,
 } from "./objectStore.ts";
 
@@ -48,6 +49,40 @@ test("research keys are owner scoped", () => {
   const digest = "a".repeat(64);
   assert.equal(researchUploadObjectKey(42, digest, "png"), `research/42/${digest}.png`);
   assert.throws(() => researchUploadObjectKey(0, digest, "png"), /invalid research upload identity/i);
+});
+
+test("builds isolated Sites object keys", () => {
+  const digest = "a".repeat(64);
+  const key = siteObjectKey(
+    "site-1",
+    "version-1",
+    "section",
+    "section-1",
+    digest,
+    "mp4",
+  );
+  assert.match(key, /^sites\/[0-9a-f]+\/versions\/[0-9a-f]+\/section\/[0-9a-f]+\/[0-9a-f]{64}\.mp4$/);
+  assert.equal(key.includes("site-1"), false);
+  assert.equal(key.includes("section-1"), false);
+  assert.throws(
+    () => siteObjectKey("", "version-1", "preview", "preview", digest, "mp4"),
+    /invalid object-key identity part/i,
+  );
+});
+
+test("accepts MP4 while retaining the shared media ceiling", async () => {
+  await withStore(async (store) => {
+    const body = Buffer.from([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70]);
+    const digest = sha256(body);
+    const key = siteObjectKey("site", "version", "preview", "preview", digest, "mp4");
+    const stored = await store.put(input({
+      key,
+      body,
+      contentType: "video/mp4",
+    }));
+    assert.equal(stored.created, true);
+    assert.equal(stored.metadata.byteSize, body.byteLength);
+  });
 });
 
 test("rejects invalid image IDs, export IDs, hashes, and extensions", () => {

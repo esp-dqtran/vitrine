@@ -15,6 +15,7 @@ export type StoredContentType =
   | "image/png"
   | "image/jpeg"
   | "image/webp"
+  | "video/mp4"
   | "application/json"
   | "application/zip"
   | "text/css"
@@ -49,6 +50,7 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "image/png",
   "image/jpeg",
   "image/webp",
+  "video/mp4",
   "application/json",
   "application/zip",
   "text/css",
@@ -57,7 +59,9 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "text/markdown",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);
-const EXTENSIONS = new Set(["png", "jpg", "webp", "json", "zip", "css", "js", "tsx", "md"]);
+const EXTENSIONS = new Set(["png", "jpg", "webp", "mp4", "json", "zip", "css", "js", "tsx", "md"]);
+const SITE_OBJECT_KINDS = new Set(["source", "preview", "page", "section", "poster"]);
+const SITE_OBJECT_EXTENSIONS = new Set(["json", "png", "jpg", "webp", "mp4"]);
 
 function encodeKeyPart(value: string): string {
   const bytes = Buffer.from(value, "utf8");
@@ -103,6 +107,24 @@ export function researchUploadObjectKey(userId: number, sha256: string, extensio
     throw new Error("Invalid research upload identity");
   }
   return `research/${userId}/${sha256}.${checkedExtension(extension)}`;
+}
+
+export function siteObjectKey(
+  siteId: string,
+  versionId: string,
+  kind: "source" | "preview" | "page" | "section" | "poster",
+  identity: string,
+  sha256: string,
+  extension: "json" | "png" | "jpg" | "webp" | "mp4",
+): string {
+  if (
+    !SHA256_PATTERN.test(sha256) ||
+    !SITE_OBJECT_KINDS.has(kind) ||
+    !SITE_OBJECT_EXTENSIONS.has(extension)
+  ) {
+    throw new Error("Invalid Site object identity");
+  }
+  return `sites/${encodeKeyPart(siteId)}/versions/${encodeKeyPart(versionId)}/${kind}/${encodeKeyPart(identity)}/${sha256}.${checkedExtension(extension)}`;
 }
 
 function validateKey(key: string): void {
