@@ -71,7 +71,14 @@ const SITES_TABLES = [
   "sites",
 ] as const;
 
+const AUXILIARY_MIGRATION_TABLES = [
+  "flow_documents",
+  "organization_members",
+  "organizations",
+] as const;
+
 const ADDED_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
+  access_events: ["feature_key", "metadata"],
   app_flows: ["platform"],
   app_versions: ["platform"],
   crawl_runs: ["run_kind", "parent_run_id", "platform", "allow_all", "pause_requested_at"],
@@ -253,6 +260,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...AUTONOMOUS_CRAWLER_TABLES,
       ...RESEARCH_PROJECT_TABLES,
       ...SITES_TABLES,
+      ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();
     const tables = await publicTables(pool);
