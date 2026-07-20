@@ -19,6 +19,7 @@ import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { SitesPage } from './components/SitesPage';
 import { SiteVersionPage } from './components/SiteVersionPage';
+import { GalleryCardSkeleton, GalleryToolbar } from './components/GalleryToolbar';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -26,17 +27,6 @@ import { submitImportJob } from './jobsApi';
 import { searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import type { CatalogSearchResult } from '../catalogResearch';
-
-function AppCardSkeleton({ index }: { index: number }) {
-  return (
-    <div style={{ position: 'relative', aspectRatio: '16 / 10', borderRadius: 'var(--radius-container)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-      <Skeleton width="100%" height="100%" radius="none" index={index} />
-      <div style={{ position: 'absolute', left: 10, bottom: 10 }}>
-        <Skeleton width={130} height={26} radius="rounded" index={index} />
-      </div>
-    </div>
-  );
-}
 
 export function App() {
   const { user, logout } = useAuth();
@@ -217,7 +207,7 @@ export function App() {
           <Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
-          {Array.from({ length: 9 }, (_, i) => <AppCardSkeleton key={i} index={i} />)}
+          {Array.from({ length: 9 }, (_, i) => <GalleryCardSkeleton key={i} index={i} />)}
         </div>
       </div>,
     );
@@ -311,20 +301,7 @@ export function App() {
               action={<Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} />}
             />
           )}
-          <div
-            style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 10,
-              backdropFilter: 'blur(10px)',
-              borderBottom: '1px solid var(--color-border)',
-              padding: '22px 28px 14px',
-              margin: '0 -28px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 14,
-            }}
-          >
+          <GalleryToolbar>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               {!isAdmin && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, flex: '0 0 auto' }}>
@@ -352,7 +329,7 @@ export function App() {
               />
               {!isAdmin && accountControls}
             </div>
-          </div>
+          </GalleryToolbar>
 
           {isAdmin && <ProgressBanner />}
 

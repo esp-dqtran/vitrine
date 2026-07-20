@@ -10,6 +10,10 @@ const site: SiteSummary = {
   id: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
   label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
   previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
+  previews: [
+    { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
+    { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
+  ],
 };
 
 const detail: SiteVersionDetail = {
@@ -26,14 +30,21 @@ const detail: SiteVersionDetail = {
   }],
 };
 
-test('renders ready Sites with counts, refresh, and an accessible import action', () => {
-  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin onRefresh={() => undefined} onImport={() => undefined} />);
+test('renders Sites with Apps gallery cards instead of preview-video cards', () => {
+  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
   assert.match(html, /V7/);
-  assert.match(html, /16 pages/);
-  assert.match(html, /46 sections/);
+  assert.match(html, /Search sites, versions, and pages/);
+  assert.match(html, /View pages/);
+  assert.match(html, /Home/);
+  assert.match(html, /16 pages · 46 sections/);
   assert.match(html, /Refresh/);
   assert.match(html, /Import Site/);
-  assert.match(html, /<video[^>]+controls=""[^>]+preload="metadata"/);
+  assert.doesNotMatch(html, /<video/);
+});
+
+test('filters Sites by name, version, and preview page title', () => {
+  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /Showing 1 of 1 sites/);
 });
 
 test('keeps the Site import dialog URL-only', () => {
