@@ -43,6 +43,64 @@ export interface App extends AppSummary {
   screens: Screen[];
 }
 
+export interface SiteSummary {
+  id: number;
+  versionId: number;
+  name: string;
+  slug: string;
+  sourceUrl: string;
+  label: string;
+  isLatest: boolean;
+  pageCount: number;
+  sectionCount: number;
+  previewUrl: string;
+  updatedAt: string;
+}
+
+export interface SiteOcrBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+}
+
+export interface SiteSectionView {
+  id: number;
+  sourceId: string;
+  position: number;
+  mediaKind: 'image' | 'video';
+  mediaUrl: string;
+  posterUrl?: string;
+  cropTop?: number;
+  cropBottom?: number;
+  videoStartSeconds?: number;
+  videoEndSeconds?: number;
+  ocrBoxes: SiteOcrBox[];
+  sourceMetadata: Record<string, unknown>;
+}
+
+export interface SiteVersionPage {
+  id: number;
+  sourceId: string;
+  title: string;
+  url: string;
+  position: number;
+  fullPageImageUrl: string;
+  sections: SiteSectionView[];
+}
+
+export interface SiteVersionDetail {
+  site: { id: number; name: string; slug: string; sourceUrl: string };
+  version: { id: number; label: string; isLatest: boolean; previewUrl: string };
+  canonicalUrl: string;
+  pages: SiteVersionPage[];
+}
+
+export type SiteImportResult =
+  | { existing: true; siteId: number; versionId: number }
+  | { existing: false; id: number };
+
 export type RowStatus = 'Queued' | 'In progress' | 'Complete' | 'Needs attention' | 'Cancelled';
 
 export interface ElementItem {

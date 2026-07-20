@@ -10,6 +10,20 @@ test('keeps the Apps shell independent from job-list loading', async () => {
   assert.doesNotMatch(source, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 
+test('keeps Sites routes ahead of Apps branches and free from job-list reads', async () => {
+  const [appSource, sitesSource, sitesApiSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./sitesApi.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.ok(appSource.indexOf("route.name === 'sites'") < appSource.indexOf("route.name === 'apps' && (appsError"));
+  assert.ok(appSource.indexOf("route.name === 'site-version'") < appSource.indexOf("route.name === 'app' && (detailError"));
+  assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
+  assert.doesNotMatch(`${sitesSource}\n${sitesApiSource}`, /fetch\(\s*['"]\/api\/jobs['"]\s*\)/);
+  assert.doesNotMatch(sitesSource, /setInterval|setTimeout/);
+});
+
 test('keeps the sticky Apps search container background transparent', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

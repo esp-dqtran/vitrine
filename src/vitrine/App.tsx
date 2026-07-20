@@ -17,6 +17,8 @@ import { UnlockModal } from './components/UnlockModal';
 import { UsersPage } from './components/UsersPage';
 import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
+import { SitesPage } from './components/SitesPage';
+import { SiteVersionPage } from './components/SiteVersionPage';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -191,6 +193,13 @@ export function App() {
 
   if (route.name === 'admin' && isAdmin) {
     return frame(<UsersPage />);
+  }
+
+  if (route.name === 'sites') {
+    return frame(<SitesPage isAdmin={isAdmin} />);
+  }
+  if (route.name === 'site-version') {
+    return frame(<SiteVersionPage siteId={route.siteId} versionId={route.versionId} isAdmin={isAdmin} />);
   }
 
   if (researchProjectsEnabled && route.name === 'projects') {
