@@ -93,7 +93,7 @@ test("returns the first five ordered page previews in ready Site summaries", asy
 Update the `/api/sites` fixture and `src/vitrine/sitesApi.test.ts` fixture with:
 
 ```ts
-pagePreviews: [
+previews: [
   { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
   { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
 ],
@@ -163,7 +163,7 @@ const previews = jsonArray(row.page_previews).map((value) => {
 });
 ```
 
-In `src/vitrine/sitesApi.ts`, parse `pagePreviews` with existing `positiveId`, `requiredText`, `nonNegativeInteger`, and `apiPath` helpers, reject more than five items, sort by `position`, and assign the result to `previews`.
+In `src/vitrine/sitesApi.ts`, parse `previews` with existing `positiveId`, `requiredText`, `nonNegativeInteger`, and `apiPath` helpers, reject more than five items, sort by `position`, and assign the result to `previews`.
 
 - [ ] **Step 4: Run focused tests and verify GREEN**
 
@@ -272,7 +272,7 @@ return (
     identityLabel={app.app}
     identityImageUrl={app.iconUrl}
     accent={app.accent}
-    supportingText={progressLabel && status !== 'Complete' ? progressLabel : undefined}
+    supportingText={progressLabel && status && status !== 'Complete' ? progressLabel : undefined}
     overlayLabel="View screens"
     previews={app.screens.map((screen, index) => ({
       key: String(screen.id ?? index),
