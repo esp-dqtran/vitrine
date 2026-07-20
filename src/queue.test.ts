@@ -36,6 +36,13 @@ test("queue accepts identifier-only durable crawler jobs and preserves BIGINT ru
   });
 });
 
+test("Apps queue rejects isolated Sites jobs", () => {
+  assert.throws(
+    () => parseJob({ type: "import-site", url: "https://mobbin.com/sites/site/version/preview", jobId: 7 }),
+    /invalid queue job/i,
+  );
+});
+
 test("autonomous queue jobs reject embedded credentials and mission data", () => {
   for (const value of [
     { type: "autonomous-crawl-app", name: "linear", runId: "42", password: "secret" },
