@@ -87,16 +87,43 @@ test('renders native video in the shared lightbox', () => {
   assert.match(html, /Home hero — 1 of 1/);
 });
 
-test('renders ordered image and native video sections without dumping OCR text', () => {
-  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin onBack={() => undefined} onImport={() => undefined} />);
-  assert.match(html, /Back to Sites/);
+test('renders the Site overview in the Apps detail shell', () => {
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="overview" onSectionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /Back to all sites/);
+  assert.match(html, /Overview/);
+  assert.match(html, /Pages/);
+  assert.match(html, /Sections/);
   assert.match(html, /Import Site/);
-  assert.match(html, /Full-page reference/);
-  assert.match(html, /loading="lazy"/);
-  assert.match(html, /<video[^>]+controls=""[^>]+preload="metadata"/);
+  assert.match(html, /Visit site/);
+  assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+controls=""[^>]+preload="metadata"/);
+});
+
+test('renders ordered full-page captures through the shared media grid', () => {
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="pages" onSectionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /Open Home page/);
+  assert.match(html, /Full-page capture/);
+  assert.match(html, /\/api\/sites\/1\/versions\/2\/pages\/10\/media/);
+});
+
+test('renders ordered image and native video sections without dumping OCR text', () => {
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" onSectionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /All media/);
+  assert.match(html, /Images/);
+  assert.match(html, /Videos/);
   assert.match(html, /Crop 0–800 px/);
   assert.match(html, /2–8 seconds/);
-  assert.match(html, /1 OCR region/);
   assert.doesNotMatch(html, /Secret visible copy/);
   assert.ok(html.indexOf('/image') < html.indexOf('/video'));
+});
+
+test('falls back unknown Site detail sections to Overview', () => {
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="unknown" onSectionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
+});
+
+test('keeps Site loading and failures inside the detail frame', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /function SiteVersionLoading/);
+  assert.match(source, /Back to all sites/);
+  assert.match(source, /Retry/);
 });
