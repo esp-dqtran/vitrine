@@ -66,6 +66,26 @@ test("loads only ready versions", async () => {
   assert.match(capturedSql[2], /sv\.status = 'ready'/);
 });
 
+test("maps PostgreSQL timestamptz Date values in ready Site summaries", async () => {
+  const updatedAt = new Date("2026-07-20T09:32:37.938Z");
+  const store = createSitesStore(async () => result([{
+    site_id: 1,
+    version_id: 2,
+    name: "V7",
+    slug: graph.site.slug,
+    source_url: graph.site.sourceUrl,
+    label: graph.version.label,
+    is_latest: true,
+    updated_at: updatedAt,
+    page_count: 16,
+    section_count: 46,
+  }]));
+
+  const sites = await store.listReadySites();
+
+  assert.equal(sites[0].updatedAt, updatedAt.toISOString());
+});
+
 test("returns only authenticated API media paths in ready Site views", async () => {
   const fakeQuery: DatabaseQuery = async (sql) => {
     if (/SELECT s\.id AS site_id, sv\.id AS version_id, s\.name/.test(sql)) {

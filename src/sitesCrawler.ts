@@ -10,11 +10,13 @@ import {
 } from "./objectStore.ts";
 import {
   canonicalMobbinSitesUrl,
+  hasDisallowedSiteMediaQuery,
   parseSiteImport,
   type SiteImport,
 } from "./sites.ts";
 import { decodeMobbinSitesSource } from "./sitesSource.ts";
 import type { CompletedSiteImport, SitesStore } from "./sitesStore.ts";
+import { stripMobbinWatermark } from "./mobbinWatermark.ts";
 
 const MAX_MEDIA_BYTES = 64 * 1024 * 1024;
 const SOURCE_TIMEOUT_MS = 45_000;
@@ -55,12 +57,47 @@ export interface MobbinSitesBrowserPorts {
   close(): Promise<void>;
 }
 
+export interface MobbinSitesLiveMediaSnapshot {
+  previewVideoUrl: string;
+  sectionMediaUrls: Record<string, string>;
+}
+
 export function classifyMobbinSitesNavigation(input: {
   loginLinks: number;
   sectionLinks: number;
 }): "authentication" | "navigation-changed" | "ready" {
   if (input.loginLinks > 0) return "authentication";
   return input.sectionLinks === 1 ? "ready" : "navigation-changed";
+}
+
+export function resolveMobbinSitesLiveMedia(
+  graph: SiteImport,
+  snapshot: MobbinSitesLiveMediaSnapshot,
+): SiteImport {
+  return parseSiteImport({
+    ...graph,
+    version: {
+      ...graph.version,
+      previewVideoUrl: snapshot.previewVideoUrl,
+    },
+    pages: graph.pages.map((page) => ({
+      ...page,
+      fullPageImageUrl: mobbinBytescaleImageUrl(page.fullPageImageUrl),
+      sections: page.sections.map((section) => {
+        const mediaUrl = snapshot.sectionMediaUrls[section.sourceId];
+        if (!mediaUrl) {
+          throw new PermanentSiteImportError("Mobbin Sites section media changed");
+        }
+        return {
+          ...section,
+          mediaUrl,
+          ...(section.posterUrl
+            ? { posterUrl: mobbinBytescaleImageUrl(section.posterUrl) }
+            : {}),
+        };
+      }),
+    })),
+  });
 }
 
 export async function crawlMobbinSite(
@@ -89,7 +126,7 @@ export async function crawlMobbinSite(
     };
 
     await assertNotCancelled(deps);
-    const normalizedSource = Buffer.from(JSON.stringify(graph));
+    const normalizedSource = Buffer.from(JSON.stringify(redactEncryptedMediaValues(graph)));
     if (normalizedSource.byteLength > MAX_MEDIA_BYTES) {
       throw new PermanentSiteImportError("Mobbin Sites source exceeds the 64 MiB media ceiling");
     }
@@ -116,6 +153,7 @@ export async function crawlMobbinSite(
       "preview",
       "preview",
       graph.version.previewVideoUrl,
+      "video",
     );
     objectKeys.preview = preview.key;
     objects.set(preview.key, preview);
@@ -128,6 +166,7 @@ export async function crawlMobbinSite(
         "page",
         page.sourceId,
         page.fullPageImageUrl,
+        "image",
       );
       objectKeys.pages[page.sourceId] = pageObject.key;
       objects.set(pageObject.key, pageObject);
@@ -139,6 +178,7 @@ export async function crawlMobbinSite(
           "section",
           section.sourceId,
           section.mediaUrl,
+          section.mediaKind,
         );
         objects.set(media.key, media);
         let poster: string | undefined;
@@ -152,6 +192,7 @@ export async function crawlMobbinSite(
               "poster",
               section.sourceId,
               section.posterUrl,
+              "image",
             );
             objects.set(posterObject.key, posterObject);
             poster = posterObject.key;
@@ -190,13 +231,14 @@ async function downloadAndStore(
   kind: "preview" | "page" | "section" | "poster",
   recordIdentity: string,
   url: string,
+  expectedMediaKind: "image" | "video",
 ): Promise<ObjectMetadata> {
   await assertNotCancelled(deps);
   assertPublicHttpsUrl(url);
   const downloaded = await deps.download(url);
   const finalUrl = downloaded.finalUrl ?? url;
   assertPublicHttpsUrl(finalUrl);
-  const body = Buffer.from(downloaded.body);
+  const downloadedBody = Buffer.from(downloaded.body);
   if (
     downloaded.contentLength !== undefined &&
     (!Number.isSafeInteger(downloaded.contentLength) ||
@@ -205,16 +247,26 @@ async function downloadAndStore(
   ) {
     throw new PermanentSiteImportError("Mobbin Site media has an invalid declared size");
   }
-  if (body.byteLength === 0 || body.byteLength > MAX_MEDIA_BYTES) {
+  if (downloadedBody.byteLength === 0 || downloadedBody.byteLength > MAX_MEDIA_BYTES) {
     throw new PermanentSiteImportError("Mobbin Site media exceeds the 64 MiB media ceiling");
   }
   if (
     downloaded.contentLength !== undefined &&
-    downloaded.contentLength !== body.byteLength
+    downloaded.contentLength !== downloadedBody.byteLength
   ) {
     throw new PermanentSiteImportError("Mobbin Site media byte size changed during download");
   }
-  const media = verifiedMediaType(downloaded.contentType, body);
+  const media = verifiedMediaType(downloaded.contentType, downloadedBody);
+  if (
+    (expectedMediaKind === "video" && media.contentType !== "video/mp4") ||
+    (expectedMediaKind === "image" && media.contentType === "video/mp4")
+  ) {
+    throw new PermanentSiteImportError("Mobbin Site media kind changed");
+  }
+  const body = expectedMediaKind === "image"
+    ? await stripMobbinWatermark(downloadedBody)
+    : downloadedBody;
+  verifiedMediaType(media.contentType, body);
   return putVerifiedObject(deps.objectStore, {
     key: siteObjectKey(
       identity.sourceSiteId,
@@ -331,9 +383,7 @@ function assertPublicHttpsUrl(value: string): void {
     parsed.username ||
     parsed.password ||
     parsed.hash ||
-    [...parsed.searchParams.keys()].some((key) =>
-      /(?:auth|credential|enc|expires|key|password|policy|secret|signature|token)/i.test(key)
-    ) ||
+    hasDisallowedSiteMediaQuery(parsed) ||
     !host ||
     host === "localhost" ||
     host.endsWith(".localhost") ||
@@ -460,11 +510,134 @@ async function captureSitesSource(page: Page, url: string): Promise<SiteImport> 
       if (state === "navigation-changed") {
         throw new PermanentSiteImportError("Mobbin Sites navigation changed");
       }
+      const previewVideoUrl = await liveMediaUrl(page.locator("main video").first());
       await link.click();
+      await waitForSectionsPage(page, sectionsPath);
+      const graph = await captured;
+      const sectionMediaUrls = await collectLiveSectionMedia(page, graph);
+      return resolveMobbinSitesLiveMedia(graph, { previewVideoUrl, sectionMediaUrls });
     }
-    return await captured;
+    const graph = await captured;
+    const previewLink = page.getByRole("link", { name: "Preview", exact: true });
+    await previewLink.click();
+    const previewVideoUrl = await liveMediaUrl(page.locator("main video").first());
+    await page.getByRole("link", { name: "Sections", exact: true }).click();
+    await waitForSectionsPage(page, sectionsPath);
+    const sectionMediaUrls = await collectLiveSectionMedia(page, graph);
+    return resolveMobbinSitesLiveMedia(graph, { previewVideoUrl, sectionMediaUrls });
   } finally {
     if (timer) clearTimeout(timer);
     page.off("response", onResponse);
   }
+}
+
+async function waitForSectionsPage(page: Page, sectionsPath: string): Promise<void> {
+  await page.waitForURL(
+    (current) => current.origin === "https://mobbin.com" && current.pathname === sectionsPath,
+    { timeout: SOURCE_TIMEOUT_MS },
+  );
+  await page.locator('a[href^="/sites/sections/"]').first().waitFor({
+    state: "attached",
+    timeout: SOURCE_TIMEOUT_MS,
+  });
+}
+
+async function liveMediaUrl(locator: ReturnType<Page["locator"]>): Promise<string> {
+  await locator.waitFor({ state: "attached", timeout: SOURCE_TIMEOUT_MS });
+  const deadline = Date.now() + SOURCE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const value = await locator.evaluate((element) => {
+      const media = element as HTMLImageElement | HTMLVideoElement;
+      return media.currentSrc || media.src || media.getAttribute("src") || "";
+    });
+    if (value.startsWith("https://")) return value;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new PermanentSiteImportError("Mobbin Sites media changed");
+}
+
+async function collectLiveSectionMedia(
+  page: Page,
+  graph: SiteImport,
+): Promise<Record<string, string>> {
+  const expected = new Set(
+    graph.pages.flatMap((sitePage) => sitePage.sections.map((section) => section.sourceId)),
+  );
+  const expectedKinds = new Map(
+    graph.pages.flatMap((sitePage) =>
+      sitePage.sections.map((section) => [section.sourceId, section.mediaKind] as const)),
+  );
+  const found = new Map<string, string>();
+  let stableAtBottom = 0;
+  for (let attempt = 0; attempt < 200 && found.size < expected.size; attempt++) {
+    const batch = await page.$$eval('a[href^="/sites/sections/"]', (anchors) =>
+      anchors.map((anchor) => {
+        const image = anchor.querySelector("img") as HTMLImageElement | null;
+        const video = anchor.querySelector("video") as HTMLVideoElement | null;
+        return {
+          sourceId: anchor.getAttribute("href")?.split("/").filter(Boolean).pop() ?? "",
+          imageUrl: image?.currentSrc || image?.src || image?.getAttribute("src") || "",
+          videoUrl: video?.currentSrc || video?.src || video?.getAttribute("src") || "",
+        };
+      }),
+    );
+    for (const item of batch) {
+      const url = expectedKinds.get(item.sourceId) === "video"
+        ? item.videoUrl
+        : item.imageUrl;
+      if (expected.has(item.sourceId) && url.startsWith("https://")) {
+        found.set(item.sourceId, url);
+      }
+    }
+    if (found.size === expected.size) break;
+    const atBottom = await page.evaluate(() => {
+      const bottom = window.scrollY + window.innerHeight >= document.body.scrollHeight - 2;
+      window.scrollBy(0, Math.round(window.innerHeight * 0.8));
+      return bottom;
+    });
+    stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
+    if (stableAtBottom >= 5) break;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  if (found.size !== expected.size) {
+    throw new PermanentSiteImportError("Mobbin Sites section media changed");
+  }
+  return Object.fromEntries(found);
+}
+
+function mobbinBytescaleImageUrl(value: string): string {
+  const parsed = new URL(value);
+  const prefix = "/storage/v1/object/public/content/";
+  if (
+    parsed.origin !== "https://ujasntkfphywizsdaapi.supabase.co" ||
+    !parsed.pathname.startsWith(prefix) ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new PermanentSiteImportError("Mobbin Sites image origin changed");
+  }
+  return `https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/${parsed.pathname.slice(prefix.length)}`;
+}
+
+function redactEncryptedMediaValues(graph: SiteImport): SiteImport {
+  const redact = (value: string): string => {
+    const parsed = new URL(value);
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (key.toLowerCase() === "enc") parsed.searchParams.set(key, "redacted");
+    }
+    return parsed.toString();
+  };
+  return {
+    ...graph,
+    version: { ...graph.version, previewVideoUrl: redact(graph.version.previewVideoUrl) },
+    pages: graph.pages.map((page) => ({
+      ...page,
+      fullPageImageUrl: redact(page.fullPageImageUrl),
+      sections: page.sections.map((section) => ({
+        ...section,
+        mediaUrl: redact(section.mediaUrl),
+        ...(section.posterUrl ? { posterUrl: redact(section.posterUrl) } : {}),
+      })),
+    })),
+  };
 }

@@ -621,7 +621,7 @@ function finiteNumber(value: unknown): number {
 }
 
 function isoDate(value: unknown): string {
-  const date = new Date(text(value));
+  const date = value instanceof Date ? value : new Date(text(value));
   if (Number.isNaN(date.valueOf())) throw new Error("Invalid Sites database row");
   return date.toISOString();
 }

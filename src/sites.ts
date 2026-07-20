@@ -61,6 +61,20 @@ const SENSITIVE_QUERY_KEY =
 
 const INVALID_SITE_IMPORT = "Invalid Mobbin Sites import";
 
+export function hasDisallowedSiteMediaQuery(parsed: URL): boolean {
+  return [...parsed.searchParams.keys()].some((key) => {
+    if (!SENSITIVE_QUERY_KEY.test(key)) return false;
+    return !(
+      key.toLowerCase() === "enc" &&
+      parsed.origin === "https://bytescale.mobbin.com" &&
+      /^\/FW25bBB\/(?:video|image)\/mobbin\.com\/prod\/file\.(?:mp4|webp)$/.test(
+        parsed.pathname,
+      ) &&
+      Boolean(parsed.searchParams.get(key))
+    );
+  });
+}
+
 export function canonicalMobbinSitesUrl(value: string): MobbinSitesIdentity {
   try {
     const parsed = new URL(value);
@@ -277,7 +291,7 @@ function publicHttpsUrl(value: unknown): string {
     parsed.password ||
     parsed.hash ||
     !isPublicHostname(parsed.hostname) ||
-    [...parsed.searchParams.keys()].some((key) => SENSITIVE_QUERY_KEY.test(key))
+    hasDisallowedSiteMediaQuery(parsed)
   ) {
     throw new Error();
   }

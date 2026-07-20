@@ -59,6 +59,32 @@ test("put sends verified private object metadata and confirms it with head", asy
   assert.equal("ACL" in put.input, false);
 });
 
+test("put accepts MP4 objects from the shared object-store contract", async () => {
+  const videoBody = Buffer.from([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70]);
+  const video: ObjectMetadata = {
+    key: `sites/site/versions/version/preview/preview/${createHash("sha256").update(videoBody).digest("hex")}.mp4`,
+    sha256: createHash("sha256").update(videoBody).digest("hex"),
+    byteSize: videoBody.byteLength,
+    contentType: "video/mp4",
+    accessClass: "protected",
+  };
+  let heads = 0;
+  const store = new S3ObjectStore({
+    bucket: "private-media",
+    prefix: "objects",
+    send: async (command) =>
+      command instanceof HeadObjectCommand
+        ? (heads++ === 0 ? undefined : headOutput(video))
+        : {},
+    sign: async () => "unused",
+  });
+
+  assert.deepEqual(await store.put({ ...video, body: videoBody }), {
+    created: true,
+    metadata: video,
+  });
+});
+
 test("put is idempotent only when existing head metadata matches exactly", async () => {
   const commands: unknown[] = [];
   const store = new S3ObjectStore({

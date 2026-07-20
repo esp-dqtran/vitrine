@@ -104,3 +104,28 @@ test("rejects sensitive media URLs and invalid OCR geometry", () => {
   ];
   assert.throws(() => parseSiteImport(invalidOcr), /invalid Mobbin Sites import/i);
 });
+
+test("accepts Mobbin's encrypted Bytescale media URLs only on the exact trusted host", () => {
+  for (const pathname of [
+    "/FW25bBB/video/mobbin.com/prod/file.mp4",
+    "/FW25bBB/image/mobbin.com/prod/file.mp4",
+    "/FW25bBB/image/mobbin.com/prod/file.webp",
+  ]) {
+    const trusted = structuredClone(validImport);
+    trusted.version.previewVideoUrl =
+      `https://bytescale.mobbin.com${pathname}?enc=fixture`;
+    assert.equal(parseSiteImport(trusted).version.previewVideoUrl, trusted.version.previewVideoUrl);
+  }
+
+  for (const hostname of ["cdn.fixture", "bytescale.mobbin.com.evil.test"]) {
+    const untrusted = structuredClone(validImport);
+    untrusted.version.previewVideoUrl =
+      `https://${hostname}/FW25bBB/video/mobbin.com/prod/file.mp4?enc=fixture`;
+    assert.throws(() => parseSiteImport(untrusted), /Invalid Mobbin Sites import/);
+  }
+
+  const nonstandardPort = structuredClone(validImport);
+  nonstandardPort.version.previewVideoUrl =
+    "https://bytescale.mobbin.com:444/FW25bBB/video/mobbin.com/prod/file.mp4?enc=fixture";
+  assert.throws(() => parseSiteImport(nonstandardPort), /Invalid Mobbin Sites import/);
+});
