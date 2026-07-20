@@ -189,7 +189,15 @@ export function App() {
     return frame(<SitesPage isAdmin={isAdmin} />);
   }
   if (route.name === 'site-version') {
-    return frame(<SiteVersionPage siteId={route.siteId} versionId={route.versionId} isAdmin={isAdmin} />);
+    return frame(
+      <SiteVersionPage
+        siteId={route.siteId}
+        versionId={route.versionId}
+        isAdmin={isAdmin}
+        initialSection={route.section}
+        onSectionChange={(section) => navigate({ name: 'site-version', siteId: route.siteId, versionId: route.versionId, section })}
+      />,
+    );
   }
 
   if (researchProjectsEnabled && route.name === 'projects') {

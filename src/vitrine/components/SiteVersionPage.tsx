@@ -65,7 +65,16 @@ function SelectedPage({ page }: { page: SitePage }) {
   );
 }
 
-export function SiteVersionPage({ siteId, versionId, isAdmin }: { siteId: number; versionId: number; isAdmin: boolean }) {
+interface SiteVersionPageProps {
+  siteId: number;
+  versionId: number;
+  isAdmin: boolean;
+  initialSection?: string;
+  onSectionChange?: (section: string) => void;
+}
+
+export function SiteVersionPage(props: SiteVersionPageProps) {
+  const { siteId, versionId, isAdmin } = props;
   const [detail, setDetail] = useState<SiteVersionDetail | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);

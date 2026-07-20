@@ -7,7 +7,7 @@ export type Route =
   | { name: 'apps' }
   | { name: 'app'; appId: string; section?: string }
   | { name: 'sites' }
-  | { name: 'site-version'; siteId: number; versionId: number }
+  | { name: 'site-version'; siteId: number; versionId: number; section?: string }
   | { name: 'projects' }
   | { name: 'project'; projectId: number }
   | { name: 'admin' };
@@ -23,12 +23,17 @@ export function parseRoutePath(pathname: string): Route {
   if (path === '/signin') return { name: 'signin' };
   if (path === '/apps') return { name: 'apps' };
   if (path === '/sites') return { name: 'sites' };
-  const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)$/);
+  const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+))?$/);
   if (siteMatch) {
     const siteId = Number(siteMatch[1]);
     const versionId = Number(siteMatch[2]);
     return Number.isSafeInteger(siteId) && Number.isSafeInteger(versionId)
-      ? { name: 'site-version', siteId, versionId }
+      ? {
+          name: 'site-version',
+          siteId,
+          versionId,
+          ...(siteMatch[3] ? { section: decodeURIComponent(siteMatch[3]) } : {}),
+        }
       : { name: 'landing' };
   }
   if (path === '/projects') return { name: 'projects' };
@@ -52,7 +57,7 @@ export function routeToPath(route: Route): string {
     case 'signin': return '/signin';
     case 'apps': return '/apps';
     case 'sites': return '/sites';
-    case 'site-version': return `/sites/${route.siteId}/versions/${route.versionId}`;
+    case 'site-version': return `/sites/${route.siteId}/versions/${route.versionId}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;
     case 'projects': return '/projects';
     case 'project': return `/projects/${route.projectId}`;
     case 'admin': return '/admin';
