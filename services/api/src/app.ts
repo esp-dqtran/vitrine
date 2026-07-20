@@ -129,8 +129,12 @@ import { createResearchSynthesisProvider } from "../../../src/researchSynthesisP
 import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
+import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
+import { publishSitesJob } from "../../../src/sitesQueue.ts";
+import { createSitesStore } from "../../../src/sitesStore.ts";
+import { mountSitesRoutes } from "./sites.ts";
 
-const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app"] as const;
+const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site"] as const;
 export const DEFAULT_API_PORT = 3010;
 const disabledBilling: BillingService = {
   createCheckout: async () => { throw new Error("Billing is not configured"); },
@@ -139,6 +143,7 @@ const disabledBilling: BillingService = {
 };
 const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
 const apiAutonomousStore = createAutonomousStore();
+const apiSitesStore = createSitesStore();
 
 type RepairProvider = ResearchProvider;
 interface CrawlRepairRequest {
@@ -282,6 +287,7 @@ const defaults = {
   failExport,
   authorizedExportObject,
   publishJob,
+  publishSitesJob,
   readProgress,
   subscribeProgress,
   requestCancel,
@@ -351,6 +357,7 @@ const defaults = {
   organizationStore: createOrganizationStore(),
   organizationsEnabled: process.env.TEAMS_ENABLED === "true",
   listResearchCandidates: undefined as ((userId: number) => Promise<ResearchSuggestionCandidate[]>) | undefined,
+  sitesStore: apiSitesStore,
 };
 type ApiDeps = typeof defaults;
 
@@ -612,6 +619,17 @@ function safeDownloadFilename(filename: string): string {
   return filename.replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+/, "").slice(0, 180) || "export";
 }
 
+function safeSiteJobError(error: unknown): string {
+  const generic = "Sites queue unavailable";
+  if (!(error instanceof Error)) return generic;
+  const sanitized = error.message
+    .replace(/https?:\/\/\S+/gi, "[redacted-url]")
+    .replace(/[\0-\x08\x0b\x0c\x0e-\x1f]/g, " ")
+    .slice(0, 500)
+    .trim();
+  return sanitized || generic;
+}
+
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const deps = {
     ...defaults,
@@ -802,6 +820,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  mountSitesRoutes(app, {
+    store: deps.sitesStore,
+    sendObject: async (metadata, res) => {
+      if (!deps.objectStore) throw new Error("Object storage is unavailable");
+      await sendStoredObject(deps.objectStore, metadata, res);
+    },
+  });
 
   const listResearchCandidates = deps.listResearchCandidates ?? (async () => {
     const images = await deps.publishedImages();
@@ -2184,6 +2210,32 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: `type must be one of: ${JOB_TYPES.join(", ")}` });
       return;
     }
+    if (type === "import-site") {
+      let canonicalUrl: string;
+      try {
+        canonicalUrl = canonicalMobbinSitesUrl(url).canonicalUrl;
+      } catch {
+        res.status(400).json({ error: "import-site requires an exact Mobbin Sites preview URL" });
+        return;
+      }
+      const existing = await deps.sitesStore.readyVersionByCanonicalUrl(canonicalUrl);
+      if (existing) {
+        res.status(200).json({ existing: true, ...existing });
+        return;
+      }
+      if (!await requireStorageReady(res)) return;
+      const id = await deps.createJob(type, { url: canonicalUrl });
+      try {
+        await deps.publishSitesJob({ type, url: canonicalUrl, jobId: id });
+      } catch (error) {
+        const message = safeSiteJobError(error);
+        await deps.setJobStatus(id, "error", message);
+        res.status(503).json({ id, error: message });
+        return;
+      }
+      res.status(201).json({ id });
+      return;
+    }
     if (type === "import-app" && (!isAppSlug(name) || !validMobbinScreensUrl(url) || !platform)) {
       res.status(400).json({
         error: "import-app requires a lowercase app slug, an HTTPS Mobbin screens URL, and a platform",
@@ -2302,7 +2354,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     if (job.status === "queued" || job.status === "running") {
-      if (job.status === "running") deps.requestCancel();
+      if (job.status === "running" && job.type !== "import-site") deps.requestCancel();
       await deps.setJobStatus(id, "cancelled", "Cancelled by user");
     }
     res.json(await deps.getJob(id));

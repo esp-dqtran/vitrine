@@ -8,6 +8,8 @@ import type { Server } from "node:http";
 import { createApiApp, createCrawlRepairRequester } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
+import type { JobRow, JobStatus } from "../../../src/db.ts";
+import type { SitesJob } from "../../../src/sitesQueue.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -44,6 +46,20 @@ const catalogImages = [
     description: "Toolbar",
   },
 ];
+
+function jobRecord(overrides: Partial<JobRow> = {}): JobRow {
+  return {
+    id: 1,
+    parent_id: null,
+    type: "import-app",
+    payload: {},
+    status: "queued",
+    message: null,
+    created_at: "2026-07-20T00:00:00.000Z",
+    updated_at: null,
+    ...overrides,
+  };
+}
 
 function crawlPlan(revision = 1, reviewed = false) {
   return {
@@ -817,6 +833,130 @@ test("marks a created job error when RabbitMQ publication fails", async (t) => {
   });
   assert.equal(response.status, 503);
   assert.deepEqual(statuses, ["error"]);
+});
+
+test("routes an exact Mobbin Sites URL only to the isolated Sites publisher", async (t) => {
+  const calls: unknown[] = [];
+  const approvedUrl = "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview";
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    sitesStore: {
+      readyVersionByCanonicalUrl: async () => undefined,
+    },
+    createJob: async (type: string, payload: Record<string, unknown>) => {
+      calls.push(["create", type, payload]);
+      return 42;
+    },
+    publishJob: async () => { calls.push(["apps-publisher"]); },
+    publishSitesJob: async (job: SitesJob) => { calls.push(["sites-publisher", job]); },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ type: "import-site", url: approvedUrl }),
+  });
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), { id: 42 });
+  assert.deepEqual(calls, [
+    ["create", "import-site", { url: approvedUrl }],
+    ["sites-publisher", { type: "import-site", url: approvedUrl, jobId: 42 }],
+  ]);
+});
+
+test("rejects an invalid Mobbin Sites URL before creating a job", async (t) => {
+  let created = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: async () => { created = true; return 1; },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ type: "import-site", url: "https://mobbin.com/sites/not-approved" }),
+  });
+  assert.equal(response.status, 400);
+  assert.equal(created, false);
+});
+
+test("returns an existing ready Site version without creating or publishing a job", async (t) => {
+  let touchedJobs = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    sitesStore: {
+      readyVersionByCanonicalUrl: async () => ({ siteId: 7, versionId: 9 }),
+    },
+    createJob: async () => { touchedJobs = true; return 1; },
+    publishSitesJob: async () => { touchedJobs = true; },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({
+      type: "import-site",
+      url: "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview",
+    }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { existing: true, siteId: 7, versionId: 9 });
+  assert.equal(touchedJobs, false);
+});
+
+test("sanitizes Sites broker errors and records the same safe message", async (t) => {
+  const statuses: unknown[] = [];
+  const secretUrl = "https://broker.example/path?token=secret";
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    sitesStore: { readyVersionByCanonicalUrl: async () => undefined },
+    createJob: async () => 51,
+    publishSitesJob: async () => { throw new Error(`failed at ${secretUrl}`); },
+    setJobStatus: async (id: number, status: JobStatus, message?: string) => {
+      statuses.push([id, status, message]);
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({
+      type: "import-site",
+      url: "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview",
+    }),
+  });
+  assert.equal(response.status, 503);
+  const body = await response.json();
+  assert.equal(body.error, "failed at [redacted-url]");
+  assert.deepEqual(statuses, [[51, "error", "failed at [redacted-url]"]]);
+  assert.doesNotMatch(JSON.stringify(body), /broker\.example|secret/);
+});
+
+test("cancels Sites and Apps jobs without crossing their cancellation boundary", async (t) => {
+  let appCancellationSignals = 0;
+  const jobs = new Map<number, ReturnType<typeof jobRecord>>([
+    [1, jobRecord({ id: 1, type: "import-site", status: "running" })],
+    [2, jobRecord({ id: 2, type: "import-app", status: "running" })],
+  ]);
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    getJob: async (id) => jobs.get(id),
+    setJobStatus: async (id, status, message) => {
+      jobs.set(id, { ...jobs.get(id)!, status, message: message ?? null });
+    },
+    requestCancel: () => { appCancellationSignals++; },
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/jobs/1/cancel`, { method: "POST", headers: adminCookie })).status, 200);
+  assert.equal(appCancellationSignals, 0);
+  assert.equal((await fetch(`${base}/jobs/2/cancel`, { method: "POST", headers: adminCookie })).status, 200);
+  assert.equal(appCancellationSignals, 1);
 });
 
 test("serves a hydrated structured design system", async (t) => {

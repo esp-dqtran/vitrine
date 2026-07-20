@@ -66,6 +66,49 @@ test("loads only ready versions", async () => {
   assert.match(capturedSql[2], /sv\.status = 'ready'/);
 });
 
+test("returns only authenticated API media paths in ready Site views", async () => {
+  const fakeQuery: DatabaseQuery = async (sql) => {
+    if (/SELECT s\.id AS site_id, sv\.id AS version_id, s\.name/.test(sql)) {
+      return result([{
+        site_id: 1,
+        version_id: 2,
+        name: "V7",
+        slug: graph.site.slug,
+        source_url: graph.site.sourceUrl,
+        canonical_url: identity.canonicalUrl,
+        label: graph.version.label,
+        is_latest: true,
+      }]);
+    }
+    if (/SELECT sp\.id, sp\.source_page_id/.test(sql)) {
+      return result([{ id: 3, source_page_id: "page-1", title: "Home", page_url: graph.pages[0].url, position: 0 }]);
+    }
+    if (/SELECT ss\.id, ss\.page_id/.test(sql)) {
+      return result([{
+        id: 4,
+        page_id: 3,
+        source_section_id: "section-1",
+        position: 0,
+        media_kind: "video",
+        poster_object_key: "sites/poster.webp",
+        crop_top: null,
+        crop_bottom: null,
+        video_start_seconds: 1,
+        video_end_seconds: 2,
+        ocr_boxes: [],
+        source_metadata: {},
+      }]);
+    }
+    return result();
+  };
+
+  const view = await createSitesStore(fakeQuery).readyVersionDetail(1, 2);
+  assert.equal(view?.previewUrl, "/api/sites/1/versions/2/media/preview");
+  assert.equal(view?.pages[0].fullPageImageUrl, "/api/sites/1/versions/2/pages/3/media");
+  assert.equal(view?.pages[0].sections[0].mediaUrl, "/api/sites/1/versions/2/sections/4/media");
+  assert.equal(view?.pages[0].sections[0].posterUrl, "/api/sites/1/versions/2/sections/4/poster");
+});
+
 test("media resolution is scoped to one ready Site version", async () => {
   const capturedSql: string[] = [];
   const fakeQuery: DatabaseQuery = async (sql) => {

@@ -562,8 +562,11 @@ function mediaPath(
   kind: "preview" | "page" | "section" | "poster",
   recordId?: number,
 ): string {
-  const suffix = recordId === undefined ? kind : `${kind}/${recordId}`;
-  return `/api/sites/${siteId}/versions/${versionId}/media/${suffix}`;
+  const base = `/api/sites/${siteId}/versions/${versionId}`;
+  if (kind === "preview") return `${base}/media/preview`;
+  if (kind === "page") return `${base}/pages/${recordId}/media`;
+  if (kind === "section") return `${base}/sections/${recordId}/media`;
+  return `${base}/sections/${recordId}/poster`;
 }
 
 function metadataFrom(row: Record<string, unknown> | undefined): ObjectMetadata | undefined {
