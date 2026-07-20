@@ -55,6 +55,14 @@ export interface MobbinSitesBrowserPorts {
   close(): Promise<void>;
 }
 
+export function classifyMobbinSitesNavigation(input: {
+  loginLinks: number;
+  sectionLinks: number;
+}): "authentication" | "navigation-changed" | "ready" {
+  if (input.loginLinks > 0) return "authentication";
+  return input.sectionLinks === 1 ? "ready" : "navigation-changed";
+}
+
 export async function crawlMobbinSite(
   url: string,
   deps: SitesCrawlerDependencies,
@@ -442,7 +450,14 @@ async function captureSitesSource(page: Page, url: string): Promise<SiteImport> 
     }
     if (!settled) {
       const link = page.getByRole("link", { name: "Sections", exact: true });
-      if (await link.count() !== 1) {
+      const state = classifyMobbinSitesNavigation({
+        loginLinks: await page.locator('a[href="/login"]').count(),
+        sectionLinks: await link.count(),
+      });
+      if (state === "authentication") {
+        throw new PermanentSiteImportError("Mobbin authentication required");
+      }
+      if (state === "navigation-changed") {
         throw new PermanentSiteImportError("Mobbin Sites navigation changed");
       }
       await link.click();

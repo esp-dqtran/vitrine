@@ -5,11 +5,18 @@ import test from "node:test";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 import { decodeMobbinSitesSource } from "./sitesSource.ts";
 import {
+  classifyMobbinSitesNavigation,
   crawlMobbinSite,
   PermanentSiteImportError,
   SiteImportCancelledError,
   type SitesCrawlerDependencies,
 } from "./sitesCrawler.ts";
+
+test("classifies Mobbin's logged-out shell as authentication, not navigation drift", () => {
+  assert.equal(classifyMobbinSitesNavigation({ loginLinks: 1, sectionLinks: 0 }), "authentication");
+  assert.equal(classifyMobbinSitesNavigation({ loginLinks: 0, sectionLinks: 0 }), "navigation-changed");
+  assert.equal(classifyMobbinSitesNavigation({ loginLinks: 0, sectionLinks: 1 }), "ready");
+});
 import type { CompletedSiteImport } from "./sitesStore.ts";
 
 const approved =
