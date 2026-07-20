@@ -41,6 +41,12 @@ export interface SiteSummary {
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  previews: Array<{
+    id: number;
+    title: string;
+    position: number;
+    url: string;
+  }>;
   updatedAt: string;
 }
 
@@ -154,7 +160,21 @@ export function createSitesStore(
                 sv.label, sv.is_latest, sv.updated_at,
                 (SELECT count(*)::integer FROM site_pages sp WHERE sp.version_id = sv.id) AS page_count,
                 (SELECT count(*)::integer FROM site_sections ss
-                 JOIN site_pages sp ON sp.id = ss.page_id WHERE sp.version_id = sv.id) AS section_count
+                 JOIN site_pages sp ON sp.id = ss.page_id WHERE sp.version_id = sv.id) AS section_count,
+                COALESCE((
+                  SELECT jsonb_agg(jsonb_build_object(
+                    'id', preview.id,
+                    'title', preview.title,
+                    'position', preview.position
+                  ) ORDER BY preview.position)
+                  FROM (
+                    SELECT sp.id, sp.title, sp.position
+                    FROM site_pages sp
+                    WHERE sp.version_id = sv.id
+                    ORDER BY sp.position
+                    LIMIT 5
+                  ) preview
+                ), '[]'::jsonb) AS page_previews
          FROM sites s
          JOIN site_versions sv ON sv.site_id = s.id
          WHERE sv.status = 'ready'
@@ -163,6 +183,16 @@ export function createSitesStore(
       return result.rows.map((row) => {
         const siteId = positiveId(row.site_id);
         const versionId = positiveId(row.version_id);
+        const previews = jsonArray(row.page_previews ?? []).map((value) => {
+          const page = jsonObject(value);
+          const id = positiveId(page.id);
+          return {
+            id,
+            title: text(page.title),
+            position: nonNegativeInteger(page.position),
+            url: mediaPath(siteId, versionId, "page", id),
+          };
+        });
         return {
           siteId,
           versionId,
@@ -174,6 +204,7 @@ export function createSitesStore(
           pageCount: nonNegativeInteger(row.page_count),
           sectionCount: nonNegativeInteger(row.section_count),
           previewUrl: mediaPath(siteId, versionId, "preview"),
+          previews,
           updatedAt: isoDate(row.updated_at),
         };
       });

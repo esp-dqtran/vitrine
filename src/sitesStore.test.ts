@@ -86,6 +86,34 @@ test("maps PostgreSQL timestamptz Date values in ready Site summaries", async ()
   assert.equal(sites[0].updatedAt, updatedAt.toISOString());
 });
 
+test("returns the first five ordered page previews in ready Site summaries", async () => {
+  const previews = Array.from({ length: 6 }, (_, index) => ({
+    id: index + 10,
+    title: `Page ${index + 1}`,
+    position: index,
+  }));
+  const store = createSitesStore(async () => result([{
+    site_id: 1,
+    version_id: 2,
+    name: "V7",
+    slug: graph.site.slug,
+    source_url: graph.site.sourceUrl,
+    label: graph.version.label,
+    is_latest: true,
+    updated_at: new Date("2026-07-20T00:00:00.000Z"),
+    page_count: 6,
+    section_count: 12,
+    page_previews: previews.slice(0, 5),
+  }]));
+
+  const [site] = await store.listReadySites();
+
+  assert.deepEqual(site.previews, previews.slice(0, 5).map((page) => ({
+    ...page,
+    url: `/api/sites/1/versions/2/pages/${page.id}/media`,
+  })));
+});
+
 test("returns only authenticated API media paths in ready Site views", async () => {
   const fakeQuery: DatabaseQuery = async (sql) => {
     if (/SELECT s\.id AS site_id, sv\.id AS version_id, s\.name/.test(sql)) {

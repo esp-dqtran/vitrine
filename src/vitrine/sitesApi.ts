@@ -60,7 +60,18 @@ function parseSummary(value: unknown): SiteSummary {
   const pageCount = nonNegativeInteger(value.pageCount);
   const sectionCount = nonNegativeInteger(value.sectionCount);
   const updatedAt = requiredText(value.updatedAt);
-  if (Number.isNaN(Date.parse(updatedAt))) throw new Error('Sites returned an invalid response');
+  if (Number.isNaN(Date.parse(updatedAt)) || !Array.isArray(value.previews) || value.previews.length > 5) {
+    throw new Error('Sites returned an invalid response');
+  }
+  const previews = value.previews.map((preview) => {
+    if (!isRecord(preview) || !positiveId(preview.id)) throw new Error('Sites returned an invalid response');
+    return {
+      id: preview.id,
+      title: requiredText(preview.title),
+      position: nonNegativeInteger(preview.position),
+      url: apiPath(preview.url),
+    };
+  }).sort((a, b) => a.position - b.position);
   return {
     id: value.siteId,
     versionId: value.versionId,
@@ -72,6 +83,7 @@ function parseSummary(value: unknown): SiteSummary {
     pageCount,
     sectionCount,
     previewUrl: apiPath(value.previewUrl),
+    previews,
     updatedAt,
   };
 }

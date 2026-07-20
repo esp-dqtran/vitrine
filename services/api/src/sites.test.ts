@@ -41,6 +41,10 @@ function fakeStore(overrides: Partial<SitesStore> = {}): SitesStore {
       pageCount: 16,
       sectionCount: 46,
       previewUrl: detail.previewUrl,
+      previews: [
+        { id: 10, title: "Home", position: 0, url: "/api/sites/1/versions/2/pages/10/media" },
+        { id: 11, title: "Pricing", position: 1, url: "/api/sites/1/versions/2/pages/11/media" },
+      ],
       updatedAt: "2026-07-20T00:00:00.000Z",
     }],
     readyVersionDetail: async () => detail,
@@ -80,7 +84,12 @@ test("serves only ready Site summaries and version details", async (t) => {
 
   const sites = await fetch(`${base}/sites`);
   assert.equal(sites.status, 200);
-  assert.equal((await sites.json())[0].pageCount, 16);
+  const [summary] = await sites.json();
+  assert.equal(summary.pageCount, 16);
+  assert.deepEqual(summary.previews, [
+    { id: 10, title: "Home", position: 0, url: "/api/sites/1/versions/2/pages/10/media" },
+    { id: 11, title: "Pricing", position: 1, url: "/api/sites/1/versions/2/pages/11/media" },
+  ]);
 
   const version = await fetch(`${base}/sites/1/versions/2`);
   assert.equal(version.status, 200);

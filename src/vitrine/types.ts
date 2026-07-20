@@ -43,6 +43,13 @@ export interface App extends AppSummary {
   screens: Screen[];
 }
 
+export interface SitePagePreview {
+  id: number;
+  title: string;
+  position: number;
+  url: string;
+}
+
 export interface SiteSummary {
   id: number;
   versionId: number;
@@ -54,6 +61,7 @@ export interface SiteSummary {
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  previews: SitePagePreview[];
   updatedAt: string;
 }
 

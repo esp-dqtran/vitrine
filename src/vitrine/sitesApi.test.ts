@@ -45,6 +45,10 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
       label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
       previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
+      previews: [
+        { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
+        { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
+      ],
     }]);
     return Response.json({
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
@@ -56,6 +60,10 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
   const sites = await listSites();
   const detail = await getSiteVersion(1, 2);
   assert.equal(sites[0].id, 1);
+  assert.deepEqual(sites[0].previews, [
+    { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
+    { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
+  ]);
   assert.deepEqual(detail.site, { id: 1, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/' });
   assert.deepEqual(urls, ['/api/sites', '/api/sites/1/versions/2']);
   assert.ok(urls.every((url) => url !== '/api/jobs'));
