@@ -287,6 +287,24 @@ test("research migration defines owner-scoped ordered evidence", async () => {
   assert.match(sql, /private_object_key TEXT REFERENCES stored_objects\(object_key\)/);
 });
 
+test("Sites migration defines ready-only graph storage backed by objects", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0011_sites.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of ["sites", "site_versions", "site_pages", "site_sections"]) {
+    assert.match(sql, new RegExp(`CREATE TABLE ${table}\\b`));
+  }
+  assert.match(sql, /status IN \('importing', 'ready', 'failed'\)/);
+  assert.match(sql, /media_kind IN \('image', 'video'\)/);
+  assert.match(sql, /stored_objects_content_type_check[\s\S]+'video\/mp4'/);
+  assert.match(sql, /REFERENCES stored_objects\(object_key\) ON DELETE RESTRICT/);
+  assert.match(sql, /UNIQUE \(site_id, source_version_id\)/);
+  assert.match(sql, /UNIQUE \(version_id, position\)/);
+  assert.match(sql, /UNIQUE \(page_id, position\)/);
+  assert.match(sql, /WHERE status = 'ready'/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {

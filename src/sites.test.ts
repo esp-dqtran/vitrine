@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canonicalMobbinSitesUrl, parseSiteImport } from "./sites.ts";
+import {
+  canonicalMobbinSitesUrl,
+  parseSiteImport,
+  type SiteImport,
+} from "./sites.ts";
 
 const approved =
   "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview";
 
-const validImport = {
+const validImport: SiteImport = {
   site: {
     sourceId: "site-1",
     name: "V7",
@@ -84,7 +88,7 @@ test("rejects duplicate positions and media-field drift", () => {
     mediaUrl: "https://cdn.fixture/hero.mp4",
     videoStartSeconds: 0,
     videoEndSeconds: 2,
-  } as never;
+  };
   assert.throws(() => parseSiteImport(videoWithCrop), /invalid Mobbin Sites import/i);
 });
 

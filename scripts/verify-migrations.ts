@@ -64,6 +64,13 @@ const RESEARCH_PROJECT_TABLES = [
   "research_projects",
 ] as const;
 
+const SITES_TABLES = [
+  "site_pages",
+  "site_sections",
+  "site_versions",
+  "sites",
+] as const;
+
 const ADDED_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
   app_flows: ["platform"],
   app_versions: ["platform"],
@@ -245,6 +252,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...OBJECT_STORAGE_TABLES,
       ...AUTONOMOUS_CRAWLER_TABLES,
       ...RESEARCH_PROJECT_TABLES,
+      ...SITES_TABLES,
       "schema_migrations",
     ].sort();
     const tables = await publicTables(pool);
@@ -280,6 +288,12 @@ async function verifyUpgradeDatabase(databaseUrlValue: string): Promise<Migratio
     assert.deepEqual(after.counts, before.counts, "upgrade changed protected row counts");
     assert.deepEqual(after.hashes, before.hashes, "upgrade changed protected rows or sequences");
     for (const table of OBJECT_STORAGE_TABLES) {
+      const result = await pool.query<{ count: number }>(
+        `SELECT count(*)::integer AS count FROM ${quotedIdentifier(table)}`,
+      );
+      assert.equal(result.rows[0].count, 0, `${table} must start empty`);
+    }
+    for (const table of SITES_TABLES) {
       const result = await pool.query<{ count: number }>(
         `SELECT count(*)::integer AS count FROM ${quotedIdentifier(table)}`,
       );
