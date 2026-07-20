@@ -140,6 +140,28 @@ services:
         condition: service_completed_successfully
     restart: on-failure
 
+  sites-import-worker:
+    build:
+      context: .
+      dockerfile: services/sites-import-worker/Dockerfile
+    environment:
+      <<: *object-store-env
+      RABBITMQ_URL: amqp://rabbitmq
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      HEADLESS: "true"
+      MOBBIN_SITES_PROFILE_DIR: /app/browser-profile
+      MOBBIN_SITES_STORAGE_STATE_PATH: /app/secrets/mobbin-storage-state.json
+    volumes:
+      - sites-import-worker-profile:/app/browser-profile
+      - ./data/mobbin-storage-state.json:/app/secrets/mobbin-storage-state.json:ro
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
+
   storage-migrate:
     profiles: ["storage-tools"]
     build:
@@ -176,4 +198,5 @@ volumes:
   postgres-data:
   minio-data:
   import-worker-profile:
+  sites-import-worker-profile:
   import-worker-downloads:
