@@ -53,10 +53,14 @@ test('renders the import dialog with a platform selector', () => {
 });
 
 test('app cards expose a keyboard action separately from carousel controls', () => {
-  const html = renderToStaticMarkup(<AppCard app={apps[0]} onOpen={() => undefined} />);
+  const html = renderToStaticMarkup(<AppCard app={apps[0]} onOpen={() => undefined} status="In progress" progressLabel="1/2 analyzed" />);
   assert.match(html, /aria-label="Open DoneApp"/);
   assert.match(html, /aria-label="Previous screen"/);
   assert.match(html, /aria-label="Next screen"/);
+  assert.match(html, /View screens/);
+  assert.match(html, /DoneApp/);
+  assert.match(html, /In progress/);
+  assert.match(html, /1\/2 analyzed/);
 });
 
 test('loading and unavailable cards keep explicit accessible labels', () => {
