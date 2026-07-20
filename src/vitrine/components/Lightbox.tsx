@@ -8,6 +8,8 @@ interface LightboxItem {
   url?: string;
   /** Optional stable key for a neutral unavailable-preview state. */
   seed?: string;
+  kind?: 'image' | 'video';
+  posterUrl?: string;
   type: string;
   caption: string;
   platform?: string;
@@ -56,7 +58,9 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
           animation: 'vtScaleIn .3s cubic-bezier(.16,1,.3,1) both',
         }}
       >
-        <PlaceholderImage src={item.url} seed={item.seed} style={{ objectFit: 'contain' }} />
+        {item.kind === 'video'
+          ? <video src={item.url} poster={item.posterUrl} controls autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          : <PlaceholderImage src={item.url} seed={item.seed} style={{ objectFit: 'contain' }} />}
         {total > 1 && <ArrowButton direction="left" visible onClick={() => onNavigate(index - 1)} />}
         {total > 1 && <ArrowButton direction="right" visible onClick={() => onNavigate(index + 1)} />}
       </div>

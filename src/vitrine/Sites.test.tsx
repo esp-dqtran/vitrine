@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SiteImportDialog } from './components/SiteImportDialog.tsx';
 import { SitesPageView } from './components/SitesPage.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
+import { Lightbox } from './components/Lightbox.tsx';
+import { MediaGridCard } from './components/MediaGridCard.tsx';
 import type { SiteSummary, SiteVersionDetail } from './types.ts';
 
 const site: SiteSummary = {
@@ -51,6 +54,37 @@ test('keeps the Site import dialog URL-only', () => {
   const html = renderToStaticMarkup(<SiteImportDialog isOpen onClose={() => undefined} onExisting={() => undefined} />);
   assert.match(html, /Mobbin Sites URL/);
   assert.doesNotMatch(html, /App name|Platform/);
+});
+
+test('renders images and native videos through the shared media primitives', () => {
+  const image = renderToStaticMarkup(<MediaGridCard label="Open Home" kind="image" url="/home.png" badges={['Home']} onOpen={() => undefined} />);
+  const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" badges={['Home', 'Video']} onOpen={() => undefined} />);
+  assert.match(image, /home\.png/);
+  assert.match(video, /<video/);
+  assert.match(video, /controls=""/);
+  assert.match(video, /poster="\/hero\.webp"/);
+});
+
+test('contains image and video failures inside one media card', () => {
+  const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
+  assert.match(source, /onError/);
+  assert.match(source, /mediaFailed/);
+  assert.match(source, /Preview unavailable/);
+});
+
+test('renders native video in the shared lightbox', () => {
+  const html = renderToStaticMarkup(
+    <Lightbox
+      item={{ kind: 'video', url: '/hero.mp4', posterUrl: '/hero.webp', type: 'Video', caption: 'Home hero' }}
+      index={0}
+      total={1}
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />,
+  );
+  assert.match(html, /<video/);
+  assert.match(html, /controls=""/);
+  assert.match(html, /Home hero — 1 of 1/);
 });
 
 test('renders ordered image and native video sections without dumping OCR text', () => {
