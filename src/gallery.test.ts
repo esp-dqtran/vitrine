@@ -115,6 +115,30 @@ test("builds lightweight admin cards from database summaries", () => {
   assert.deepEqual(app.platforms, ["web", "ios", "android"]);
 });
 
+test("uses captured website identity in the Apps gallery", () => {
+  const [app] = buildAdminGalleryApps([{
+    id: 71,
+    app: "example-com",
+    platform: "web",
+    image_url: "capture:0123456789abcdef",
+    description: null,
+    category: "Developer tools",
+    icon_url: "https://example.com/favicon.ico",
+    display_name: "Example",
+    website_url: "https://example.com",
+    accent_color: "#123456",
+    total_screens: 1,
+    analyzed_screens: 0,
+    last_captured_at: "2026-07-21T01:00:00.000Z",
+    available_platforms: ["web"],
+  }]);
+
+  assert.equal(app.app, "Example");
+  assert.equal(app.accent, "#123456");
+  assert.equal(app.websiteUrl, "https://example.com");
+  assert.equal(app.iconUrl, "https://example.com/favicon.ico");
+});
+
 test("builds paginated public previews without source image fields", () => {
   const images = Array.from({ length: 30 }, (_, appIndex) =>
     Array.from({ length: 4 }, (_, imageIndex) => ({

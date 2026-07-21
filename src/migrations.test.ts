@@ -305,6 +305,27 @@ test("Sites migration defines ready-only graph storage backed by objects", async
   assert.match(sql, /WHERE status = 'ready'/);
 });
 
+test("public-page migration defines App-backed immutable page captures", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0012_public_page_captures.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of ["web_pages", "web_page_versions", "web_page_sections"]) {
+    assert.match(sql, new RegExp(`CREATE TABLE ${table}\\b`));
+  }
+  for (const column of ["source_domain", "display_name", "description", "website_url", "accent_color"]) {
+    assert.match(sql, new RegExp(`apps ADD COLUMN IF NOT EXISTS ${column}\\b`));
+  }
+  assert.match(sql, /apps_source_domain_unique/);
+  assert.match(sql, /status IN \('importing', 'ready', 'failed'\)/);
+  assert.match(sql, /UNIQUE \(page_id, content_hash\)/);
+  assert.match(sql, /REFERENCES stored_objects\(object_key\) ON DELETE RESTRICT/);
+  assert.match(sql, /REFERENCES images\(id\) ON DELETE RESTRICT/);
+  assert.match(sql, /UNIQUE \(version_id, position\)/);
+  assert.match(sql, /WHERE status = 'ready'/);
+  assert.match(sql, /'video\/webm'/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {

@@ -10,6 +10,7 @@ import {
   failureObjectKey,
   imageObjectKey,
   LocalObjectStore,
+  publicPageObjectKey,
   researchUploadObjectKey,
   siteObjectKey,
   type ObjectMetadata,
@@ -70,6 +71,26 @@ test("builds isolated Sites object keys", () => {
   );
 });
 
+test("builds isolated public-page object keys", () => {
+  const captureHash = "a".repeat(64);
+  const digest = "b".repeat(64);
+  const key = publicPageObjectKey(
+    "example.com",
+    captureHash,
+    "preview",
+    "pricing",
+    digest,
+    "webm",
+  );
+  assert.match(key, /^public-pages\/[0-9a-f]+\/captures\/[0-9a-f]{64}\/preview\/[0-9a-f]+\/[0-9a-f]{64}\.webm$/);
+  assert.equal(key.includes("example.com"), false);
+  assert.equal(key.includes("pricing"), false);
+  assert.throws(
+    () => publicPageObjectKey("", captureHash, "preview", "pricing", digest, "webm"),
+    /invalid object-key identity part/i,
+  );
+});
+
 test("accepts MP4 while retaining the shared media ceiling", async () => {
   await withStore(async (store) => {
     const body = Buffer.from([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70]);
@@ -80,6 +101,17 @@ test("accepts MP4 while retaining the shared media ceiling", async () => {
       body,
       contentType: "video/mp4",
     }));
+    assert.equal(stored.created, true);
+    assert.equal(stored.metadata.byteSize, body.byteLength);
+  });
+});
+
+test("accepts WebM while retaining the shared media ceiling", async () => {
+  await withStore(async (store) => {
+    const body = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x01]);
+    const digest = sha256(body);
+    const key = publicPageObjectKey("example.com", "a".repeat(64), "preview", "pricing", digest, "webm");
+    const stored = await store.put(input({ key, body, contentType: "video/webm" }));
     assert.equal(stored.created, true);
     assert.equal(stored.metadata.byteSize, body.byteLength);
   });

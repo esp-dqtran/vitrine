@@ -26,7 +26,7 @@ const MAX_BYTES = 64 * 1024 * 1024;
 const KEY_PATTERN = /^[a-z0-9][a-z0-9/_=.@-]{0,1023}$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const CONTENT_TYPES = new Set<StoredContentType>([
-  "image/png", "image/jpeg", "image/webp", "video/mp4", "application/json",
+  "image/png", "image/jpeg", "image/webp", "video/mp4", "video/webm", "application/json",
   "application/zip", "text/css", "text/javascript", "text/typescript",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);

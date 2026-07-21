@@ -85,6 +85,31 @@ test("put accepts MP4 objects from the shared object-store contract", async () =
   });
 });
 
+test("put accepts WebM objects from the shared object-store contract", async () => {
+  const videoBody = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x01]);
+  const video: ObjectMetadata = {
+    key: `public-pages/domain/captures/${"a".repeat(64)}/preview/page/${createHash("sha256").update(videoBody).digest("hex")}.webm`,
+    sha256: createHash("sha256").update(videoBody).digest("hex"),
+    byteSize: videoBody.byteLength,
+    contentType: "video/webm",
+    accessClass: "protected",
+  };
+  let heads = 0;
+  const store = new S3ObjectStore({
+    bucket: "private-media",
+    prefix: "objects",
+    send: async (command) => command instanceof HeadObjectCommand
+      ? (heads++ === 0 ? undefined : headOutput(video))
+      : {},
+    sign: async () => "unused",
+  });
+
+  assert.deepEqual(await store.put({ ...video, body: videoBody }), {
+    created: true,
+    metadata: video,
+  });
+});
+
 test("put is idempotent only when existing head metadata matches exactly", async () => {
   const commands: unknown[] = [];
   const store = new S3ObjectStore({

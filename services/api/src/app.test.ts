@@ -10,6 +10,7 @@ import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
 import type { JobRow, JobStatus } from "../../../src/db.ts";
 import type { SitesJob } from "../../../src/sitesQueue.ts";
+import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -937,6 +938,79 @@ test("sanitizes Sites broker errors and records the same safe message", async (t
   assert.doesNotMatch(JSON.stringify(body), /broker\.example|secret/);
 });
 
+test("routes a public URL only to the isolated public-page publisher", async (t) => {
+  const calls: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: async (type: string, payload: Record<string, unknown>) => {
+      calls.push(["create", type, payload]);
+      return 52;
+    },
+    publishJob: async () => { calls.push(["apps-publisher"]); },
+    publishSitesJob: async () => { calls.push(["sites-publisher"]); },
+    publishPublicPageJob: async (job: PublicPageJob) => { calls.push(["public-page-publisher", job]); },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ type: "crawl-public-page", url: "https://www.example.com/pricing#plans" }),
+  });
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), { id: 52 });
+  assert.deepEqual(calls, [
+    ["create", "crawl-public-page", { url: "https://www.example.com/pricing" }],
+    ["public-page-publisher", {
+      type: "crawl-public-page",
+      url: "https://www.example.com/pricing",
+      jobId: 52,
+    }],
+  ]);
+});
+
+test("rejects private public-page targets before creating a job", async (t) => {
+  let created = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: async () => { created = true; return 1; },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ type: "crawl-public-page", url: "http://127.0.0.1/admin" }),
+  });
+  assert.equal(response.status, 400);
+  assert.equal(created, false);
+});
+
+test("sanitizes public-page broker errors and marks the job terminal", async (t) => {
+  const statuses: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    createJob: async () => 53,
+    publishPublicPageJob: async () => {
+      throw new Error("failed at https://broker.example/path?token=secret");
+    },
+    setJobStatus: async (id: number, status: JobStatus, message?: string) => {
+      statuses.push([id, status, message]);
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ type: "crawl-public-page", url: "https://example.com" }),
+  });
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { id: 53, error: "Public page queue unavailable" });
+  assert.deepEqual(statuses, [[53, "error", "Public page queue unavailable"]]);
+});
+
 test("cancels Sites and Apps jobs without crossing their cancellation boundary", async (t) => {
   let appCancellationSignals = 0;
   const jobs = new Map<number, ReturnType<typeof jobRecord>>([
@@ -1695,6 +1769,79 @@ test("returns app metadata without invoking section dependencies", async (t) => 
   assert.equal("version" in body, false);
   assert.equal("nextCursor" in body, false);
   assert.equal((await fetch(`${base}/apps/linear?limit=48`, { headers: adminCookie })).status, 400);
+});
+
+test("returns captured website metadata and serves its app-scoped scrolling preview", async (t) => {
+  const previewBody = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x01]);
+  const preview: ObjectMetadata = {
+    key: "public-pages/example.com/version/preview.webm",
+    sha256: createHash("sha256").update(previewBody).digest("hex"),
+    byteSize: previewBody.byteLength,
+    contentType: "video/webm",
+    accessClass: "protected",
+  };
+  const seen: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    appMetadata: async () => ({
+      app: "example-com",
+      icon_url: "https://example.com/favicon.ico",
+      category: "Developer tools",
+      display_name: "Example",
+      description: "Build better examples.",
+      website_url: "https://example.com",
+      accent_color: "#123456",
+      preview_version_id: 71,
+      total_screens: 1,
+      total_ui_elements: 5,
+      total_flows: 0,
+      analyzed_screens: 0,
+      last_captured_at: "2026-07-21T01:00:00.000Z",
+      available_platforms: ["web"],
+    }),
+    publicPageStore: {
+      previewObject: async (app: string, versionId: number, publishedOnly?: boolean) => {
+        seen.push([app, versionId, publishedOnly]);
+        return app === "example-com" && versionId === 71 ? preview : undefined;
+      },
+    },
+    objectStore: {
+      ...localObjectStore,
+      get: async () => ({ metadata: preview, body: previewBody }),
+    },
+    recordAccessEvent: async () => {},
+  } as never));
+  t.after(() => close(server));
+
+  const detail = await fetch(`${base}/apps/example-com`, { headers: adminCookie });
+  assert.equal(detail.status, 200);
+  assert.deepEqual((await detail.json()).app, {
+    id: "example-com",
+    app: "Example",
+    cat: "Developer tools",
+    accent: "#123456",
+    totalScreens: 1,
+    totalUiElements: 5,
+    totalFlows: 0,
+    platforms: ["web"],
+    analyzedScreens: 0,
+    lastCapturedAt: "2026-07-21T01:00:00.000Z",
+    websiteUrl: "https://example.com",
+    iconUrl: "https://example.com/favicon.ico",
+    description: "Build better examples.",
+    previewVideoUrl: "/api/apps/example-com/page-preview/71",
+  });
+
+  const media = await fetch(`${base}/apps/example-com/page-preview/71`, { headers: adminCookie });
+  assert.equal(media.status, 200);
+  assert.equal(media.headers.get("content-type"), "video/webm");
+  assert.deepEqual(Buffer.from(await media.arrayBuffer()), previewBody);
+  assert.deepEqual(seen, [["example-com", 71, false]]);
+  assert.equal(
+    (await fetch(`${base}/apps/another-app/page-preview/71`, { headers: adminCookie })).status,
+    404,
+  );
 });
 
 test("loads screens and UI elements from dedicated paged endpoints", async (t) => {

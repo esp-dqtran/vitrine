@@ -32,6 +32,8 @@ export interface AppSummary {
   lastCapturedAt?: string | null;
   websiteUrl?: string | null;
   iconUrl?: string | null;
+  description?: string | null;
+  previewVideoUrl?: string | null;
 }
 
 export interface AppMetadata extends AppSummary {
@@ -151,7 +153,7 @@ export interface ProgressSnapshot {
 export interface Job {
   id: number;
   parent_id: number | null;
-  type: 'discover-catalog' | 'import-app' | 'caption-app' | 'synthesize-app' | 'research-app' | 'smart-crawl-app';
+  type: 'discover-catalog' | 'import-app' | 'caption-app' | 'synthesize-app' | 'research-app' | 'smart-crawl-app' | 'crawl-public-page';
   payload: { name?: string; url?: string; homepageUrl?: string; provider?: string; runId?: string };
   status: 'queued' | 'running' | 'done' | 'error' | 'cancelled';
   message: string | null;

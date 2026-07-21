@@ -12,8 +12,23 @@ export function AppOverviewPanel({ app }: { app: AppMetadata }) {
     <div style={{ display: 'grid', gap: 18, paddingTop: 28 }}>
       <div>
         <Heading level={2}>App overview</Heading>
-        <div style={{ marginTop: 7 }}><Text type="body" color="secondary">Catalog metadata is available immediately. Open a section to load its captured data.</Text></div>
+        <div style={{ marginTop: 7 }}><Text type="body" color="secondary">{app.description || 'Catalog metadata is available immediately. Open a section to load its captured data.'}</Text></div>
+        {app.websiteUrl && <div style={{ marginTop: 8 }}><a href={app.websiteUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--color-text-accent)', fontSize: 14 }}>Open website</a></div>}
       </div>
+      {app.previewVideoUrl && (
+        <Card padding={2}>
+          <video
+            src={app.previewVideoUrl}
+            aria-label={`${app.app} continuous scrolling preview`}
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls
+            style={{ display: 'block', width: '100%', maxHeight: 560, objectFit: 'contain', background: '#0a0a0a', borderRadius: 8 }}
+          />
+        </Card>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
         {stats.map(([label, value]) => <Card key={label} padding={4}><Text type="supporting" color="secondary">{label}</Text><div style={{ marginTop: 8, fontSize: 28, fontWeight: 700 }}>{value}</div></Card>)}
       </div>
