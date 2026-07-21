@@ -20,6 +20,7 @@ import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { SitesPage } from './components/SitesPage';
 import { SiteVersionPage } from './components/SiteVersionPage';
 import { GalleryCardSkeleton, GalleryToolbar } from './components/GalleryToolbar';
+import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -34,6 +35,7 @@ export function App() {
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
   const [cat, setCat] = useState('All');
+  const [siteQuery, setSiteQuery] = useState('');
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
   const [q, setQ] = useState(() => {
     const seed = sessionStorage.getItem('astryx:q') ?? sessionStorage.getItem('vitrine:q');
@@ -186,7 +188,7 @@ export function App() {
   }
 
   if (route.name === 'sites') {
-    return frame(<SitesPage isAdmin={isAdmin} />);
+    return frame(<SitesPage isAdmin={isAdmin} query={siteQuery} onQueryChange={setSiteQuery} />);
   }
   if (route.name === 'site-version') {
     return frame(
@@ -210,7 +212,8 @@ export function App() {
   if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
     return frame(
       <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}>
-        {isAdmin && <PageHeader title="Apps" description="Browse captured screens, UI elements, and flows across every imported app." />}
+        {isAdmin && <PageHeader title="References" description="Browse app and website design references." />}
+        <ReferenceTypeTabs active="apps" />
         <div style={{ padding: '22px 0 14px' }}>
           <Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />
         </div>
@@ -304,11 +307,12 @@ export function App() {
         >
           {isAdmin && (
             <PageHeader
-              title="Apps"
-              description="Browse captured screens, UI elements, and flows across every imported app."
+              title="References"
+              description="Browse app and website design references."
               action={<Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} />}
             />
           )}
+          <ReferenceTypeTabs active="apps" />
           <GalleryToolbar>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               {!isAdmin && (

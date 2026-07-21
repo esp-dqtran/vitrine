@@ -8,6 +8,7 @@ import { SiteImportDialog } from './SiteImportDialog.tsx';
 import { GalleryCardSkeleton, GalleryToolbar } from './GalleryToolbar.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteCard } from './SiteCard.tsx';
+import { ReferenceTypeTabs } from './ReferenceTypeTabs.tsx';
 
 interface SitesPageViewProps {
   sites: SiteSummary[];
@@ -34,6 +35,7 @@ export function SitesPageView({ sites, isAdmin, error, query, onQueryChange, onR
         description="Inspect complete website references page by page, with their original section order and media states."
         action={isAdmin ? <Button variant="primary" label="Import Site" clickAction={onImport} /> : undefined}
       />
+      <ReferenceTypeTabs active="sites" />
       <GalleryToolbar>
         <div style={{ maxWidth: 420 }}>
           <SearchInput value={query} onChange={onQueryChange} placeholder="Search sites, versions, and pages…" />
@@ -57,12 +59,17 @@ export function SitesPageView({ sites, isAdmin, error, query, onQueryChange, onR
   );
 }
 
-export function SitesPage({ isAdmin }: { isAdmin: boolean }) {
+interface SitesPageProps {
+  isAdmin: boolean;
+  query: string;
+  onQueryChange: (value: string) => void;
+}
+
+export function SitesPage({ isAdmin, query, onQueryChange }: SitesPageProps) {
   const [sites, setSites] = useState<SiteSummary[] | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
-  const [query, setQuery] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -76,6 +83,7 @@ export function SitesPage({ isAdmin }: { isAdmin: boolean }) {
     return (
       <main role="status" aria-label="Loading Sites" style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px 72px' }}>
         <PageHeader title="Sites" description="Inspect complete website references page by page, with their original section order and media states." />
+        <ReferenceTypeTabs active="sites" />
         <GalleryToolbar><div style={{ maxWidth: 420 }}><SearchInput value="" onChange={() => undefined} placeholder="Search sites, versions, and pages…" /></div></GalleryToolbar>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, padding: '22px 0 72px' }}>
           {Array.from({ length: 9 }, (_, index) => <GalleryCardSkeleton key={index} index={index} />)}
@@ -85,7 +93,7 @@ export function SitesPage({ isAdmin }: { isAdmin: boolean }) {
   }
   return (
     <>
-      <SitesPageView sites={sites} isAdmin={isAdmin} error={error || undefined} query={query} onQueryChange={setQuery} onRefresh={() => setRevision((value) => value + 1)} onImport={() => setImportOpen(true)} />
+      <SitesPageView sites={sites} isAdmin={isAdmin} error={error || undefined} query={query} onQueryChange={onQueryChange} onRefresh={() => setRevision((value) => value + 1)} onImport={() => setImportOpen(true)} />
       {isAdmin && <SiteImportDialog isOpen={importOpen} onClose={() => setImportOpen(false)} onExisting={(siteId, versionId) => navigate({ name: 'site-version', siteId, versionId })} />}
     </>
   );

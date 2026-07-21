@@ -88,3 +88,12 @@ test('shares catalog search state with the inspiration modal', async () => {
   assert.match(source, /collections=\{collections\}/);
   assert.match(source, /onCollectionsChange=\{setCollections\}/);
 });
+
+test('keeps independent Apps and Sites search state under References', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const \[siteQuery, setSiteQuery\] = useState\(''\)/);
+  assert.match(source, /<ReferenceTypeTabs active="apps"/);
+  assert.match(source, /query=\{siteQuery\}/);
+  assert.match(source, /onQueryChange=\{setSiteQuery\}/);
+});
