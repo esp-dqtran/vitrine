@@ -330,6 +330,25 @@ test("public-page migration defines App-backed immutable page captures", async (
   );
 });
 
+test("launch referral migration defines bounded banked Pro months", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0013_launch_referrals.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of [
+    "promotional_entitlements",
+    "referral_codes",
+    "referral_visits",
+    "referrals",
+    "referral_activity",
+    "referral_rewards",
+  ]) assert.match(sql, new RegExp(`CREATE TABLE ${table}\\b`));
+  assert.match(sql, /UNIQUE \(invited_user_id\)/);
+  assert.match(sql, /UNIQUE \(referral_id\)/);
+  assert.match(sql, /CHECK \(inviter_user_id <> invited_user_id\)/);
+  assert.match(sql, /CHECK \(state IN \('available', 'activated', 'revoked'\)\)/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {
