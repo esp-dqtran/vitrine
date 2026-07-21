@@ -162,6 +162,24 @@ services:
         condition: service_completed_successfully
     restart: on-failure
 
+  public-page-import-worker:
+    build:
+      context: .
+      dockerfile: services/public-page-import-worker/Dockerfile
+    environment:
+      <<: *object-store-env
+      RABBITMQ_URL: amqp://rabbitmq
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      HEADLESS: "true"
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
+
   storage-migrate:
     profiles: ["storage-tools"]
     build:
