@@ -1,5 +1,5 @@
 import type { Platform } from '../platformFromUrl';
-import { platformFromUrl } from '../platformFromUrl';
+import { platformFromUrl } from '../platformFromUrl.ts';
 
 export async function submitImportJob(name: string, url: string, platform: Platform): Promise<void> {
   return submitJob({ type: 'import-app', name, url, platform });
