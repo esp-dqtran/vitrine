@@ -33,4 +33,3 @@ await startPublicPageImportWorker({
     await consumePublicPageJobs(handler);
   },
 });
-

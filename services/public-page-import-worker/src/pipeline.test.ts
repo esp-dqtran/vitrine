@@ -94,4 +94,3 @@ test("crawler cancellation never becomes a worker error", async () => {
   await handler(job, { attempt: 1, maxAttempts: 3 });
   assert.deepEqual(statuses, [[42, "running", "Rendering page"]]);
 });
-
