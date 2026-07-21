@@ -16,6 +16,7 @@ export type StoredContentType =
   | "image/jpeg"
   | "image/webp"
   | "video/mp4"
+  | "video/webm"
   | "application/json"
   | "application/zip"
   | "text/css"
@@ -51,6 +52,7 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "image/jpeg",
   "image/webp",
   "video/mp4",
+  "video/webm",
   "application/json",
   "application/zip",
   "text/css",
@@ -59,9 +61,11 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "text/markdown",
 ]);
 const ACCESS_CLASSES = new Set<ObjectAccessClass>(["protected", "public-preview", "internal"]);
-const EXTENSIONS = new Set(["png", "jpg", "webp", "mp4", "json", "zip", "css", "js", "tsx", "md"]);
+const EXTENSIONS = new Set(["png", "jpg", "webp", "mp4", "webm", "json", "zip", "css", "js", "tsx", "md"]);
 const SITE_OBJECT_KINDS = new Set(["source", "preview", "page", "section", "poster"]);
 const SITE_OBJECT_EXTENSIONS = new Set(["json", "png", "jpg", "webp", "mp4"]);
+const PUBLIC_PAGE_OBJECT_KINDS = new Set(["source", "preview", "page", "section", "icon"]);
+const PUBLIC_PAGE_OBJECT_EXTENSIONS = new Set(["json", "png", "jpg", "webp", "webm"]);
 
 function encodeKeyPart(value: string): string {
   const bytes = Buffer.from(value, "utf8");
@@ -125,6 +129,25 @@ export function siteObjectKey(
     throw new Error("Invalid Site object identity");
   }
   return `sites/${encodeKeyPart(siteId)}/versions/${encodeKeyPart(versionId)}/${kind}/${encodeKeyPart(identity)}/${sha256}.${checkedExtension(extension)}`;
+}
+
+export function publicPageObjectKey(
+  domain: string,
+  captureHash: string,
+  kind: "source" | "preview" | "page" | "section" | "icon",
+  identity: string,
+  sha256: string,
+  extension: "json" | "png" | "jpg" | "webp" | "webm",
+): string {
+  if (
+    !SHA256_PATTERN.test(captureHash) ||
+    !SHA256_PATTERN.test(sha256) ||
+    !PUBLIC_PAGE_OBJECT_KINDS.has(kind) ||
+    !PUBLIC_PAGE_OBJECT_EXTENSIONS.has(extension)
+  ) {
+    throw new Error("Invalid public-page object identity");
+  }
+  return `public-pages/${encodeKeyPart(domain)}/captures/${captureHash}/${kind}/${encodeKeyPart(identity)}/${sha256}.${checkedExtension(extension)}`;
 }
 
 function validateKey(key: string): void {
