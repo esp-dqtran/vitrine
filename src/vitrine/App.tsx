@@ -10,7 +10,7 @@ import { SearchTrigger } from './components/SearchTrigger';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { ImportDialog, appRow, knownPlatformsFor } from './components/ImportDialog';
+import { ImportDialog, appRow } from './components/ImportDialog';
 import { PageHeader } from './components/PageHeader';
 import { Sidebar } from './components/Sidebar';
 import { UnlockModal } from './components/UnlockModal';
@@ -24,7 +24,7 @@ import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
-import { submitImportJob } from './jobsApi';
+import { submitUrlImport } from './jobsApi';
 import { searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import type { CatalogSearchResult } from '../catalogResearch';
@@ -409,8 +409,7 @@ export function App() {
       <ImportDialog
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        submitImport={submitImportJob}
-        knownPlatforms={knownPlatformsFor(apps ?? [])}
+        submitImport={submitUrlImport}
       />
     )}
     {unlockTarget && entitlements && (

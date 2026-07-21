@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Button, Dialog, Heading, Selector, Text, TextInput } from '@astryxdesign/core';
+import { Button, Dialog, Heading, Text, TextInput } from '@astryxdesign/core';
 import type { App, Job, RowStatus } from '../types';
 import { groupPipelines } from '../jobs';
-import { isPlatform, platformFromUrl, PLATFORM_LABEL, PLATFORMS, type Platform } from '../../platformFromUrl';
 
 // ------------------------------------------------------------------
 // Per-app row view-model (real apps + in-flight import jobs) — shared by
@@ -55,51 +54,20 @@ export function buildPipelineRows(apps: App[], jobs: Job[]): RowVM[] {
 }
 
 // ------------------------------------------------------------------
-// Import dialog — pick a Mobbin screens URL + platform, queue the import
+// Import dialog — one URL; jobsApi preserves Mobbin Apps imports and sends other public
+// websites to the isolated rendered-page crawler.
 // ------------------------------------------------------------------
-
-// Derive an app slug from a pasted Mobbin (or plain website) URL, for the import form.
-function deriveSlug(raw: string): string {
-  try {
-    const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
-    if (u.hostname.includes('mobbin.com')) {
-      const seg = u.pathname.split('/').filter(Boolean)[1] ?? '';
-      const m = seg.match(/^(.*)-(?:web|ios|android)-[0-9a-f-]{36}$/i);
-      return (m ? m[1] : seg).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || '';
-    }
-    return (u.hostname.replace(/^www\./, '').split('.')[0] || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-') || '';
-  } catch {
-    return '';
-  }
-}
-
-// Mobbin URLs already encode the platform in their slug (…-ios-<uuid>, …-web-<uuid>) — detect
-// it as a starting point, but always let the user confirm/correct it before submitting so a
-// hand-typed or unusual URL never silently imports under the wrong platform.
-function detectPlatform(url: string): Platform {
-  try { return platformFromUrl(url); } catch { return 'web'; }
-}
-
-export function ImportDialog({ isOpen, onClose, submitImport, knownPlatforms }: { isOpen: boolean; onClose: () => void; submitImport: (name: string, url: string, platform: Platform) => Promise<void>; knownPlatforms: (name: string) => Platform[] }) {
+export function ImportDialog({ isOpen, onClose, submitImport }: { isOpen: boolean; onClose: () => void; submitImport: (url: string) => Promise<void> }) {
   const [url, setUrl] = useState('');
-  const [name, setName] = useState('');
-  const [nameEdited, setNameEdited] = useState(false);
-  const [platform, setPlatform] = useState<Platform>('web');
-  const [platformEdited, setPlatformEdited] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const onUrl = (value: string) => {
-    setUrl(value);
-    if (!nameEdited) setName(deriveSlug(value));
-    if (!platformEdited) setPlatform(detectPlatform(value));
-  };
-  const reset = () => { setUrl(''); setName(''); setNameEdited(false); setPlatform('web'); setPlatformEdited(false); setError(null); };
+  const reset = () => { setUrl(''); setError(null); };
   const submit = async () => {
     setError(null);
     setBusy(true);
     try {
-      await submitImport(name.trim(), url.trim(), platform);
+      await submitImport(url.trim());
       reset();
       onClose();
     } catch (cause) {
@@ -109,39 +77,17 @@ export function ImportDialog({ isOpen, onClose, submitImport, knownPlatforms }: 
     }
   };
 
-  const existingPlatforms = name.trim() ? knownPlatforms(name.trim()) : [];
-
   return (
     <Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) { reset(); onClose(); } }} purpose="form" width={460}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Heading level={3}>Import from URL</Heading>
-        <Text color="secondary">Paste a Mobbin app screens URL. It&rsquo;s queued for the crawl → describe → extract pipeline.</Text>
-        <TextInput label="Mobbin screens URL" value={url} onChange={onUrl} placeholder="https://mobbin.com/apps/…/screens" width="100%" hasClear />
-        <TextInput label="App name (slug)" value={name} onChange={(v) => { setName(v); setNameEdited(true); }} placeholder="linear" width="100%" hasClear status={error ? { type: 'error', message: error } : undefined} />
-        <Selector
-          label="Platform"
-          size="sm"
-          value={platform}
-          onChange={(value) => { setPlatformEdited(true); setPlatform(value as Platform); }}
-          options={PLATFORMS.map((p) => ({ value: p, label: PLATFORM_LABEL[p] }))}
-        />
-        {existingPlatforms.length > 0 && (
-          <Text type="supporting" color="secondary">
-            {name.trim()} already has: {existingPlatforms.map((p) => PLATFORM_LABEL[p]).join(', ')}. This import adds {PLATFORM_LABEL[platform]}.
-          </Text>
-        )}
+        <Text color="secondary">Paste any public website URL. We render the page, detect its sections from HTML, capture the full page, and record a continuous scrolling preview.</Text>
+        <TextInput label="Website or Mobbin URL" value={url} onChange={setUrl} placeholder="https://example.com" width="100%" hasClear status={error ? { type: 'error', message: error } : undefined} />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
           <Button variant="ghost" label="Cancel" clickAction={() => { reset(); onClose(); }} />
-          <Button variant="primary" label="Submit" isDisabled={!url.trim() || !name.trim() || busy} isLoading={busy} clickAction={submit} />
+          <Button variant="primary" label="Submit" isDisabled={!url.trim() || busy} isLoading={busy} clickAction={submit} />
         </div>
       </div>
     </Dialog>
   );
-}
-
-export function knownPlatformsFor(apps: App[]) {
-  return (name: string): Platform[] => {
-    const found = apps.find((a) => a.id === name || a.app === name);
-    return found ? [...new Set(found.screens.map((s) => s.platform))].filter(isPlatform) : [];
-  };
 }

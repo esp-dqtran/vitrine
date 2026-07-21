@@ -43,13 +43,13 @@ test('adds synthetic pipeline rows for in-flight imports not yet in the app list
   assert.equal(linear!.app, undefined);
 });
 
-test('renders the import dialog with a platform selector', () => {
+test('renders a URL-only import dialog for Mobbin Apps or public websites', () => {
   const html = renderToStaticMarkup(
-    <ImportDialog isOpen onClose={() => undefined} submitImport={async () => undefined} knownPlatforms={() => []} />,
+    <ImportDialog isOpen onClose={() => undefined} submitImport={async () => undefined} />,
   );
   assert.match(html, /Import from URL/);
-  assert.match(html, /Mobbin screens URL/);
-  assert.match(html, /Platform/);
+  assert.match(html, /Website or Mobbin URL/);
+  assert.doesNotMatch(html, /App name \(slug\)|Platform/);
 });
 
 test('app cards expose a keyboard action separately from carousel controls', () => {
