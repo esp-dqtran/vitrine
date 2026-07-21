@@ -38,5 +38,9 @@ export function activateProMonth(fetcher: Fetcher = fetch): Promise<{
   expiresAt: string;
   availableMonths: number;
 }> {
-  return fetcher("/api/referrals/rewards/activate", { method: "POST" }).then(jsonOrError);
+  return fetcher("/api/referrals/rewards/activate", { method: "POST" }).then(jsonOrError<{
+    status: "activated";
+    expiresAt: string;
+    availableMonths: number;
+  }>);
 }

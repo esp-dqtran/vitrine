@@ -1,6 +1,6 @@
 # Astryx Free/Pro production-readiness matrix
 
-Verified against source, tests, Docker Compose, and the local PostgreSQL/RabbitMQ runtime on 2026-07-12. This is a living release gate; `Complete` means implemented and directly verified, not merely planned.
+Originally verified against source, tests, Docker Compose, and the local PostgreSQL/RabbitMQ runtime on 2026-07-12. Billing, pricing, self-service signup, and launch referrals were refreshed on 2026-07-21 against migration head 14, an isolated local API/database, and Stripe test mode. This is a living release gate; `Complete` means implemented and directly verified, not merely planned.
 
 Status: **Complete**, **Partial**, **Missing**, or **External**.
 
@@ -43,7 +43,7 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 | Normalized sign-in and generic failure | Complete | `normalizeEmail`, hash verification, `/auth/login`, API/frontend tests | Distributed abuse limit and browser acceptance |
 | Logout and secure production cookie | Partial | HttpOnly, SameSite=Strict, production Secure, logout route/tests | Explicit max-age/domain policy, trusted proxy, origin protection |
 | `signed_in_elsewhere` | Complete | Two-session policy and explicit API state/tests | Friendly browser recovery acceptance |
-| Self-service registration | Missing | No route/store/UI | Normalized unique email, neutral response, rate limits |
+| Self-service registration | Complete | `/auth/signup`, normalized unique email persistence, AuthProvider/SignIn UI, API tests, and isolated API smoke | Email verification and distributed public-route abuse limits are separate gates |
 | Email verification | Missing | No token/store/SMTP contract | Hashed single-use expiring token and browser flow |
 | Password reset/change | Missing | No route/store/UI | Neutral request, hashed token, expiry, reuse prevention, session revocation |
 | Session list/revoke | Missing | Only create/resolve/delete current session | Safe device metadata, list, individual/all-other revocation |
@@ -54,12 +54,21 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 
 | Requirement | Status | Current evidence | Remaining gate |
 |---|---|---|---|
-| Stripe-authoritative entitlement | Complete | Signed webhook construction and subscription-event synchronization; redirects do not grant Pro | Test-clock/live test-mode lifecycle |
-| Checkout and Portal backend | Complete | Monthly/yearly Checkout, active-user guard, Portal route | Frontend controls and browser acceptance |
+| Stripe-authoritative entitlement | Complete | Signed webhook construction and subscription-event synchronization; 2026-07-21 Stripe test-mode smoke proved webhook-confirmed paid Pro and cancellation fallback | Repeat through the hosted Checkout UI after staging deploy |
+| Checkout and Portal backend | Complete | Real test-mode Checkout Sessions used $8.99 monthly and $79.99 yearly Price IDs; Customer Portal Session creation passed | Repeat in the deployed-staging browser |
 | Duplicate webhook idempotency | Complete | `stripe_events` store and idempotent service path | Concurrent duplicate integration test |
 | Out-of-order/delayed lifecycle | Partial | Past-due grace and ignored invoice behavior tested | Renewal, cancellation, unpaid fallback, delayed webhook reconciliation |
-| Account billing UI | Missing | App fetches subscription data; no complete account/billing management surface | Plan/interval/dates/grace/failure/usage plus Checkout/Portal actions |
-| Free unlock and export usage | Partial | Server enforcement and subscription JSON exist | Clear customer UI and complete browser journey |
+| Account billing UI | Complete | Pricing Checkout action, webhook-authoritative Billing Success, Settings plan/interval/dates/grace/usage, and Portal action have focused tests | Deployed-staging responsive/browser acceptance |
+| Free unlock and export usage | Complete | Server enforcement, subscription JSON, Pricing/Settings state, and frontend plan-aware controls are implemented and tested | Deployed-staging browser acceptance |
+
+## Launch referrals
+
+| Requirement | Status | Current evidence | Remaining gate |
+|---|---|---|---|
+| Signup promotion and attribution | Complete | Opaque link validation, immutable signup attribution, immediate 30-day promotional Pro, no card or Stripe subscription; isolated API smoke passed | Repeat through deployed-staging browser |
+| Activation and banked Pro Month | Complete | Three-app/two-UTC-date/24-hour qualification, concurrency safety, three-reward cap, explicit activation, paid precedence, and expiry fallback are covered by store/API tests and isolated smoke | Observe real-user activation timing during soft launch |
+| Measurement and abuse operations | Complete | Aggregate referral funnel/retention dashboard and idempotent admin revocations are implemented without invited-user activity disclosure | Set launch alert/review cadence and assign operator |
+| Complete deployed sandbox journey | Partial | Migration head 14 and the full isolated API/database journey passed on 2026-07-21; Stripe test Checkout, signed webhook, Portal, cancellation, and referral expiry were exercised | Run the same journey on the deployed staging URL |
 
 ## API, browser, and dependency security
 
@@ -103,7 +112,7 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 | Requirement | Status | Current evidence | Remaining gate |
 |---|---|---|---|
 | Reproducible service images | Partial | API/discover/worker/migration Dockerfiles; migration image uses repaired `npm ci` lock | All images multi-stage, exact toolchain/digests, non-root, health/read-only checks |
-| Production-like Compose/staging | Missing | PostgreSQL/RabbitMQ local dependencies only | Full frontend/API/worker/migration/storage/reverse-proxy stack and rollback |
+| Production-like Compose/staging | Partial | API/worker/migration services, RabbitMQ, PostgreSQL rollback profile, and S3-backed object storage configuration exist; the isolated launch API passed | Full frontend/reverse-proxy stack, deployed staging, rollback, and browser acceptance |
 | CI/CD | Missing | No `.github` workflow | Install, diff, TS, tests, builds, migration, containers, scans, browser smoke, staged deploy |
 | Direct URL routing/code splitting | Missing | Frontend uses hash routing and eager imports | History fallback, route-level dynamic imports, error boundaries |
 | Responsive/a11y/error/offline acceptance | Partial | Design-system components and rendered tests exist | Keyboard/focus/labels/contrast/responsive/offline browser matrix |
@@ -112,4 +121,4 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 
 ## Release claim
 
-Astryx is **not yet production-ready**. Database migration behavior is proven on disposable empty/upgrade databases, while backup/restore, the real database migration, object migration, full customer lifecycle, production security/operations, complete staging, and browser/recovery acceptance remain release blockers. The final claim must cite live evidence for every applicable gate from the launch brief.
+Astryx is **not yet production-ready**. The Free/Pro and referral launch paths are implemented and passed an isolated Stripe test-mode/API/database journey, but that does not replace deployed-staging proof. Backup/restore, remaining object parity, email/account recovery, production security and observability, complete staging, and browser/recovery acceptance remain release blockers. The final claim must cite live evidence for every applicable gate from the launch brief.

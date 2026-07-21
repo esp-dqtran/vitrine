@@ -132,7 +132,7 @@ test("keeps existing rows visible while filtered results refresh", () => {
     loadingMore={false}
     refreshing
     query="pro"
-    filter="active"
+    filter="pro"
     onQueryChange={() => undefined}
     onFilterChange={() => undefined}
     onLoadMore={() => undefined}

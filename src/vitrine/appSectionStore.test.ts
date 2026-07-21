@@ -2,7 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createAppSectionStore, type AppSectionKey } from './appSectionStore.ts';
 
-const version = { id: 3, app: 'claude', platform: 'ios', version_number: 4, status: 'published' as const };
+const version = {
+  id: 3, app: 'claude', platform: 'ios', version_number: 4, label: 'v4',
+  source_url: null, status: 'published' as const, notes: '',
+  captured_at: '2026-07-21T00:00:00.000Z', submitted_at: null,
+  published_at: '2026-07-21T01:00:00.000Z', screen_count: 0,
+  analyzed_count: 0, component_count: 0, token_count: 0, flow_count: 0,
+};
 const key: AppSectionKey = { appId: 'claude', section: 'screens', platform: 'ios', version: 'latest' };
 
 test('deduplicates in-flight loads and reuses fulfilled section data', async () => {

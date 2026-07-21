@@ -9,7 +9,7 @@ Astryx customers can start on Free, deliberately unlock three permanent applicat
 Astryx has two customer plans. The existing `admin` role remains operational and is not a paid plan.
 
 - Free costs $0 and includes public catalog browsing, limited previews, three permanent application unlocks, complete evidence for those applications, and one personal collection without editable research notes.
-- Pro costs $7 monthly or $70 yearly and includes every published application, full structured search and filters, cross-application comparison, unlimited personal collections with research notes, and twenty export operations per subscription month.
+- Pro costs $8.99 monthly or $79.99 yearly and includes every published application, full structured search and filters, cross-application comparison, unlimited personal collections with research notes, and twenty export operations per subscription month. The yearly price saves about 26% versus twelve monthly payments.
 - Team, Enterprise, shared workspaces, private application analysis, raw API access, and bulk catalog export remain out of scope.
 
 ## Billing journey

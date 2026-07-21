@@ -6,7 +6,8 @@ import { PricingView } from './Pricing.tsx';
 import type { SubscriptionView } from './billingApi.ts';
 
 const free: SubscriptionView = {
-  plan: 'free', status: null, interval: null, currentPeriodEnd: null,
+  plan: 'free', entitlementSource: 'free', promotionExpiresAt: null,
+  status: null, interval: null, currentPeriodEnd: null,
   cancelAtPeriodEnd: false, graceExpiresAt: null, hasBillingCustomer: false,
   freeUnlocks: [], freeUnlocksRemaining: 3,
   exportUsage: { used: 0, limit: 20, resetAt: null },
@@ -21,6 +22,17 @@ test('shows sign-in actions to a visitor', () => {
   const html = renderToStaticMarkup(<PricingView user={null} subscription={null} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
   assert.match(html, /Start free/);
   assert.match(html, /Upgrade to Pro/);
+});
+
+test('shows the approved monthly and yearly launch prices', () => {
+  const monthly = renderToStaticMarkup(<PricingView user={null} subscription={null} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
+  assert.match(monthly, /\$8\.99/);
+  assert.match(monthly, /\/month/);
+
+  const yearly = renderToStaticMarkup(<PricingView user={null} subscription={null} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} yearly />);
+  assert.match(yearly, /\$79\.99/);
+  assert.match(yearly, /\/year/);
+  assert.match(yearly, /save 26%/i);
 });
 
 test('marks the effective customer plan and keeps only the valid upgrade action', () => {

@@ -44,7 +44,7 @@ test("surfaces the generic login error and posts logout", async (t) => {
 
 test("includes a referral token only when creating an account", async (t) => {
   let body: unknown;
-  t.mock.method(globalThis, "fetch", async (_input, init) => {
+  t.mock.method(globalThis, "fetch", async (_input: string | URL | Request, init?: RequestInit) => {
     body = JSON.parse(String(init?.body));
     return new Response(JSON.stringify({ id: 2, email: "new@example.com", role: "user" }), {
       status: 200,

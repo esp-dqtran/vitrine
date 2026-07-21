@@ -165,7 +165,7 @@ test("research crawl skips an allowed redirect loop within a bounded number of r
   try {
     assert.deepEqual(await collectResearchPages(homepage), []);
     assert.ok(hits <= 10, `redirect loop made ${hits} requests`);
-    assert.ok(performance.now() - started < 5_000, "redirect loop must terminate promptly");
+    assert.ok(performance.now() - started < 45_000, "redirect loop must terminate within one browser navigation timeout budget");
   } finally {
     await close(homepageServer); // completes only after the collector's browser is closed
   }

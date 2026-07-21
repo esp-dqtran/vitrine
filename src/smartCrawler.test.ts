@@ -661,7 +661,7 @@ test("review: crawl progress finalization maps outcomes and preserves the origin
     app: string;
     done: number;
     total: number;
-    status: "running" | "done" | "error" | "cancelled";
+    status: "running" | "done" | "error" | "cancelled" | "idle";
     message?: string;
   };
   const withCrawlProgress = (smartCrawlerModule as typeof smartCrawlerModule & {

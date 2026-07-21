@@ -202,7 +202,8 @@ entitlements. The current commercial model has two plans:
   previews and basic app/category browsing are available before an unlock.
   Free accounts can keep one collection, but cannot run structured catalog
   search, edit research notes, or export.
-- **Pro:** $7/month or $70/year. Pro accounts can access every app and reserve
+- **Pro:** $8.99/month or $79.99/year (about 26% below twelve monthly payments).
+  Pro accounts can access every app and reserve
   up to 20 controlled exports per billing month. Structured search, filters,
   screens, elements, flows, comparisons, unlimited collections, and editable
   research notes are included.
@@ -277,6 +278,17 @@ The API requires these values at startup:
 The Checkout and Portal endpoints return Stripe-hosted HTTPS URLs. The frontend
 validates the scheme before redirecting and displays API failures in place.
 
+### Launch referrals
+
+The first-launch referral campaign is separate from Stripe billing. A newly
+referred account receives 30 days of promotional Pro without a card. After the
+new account opens three distinct applications across two UTC dates and at least
+24 elapsed hours, the inviter earns one banked Pro Month, capped at three. The
+inviter explicitly activates a banked month; paid Pro remains authoritative and
+banked months wait until paid access ends. Administrator metrics expose only
+aggregate funnel and retention data, with narrow revocation operations for
+referrals, rewards, and promotional entitlements.
+
 ### Persistence and abuse controls
 
 The existing PostgreSQL database contains customer subscriptions, permanent
@@ -293,8 +305,7 @@ Administrators bypass these customer limits.
 
 ### Explicit follow-ons
 
-1. Add public registration and account verification; today customer rows must
-   be provisioned through an existing trusted path.
-2. Generate and deliver the reserved export artifacts. The current endpoint
-   validates entitlement, scope, and monthly quota, but intentionally stops at
-   the reservation boundary.
+1. Add email verification, password reset, session management, and account
+   deletion workflows around the shipped self-service registration route.
+2. Complete deployed-staging browser acceptance for Checkout, Portal,
+   cancellation, referral signup, reward activation, and entitlement expiry.

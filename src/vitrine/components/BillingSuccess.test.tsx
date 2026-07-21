@@ -5,7 +5,8 @@ import { BillingSuccessView, waitForPro } from './BillingSuccess.tsx';
 import type { SubscriptionView } from '../billingApi.ts';
 
 const free: SubscriptionView = {
-  plan: 'free', status: null, interval: null, currentPeriodEnd: null,
+  plan: 'free', entitlementSource: 'free', promotionExpiresAt: null,
+  status: null, interval: null, currentPeriodEnd: null,
   cancelAtPeriodEnd: false, graceExpiresAt: null, hasBillingCustomer: true,
   freeUnlocks: [], freeUnlocksRemaining: 3,
   exportUsage: { used: 0, limit: 20, resetAt: null },

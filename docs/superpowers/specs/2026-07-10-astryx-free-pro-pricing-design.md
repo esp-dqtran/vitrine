@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10
 
-**Status:** Approved conversational design; awaiting written-spec review
+**Status:** Implemented; launch price revised on 2026-07-21
 
 ## Goal
 
@@ -60,8 +60,8 @@ remain. An unlocked application cannot be exchanged for another application.
 
 Price:
 
-- **$7 per month**, billed monthly; or
-- **$70 per year**, billed yearly.
+- **$8.99 per month**, billed monthly; or
+- **$79.99 per year**, billed yearly (about 26% below twelve monthly payments).
 
 Monthly and yearly Pro subscriptions have identical entitlements. Pro includes:
 
@@ -298,7 +298,7 @@ The public pricing page contains two cards only:
 - **Free** — `Explore three complete applications`;
 - **Pro** — `Explore every observed design system`.
 
-A monthly/yearly toggle displays `$7/month` or `$70/year`. No Team, Enterprise,
+A monthly/yearly toggle displays `$8.99/month` or `$79.99/year`. No Team, Enterprise,
 trial, credits, or custom pricing appears at launch.
 
 Upgrade prompts appear when a Free user:
@@ -346,8 +346,8 @@ day of Pro access.
 Recognized monthly subscription revenue is:
 
 ```text
-monthly Pro subscribers * $7
-+ active yearly Pro subscribers * ($70 / 12)
+monthly Pro subscribers * $8.99
++ active yearly Pro subscribers * ($79.99 / 12)
 ```
 
 Contribution margin must subtract:
@@ -363,7 +363,7 @@ The current architecture estimates batch AI processing at roughly $8 for a
 production model and actual screen distribution rather than treated as a fixed
 forecast.
 
-Review the $7 launch price when any of these triggers occurs:
+Review the $8.99 launch price when any of these triggers occurs:
 
 - the catalog exceeds 100 complete applications;
 - export or media delivery materially reduces contribution margin;
@@ -414,7 +414,7 @@ progress.
 ### User Experience
 
 - the pricing page shows only Free and Pro;
-- the monthly/yearly toggle shows $7 and $70 correctly;
+- the monthly/yearly toggle shows $8.99 and $79.99 with the 26% annual saving correctly;
 - previewing does not consume a Free unlock;
 - unlock confirmation shows the remaining count;
 - an upgrade flow returns to the interrupted application or export;
@@ -424,7 +424,7 @@ progress.
 ## Success Criteria
 
 - A new user can evaluate three complete applications without payment.
-- A user can subscribe for $7/month or $70/year through Stripe.
+- A user can subscribe for $8.99/month or $79.99/year through Stripe.
 - Pro is granted only after a verified Stripe webhook.
 - Pro can use the complete catalog and selected exports without ordinary browsing
   friction.

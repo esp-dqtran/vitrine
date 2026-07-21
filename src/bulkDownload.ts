@@ -745,6 +745,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
     await closeContext();
     return { status: "error", message };
   }
+  const flowTotal: number = expectedTotal;
 
   const downloadRoot = catalogDownloadRoot(appName, platform, "flows");
   const existingFlows = await getAppFlows(appName, platform);
@@ -774,7 +775,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         laneSeen.add(row.id);
         if (existingRowIds.has(row.id)) {
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Verifying flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: flowTotal, status: "running", message: "Verifying flows" });
           continue;
         }
         const flowUrl = new URL(`/flows/${row.id}`, appUrl).toString();
@@ -787,13 +788,13 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         } catch (error) {
           console.warn(`[${appName}] Error on flow ${row.id}: ${error}. Skipping.`);
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: flowTotal, status: "running", message: "Downloading flows" });
           continue;
         }
         if (savedPaths.length === 0) {
           console.warn(`[${appName}] No download started for flow "${row.title}" (${row.id}) — skipping.`);
           done++;
-          writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
+          writeProgress({ stage: "crawl", app: appName, done, total: flowTotal, status: "running", message: "Downloading flows" });
           continue;
         }
         // Hash/upload/DB-insert don't touch the page, so let them run in the background
@@ -827,7 +828,7 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
             })
             .finally(() => {
               done++;
-              writeProgress({ stage: "crawl", app: appName, done, total: expectedTotal, status: "running", message: "Downloading flows" });
+              writeProgress({ stage: "crawl", app: appName, done, total: flowTotal, status: "running", message: "Downloading flows" });
             })
         );
       }

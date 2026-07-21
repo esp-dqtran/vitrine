@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add the backend Free/Pro pricing core for authenticated Astryx users: three permanent Free app unlocks, Stripe subscriptions at $7 monthly or $70 yearly, server-enforced catalog entitlements, protected media, export quota reservation, and anti-scraping controls.
+**Goal:** Add the backend Free/Pro pricing core for authenticated Astryx users: three permanent Free app unlocks, Stripe subscriptions using server-configured monthly and yearly Price IDs, server-enforced catalog entitlements, protected media, export quota reservation, and anti-scraping controls. The historical $7/$70 assumption was superseded by the approved $8.99/$79.99 launch price on 2026-07-21.
 
 **Architecture:** Keep `admin | user` authorization separate from `free | pro` entitlement. Postgres is authoritative for local subscription, unlock, export-usage, session, and audit state; Stripe Checkout and Customer Portal own payment UI, while verified webhooks synchronize subscription state. Add public paginated previews and entitled paginated app detail beside the existing admin-only `/apps` compatibility route, then place rate limits and signed media delivery around the new customer routes.
 

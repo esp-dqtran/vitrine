@@ -146,7 +146,7 @@ export function createAppSectionStore(clients: AppSectionClients = defaultClient
     },
     subscribe(listener: () => void) {
       listeners.add(listener);
-      return () => listeners.delete(listener);
+      return () => { listeners.delete(listener); };
     },
   };
 }

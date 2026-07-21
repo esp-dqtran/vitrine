@@ -12,6 +12,7 @@ const STAGE_LABEL: Record<Job['type'], string> = {
   'discover-catalog': 'Discover catalog',
   'research-app': 'Research crawl plan',
   'smart-crawl-app': 'Run intelligent crawler',
+  'crawl-public-page': 'Crawl public page',
 };
 
 const STATUS_VARIANT: Record<Job['status'], 'neutral' | 'info' | 'success' | 'error'> = {

@@ -26,5 +26,7 @@ test("rejects malformed and tampered encrypted session envelopes", () => {
   const key = randomBytes(32).toString("base64");
   assert.throws(() => decryptStorageState("v2.bad.bad.bad", key), /invalid encrypted crawl session/i);
   const encrypted = encryptStorageState({ cookies: [], origins: [] }, key);
-  assert.throws(() => decryptStorageState(`${encrypted.slice(0, -1)}A`, key), /authenticate|decrypt/i);
+  const parts = encrypted.split(".");
+  parts[3] = `${parts[3][0] === "A" ? "B" : "A"}${parts[3].slice(1)}`;
+  assert.throws(() => decryptStorageState(parts.join("."), key), /authenticate|decrypt/i);
 });

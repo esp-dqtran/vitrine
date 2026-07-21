@@ -75,7 +75,7 @@ test("pushes a complete snapshot after a scoped progress change and stops after 
   const dataDir = join(root, "data");
   mkdirSync(dataDir);
   const snapshots: ProgressSnapshot[] = [];
-  let unsubscribe = () => undefined;
+  let unsubscribe: () => void = () => undefined;
 
   try {
     unsubscribe = subscribeProgress((snapshot) => snapshots.push(snapshot), { dataDir });

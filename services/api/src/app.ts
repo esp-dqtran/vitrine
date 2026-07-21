@@ -2130,12 +2130,13 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
 
   const resolveAppSection = async (req: express.Request, res: express.Response) => {
+    const appSlug = Array.isArray(req.params.app) ? req.params.app[0] : req.params.app;
     const platformValue = optionalQuery(req.query.platform);
     if (platformValue && !isPlatform(platformValue)) {
       res.status(400).json({ error: "invalid platform" });
       return undefined;
     }
-    const platforms = await deps.appPlatforms(req.params.app);
+    const platforms = await deps.appPlatforms(appSlug);
     const platform = (platformValue as Platform | undefined) ?? platforms.find(isPlatform);
     if (!platform) {
       res.status(404).json({ error: "app platform not found" });
@@ -2148,7 +2149,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return undefined;
     }
     const publishedOnly = res.locals.user.role !== "admin";
-    const versions = await deps.listAppVersions(req.params.app, platform, publishedOnly);
+    const versions = await deps.listAppVersions(appSlug, platform, publishedOnly);
     const version = requestedVersion === undefined
       ? versions.find(({ status }) => status === "published")
       : versions.find(({ version_number }) => version_number === requestedVersion);
@@ -2164,10 +2165,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   };
 
   const recordAppDetailSuccess = async (req: express.Request, res: express.Response) => {
+    const appSlug = Array.isArray(req.params.app) ? req.params.app[0] : req.params.app;
     await deps.recordAccessEvent({
       userId: res.locals.user.id,
       ipPrefix: ipPrefix(req.ip ?? "unknown"),
-      appSlug: req.params.app,
+      appSlug,
       featureKey: "library",
       action: "app-detail",
       outcome: "success",

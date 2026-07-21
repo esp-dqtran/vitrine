@@ -211,9 +211,9 @@ export function PricingView({
   error = '',
 }: PricingViewProps) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
-  const proPrice = yearly ? '$70' : '$7';
+  const proPrice = yearly ? '$79.99' : '$8.99';
   const proNote = yearly ? '/year' : '/month';
-  const proSub = yearly ? 'billed yearly · save $14 vs monthly' : 'billed monthly';
+  const proSub = yearly ? 'billed yearly · save 26% vs monthly' : 'billed monthly';
   const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)' };
 
   return (
@@ -255,7 +255,7 @@ export function PricingView({
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
           <Badge variant="neutral" label="Pricing" />
         </div>
-        <Heading level={1} type="display-2">Free to explore. $7/month to go deeper.</Heading>
+        <Heading level={1} type="display-2">Free to explore. $8.99/month to go deeper.</Heading>
         <div style={{ margin: '16px auto 0', maxWidth: 560 }}>
           <Text type="large" color="secondary">
             Vitrine is a research library of observed application design systems — screens, flows, components, tokens and evidence, reconstructed once and reused by every subscriber.
@@ -264,7 +264,7 @@ export function PricingView({
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
           <SegmentedControl label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => onYearlyChange(v === 'yearly')}>
             <SegmentedControlItem label="Monthly" value="monthly" />
-            <SegmentedControlItem label="Yearly · save $14" value="yearly" />
+            <SegmentedControlItem label="Yearly · save 26%" value="yearly" />
           </SegmentedControl>
         </div>
       </Section>

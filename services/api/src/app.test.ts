@@ -11,6 +11,8 @@ import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
 import type { JobRow, JobStatus } from "../../../src/db.ts";
 import type { SitesJob } from "../../../src/sitesQueue.ts";
 import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
+import type { ReferralCampaign } from "../../../src/referralStore.ts";
+import type { ProgressSnapshot } from "../../../src/progress.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -232,15 +234,15 @@ test("keeps the progress stream admin-only without opening a subscription", asyn
 });
 
 test("progress stream sends complete snapshots and cleans up its subscription", async (t) => {
-  const initial = {
+  const initial: ProgressSnapshot = {
     entries: [{ id: "worker:1", stage: "crawl", app: "linear", done: 1, total: 4, status: "running", updatedAt: "2026-07-19T00:00:00.000Z" }],
-  } as const;
-  let listener: ((snapshot: typeof initial) => void) | undefined;
+  };
+  let listener: ((snapshot: ProgressSnapshot) => void) | undefined;
   let unsubscribeCalls = 0;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => admin,
     readProgress: () => initial,
-    subscribeProgress: (next: (snapshot: typeof initial) => void) => {
+    subscribeProgress: (next: (snapshot: ProgressSnapshot) => void) => {
       listener = next;
       return () => { unsubscribeCalls++; };
     },
@@ -1791,7 +1793,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   let unlocked = false;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
-    appMetadata: async (app) => ({
+    appMetadata: async (app: string) => ({
       app, icon_url: null, category: null, total_screens: 1, total_ui_elements: 0,
       total_flows: 0, analyzed_screens: 0, last_captured_at: null,
       available_platforms: ["web", "ios", "android"],
@@ -2259,12 +2261,12 @@ test("validates referral links publicly and keeps signup available when attribut
   const { base, server } = await serve(createApiApp({
     referralCampaign,
     appUrl: "https://astryx.example",
-    validateReferralToken: async (token, _campaign, visitor) => {
+    validateReferralToken: async (token: string, _campaign: ReferralCampaign, visitor?: string) => {
       validations.push({ token, visitor });
       return token === "v".repeat(48);
     },
     registerUser: async () => newUser,
-    attributeReferralSignup: async ({ invitedUserId }) => {
+    attributeReferralSignup: async ({ invitedUserId }: { invitedUserId: number }) => {
       attributedUserId = invitedUserId;
       throw new Error("referral store unavailable");
     },
@@ -2333,13 +2335,15 @@ test("records only authorized app-detail opens for referral activation", async (
     resolveSession: async () => user,
     referralCampaign,
     canAccessApp: async () => allowed,
-    recordReferralAppOpen: async (_userId, appSlug) => {
+    recordReferralAppOpen: async (_userId: number, appSlug: string) => {
       recorded.push(appSlug);
       return { rewardIssued: false };
     },
-    allImages: async () => catalogImages,
-    listAppVersions: async () => [publishedVersion],
-    versionImages: async () => catalogImages,
+    appMetadata: async (app: string) => ({
+      app, icon_url: null, category: null, total_screens: 1, total_ui_elements: 0,
+      total_flows: 0, analyzed_screens: 0, last_captured_at: null,
+      available_platforms: ["web"],
+    }),
     recordAccessEvent: async () => undefined,
   } as never));
   t.after(() => close(server));
@@ -2381,9 +2385,9 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
     resolveSession: async () => admin,
     referralCampaign,
     referralCampaignMetrics: async () => metrics,
-    revokeReferral: async (id) => { revoked.push(`referral:${id}`); return id === 11; },
-    revokeReferralReward: async (id) => { revoked.push(`reward:${id}`); return true; },
-    revokePromotionalEntitlement: async (id) => { revoked.push(`entitlement:${id}`); return true; },
+    revokeReferral: async (id: number) => { revoked.push(`referral:${id}`); return id === 11; },
+    revokeReferralReward: async (id: number) => { revoked.push(`reward:${id}`); return true; },
+    revokePromotionalEntitlement: async (id: number) => { revoked.push(`entitlement:${id}`); return true; },
   } as never));
   t.after(() => close(adminApp.server));
   const headers = { cookie: "astryx_session=admin" };
@@ -2482,6 +2486,8 @@ test("creates Checkout and returns safe subscription state", async (t) => {
     },
     getAccountEntitlements: async () => ({
       plan: "pro",
+      entitlementSource: "paid",
+      promotionExpiresAt: null,
       subscription: {
         user_id: user.id,
         stripe_customer_id: "cus_secret",
@@ -2524,9 +2530,12 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
-    allImages: async () => images,
-    listAppVersions: async (app) => [{ ...publishedVersion, app }],
-    versionImages: async (app) => images.filter((image) => image.app === app),
+    appMetadata: async (app) => ({
+      app, icon_url: null, category: null,
+      total_screens: images.filter((image) => image.app === app).length,
+      total_ui_elements: 0, total_flows: 0, analyzed_screens: 0,
+      last_captured_at: null, available_platforms: ["web"],
+    }),
     appTraversalLimit: 1,
     recordAccessEvent: async (event) => { events.push(event); },
   }));
