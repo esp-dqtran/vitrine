@@ -64,10 +64,23 @@ test("serializes concurrent Free unlock allocation", { skip }, async () => {
   assert.equal((await listFreeUnlocks(userId)).length, 3);
 });
 
+test("serializes the single Free collection allocation", { skip }, async () => {
+  const { countUserCollections, createFreeCollection } = await import("./pricingStore.ts");
+  const { userId } = await fixture();
+  const created = await Promise.all([
+    createFreeCollection(userId, "First"),
+    createFreeCollection(userId, "Second"),
+  ]);
+  assert.equal(created.filter(Boolean).length, 1);
+  assert.equal(await countUserCollections(userId), 1);
+});
+
 test("active Pro accesses every app and receives twenty monthly export reservations", { skip }, async () => {
   const {
     canAccessApp,
+    countUserCollections,
     getAccountEntitlements,
+    isProUser,
     reserveExportOperation,
     upsertSubscription,
   } = await import("./pricingStore.ts");
@@ -86,6 +99,8 @@ test("active Pro accesses every app and receives twenty monthly export reservati
   });
 
   assert.equal(await canAccessApp({ id: userId, role: "user" }, apps[3]), true);
+  assert.equal(await isProUser(userId), true);
+  assert.equal(await countUserCollections(userId), 0);
   for (let used = 1; used <= 20; used++) {
     assert.deepEqual(await reserveExportOperation(userId, new Date("2026-07-10T00:00:00Z")), {
       status: "reserved",

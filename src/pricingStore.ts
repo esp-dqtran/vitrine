@@ -1,6 +1,6 @@
 import type { QueryResultRow } from "pg";
 import type { AuthUser } from "./authStore.ts";
-import { query, withTransaction } from "./db.ts";
+import { query, withTransaction, type ResearchCollection } from "./db.ts";
 import { isFeatureKey, type FeatureKey } from "./featureUsage.ts";
 import { exportObjectKey, validateObjectMetadata, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
 import {
@@ -49,6 +49,38 @@ export async function getSubscription(userId: number): Promise<SubscriptionRecor
     [userId],
   );
   return result.rows[0];
+}
+
+export async function isProUser(userId: number, now = new Date()): Promise<boolean> {
+  return effectivePlan(await getSubscription(userId), now) === "pro";
+}
+
+export async function countUserCollections(userId: number): Promise<number> {
+  const result = await query<{ count: string }>(
+    "SELECT count(*)::text AS count FROM collections WHERE user_id = $1",
+    [userId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function createFreeCollection(
+  userId: number,
+  name: string,
+): Promise<ResearchCollection | undefined> {
+  return withTransaction(async (client) => {
+    await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [userId]);
+    const count = await client.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM collections WHERE user_id = $1",
+      [userId],
+    );
+    if (Number(count.rows[0]?.count ?? 0) >= 1) return undefined;
+    const inserted = await client.query<Omit<ResearchCollection, "items"> & QueryResultRow>(
+      `INSERT INTO collections (user_id, name, description) VALUES ($1, $2, '')
+       RETURNING id, name, description, created_at, updated_at`,
+      [userId, name],
+    );
+    return { ...inserted.rows[0], items: [] };
+  });
 }
 
 export async function canAccessApp(

@@ -14,6 +14,14 @@ import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
+const freeEntitlements = {
+  plan: "free" as const,
+  subscription: null,
+  freeUnlocks: [] as string[],
+  freeUnlocksRemaining: 3,
+  exportUsage: { used: 0, limit: 20 as const, resetAt: null },
+};
+const proEntitlements = { ...freeEntitlements, plan: "pro" as const };
 const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
 const previewSha256 = createHash("sha256").update("image").digest("hex");
@@ -1116,6 +1124,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    getAccountEntitlements: async () => proEntitlements,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
     recordAccessEvent: async (event) => { events.push(event); },
     createExport: async () => ++nextExportId,
@@ -1175,6 +1184,8 @@ test("stores a FLOW.md export as a markdown object (regression: md extension was
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    getAccountEntitlements: async () => proEntitlements,
+    countUserCollections: async () => 1,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
     recordAccessEvent: async () => undefined,
     createExport: async () => 7, completeExport: async () => undefined, failExport: async () => undefined,
@@ -1355,6 +1366,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    getAccountEntitlements: async () => proEntitlements,
     allImages: async () => [{
       ...catalogImages[0],
       analysis: {
@@ -1395,6 +1407,8 @@ test("creates user-owned collections and edits item notes", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     canAccessApp: async () => true,
+    getAccountEntitlements: async () => proEntitlements,
+    countUserCollections: async () => 1,
     createCollection: async (_userId, name, description) => ({ ...collection, name, description: description ?? "" }),
     listCollections: async () => [{ ...collection, items: [] }],
     addCollectionItem: async (_userId, _collectionId, item) => ({
@@ -1440,6 +1454,65 @@ test("creates user-owned collections and edits item notes", async (t) => {
     { featureKey: "collections", action: "collection-item-removed", outcome: "success" },
     { featureKey: "collections", action: "collection-deleted", outcome: "success" },
   ]);
+});
+
+test("enforces Free search, collection, note, and unlock policy", async (t) => {
+  const now = "2026-07-21T00:00:00.000Z";
+  let collectionCount = 0;
+  let unlockCalled = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    getAccountEntitlements: async () => freeEntitlements,
+    countUserCollections: async () => collectionCount,
+    canAccessApp: async () => true,
+    createCollection: async (_userId, name, description) => {
+      collectionCount += 1;
+      return { id: 1, name, description, created_at: now, updated_at: now, items: [] };
+    },
+    createFreeCollection: async (_userId, name) => {
+      if (collectionCount >= 1) return undefined;
+      collectionCount += 1;
+      return { id: 1, name, description: "", created_at: now, updated_at: now, items: [] };
+    },
+    addCollectionItem: async () => { throw new Error("Free notes must be rejected first"); },
+    updateCollectionItemNotes: async () => { throw new Error("Free notes must be rejected first"); },
+    unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+
+  const search = await fetch(`${base}/search?q=checkout`, { headers });
+  assert.equal(search.status, 403);
+  assert.equal((await search.json()).code, "upgrade_required");
+
+  const described = await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Research", description: "Notes" }) });
+  assert.equal(described.status, 403);
+  assert.equal((await described.json()).code, "upgrade_required");
+  assert.equal((await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Research" }) })).status, 201);
+  const second = await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Second" }) });
+  assert.equal(second.status, 403);
+  assert.equal((await second.json()).code, "plan_limit");
+
+  const item = { kind: "screen", app: "linear", referenceId: "7", title: "Workspace", notes: "Remember this" };
+  assert.equal((await fetch(`${base}/collections/1/items`, { method: "POST", headers, body: JSON.stringify(item) })).status, 403);
+  assert.equal((await fetch(`${base}/collections/1/items/1`, { method: "PATCH", headers, body: JSON.stringify({ notes: "Remember" }) })).status, 403);
+  assert.equal((await fetch(`${base}/apps/linear/unlock`, { method: "POST", headers })).status, 201);
+  assert.equal(unlockCalled, true);
+});
+
+test("prevents active Pro from banking permanent Free unlocks", async (t) => {
+  let unlockCalled = false;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    getAccountEntitlements: async () => proEntitlements,
+    unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/apps/linear/unlock`, { method: "POST", headers: { cookie: "astryx_session=user" } });
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).code, "already_pro");
+  assert.equal(unlockCalled, false);
 });
 
 test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
@@ -1716,6 +1789,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
       available_platforms: ["web", "ios", "android"],
     }),
     canAccessApp: async () => unlocked,
+    getAccountEntitlements: async () => freeEntitlements,
     unlockFreeApp: async () => {
       unlocked = true;
       return { status: "unlocked", remaining: 2 };

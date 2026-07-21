@@ -73,6 +73,8 @@ import { buildAdminGalleryApps, buildAppMetadata, buildCatalogPage, buildEvidenc
 import {
   authorizedExportObject,
   canAccessApp,
+  countUserCollections,
+  createFreeCollection,
   completeExport,
   createExport,
   failExport,
@@ -333,6 +335,8 @@ const defaults = {
   canAccessApp,
   unlockFreeApp,
   getAccountEntitlements,
+  countUserCollections,
+  createFreeCollection,
   recordAccessEvent,
   reserveExportOperation,
   listAdminUsersPage,
@@ -830,6 +834,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  const effectiveCustomerPlan = async (res: express.Response): Promise<"free" | "pro"> =>
+    res.locals.user.role === "admin"
+      ? "pro"
+      : (await deps.getAccountEntitlements(res.locals.user.id)).plan;
 
   mountSitesRoutes(app, {
     store: deps.sitesStore,
@@ -1472,6 +1481,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid search kind" });
       return;
     }
+    if (await effectiveCustomerPlan(res) !== "pro") {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
     const [images, systems, flows] = await Promise.all([
       res.locals.user.role === "admin" ? deps.allImages() : deps.publishedImages(),
       res.locals.user.role === "admin" ? deps.listDesignSystems() : deps.listPublishedDesignSystems(),
@@ -1563,7 +1576,18 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid collection" });
       return;
     }
-    const collection = await deps.createCollection(res.locals.user.id, name, description);
+    const plan = await effectiveCustomerPlan(res);
+    if (plan !== "pro" && description.trim()) {
+      res.status(403).json({ error: "Research notes require Pro", code: "upgrade_required" });
+      return;
+    }
+    const collection = plan === "pro"
+      ? await deps.createCollection(res.locals.user.id, name, description)
+      : await deps.createFreeCollection(res.locals.user.id, name);
+    if (!collection) {
+      res.status(403).json({ error: "Free includes one collection", code: "plan_limit" });
+      return;
+    }
     await deps.recordAccessEvent({
       userId: res.locals.user.id,
       featureKey: "collections",
@@ -1603,6 +1627,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid collection item" });
       return;
     }
+    if (notes.trim() && await effectiveCustomerPlan(res) !== "pro") {
+      res.status(403).json({ error: "Research notes require Pro", code: "upgrade_required" });
+      return;
+    }
     if (!(await deps.canAccessApp(res.locals.user, appName))) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return;
@@ -1628,6 +1656,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const notes = boundedText(req.body?.notes, 4000);
     if (!collectionId || !itemId || notes === undefined) {
       res.status(400).json({ error: "invalid collection item notes" });
+      return;
+    }
+    if (notes.trim() && await effectiveCustomerPlan(res) !== "pro") {
+      res.status(403).json({ error: "Research notes require Pro", code: "upgrade_required" });
       return;
     }
     const item = await deps.updateCollectionItemNotes(res.locals.user.id, collectionId, itemId, notes);
@@ -1690,6 +1722,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       currentPeriodEnd: view.subscription?.current_period_end ?? null,
       cancelAtPeriodEnd: view.subscription?.cancel_at_period_end ?? false,
       graceExpiresAt: view.subscription?.grace_expires_at ?? null,
+      hasBillingCustomer: Boolean(view.subscription?.stripe_customer_id),
       freeUnlocks: view.freeUnlocks,
       freeUnlocksRemaining: view.freeUnlocksRemaining,
       exportUsage: view.exportUsage,
@@ -1964,6 +1997,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.post("/apps/:app/unlock", async (req, res) => {
     if (!isAppSlug(req.params.app)) {
       res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    if (await effectiveCustomerPlan(res) === "pro") {
+      res.status(409).json({ error: "Pro already includes every app", code: "already_pro" });
       return;
     }
     const result = await deps.unlockFreeApp(res.locals.user.id, req.params.app);
