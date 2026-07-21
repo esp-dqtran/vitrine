@@ -27,6 +27,7 @@ import { useCollections } from './useCollections';
 import { submitUrlImport } from './jobsApi';
 import { searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
+import { loadSubscription, type SubscriptionView } from './billingApi';
 import type { CatalogSearchResult } from '../catalogResearch';
 
 export function App() {
@@ -51,8 +52,10 @@ export function App() {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [entitlements, setEntitlements] = useState<{ plan: 'free' | 'pro'; freeUnlocks: string[]; freeUnlocksRemaining: number } | null>(null);
+  const [entitlements, setEntitlements] = useState<SubscriptionView | null>(null);
   const [entitlementsResolved, setEntitlementsResolved] = useState(isAdmin);
+  const [entitlementsError, setEntitlementsError] = useState('');
+  const [entitlementsRevision, setEntitlementsRevision] = useState(0);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
@@ -64,22 +67,25 @@ export function App() {
   const { apps, totalApps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
     route.name === 'app' ? route.appId : undefined,
-    route.name === 'app' && !detailGateLoading && !detailLocked,
+    route.name === 'app' && !detailGateLoading && !entitlementsError && !detailLocked,
   );
 
   useEffect(() => {
     if (user?.role !== 'user') {
       setEntitlements(null);
       setEntitlementsResolved(true);
+      setEntitlementsError('');
       return;
     }
     setEntitlementsResolved(false);
-    void fetch('/api/billing/subscription')
-      .then((response) => response.ok ? response.json() : null)
+    setEntitlementsError('');
+    void loadSubscription()
       .then(setEntitlements)
-      .catch(() => setEntitlements(null))
+      .catch((reason: Error) => { setEntitlements(null); setEntitlementsError(reason.message); })
       .finally(() => setEntitlementsResolved(true));
-  }, [user?.role]);
+  }, [entitlementsRevision, user?.id, user?.role]);
+
+  const retryEntitlements = () => setEntitlementsRevision((value) => value + 1);
 
   const openCollections = async () => {
     await ensureCollections().catch(() => []);
@@ -220,6 +226,18 @@ export function App() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
           {Array.from({ length: 9 }, (_, i) => <GalleryCardSkeleton key={i} index={i} />)}
         </div>
+      </div>,
+    );
+  }
+
+  if (route.name === 'app' && entitlementsError) {
+    return frame(
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 }} role="alert">
+        <EmptyState
+          title="Could not load account access"
+          description={entitlementsError}
+          actions={<Button label="Retry" variant="primary" clickAction={retryEntitlements} />}
+        />
       </div>,
     );
   }
@@ -385,7 +403,7 @@ export function App() {
     </AnimatePresence>
     <AnimatePresence>
       {collectionsOpen && <CollectionsPanel collections={collections} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
-      {settingsOpen && user && <SettingsPanel user={user} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onClose={() => setSettingsOpen(false)} />}
       {paletteOpen && (
         <CommandPalette
           apps={apps ?? []}
