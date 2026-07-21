@@ -67,6 +67,8 @@ interface CommandPaletteProps {
   searchLoading: boolean;
   searchError: string;
   collections: ResearchCollection[];
+  plan: 'free' | 'pro';
+  onUpgrade: () => void;
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   onQueryChange: (value: string) => void;
   onRetrySearch: () => void;
@@ -84,6 +86,8 @@ export function CommandPalette({
   searchLoading,
   searchError,
   collections,
+  plan,
+  onUpgrade,
   onCollectionsChange,
   onQueryChange,
   onRetrySearch,
@@ -133,7 +137,7 @@ export function CommandPalette({
   useEffect(() => { setActiveIndex(0); }, [result]);
 
   useEffect(() => {
-    if (nav !== 'flows' || flowsByApp || flowsLoading) return;
+    if (plan !== 'pro' || nav !== 'flows' || flowsByApp || flowsLoading) return;
     setFlowsLoading(true);
     Promise.all(apps.map((app) => {
       const platform = (app.screens.find((screen) => screen.platform === 'ios' || screen.platform === 'android' || screen.platform === 'web')?.platform ?? 'web') as Platform;
@@ -143,10 +147,10 @@ export function CommandPalette({
     }))
       .then((pairs) => setFlowsByApp(Object.fromEntries(pairs)))
       .finally(() => setFlowsLoading(false));
-  }, [nav, apps, flowsByApp, flowsLoading]);
+  }, [nav, apps, flowsByApp, flowsLoading, plan]);
 
   useEffect(() => {
-    if (!selected) return;
+    if (plan !== 'pro' || !selected) return;
     const controller = new AbortController();
     setRelatedLoading(true);
     setRelatedError('');
@@ -155,7 +159,7 @@ export function CommandPalette({
       .catch((error: Error) => { if (error.name !== 'AbortError') setRelatedError(error.message); })
       .finally(() => { if (!controller.signal.aborted) setRelatedLoading(false); });
     return () => controller.abort();
-  }, [selected, relatedRetry]);
+  }, [selected, relatedRetry, plan]);
 
   const requestClose = (afterClose?: () => void) => {
     if (closing) return;
@@ -331,6 +335,7 @@ export function CommandPalette({
               startIcon={<Icon icon="search" size="sm" />}
               hasClear={Boolean(query)}
               width="100%"
+              isDisabled={plan === 'free'}
             />
           </div>
           <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 7px' }}>Esc</span>
@@ -339,7 +344,7 @@ export function CommandPalette({
 
         <div className="command-palette-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div className="command-palette-sidebar" style={{ width: 200, flex: '0 0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 2, borderRight: '1px solid var(--color-border)', overflowY: 'auto' }}>
-            {NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.filter((item) => plan === 'pro' || item.id === 'trending' || item.id === 'categories').map((item) => (
               <ToggleButton
                 key={item.id}
                 label={item.label}
@@ -359,7 +364,15 @@ export function CommandPalette({
           </div>
 
           <div ref={resultsScrollRef} className="inspiration-modal-content" style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 24px 28px' }}>
-            {comparison ? (
+            {plan === 'free' ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12 }}>
+                  <div style={{ flex: 1 }}><strong>Search, filters, screens, elements, and flows are Pro.</strong><div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>You can still browse trending apps and categories.</div></div>
+                  <Button label="Upgrade to Pro" variant="primary" size="sm" onClick={onUpgrade} />
+                </div>
+                {nav === 'trending' ? <><div style={SECTION_LABEL}>Trending apps</div><div style={TILE_GRID}>{apps.slice(0, 7).map((app) => <AppTile key={app.id} app={app} onSelect={() => selectApp(app.id)} />)}</div></> : browseContent}
+              </>
+            ) : comparison ? (
               <InspirationComparison comparison={comparison} onBack={() => setComparison(null)} />
             ) : selected ? (
               <>
@@ -369,6 +382,8 @@ export function CommandPalette({
                   relatedLoading={relatedLoading}
                   relatedError={relatedError}
                   collections={collections}
+                  plan={plan}
+                  onUpgrade={onUpgrade}
                   onCollectionsChange={onCollectionsChange}
                   onBack={backToResults}
                   onOpen={openResult}

@@ -7,10 +7,12 @@ interface CollectionPickerProps {
   reference: SaveReference;
   collections: ResearchCollection[];
   onCollectionsChange: (collections: ResearchCollection[]) => void;
+  plan: 'free' | 'pro';
+  onUpgrade?: () => void;
   dark?: boolean;
 }
 
-export function CollectionPicker({ reference, collections, onCollectionsChange, dark }: CollectionPickerProps) {
+export function CollectionPicker({ reference, collections, onCollectionsChange, plan, onUpgrade, dark }: CollectionPickerProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -64,7 +66,9 @@ export function CollectionPicker({ reference, collections, onCollectionsChange, 
         {collections.map((collection) => (
           <DropdownMenuItem key={collection.id} label={collection.name} endContent={collection.items.length} onClick={() => void save(collection.id)} isDisabled={busy} />
         ))}
-        <DropdownMenuItem label="+ New collection" onClick={() => void createAndSave()} isDisabled={busy} />
+        {plan === 'pro' || collections.length === 0
+          ? <DropdownMenuItem label="+ New collection" onClick={() => void createAndSave()} isDisabled={busy} />
+          : <DropdownMenuItem label="Upgrade for more collections" onClick={onUpgrade} isDisabled={busy} />}
       </DropdownMenu>
       {message && message !== 'Saved' && <span role="alert" style={{ fontSize: 11, color: 'var(--color-text-danger)' }}>{message}</span>}
     </div>

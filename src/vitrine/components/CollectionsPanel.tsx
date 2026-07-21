@@ -6,12 +6,14 @@ import { useSlidePanel } from '../useSlidePanel';
 
 interface CollectionsPanelProps {
   collections: ResearchCollection[];
+  plan: 'free' | 'pro';
+  onUpgrade: () => void;
   onChange: (collections: ResearchCollection[]) => void;
   onClose: () => void;
   onOpenApp: (app: string) => void;
 }
 
-export function CollectionsPanel({ collections, onChange, onClose, onOpenApp }: CollectionsPanelProps) {
+export function CollectionsPanel({ collections, plan, onUpgrade, onChange, onClose, onOpenApp }: CollectionsPanelProps) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const { overlayRef, panelRef } = useSlidePanel();
@@ -36,10 +38,17 @@ export function CollectionsPanel({ collections, onChange, onClose, onOpenApp }: 
         <div style={{ flex: 1 }}><h2 style={{ margin: 0 }}>Research collections</h2><div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Save evidence and keep product-design notes together.</div></div>
         <Button label="Close" variant="secondary" size="sm" onClick={onClose} />
       </div>
-      <div style={{ display: 'flex', gap: 8, margin: '20px 0' }}>
-        <div style={{ flex: 1 }}><TextInput label="New collection name" isLabelHidden value={name} onChange={setName} onEnter={() => void create()} placeholder="New collection name" width="100%" /></div>
-        <Button label="Create" variant="primary" clickAction={create} />
-      </div>
+      {plan === 'pro' || collections.length === 0 ? (
+        <div style={{ display: 'flex', gap: 8, margin: '20px 0' }}>
+          <div style={{ flex: 1 }}><TextInput label="New collection name" isLabelHidden value={name} onChange={setName} onEnter={() => void create()} placeholder="New collection name" width="100%" /></div>
+          <Button label="Create" variant="primary" clickAction={create} />
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0', padding: 12, borderRadius: 10, background: 'var(--color-background-muted)' }}>
+          <span style={{ flex: 1, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Free includes one collection.</span>
+          <Button label="Upgrade for more collections" variant="primary" size="sm" onClick={onUpgrade} />
+        </div>
+      )}
       {error && <div role="alert" style={{ color: 'var(--color-text-danger)', fontSize: 12 }}>{error}</div>}
       <div style={{ display: 'grid', gap: 14 }}>
         {collections.map((collection) => (
@@ -54,7 +63,9 @@ export function CollectionsPanel({ collections, onChange, onClose, onOpenApp }: 
                   <div style={{ flex: 1 }}><Button label={item.title} variant="ghost" size="sm" onClick={() => onOpenApp(item.app)} /><span style={{ display: 'block', marginTop: 2, color: 'var(--color-text-disabled)', fontSize: 11 }}>{item.kind} · {item.app}</span></div>
                   <Button label="Remove" variant="ghost" size="sm" clickAction={async () => { await removeCollectionItem(collection.id, item.id); await refresh(); }} />
                 </div>
-                <CollectionItemNotes collectionId={collection.id} itemId={item.id} title={item.title} notes={item.notes} onSaved={refresh} />
+                {plan === 'pro'
+                  ? <CollectionItemNotes collectionId={collection.id} itemId={item.id} title={item.title} notes={item.notes} onSaved={refresh} />
+                  : <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-text-secondary)' }}><strong>Notes require Pro.</strong>{item.notes ? <p style={{ margin: '4px 0 0' }}>{item.notes}</p> : null}</div>}
               </article>
             ))}
           </Card>

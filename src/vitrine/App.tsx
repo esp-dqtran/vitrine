@@ -59,6 +59,9 @@ export function App() {
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
+  const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
+  const canUseProResearch = isAdmin || customerPlan === 'pro';
+  const openPricing = () => navigate({ name: 'pricing' });
 
   const isFreeGated = (appId: string) =>
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
@@ -98,6 +101,12 @@ export function App() {
   };
 
   useEffect(() => {
+    if (!canUseProResearch) {
+      setSearchResult(null);
+      setSearchError('');
+      setSearchLoading(false);
+      return;
+    }
     if (!q.trim()) {
       setSearchResult(null);
       setSearchError('');
@@ -113,7 +122,7 @@ export function App() {
         .finally(() => { if (!controller.signal.aborted) setSearchLoading(false); });
     }, 180);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [q, filters, searchRetry]);
+  }, [canUseProResearch, q, filters, searchRetry]);
 
   useEffect(() => {
     if (!isAdmin || route.name === 'app' || !hasMore || loadingMore) return;
@@ -402,7 +411,7 @@ export function App() {
       )}
     </AnimatePresence>
     <AnimatePresence>
-      {collectionsOpen && <CollectionsPanel collections={collections} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
+      {collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
       {settingsOpen && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onClose={() => setSettingsOpen(false)} />}
       {paletteOpen && (
         <CommandPalette
@@ -412,6 +421,8 @@ export function App() {
           searchLoading={searchLoading}
           searchError={searchError}
           collections={collections}
+          plan={customerPlan}
+          onUpgrade={openPricing}
           onCollectionsChange={setCollections}
           onQueryChange={setQ}
           onRetrySearch={() => setSearchRetry((value) => value + 1)}

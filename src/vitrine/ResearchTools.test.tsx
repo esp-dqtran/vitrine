@@ -29,9 +29,23 @@ test('offers saving any observed reference to a collection', () => {
     reference={{ kind: 'flow', app: 'linear', referenceId: 'sign-in', title: 'Sign in' }}
     collections={[{ id: 1, name: 'Auth research', description: '', created_at: '', updated_at: '', items: [] }]}
     onCollectionsChange={() => undefined}
+    plan="pro"
   />);
   assert.match(html, /Save/);
   assert.match(html, /collection/);
+});
+
+test('keeps Free users to their existing collection', () => {
+  const html = renderToStaticMarkup(<CollectionPicker
+    reference={{ kind: 'flow', app: 'linear', referenceId: 'sign-in', title: 'Sign in' }}
+    collections={[{ id: 1, name: 'Auth research', description: '', created_at: '', updated_at: '', items: [] }]}
+    onCollectionsChange={() => undefined}
+    plan="free"
+    onUpgrade={() => undefined}
+  />);
+  assert.match(html, /Auth research/);
+  assert.match(html, /Upgrade for more collections/);
+  assert.doesNotMatch(html, /\+ New collection/);
 });
 
 test('makes editable Figma the primary export and keeps code formats secondary', () => {

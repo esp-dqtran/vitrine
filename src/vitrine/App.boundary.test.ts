@@ -89,6 +89,15 @@ test('shares catalog search state with the inspiration modal', async () => {
   assert.match(source, /onCollectionsChange=\{setCollections\}/);
 });
 
+test('does not request Pro catalog research for a Free account', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const canUseProResearch = isAdmin \|\| customerPlan === 'pro'/);
+  assert.ok(source.indexOf('if (!canUseProResearch)') < source.indexOf('searchCatalog(q, filters, controller.signal)'));
+  assert.match(source, /plan=\{customerPlan\}/);
+  assert.match(source, /onUpgrade=\{openPricing\}/);
+});
+
 test('keeps independent Apps and Sites search state under References', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

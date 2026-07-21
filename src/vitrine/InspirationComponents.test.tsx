@@ -32,6 +32,7 @@ test("renders preview context and all three actions", () => {
     related={[]}
     relatedLoading={false}
     collections={[]}
+    plan="pro"
     onCollectionsChange={() => undefined}
     onBack={() => undefined}
     onOpen={() => undefined}

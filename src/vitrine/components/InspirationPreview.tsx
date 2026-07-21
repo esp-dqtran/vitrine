@@ -11,6 +11,8 @@ interface InspirationPreviewProps {
   relatedLoading: boolean;
   relatedError?: string;
   collections: ResearchCollection[];
+  plan: 'free' | 'pro';
+  onUpgrade?: () => void;
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   onBack: () => void;
   onOpen: (item: CatalogSearchResultItem) => void;
@@ -42,6 +44,8 @@ export function InspirationPreview(props: InspirationPreviewProps) {
               reference={{ kind: item.kind, app: item.app, referenceId: item.id, title: item.title }}
               collections={props.collections}
               onCollectionsChange={props.onCollectionsChange}
+              plan={props.plan}
+              onUpgrade={props.onUpgrade}
             />
           </div>
         </div>
