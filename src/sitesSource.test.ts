@@ -20,6 +20,8 @@ test("decodes the inspected V7 graph exactly", async () => {
   assert.equal(sections.filter((item) => item.mediaKind === "image").length, 35);
   assert.equal(sections.filter((item) => item.mediaKind === "video").length, 11);
   assert.equal(sections.flatMap((item) => item.ocrBoxes).length, 3146);
+  assert.deepEqual(sections[0].sourceMetadata?.patterns, ["Hero Section"]);
+  assert.deepEqual(sections[1].sourceMetadata?.patterns, ["Navigation Section"]);
   assert.deepEqual(result.pages.map((page) => page.position), [
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
   ]);

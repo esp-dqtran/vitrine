@@ -144,7 +144,7 @@ test("returns only authenticated API media paths in ready Site views", async () 
         video_start_seconds: 1,
         video_end_seconds: 2,
         ocr_boxes: [],
-        source_metadata: {},
+        source_metadata: { patterns: ["Hero Section"] },
       }]);
     }
     return result();
@@ -155,6 +155,38 @@ test("returns only authenticated API media paths in ready Site views", async () 
   assert.equal(view?.pages[0].fullPageImageUrl, "/api/sites/1/versions/2/pages/3/media");
   assert.equal(view?.pages[0].sections[0].mediaUrl, "/api/sites/1/versions/2/sections/4/media");
   assert.equal(view?.pages[0].sections[0].posterUrl, "/api/sites/1/versions/2/sections/4/poster");
+  assert.deepEqual(view?.pages[0].sections[0].sourceMetadata, { patterns: ["Hero Section"] });
+});
+
+test("returns ready Site versions newest-first in version detail", async () => {
+  const store = createSitesStore(async (sql) => {
+    if (/SELECT s\.id AS site_id, sv\.id AS version_id/.test(sql)) {
+      return result([{
+        site_id: 1,
+        version_id: 2,
+        name: "V7",
+        slug: graph.site.slug,
+        source_url: graph.site.sourceUrl,
+        canonical_url: identity.canonicalUrl,
+        label: "Jul 2026",
+        is_latest: true,
+      }]);
+    }
+    if (/SELECT sv\.id, sv\.label, sv\.is_latest, sv\.updated_at/.test(sql)) {
+      return result([
+        { id: 2, label: "Jul 2026", is_latest: true, updated_at: new Date("2026-07-20T00:00:00Z") },
+        { id: 1, label: "Nov 2025", is_latest: false, updated_at: new Date("2025-11-20T00:00:00Z") },
+      ]);
+    }
+    return result();
+  });
+
+  const detail = await store.readyVersionDetail(1, 2);
+
+  assert.deepEqual(detail?.versions, [
+    { id: 2, label: "Jul 2026", isLatest: true, updatedAt: "2026-07-20T00:00:00.000Z" },
+    { id: 1, label: "Nov 2025", isLatest: false, updatedAt: "2025-11-20T00:00:00.000Z" },
+  ]);
 });
 
 test("media resolution is scoped to one ready Site version", async () => {

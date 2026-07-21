@@ -73,6 +73,13 @@ export interface SiteOcrBox {
   text: string;
 }
 
+export interface SiteVersionOption {
+  id: number;
+  label: string;
+  isLatest: boolean;
+  updatedAt: string;
+}
+
 export interface SiteSectionView {
   id: number;
   sourceId: string;
@@ -84,6 +91,7 @@ export interface SiteSectionView {
   cropBottom?: number;
   videoStartSeconds?: number;
   videoEndSeconds?: number;
+  patterns: string[];
   ocrBoxes: SiteOcrBox[];
   sourceMetadata: Record<string, unknown>;
 }
@@ -101,6 +109,7 @@ export interface SiteVersionPage {
 export interface SiteVersionDetail {
   site: { id: number; name: string; slug: string; sourceUrl: string };
   version: { id: number; label: string; isLatest: boolean; previewUrl: string };
+  versionOptions: SiteVersionOption[];
   canonicalUrl: string;
   pages: SiteVersionPage[];
 }

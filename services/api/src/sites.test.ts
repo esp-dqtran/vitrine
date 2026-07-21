@@ -24,6 +24,10 @@ const detail: SiteVersionDetail = {
   label: "Jul 2026",
   isLatest: true,
   previewUrl: "/api/sites/1/versions/2/media/preview",
+  versions: [
+    { id: 2, label: "Jul 2026", isLatest: true, updatedAt: "2026-07-20T00:00:00.000Z" },
+    { id: 1, label: "Nov 2025", isLatest: false, updatedAt: "2025-11-20T00:00:00.000Z" },
+  ],
   pages: [],
 };
 
@@ -93,7 +97,9 @@ test("serves only ready Site summaries and version details", async (t) => {
 
   const version = await fetch(`${base}/sites/1/versions/2`);
   assert.equal(version.status, 200);
-  assert.equal((await version.json()).canonicalUrl, detail.canonicalUrl);
+  const versionBody = await version.json();
+  assert.equal(versionBody.canonicalUrl, detail.canonicalUrl);
+  assert.deepEqual(versionBody.versions, detail.versions);
 });
 
 test("validates positive Site route IDs before store reads", async (t) => {

@@ -53,7 +53,30 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     return Response.json({
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
       canonicalUrl: approvedUrl, label: 'Jul 2026', isLatest: true,
-      previewUrl: '/api/sites/1/versions/2/media/preview', pages: [],
+      previewUrl: '/api/sites/1/versions/2/media/preview',
+      versions: [
+        { id: 2, label: 'Jul 2026', isLatest: true, updatedAt: '2026-07-20T00:00:00.000Z' },
+        { id: 1, label: 'Nov 2025', isLatest: false, updatedAt: '2025-11-20T00:00:00.000Z' },
+      ],
+      pages: [{
+        id: 10,
+        sourceId: 'page-1',
+        title: 'Home',
+        url: 'https://v7labs.com/',
+        position: 0,
+        fullPageImageUrl: '/api/sites/1/versions/2/pages/10/media',
+        sections: [{
+          id: 12,
+          sourceId: 'section-1',
+          position: 0,
+          mediaKind: 'image',
+          mediaUrl: '/api/sites/1/versions/2/sections/12/media',
+          cropTop: 0,
+          cropBottom: 800,
+          ocrBoxes: [],
+          sourceMetadata: { patterns: ['Hero Section', 'Features'] },
+        }],
+      }],
     });
   };
 
@@ -65,6 +88,8 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
   ]);
   assert.deepEqual(detail.site, { id: 1, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/' });
+  assert.deepEqual(detail.versionOptions.map((version) => version.label), ['Jul 2026', 'Nov 2025']);
+  assert.deepEqual(detail.pages[0].sections[0].patterns, ['Hero Section', 'Features']);
   assert.deepEqual(urls, ['/api/sites', '/api/sites/1/versions/2']);
   assert.ok(urls.every((url) => url !== '/api/jobs'));
 });

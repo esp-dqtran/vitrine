@@ -50,6 +50,13 @@ export interface SiteSummary {
   updatedAt: string;
 }
 
+export interface SiteVersionOption {
+  id: number;
+  label: string;
+  isLatest: boolean;
+  updatedAt: string;
+}
+
 export interface SiteVersionDetail {
   siteId: number;
   versionId: number;
@@ -60,6 +67,7 @@ export interface SiteVersionDetail {
   label: string;
   isLatest: boolean;
   previewUrl: string;
+  versions: SiteVersionOption[];
   pages: Array<{
     id: number;
     sourceId: string;
@@ -225,7 +233,7 @@ export function createSitesStore(
       const headerRow = header.rows[0];
       if (!headerRow) return undefined;
 
-      const [pageResult, sectionResult] = await Promise.all([
+      const [pageResult, sectionResult, versionResult] = await Promise.all([
         runQuery(
           `SELECT sp.id, sp.source_page_id, sp.title, sp.page_url, sp.position
            FROM site_pages sp
@@ -243,6 +251,13 @@ export function createSitesStore(
            WHERE sp.version_id = $1
            ORDER BY sp.position, ss.position`,
           [versionId],
+        ),
+        runQuery(
+          `SELECT sv.id, sv.label, sv.is_latest, sv.updated_at
+           FROM site_versions sv
+           WHERE sv.site_id = $1 AND sv.status = 'ready'
+           ORDER BY sv.is_latest DESC, sv.updated_at DESC, sv.id DESC`,
+          [siteId],
         ),
       ]);
       const sectionsByPage = new Map<number, SiteVersionDetail["pages"][number]["sections"]>();
@@ -284,6 +299,12 @@ export function createSitesStore(
         label: text(headerRow.label),
         isLatest: headerRow.is_latest === true,
         previewUrl: mediaPath(siteId, versionId, "preview"),
+        versions: versionResult.rows.map((row) => ({
+          id: positiveId(row.id),
+          label: text(row.label),
+          isLatest: row.is_latest === true,
+          updatedAt: isoDate(row.updated_at),
+        })),
         pages: pageResult.rows.map((row) => {
           const pageId = positiveId(row.id);
           return {

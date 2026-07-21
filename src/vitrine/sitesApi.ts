@@ -44,10 +44,28 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
   const sourceUrl = requiredText(body.sourceUrl);
   const label = requiredText(body.label);
   const previewUrl = apiPath(body.previewUrl);
-  if (!Array.isArray(body.pages)) throw new Error('Site version returned an invalid response');
+  if (!Array.isArray(body.versions) || !Array.isArray(body.pages)) {
+    throw new Error('Site version returned an invalid response');
+  }
+  const versionOptions = body.versions.map((value) => {
+    if (!isRecord(value) || !positiveId(value.id)) {
+      throw new Error('Site version returned an invalid response');
+    }
+    const updatedAt = requiredText(value.updatedAt);
+    if (Number.isNaN(Date.parse(updatedAt))) {
+      throw new Error('Site version returned an invalid response');
+    }
+    return {
+      id: value.id,
+      label: requiredText(value.label),
+      isLatest: value.isLatest === true,
+      updatedAt,
+    };
+  });
   return {
     site: { id: siteId, name, slug, sourceUrl },
     version: { id: versionId, label, isLatest: body.isLatest === true, previewUrl },
+    versionOptions,
     canonicalUrl: requiredText(body.canonicalUrl),
     pages: body.pages.map(parsePage),
   };
@@ -109,12 +127,14 @@ function parseSection(value: unknown): SiteSectionView {
     (value.mediaKind !== 'image' && value.mediaKind !== 'video') ||
     !Array.isArray(value.ocrBoxes) || !isRecord(value.sourceMetadata)
   ) throw new Error('Site version returned an invalid response');
+  const sourceMetadata = value.sourceMetadata;
   const section: SiteSectionView = {
     id: value.id,
     sourceId: requiredText(value.sourceId),
     position: nonNegativeInteger(value.position),
     mediaKind: value.mediaKind,
     mediaUrl: apiPath(value.mediaUrl),
+    patterns: optionalStringArray(sourceMetadata.patterns),
     ocrBoxes: value.ocrBoxes.map((box) => {
       if (!isRecord(box)) throw new Error('Site version returned an invalid response');
       return {
@@ -123,7 +143,7 @@ function parseSection(value: unknown): SiteSectionView {
         text: typeof box.text === 'string' ? box.text : '',
       };
     }),
-    sourceMetadata: value.sourceMetadata,
+    sourceMetadata,
   };
   if (typeof value.posterUrl === 'string') section.posterUrl = apiPath(value.posterUrl);
   if (value.cropTop !== undefined) section.cropTop = finiteNumber(value.cropTop);
@@ -131,6 +151,14 @@ function parseSection(value: unknown): SiteSectionView {
   if (value.videoStartSeconds !== undefined) section.videoStartSeconds = finiteNumber(value.videoStartSeconds);
   if (value.videoEndSeconds !== undefined) section.videoEndSeconds = finiteNumber(value.videoEndSeconds);
   return section;
+}
+
+function optionalStringArray(value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || !item)) {
+    throw new Error('Site version returned an invalid response');
+  }
+  return [...new Set(value)];
 }
 
 async function responseBody(response: Response): Promise<unknown> {

@@ -164,6 +164,7 @@ function mapSection(source: SourceObject): SiteSection {
   const type = string(source.type);
   const sourceId = string(source.id);
   const position = integer(source.display_order);
+  const patterns = sectionPatterns(source);
   if (type === "page_image") {
     const metadata = object(source.metadata);
     const width = positiveNumber(metadata.width);
@@ -180,6 +181,7 @@ function mapSection(source: SourceObject): SiteSection {
         sourceType: type,
         sourceWidth: width,
         sourceHeight: height,
+        patterns,
       },
     };
   }
@@ -193,10 +195,15 @@ function mapSection(source: SourceObject): SiteSection {
       videoStartSeconds: nonNegativeNumber(source.video_timestamp_start_ms) / 1_000,
       videoEndSeconds: positiveNumber(source.video_timestamp_end_ms) / 1_000,
       ocrBoxes: [],
-      sourceMetadata: { sourceType: type },
+      sourceMetadata: { sourceType: type, patterns },
     };
   }
   throw new MobbinSitesSourceError();
+}
+
+function sectionPatterns(source: SourceObject): string[] {
+  if (source.patterns === undefined) return [];
+  return array(source.patterns).map(string);
 }
 
 function mapOcrBox(value: unknown): SiteOcrBox {
