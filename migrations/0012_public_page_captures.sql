@@ -1,13 +1,3 @@
-ALTER TABLE stored_objects
-  DROP CONSTRAINT stored_objects_content_type_check;
-
-ALTER TABLE stored_objects
-  ADD CONSTRAINT stored_objects_content_type_check CHECK (content_type IN (
-    'image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'video/webm',
-    'application/json', 'application/zip', 'text/css', 'text/javascript',
-    'text/typescript', 'text/markdown'
-  ));
-
 ALTER TABLE apps ADD COLUMN IF NOT EXISTS source_domain TEXT;
 ALTER TABLE apps ADD COLUMN IF NOT EXISTS display_name TEXT;
 ALTER TABLE apps ADD COLUMN IF NOT EXISTS description TEXT;
@@ -17,6 +7,18 @@ ALTER TABLE apps ADD COLUMN IF NOT EXISTS accent_color TEXT;
 CREATE UNIQUE INDEX apps_source_domain_unique
   ON apps (source_domain)
   WHERE source_domain IS NOT NULL;
+
+-- Catalog reads join apps before stored_objects. Take DDL locks in that same
+-- order so active reads cannot deadlock this migration.
+ALTER TABLE stored_objects
+  DROP CONSTRAINT stored_objects_content_type_check;
+
+ALTER TABLE stored_objects
+  ADD CONSTRAINT stored_objects_content_type_check CHECK (content_type IN (
+    'image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'video/webm',
+    'application/json', 'application/zip', 'text/css', 'text/javascript',
+    'text/typescript', 'text/markdown'
+  ));
 
 CREATE TABLE web_pages (
   id BIGSERIAL PRIMARY KEY,

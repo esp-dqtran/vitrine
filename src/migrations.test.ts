@@ -324,6 +324,10 @@ test("public-page migration defines App-backed immutable page captures", async (
   assert.match(sql, /UNIQUE \(version_id, position\)/);
   assert.match(sql, /WHERE status = 'ready'/);
   assert.match(sql, /'video\/webm'/);
+  assert.ok(
+    sql.indexOf("ALTER TABLE apps") < sql.indexOf("ALTER TABLE stored_objects"),
+    "lock apps before stored_objects to match live catalog read order and avoid DDL deadlocks",
+  );
 });
 
 test("baseline migration preserves existing published and draft image membership", {
