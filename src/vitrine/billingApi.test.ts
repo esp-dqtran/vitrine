@@ -5,6 +5,8 @@ import { createCheckout, createPortal, loadSubscription } from './billingApi.ts'
 test('loads the safe subscription view', async () => {
   const expected = {
     plan: 'free' as const,
+    entitlementSource: 'free' as const,
+    promotionExpiresAt: null,
     status: null,
     interval: null,
     currentPeriodEnd: null,

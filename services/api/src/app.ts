@@ -1785,6 +1785,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const view = await deps.getAccountEntitlements(res.locals.user.id);
     res.json({
       plan: view.plan,
+      entitlementSource: view.entitlementSource,
+      promotionExpiresAt: view.promotionExpiresAt,
       status: view.subscription?.status ?? null,
       interval: view.subscription?.billing_interval ?? null,
       currentPeriodEnd: view.subscription?.current_period_end ?? null,

@@ -1,5 +1,7 @@
 export interface SubscriptionView {
   plan: 'free' | 'pro';
+  entitlementSource: 'paid' | 'promotion' | 'free';
+  promotionExpiresAt: string | null;
   status: string | null;
   interval: 'month' | 'year' | null;
   currentPeriodEnd: string | null;
