@@ -4,7 +4,7 @@
 
 **Goal:** Reduce long public-page preview recordings to about 21 seconds while leaving screenshots and section capture unchanged.
 
-**Architecture:** Keep the current Playwright screencast and continuous `requestAnimationFrame` scroll. Calculate duration with a pure, testable helper that preserves the configured minimum speed but caps long-page scrolling at 20 seconds; reduce default endpoint holds to 500 ms.
+**Architecture:** Keep the continuous `requestAnimationFrame` scroll and full-page screenshot. Calculate duration with a pure, testable helper that preserves the configured minimum speed but caps long-page scrolling at 20 seconds; sample Playwright screencast JPEG callbacks at 60 fps and encode the WebM with `ffmpeg-static` instead of Playwright's fixed-25-fps path recorder.
 
 **Tech Stack:** TypeScript, Node test runner, Playwright, Vite
 
@@ -65,6 +65,8 @@ export function publicPageScrollDurationMs(
 ```
 
 Change `recordContinuousScroll` to accept `maxDurationMs` and calculate duration with this helper. Do not change its animation, WebM recording, or returned shape.
+
+Use `ffmpeg-static` to encode the sampled screencast frames and assert with FFmpeg that the fixture WebM reports `60 fps`.
 
 - [ ] **Step 4: Run both supported browser-test runtimes**
 

@@ -12,6 +12,7 @@ Reduce the time required to record and watch continuously scrolling public-page 
 - Reduce the default hold at the top and bottom from 1,000 ms to 500 ms.
 - Keep the existing continuous `requestAnimationFrame` animation, zero intermediate stops, and full-page screenshot capture unchanged.
 - Preserve explicit test and caller overrides for scroll speed and hold duration.
+- Sample Playwright's screencast frame callback at 60 fps and encode those JPEG frames to WebM with the portable `ffmpeg-static` binary. Do not use Playwright's path-based recorder, which fixes output at 25 fps.
 
 For the measured Mobbin homepage, the 9,925 px scroll distance changes from about 49.6 seconds of scrolling plus two 1-second holds to 20 seconds of scrolling plus two 0.5-second holds: roughly 21 seconds total, with smoother movement.
 
@@ -25,6 +26,7 @@ For the measured Mobbin homepage, the 9,925 px scroll distance changes from abou
 
 - Add a unit-level timing test for short and tall scroll distances.
 - Verify the browser capture test still produces a WebM and ordered section crops under both Node strip-types and the worker's `tsx` runtime.
+- Assert that the fixture WebM reports 60 fps through FFmpeg.
 - Run focused crawler and worker tests plus the production build.
 - Re-run the isolated Mobbin.com E2E and confirm the resulting WebM duration is below 20 seconds.
 

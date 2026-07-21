@@ -1,7 +1,10 @@
+import { spawn } from "node:child_process";
 import { lookup } from "node:dns/promises";
+import { once } from "node:events";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import ffmpegPath from "ffmpeg-static";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import sharp from "sharp";
 import {
@@ -13,6 +16,7 @@ import {
 } from "./publicPage.ts";
 
 const VIEWPORT = { width: 1440 as const, height: 900 as const };
+const PREVIEW_FRAMES_PER_SECOND = 60;
 
 export interface PublicPageBrowserOptions {
   headless?: boolean;
@@ -291,9 +295,24 @@ async function recordContinuousScroll(
 ): Promise<{ body: Buffer; durationMs: number }> {
   const directory = await mkdtemp(path.join(tmpdir(), "astryx-public-page-video-"));
   const videoPath = path.join(directory, "preview.webm");
+  const encoder = createPreviewVideoEncoder(videoPath);
+  const frameWrites = createFrameWriteQueue((frame) => encoder.write(frame));
+  let encoderFinished = false;
+  let nextFrameTimestamp: number | undefined;
+  const frameIntervalMs = 1_000 / PREVIEW_FRAMES_PER_SECOND;
   try {
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screencast.start({ path: videoPath, size: VIEWPORT });
+    await page.screencast.start({
+      size: VIEWPORT,
+      onFrame: ({ data, timestamp }) => {
+        if (nextFrameTimestamp === undefined) nextFrameTimestamp = timestamp;
+        if (timestamp + 0.001 < nextFrameTimestamp) return;
+        while (timestamp + 0.001 >= nextFrameTimestamp) {
+          frameWrites.push(data);
+          nextFrameTimestamp += frameIntervalMs;
+        }
+      },
+    });
     await page.waitForTimeout(options.holdMs);
     const distance = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
     const durationMs = publicPageScrollDurationMs(distance, options.pixelsPerSecond, options.maxDurationMs);
@@ -311,11 +330,76 @@ async function recordContinuousScroll(
     }
     await page.waitForTimeout(options.holdMs);
     await page.screencast.stop();
+    await frameWrites.flush();
+    await encoder.finish();
+    encoderFinished = true;
     return { body: await readFile(videoPath), durationMs };
   } finally {
     await page.screencast.stop().catch(() => undefined);
+    if (!encoderFinished) encoder.abort();
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+export function createFrameWriteQueue(write: (frame: Buffer) => Promise<void>): {
+  push(frame: Buffer): void;
+  flush(): Promise<void>;
+} {
+  let pending = Promise.resolve();
+  return {
+    push(frame) {
+      pending = pending.then(() => write(frame));
+    },
+    flush() {
+      return pending;
+    },
+  };
+}
+
+function createPreviewVideoEncoder(videoPath: string): {
+  write(frame: Buffer): Promise<void>;
+  finish(): Promise<void>;
+  abort(): void;
+} {
+  if (!ffmpegPath) throw new Error("Public page video encoder is unavailable");
+  const encoder = spawn(ffmpegPath, [
+    "-y",
+    "-loglevel", "error",
+    "-f", "image2pipe",
+    "-vcodec", "mjpeg",
+    "-framerate", String(PREVIEW_FRAMES_PER_SECOND),
+    "-i", "pipe:0",
+    "-an",
+    "-c:v", "libvpx-vp9",
+    "-deadline", "realtime",
+    "-cpu-used", "5",
+    "-row-mt", "1",
+    "-b:v", "0",
+    "-crf", "32",
+    "-pix_fmt", "yuv420p",
+    videoPath,
+  ], { stdio: ["pipe", "ignore", "pipe"] });
+  const completed = new Promise<void>((resolve, reject) => {
+    encoder.once("error", reject);
+    encoder.once("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error("Public page video encoding failed"));
+    });
+  });
+  return {
+    async write(frame) {
+      if (encoder.stdin.write(frame)) return;
+      await once(encoder.stdin, "drain");
+    },
+    async finish() {
+      encoder.stdin.end();
+      await completed;
+    },
+    abort() {
+      encoder.stdin.destroy();
+      encoder.kill();
+    },
+  };
 }
 
 export function publicPageScrollDurationMs(
