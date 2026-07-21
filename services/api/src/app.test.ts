@@ -1467,7 +1467,7 @@ test("enforces Free search, collection, note, and unlock policy", async (t) => {
     canAccessApp: async () => true,
     createCollection: async (_userId, name, description) => {
       collectionCount += 1;
-      return { id: 1, name, description, created_at: now, updated_at: now, items: [] };
+      return { id: 1, name, description: description ?? "", created_at: now, updated_at: now, items: [] };
     },
     createFreeCollection: async (_userId, name) => {
       if (collectionCount >= 1) return undefined;
