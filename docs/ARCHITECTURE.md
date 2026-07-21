@@ -269,6 +269,9 @@ The API requires these values at startup:
 - `STRIPE_PRO_MONTHLY_PRICE_ID`
 - `STRIPE_PRO_YEARLY_PRICE_ID`
 - `APP_URL`
+- `REFERRAL_CAMPAIGN_ID`
+- `REFERRAL_CAMPAIGN_START` (ISO-8601 UTC timestamp)
+- `REFERRAL_CAMPAIGN_END` (ISO-8601 UTC timestamp later than the start)
 - `MEDIA_SIGNING_SECRET`
 
 The Checkout and Portal endpoints return Stripe-hosted HTTPS URLs. The frontend

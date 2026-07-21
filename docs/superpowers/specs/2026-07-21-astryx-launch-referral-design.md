@@ -1,7 +1,7 @@
 # Astryx Launch Referral Design
 
 **Date:** 2026-07-21
-**Status:** Approved concept, pending written-spec review
+**Status:** Implemented
 **Scope:** First-launch referral campaign for individual Free and Pro accounts
 
 ## Objective
