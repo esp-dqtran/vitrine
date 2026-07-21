@@ -59,7 +59,11 @@ export interface PublicPageStore {
     objects: ObjectMetadata[],
   ): Promise<CompletedPublicPageCapture>;
   failCapture(versionId: number, message: string): Promise<void>;
-  previewObject(app: string, versionId: number): Promise<ObjectMetadata | undefined>;
+  previewObject(
+    app: string,
+    versionId: number,
+    publishedOnly?: boolean,
+  ): Promise<ObjectMetadata | undefined>;
 }
 
 const liveQuery: DatabaseQuery = (sql, values) =>
@@ -314,7 +318,7 @@ export function createPublicPageStore(
       );
     },
 
-    async previewObject(app, versionId) {
+    async previewObject(app, versionId, publishedOnly = false) {
       assertPositiveId(versionId);
       const result = await runQuery(
         `SELECT so.object_key, so.sha256, so.byte_size, so.content_type, so.access_class
@@ -325,8 +329,14 @@ export function createPublicPageStore(
          WHERE a.name = $1 AND wpv.id = $2 AND wpv.status = 'ready'
            AND so.content_type = 'video/webm'
            AND so.access_class = 'protected'
+           AND ($3::boolean = false OR EXISTS (
+             SELECT 1
+             FROM version_images vi
+             JOIN app_versions av ON av.id = vi.version_id
+             WHERE vi.image_id = wpv.screenshot_image_id AND av.status = 'published'
+           ))
          LIMIT 1`,
-        [nonEmptyText(app), versionId],
+        [nonEmptyText(app), versionId, publishedOnly],
       );
       return metadataFrom(result.rows[0]);
     },

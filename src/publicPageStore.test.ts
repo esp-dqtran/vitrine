@@ -150,3 +150,24 @@ test("completeCapture rolls back before ready when section counts differ", async
   assert.equal(calls.some((sql) => /status = 'ready'/.test(sql)), false);
   assert.equal(calls.at(-1), "ROLLBACK");
 });
+
+test("preview lookup is App-scoped and can require published evidence", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const preview = metadata("public-pages/example.com/version/preview.webm", "video/webm");
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result([{
+      object_key: preview.key,
+      sha256: preview.sha256,
+      byte_size: preview.byteSize,
+      content_type: preview.contentType,
+      access_class: preview.accessClass,
+    }]);
+  };
+  const store = createPublicPageStore(query);
+
+  assert.deepEqual(await store.previewObject("example-com", 71, true), preview);
+  assert.match(calls[0].sql, /a\.name = \$1 AND wpv\.id = \$2/);
+  assert.match(calls[0].sql, /av\.status = 'published'/);
+  assert.deepEqual(calls[0].values, ["example-com", 71, true]);
+});

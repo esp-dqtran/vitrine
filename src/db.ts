@@ -197,6 +197,11 @@ export interface AppMetadataRow {
   app: string;
   icon_url: string | null;
   category: string | null;
+  display_name?: string | null;
+  description?: string | null;
+  website_url?: string | null;
+  accent_color?: string | null;
+  preview_version_id?: number | null;
   total_screens: number;
   total_ui_elements: number;
   total_flows: number;
@@ -222,6 +227,74 @@ function decodeImageCursor(cursor: string): number {
 }
 
 export async function appMetadata(app: string, publishedOnly = false): Promise<AppMetadataRow | null> {
+  try {
+    const res = await query<AppMetadataRow>(
+    `WITH target AS (
+       SELECT id, name, icon_url, category, display_name, description, website_url, accent_color
+       FROM apps WHERE name = $1
+     ), latest_versions AS (
+       SELECT DISTINCT ON (av.platform) av.id, av.platform
+       FROM app_versions av JOIN target t ON t.id = av.app_id
+       WHERE av.status = 'published'
+       ORDER BY av.platform, av.version_number DESC
+     ), eligible_images AS (
+       SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
+       FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
+       WHERE $2::boolean = false
+       UNION ALL
+       SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
+       FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
+       JOIN images i ON i.id = vi.image_id
+       WHERE $2::boolean = true
+     ), eligible_flows AS (
+       SELECT COALESCE(jsonb_array_length(af.flows), 0)::integer AS flow_count
+       FROM target t JOIN app_flows af ON af.app_id = t.id
+       WHERE $2::boolean = false
+       UNION ALL
+       SELECT COALESCE(jsonb_array_length(afv.flows), 0)::integer
+       FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
+       WHERE $2::boolean = true
+     )
+     SELECT t.name AS app, t.icon_url, t.category, t.display_name, t.description,
+       t.website_url, t.accent_color,
+       (
+         SELECT wpv.id::integer
+         FROM web_pages wp
+         JOIN web_page_versions wpv ON wpv.page_id = wp.id
+         WHERE wp.app_id = t.id AND wpv.status = 'ready'
+           AND ($2::boolean = false OR EXISTS (
+             SELECT 1 FROM version_images vi
+             JOIN app_versions av ON av.id = vi.version_id
+             WHERE vi.image_id = wpv.screenshot_image_id AND av.status = 'published'
+           ))
+         ORDER BY wpv.captured_at DESC NULLS LAST, wpv.id DESC
+         LIMIT 1
+       ) AS preview_version_id,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'screen')::integer AS total_screens,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'ui_element')::integer AS total_ui_elements,
+       COALESCE((SELECT SUM(flow_count) FROM eligible_flows), 0)::integer AS total_flows,
+       COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'screen' AND ei.analysis IS NOT NULL)::integer AS analyzed_screens,
+       MAX(ei.captured_at) AS last_captured_at,
+       COALESCE((
+         SELECT array_agg(platform ORDER BY CASE platform WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END, platform)
+         FROM (SELECT DISTINCT platform FROM eligible_images WHERE platform IS NOT NULL) available
+       ), ARRAY[]::text[]) AS available_platforms
+     FROM target t LEFT JOIN eligible_images ei ON true
+     GROUP BY t.id, t.name, t.icon_url, t.category, t.display_name, t.description,
+       t.website_url, t.accent_color`,
+    [app, publishedOnly],
+  );
+    return res.rows[0] ?? null;
+  } catch (error) {
+    const code = (error as { code?: string } | undefined)?.code;
+    if (code !== "42703" && code !== "42P01") throw error;
+    // API startup requires current migrations. This fallback only keeps rolling deploys and
+    // older local test databases readable while migration 0012 is being applied.
+    return legacyAppMetadata(app, publishedOnly);
+  }
+}
+
+async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<AppMetadataRow | null> {
   const res = await query<AppMetadataRow>(
     `WITH target AS (
        SELECT id, name, icon_url, category FROM apps WHERE name = $1
@@ -399,6 +472,9 @@ export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promi
 }
 
 export interface AdminGalleryImage extends CrawledImage {
+  display_name?: string | null;
+  website_url?: string | null;
+  accent_color?: string | null;
   total_screens: number;
   analyzed_screens: number;
   last_captured_at: string | null;
@@ -419,6 +495,7 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
   const res = await query<AdminGalleryPageRow>(
     `WITH all_apps AS (
        SELECT a.id, a.name, a.icon_url, a.category,
+              a.display_name, a.website_url, a.accent_color,
               COUNT(*) OVER()::integer AS total_apps
        FROM apps a
        WHERE EXISTS (
@@ -444,6 +521,7 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
      ), ranked_images AS (
        SELECT i.id, pa.name AS app, p.name AS platform, i.image_url, i.kind,
               i.description, i.analysis, pa.icon_url, pa.category,
+              pa.display_name, pa.website_url, pa.accent_color,
               i.image_url AS capture_url, i.created_at AS captured_at,
               ROW_NUMBER() OVER (PARTITION BY pa.id ORDER BY i.created_at ASC, i.id ASC) AS preview_rank,
               pa.id AS app_id, pa.total_apps
@@ -452,7 +530,8 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
        JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
      )
      SELECT ri.id, ri.app, ri.platform, ri.image_url, ri.kind, ri.description, ri.analysis,
-            ri.icon_url, ri.category, ri.capture_url, ri.captured_at,
+            ri.icon_url, ri.category, ri.display_name, ri.website_url, ri.accent_color,
+            ri.capture_url, ri.captured_at,
             c.total_screens, c.analyzed_screens, c.last_captured_at,
             ri.total_apps,
             ARRAY(

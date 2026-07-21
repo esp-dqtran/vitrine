@@ -133,8 +133,11 @@ import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import { mountSitesRoutes } from "./sites.ts";
+import { canonicalPublicPageUrl } from "../../../src/publicPage.ts";
+import { publishPublicPageJob } from "../../../src/publicPageQueue.ts";
+import { createPublicPageStore } from "../../../src/publicPageStore.ts";
 
-const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site"] as const;
+const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site", "crawl-public-page"] as const;
 export const DEFAULT_API_PORT = 3010;
 const disabledBilling: BillingService = {
   createCheckout: async () => { throw new Error("Billing is not configured"); },
@@ -144,6 +147,7 @@ const disabledBilling: BillingService = {
 const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
 const apiAutonomousStore = createAutonomousStore();
 const apiSitesStore = createSitesStore();
+const apiPublicPageStore = createPublicPageStore();
 
 type RepairProvider = ResearchProvider;
 interface CrawlRepairRequest {
@@ -288,6 +292,7 @@ const defaults = {
   authorizedExportObject,
   publishJob,
   publishSitesJob,
+  publishPublicPageJob,
   readProgress,
   subscribeProgress,
   requestCancel,
@@ -358,6 +363,7 @@ const defaults = {
   organizationsEnabled: process.env.TEAMS_ENABLED === "true",
   listResearchCandidates: undefined as ((userId: number) => Promise<ResearchSuggestionCandidate[]>) | undefined,
   sitesStore: apiSitesStore,
+  publicPageStore: apiPublicPageStore,
 };
 type ApiDeps = typeof defaults;
 
@@ -628,6 +634,10 @@ function safeSiteJobError(error: unknown): string {
     .slice(0, 500)
     .trim();
   return sanitized || generic;
+}
+
+function safePublicPageJobError(): string {
+  return "Public page queue unavailable";
 }
 
 export function createApiApp(overrides: Partial<ApiDeps> = {}) {
@@ -2149,6 +2159,36 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json({ app: buildAppMetadata(row) });
   });
 
+  app.get("/apps/:app/page-preview/:versionId", async (req, res) => {
+    const versionId = positiveId(req.params.versionId);
+    if (!isAppSlug(req.params.app) || !versionId) {
+      res.status(400).json({ error: "invalid page preview reference" });
+      return;
+    }
+    if (res.locals.user.role !== "admin" && !(await deps.canAccessApp(res.locals.user, req.params.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "media storage unavailable" });
+      return;
+    }
+    const metadata = await deps.publicPageStore.previewObject(
+      req.params.app,
+      versionId,
+      res.locals.user.role !== "admin",
+    );
+    if (!metadata) {
+      res.status(404).json({ error: "page preview not found" });
+      return;
+    }
+    try {
+      await sendStoredObject(deps.objectStore, metadata, res);
+    } catch {
+      res.status(503).json({ error: "media storage unavailable" });
+    }
+  });
+
   app.get("/apps", requireAdmin, async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
@@ -2229,6 +2269,27 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         await deps.publishSitesJob({ type, url: canonicalUrl, jobId: id });
       } catch (error) {
         const message = safeSiteJobError(error);
+        await deps.setJobStatus(id, "error", message);
+        res.status(503).json({ id, error: message });
+        return;
+      }
+      res.status(201).json({ id });
+      return;
+    }
+    if (type === "crawl-public-page") {
+      let canonicalUrl: string;
+      try {
+        canonicalUrl = canonicalPublicPageUrl(url).requestedUrl;
+      } catch {
+        res.status(400).json({ error: "crawl-public-page requires a public HTTP(S) URL" });
+        return;
+      }
+      if (!await requireStorageReady(res)) return;
+      const id = await deps.createJob(type, { url: canonicalUrl });
+      try {
+        await deps.publishPublicPageJob({ type, url: canonicalUrl, jobId: id });
+      } catch {
+        const message = safePublicPageJobError();
         await deps.setJobStatus(id, "error", message);
         res.status(503).json({ id, error: message });
         return;

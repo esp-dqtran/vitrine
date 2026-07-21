@@ -59,12 +59,19 @@ export interface CatalogAppMetadata {
   lastCapturedAt: string | null;
   websiteUrl: string | null;
   iconUrl: string | null;
+  description: string | null;
+  previewVideoUrl: string | null;
 }
 
 export interface AppMetadataRecord {
   app: string;
   icon_url: string | null;
   category: string | null;
+  display_name?: string | null;
+  description?: string | null;
+  website_url?: string | null;
+  accent_color?: string | null;
+  preview_version_id?: number | null;
   total_screens: number;
   total_ui_elements: number;
   total_flows: number;
@@ -155,17 +162,21 @@ export function buildAppMetadata(row: AppMetadataRecord): CatalogAppMetadata {
   const meta = appMeta(row.app);
   return {
     id: row.app,
-    app: meta.label,
+    app: row.display_name ?? meta.label,
     cat: row.category ?? meta.cat,
-    accent: meta.accent,
+    accent: row.accent_color ?? meta.accent,
     totalScreens: row.total_screens,
     totalUiElements: row.total_ui_elements,
     totalFlows: row.total_flows,
     platforms: row.available_platforms,
     analyzedScreens: row.analyzed_screens,
     lastCapturedAt: row.last_captured_at,
-    websiteUrl: meta.websiteUrl,
+    websiteUrl: row.website_url ?? meta.websiteUrl,
     iconUrl: row.icon_url,
+    description: row.description ?? null,
+    previewVideoUrl: row.preview_version_id
+      ? `/api/apps/${encodeURIComponent(row.app)}/page-preview/${row.preview_version_id}`
+      : null,
   };
 }
 
@@ -228,14 +239,14 @@ export function buildAdminGalleryApps(images: AdminGalleryImage[]) {
     const summary = appImages[0];
     return {
       id: app,
-      app: meta.label,
+      app: summary?.display_name ?? meta.label,
       cat: summary?.category ?? meta.cat,
-      accent: meta.accent,
+      accent: summary?.accent_color ?? meta.accent,
       totalScreens: summary?.total_screens ?? 0,
       platforms: summary?.available_platforms ?? [],
       analyzedScreens: summary?.analyzed_screens ?? 0,
       lastCapturedAt: summary?.last_captured_at ?? null,
-      websiteUrl: meta.websiteUrl,
+      websiteUrl: summary?.website_url ?? meta.websiteUrl,
       iconUrl: summary?.icon_url ?? null,
       screens: appImages.slice(0, 5).map((image) => screen(app, image)),
     };
