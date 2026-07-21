@@ -163,7 +163,6 @@ export function SiteVersionView({
         tabTrailing={activeSection === 'sections'
           ? <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{visibleSections.length} sections</span>
           : undefined}
-        bodyBackground={activeSection === 'preview' ? 'var(--color-background-surface)' : 'var(--color-background-body)'}
         bodyPadding={activeSection === 'preview' ? '24px 40px 80px' : '32px 40px 72px'}
       >
         {body}

@@ -235,7 +235,6 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
         onTabChange={setSection}
         tabControls={tabControls}
         tabTrailing={<span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${screens.length} screens` : section === 'elements' ? `${screens.length} UI elements` : section === 'flows' ? `${flows.length} flows` : ''}</span>}
-        bodyBackground={section === 'screens' ? 'var(--color-background-body)' : 'var(--color-background-surface)'}
         bodyPadding={section === 'screens' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>

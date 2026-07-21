@@ -25,7 +25,6 @@ interface ReferenceDetailShellProps<T extends string> {
   onTabChange: (tab: T) => void;
   tabControls?: ReactNode;
   tabTrailing?: ReactNode;
-  bodyBackground?: string;
   bodyPadding?: string;
   children: ReactNode;
 }
@@ -46,7 +45,6 @@ export function ReferenceDetailShell<T extends string>({
   onTabChange,
   tabControls,
   tabTrailing,
-  bodyBackground = 'var(--color-background-surface)',
   bodyPadding = '8px 40px 80px',
   children,
 }: ReferenceDetailShellProps<T>) {
@@ -99,7 +97,7 @@ export function ReferenceDetailShell<T extends string>({
           {tabControls}
         </div>
       </div>
-      <div style={{ background: bodyBackground, minHeight: 400 }}>
+      <div style={{ minHeight: 400 }}>
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: bodyPadding }}>
           {children}
         </div>

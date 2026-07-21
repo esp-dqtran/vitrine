@@ -23,4 +23,6 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
   assert.match(html, /role="tab"[^>]+aria-selected="true"/);
   assert.match(html, /Visit site/);
   assert.match(html, /Overview content/);
+  assert.match(html, /<div style="min-height:400px">/);
+  assert.doesNotMatch(html, /background:[^;"]+;min-height:400px/);
 });
