@@ -7,6 +7,11 @@ test('round-trips the billing success route', () => {
   assert.equal(routeToPath({ name: 'billing-success' }), '/billing/success');
 });
 
+test('round-trips the billing settings route used by the Stripe customer portal', () => {
+  assert.deepEqual(parseRoutePath('/settings/billing'), { name: 'settings-billing' });
+  assert.equal(routeToPath({ name: 'settings-billing' }), '/settings/billing');
+});
+
 test('round-trips current and legacy Site detail tabs while keeping the base route stable', () => {
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/preview'), { name: 'site-version', siteId: 1, versionId: 2, section: 'preview' });
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/pages'), { name: 'site-version', siteId: 1, versionId: 2, section: 'pages' });

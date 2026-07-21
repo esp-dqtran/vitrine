@@ -106,3 +106,10 @@ test('keeps independent Apps and Sites search state under References', async () 
   assert.match(source, /query=\{siteQuery\}/);
   assert.match(source, /onQueryChange=\{setSiteQuery\}/);
 });
+
+test('opens account settings when returning from the Stripe billing portal', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /route\.name === 'settings-billing'/);
+  assert.match(source, /navigate\(\{ name: 'apps' \}\)/);
+});

@@ -4,6 +4,7 @@ export type Route =
   | { name: 'landing' }
   | { name: 'pricing' }
   | { name: 'billing-success' }
+  | { name: 'settings-billing' }
   | { name: 'signin' }
   | { name: 'apps' }
   | { name: 'app'; appId: string; section?: string }
@@ -22,6 +23,7 @@ export function parseRoutePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/pricing') return { name: 'pricing' };
   if (path === '/billing/success') return { name: 'billing-success' };
+  if (path === '/settings/billing') return { name: 'settings-billing' };
   if (path === '/signin') return { name: 'signin' };
   if (path === '/apps') return { name: 'apps' };
   if (path === '/sites') return { name: 'sites' };
@@ -57,6 +59,7 @@ export function routeToPath(route: Route): string {
     case 'landing': return '/landing';
     case 'pricing': return '/pricing';
     case 'billing-success': return '/billing/success';
+    case 'settings-billing': return '/settings/billing';
     case 'signin': return '/signin';
     case 'apps': return '/apps';
     case 'sites': return '/sites';

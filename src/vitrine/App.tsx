@@ -62,6 +62,10 @@ export function App() {
   const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
   const canUseProResearch = isAdmin || customerPlan === 'pro';
   const openPricing = () => navigate({ name: 'pricing' });
+  const closeSettings = () => {
+    setSettingsOpen(false);
+    if (route.name === 'settings-billing') navigate({ name: 'apps' });
+  };
 
   const isFreeGated = (appId: string) =>
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
@@ -412,7 +416,7 @@ export function App() {
     </AnimatePresence>
     <AnimatePresence>
       {collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
-      {settingsOpen && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onClose={() => setSettingsOpen(false)} />}
+      {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onClose={closeSettings} />}
       {paletteOpen && (
         <CommandPalette
           apps={apps ?? []}
