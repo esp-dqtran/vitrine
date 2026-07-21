@@ -18,13 +18,14 @@ The customer-facing promise is:
 
 - A new user who signs up through a valid referral link receives 30 days of promotional Pro immediately.
 - The inviter earns a reward only after the invited user becomes activated.
-- A Free inviter receives 30 days of promotional Pro.
-- An inviter already paying for Pro receives an $8.99 Stripe billing credit, equivalent to one monthly Pro payment.
+- Every inviter reward is one banked Pro Month pass, regardless of the inviter's current plan.
+- The inviter chooses when to activate each earned pass. Activation starts 30 consecutive days of promotional Pro.
+- A paid Pro subscriber keeps earned passes banked for use after their paid subscription ends; the reward does not become Stripe billing credit.
 - Each inviter may earn at most three rewards during the launch campaign.
 - Promotional access never requests a card, starts a Stripe subscription, or charges automatically.
 - When promotional Pro expires, an account without an active paid subscription returns to Free with its existing Free entitlements intact.
 
-The pricing assumption for the campaign is $8.99 monthly and $79.99 yearly. Referral rewards are promotional access or billing credit, not MRR.
+The pricing assumption for the campaign is $8.99 monthly and $79.99 yearly. Referral rewards are promotional access, not currency, billing credit, or MRR.
 
 ## Qualification Rules
 
@@ -51,7 +52,8 @@ This is deliberately lighter than requiring payment. It proves that the invited 
 ### Reward limits
 
 - An inviter can earn no more than three rewards during the campaign.
-- Free-account promotional rewards stack consecutively, up to 90 total earned days.
+- Earned Pro Month passes remain banked until the inviter activates them.
+- An inviter may bank at most three passes and activate them one at a time.
 - A referred user's signup promotion does not count against the inviter's reward cap.
 - One referred account can qualify exactly one inviter reward.
 - Rewards are non-transferable and have no cash value.
@@ -68,7 +70,7 @@ The effective customer plan is resolved in this order:
 
 The subscription response should identify the entitlement source as `paid`, `promotion`, or `free`, and include the promotional expiry when applicable. Existing feature gates continue to consume one effective Free/Pro result rather than embedding referral rules throughout the application.
 
-For an active paid subscriber, an earned reward becomes an idempotent $8.99 Stripe customer balance credit. The referral reward record stores the Stripe credit transaction identifier so retries cannot issue duplicate credit.
+Earning a reward creates an idempotent, unactivated Pro Month pass. Activating a pass creates a 30-day promotional entitlement and permanently marks that pass as consumed in the same database transaction. Paid subscribers cannot activate a pass while their paid entitlement is active, preventing accidental overlap; their passes remain available for later use.
 
 ## Data Boundaries
 
@@ -77,7 +79,7 @@ The referral domain should remain separate from billing and account authenticati
 - `referral_codes`: one opaque, revocable share token per inviter.
 - `referrals`: immutable inviter-to-new-user attribution, signup promotion state, activation state, and campaign identity.
 - `referral_activity`: distinct application and UTC-day evidence used to evaluate activation.
-- `referral_rewards`: one idempotent inviter reward per qualified referral, with promotional-grant or Stripe-credit fulfillment state.
+- `referral_rewards`: one idempotent, banked Pro Month pass per qualified referral, with available, activated, or revoked state and an optional promotional-entitlement reference.
 - `promotional_entitlements`: bounded Pro grants with source, start, expiry, and revocation fields.
 
 Referral tokens must be random opaque values, not encoded user IDs or emails. Public APIs accept only the token; internal rows retain the user relationships.
@@ -93,6 +95,7 @@ Account Settings contains a launch card with:
 - the offer summary;
 - a `Copy referral link` action;
 - progress such as `1 of 3 rewards earned`;
+- the number of available Pro Month passes and an `Activate 1 Pro Month` action;
 - each referral's state: joined, active, or rewarded;
 - the campaign end date and concise fair-use terms.
 
@@ -108,7 +111,7 @@ After signup, the user lands in the catalog with the promotional expiry visible 
 
 ### Activation and reward feedback
 
-The inviter sees progress only in coarse states; private activity details about the invited user are never exposed. When activation completes, the inviter receives an in-product confirmation. Email notification may be added later but is not required for launch.
+The inviter sees progress only in coarse states; private activity details about the invited user are never exposed. When activation completes, the inviter receives an in-product confirmation that one Pro Month is ready to use. Activating it requires an explicit confirmation and shows the exact 30-day expiry before submission. Email notification may be added later but is not required for launch.
 
 ## Abuse Controls
 
@@ -129,7 +132,8 @@ The system may flag repeated network or session patterns for manual review, but 
 
 - The initial campaign runs for 90 days from its configured launch timestamp.
 - Referral links stop accepting new attributions when the campaign closes.
-- Signup promotions and earned rewards granted before closure remain valid through their stored expiry.
+- Signup promotions granted before closure remain valid through their stored expiry.
+- Pro Month passes earned before closure remain banked and may be activated after the campaign ends. Banked passes do not expire in the initial launch program.
 - Campaign dates, reward cap, signup grant duration, and activation thresholds are server configuration, persisted with a campaign identifier on every referral.
 - Changing a later campaign must not reinterpret historical referrals.
 
@@ -165,7 +169,7 @@ These are campaign decision thresholds, not external industry benchmarks. If tra
 
 - An invalid, revoked, expired, or closed-campaign referral link falls back to normal signup without promotional claims.
 - Referral attribution failure must not prevent account creation; it records a bounded internal error and continues as normal Free signup.
-- Stripe credit failure leaves the reward pending and retryable. It never falls back to issuing a second promotional reward automatically.
+- Pass activation failure leaves the pass available and retryable. It must never consume a pass without creating its promotional entitlement.
 - Promotion resolution fails closed to the user's paid Stripe entitlement or Free plan; it never grants permanent Pro because a referral lookup failed.
 
 ## Verification
@@ -178,15 +182,17 @@ Automated coverage must include:
 - three-distinct-app and two-day activation boundaries;
 - concurrent activation issuing exactly one reward;
 - three-reward inviter cap;
-- stacking promotional grants to at most 90 earned days;
-- paid inviter receiving one idempotent Stripe credit;
+- banking at most three Pro Month passes;
+- explicit pass activation creating exactly one 30-day promotional entitlement;
+- failed or concurrent activation never losing or double-consuming a pass;
+- paid inviters retaining passes and being prevented from activating them during paid access;
 - expiry returning an unpaid account to Free;
 - active paid Pro taking precedence over promotional Pro;
 - campaign closure preserving previously issued rewards;
 - revoked referrals and grants;
 - referral analytics without exposing invited-user activity details.
 
-An end-to-end sandbox scenario must cover referral link → new signup → immediate promotional Pro → second-day activation → inviter reward → promotional expiry or Stripe credit fulfillment.
+An end-to-end sandbox scenario must cover referral link → new signup → immediate promotional Pro → second-day activation → banked inviter Pro Month → explicit activation → promotional expiry.
 
 ## Out of Scope
 
