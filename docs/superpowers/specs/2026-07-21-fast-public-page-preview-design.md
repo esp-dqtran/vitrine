@@ -7,13 +7,13 @@ Reduce the time required to record and watch continuously scrolling public-page 
 ## Chosen behavior
 
 - Keep `scrollPixelsPerSecond` as the minimum scroll speed so short pages never become slower.
-- Add `maxScrollDurationMs` with a 12,000 ms default.
+- Add `maxScrollDurationMs` with a 20,000 ms default.
 - Compute scroll duration as the lesser of the distance-based duration and `maxScrollDurationMs`. Long pages therefore scroll faster automatically.
 - Reduce the default hold at the top and bottom from 1,000 ms to 500 ms.
 - Keep the existing continuous `requestAnimationFrame` animation, zero intermediate stops, and full-page screenshot capture unchanged.
 - Preserve explicit test and caller overrides for scroll speed and hold duration.
 
-For the measured Mobbin homepage, the 9,925 px scroll distance changes from about 49.6 seconds of scrolling plus two 1-second holds to 12 seconds of scrolling plus two 0.5-second holds: roughly 13 seconds total.
+For the measured Mobbin homepage, the 9,925 px scroll distance changes from about 49.6 seconds of scrolling plus two 1-second holds to 20 seconds of scrolling plus two 0.5-second holds: roughly 21 seconds total, with smoother movement.
 
 ## Alternatives considered
 

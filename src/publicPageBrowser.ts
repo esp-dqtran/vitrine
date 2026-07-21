@@ -44,7 +44,7 @@ export async function createPublicPageBrowser(
     capture: (url) => capturePublicPage(browser, url, {
       validateNavigation,
       scrollPixelsPerSecond: options.scrollPixelsPerSecond ?? 200,
-      maxScrollDurationMs: options.maxScrollDurationMs ?? 12_000,
+      maxScrollDurationMs: options.maxScrollDurationMs ?? 20_000,
       holdMs: options.holdMs ?? 500,
     }),
     close: () => browser.close(),
@@ -321,7 +321,7 @@ async function recordContinuousScroll(
 export function publicPageScrollDurationMs(
   distance: number,
   pixelsPerSecond: number,
-  maxDurationMs = 12_000,
+  maxDurationMs = 20_000,
 ): number {
   const safeDistance = checkedNonNegative(distance, "scroll distance");
   const speed = checkedPositive(pixelsPerSecond, "scroll speed");

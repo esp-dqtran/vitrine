@@ -49,9 +49,9 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
   return { server, url: `http://lvh.me:${address.port}/pricing` };
 }
 
-test("caps long previews without slowing short pages", () => {
+test("caps long previews at the smooth default duration", () => {
   assert.equal(publicPageScrollDurationMs(1_000, 200), 5_000);
-  assert.equal(publicPageScrollDurationMs(9_925, 200), 12_000);
+  assert.equal(publicPageScrollDurationMs(9_925, 200), 20_000);
   assert.equal(publicPageScrollDurationMs(100_000, 200, 20_000), 20_000);
 });
 

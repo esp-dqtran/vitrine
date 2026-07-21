@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reduce long public-page preview recordings to about 13 seconds while leaving screenshots and section capture unchanged.
+**Goal:** Reduce long public-page preview recordings to about 21 seconds while leaving screenshots and section capture unchanged.
 
-**Architecture:** Keep the current Playwright screencast and continuous `requestAnimationFrame` scroll. Calculate duration with a pure, testable helper that preserves the configured minimum speed but caps long-page scrolling at 12 seconds; reduce default endpoint holds to 500 ms.
+**Architecture:** Keep the current Playwright screencast and continuous `requestAnimationFrame` scroll. Calculate duration with a pure, testable helper that preserves the configured minimum speed but caps long-page scrolling at 20 seconds; reduce default endpoint holds to 500 ms.
 
 **Tech Stack:** TypeScript, Node test runner, Playwright, Vite
 
@@ -23,7 +23,7 @@ Import `publicPageScrollDurationMs` in `src/publicPageBrowser.test.ts` and add:
 ```typescript
 test("caps long previews without slowing short pages", () => {
   assert.equal(publicPageScrollDurationMs(1_000, 200), 5_000);
-  assert.equal(publicPageScrollDurationMs(9_925, 200), 12_000);
+  assert.equal(publicPageScrollDurationMs(9_925, 200), 20_000);
   assert.equal(publicPageScrollDurationMs(100_000, 200, 20_000), 20_000);
 });
 ```
@@ -40,10 +40,10 @@ Expected: FAIL because `publicPageScrollDurationMs` is not exported.
 
 - [ ] **Step 3: Add the duration option and helper**
 
-In `src/publicPageBrowser.ts`, add `maxScrollDurationMs?: number` to `PublicPageBrowserOptions`. Default it to `12_000` and change the default `holdMs` to `500` in `createPublicPageBrowser`:
+In `src/publicPageBrowser.ts`, add `maxScrollDurationMs?: number` to `PublicPageBrowserOptions`. Default it to `20_000` and change the default `holdMs` to `500` in `createPublicPageBrowser`:
 
 ```typescript
-maxScrollDurationMs: options.maxScrollDurationMs ?? 12_000,
+maxScrollDurationMs: options.maxScrollDurationMs ?? 20_000,
 holdMs: options.holdMs ?? 500,
 ```
 
@@ -55,7 +55,7 @@ Add the pure timing helper:
 export function publicPageScrollDurationMs(
   distance: number,
   pixelsPerSecond: number,
-  maxDurationMs = 12_000,
+  maxDurationMs = 20_000,
 ): number {
   const safeDistance = checkedNonNegative(distance, "scroll distance");
   const speed = checkedPositive(pixelsPerSecond, "scroll speed");
