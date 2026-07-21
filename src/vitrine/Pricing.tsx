@@ -1,5 +1,7 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { Badge, Button, Divider, DropdownMenu, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
+import type { AuthUser } from './authApi';
+import { createCheckout, loadSubscription, type SubscriptionView } from './billingApi';
 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
 
@@ -110,6 +112,9 @@ function PlanCard({
   features,
   cta,
   ctaVariant,
+  clickAction,
+  disabled,
+  loading,
 }: {
   highlighted?: boolean;
   badge?: string;
@@ -120,6 +125,9 @@ function PlanCard({
   features: string[];
   cta: string;
   ctaVariant: 'primary' | 'secondary';
+  clickAction?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
 }) {
   return (
     <div
@@ -162,7 +170,7 @@ function PlanCard({
         ))}
       </div>
 
-      <Button variant={ctaVariant} label={cta} style={{ width: '100%' }} />
+      <Button variant={ctaVariant} label={cta} clickAction={clickAction} isDisabled={disabled} isLoading={loading} style={{ width: '100%' }} />
     </div>
   );
 }
@@ -179,9 +187,30 @@ function Section({ style, children }: { style?: CSSProperties; children: ReactNo
   return <div style={{ ...wrap, ...style }}>{children}</div>;
 }
 
-export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn: () => void }) {
+interface PricingViewProps {
+  user: AuthUser | null;
+  subscription: SubscriptionView | null;
+  onBrowse: () => void;
+  onSignIn: () => void;
+  onCheckout: () => void;
+  yearly?: boolean;
+  onYearlyChange?: (yearly: boolean) => void;
+  loading?: boolean;
+  error?: string;
+}
+
+export function PricingView({
+  user,
+  subscription,
+  onBrowse,
+  onSignIn,
+  onCheckout,
+  yearly = false,
+  onYearlyChange = () => undefined,
+  loading = false,
+  error = '',
+}: PricingViewProps) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
-  const [yearly, setYearly] = useState(false);
   const proPrice = yearly ? '$70' : '$7';
   const proNote = yearly ? '/year' : '/month';
   const proSub = yearly ? 'billed yearly · save $14 vs monthly' : 'billed monthly';
@@ -233,7 +262,7 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
           </Text>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <SegmentedControl label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => setYearly(v === 'yearly')}>
+          <SegmentedControl label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => onYearlyChange(v === 'yearly')}>
             <SegmentedControlItem label="Monthly" value="monthly" />
             <SegmentedControlItem label="Yearly · save $14" value="yearly" />
           </SegmentedControl>
@@ -248,8 +277,10 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
             price="$0"
             priceNote="forever"
             features={FREE_FEATURES}
-            cta="Start free"
+            cta={user ? subscription?.plan === 'pro' ? 'Included with Pro' : 'Current Free plan' : 'Start free'}
             ctaVariant="secondary"
+            clickAction={user ? undefined : onSignIn}
+            disabled={Boolean(user)}
           />
           <PlanCard
             highlighted
@@ -259,12 +290,16 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
             price={proPrice}
             priceNote={proNote}
             features={PRO_FEATURES}
-            cta="Upgrade to Pro"
+            cta={subscription?.plan === 'pro' ? 'Current Pro plan' : 'Upgrade to Pro'}
             ctaVariant="primary"
+            clickAction={user ? onCheckout : onSignIn}
+            disabled={loading || subscription?.plan === 'pro' || user?.role === 'admin'}
+            loading={loading}
           />
         </div>
         <div style={{ textAlign: 'center', marginTop: 14 }}>
           <Text type="supporting" color="secondary">{`${proSub} · no exports on Free`}</Text>
+          {error && <div role="alert" style={{ marginTop: 10, color: 'var(--color-text-danger)' }}>{error}</div>}
         </div>
       </Section>
 
@@ -332,6 +367,45 @@ export function Pricing({ onBrowse, onSignIn }: { onBrowse: () => void; onSignIn
       </Section>
     </div>
   );
+}
+
+export function Pricing({ user, onBrowse, onSignIn }: { user: AuthUser | null; onBrowse: () => void; onSignIn: () => void }) {
+  const [yearly, setYearly] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionView | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (user?.role !== 'user') {
+      setSubscription(null);
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    loadSubscription()
+      .then((view) => { if (active) { setSubscription(view); setError(''); } })
+      .catch((reason: Error) => { if (active) setError(reason.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [user?.id, user?.role]);
+
+  const onCheckout = async () => {
+    if (user?.role !== 'user' || subscription?.plan === 'pro') return;
+    setLoading(true);
+    setError('');
+    try {
+      const session = await createCheckout(yearly ? 'year' : 'month');
+      const target = new URL(session.url);
+      if (target.protocol !== 'https:') throw new Error('Billing returned an unsafe redirect');
+      window.location.assign(target.href);
+    } catch (reason) {
+      setError((reason as Error).message);
+      setLoading(false);
+    }
+  };
+
+  return <PricingView user={user} subscription={subscription} onBrowse={onBrowse} onSignIn={onSignIn} onCheckout={() => void onCheckout()} yearly={yearly} onYearlyChange={setYearly} loading={loading} error={error} />;
 }
 
 function Faq() {
