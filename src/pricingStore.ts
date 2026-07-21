@@ -2,6 +2,7 @@ import type { QueryResultRow } from "pg";
 import type { AuthUser } from "./authStore.ts";
 import { query, withTransaction, type ResearchCollection } from "./db.ts";
 import { isFeatureKey, type FeatureKey } from "./featureUsage.ts";
+import { activePromotionalEntitlement } from "./referralStore.ts";
 import { exportObjectKey, validateObjectMetadata, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
 import {
   effectivePlan,
@@ -33,6 +34,8 @@ export interface StripeSubscriptionInput {
 
 export interface AccountEntitlements {
   plan: "free" | "pro";
+  entitlementSource: "paid" | "promotion" | "free";
+  promotionExpiresAt: string | null;
   subscription: SubscriptionRecord | null;
   freeUnlocks: string[];
   freeUnlocksRemaining: number;
@@ -52,7 +55,11 @@ export async function getSubscription(userId: number): Promise<SubscriptionRecor
 }
 
 export async function isProUser(userId: number, now = new Date()): Promise<boolean> {
-  return effectivePlan(await getSubscription(userId), now) === "pro";
+  const [subscription, promotion] = await Promise.all([
+    getSubscription(userId),
+    activePromotionalEntitlement(userId, now),
+  ]);
+  return effectivePlan(subscription, now) === "pro" || Boolean(promotion);
 }
 
 export async function countUserCollections(userId: number): Promise<number> {
@@ -86,9 +93,10 @@ export async function createFreeCollection(
 export async function canAccessApp(
   user: Pick<AuthUser, "id" | "role">,
   appSlug: string,
+  now = new Date(),
 ): Promise<boolean> {
   if (user.role === "admin") return true;
-  if (effectivePlan(await getSubscription(user.id)) === "pro") return true;
+  if (await isProUser(user.id, now)) return true;
   const result = await query(
     `SELECT 1 FROM free_app_unlocks u JOIN apps a ON a.id = u.app_id
      WHERE u.user_id = $1 AND a.name = $2`,
@@ -179,12 +187,19 @@ function usageWindow(subscription: SubscriptionRecord, now: Date): { start: Date
 }
 
 export async function getAccountEntitlements(userId: number, now = new Date()): Promise<AccountEntitlements> {
-  const [subscription, freeUnlocks] = await Promise.all([
+  const [subscription, promotion, freeUnlocks] = await Promise.all([
     getSubscription(userId),
+    activePromotionalEntitlement(userId, now),
     listFreeUnlocks(userId),
   ]);
-  const plan = effectivePlan(subscription, now);
-  const window = subscription && plan === "pro" ? usageWindow(subscription, now) : undefined;
+  const paid = effectivePlan(subscription, now) === "pro";
+  const plan = paid || promotion ? "pro" : "free";
+  const entitlementSource = paid ? "paid" : promotion ? "promotion" : "free";
+  const window = paid && subscription
+    ? usageWindow(subscription, now)
+    : promotion
+      ? { start: new Date(promotion.startsAt), end: new Date(promotion.expiresAt) }
+      : undefined;
   let used = 0;
   if (window) {
     const result = await query<{ operation_count: number }>(
@@ -195,6 +210,8 @@ export async function getAccountEntitlements(userId: number, now = new Date()): 
   }
   return {
     plan,
+    entitlementSource,
+    promotionExpiresAt: promotion?.expiresAt ?? null,
     subscription: subscription ?? null,
     freeUnlocks,
     freeUnlocksRemaining: Math.max(0, FREE_APP_LIMIT - freeUnlocks.length),
@@ -216,10 +233,22 @@ export async function reserveExportOperation(
       [userId],
     );
     const subscription = result.rows[0];
-    if (!subscription || effectivePlan(subscription, now) !== "pro") {
+    const promotionResult = await client.query<{ starts_at: string; expires_at: string }>(
+      `SELECT starts_at::text, expires_at::text FROM promotional_entitlements
+       WHERE user_id = $1 AND revoked_at IS NULL AND starts_at <= $2 AND expires_at > $2
+       ORDER BY expires_at DESC LIMIT 1 FOR UPDATE`,
+      [userId, now],
+    );
+    const promotion = promotionResult.rows[0];
+    const paid = Boolean(subscription && effectivePlan(subscription, now) === "pro");
+    if (!paid && !promotion) {
       return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
     }
-    const window = usageWindow(subscription, now);
+    const window = paid && subscription
+      ? usageWindow(subscription, now)
+      : promotion
+        ? { start: new Date(promotion.starts_at), end: new Date(promotion.expires_at) }
+        : undefined;
     if (!window) return { status: "not_pro", used: 0, limit: EXPORT_LIMIT, resetAt: null };
     const reserved = await client.query<{ operation_count: number }>(
       `INSERT INTO export_usage (user_id, window_start, operation_count) VALUES ($1, $2, 1)

@@ -124,6 +124,58 @@ test("active Pro accesses every app and receives twenty monthly export reservati
   });
 });
 
+test("promotional Pro uses its own access and export window while paid Pro takes precedence", { skip }, async () => {
+  const {
+    canAccessApp,
+    getAccountEntitlements,
+    reserveExportOperation,
+    upsertSubscription,
+  } = await import("./pricingStore.ts");
+  const { userId, apps } = await fixture();
+  await db.query(
+    `INSERT INTO promotional_entitlements (user_id, source, starts_at, expires_at)
+     VALUES ($1, 'referral_signup', $2, $3)`,
+    [userId, new Date("2026-07-21T10:00:00Z"), new Date("2026-08-20T10:00:00Z")],
+  );
+
+  const now = new Date("2026-07-25T00:00:00Z");
+  const promotional = await getAccountEntitlements(userId, now);
+  assert.equal(promotional.plan, "pro");
+  assert.equal(promotional.entitlementSource, "promotion");
+  assert.equal(promotional.promotionExpiresAt, "2026-08-20T10:00:00.000Z");
+  assert.equal(await canAccessApp({ id: userId, role: "user" }, apps[3], now), true);
+  assert.deepEqual(await reserveExportOperation(userId, now), {
+    status: "reserved",
+    used: 1,
+    limit: 20,
+    resetAt: "2026-08-20T10:00:00.000Z",
+  });
+
+  await upsertSubscription({
+    userId,
+    customerId: "cus_pricing_precedence",
+    subscriptionId: "sub_pricing_precedence",
+    priceId: "price_month",
+    interval: "month",
+    status: "active",
+    periodStart: new Date("2026-07-01T00:00:00Z"),
+    periodEnd: new Date("2026-08-01T00:00:00Z"),
+    cancelAtPeriodEnd: false,
+    graceExpiresAt: null,
+  });
+  const paid = await getAccountEntitlements(userId, now);
+  assert.equal(paid.entitlementSource, "paid");
+  assert.equal(paid.promotionExpiresAt, "2026-08-20T10:00:00.000Z");
+  assert.equal(paid.exportUsage.resetAt, "2026-08-01T00:00:00.000Z");
+
+  await db.query("UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1", [userId]);
+  await db.query("UPDATE promotional_entitlements SET revoked_at = $2 WHERE user_id = $1", [userId, now]);
+  const revoked = await getAccountEntitlements(userId, now);
+  assert.equal(revoked.plan, "free");
+  assert.equal(revoked.entitlementSource, "free");
+  assert.equal(revoked.promotionExpiresAt, null);
+});
+
 test("creates an export before transactionally completing a stable retry", { skip }, async () => {
   const { completeExport, createExport, failExport } = await import("./pricingStore.ts");
   const { userId, apps } = await fixture();
