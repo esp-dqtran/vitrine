@@ -26,11 +26,11 @@ export function login(email: string, password: string): Promise<AuthUser> {
   }).then(jsonOrError);
 }
 
-export function signup(email: string, password: string): Promise<AuthUser> {
+export function signup(email: string, password: string, referralToken?: string): Promise<AuthUser> {
   return fetch("/api/auth/signup", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, ...(referralToken ? { referralToken } : {}) }),
   }).then(jsonOrError);
 }
 

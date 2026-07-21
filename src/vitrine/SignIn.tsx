@@ -2,7 +2,49 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import gsap from 'gsap';
 import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
+import { validateReferral } from './referralApi';
 import { useFloatDrift } from './useFloatDrift';
+
+interface ReferralStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+const REFERRAL_TOKEN_KEY = 'astryx:referral-token';
+const REFERRAL_VISITOR_KEY = 'astryx:referral-visitor';
+
+export async function resolveReferralInvite(input: {
+  search: string;
+  tokenStorage: ReferralStorage;
+  visitorStorage: ReferralStorage;
+  validate?: (token: string, visitor: string) => Promise<boolean>;
+  visitorFactory?: () => string;
+}): Promise<string | null> {
+  const queryToken = new URLSearchParams(input.search).get('ref');
+  const candidate = queryToken ?? input.tokenStorage.getItem(REFERRAL_TOKEN_KEY);
+  if (!candidate) return null;
+  let visitor = input.visitorStorage.getItem(REFERRAL_VISITOR_KEY);
+  if (!visitor) {
+    visitor = (input.visitorFactory ?? (() => crypto.randomUUID()))();
+    input.visitorStorage.setItem(REFERRAL_VISITOR_KEY, visitor);
+  }
+  const valid = await (input.validate ?? validateReferral)(candidate, visitor);
+  if (!valid) {
+    input.tokenStorage.removeItem(REFERRAL_TOKEN_KEY);
+    return null;
+  }
+  input.tokenStorage.setItem(REFERRAL_TOKEN_KEY, candidate);
+  return candidate;
+}
+
+export function ReferralInviteNotice() {
+  return (
+    <div style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 10, background: 'var(--color-background-accent-subtle)', color: 'var(--color-text-primary)', fontSize: 13 }}>
+      Your friend gave you 30 days of Astryx Pro. No card required.
+    </div>
+  );
+}
 
 function Wordmark() {
   return (
@@ -455,7 +497,7 @@ export function SignIn({
   onSignedIn,
 }: {
   authenticate: (email: string, password: string) => Promise<AuthUser>;
-  register: (email: string, password: string) => Promise<AuthUser>;
+  register: (email: string, password: string, referralToken?: string) => Promise<AuthUser>;
   onSignedIn: (user: AuthUser) => void;
 }) {
   // Below md, the decorative Showcase panel (3D tilt/parallax that's meaningless on
@@ -472,6 +514,22 @@ export function SignIn({
   const [shakeNonce, setShakeNonce] = useState(0);
   const [success, setSuccess] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | null>(null);
+  const [referralToken, setReferralToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let active = true;
+    void resolveReferralInvite({
+      search: window.location.search,
+      tokenStorage: window.sessionStorage,
+      visitorStorage: window.localStorage,
+    }).then((token) => {
+      if (!active || !token) return;
+      setReferralToken(token);
+      setMode('signup');
+    }).catch(() => window.sessionStorage.removeItem(REFERRAL_TOKEN_KEY));
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!success || !authenticatedUser) return;
@@ -519,8 +577,11 @@ export function SignIn({
     }
     try {
       const authedUser = mode === 'signup'
-        ? await register(email.trim(), password)
+        ? await register(email.trim(), password, referralToken ?? undefined)
         : await authenticate(email.trim(), password);
+      if (mode === 'signup' && typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(REFERRAL_TOKEN_KEY);
+      }
       setAuthenticatedUser(authedUser);
       setSuccess(true);
     } catch (reason) {
@@ -544,6 +605,7 @@ export function SignIn({
             <SuccessPanel />
           ) : (
             <>
+              {referralToken && <ReferralInviteNotice />}
               <div style={{ marginBottom: 30, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both' }}>
                 <Heading level={1}>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</Heading>
                 <div style={{ marginTop: 8 }}>

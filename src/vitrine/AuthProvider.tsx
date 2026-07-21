@@ -11,7 +11,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   authenticate(email: string, password: string): Promise<AuthUser>;
-  register(email: string, password: string): Promise<AuthUser>;
+  register(email: string, password: string, referralToken?: string): Promise<AuthUser>;
   completeLogin(user: AuthUser): void;
   logout(): Promise<void>;
 }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getCurrentUser, login, logout } from "./authApi.ts";
+import { getCurrentUser, login, logout, signup } from "./authApi.ts";
 
 test("maps 401 me responses to no user", async (t) => {
   t.mock.method(
@@ -40,4 +40,21 @@ test("surfaces the generic login error and posts logout", async (t) => {
   await assert.rejects(login("admin@example.com", "wrong"), /Invalid email or password/);
   await logout();
   assert.equal(fetchMock.mock.callCount(), 2);
+});
+
+test("includes a referral token only when creating an account", async (t) => {
+  let body: unknown;
+  t.mock.method(globalThis, "fetch", async (_input, init) => {
+    body = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ id: 2, email: "new@example.com", role: "user" }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+  await signup("new@example.com", "a long enough password", "r".repeat(48));
+  assert.deepEqual(body, {
+    email: "new@example.com",
+    password: "a long enough password",
+    referralToken: "r".repeat(48),
+  });
 });
