@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
 import { once } from "node:events";
-import { createPublicPageBrowser } from "./publicPageBrowser.ts";
+import { createPublicPageBrowser, publicPageScrollDurationMs } from "./publicPageBrowser.ts";
 
 async function fixtureServer(): Promise<{ server: Server; url: string }> {
   const server = createServer((_request, response) => {
@@ -48,6 +48,12 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
   if (!address || typeof address === "string") throw new Error("Fixture server did not bind");
   return { server, url: `http://lvh.me:${address.port}/pricing` };
 }
+
+test("caps long previews without slowing short pages", () => {
+  assert.equal(publicPageScrollDurationMs(1_000, 200), 5_000);
+  assert.equal(publicPageScrollDurationMs(9_925, 200), 12_000);
+  assert.equal(publicPageScrollDurationMs(100_000, 200, 20_000), 20_000);
+});
 
 test("captures ordered HTML sections, crops, metadata, and a continuous WebM preview", { timeout: 30_000 }, async (t) => {
   const fixture = await fixtureServer();

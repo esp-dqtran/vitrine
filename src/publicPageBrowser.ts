@@ -18,6 +18,7 @@ export interface PublicPageBrowserOptions {
   headless?: boolean;
   validateNavigation?: (url: string) => Promise<void>;
   scrollPixelsPerSecond?: number;
+  maxScrollDurationMs?: number;
   holdMs?: number;
 }
 
@@ -43,7 +44,8 @@ export async function createPublicPageBrowser(
     capture: (url) => capturePublicPage(browser, url, {
       validateNavigation,
       scrollPixelsPerSecond: options.scrollPixelsPerSecond ?? 200,
-      holdMs: options.holdMs ?? 1_000,
+      maxScrollDurationMs: options.maxScrollDurationMs ?? 12_000,
+      holdMs: options.holdMs ?? 500,
     }),
     close: () => browser.close(),
   };
@@ -52,7 +54,7 @@ export async function createPublicPageBrowser(
 async function capturePublicPage(
   browser: Browser,
   url: string,
-  options: Required<Pick<PublicPageBrowserOptions, "validateNavigation" | "scrollPixelsPerSecond" | "holdMs">>,
+  options: Required<Pick<PublicPageBrowserOptions, "validateNavigation" | "scrollPixelsPerSecond" | "maxScrollDurationMs" | "holdMs">>,
 ): Promise<PublicPageBrowserResult> {
   const requestedUrl = canonicalPublicPageUrl(url).requestedUrl;
   await options.validateNavigation(requestedUrl);
@@ -114,6 +116,7 @@ async function capturePublicPage(
 
     const recording = await recordContinuousScroll(page, {
       pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
+      maxDurationMs: checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
       holdMs: checkedNonNegative(options.holdMs, "scroll hold"),
     });
     return {
@@ -284,7 +287,7 @@ async function cropSections(
 
 async function recordContinuousScroll(
   page: Page,
-  options: { pixelsPerSecond: number; holdMs: number },
+  options: { pixelsPerSecond: number; maxDurationMs: number; holdMs: number },
 ): Promise<{ body: Buffer; durationMs: number }> {
   const directory = await mkdtemp(path.join(tmpdir(), "astryx-public-page-video-"));
   const videoPath = path.join(directory, "preview.webm");
@@ -293,7 +296,7 @@ async function recordContinuousScroll(
     await page.screencast.start({ path: videoPath, size: VIEWPORT });
     await page.waitForTimeout(options.holdMs);
     const distance = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
-    const durationMs = Math.min(60_000, Math.max(0, Math.round(distance / options.pixelsPerSecond * 1_000)));
+    const durationMs = publicPageScrollDurationMs(distance, options.pixelsPerSecond, options.maxDurationMs);
     if (distance > 0 && durationMs > 0) {
       await page.evaluate(({ target, duration }) => new Promise<void>((resolve) => {
         const started = performance.now();
@@ -313,6 +316,17 @@ async function recordContinuousScroll(
     await page.screencast.stop().catch(() => undefined);
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+export function publicPageScrollDurationMs(
+  distance: number,
+  pixelsPerSecond: number,
+  maxDurationMs = 12_000,
+): number {
+  const safeDistance = checkedNonNegative(distance, "scroll distance");
+  const speed = checkedPositive(pixelsPerSecond, "scroll speed");
+  const maximum = checkedPositive(maxDurationMs, "maximum scroll duration");
+  return Math.min(maximum, Math.round(safeDistance / speed * 1_000));
 }
 
 function createPublicNetworkValidator(): (url: string) => Promise<void> {
