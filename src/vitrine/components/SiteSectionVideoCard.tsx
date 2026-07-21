@@ -1,5 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge, ClickableCard } from '@astryxdesign/core';
+
+export const SITE_VIDEO_VISIBILITY_THRESHOLD = 0.35;
+
+type VisibilityObserver = Pick<IntersectionObserver, 'observe' | 'disconnect'>;
+type VisibilityObserverFactory = (
+  callback: IntersectionObserverCallback,
+  options: IntersectionObserverInit,
+) => VisibilityObserver;
+
+export function observeSiteVideoPlayback(
+  video: Pick<HTMLVideoElement, 'play' | 'pause'>,
+  target: Element,
+  createObserver: VisibilityObserverFactory = (callback, options) => new IntersectionObserver(callback, options),
+) {
+  const observer = createObserver((entries) => {
+    const entry = entries[0];
+    if (entry?.isIntersecting && entry.intersectionRatio >= SITE_VIDEO_VISIBILITY_THRESHOLD) {
+      void video.play().catch(() => undefined);
+    } else {
+      video.pause();
+    }
+  }, { threshold: SITE_VIDEO_VISIBILITY_THRESHOLD });
+
+  observer.observe(target);
+  return () => observer.disconnect();
+}
 
 interface SiteSectionVideoCardProps {
   label: string;
@@ -18,10 +44,17 @@ export function SiteSectionVideoCard({
   delay = 0,
   onOpen,
 }: SiteSectionVideoCardProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const actionVisible = hovered || focused;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || typeof IntersectionObserver === 'undefined') return;
+    return observeSiteVideoPlayback(video, video);
+  }, [url]);
 
   return (
     <div
@@ -67,6 +100,7 @@ export function SiteSectionVideoCard({
           </div>
         ) : (
           <video
+            ref={videoRef}
             src={url}
             poster={posterUrl}
             muted
