@@ -193,19 +193,26 @@ into the container.
 7. **One browser owner per profile** — queue depth may grow, but importing stays
    serial for each Mobbin profile.
 
-## Free and Pro customer backend
+## Free and Pro subscriptions
 
-Astryx now has a backend-only customer access layer. The current commercial
-model has two plans:
+Astryx has a complete customer subscription flow backed by server-side
+entitlements. The current commercial model has two plans:
 
 - **Free:** permanently unlock up to 3 apps per account. Public catalog
-  previews are available before an unlock. Exports are not included.
+  previews and basic app/category browsing are available before an unlock.
+  Free accounts can keep one collection, but cannot run structured catalog
+  search, edit research notes, or export.
 - **Pro:** $7/month or $70/year. Pro accounts can access every app and reserve
-  up to 20 controlled exports per billing month.
+  up to 20 controlled exports per billing month. Structured search, filters,
+  screens, elements, flows, comparisons, unlimited collections, and editable
+  research notes are included.
 
-The customer frontend, public registration, and generated export files are
-deliberately outside this backend slice. Existing administrator workflows keep
-using their current routes.
+The Pricing page starts monthly or yearly Stripe Checkout. Checkout returns to
+`/billing/success`, where the UI waits for the signed webhook to make Pro
+authoritative before confirming the upgrade. Settings shows the current plan,
+renewal/cancellation state, grace period, Free unlock usage, export usage, and
+a Stripe Customer Portal action. Existing administrator workflows keep using
+their current routes and bypass customer plan limits.
 
 ### HTTP contract
 
@@ -234,6 +241,10 @@ Authenticated customer routes:
 - `POST /billing/checkout` — creates a Stripe Checkout Session for the
   server-selected monthly or yearly Pro Price.
 - `POST /billing/portal` — creates a Stripe Customer Portal Session.
+- `POST /collections` — creates the only collection allowed to Free accounts;
+  a user-row lock serializes concurrent attempts. Pro accounts are unlimited.
+- `GET /search` and non-empty collection-item notes — Pro-only. The API, rather
+  than the client, remains the enforcement boundary.
 
 Administrator compatibility routes remain available to administrator
 accounts only. In particular, `GET /apps`, `GET /images`, `GET /jobs`,
@@ -260,8 +271,8 @@ The API requires these values at startup:
 - `APP_URL`
 - `MEDIA_SIGNING_SECRET`
 
-The Checkout and Portal endpoints return Stripe-hosted URLs; the future
-frontend only needs to redirect to them.
+The Checkout and Portal endpoints return Stripe-hosted HTTPS URLs. The frontend
+validates the scheme before redirecting and displays API failures in place.
 
 ### Persistence and abuse controls
 
@@ -279,9 +290,8 @@ Administrators bypass these customer limits.
 
 ### Explicit follow-ons
 
-1. Build the customer frontend against the routes above.
-2. Add public registration and account verification; today customer rows must
+1. Add public registration and account verification; today customer rows must
    be provisioned through an existing trusted path.
-3. Generate and deliver the reserved export artifacts. The current endpoint
+2. Generate and deliver the reserved export artifacts. The current endpoint
    validates entitlement, scope, and monthly quota, but intentionally stops at
    the reservation boundary.
