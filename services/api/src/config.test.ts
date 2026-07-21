@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { adminSeedFromEnv, billingConfigFromEnv } from "./config.ts";
+import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from "./config.ts";
 
 test("requires valid admin seed variables", () => {
   assert.throws(() => adminSeedFromEnv({}), /ADMIN_EMAIL/);
@@ -86,4 +86,28 @@ test("parses billing and limiter configuration", () => {
       appTraversalLimit: 20,
     },
   );
+});
+
+test("parses the bounded launch referral campaign", () => {
+  assert.deepEqual(referralCampaignFromEnv({
+    REFERRAL_CAMPAIGN_ID: "launch-2026",
+    REFERRAL_CAMPAIGN_START: "2026-07-21T00:00:00Z",
+    REFERRAL_CAMPAIGN_END: "2026-10-19T00:00:00Z",
+  }), {
+    id: "launch-2026",
+    startsAt: new Date("2026-07-21T00:00:00Z"),
+    endsAt: new Date("2026-10-19T00:00:00Z"),
+    rewardCap: 3,
+  });
+  assert.throws(() => referralCampaignFromEnv({}), /REFERRAL_CAMPAIGN_ID/);
+  assert.throws(() => referralCampaignFromEnv({
+    REFERRAL_CAMPAIGN_ID: "launch-2026",
+    REFERRAL_CAMPAIGN_START: "not-a-date",
+    REFERRAL_CAMPAIGN_END: "2026-10-19T00:00:00Z",
+  }), /REFERRAL_CAMPAIGN_START/);
+  assert.throws(() => referralCampaignFromEnv({
+    REFERRAL_CAMPAIGN_ID: "launch-2026",
+    REFERRAL_CAMPAIGN_START: "2026-10-19T00:00:00Z",
+    REFERRAL_CAMPAIGN_END: "2026-07-21T00:00:00Z",
+  }), /must be after start/);
 });

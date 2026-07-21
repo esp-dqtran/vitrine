@@ -138,6 +138,15 @@ import { mountSitesRoutes } from "./sites.ts";
 import { canonicalPublicPageUrl } from "../../../src/publicPage.ts";
 import { publishPublicPageJob } from "../../../src/publicPageQueue.ts";
 import { createPublicPageStore } from "../../../src/publicPageStore.ts";
+import {
+  activateProMonth,
+  attributeReferralSignup,
+  createReferralCode,
+  recordReferralAppOpen,
+  referralSummary,
+  validateReferralToken,
+  type ReferralCampaign,
+} from "../../../src/referralStore.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site", "crawl-public-page"] as const;
 export const DEFAULT_API_PORT = 3010;
@@ -150,6 +159,12 @@ const apiCrawlRunService = createCrawlRunService({ workerId: "api" });
 const apiAutonomousStore = createAutonomousStore();
 const apiSitesStore = createSitesStore();
 const apiPublicPageStore = createPublicPageStore();
+const disabledReferralCampaign: ReferralCampaign = {
+  id: "disabled",
+  startsAt: new Date(0),
+  endsAt: new Date(0),
+  rewardCap: 3,
+};
 
 type RepairProvider = ResearchProvider;
 interface CrawlRepairRequest {
@@ -339,6 +354,14 @@ const defaults = {
   createFreeCollection,
   recordAccessEvent,
   reserveExportOperation,
+  activateProMonth,
+  attributeReferralSignup,
+  createReferralCode,
+  recordReferralAppOpen,
+  referralSummary,
+  validateReferralToken,
+  referralCampaign: disabledReferralCampaign,
+  appUrl: process.env.APP_URL?.replace(/\/$/, "") ?? "http://localhost:5173",
   listAdminUsersPage,
   setAdminUserActive,
   getFeatureUsageOverview,
@@ -710,6 +733,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     next();
   });
 
+  app.get("/referrals/validate", async (req, res) => {
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+    const visitor = typeof req.query.visitor === "string" && req.query.visitor.length <= 128
+      ? req.query.visitor
+      : undefined;
+    const valid = await deps.validateReferralToken(token, deps.referralCampaign, visitor);
+    res.json({ valid });
+  });
+
   app.post("/auth/login", async (req, res) => {
     const email = typeof req.body?.email === "string" ? req.body.email : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
@@ -725,6 +757,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.post("/auth/signup", async (req, res) => {
     const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
+    const referralToken = typeof req.body?.referralToken === "string"
+      && req.body.referralToken.length >= 32
+      && req.body.referralToken.length <= 128
+      ? req.body.referralToken
+      : undefined;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       res.status(400).json({ error: "Enter a valid email address" });
       return;
@@ -737,6 +774,17 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     if (!user) {
       res.status(409).json({ error: "An account with this email already exists" });
       return;
+    }
+    if (referralToken) {
+      try {
+        await deps.attributeReferralSignup({
+          token: referralToken,
+          invitedUserId: user.id,
+          campaign: deps.referralCampaign,
+        });
+      } catch {
+        // Referral attribution is best-effort and must never block account creation.
+      }
     }
     const session = await deps.createSession(user.id);
     res.cookie(SESSION_COOKIE, session.token, cookieOptions).json(user);
@@ -839,6 +887,26 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.locals.user.role === "admin"
       ? "pro"
       : (await deps.getAccountEntitlements(res.locals.user.id)).plan;
+
+  app.post("/referrals/link", async (_req, res) => {
+    const { token } = await deps.createReferralCode(res.locals.user.id);
+    const target = new URL("/", deps.appUrl);
+    target.searchParams.set("ref", token);
+    res.status(201).json({ url: target.toString() });
+  });
+
+  app.get("/referrals/summary", async (_req, res) => {
+    res.json(await deps.referralSummary(res.locals.user.id, deps.referralCampaign));
+  });
+
+  app.post("/referrals/rewards/activate", async (_req, res) => {
+    const result = await deps.activateProMonth(res.locals.user.id);
+    if (result.status === "activated") {
+      res.json(result);
+      return;
+    }
+    res.status(409).json({ error: "Pro Month cannot be activated", code: result.status });
+  });
 
   mountSitesRoutes(app, {
     store: deps.sitesStore,
@@ -2037,6 +2105,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     if (!(await deps.canAccessApp(res.locals.user, appSlug))) {
       res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
       return false;
+    }
+    try {
+      await deps.recordReferralAppOpen(
+        res.locals.user.id,
+        appSlug,
+        new Date(),
+        deps.referralCampaign,
+      );
+    } catch {
+      console.error(`[referrals] app-open recording failed for user ${res.locals.user.id}`);
     }
     return true;
   };

@@ -1,5 +1,5 @@
 import { createApiApp, DEFAULT_API_PORT } from "./app.ts";
-import { adminSeedFromEnv, billingConfigFromEnv } from "./config.ts";
+import { adminSeedFromEnv, billingConfigFromEnv, referralCampaignFromEnv } from "./config.ts";
 import { startApi } from "./start.ts";
 import { seedAdmin } from "../../../src/authStore.ts";
 import { pool } from "../../../src/db.ts";
@@ -22,6 +22,7 @@ await startApi({
   start: async () => {
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
+    const referralCampaign = referralCampaignFromEnv(process.env);
     await seedAdmin(seed.email, seed.password);
     const stripe = new Stripe(config.stripeSecretKey);
     const billing = createBillingService({
@@ -42,6 +43,8 @@ await startApi({
       generalRateLimit: config.generalRateLimit,
       mediaRateLimit: config.mediaRateLimit,
       appTraversalLimit: config.appTraversalLimit,
+      appUrl: config.appUrl,
+      referralCampaign,
     }).listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },
 });

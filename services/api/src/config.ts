@@ -24,6 +24,13 @@ export interface BillingConfig {
   appTraversalLimit: number;
 }
 
+export interface ReferralCampaignConfig {
+  id: string;
+  startsAt: Date;
+  endsAt: Date;
+  rewardCap: 3;
+}
+
 function required(env: Record<string, string | undefined>, name: string): string {
   const value = env[name]?.trim();
   if (!value) throw new Error(`${name} is required`);
@@ -61,5 +68,21 @@ export function billingConfigFromEnv(env: Record<string, string | undefined>): B
     mediaRateLimit: positiveInt(env.MEDIA_RATE_LIMIT, 500, "MEDIA_RATE_LIMIT"),
     appTraversalLimit: positiveInt(env.APP_TRAVERSAL_LIMIT, 20, "APP_TRAVERSAL_LIMIT"),
   };
+}
+
+export function referralCampaignFromEnv(
+  env: Record<string, string | undefined>,
+): ReferralCampaignConfig {
+  const id = required(env, "REFERRAL_CAMPAIGN_ID");
+  const startsAt = new Date(required(env, "REFERRAL_CAMPAIGN_START"));
+  const endsAt = new Date(required(env, "REFERRAL_CAMPAIGN_END"));
+  if (Number.isNaN(startsAt.valueOf())) {
+    throw new Error("REFERRAL_CAMPAIGN_START must be ISO-8601");
+  }
+  if (Number.isNaN(endsAt.valueOf())) {
+    throw new Error("REFERRAL_CAMPAIGN_END must be ISO-8601");
+  }
+  if (endsAt <= startsAt) throw new Error("REFERRAL_CAMPAIGN_END must be after start");
+  return { id, startsAt, endsAt, rewardCap: 3 };
 }
 import { decodeSessionKey } from "../../../src/crawlSession.ts";

@@ -16,12 +16,20 @@ const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
 const freeEntitlements = {
   plan: "free" as const,
+  entitlementSource: "free" as const,
+  promotionExpiresAt: null,
   subscription: null,
   freeUnlocks: [] as string[],
   freeUnlocksRemaining: 3,
   exportUsage: { used: 0, limit: 20 as const, resetAt: null },
 };
-const proEntitlements = { ...freeEntitlements, plan: "pro" as const };
+const proEntitlements = { ...freeEntitlements, plan: "pro" as const, entitlementSource: "paid" as const };
+const referralCampaign = {
+  id: "launch-2026",
+  startsAt: new Date("2026-07-21T00:00:00Z"),
+  endsAt: new Date("2026-10-19T00:00:00Z"),
+  rewardCap: 3 as const,
+};
 const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
 const previewSha256 = createHash("sha256").update("image").digest("hex");
@@ -2242,6 +2250,105 @@ test("rejects a duplicate email and invalid signup input", async (t) => {
     body: JSON.stringify({ email: "person@example.com", password: "short" }),
   });
   assert.equal(shortPassword.status, 400);
+});
+
+test("validates referral links publicly and keeps signup available when attribution fails", async (t) => {
+  const newUser = { id: 3, email: "referred@example.com", role: "user" as const };
+  const validations: Array<{ token: string; visitor?: string }> = [];
+  let attributedUserId: number | undefined;
+  const { base, server } = await serve(createApiApp({
+    referralCampaign,
+    appUrl: "https://astryx.example",
+    validateReferralToken: async (token, _campaign, visitor) => {
+      validations.push({ token, visitor });
+      return token === "v".repeat(48);
+    },
+    registerUser: async () => newUser,
+    attributeReferralSignup: async ({ invitedUserId }) => {
+      attributedUserId = invitedUserId;
+      throw new Error("referral store unavailable");
+    },
+    createSession: async () => ({ token: "referred-session", expiresAt: new Date() }),
+  } as never));
+  t.after(() => close(server));
+
+  const validation = await fetch(`${base}/referrals/validate?token=${"v".repeat(48)}&visitor=browser-visitor`);
+  assert.equal(validation.status, 200);
+  assert.deepEqual(await validation.json(), { valid: true });
+  assert.deepEqual(validations, [{ token: "v".repeat(48), visitor: "browser-visitor" }]);
+
+  const signup = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      email: newUser.email,
+      password: "a long enough password",
+      referralToken: "v".repeat(48),
+    }),
+  });
+  assert.equal(signup.status, 200);
+  assert.deepEqual(await signup.json(), newUser);
+  assert.equal(attributedUserId, newUser.id);
+});
+
+test("returns safe referral state, creates a share link, and activates a banked month", async (t) => {
+  const summary = {
+    campaign: { id: referralCampaign.id, active: true, endsAt: referralCampaign.endsAt.toISOString() },
+    referralCount: 1,
+    activatedCount: 1,
+    earnedCount: 1,
+    availableMonths: 1,
+    referrals: [{ id: "11", state: "rewarded" as const }],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    referralCampaign,
+    appUrl: "https://astryx.example",
+    createReferralCode: async () => ({ token: "s".repeat(48) }),
+    referralSummary: async () => summary,
+    activateProMonth: async () => ({
+      status: "activated",
+      expiresAt: "2026-08-24T10:00:00.000Z",
+      availableMonths: 0,
+    }),
+  } as never));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user" };
+
+  const link = await fetch(`${base}/referrals/link`, { method: "POST", headers });
+  assert.equal(link.status, 201);
+  assert.deepEqual(await link.json(), { url: `https://astryx.example/?ref=${"s".repeat(48)}` });
+  assert.deepEqual(await (await fetch(`${base}/referrals/summary`, { headers })).json(), summary);
+  assert.deepEqual(await (await fetch(`${base}/referrals/rewards/activate`, { method: "POST", headers })).json(), {
+    status: "activated",
+    expiresAt: "2026-08-24T10:00:00.000Z",
+    availableMonths: 0,
+  });
+});
+
+test("records only authorized app-detail opens for referral activation", async (t) => {
+  const recorded: string[] = [];
+  let allowed = true;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    referralCampaign,
+    canAccessApp: async () => allowed,
+    recordReferralAppOpen: async (_userId, appSlug) => {
+      recorded.push(appSlug);
+      return { rewardIssued: false };
+    },
+    allImages: async () => catalogImages,
+    listAppVersions: async () => [publishedVersion],
+    versionImages: async () => catalogImages,
+    recordAccessEvent: async () => undefined,
+  } as never));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user" };
+
+  assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
+  allowed = false;
+  assert.equal((await fetch(`${base}/apps/notion`, { headers })).status, 403);
+  assert.deepEqual(recorded, ["linear"]);
 });
 
 test("explains when a normal-user session was evicted", async (t) => {
