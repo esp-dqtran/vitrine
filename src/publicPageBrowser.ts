@@ -159,9 +159,9 @@ async function primeLazyContent(page: Page): Promise<void> {
 async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<unknown> {
   return page.evaluate(({ requested, viewport }) => {
     type AnyRecord = Record<string, unknown>;
-    const clean = (value: unknown, maximum: number) => typeof value === "string"
+    const [clean] = [(value: unknown, maximum: number) => typeof value === "string"
       ? value.replace(/\s+/g, " ").trim().slice(0, maximum)
-      : "";
+      : ""] as const;
     const jsonLd: AnyRecord[] = [];
     for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
       try {
@@ -178,7 +178,7 @@ async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<un
       const type = value["@type"];
       return type === "SoftwareApplication" || type === "Organization" || type === "WebSite";
     });
-    const meta = (selector: string) => clean(document.querySelector<HTMLMetaElement>(selector)?.content, 500);
+    const [meta] = [(selector: string) => clean(document.querySelector<HTMLMetaElement>(selector)?.content, 500)] as const;
     const fallbackName = new URL(location.href).hostname.replace(/^www\./, "").split(".")[0] || "Website";
     const titleName = clean(document.title.split(/\s+[|–—-]\s+/)[0], 160);
     const name = clean(structured?.name, 160) || meta('meta[property="og:site_name"]') || titleName || fallbackName;
@@ -189,7 +189,7 @@ async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<un
     const iconUrl = document.querySelector<HTMLLinkElement>('link[rel~="icon"],link[rel="apple-touch-icon"]')?.href;
     const canonicalUrl = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href || location.href;
 
-    const selectorFor = (element: Element): string => {
+    const [selectorFor] = [(element: Element): string => {
       if (element.id && /^[A-Za-z][\w-]{0,80}$/.test(element.id)) return `#${CSS.escape(element.id)}`;
       const parts: string[] = [];
       let current: Element | null = element;
@@ -203,18 +203,18 @@ async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<un
         current = parent;
       }
       return parts.join(" > ");
-    };
-    const visible = (element: Element) => {
+    }] as const;
+    const [visible] = [(element: Element) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity || 1) > 0
         && rect.width >= viewport.width * 0.5 && rect.height >= 60;
-    };
-    const overlay = (element: Element) => {
+    }] as const;
+    const [overlay] = [(element: Element) => {
       const style = getComputedStyle(element);
       const role = element.getAttribute("role");
       return style.position === "fixed" || role === "dialog" || role === "alertdialog";
-    };
+    }] as const;
     const roots = [...document.querySelectorAll(
       "header,main>section,main>article,main>div,body>section,body>article,body>div,footer",
     )].filter((element) => visible(element) && !overlay(element));
@@ -297,12 +297,12 @@ async function recordContinuousScroll(
     if (distance > 0 && durationMs > 0) {
       await page.evaluate(({ target, duration }) => new Promise<void>((resolve) => {
         const started = performance.now();
-        const frame = (now: number) => {
+        const [frame] = [(now: number) => {
           const progress = Math.min(1, (now - started) / duration);
           window.scrollTo(0, Math.round(target * progress));
           if (progress >= 1) resolve();
           else requestAnimationFrame(frame);
-        };
+        }] as const;
         requestAnimationFrame(frame);
       }), { target: distance, duration: durationMs });
     }
