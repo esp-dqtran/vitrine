@@ -110,7 +110,7 @@ async function capturePublicPage(
     });
     const pageImage = Buffer.from(await page.screenshot({ fullPage: true, type: "png", animations: "disabled" }));
     const sectionImages = await cropSections(pageImage, capture.sections);
-    await freeze.evaluate((node) => node.remove());
+    await freeze.evaluate((node) => node.parentNode?.removeChild(node));
 
     const recording = await recordContinuousScroll(page, {
       pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
