@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Badge, Button, Divider, DropdownMenu, Heading, Icon, IconButton, Text, TextInput, ToggleButton, useMediaQuery } from '@astryxdesign/core';
+import { Button, Divider, DropdownMenu, Heading, Icon, Text, ToggleButton, useMediaQuery } from '@astryxdesign/core';
 import { PlaceholderImage } from './components/PlaceholderImage';
 import { useFloatDrift } from './useFloatDrift';
 import { useRevealOnScroll } from './useRevealOnScroll';
@@ -128,22 +128,6 @@ function IconMarquee() {
   );
 }
 
-// ---------- hero search bar (seeds the real catalog search) ----------
-function HeroSearchBar({ onSearch }: { onSearch: (q: string) => void }) {
-  const [value, setValue] = useState('');
-  const go = () => onSearch(value.trim());
-  return (
-    <div style={{ maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'end', gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <TextInput label="Search apps, screens, and flows" isLabelHidden value={value} onChange={setValue} onEnter={go} placeholder="Search apps, screens, flows…" startIcon={<Icon icon="search" />} width="100%" />
-        </div>
-        <IconButton label="Search" icon={<Icon icon="chevronRight" />} variant="primary" onClick={go} />
-      </div>
-    </div>
-  );
-}
-
 // ---------- stats block ----------
 // ponytail: headline figures are marketing copy, not live counts — update by hand.
 const STATS = [
@@ -246,8 +230,21 @@ function PatternTabs() {
             label={t.label}
             isPressed={active === t.key}
             onPressedChange={() => setActive(t.key)}
-            style={{ position: 'relative', borderRadius: 999 }}
-          />
+            style={{
+              position: 'relative',
+              borderRadius: 999,
+              background: 'transparent',
+              // The indicator behind this pill is --color-text-primary, so the active label
+              // has to invert or it renders in its own background colour (1:1 contrast).
+              // Passing children as well as `label` is what makes this colour stick — the
+              // label prop alone is styled by the design system and ignores it. Matches
+              // FilterChips, which already does exactly this.
+              color: active === t.key ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
+              transition: 'color .12s ease',
+            }}
+          >
+            {t.label}
+          </ToggleButton>
         ))}
       </div>
       <div style={{ marginBottom: 24, maxWidth: 520 }}>
@@ -266,7 +263,7 @@ function PatternTabs() {
 
 const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' };
 
-export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void; onSearch: (q: string) => void }) {
+export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void }) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const patternsRef = useRef<HTMLDivElement>(null);
@@ -329,9 +326,6 @@ export function Home({ onBrowse, onPricing, onLogin, onSearch }: { onBrowse: () 
           <Text type="large" color="secondary">Real screens, real flows, real decisions —</Text>
           <br />
           <Text type="large" color="secondary">reconstructed from the apps you already use.</Text>
-        </div>
-        <div style={{ marginTop: 32, animation: 'hmFadeUp .5s cubic-bezier(.16,1,.3,1) .15s both' }}>
-          <HeroSearchBar onSearch={onSearch} />
         </div>
       </Section>
 

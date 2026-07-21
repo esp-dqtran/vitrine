@@ -674,9 +674,13 @@ async function discoverFlowRows(page: Page): Promise<Array<{ id: string; title: 
 // only render on hover), reusing the same hover-submenu dance as the Screens tab.
 async function downloadFlowRow(page: Page, cell: Locator): Promise<boolean> {
   await cell.hover();
-  const more = cell.getByRole("button", { name: "More actions" });
+  const more = flowMoreActionsLocator(cell);
   if ((await more.count()) === 0) return false;
   return clickDownloadAllMenu(page, more);
+}
+
+export function flowMoreActionsLocator(cell: Locator): Locator {
+  return cell.locator('button[aria-label="More actions"]').first();
 }
 
 // Flows dominate total crawl time (each row needs its own hover + menu + version-fetch

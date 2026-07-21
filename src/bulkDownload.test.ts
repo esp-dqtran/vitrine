@@ -15,6 +15,7 @@ import {
   flowStageCoverage,
   retryTransientFlowIngestion,
   waitForGridOrRedirect,
+  flowMoreActionsLocator,
 } from "./bulkDownload.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
@@ -38,6 +39,20 @@ test("flow navigation recognizes Mobbin redirecting an app with no flows back to
   assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/apps/product-hunt-ios-id/version/screens"), true);
   assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/apps/product-hunt-ios-id/version/flows"), false);
   assert.equal(isFlowlessRedirect(requested, "https://mobbin.com/login"), false);
+});
+
+test("flow downloads select only the row action button with the More actions aria label", () => {
+  const selected = { kind: "row-action" };
+  const calls: string[] = [];
+  const cell = {
+    locator(selector: string) {
+      calls.push(selector);
+      return { first: () => selected };
+    },
+  };
+
+  assert.equal(flowMoreActionsLocator(cell as never), selected);
+  assert.deepEqual(calls, ['button[aria-label="More actions"]']);
 });
 
 test("flow navigation accepts a delayed client-side redirect before the grid timeout", async () => {

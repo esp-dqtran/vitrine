@@ -50,11 +50,6 @@ function Root() {
       onBrowse={goSignIn}
       onPricing={goPricing}
       onLogin={goSignIn}
-      onSearch={(q) => {
-        // Browsing needs an account; carry the query across sign-in so it lands in the catalog search.
-        if (q) sessionStorage.setItem('astryx:q', q);
-        goSignIn();
-      }}
     />
   );
 }
