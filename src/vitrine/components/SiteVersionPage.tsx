@@ -8,6 +8,7 @@ import { MediaGridCard } from './MediaGridCard.tsx';
 import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteImportDialog } from './SiteImportDialog.tsx';
+import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
 import {
   SiteSectionInspector,
   type SiteInspectorItem,
@@ -227,18 +228,32 @@ function SectionsPanel({
       </div>
       {visibleSections.length ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
-          {visibleSections.map(({ page, item, index, patterns }, visibleIndex) => (
-            <MediaGridCard
-              key={item.id}
-              label={`Open ${patterns[0]} from ${page.title}`}
-              kind={item.mediaKind}
-              url={item.mediaUrl}
-              posterUrl={item.posterUrl}
-              badges={[...patterns.slice(0, 2), item.mediaKind === 'image' ? 'Image' : 'Video']}
-              delay={Math.min(visibleIndex * 0.04, 0.32)}
-              onOpen={() => onOpen(visibleIndex)}
-            />
-          ))}
+          {visibleSections.map(({ page, item, patterns }, visibleIndex) => {
+            const label = `Open ${patterns[0]} from ${page.title}`;
+            const badges = [...patterns.slice(0, 2), item.mediaKind === 'image' ? 'Image' : 'Video'];
+            const delay = Math.min(visibleIndex * 0.04, 0.32);
+            return item.mediaKind === 'video' ? (
+              <SiteSectionVideoCard
+                key={item.id}
+                label={label}
+                url={item.mediaUrl}
+                posterUrl={item.posterUrl}
+                badges={badges}
+                delay={delay}
+                onOpen={() => onOpen(visibleIndex)}
+              />
+            ) : (
+              <MediaGridCard
+                key={item.id}
+                label={label}
+                kind="image"
+                url={item.mediaUrl}
+                badges={badges}
+                delay={delay}
+                onOpen={() => onOpen(visibleIndex)}
+              />
+            );
+          })}
         </div>
       ) : <EmptyState title="No sections match these filters" description="Try another keyword, pattern, or media type." isCompact />}
     </>

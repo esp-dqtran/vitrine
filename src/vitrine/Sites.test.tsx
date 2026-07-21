@@ -73,6 +73,20 @@ test('renders images and native videos through the shared media primitives', () 
   assert.match(video, /poster="\/hero\.webp"/);
 });
 
+test('renders Site videos as Mobbin-style section actions without changing image cards', () => {
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={detail} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+  );
+  const video = html.match(/<video[^>]+src="\/video"[^>]*>/)?.[0] ?? '';
+  assert.match(video, /poster="\/poster"/);
+  assert.match(video, /loop=""/);
+  assert.match(video, /playsInline=""/);
+  assert.doesNotMatch(video, /controls=/);
+  assert.match(html, /View section/);
+  assert.match(html, /data-site-section-video-card="true"/);
+  assert.match(html, /<img[^>]+src="\/image"/);
+});
+
 test('contains image and video failures inside one media card', () => {
   const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
   assert.match(source, /onError/);
