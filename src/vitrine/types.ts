@@ -228,6 +228,19 @@ export interface DailySignupPoint {
   signups: number;
 }
 
+export interface ReferralCampaignMetrics {
+  linksCreated: number;
+  uniqueReferralVisits: number;
+  referredSignups: number;
+  referredActivations: number;
+  rewardsIssued: number;
+  signupToActivationRate: number;
+  referredPaidConversions: number;
+  organicPaidConversions: number;
+  referredRetention: { day7: number; day30: number; day60: number };
+  revocations: number;
+}
+
 export type CrawlPlanStatus = 'draft' | 'approved' | 'superseded';
 export type CrawlRunStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled' | 'interrupted';
 export type CrawlRunStepStatus = 'queued' | 'running' | 'completed' | 'skipped' | 'failed';

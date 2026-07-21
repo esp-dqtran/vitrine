@@ -349,6 +349,15 @@ test("launch referral migration defines bounded banked Pro months", async () => 
   assert.match(sql, /CHECK \(state IN \('available', 'activated', 'revoked'\)\)/);
 });
 
+test("referral operations migration makes attribution revocable", async () => {
+  const sql = await readFile(
+    new URL("../migrations/0014_referral_operations.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(sql, /ALTER TABLE referrals ADD COLUMN revoked_at TIMESTAMPTZ/);
+  assert.match(sql, /referrals_campaign_revoked_idx/);
+});
+
 test("baseline migration preserves existing published and draft image membership", {
   skip: postgresSkipReason,
 }, async (t) => {

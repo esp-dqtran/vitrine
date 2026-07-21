@@ -217,3 +217,73 @@ test("activates one banked month atomically and blocks paid overlap", { skip }, 
   assert.deepEqual(await store.activateProMonth(paidInviterId, now), { status: "paid_active" });
   assert.equal((await store.referralSummary(paidInviterId, campaign, now)).availableMonths, 1);
 });
+
+test("reports the launch funnel, conversion, and eligible retention", { skip }, async () => {
+  const inviterId = await user("metrics-inviter");
+  const invitedUserId = await user("metrics-invited");
+  const organicUserId = await user("metrics-organic");
+  const names = await apps();
+  const code = await store.createReferralCode(inviterId, () => "m".repeat(48));
+  await store.validateReferralToken(code.token, campaign, "metrics-visitor-1", new Date("2026-07-21T08:00:00Z"));
+  await store.validateReferralToken(code.token, campaign, "metrics-visitor-2", new Date("2026-07-21T08:01:00Z"));
+  await store.attributeReferralSignup({
+    token: code.token,
+    invitedUserId,
+    campaign,
+    now: new Date("2026-07-21T10:00:00Z"),
+  });
+  await qualify(invitedUserId, names);
+  for (const [userId, suffix] of [[invitedUserId, "referred"], [organicUserId, "organic"]] as const) {
+    await db.query(
+      `INSERT INTO subscriptions (
+         user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
+         billing_interval, status, current_period_start, current_period_end
+       ) VALUES ($1, $2, $3, 'price_metrics', 'month', 'active', $4, $5)`,
+      [userId, `cus_metrics_${suffix}`, `sub_metrics_${suffix}`, new Date("2026-07-01T00:00:00Z"), new Date("2026-10-01T00:00:00Z")],
+    );
+  }
+  for (const createdAt of [
+    "2026-07-28T10:00:00Z",
+    "2026-08-20T10:00:00Z",
+    "2026-09-19T10:00:00Z",
+  ]) await db.query(
+    "INSERT INTO access_events (user_id, action, outcome, created_at) VALUES ($1, 'app-detail', 'success', $2)",
+    [invitedUserId, new Date(createdAt)],
+  );
+
+  assert.deepEqual(await store.referralCampaignMetrics(campaign.id, new Date("2026-10-01T00:00:00Z")), {
+    linksCreated: 1,
+    uniqueReferralVisits: 2,
+    referredSignups: 1,
+    referredActivations: 1,
+    rewardsIssued: 1,
+    signupToActivationRate: 100,
+    referredPaidConversions: 1,
+    organicPaidConversions: 1,
+    referredRetention: { day7: 100, day30: 100, day60: 100 },
+    revocations: 0,
+  });
+});
+
+test("revokes referrals, rewards, and promotional access idempotently", { skip }, async () => {
+  const inviterId = await user("revoke-inviter");
+  const invitedUserId = await user("revoke-invited");
+  const names = await apps();
+  await attributed(inviterId, invitedUserId, "revoke");
+  await qualify(invitedUserId, names);
+  await store.activateProMonth(inviterId, new Date("2026-07-25T00:00:00Z"));
+  const rows = await db.query<{ referral_id: number; reward_id: number; entitlement_id: number }>(
+    `SELECT r.id AS referral_id, rw.id AS reward_id, rw.entitlement_id
+     FROM referrals r JOIN referral_rewards rw ON rw.referral_id = r.id
+     WHERE r.invited_user_id = $1`,
+    [invitedUserId],
+  );
+  const ids = rows.rows[0];
+  assert.equal(await store.revokeReferralReward(ids.reward_id), true);
+  assert.equal(await store.revokeReferralReward(ids.reward_id), true);
+  assert.equal(await store.activePromotionalEntitlement(inviterId, new Date("2026-07-26T00:00:00Z")), undefined);
+  assert.equal(await store.revokeReferral(ids.referral_id), true);
+  assert.equal(await store.activePromotionalEntitlement(invitedUserId, new Date("2026-07-26T00:00:00Z")), undefined);
+  assert.equal(await store.revokePromotionalEntitlement(ids.entitlement_id), true);
+  assert.equal(await store.revokeReferral(999999), false);
+});

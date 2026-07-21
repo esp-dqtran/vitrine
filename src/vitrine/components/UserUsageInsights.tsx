@@ -1,27 +1,29 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
-import type { FeatureUsageOverview, UsageRangeKey } from '../types.ts';
+import type { FeatureUsageOverview, ReferralCampaignMetrics, UsageRangeKey } from '../types.ts';
 import type { GrowthResponse } from '../usersApi.ts';
 import { formatConversion } from '../usersPageModel.ts';
 
 const CHART_FONT = "'Figtree', system-ui, sans-serif";
 const axisTick = { fill: 'var(--color-text-secondary)', fontSize: 11, fontFamily: CHART_FONT };
 
-export function UserUsageInsights({ usage, growth, range, onRangeChange }: {
+export function UserUsageInsights({ usage, growth, referrals, range, onRangeChange }: {
   usage: FeatureUsageOverview;
   growth: GrowthResponse;
+  referrals: ReferralCampaignMetrics;
   range: UsageRangeKey;
   onRangeChange: (range: UsageRangeKey) => void;
 }) {
-  const [view, setView] = useState<'usage' | 'growth'>('usage');
+  const [view, setView] = useState<'usage' | 'growth' | 'referrals'>('usage');
   return (
     <aside className="admin-users-insights" aria-labelledby="admin-users-insights-title">
       <div className="admin-users-insights-heading">
         <h2 id="admin-users-insights-title">Insights</h2>
-        <SegmentedControl label="Insight view" value={view} onChange={(value) => setView(value as 'usage' | 'growth')}>
+        <SegmentedControl label="Insight view" value={view} onChange={(value) => setView(value as 'usage' | 'growth' | 'referrals')}>
           <SegmentedControlItem value="usage" label="Feature usage" />
           <SegmentedControlItem value="growth" label="Growth" />
+          <SegmentedControlItem value="referrals" label="Referrals" />
         </SegmentedControl>
       </div>
       <SegmentedControl label="Usage range" value={range} onChange={(value) => onRangeChange(value as UsageRangeKey)}>
@@ -52,7 +54,7 @@ export function UserUsageInsights({ usage, growth, range, onRangeChange }: {
             </ol>
           ) : <p className="admin-users-insights-empty">No feature activity in this range yet.</p>}
         </>
-      ) : (
+      ) : view === 'growth' ? (
         <>
           <div className="admin-users-chart" role="img" aria-label="Daily member signups">
             <ResponsiveContainer width="100%" height="100%">
@@ -72,7 +74,28 @@ export function UserUsageInsights({ usage, growth, range, onRangeChange }: {
             <div><dt>Conversion</dt><dd>{formatConversion(growth.stats.active_subscribers, growth.stats.total_users)}</dd></div>
           </dl>
         </>
-      )}
+      ) : <ReferralInsights metrics={referrals} />}
     </aside>
+  );
+}
+
+export function ReferralInsights({ metrics }: { metrics: ReferralCampaignMetrics }) {
+  return (
+    <div className="admin-users-referral-insights">
+      <dl className="admin-users-growth-metrics">
+        <div><dt>Links created</dt><dd>{metrics.linksCreated}</dd></div>
+        <div><dt>Unique visits</dt><dd>{metrics.uniqueReferralVisits}</dd></div>
+        <div><dt>Referred signups</dt><dd>{metrics.referredSignups}</dd></div>
+        <div><dt>Activated users</dt><dd>{metrics.referredActivations}</dd></div>
+        <div><dt>Rewards issued</dt><dd>{metrics.rewardsIssued}</dd></div>
+        <div><dt>Activation rate</dt><dd>{metrics.signupToActivationRate}%</dd></div>
+        <div><dt>Referred paid</dt><dd>{metrics.referredPaidConversions}</dd></div>
+        <div><dt>Organic paid</dt><dd>{metrics.organicPaidConversions}</dd></div>
+        <div><dt>D7 retention</dt><dd>{metrics.referredRetention.day7}%</dd></div>
+        <div><dt>D30 retention</dt><dd>{metrics.referredRetention.day30}%</dd></div>
+        <div><dt>D60 retention</dt><dd>{metrics.referredRetention.day60}%</dd></div>
+        <div><dt>Revocations</dt><dd>{metrics.revocations}</dd></div>
+      </dl>
+    </div>
   );
 }

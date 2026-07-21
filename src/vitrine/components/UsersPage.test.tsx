@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { UserDirectory } from "./UserDirectory.tsx";
 import { UsersPageView } from "./UsersPage.tsx";
+import { ReferralInsights } from "./UserUsageInsights.tsx";
 
 const users = [
   { id: 1, email: "admin@gmail.com", role: "admin" as const, active: true, created_at: "2026-07-13T00:00:00.000Z", subscription_status: null },
@@ -22,6 +23,19 @@ const usage = {
     { key: "exports" as const, label: "Exports", uses: 5, uniqueUsers: 1, share: 35.7 },
   ],
   daily: [{ day: "2026-07-19", uses: 14 }],
+};
+
+const referrals = {
+  linksCreated: 4,
+  uniqueReferralVisits: 10,
+  referredSignups: 5,
+  referredActivations: 3,
+  rewardsIssued: 3,
+  signupToActivationRate: 60,
+  referredPaidConversions: 1,
+  organicPaidConversions: 2,
+  referredRetention: { day7: 80, day30: 60, day60: 50 },
+  revocations: 1,
 };
 
 test("keeps directory filter state below the Users page render boundary", () => {
@@ -54,6 +68,7 @@ test("renders one unified, searchable directory with account actions", () => {
     />}
     growth={growth}
     usage={usage}
+    referrals={referrals}
     range="30d"
     onRangeChange={() => undefined}
   />);
@@ -90,10 +105,23 @@ test("renders honest empty directory copy", () => {
     />}
     growth={growth}
     usage={usage}
+    referrals={referrals}
     range="30d"
     onRangeChange={() => undefined}
   />);
   assert.match(html, /No members yet/);
+});
+
+test("renders the referral funnel without invited-user activity", () => {
+  const html = renderToStaticMarkup(<ReferralInsights metrics={referrals} />);
+  assert.match(html, /Links created/);
+  assert.match(html, /Unique visits/);
+  assert.match(html, /Referred signups/);
+  assert.match(html, /60%/);
+  assert.match(html, /D7 retention/);
+  assert.match(html, /80%/);
+  assert.match(html, /Revocations/);
+  assert.doesNotMatch(html, /email|app detail/i);
 });
 
 test("keeps existing rows visible while filtered results refresh", () => {

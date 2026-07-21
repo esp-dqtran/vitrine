@@ -2351,6 +2351,51 @@ test("records only authorized app-detail opens for referral activation", async (
   assert.deepEqual(recorded, ["linear"]);
 });
 
+test("keeps referral metrics and revocations admin-only", async (t) => {
+  const metrics = {
+    linksCreated: 4,
+    uniqueReferralVisits: 10,
+    referredSignups: 5,
+    referredActivations: 3,
+    rewardsIssued: 3,
+    signupToActivationRate: 60,
+    referredPaidConversions: 1,
+    organicPaidConversions: 2,
+    referredRetention: { day7: 80, day30: 60, day60: 50 },
+    revocations: 1,
+  };
+  let metricCalls = 0;
+  const userApp = await serve(createApiApp({
+    resolveSession: async () => user,
+    referralCampaign,
+    referralCampaignMetrics: async () => { metricCalls += 1; return metrics; },
+  } as never));
+  t.after(() => close(userApp.server));
+  assert.equal((await fetch(`${userApp.base}/admin/referrals/metrics`, {
+    headers: { cookie: "astryx_session=user" },
+  })).status, 403);
+  assert.equal(metricCalls, 0);
+
+  const revoked: string[] = [];
+  const adminApp = await serve(createApiApp({
+    resolveSession: async () => admin,
+    referralCampaign,
+    referralCampaignMetrics: async () => metrics,
+    revokeReferral: async (id) => { revoked.push(`referral:${id}`); return id === 11; },
+    revokeReferralReward: async (id) => { revoked.push(`reward:${id}`); return true; },
+    revokePromotionalEntitlement: async (id) => { revoked.push(`entitlement:${id}`); return true; },
+  } as never));
+  t.after(() => close(adminApp.server));
+  const headers = { cookie: "astryx_session=admin" };
+  assert.deepEqual(await (await fetch(`${adminApp.base}/admin/referrals/metrics`, { headers })).json(), metrics);
+  assert.equal((await fetch(`${adminApp.base}/admin/referrals/11/revoke`, { method: "POST", headers })).status, 204);
+  assert.equal((await fetch(`${adminApp.base}/admin/referral-rewards/12/revoke`, { method: "POST", headers })).status, 204);
+  assert.equal((await fetch(`${adminApp.base}/admin/promotional-entitlements/13/revoke`, { method: "POST", headers })).status, 204);
+  assert.equal((await fetch(`${adminApp.base}/admin/referrals/not-an-id/revoke`, { method: "POST", headers })).status, 400);
+  assert.equal((await fetch(`${adminApp.base}/admin/referrals/99/revoke`, { method: "POST", headers })).status, 404);
+  assert.deepEqual(revoked, ["referral:11", "reward:12", "entitlement:13", "referral:99"]);
+});
+
 test("explains when a normal-user session was evicted", async (t) => {
   const { base, server } = await serve(
     createApiApp({ resolveSessionState: async () => ({ status: "signed_in_elsewhere" }) })

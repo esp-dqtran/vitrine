@@ -7,6 +7,7 @@ import type {
   UsageRangeKey,
   UserFeatureUsage,
   UserFilter,
+  ReferralCampaignMetrics,
 } from './types.ts';
 
 export interface GrowthResponse {
@@ -53,4 +54,27 @@ export function setAdminUserActive(userId: number, active: boolean): Promise<Adm
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ active }),
   });
+}
+
+export function fetchReferralCampaignMetrics(): Promise<ReferralCampaignMetrics> {
+  return apiJson('/api/admin/referrals/metrics');
+}
+
+async function postEmpty(path: string): Promise<void> {
+  const response = await fetch(path, { method: 'POST' });
+  if (response.ok) return;
+  const body = await response.json().catch(() => ({})) as { error?: string };
+  throw new Error(body.error ?? `${path} returned ${response.status}`);
+}
+
+export function revokeReferral(referralId: number): Promise<void> {
+  return postEmpty(`/api/admin/referrals/${referralId}/revoke`);
+}
+
+export function revokeReferralReward(rewardId: number): Promise<void> {
+  return postEmpty(`/api/admin/referral-rewards/${rewardId}/revoke`);
+}
+
+export function revokePromotionalEntitlement(entitlementId: number): Promise<void> {
+  return postEmpty(`/api/admin/promotional-entitlements/${entitlementId}/revoke`);
 }

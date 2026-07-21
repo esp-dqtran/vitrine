@@ -20,6 +20,19 @@ export interface ReferralSummary {
   referrals: Array<{ id: string; state: "joined" | "active" | "rewarded" }>;
 }
 
+export interface ReferralCampaignMetrics {
+  linksCreated: number;
+  uniqueReferralVisits: number;
+  referredSignups: number;
+  referredActivations: number;
+  rewardsIssued: number;
+  signupToActivationRate: number;
+  referredPaidConversions: number;
+  organicPaidConversions: number;
+  referredRetention: { day7: number; day30: number; day60: number };
+  revocations: number;
+}
+
 type AttributionResult =
   | { status: "attributed"; promotionExpiresAt: string }
   | { status: "invalid" | "closed" | "self_referral" | "already_attributed" };
@@ -133,7 +146,7 @@ export async function recordReferralAppOpen(
   return withTransaction(async (client) => {
     const referral = await client.query<{ id: string; inviter_user_id: number }>(
       `SELECT id::text, inviter_user_id FROM referrals
-       WHERE invited_user_id = $1 AND campaign_id = $2
+       WHERE invited_user_id = $1 AND campaign_id = $2 AND revoked_at IS NULL
        FOR UPDATE`,
       [userId, campaign.id],
     );
@@ -201,7 +214,7 @@ export async function referralSummary(
        rw.state AS reward_state
      FROM referrals r
      LEFT JOIN referral_rewards rw ON rw.referral_id = r.id
-     WHERE r.inviter_user_id = $1 AND r.campaign_id = $2
+     WHERE r.inviter_user_id = $1 AND r.campaign_id = $2 AND r.revoked_at IS NULL
      ORDER BY r.created_at, r.id`,
     [userId, campaign.id],
   );
@@ -283,4 +296,146 @@ export async function activePromotionalEntitlement(
     startsAt: new Date(row.starts_at).toISOString(),
     expiresAt: new Date(row.expires_at).toISOString(),
   } : undefined;
+}
+
+function percentage(numerator: number, denominator: number): number {
+  return denominator ? Math.round((numerator / denominator) * 1000) / 10 : 0;
+}
+
+export async function referralCampaignMetrics(
+  campaignId: string,
+  now = new Date(),
+): Promise<ReferralCampaignMetrics> {
+  const counts = await query<{
+    links_created: number;
+    unique_visits: number;
+    signups: number;
+    activations: number;
+    rewards: number;
+    referred_paid: number;
+    organic_paid: number;
+    revocations: number;
+  }>(
+    `SELECT
+       (SELECT count(*)::integer FROM referral_codes) AS links_created,
+       (SELECT count(*)::integer FROM referral_visits WHERE campaign_id = $1) AS unique_visits,
+       (SELECT count(*)::integer FROM referrals WHERE campaign_id = $1 AND revoked_at IS NULL) AS signups,
+       (SELECT count(*)::integer FROM referral_rewards rw JOIN referrals r ON r.id = rw.referral_id
+         WHERE r.campaign_id = $1 AND r.revoked_at IS NULL AND rw.state <> 'revoked') AS activations,
+       (SELECT count(*)::integer FROM referral_rewards rw JOIN referrals r ON r.id = rw.referral_id
+         WHERE r.campaign_id = $1) AS rewards,
+       (SELECT count(DISTINCT r.invited_user_id)::integer FROM referrals r
+         JOIN subscriptions s ON s.user_id = r.invited_user_id
+         WHERE r.campaign_id = $1 AND r.revoked_at IS NULL AND s.status = 'active') AS referred_paid,
+       (SELECT count(*)::integer FROM subscriptions s
+         WHERE s.status = 'active' AND NOT EXISTS (
+           SELECT 1 FROM referrals r WHERE r.campaign_id = $1 AND r.invited_user_id = s.user_id
+         )) AS organic_paid,
+       ((SELECT count(*) FROM referrals WHERE campaign_id = $1 AND revoked_at IS NOT NULL)
+         + (SELECT count(*) FROM referral_rewards rw JOIN referrals r ON r.id = rw.referral_id
+            WHERE r.campaign_id = $1 AND rw.state = 'revoked')
+         + (SELECT count(*) FROM promotional_entitlements p JOIN referrals r
+            ON r.signup_entitlement_id = p.id WHERE r.campaign_id = $1 AND p.revoked_at IS NOT NULL)
+       )::integer AS revocations`,
+    [campaignId],
+  );
+  const retention = async (days: number): Promise<number> => {
+    const result = await query<{ eligible: number; retained: number }>(
+      `SELECT count(*)::integer AS eligible,
+         count(*) FILTER (WHERE EXISTS (
+           SELECT 1 FROM access_events e
+           WHERE e.user_id = r.invited_user_id
+             AND e.created_at >= r.created_at + ($3::integer * interval '1 day')
+         ))::integer AS retained
+       FROM referrals r
+       WHERE r.campaign_id = $1 AND r.revoked_at IS NULL
+         AND r.created_at <= $2::timestamptz - ($3::integer * interval '1 day')`,
+      [campaignId, now, days],
+    );
+    return percentage(result.rows[0].retained, result.rows[0].eligible);
+  };
+  const [day7, day30, day60] = await Promise.all([retention(7), retention(30), retention(60)]);
+  const row = counts.rows[0];
+  return {
+    linksCreated: row.links_created,
+    uniqueReferralVisits: row.unique_visits,
+    referredSignups: row.signups,
+    referredActivations: row.activations,
+    rewardsIssued: row.rewards,
+    signupToActivationRate: percentage(row.activations, row.signups),
+    referredPaidConversions: row.referred_paid,
+    organicPaidConversions: row.organic_paid,
+    referredRetention: { day7, day30, day60 },
+    revocations: row.revocations,
+  };
+}
+
+export async function revokePromotionalEntitlement(
+  entitlementId: number,
+  now = new Date(),
+): Promise<boolean> {
+  return withTransaction(async (client) => {
+    const entitlement = await client.query(
+      "SELECT 1 FROM promotional_entitlements WHERE id = $1 FOR UPDATE",
+      [entitlementId],
+    );
+    if (!entitlement.rowCount) return false;
+    await client.query(
+      "UPDATE promotional_entitlements SET revoked_at = COALESCE(revoked_at, $2) WHERE id = $1",
+      [entitlementId, now],
+    );
+    return true;
+  });
+}
+
+export async function revokeReferralReward(rewardId: number, now = new Date()): Promise<boolean> {
+  return withTransaction(async (client) => {
+    const reward = await client.query<{ entitlement_id: number | null }>(
+      "SELECT entitlement_id FROM referral_rewards WHERE id = $1 FOR UPDATE",
+      [rewardId],
+    );
+    if (!reward.rows[0]) return false;
+    await client.query(
+      `UPDATE referral_rewards SET state = 'revoked', revoked_at = COALESCE(revoked_at, $2)
+       WHERE id = $1`,
+      [rewardId, now],
+    );
+    if (reward.rows[0].entitlement_id) await client.query(
+      "UPDATE promotional_entitlements SET revoked_at = COALESCE(revoked_at, $2) WHERE id = $1",
+      [reward.rows[0].entitlement_id, now],
+    );
+    return true;
+  });
+}
+
+export async function revokeReferral(referralId: number, now = new Date()): Promise<boolean> {
+  return withTransaction(async (client) => {
+    const referral = await client.query<{ signup_entitlement_id: number }>(
+      "SELECT signup_entitlement_id FROM referrals WHERE id = $1 FOR UPDATE",
+      [referralId],
+    );
+    if (!referral.rows[0]) return false;
+    await client.query(
+      "UPDATE referrals SET revoked_at = COALESCE(revoked_at, $2) WHERE id = $1",
+      [referralId, now],
+    );
+    await client.query(
+      "UPDATE promotional_entitlements SET revoked_at = COALESCE(revoked_at, $2) WHERE id = $1",
+      [referral.rows[0].signup_entitlement_id, now],
+    );
+    const rewards = await client.query<{ entitlement_id: number | null }>(
+      "SELECT entitlement_id FROM referral_rewards WHERE referral_id = $1 FOR UPDATE",
+      [referralId],
+    );
+    await client.query(
+      `UPDATE referral_rewards SET state = 'revoked', revoked_at = COALESCE(revoked_at, $2)
+       WHERE referral_id = $1`,
+      [referralId, now],
+    );
+    for (const reward of rewards.rows) if (reward.entitlement_id) await client.query(
+      "UPDATE promotional_entitlements SET revoked_at = COALESCE(revoked_at, $2) WHERE id = $1",
+      [reward.entitlement_id, now],
+    );
+    return true;
+  });
 }

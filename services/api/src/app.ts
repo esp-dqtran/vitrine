@@ -144,6 +144,10 @@ import {
   createReferralCode,
   recordReferralAppOpen,
   referralSummary,
+  referralCampaignMetrics,
+  revokePromotionalEntitlement,
+  revokeReferral,
+  revokeReferralReward,
   validateReferralToken,
   type ReferralCampaign,
 } from "../../../src/referralStore.ts";
@@ -359,6 +363,10 @@ const defaults = {
   createReferralCode,
   recordReferralAppOpen,
   referralSummary,
+  referralCampaignMetrics,
+  revokePromotionalEntitlement,
+  revokeReferral,
+  revokeReferralReward,
   validateReferralToken,
   referralCampaign: disabledReferralCampaign,
   appUrl: process.env.APP_URL?.replace(/\/$/, "") ?? "http://localhost:5173",
@@ -2473,6 +2481,49 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/users/growth", requireAdmin, async (_req, res) => {
     const [stats, dailySignups] = await Promise.all([deps.getGrowthStats(), deps.getDailySignups()]);
     res.json({ stats, dailySignups });
+  });
+
+  app.get("/admin/referrals/metrics", requireAdmin, async (_req, res) => {
+    res.json(await deps.referralCampaignMetrics(deps.referralCampaign.id));
+  });
+
+  app.post("/admin/referrals/:id/revoke", requireAdmin, async (req, res) => {
+    const id = positiveId(String(req.params.id));
+    if (!id) {
+      res.status(400).json({ error: "invalid referral id" });
+      return;
+    }
+    if (!await deps.revokeReferral(id)) {
+      res.status(404).json({ error: "referral not found" });
+      return;
+    }
+    res.status(204).end();
+  });
+
+  app.post("/admin/referral-rewards/:id/revoke", requireAdmin, async (req, res) => {
+    const id = positiveId(String(req.params.id));
+    if (!id) {
+      res.status(400).json({ error: "invalid referral reward id" });
+      return;
+    }
+    if (!await deps.revokeReferralReward(id)) {
+      res.status(404).json({ error: "referral reward not found" });
+      return;
+    }
+    res.status(204).end();
+  });
+
+  app.post("/admin/promotional-entitlements/:id/revoke", requireAdmin, async (req, res) => {
+    const id = positiveId(String(req.params.id));
+    if (!id) {
+      res.status(400).json({ error: "invalid promotional entitlement id" });
+      return;
+    }
+    if (!await deps.revokePromotionalEntitlement(id)) {
+      res.status(404).json({ error: "promotional entitlement not found" });
+      return;
+    }
+    res.status(204).end();
   });
 
   app.get("/users/usage", requireAdmin, async (req, res) => {
