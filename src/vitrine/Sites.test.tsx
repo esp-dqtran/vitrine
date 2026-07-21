@@ -35,17 +35,21 @@ const detail: SiteVersionDetail = {
 
 test('renders Sites with Apps gallery cards instead of preview-video cards', () => {
   const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
+  assert.match(html, /References/);
   assert.match(html, /V7/);
-  assert.match(html, /Search sites, versions, and pages/);
-  assert.match(html, /View pages/);
+  assert.match(html, /Search sites, versions, and sections/);
+  assert.match(html, /View site/);
   assert.match(html, /Home/);
-  assert.match(html, /16 pages · 46 sections/);
+  assert.match(html, /46 sections/);
+  assert.doesNotMatch(html, /16 pages/);
+  assert.doesNotMatch(html, /View pages/);
+  assert.doesNotMatch(html, /page by page/);
   assert.match(html, /Refresh/);
   assert.match(html, /Import Site/);
   assert.doesNotMatch(html, /<video/);
 });
 
-test('filters Sites by name, version, and preview page title', () => {
+test('filters Sites by name, version, and source page title', () => {
   const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
   assert.match(html, /Showing 1 of 1 sites/);
 });

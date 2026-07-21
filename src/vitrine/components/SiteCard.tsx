@@ -8,8 +8,8 @@ export function SiteCard({ site, onOpen }: { site: SiteSummary; onOpen: () => vo
       identityKey={`site-icon-${site.id}`}
       identityLabel={site.name}
       accent="var(--color-accent)"
-      supportingText={`${site.label} · ${site.pageCount} pages · ${site.sectionCount} sections`}
-      overlayLabel="View pages"
+      supportingText={`${site.label} · ${site.sectionCount} sections`}
+      overlayLabel="View site"
       previews={site.previews.map((page) => ({
         key: String(page.id),
         url: page.url,

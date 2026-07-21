@@ -31,14 +31,14 @@ export function SitesPageView({ sites, isAdmin, error, query, onQueryChange, onR
   return (
     <main style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px 72px' }}>
       <PageHeader
-        title="Sites"
-        description="Inspect complete website references page by page, with their original section order and media states."
+        title="References"
+        description="Browse captured websites and reusable interface sections."
         action={isAdmin ? <Button variant="primary" label="Import Site" clickAction={onImport} /> : undefined}
       />
       <ReferenceTypeTabs active="sites" />
       <GalleryToolbar>
         <div style={{ maxWidth: 420 }}>
-          <SearchInput value={query} onChange={onQueryChange} placeholder="Search sites, versions, and pages…" />
+          <SearchInput value={query} onChange={onQueryChange} placeholder="Search sites, versions, and sections…" />
         </div>
       </GalleryToolbar>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '4px 0 20px' }}>
@@ -49,7 +49,7 @@ export function SitesPageView({ sites, isAdmin, error, query, onQueryChange, onR
       {sites.length === 0 && !error ? (
         <EmptyState title="No Sites imported yet" description={isAdmin ? 'Import a Mobbin Sites preview URL to create the first website reference.' : 'No ready website references are available yet.'} />
       ) : visibleSites.length === 0 && !error ? (
-        <EmptyState title="No Sites match this search" description="Try a Site name, version, or page title." />
+        <EmptyState title="No Sites match this search" description="Try a Site name, version, or section keyword." />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
           {visibleSites.map((site) => <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onOpen(site)} />)}
@@ -82,9 +82,9 @@ export function SitesPage({ isAdmin, query, onQueryChange }: SitesPageProps) {
   if (sites === null) {
     return (
       <main role="status" aria-label="Loading Sites" style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px 72px' }}>
-        <PageHeader title="Sites" description="Inspect complete website references page by page, with their original section order and media states." />
+        <PageHeader title="References" description="Browse captured websites and reusable interface sections." />
         <ReferenceTypeTabs active="sites" />
-        <GalleryToolbar><div style={{ maxWidth: 420 }}><SearchInput value="" onChange={() => undefined} placeholder="Search sites, versions, and pages…" /></div></GalleryToolbar>
+        <GalleryToolbar><div style={{ maxWidth: 420 }}><SearchInput value="" onChange={() => undefined} placeholder="Search sites, versions, and sections…" /></div></GalleryToolbar>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, padding: '22px 0 72px' }}>
           {Array.from({ length: 9 }, (_, index) => <GalleryCardSkeleton key={index} index={index} />)}
         </div>
