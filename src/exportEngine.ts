@@ -21,6 +21,32 @@ const foundationKinds: Record<string, TokenKind> = {
   colors: 'color', typography: 'typography', spacing: 'spacing', radii: 'radius', borders: 'border', effects: 'effect',
 };
 const evidenceForComponent = (component: DesignComponent): number[] => [...new Set(component.variants.flatMap(({ evidence }) => evidence))];
+const hasEvidence = (snapshot: DesignSystemSnapshot): boolean => [
+  ...snapshot.tokens.flatMap(({ evidence }) => evidence),
+  ...snapshot.components.flatMap(evidenceForComponent),
+  ...snapshot.flows.flatMap(({ steps }) => steps.flatMap(({ evidence }) => evidence)),
+  ...(snapshot.rules ?? []).flatMap(({ evidence }) => evidence),
+].length > 0;
+
+function evidenceNeutral(content: string, snapshot: DesignSystemSnapshot): string {
+  return content
+    .replace(`Astryx observed design tokens for ${snapshot.app}. Evidence is retained in the JSON/component-spec exports.`, `Astryx design tokens for ${snapshot.app}.`)
+    .replace(/Design system observed by Astryx across \d+ evidence screen\(s\) of [^.]+\./g, snapshot.summary || `Astryx design system for ${snapshot.app}.`)
+    .replace(/Observed across \d+ evidence screen\(s\) of \*\*[^*]+\*\*, generated ([^.]+\.)/g, `${snapshot.summary || `Astryx design system for **${snapshot.app}**.`} Generated $1`)
+    .replace(/ observed /gi, ' ')
+    .replace(/ observed\b/gi, '')
+    .replace(/Evidence: \*\//g, '*/')
+    .replace(/ Evidence: \s*\*\//g, ' */')
+    .replace(/observedVariant/g, 'variant')
+    .replace(/data-observed-variant/g, 'data-variant')
+    .replace(/ · Evidence screens: ' \+ token\.evidence\.join\(', '\)/g, '')
+    .replace(/ \+ ' · Evidence screens: ' \+ variant\.evidence\.join\(', '\)/g, '')
+    .replace(/node\.appendChild\(await label\('Evidence screens: ' \+ variant\.evidence\.join\(', '\)\)\);/g, '')
+    .replace(/row\.appendChild\(await label\('Evidence screens: ' \+ rule\.evidence\.join\(', '\)\)\);/g, '')
+    .replace(/Evidence screens:/g, 'Source references:')
+    .replace(/evidence IDs stored in this export/gi, 'design-system data stored in this export')
+    .replace(/from evidence\./gi, 'from design-system data.');
+}
 
 function scopeSnapshot(snapshot: DesignSystemSnapshot, images: ExportImage[], scope: ExportScope) {
   let tokens = snapshot.tokens;
@@ -288,10 +314,14 @@ export function buildExportArtifact(
   scope: ExportScope,
 ): ExportArtifact {
   const scoped = scopeSnapshot(snapshot, images, scope); const app = slug(snapshot.app);
+  const evidenceBacked = hasEvidence(scoped);
   if (format === 'figma') {
-    const manifest = JSON.stringify({ name: `${snapshot.app} · Astryx observed library`, id: 'REPLACE_WITH_FIGMA_ASSIGNED_PLUGIN_ID', api: '1.0.0', main: 'code.js', documentAccess: 'dynamic-page', editorType: ['figma'], networkAccess: { allowedDomains: ['none'] } }, null, 2);
-    const readme = `Figma assigns every development plugin its ID. In Figma, create a new development plugin, keep the generated manifest (and its assigned id), replace its code.js with this bundle's code.js, then run the plugin in a blank design file. The included manifest.json is a template if you prefer to copy the assigned id into it and import it.\n\nEvery generated variable, style, component variant, and reference is backed by the evidence IDs stored in this export. No missing states are generated.\n`;
-    return { filename: `${app}-figma-library.zip`, mime: 'application/zip', content: zip([{ name: 'manifest.json', content: manifest }, { name: 'code.js', content: figmaCode(scoped) }, { name: 'README.md', content: readme }]) };
+    const manifest = JSON.stringify({ name: `${snapshot.app} · Astryx ${evidenceBacked ? 'observed library' : 'design system'}`, id: 'REPLACE_WITH_FIGMA_ASSIGNED_PLUGIN_ID', api: '1.0.0', main: 'code.js', documentAccess: 'dynamic-page', editorType: ['figma'], networkAccess: { allowedDomains: ['none'] } }, null, 2);
+    const readme = evidenceBacked
+      ? `Figma assigns every development plugin its ID. In Figma, create a new development plugin, keep the generated manifest (and its assigned id), replace its code.js with this bundle's code.js, then run the plugin in a blank design file. The included manifest.json is a template if you prefer to copy the assigned id into it and import it.\n\nEvery generated variable, style, component variant, and reference is backed by the evidence IDs stored in this export. No missing states are generated.\n`
+      : `Figma assigns every development plugin its ID. In Figma, create a new development plugin, keep the generated manifest (and its assigned id), replace its code.js with this bundle's code.js, then run the plugin in a blank design file. The included manifest.json is a template if you prefer to copy the assigned id into it and import it.\n\nThis bundle creates the imported Astryx design system as editable variables, styles, components, and rules.\n`;
+    const code = evidenceBacked ? figmaCode(scoped) : evidenceNeutral(figmaCode(scoped), scoped);
+    return { filename: `${app}-figma-library.zip`, mime: 'application/zip', content: zip([{ name: 'manifest.json', content: manifest }, { name: 'code.js', content: code }, { name: 'README.md', content: readme }]) };
   }
   const json = { ...scoped, images: scoped.images.map(({ id, description }) => ({ id, description })) };
   const outputs: Record<Exclude<ExportFormat, 'figma'>, { suffix: string; mime: string; content: string }> = {
@@ -304,5 +334,6 @@ export function buildExportArtifact(
     'flow-md': { suffix: 'FLOW.md', mime: 'text/markdown', content: flowMd(scoped) },
   };
   const output = outputs[format];
-  return { filename: `${app}-${output.suffix}`, mime: output.mime, content: Buffer.from(output.content) };
+  const content = evidenceBacked ? output.content : evidenceNeutral(output.content, scoped);
+  return { filename: `${app}-${output.suffix}`, mime: output.mime, content: Buffer.from(content) };
 }

@@ -19,6 +19,23 @@ const snapshot: DesignSystemSnapshot = {
 const images = [{ id: 7, image_url: 'linear.webp', description: 'Workspace toolbar' }];
 const whole: ExportScope = { kind: 'design-system' };
 
+test('exports evidence-free imported systems without observed-screen claims', () => {
+  const imported: DesignSystemSnapshot = {
+    app: 'linear', generatedAt: '2026-07-22T00:00:00.000Z', summary: 'Dark product UI',
+    tokens: [{ id: 'primary', kind: 'color', name: 'Primary', value: '#5e6ad2', role: 'Brand', evidence: [] }],
+    components: [{ id: 'button', name: 'Button', category: 'Actions', description: 'Primary action', variants: [{ id: 'default', name: 'Default', description: 'Default state', evidence: [] }] }],
+    flows: [], rules: [],
+  };
+  for (const format of ['design-md', 'react', 'css'] as const) {
+    const text = buildExportArtifact(imported, [], format, whole).content.toString();
+    assert.doesNotMatch(text, /observed|evidence screen/i, format);
+    if (format === 'design-md') assert.match(text, /Dark product UI/);
+    if (format === 'react') assert.doesNotMatch(text, /Evidence:/);
+  }
+  const figma = buildExportArtifact(imported, [], 'figma', whole).content.toString();
+  assert.doesNotMatch(figma, /backed by the evidence|Evidence screens:|observed library/i);
+});
+
 test('builds an editable Figma development-plugin ZIP from observed evidence', () => {
   const artifact = buildExportArtifact(snapshot, images, 'figma', whole);
   assert.equal(artifact.filename, 'linear-figma-library.zip');
