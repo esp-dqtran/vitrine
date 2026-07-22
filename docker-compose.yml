@@ -122,6 +122,9 @@ services:
       CRAWL_PROFILE_ROOT: /app/data/browser-profiles-linux
       CHAT_PROFILE_ROOT: /app/data/chat-profiles-linux
       CRAWL_STALE_RUN_THRESHOLD_MS: ${CRAWL_STALE_RUN_THRESHOLD_MS:-300000}
+      RESEARCH_LLM_BASE_URL: ${RESEARCH_LLM_BASE_URL:-https://api.openai.com/v1}
+      RESEARCH_LLM_API_KEY: ${RESEARCH_LLM_API_KEY:-}
+      RESEARCH_LLM_MODEL: ${RESEARCH_LLM_MODEL:-}
       TEST_ACCOUNT: ${TEST_ACCOUNT:-}
       ATLASSIAN_TEST_EMAIL: ${ATLASSIAN_TEST_EMAIL:-}
       # Chrome's cookie store is encrypted with an OS-level key (macOS Keychain / Linux
