@@ -2661,11 +2661,18 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const versioned = requestedVersion !== undefined || res.locals.user.role !== "admin"
       ? await deps.getVersionDesignSystem(appSlug, platform, requestedVersion)
       : undefined;
-    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin"
-      ? await deps.getDesignSystem(appSlug, platform)
-      : requestedVersion === undefined
-        ? await deps.getImportedCurrentDesignSystem(appSlug, platform)
-        : undefined);
+    const versionedSnapshot = versioned?.snapshot;
+    const versionedPlaceholder = versionedSnapshot
+      && versionedSnapshot.tokens.length === 0
+      && versionedSnapshot.components.length === 0
+      && (versionedSnapshot.rules?.length ?? 0) === 0;
+    const importedCurrent = res.locals.user.role !== "admin"
+      && requestedVersion === undefined
+      && (!versionedSnapshot || versionedPlaceholder)
+      ? await deps.getImportedCurrentDesignSystem(appSlug, platform)
+      : undefined;
+    const snapshot = (versionedPlaceholder ? importedCurrent ?? versionedSnapshot : versionedSnapshot)
+      ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug, platform) : importedCurrent);
     const flows = versioned?.flows ?? await deps.getAppFlows(appSlug, platform);
     // Flows come from the crawl and don't require AI synthesis — don't hide them behind a
     // missing design-system snapshot (e.g. an app that's only been through crawl-only import).

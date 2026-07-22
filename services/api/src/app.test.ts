@@ -1587,6 +1587,31 @@ test("serves imported current design when an entitled user has no published vers
   assert.equal((await response.json()).summary, "Dark product UI");
 });
 
+test("serves imported current design when the published version has only an empty placeholder", async (t) => {
+  const imported = {
+    app: "linear", generatedAt: "2026-07-22T00:00:00.000Z", summary: "Dark product UI",
+    tokens: [{ id: "primary", kind: "color" as const, name: "Primary", value: "#5e6ad2", role: "Brand", evidence: [] }],
+    components: [], flows: [], rules: [],
+  };
+  const placeholder = {
+    app: "linear", generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [], components: [], flows: [], rules: [],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: placeholder, flows: [] }),
+    getImportedCurrentDesignSystem: async () => imported,
+    getAppFlows: async () => [], appImages: async () => [],
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.summary, "Dark product UI");
+  assert.equal(body.tokens.length, 1);
+});
+
 test("never uses imported-current fallback for an explicit version", async (t) => {
   let fallbackReads = 0;
   const { base, server } = await serve(createApiApp({
