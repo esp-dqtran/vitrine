@@ -15,6 +15,7 @@ import {
   downloadFeatureDocumentMarkdown,
   getFeatureDocument,
   regenerateFeatureDocument,
+  retryFeatureDocumentJob,
   revokeFeatureDocumentShare,
   restoreFeatureDocumentRevision,
   saveFeatureDocumentRevision,
@@ -32,6 +33,34 @@ export function featureDocumentReviewActions(status: FeatureDocumentReviewStatus
   return status === 'draft' ? ['in_review'] : status === 'in_review' ? ['draft', 'approved'] : [];
 }
 
+export function FeatureDocumentPendingState({
+  title,
+  job,
+  error,
+  connectionError,
+  onCancel,
+  onReconnect,
+  onRetry,
+}: {
+  title: string;
+  job?: FeatureDocumentJobView;
+  error?: string;
+  connectionError?: string;
+  onCancel?: () => void;
+  onReconnect?: () => void;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="feature-document-page">
+      <header className="feature-document-header"><div><div className="feature-document-kicker">Feature Document</div><h1>{title}</h1></div></header>
+      {error && <div role="alert" className="feature-document-warning">{error}</div>}
+      {job
+        ? <FeatureDocumentProgress job={job} connectionError={connectionError} onCancel={onCancel} onReconnect={onReconnect} onRetry={onRetry} />
+        : <EmptyState title="Generation unavailable" description="This Feature Document has no revision or active generation." />}
+    </div>
+  );
+}
+
 export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const [document, setDocument] = useState<FeatureDocumentView | null>(null);
   const [selectedRevisionId, setSelectedRevisionId] = useState<number>();
@@ -42,7 +71,7 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const [connectionError, setConnectionError] = useState('');
   const [subscriptionRevision, setSubscriptionRevision] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [share, setShare] = useState<FeatureDocumentShareView>();
+  const [shares, setShares] = useState<FeatureDocumentShareView[]>([]);
   const [error, setError] = useState('');
 
   const applyDocument = (next: FeatureDocumentView) => {
@@ -54,6 +83,7 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
       setSelectedEvidenceId(revision.evidenceManifest[0]?.evidenceId);
     }
     setJob(next.currentJob);
+    setShares(next.shares ?? []);
   };
 
   const reload = async () => {
@@ -168,15 +198,31 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const createShare = async () => {
     if (!selectedRevision) return;
     setBusy(true); setError('');
-    try { setShare(await createFeatureDocumentShare(documentId, selectedRevision.id)); }
+    try {
+      const created = await createFeatureDocumentShare(documentId, selectedRevision.id);
+      setShares((current) => [created, ...current.filter(({ id }) => id !== created.id)]);
+    }
     catch (cause) { setError((cause as Error).message); }
     finally { setBusy(false); }
   };
 
-  const revokeShare = async () => {
-    if (!share) return;
+  const retry = async () => {
+    if (!job) return;
     setBusy(true); setError('');
-    try { await revokeFeatureDocumentShare(documentId, share.id); setShare(undefined); }
+    try {
+      const next = await retryFeatureDocumentJob(job.id);
+      setJob(next);
+      setSubscriptionRevision((value) => value + 1);
+    } catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const revokeShare = async (shareId: number) => {
+    setBusy(true); setError('');
+    try {
+      await revokeFeatureDocumentShare(documentId, shareId);
+      setShares((current) => current.map((share) => share.id === shareId ? { ...share, revokedAt: new Date().toISOString() } : share));
+    }
     catch (cause) { setError((cause as Error).message); }
     finally { setBusy(false); }
   };
@@ -186,7 +232,16 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const selectedLabel = useMemo(() => selectedRevision ? `Revision ${selectedRevision.revisionNumber}` : '', [selectedRevision]);
 
   if (error && !document) return <EmptyState title="Could not load Feature Document" description={error} actions={<Button label="Retry" clickAction={() => void reload()} />} />;
-  if (!document || !selectedRevision || !draft) return <div role="status" aria-label="Loading Feature Document" style={{ display: 'grid', placeItems: 'center', minHeight: 320 }}><Spinner size="lg" /></div>;
+  if (!document) return <div role="status" aria-label="Loading Feature Document" style={{ display: 'grid', placeItems: 'center', minHeight: 320 }}><Spinner size="lg" /></div>;
+  if (!selectedRevision || !draft) return <FeatureDocumentPendingState
+    title={title}
+    job={job}
+    error={error}
+    connectionError={connectionError}
+    onCancel={job && activeJob(job) ? () => void cancelFeatureDocumentJob(job.id).then(setJob).catch((cause: Error) => setError(cause.message)) : undefined}
+    onReconnect={() => setSubscriptionRevision((value) => value + 1)}
+    onRetry={job && (job.status === 'error' || job.status === 'cancelled' || job.status === 'stale') ? retry : undefined}
+  />;
 
   return (
     <div className="feature-document-page">
@@ -211,16 +266,16 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
       </header>
       {document.sourceChanged && <div role="alert" className="feature-document-warning">The source Flow changed. Regenerate from current evidence or explicitly retain this revision.</div>}
       {error && <div role="alert" className="feature-document-warning">{error}</div>}
-      {share?.url && (
-        <div className="feature-document-share-grant">
+      {shares.map((share) => (
+        <div className="feature-document-share-grant" key={share.id}>
           <span>Share URL</span>
-          <code className="feature-document-share-url" aria-label="Share URL">{share.url}</code>
+          <code className="feature-document-share-url" aria-label="Share URL">{share.url ?? `Share ${share.id} (URL hidden after creation)`}</code>
           <span>Expires {new Date(share.expiresAt).toLocaleString()}</span>
-          <Button label="Copy share URL" variant="ghost" size="sm" clickAction={() => navigator.clipboard.writeText(share.url!)} />
-          <Button label="Open share" variant="ghost" size="sm" clickAction={() => { window.open(share.url!, '_blank', 'noopener,noreferrer'); }} />
-          <Button label="Revoke share" variant="ghost" size="sm" isDisabled={busy} clickAction={revokeShare} />
+          {share.url && <Button label="Copy share URL" variant="ghost" size="sm" clickAction={() => navigator.clipboard.writeText(share.url!)} />}
+          {share.url && <Button label="Open share" variant="ghost" size="sm" clickAction={() => { window.open(share.url!, '_blank', 'noopener,noreferrer'); }} />}
+          <Button label={share.revokedAt ? 'Revoked' : 'Revoke share'} variant="ghost" size="sm" isDisabled={busy || Boolean(share.revokedAt)} clickAction={() => revokeShare(share.id)} />
         </div>
-      )}
+      ))}
       {job && (activeJob(job) || job.status === 'error' || job.status === 'stale') && (
         <FeatureDocumentProgress
           job={job}

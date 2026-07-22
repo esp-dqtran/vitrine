@@ -5,6 +5,7 @@ import type { FeatureDocumentContent, FeatureDocumentRevisionView } from '../fea
 import { FeatureDocumentEditor } from './components/FeatureDocumentEditor.tsx';
 import { FeatureDocumentEvidencePanel } from './components/FeatureDocumentEvidencePanel.tsx';
 import { FeatureDocumentRevisionHistory } from './components/FeatureDocumentRevisionHistory.tsx';
+import { FeatureDocumentPendingState } from './components/FeatureDocumentPage.tsx';
 
 const claim = (id: string, text: string) => ({ id, kind: 'proposed' as const, text, evidenceIds: [] });
 const content: FeatureDocumentContent = {
@@ -17,7 +18,7 @@ const content: FeatureDocumentContent = {
   },
   flowAnalysis: { effectivePatterns: [], friction: [], missingStates: [], inconsistencies: [], risksAndAssumptions: [] },
   proposedFeature: { problem: claim('problem', 'Users lose progress'), targetUsers: [], goals: [], nonGoals: [], behavior: [], journey: [] },
-  requirements: [{ ...claim('requirement', 'Preserve progress'), priority: 'must', acceptanceCriteria: [{ id: 'criterion', given: 'checkout started', when: 'interrupted', then: 'restore it', evidenceIds: ['IMAGE-42'] }] }],
+  requirements: [{ ...claim('requirement', 'Preserve progress'), userStory: 'As a buyer, I want to resume checkout.', priority: 'must', preconditions: ['Checkout started'], acceptanceCriteria: [{ id: 'criterion', given: 'checkout started', when: 'interrupted', then: 'restore it', evidenceIds: ['IMAGE-42'] }] }],
   edgeCases: [], successMetrics: [], guardrailMetrics: [], analyticsEvents: [], dependencies: [], openQuestions: [],
 };
 
@@ -59,4 +60,11 @@ test('revision history labels immutable authors and source metadata', () => {
   assert.match(html, /Revision 3 · Generated/);
   assert.match(html, /research-model/);
   assert.match(html, /Prompt 1/);
+});
+
+test('initial generation exposes durable progress and cancellation before a revision exists', () => {
+  const html = renderToStaticMarkup(<FeatureDocumentPendingState title="Checkout" job={{ id: 9, documentId: 12, status: 'running', stage: 'analyzing', doneCount: 1, totalCount: 3, updatedAt: '2026-07-22T00:00:00.000Z' }} onCancel={() => {}} onReconnect={() => {}} />);
+  assert.match(html, /Analyzing image 2 of 3/);
+  assert.match(html, /Cancel generation/);
+  assert.doesNotMatch(html, /Loading Feature Document/);
 });

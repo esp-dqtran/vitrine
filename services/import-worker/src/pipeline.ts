@@ -8,6 +8,7 @@ import { isPlatform, platformFromUrl } from "../../../src/platformFromUrl.ts";
 import type { StageOutcome } from "../../../src/progress.ts";
 import { CrawlRunInterruptedError, type CrawlRunService } from "../../../src/crawlRun.ts";
 import { researchAppJob, type ResearchAppJobInput } from "../../../src/crawlJobs.ts";
+import type { FeatureDocumentJobStatus } from "../../../src/featureDocument.ts";
 
 const DEFAULT_PROVIDER = "chatgpt";
 // Screens establishes login (up to 30 min); UI Elements / Flows then fail fast if the app
@@ -35,7 +36,7 @@ const defaults = {
       throw new Error("Autonomous orchestrator is not configured");
     },
   },
-  generateFeatureDocument: async (_runId: string): Promise<void> => {
+  generateFeatureDocument: async (_runId: string): Promise<FeatureDocumentJobStatus | undefined> => {
     throw new Error("Feature document service is not configured");
   },
 };
@@ -144,8 +145,9 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
 
     if (job.type === "generate-feature-document") {
       try {
-        await deps.generateFeatureDocument(job.runId);
-        if (job.jobId != null) await deps.setJobStatus(job.jobId, "done");
+        const outcome = await deps.generateFeatureDocument(job.runId);
+        const transportStatus = outcome === "done" ? "done" : outcome === "cancelled" ? "cancelled" : "error";
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, transportStatus, transportStatus === "error" ? `Feature document run ${outcome ?? "unavailable"}` : undefined);
       } catch (error) {
         if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
         throw error;

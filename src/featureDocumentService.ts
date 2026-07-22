@@ -14,6 +14,7 @@ type FailureCode =
   | "image_missing"
   | "image_metadata_mismatch"
   | "image_type_unsupported"
+  | "image_size_excessive"
   | "provider_unavailable"
   | "provider_timeout"
   | "provider_refused"
@@ -26,6 +27,7 @@ const SAFE_MESSAGES: Record<FailureCode, string> = {
   image_missing: "A Flow image is unavailable",
   image_metadata_mismatch: "A Flow image failed integrity verification",
   image_type_unsupported: "A Flow image has an unsupported format",
+  image_size_excessive: "A Flow image is too large for feature analysis",
   provider_unavailable: "Feature analysis is temporarily unavailable",
   provider_timeout: "Feature analysis timed out",
   provider_refused: "Feature analysis could not process this evidence",
@@ -60,8 +62,10 @@ function sameMetadata(left: ObjectMetadata, right: ObjectMetadata): boolean {
 function checkedImage(
   expected: ObjectMetadata,
   object: Awaited<ReturnType<ObjectStore["get"]>>,
+  maximumBytes: number,
 ): { bytes: Buffer; contentType: "image/png" | "image/jpeg" | "image/webp" } {
   if (!RASTER_TYPES.has(expected.contentType)) throw new FeatureGenerationError("image_type_unsupported");
+  if (expected.byteSize > maximumBytes || object.body.byteLength > maximumBytes) throw new FeatureGenerationError("image_size_excessive");
   if (
     !sameMetadata(expected, object.metadata)
     || object.body.byteLength !== expected.byteSize
@@ -103,9 +107,10 @@ async function analyzeStep(input: {
   prompt: FeatureStepPrompt;
   image: { bytes: Buffer; contentType: "image/png" | "image/jpeg" | "image/webp" };
   timeoutMs: number;
+  retryDelayMs: number;
 }): Promise<{ result: FeatureStepAnalysis; attemptCount: number }> {
   let validationError = "";
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     let raw: unknown;
     try {
       raw = await input.provider.analyzeImage(
@@ -114,13 +119,18 @@ async function analyzeStep(input: {
         AbortSignal.timeout(input.timeoutMs),
       );
     } catch (error) {
-      throw providerFailure(error, "step_invalid");
+      const failure = providerFailure(error, "step_invalid");
+      if ((failure.code === "provider_timeout" || failure.code === "provider_unavailable") && attempt < 3) {
+        if (input.retryDelayMs) await new Promise((resolve) => setTimeout(resolve, input.retryDelayMs * attempt));
+        continue;
+      }
+      throw failure;
     }
     try {
       return { result: parseFeatureStepAnalysis(raw, input.prompt.evidenceId), attemptCount: attempt };
     } catch (error) {
       validationError = error instanceof Error ? error.message : "Invalid step analysis";
-      if (attempt === 2) throw new FeatureGenerationError("step_invalid");
+      if (attempt === 3) throw new FeatureGenerationError("step_invalid");
     }
   }
   throw new FeatureGenerationError("step_invalid");
@@ -131,11 +141,12 @@ async function synthesizeDocument(input: {
   analyses: FeatureStepAnalysis[];
   provider: FeatureDocumentProvider;
   timeoutMs: number;
+  retryDelayMs: number;
   onValidation(): Promise<void>;
 }): Promise<FeatureDocumentContent> {
   const allowedEvidenceIds = input.job.evidenceManifest.map(({ evidenceId }) => evidenceId);
   let validationError = "";
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     let raw: unknown;
     try {
       raw = await input.provider.synthesize({
@@ -146,14 +157,19 @@ async function synthesizeDocument(input: {
         ...(validationError ? { validationError } : {}),
       }, AbortSignal.timeout(input.timeoutMs));
     } catch (error) {
-      throw providerFailure(error, "document_invalid");
+      const failure = providerFailure(error, "document_invalid");
+      if ((failure.code === "provider_timeout" || failure.code === "provider_unavailable") && attempt < 3) {
+        if (input.retryDelayMs) await new Promise((resolve) => setTimeout(resolve, input.retryDelayMs * attempt));
+        continue;
+      }
+      throw failure;
     }
     await input.onValidation();
     try {
       return parseFeatureDocumentContent(raw, new Set(allowedEvidenceIds));
     } catch (error) {
       validationError = error instanceof Error ? error.message : "Invalid feature document";
-      if (attempt === 2) throw new FeatureGenerationError("document_invalid");
+      if (attempt === 3) throw new FeatureGenerationError("document_invalid");
     }
   }
   throw new FeatureGenerationError("document_invalid");
@@ -166,19 +182,25 @@ export function createFeatureDocumentService(deps: {
   imageObjectById(imageId: number): Promise<ObjectMetadata | undefined>;
   currentSourceManifest(input: FeatureDocumentWorkerJob["source"]): Promise<{ sha256: string }>;
   timeoutMs?: number;
-}): { generate(jobId: string): Promise<void> } {
+  retryDelayMs?: number;
+  maxImageBytes?: number;
+}): { generate(jobId: string): Promise<FeatureDocumentWorkerJob["status"] | undefined> } {
   const timeoutMs = deps.timeoutMs ?? 60_000;
+  const retryDelayMs = deps.retryDelayMs ?? 250;
+  const maxImageBytes = deps.maxImageBytes ?? 20 * 1024 * 1024;
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new Error("Invalid feature analysis timeout");
+  if (!Number.isSafeInteger(retryDelayMs) || retryDelayMs < 0) throw new Error("Invalid feature analysis retry delay");
+  if (!Number.isSafeInteger(maxImageBytes) || maxImageBytes < 1) throw new Error("Invalid feature analysis image limit");
 
   return {
     async generate(rawJobId) {
       const jobId = positiveJobId(rawJobId);
       const job = await deps.store.claimJob(jobId);
-      if (!job || job.status === "cancelled") return;
-      if (job.status !== "running") return;
+      if (!job || job.status === "cancelled") return job?.status;
+      if (job.status !== "running") return job.status;
       if (job.providerModel !== deps.provider.model) {
         await deps.store.failJob(jobId, "provider_unavailable", SAFE_MESSAGES.provider_unavailable);
-        return;
+        return "error";
       }
 
       let activeEvidence: typeof job.evidenceManifest[number] | undefined;
@@ -194,7 +216,7 @@ export function createFeatureDocumentService(deps: {
         for (let index = 0; index < manifest.length; index += 1) {
           const evidence = manifest[index];
           activeEvidence = evidence;
-          if (await cancellationRequested(deps.store, jobId)) return;
+          if (await cancellationRequested(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
           const existing = persisted.get(evidence.evidenceId);
           if (
             existing
@@ -211,13 +233,14 @@ export function createFeatureDocumentService(deps: {
           const metadata = await deps.imageObjectById(evidence.imageId);
           if (!metadata) throw new FeatureGenerationError("image_missing");
           if (!RASTER_TYPES.has(metadata.contentType)) throw new FeatureGenerationError("image_type_unsupported");
+          if (metadata.byteSize > maxImageBytes) throw new FeatureGenerationError("image_size_excessive");
           let object: Awaited<ReturnType<ObjectStore["get"]>>;
           try {
             object = await deps.objectStore.get(metadata.key);
           } catch {
             throw new FeatureGenerationError("image_missing");
           }
-          const image = checkedImage(metadata, object);
+          const image = checkedImage(metadata, object, maxImageBytes);
           const analyzed = await analyzeStep({
             provider: deps.provider,
             prompt: {
@@ -232,6 +255,7 @@ export function createFeatureDocumentService(deps: {
             },
             image,
             timeoutMs,
+            retryDelayMs,
           });
           attemptCount = analyzed.attemptCount;
           await deps.store.recordStepAnalysis(jobId, {
@@ -247,21 +271,22 @@ export function createFeatureDocumentService(deps: {
         }
 
         activeEvidence = undefined;
-        if (await cancellationRequested(deps.store, jobId)) return;
+        if (await cancellationRequested(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
         await deps.store.updateProgress(jobId, "synthesizing", manifest.length);
         const content = await synthesizeDocument({
           job,
           analyses,
           provider: deps.provider,
           timeoutMs,
+          retryDelayMs,
           onValidation: () => deps.store.updateProgress(jobId, "validating", manifest.length),
         });
 
-        if (await cancellationRequested(deps.store, jobId)) return;
+        if (await cancellationRequested(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
         const current = await deps.currentSourceManifest(job.source);
         if (current.sha256 !== job.evidenceManifestSha256) {
           await deps.store.markStale(jobId);
-          return;
+          return "stale";
         }
         await deps.store.updateProgress(jobId, "saving", manifest.length);
         await deps.store.completeGeneration(jobId, {
@@ -273,6 +298,7 @@ export function createFeatureDocumentService(deps: {
           promptVersion: job.promptVersion,
           providerModel: job.providerModel,
         });
+        return "done";
       } catch (error) {
         const failure = error instanceof FeatureGenerationError
           ? error
@@ -288,6 +314,7 @@ export function createFeatureDocumentService(deps: {
           });
         }
         await deps.store.failJob(jobId, failure.code, failure.message);
+        return "error";
       }
     },
   };

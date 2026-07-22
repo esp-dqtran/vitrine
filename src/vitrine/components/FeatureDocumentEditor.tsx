@@ -78,6 +78,8 @@ function RequirementField({
     <article className="feature-document-requirement">
       <div className="feature-document-requirement-heading">Requirement {index + 1} · {requirement.priority}</div>
       <ClaimField label={`Requirement ${index + 1}`} claim={requirement} onText={(text) => update((draft) => { draft.text = text; })} onEvidence={onEvidence} readOnly={readOnly} />
+      <TextArea label="User story" value={requirement.userStory} onChange={(text) => update((draft) => { draft.userStory = text; })} rows={2} width="100%" isDisabled={readOnly} />
+      <TextArea label="Preconditions" value={requirement.preconditions.join('\n')} onChange={(text) => update((draft) => { draft.preconditions = text.split('\n').map((item) => item.trim()).filter(Boolean); })} rows={2} width="100%" isDisabled={readOnly} />
       {requirement.acceptanceCriteria.map((criterion, criterionIndex) => (
         <fieldset key={criterion.id} className="feature-document-criterion">
           <legend>Acceptance criterion {criterionIndex + 1}</legend>

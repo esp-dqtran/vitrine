@@ -2,16 +2,17 @@ import assert from "node:assert/strict";
 import { after, before, beforeEach, test } from "node:test";
 import pg from "pg";
 import { applyMigrations } from "./migrations.ts";
-import {
+
+const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_test";
+process.env.DATABASE_URL = TEST_URL;
+
+const {
   featureKeyForLegacyAction,
   getFeatureUsageOverview,
   getUserFeatureUsage,
   isFeatureKey,
   parseUsageRange,
-} from "./featureUsage.ts";
-
-const TEST_URL = "postgres://postgres:postgres@localhost:5432/astryx_test";
-process.env.DATABASE_URL = TEST_URL;
+} = await import("./featureUsage.ts");
 
 async function postgresAvailable(): Promise<boolean> {
   const client = new pg.Client({ connectionString: TEST_URL });

@@ -95,6 +95,8 @@ test("synthesis sends no image bytes and includes validation repair context", as
 
   assert.doesNotMatch(body, /base64|image_url/);
   assert.match(body, /unknown evidence IMAGE-9/);
+  assert.match(body, /userStory/);
+  assert.match(body, /preconditions/);
 });
 
 test("provider failures never expose credentials, prompts, bodies, or responses", async () => {

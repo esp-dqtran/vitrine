@@ -34,7 +34,7 @@ export function FeatureDocumentProgress({
         {active && onCancel && <Button label="Cancel generation" variant="ghost" size="sm" clickAction={onCancel} />}
       </div>
       <progress max={job.totalCount} value={job.doneCount} aria-label="Analyzed images" style={{ width: '100%' }} />
-      {(job.status === 'error' || job.status === 'stale') && onRetry && <Button label="Regenerate" variant="primary" size="sm" clickAction={onRetry} />}
+      {(job.status === 'error' || job.status === 'stale' || job.status === 'cancelled') && onRetry && <Button label="Retry generation" variant="primary" size="sm" clickAction={onRetry} />}
       {connectionError && (
         <div role="alert" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
           <span>{connectionError}</span>

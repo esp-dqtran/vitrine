@@ -27,7 +27,9 @@ const STEP_SYSTEM_PROMPT = [
 ].join(" ");
 
 const SYNTHESIS_SYSTEM_PROMPT = [
-  "Return JSON only using the complete Feature Document structure requested by the user payload.",
+  "Return JSON only using this exact top-level structure: executiveSummary, observedFlow, flowAnalysis, proposedFeature, requirements, edgeCases, successMetrics, guardrailMetrics, analyticsEvents, dependencies, openQuestions.",
+  "Each claim has id, kind, text, evidenceIds, and optional confidence.",
+  "Each requirement is a claim plus userStory, priority, preconditions, and acceptanceCriteria; every criterion has id, given, when, then, and evidenceIds.",
   "Classify every claim as observed, inferred, proposed, or unknown.",
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
   "Never invent an evidence ID.",

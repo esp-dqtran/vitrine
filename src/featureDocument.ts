@@ -17,7 +17,9 @@ export interface FeatureAcceptanceCriterion {
 }
 
 export interface FeatureRequirement extends FeatureClaim {
+  userStory: string;
   priority: "must" | "should" | "could" | "later";
+  preconditions: string[];
   acceptanceCriteria: FeatureAcceptanceCriterion[];
 }
 
@@ -142,6 +144,7 @@ export interface FeatureDocumentView {
   sourceChanged: boolean;
   currentRevision?: FeatureDocumentRevisionView;
   revisions: FeatureDocumentRevisionView[];
+  shares: FeatureDocumentShareView[];
   currentJob?: FeatureDocumentJobView;
 }
 
@@ -298,7 +301,13 @@ function requirement(
   if (priority === "must" && acceptanceCriteria.length === 0) {
     throw new Error(`${label} requires acceptance criteria`);
   }
-  return { ...base, priority, acceptanceCriteria };
+  return {
+    ...base,
+    userStory: text(item.userStory, `${label}.userStory`, 4_000),
+    priority,
+    preconditions: strings(item.preconditions, `${label}.preconditions`, 50),
+    acceptanceCriteria,
+  };
 }
 
 export function parseFeatureStepAnalysis(value: unknown, evidenceId: string): FeatureStepAnalysis {
@@ -391,7 +400,7 @@ function claimLines(title: string, items: FeatureClaim[]): string[] {
 export function renderFeatureDocumentMarkdown(
   title: string,
   content: FeatureDocumentContent,
-  metadata: { sourceFlowTitle: string; generatedAt: string },
+  metadata: { sourceFlowTitle: string; generatedAt: string; evidenceManifest: FeatureEvidenceManifestItem[] },
 ): string {
   const lines = [
     `# ${heading(title)}`,
@@ -434,7 +443,20 @@ export function renderFeatureDocumentMarkdown(
     "",
   ];
   for (const requirement of content.requirements) {
-    lines.push(`### ${requirement.id} · ${requirement.priority.toUpperCase()}`, "", `${requirement.text}${cited(requirement)}`, "", "#### Acceptance criteria", "");
+    lines.push(
+      `### ${requirement.id} · ${requirement.priority.toUpperCase()}`,
+      "",
+      `${requirement.text}${cited(requirement)}`,
+      "",
+      `**User story:** ${requirement.userStory}`,
+      "",
+      "**Preconditions:**",
+      "",
+      ...(requirement.preconditions.length ? requirement.preconditions.map((item) => `- ${item}`) : ["- None."]),
+      "",
+      "#### Acceptance criteria",
+      "",
+    );
     for (const criterion of requirement.acceptanceCriteria) {
       lines.push(`- **${criterion.id}:** Given ${criterion.given}; when ${criterion.when}; then ${criterion.then}.${cited(criterion)}`);
     }
@@ -484,7 +506,13 @@ export function renderFeatureDocumentMarkdown(
     ...content.dependencies,
     ...content.openQuestions,
   ]);
-  lines.push("## Evidence appendix", "", ...[...evidence].sort().map((id) => `- ${id}`), "");
+  const manifestById = new Map(metadata.evidenceManifest.map((item) => [item.evidenceId, item]));
+  lines.push("## Evidence appendix", "", ...[...evidence].sort().map((id) => {
+    const item = manifestById.get(id);
+    return item
+      ? `- **${id}:** Step ${item.stepIndex + 1} (${heading(item.stepLabel)}), image ${item.imageIndex + 1} (image ID ${item.imageId})${item.description ? ` — ${heading(item.description)}` : ""}`
+      : `- **${id}:** Source mapping unavailable`;
+  }), "");
   return `${lines.join("\n").trim()}\n`;
 }
 import { createHash } from "node:crypto";

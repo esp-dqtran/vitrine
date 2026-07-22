@@ -30,12 +30,13 @@ CREATE TABLE feature_document_revisions (
   provider_model TEXT NOT NULL CHECK (char_length(provider_model) BETWEEN 1 AND 160),
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (document_id, revision_number)
+  UNIQUE (document_id, revision_number),
+  UNIQUE (id, document_id)
 );
 
 ALTER TABLE feature_documents
   ADD CONSTRAINT feature_documents_current_revision_fk
-  FOREIGN KEY (current_revision_id) REFERENCES feature_document_revisions(id) ON DELETE RESTRICT;
+  FOREIGN KEY (current_revision_id, id) REFERENCES feature_document_revisions(id, document_id) ON DELETE RESTRICT;
 
 CREATE TABLE feature_document_jobs (
   id BIGSERIAL PRIMARY KEY,
@@ -94,7 +95,9 @@ CREATE TABLE feature_document_shares (
   revoked_at TIMESTAMPTZ,
   last_accessed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CHECK (expires_at > created_at)
+  CHECK (expires_at > created_at),
+  FOREIGN KEY (revision_id, document_id)
+    REFERENCES feature_document_revisions(id, document_id) ON DELETE CASCADE
 );
 
 CREATE INDEX feature_documents_owner_updated_idx

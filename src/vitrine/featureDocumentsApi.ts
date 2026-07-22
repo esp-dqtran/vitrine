@@ -114,6 +114,10 @@ export function cancelFeatureDocumentJob(jobId: number, request: typeof fetch = 
   return json(`/api/feature-document-jobs/${pathId(jobId)}/cancel`, { method: 'POST', headers, body: '{}' }, request);
 }
 
+export function retryFeatureDocumentJob(jobId: number, request: typeof fetch = fetch): Promise<FeatureDocumentJobView> {
+  return json(`/api/feature-document-jobs/${pathId(jobId)}/retry`, { method: 'POST', headers, body: '{}' }, request);
+}
+
 export function createFeatureDocumentShare(
   documentId: number,
   revisionId: number,

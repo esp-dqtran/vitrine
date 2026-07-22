@@ -77,8 +77,12 @@ export interface CompleteFeatureGenerationInput {
 export interface PublicFeatureDocumentShare {
   title: string;
   reviewStatus: FeatureDocumentReviewStatus;
-  revision: FeatureDocumentRevisionView;
+  revision: Pick<FeatureDocumentRevisionView, "revisionNumber" | "reviewStatus" | "content" | "evidenceManifest" | "createdAt">;
   expiresAt: string;
+}
+
+export class InvalidFeatureDocumentReviewTransitionError extends Error {
+  constructor() { super("Invalid feature document review transition"); }
 }
 
 export interface FeatureDocumentStore {
@@ -88,6 +92,7 @@ export interface FeatureDocumentStore {
   getJob(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
   workerJob(jobId: number): Promise<FeatureDocumentWorkerJob | undefined>;
   requestCancel(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
+  retryJob(userId: number, jobId: number, transportJobId: number): Promise<FeatureDocumentJobView | undefined>;
   claimJob(jobId: number): Promise<FeatureDocumentWorkerJob | undefined>;
   updateProgress(jobId: number, stage: FeatureDocumentJobStage, doneCount: number): Promise<void>;
   completedStepAnalyses(jobId: number): Promise<FeatureStepAnalysisRecord[]>;
@@ -299,7 +304,7 @@ async function loadDocument(
   );
   const document = documentResult.rows[0];
   if (!document) return undefined;
-  const [revisionResult, jobResult] = await Promise.all([
+  const [revisionResult, jobResult, shareResult] = await Promise.all([
     runQuery(
       `SELECT ${REVISION_COLUMNS}
        FROM feature_document_revisions r
@@ -310,6 +315,12 @@ async function loadDocument(
       `SELECT ${JOB_COLUMNS}
        FROM feature_document_jobs j
        WHERE j.document_id = $1 ORDER BY j.created_at DESC, j.id DESC LIMIT 1`,
+      [documentId],
+    ),
+    runQuery(
+      `SELECT s.id, s.document_id, s.revision_id, s.expires_at, s.revoked_at
+       FROM feature_document_shares s
+       WHERE s.document_id = $1 ORDER BY s.created_at DESC, s.id DESC`,
       [documentId],
     ),
   ]);
@@ -328,6 +339,13 @@ async function loadDocument(
     sourceChanged: Boolean(revisionSha && currentSha && revisionSha !== currentSha && acknowledgedSha !== currentSha),
     ...(currentRevision ? { currentRevision } : {}),
     revisions,
+    shares: shareResult.rows.map((row) => ({
+      id: positiveInteger(row.id),
+      documentId: positiveInteger(row.document_id),
+      revisionId: positiveInteger(row.revision_id),
+      expiresAt: iso(row.expires_at),
+      ...(row.revoked_at == null ? {} : { revokedAt: iso(row.revoked_at) }),
+    })),
     ...(jobResult.rows[0] ? { currentJob: jobFromRow(jobResult.rows[0]) } : {}),
   };
 }
@@ -432,6 +450,7 @@ export function createFeatureDocumentStore(
             reviewStatus: "draft",
             sourceChanged: false,
             revisions: [],
+            shares: [],
             currentJob: job,
           },
           job,
@@ -482,6 +501,23 @@ export function createFeatureDocumentStore(
            AND j.status IN ('queued', 'running')
          RETURNING ${JOB_COLUMNS}`,
         [jobId, userId],
+      );
+      return jobFromRow(result.rows[0]);
+    },
+
+    async retryJob(userId, jobId, transportJobId) {
+      positiveInteger(transportJobId, "transport job");
+      const result = await runQuery(
+        `UPDATE feature_document_jobs j
+         SET transport_job_id = $3, status = 'queued',
+             stage = CASE WHEN j.done_count > 0 THEN 'analyzing' ELSE 'preparing' END,
+             cancel_requested = false, error_code = NULL, error_message = NULL,
+             updated_at = now(), completed_at = NULL
+         FROM feature_documents d
+         WHERE j.id = $1 AND d.id = j.document_id AND d.user_id = $2
+           AND j.status IN ('error', 'cancelled')
+         RETURNING ${JOB_COLUMNS}`,
+        [jobId, userId, transportJobId],
       );
       return jobFromRow(result.rows[0]);
     },
@@ -689,11 +725,17 @@ export function createFeatureDocumentStore(
       if (!REVIEW_STATUSES.has(status)) throw new Error("Invalid feature document review status");
       return runTransaction(async (tx) => {
         const owned = await tx(
-          `SELECT id FROM feature_documents
-           WHERE id = $1 AND user_id = $2 AND current_revision_id = $3 FOR UPDATE`,
+          `SELECT r.review_status FROM feature_documents d
+           JOIN feature_document_revisions r ON r.id = d.current_revision_id
+           WHERE d.id = $1 AND d.user_id = $2 AND d.current_revision_id = $3 FOR UPDATE OF d, r`,
           [documentId, userId, revisionId],
         );
-        if (!owned.rows[0]) return undefined;
+        const current = owned.rows[0];
+        if (!current) return undefined;
+        const allowed = current.review_status === "draft"
+          ? status === "in_review"
+          : current.review_status === "in_review" && (status === "draft" || status === "approved");
+        if (!allowed) throw new InvalidFeatureDocumentReviewTransitionError();
         if (status === "approved") {
           await tx(
             `UPDATE feature_document_revisions
@@ -788,16 +830,22 @@ export function createFeatureDocumentStore(
          FROM feature_documents d, feature_document_revisions r
          WHERE s.token_sha256 = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
            AND d.id = s.document_id AND r.id = s.revision_id AND r.document_id = d.id
-         RETURNING d.title, s.expires_at,
-                   r.id, r.document_id, r.revision_number, r.author_type, r.review_status,
-                   r.content, r.source_flow, r.evidence_manifest, r.focus_instruction,
-                   r.prompt_version, r.provider_model, r.created_at`,
+         RETURNING d.title, s.expires_at, r.revision_number, r.review_status,
+                   r.content, r.evidence_manifest, r.created_at`,
         [checksum, now.toISOString()],
       );
       const row = result.rows[0];
       if (!row) return undefined;
-      const revision = revisionFromRow(row);
-      return { title: text(row.title), reviewStatus: revision.reviewStatus, revision, expiresAt: iso(row.expires_at) };
+      const evidenceManifest = manifestFrom(row.evidence_manifest);
+      const reviewStatus = row.review_status as FeatureDocumentReviewStatus;
+      const revision = {
+        revisionNumber: positiveInteger(row.revision_number, "revision number"),
+        reviewStatus,
+        content: parseFeatureDocumentContent(row.content, new Set(evidenceManifest.map(({ evidenceId }) => evidenceId))),
+        evidenceManifest,
+        createdAt: iso(row.created_at),
+      };
+      return { title: text(row.title), reviewStatus, revision, expiresAt: iso(row.expires_at) };
     },
 
     async publicShareImage(tokenSha256, imageId, now) {

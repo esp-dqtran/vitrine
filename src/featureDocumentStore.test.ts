@@ -84,7 +84,9 @@ function content(suffix = ""): FeatureDocumentContent {
     },
     requirements: [{
       ...claim(`requirement${suffix}`, "Preserve checkout progress"),
+      userStory: "As a buyer, I want checkout progress preserved.",
       priority: "must",
+      preconditions: ["Checkout has started."],
       acceptanceCriteria: [{
         id: `criterion${suffix}`,
         given: "checkout has started",
@@ -179,9 +181,15 @@ test("keeps generation, revisions, ownership, review, media, and shares durable"
   assert.equal(restored?.authorType, "restored");
   assert.equal(await store.saveRevision(702, created.document.id, restored!.id, content("-forbidden")), undefined);
 
+  await assert.rejects(
+    store.setReviewStatus(701, created.document.id, restored!.id, "approved"),
+    /Invalid feature document review transition/,
+  );
+  await store.setReviewStatus(701, created.document.id, restored!.id, "in_review");
   const firstApproval = await store.setReviewStatus(701, created.document.id, restored!.id, "approved");
   assert.equal(firstApproval?.reviewStatus, "approved");
   const next = await store.saveRevision(701, created.document.id, restored!.id, content("-next"));
+  await store.setReviewStatus(701, created.document.id, next!.id, "in_review");
   const secondApproval = await store.setReviewStatus(701, created.document.id, next!.id, "approved");
   assert.equal(secondApproval?.reviewStatus, "approved");
   assert.equal(secondApproval?.revisions.find(({ id }) => id === restored!.id)?.reviewStatus, "superseded");
@@ -197,7 +205,10 @@ test("keeps generation, revisions, ownership, review, media, and shares durable"
   const tokenSha256 = "c".repeat(64);
   const grant = await store.createShare(701, created.document.id, next!.id, tokenSha256, now);
   assert.equal(grant?.expiresAt, "2026-07-29T00:00:00.000Z");
-  assert.ok(await store.publicShare(tokenSha256, new Date("2026-07-28T23:59:59.000Z")));
+  const publicShare = await store.publicShare(tokenSha256, new Date("2026-07-28T23:59:59.000Z"));
+  assert.ok(publicShare);
+  assert.deepEqual(Object.keys(publicShare!.revision).sort(), ["content", "createdAt", "evidenceManifest", "reviewStatus", "revisionNumber"]);
+  assert.equal((await store.getDocument(701, created.document.id))?.shares.length, 1);
   assert.equal(await store.publicShare(tokenSha256, new Date("2026-07-29T00:00:00.000Z")), undefined);
   assert.equal((await store.publicShareImage(tokenSha256, 1, new Date("2026-07-28T00:00:00.000Z")))?.key, "images/checkout.png");
   assert.equal(await store.revokeShare(702, created.document.id, grant!.id), false);
@@ -228,4 +239,9 @@ test("keeps generation, revisions, ownership, review, media, and shares durable"
   assert.equal((await store.requestCancel(702, cancellable!.id)), undefined);
   assert.equal((await store.requestCancel(701, cancellable!.id))?.status, "queued");
   assert.equal((await store.claimJob(cancellable!.id))?.status, "cancelled");
+  const retryTransport = await db.query<{ id: number }>(
+    "INSERT INTO jobs (type, payload) VALUES ('feature-document', '{}') RETURNING id",
+  );
+  assert.equal((await store.retryJob(702, cancellable!.id, retryTransport.rows[0].id)), undefined);
+  assert.equal((await store.retryJob(701, cancellable!.id, retryTransport.rows[0].id))?.status, "queued");
 });

@@ -45,7 +45,9 @@ function completeDocumentFixture() {
     },
     requirements: [{
       ...claim("requirement-1", "The system preserves checkout progress", "proposed", ["IMAGE-42"]),
+      userStory: "As a shopper, I want to resume checkout so that I can finish my purchase.",
       priority: "must",
+      preconditions: ["The shopper has started checkout."],
       acceptanceCriteria: [{
         id: "criterion-1",
         given: "a shopper has entered checkout",
@@ -86,12 +88,17 @@ test("accepts a complete document and renders its evidence appendix", () => {
   const markdown = renderFeatureDocumentMarkdown("Checkout recovery", content, {
     sourceFlowTitle: "Recover checkout",
     generatedAt: "2026-07-22T00:00:00.000Z",
+    evidenceManifest: [
+      { stepIndex: 0, imageIndex: 0, imageId: 42, evidenceId: "IMAGE-42", stepLabel: "Cart", description: "Cart review" },
+      { stepIndex: 0, imageIndex: 1, imageId: 43, evidenceId: "FLOW-STEP-01", stepLabel: "Cart", description: "Cart detail" },
+    ],
   });
 
   assert.equal(content.requirements[0].kind, "proposed");
   assert.match(markdown, /## Acceptance criteria/);
   assert.match(markdown, /FLOW-STEP-01/);
   assert.match(markdown, /IMAGE-42/);
+  assert.match(markdown, /Step 1 \(Cart\), image 1 \(image ID 42\)/);
 });
 
 test("rejects an observed claim without evidence", () => {

@@ -52,8 +52,8 @@ function documentFixture(): FeatureDocumentContent {
     flowAnalysis: { effectivePatterns: [], friction: [], missingStates: [], inconsistencies: [], risksAndAssumptions: [] },
     proposedFeature: { problem: claim("problem", "Progress can be lost"), targetUsers: [], goals: [], nonGoals: [], behavior: [], journey: [] },
     requirements: [
-      { ...claim("requirement-1", "Preserve cart"), priority: "must", acceptanceCriteria: [{ id: "criterion-1", given: "a cart", when: "interrupted", then: "restore it", evidenceIds: [manifest[0].evidenceId] }] },
-      { ...claim("requirement-2", "Resume payment"), priority: "should", acceptanceCriteria: [] },
+      { ...claim("requirement-1", "Preserve cart"), userStory: "As a buyer, I want to resume checkout.", priority: "must", preconditions: ["A cart exists."], acceptanceCriteria: [{ id: "criterion-1", given: "a cart", when: "interrupted", then: "restore it", evidenceIds: [manifest[0].evidenceId] }] },
+      { ...claim("requirement-2", "Resume payment"), userStory: "As a buyer, I want to resume payment.", priority: "should", preconditions: [], acceptanceCriteria: [] },
     ],
     edgeCases: [], successMetrics: [], guardrailMetrics: [], analyticsEvents: [], dependencies: [], openQuestions: [],
   };
@@ -143,7 +143,7 @@ class FakeStore {
   }
 }
 
-function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?: string } = {}) {
+function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?: string; analyzeImage?: FeatureDocumentProvider["analyzeImage"]; maxImageBytes?: number } = {}) {
   const store = options.store ?? new FakeStore();
   const imageCalls: Array<{ prompt: { evidenceId: string; validationError?: string } }> = [];
   const synthesisCalls: Array<{ validationError?: string }> = [];
@@ -151,7 +151,7 @@ function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?
     model: "research-model",
     async analyzeImage(prompt) {
       imageCalls.push({ prompt });
-      return analysis(prompt.evidenceId);
+      return options.analyzeImage ? options.analyzeImage(prompt, { bytes: Buffer.alloc(0), contentType: "image/png" }, AbortSignal.timeout(1_000)) : analysis(prompt.evidenceId);
     },
     async synthesize(prompt) {
       synthesisCalls.push({ validationError: prompt.validationError });
@@ -172,6 +172,8 @@ function setup(options: { store?: FakeStore; synthesis?: unknown; currentSha256?
     imageObjectById: async (imageId) => objects.get(imageId),
     currentSourceManifest: async () => ({ sha256: options.currentSha256 ?? store.job.evidenceManifestSha256 }),
     timeoutMs: 1_000,
+    retryDelayMs: 0,
+    ...(options.maxImageBytes ? { maxImageBytes: options.maxImageBytes } : {}),
   });
   return { store, service, imageCalls, synthesisCalls, objects };
 }
@@ -265,4 +267,35 @@ test("rejects mismatched image bytes with a stable code and no partial revision"
   assert.equal(state.store.failed?.code, "image_metadata_mismatch");
   assert.equal(state.store.completed.length, 0);
   assert.equal(state.store.failed?.message.includes("tampered"), false);
+});
+
+test("retries one transient provider failure without repeating completed evidence", async () => {
+  let calls = 0;
+  const state = setup({
+    analyzeImage: async (prompt) => {
+      calls += 1;
+      if (calls === 1) throw new Error("provider unavailable");
+      return analysis(prompt.evidenceId);
+    },
+  });
+  assert.equal(await state.service.generate("27"), "done");
+  assert.equal(calls, manifest.length + 1);
+  assert.equal(state.store.completed.length, 1);
+});
+
+test("rejects excessive image metadata before loading object bytes", async () => {
+  const state = setup({ maxImageBytes: 4 });
+  let getCalls = 0;
+  const service = createFeatureDocumentService({
+    store: state.store as unknown as FeatureDocumentStore,
+    provider: { model: "research-model", analyzeImage: async (prompt) => analysis(prompt.evidenceId), synthesize: async () => documentFixture() },
+    objectStore: { get: async () => { getCalls += 1; throw new Error("must not load"); } } as unknown as ObjectStore,
+    imageObjectById: async (imageId) => state.objects.get(imageId),
+    currentSourceManifest: async () => ({ sha256: state.store.job.evidenceManifestSha256 }),
+    retryDelayMs: 0,
+    maxImageBytes: 4,
+  });
+  assert.equal(await service.generate("27"), "error");
+  assert.equal(state.store.failed?.code, "image_size_excessive");
+  assert.equal(getCalls, 0);
 });

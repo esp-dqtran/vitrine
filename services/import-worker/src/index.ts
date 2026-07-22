@@ -163,7 +163,7 @@ await startImportWorker({
       autonomousOrchestrator,
       generateFeatureDocument: async (runId) => {
         if (!featureDocumentService) throw new Error("Feature document provider is not configured");
-        await featureDocumentService.generate(runId);
+        return featureDocumentService.generate(runId);
       },
     }));
   },

@@ -14,6 +14,7 @@ import type {
   FeatureDocumentStore,
   PublicFeatureDocumentShare,
 } from "../../../src/featureDocumentStore.ts";
+import { InvalidFeatureDocumentReviewTransitionError } from "../../../src/featureDocumentStore.ts";
 import type { ObjectMetadata } from "../../../src/objectStore.ts";
 import type { Job } from "../../../src/queue.ts";
 
@@ -393,6 +394,9 @@ export function mountFeatureDocumentRoutes(
     }
     const document = await deps.store.getDocument(res.locals.user.id, documentId);
     if (!document?.currentRevision) { res.status(404).json({ error: "Feature Document not found" }); return; }
+    if (!(await deps.canAccessApp(res.locals.user, document.currentRevision.source.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" }); return;
+    }
     const prepared = await prepareFromSource(deps, res.locals.user, document.currentRevision.source, focusInstruction);
     if (!prepared) { res.status(409).json({ error: "Source Flow is unavailable", code: "source_unavailable" }); return; }
     if (prepared.missing.length) { missingEvidence(res, prepared.missing); return; }
@@ -418,7 +422,15 @@ export function mountFeatureDocumentRoutes(
     const revisionId = positiveId(body?.revisionId);
     const status = body?.status as FeatureDocumentReviewStatus;
     if (!documentId || !revisionId || !REVIEW_STATUSES.has(status)) { res.status(400).json({ error: "Invalid review transition" }); return; }
-    const document = await deps.store.setReviewStatus(res.locals.user.id, documentId, revisionId, status);
+    let document;
+    try {
+      document = await deps.store.setReviewStatus(res.locals.user.id, documentId, revisionId, status);
+    } catch (error) {
+      if (error instanceof InvalidFeatureDocumentReviewTransitionError) {
+        res.status(409).json({ error: "Invalid review transition", code: "invalid_review_transition" }); return;
+      }
+      throw error;
+    }
     if (!document) { res.status(404).json({ error: "Feature Document not found" }); return; }
     await event(res, "feature_document_review_transition", "completed");
     res.json(document);
@@ -449,6 +461,7 @@ export function mountFeatureDocumentRoutes(
     const markdown = renderFeatureDocumentMarkdown(document.title, revision.content, {
       sourceFlowTitle: revision.source.title,
       generatedAt: revision.createdAt,
+      evidenceManifest: revision.evidenceManifest,
     });
     res.type("text/markdown");
     res.setHeader("Content-Disposition", `attachment; filename="feature-document-${document.id}-r${revision.revisionNumber}.md"`);
@@ -495,11 +508,61 @@ export function mountFeatureDocumentRoutes(
     res.json(job);
   }));
 
+  app.post("/feature-document-jobs/:jobId/retry", asyncRoute(async (req, res) => {
+    const jobId = positiveId(req.params.jobId);
+    if (!jobId || !exactBody(req.body ?? {}, [])) { res.status(400).json({ error: "Invalid retry" }); return; }
+    const owned = await deps.store.getJob(res.locals.user.id, jobId);
+    if (!owned) { res.status(404).json({ error: "Feature Document job not found" }); return; }
+    const workerJob = await deps.store.workerJob(jobId);
+    if (!workerJob || !(await deps.canAccessApp(res.locals.user, workerJob.source.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" }); return;
+    }
+    if (owned.status === "stale") {
+      const prepared = await prepareFromSource(deps, res.locals.user, workerJob.source, workerJob.focusInstruction);
+      if (!prepared) { res.status(409).json({ error: "Source Flow is unavailable", code: "source_unavailable" }); return; }
+      if (prepared.missing.length) { missingEvidence(res, prepared.missing); return; }
+      const replacement = await publishGeneration(deps, res.locals.user.id, prepared, workerJob.focusInstruction, workerJob.documentId);
+      if (!replacement) { res.status(404).json({ error: "Feature Document not found" }); return; }
+      const replacementJob = await deps.store.getJob(res.locals.user.id, replacement.jobId);
+      res.status(202).json(replacementJob ?? replacement); return;
+    }
+    const transportJobId = await deps.createJob("generate-feature-document", {});
+    const retried = await deps.store.retryJob(res.locals.user.id, jobId, transportJobId);
+    if (!retried) { res.status(409).json({ error: "Feature Document job cannot be retried", code: "job_not_retryable" }); return; }
+    try {
+      await deps.publishJob({ type: "generate-feature-document", runId: String(jobId), jobId: transportJobId });
+    } catch {
+      await Promise.all([
+        deps.store.failJob(jobId, "queue_unavailable", "Feature document queue is unavailable"),
+        deps.setJobStatus(transportJobId, "error", "Feature document queue is unavailable"),
+      ]);
+      res.status(503).json({ error: "Feature document queue unavailable", code: "queue_unavailable" }); return;
+    }
+    res.status(202).json(retried);
+  }));
+
   app.get("/feature-document-jobs/:jobId/events", asyncRoute(async (req, res) => {
     const jobId = positiveId(req.params.jobId);
     if (!jobId) { res.status(400).json({ error: "Invalid Feature Document job" }); return; }
+    const client = await deps.acquireNotificationClient();
+    await client.query("LISTEN feature_document_jobs");
+    let pending = false;
+    let ready = false;
+    const notification = (notice: Notification) => {
+      if (notice.channel !== "feature_document_jobs" || notice.payload !== String(jobId)) return;
+      if (!ready) { pending = true; return; }
+      deps.store.getJob(res.locals.user.id, jobId).then((current) => {
+        if (current && !res.writableEnded) send(current);
+      }).catch(() => {});
+    };
+    client.on("notification", notification);
     const initial = await deps.store.getJob(res.locals.user.id, jobId);
-    if (!initial) { res.status(404).json({ error: "Feature Document job not found" }); return; }
+    if (!initial) {
+      client.removeListener("notification", notification);
+      await client.query("UNLISTEN feature_document_jobs").catch(() => {});
+      client.release();
+      res.status(404).json({ error: "Feature Document job not found" }); return;
+    }
     res.status(200);
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -509,15 +572,12 @@ export function mountFeatureDocumentRoutes(
       res.write(`event: feature-document-progress\ndata: ${JSON.stringify(value)}\n\n`);
     };
     send(initial);
-    const client = await deps.acquireNotificationClient();
-    await client.query("LISTEN feature_document_jobs");
-    const notification = (notice: Notification) => {
-      if (notice.channel !== "feature_document_jobs" || notice.payload !== String(jobId)) return;
-      deps.store.getJob(res.locals.user.id, jobId).then((current) => {
-        if (current && !res.writableEnded) send(current);
-      }).catch(() => {});
-    };
-    client.on("notification", notification);
+    ready = true;
+    if (pending) {
+      pending = false;
+      const current = await deps.store.getJob(res.locals.user.id, jobId);
+      if (current && !res.writableEnded) send(current);
+    }
     const heartbeat = setInterval(() => {
       if (!res.writableEnded) res.write(": heartbeat\n\n");
     }, 25_000);

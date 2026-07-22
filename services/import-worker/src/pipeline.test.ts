@@ -178,7 +178,7 @@ test("pipeline dispatches feature document generation and tracks transport statu
   const handler = createPipelineHandler({
     getJob: async () => ({ status: "queued" }) as never,
     setJobStatus: async (id, status) => { events.push(`job:${id}:${status}`); },
-    generateFeatureDocument: async (runId) => { events.push(`feature:${runId}`); },
+    generateFeatureDocument: async (runId) => { events.push(`feature:${runId}`); return "done"; },
   });
 
   await handler({ type: "generate-feature-document", runId: "27", jobId: 9 });

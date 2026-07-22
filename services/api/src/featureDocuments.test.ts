@@ -9,6 +9,7 @@ import {
   type FeatureDocumentRouteDependencies,
 } from "./featureDocuments.ts";
 import type { FeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
+import { InvalidFeatureDocumentReviewTransitionError } from "../../../src/featureDocumentStore.ts";
 
 const app = express();
 app.use(express.json());
@@ -17,6 +18,10 @@ const published: unknown[] = [];
 const created: Array<{ userId: number; input: Record<string, unknown> }> = [];
 const missingObjects = new Set<number>();
 let publicHash = "";
+let allowApp = true;
+let reviewTransitionInvalid = false;
+let ownedJobStatus: typeof job.status | "error" | "cancelled" | "stale" = "running";
+const sseOrder: string[] = [];
 
 const job = {
   id: 31,
@@ -38,10 +43,17 @@ const store = {
   },
   async getDocument(userId: number) {
     return userId === 7
-      ? { id: 12, title: "Checkout", reviewStatus: "draft", sourceChanged: false, revisions: [], currentJob: job }
+      ? { id: 12, title: "Checkout", reviewStatus: "draft", sourceChanged: false, revisions: [], shares: [], currentJob: job, currentRevision: { id: 5, source: { app: "linear", platform: "web", versionId: 5, flowId: "checkout", title: "Checkout", description: "", tags: [] }, focusInstruction: "" } }
       : undefined;
   },
-  async getJob(userId: number) { return userId === 7 ? job : undefined; },
+  async getJob(userId: number, jobId: number) { sseOrder.push("snapshot"); return userId === 7 ? { ...job, id: jobId, status: ownedJobStatus } : undefined; },
+  async workerJob() { return { ...job, transportJobId: 72, requestedBy: 7, source: { app: "linear", platform: "web", flowId: "checkout", title: "Checkout", description: "", tags: [] }, evidenceManifest: [], evidenceManifestSha256: "a".repeat(64), focusInstruction: "", promptVersion: 1, providerModel: "research-model", cancelRequested: false }; },
+  async retryJob(userId: number) { return userId === 7 ? { ...job, status: "queued" as const } : undefined; },
+  async createRegeneration() { return { ...job, id: 32, status: "queued" as const }; },
+  async setReviewStatus() {
+    if (reviewTransitionInvalid) throw new InvalidFeatureDocumentReviewTransitionError();
+    return { id: 12, title: "Checkout", reviewStatus: "in_review", sourceChanged: false, revisions: [], shares: [] };
+  },
   async failJob() {},
   async publicShare(tokenSha256: string) {
     publicHash = tokenSha256;
@@ -50,14 +62,10 @@ const store = {
       reviewStatus: "approved" as const,
       expiresAt: "2026-07-29T00:00:00.000Z",
       revision: {
-        id: 5,
-        documentId: 12,
         revisionNumber: 2,
-        authorType: "user" as const,
         reviewStatus: "approved" as const,
         content: {},
-        source: { app: "linear", platform: "web", flowId: "checkout", title: "Checkout", description: "", tags: [] },
-        evidenceManifest: [], focusInstruction: "", promptVersion: 1, providerModel: "model",
+        evidenceManifest: [],
         createdAt: "2026-07-22T00:00:00.000Z",
       },
     };
@@ -70,14 +78,14 @@ const store = {
 } as unknown as FeatureDocumentStore;
 
 class NotificationClient extends EventEmitter {
-  async query() { return { rows: [] }; }
+  async query(sql: string) { if (sql.startsWith("LISTEN")) sseOrder.push("listen"); return { rows: [] }; }
   release() {}
 }
 
 const listener = new NotificationClient();
 const dependencies = {
   store,
-  canAccessApp: async () => true,
+  canAccessApp: async () => allowApp,
   listAppVersions: async () => [{ id: 5, version_number: 3, status: "published" }],
   getVersionFlows: async () => [{
     id: "checkout",
@@ -159,6 +167,7 @@ test("rejects incomplete Flow evidence without publishing", async () => {
 
 test("owner-scoped reads and SSE expose only the authorized durable job", async () => {
   assert.equal((await fetch(`${base}/feature-documents/12`, { headers: { "x-user-id": "8" } })).status, 404);
+  sseOrder.length = 0;
   const controller = new AbortController();
   const response = await fetch(`${base}/feature-document-jobs/31/events`, { signal: controller.signal });
   assert.match(response.headers.get("content-type") ?? "", /text\/event-stream/);
@@ -166,11 +175,45 @@ test("owner-scoped reads and SSE expose only the authorized durable job", async 
   controller.abort();
   assert.match(new TextDecoder().decode(first.value), /feature-document-progress/);
   assert.match(new TextDecoder().decode(first.value), /"stage":"analyzing"/);
+  assert.ok(sseOrder.indexOf("listen") < sseOrder.indexOf("snapshot"));
+});
+
+test("retry republishes the same durable run and regeneration rechecks entitlement", async () => {
+  const publishCount = published.length;
+  const retry = await fetch(`${base}/feature-document-jobs/31/retry`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  assert.equal(retry.status, 202);
+  assert.deepEqual(published[publishCount], { type: "generate-feature-document", runId: "31", jobId: 72 });
+
+  allowApp = false;
+  const regeneration = await fetch(`${base}/feature-documents/12/regenerations`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ focusInstruction: "" }) });
+  allowApp = true;
+  assert.equal(regeneration.status, 403);
+  assert.equal((await regeneration.json() as { code: string }).code, "upgrade_required");
+
+  ownedJobStatus = "stale";
+  const stalePublishCount = published.length;
+  const staleRetry = await fetch(`${base}/feature-document-jobs/31/retry`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  ownedJobStatus = "running";
+  assert.equal(staleRetry.status, 202);
+  assert.deepEqual(published[stalePublishCount], { type: "generate-feature-document", runId: "32", jobId: 72 });
+});
+
+test("rejects review lifecycle shortcuts with a stable conflict code", async () => {
+  reviewTransitionInvalid = true;
+  const response = await fetch(`${base}/feature-documents/12/review-status`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ revisionId: 5, status: "approved" }) });
+  reviewTransitionInvalid = false;
+  assert.equal(response.status, 409);
+  assert.equal((await response.json() as { code: string }).code, "invalid_review_transition");
 });
 
 test("public share is non-enumerating and exposes only allowlisted media", async () => {
   const token = "a".repeat(43);
-  assert.equal((await fetch(`${base}/feature-document-shares/${token}`)).status, 200);
+  const shareResponse = await fetch(`${base}/feature-document-shares/${token}`);
+  assert.equal(shareResponse.status, 200);
+  const share = await shareResponse.json() as { revision: Record<string, unknown> };
+  assert.deepEqual(Object.keys(share.revision).sort(), ["content", "createdAt", "evidenceManifest", "reviewStatus", "revisionNumber"]);
+  assert.equal("focusInstruction" in share.revision, false);
+  assert.equal("providerModel" in share.revision, false);
   assert.notEqual(publicHash, token);
   assert.match(publicHash, /^[0-9a-f]{64}$/);
   assert.equal((await fetch(`${base}/feature-document-shares/${token}/media/42`)).status, 200);
