@@ -19,6 +19,7 @@ import { ResearchProjectsPage } from './components/ResearchProjectsPage';
 import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { SitesPage } from './components/SitesPage';
 import { SiteVersionPage } from './components/SiteVersionPage';
+import { FeatureDocumentPage } from './components/FeatureDocumentPage.tsx';
 import { GalleryCardSkeleton, GalleryToolbar } from './components/GalleryToolbar';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
@@ -228,7 +229,7 @@ export function App() {
     return frame(<ResearchProjectPage projectId={route.projectId} />);
   }
   if (route.name === 'feature-document') {
-    return frame(<main aria-label="Feature Document workspace" data-document-id={route.documentId}>Feature Document</main>);
+    return frame(<FeatureDocumentPage documentId={route.documentId} />);
   }
 
   if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
