@@ -86,6 +86,14 @@ const REFERRAL_TABLES = [
   "referrals",
 ] as const;
 
+const FEATURE_DOCUMENT_TABLES = [
+  "feature_document_jobs",
+  "feature_document_revisions",
+  "feature_document_shares",
+  "feature_document_step_analyses",
+  "feature_documents",
+] as const;
+
 const AUXILIARY_MIGRATION_TABLES = [
   "flow_documents",
   "organization_members",
@@ -278,6 +286,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...SITES_TABLES,
       ...PUBLIC_PAGE_TABLES,
       ...REFERRAL_TABLES,
+      ...FEATURE_DOCUMENT_TABLES,
       ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();

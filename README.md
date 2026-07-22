@@ -106,6 +106,24 @@ Synthesis is synchronous with a 60-second request limit and retries one invalid 
 
 Research activation metrics record only the user ID, action, numeric volume, and outcome. Questions, notes, filenames, image contents, generated text, and designer decisions are not written to analytics events.
 
+## Flow-to-Feature-Document workspace for product managers
+
+From an app's **Flows** tab, a product manager can turn one captured Flow into a living Feature Document. The setup preview pins the exact app, platform, version, ordered steps, and every source image before submission. Submission is blocked if any image is missing protected object storage or source metadata.
+
+Generation runs as a durable import-worker job. It analyzes every ordered image with the configured multimodal provider, synthesizes one structured document, and streams progress to the workspace over SSE without interval polling. A stopped worker resumes completed image analyses instead of sending them again. If the pinned Flow changes during generation, the run becomes stale and cannot replace the current revision.
+
+The result is editable as structured sections: overview, problem, actors, assumptions, scope, business rules, functional and non-functional requirements, acceptance criteria, edge cases, open questions, and an evidence appendix. Saves and regenerations create immutable revisions, so user edits remain available. The selected current revision can move through draft, in-review, and approved states, export to Markdown, or be shared through a revocable link that expires after seven days. Public shares are read-only and expose only that revision and its allowlisted evidence.
+
+Feature Document generation uses the same server/worker-only provider configuration as Research Projects:
+
+```dotenv
+RESEARCH_LLM_BASE_URL=https://api.openai.com/v1
+RESEARCH_LLM_API_KEY=<secret>
+RESEARCH_LLM_MODEL=<multimodal-json-capable-model>
+```
+
+Pass these variables to the API/worker runtime, never to a `VITE_*` client variable. The provider receives every source image required by the pinned Flow. Application logs and analytics contain status, identifiers, counts, and outcomes only; they exclude prompts, image bytes, generated document content, credentials, and signed media URLs.
+
 ## Product flow documentation (`FLOW.md`) for product managers
 
 Astryx reconstructs the same app three ways for three readers: designers export an editable design system (Figma/tokens), developers export tokens as code (CSS/Tailwind/JSON/React), and product managers export **`FLOW.md`** — the app's observed user flows as an ordered, evidence-cited Markdown doc, a PRD-ready reference.

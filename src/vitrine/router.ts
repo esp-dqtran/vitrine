@@ -12,6 +12,8 @@ export type Route =
   | { name: 'site-version'; siteId: number; versionId: number; section?: string }
   | { name: 'projects' }
   | { name: 'project'; projectId: number }
+  | { name: 'feature-document'; documentId: number }
+  | { name: 'feature-document-share'; token: string }
   | { name: 'admin' };
 
 function subscribe(fn: () => void) {
@@ -48,6 +50,13 @@ export function parseRoutePath(pathname: string): Route {
       ? { name: 'project', projectId }
       : { name: 'landing' };
   }
+  const featureDocumentMatch = path.match(/^\/feature-documents\/([1-9]\d*)$/);
+  if (featureDocumentMatch) {
+    const documentId = Number(featureDocumentMatch[1]);
+    return Number.isSafeInteger(documentId) ? { name: 'feature-document', documentId } : { name: 'landing' };
+  }
+  const featureDocumentShareMatch = path.match(/^\/feature-document-shares\/([^/]+)$/);
+  if (featureDocumentShareMatch) return { name: 'feature-document-share', token: decodeURIComponent(featureDocumentShareMatch[1]) };
   if (path === '/admin') return { name: 'admin' };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
   if (appMatch) return { name: 'app', appId: decodeURIComponent(appMatch[1]), section: appMatch[2] };
@@ -66,6 +75,8 @@ export function routeToPath(route: Route): string {
     case 'site-version': return `/sites/${route.siteId}/versions/${route.versionId}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;
     case 'projects': return '/projects';
     case 'project': return `/projects/${route.projectId}`;
+    case 'feature-document': return `/feature-documents/${route.documentId}`;
+    case 'feature-document-share': return `/feature-document-shares/${encodeURIComponent(route.token)}`;
     case 'admin': return '/admin';
     case 'app': return `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${route.section}` : ''}`;
   }

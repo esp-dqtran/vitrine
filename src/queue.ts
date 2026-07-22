@@ -18,6 +18,7 @@ export type Job = (
   | { type: "research-app"; name: string; homepageUrl: string; provider?: ResearchProvider }
   | { type: "smart-crawl-app"; name: string; runId: string }
   | { type: "autonomous-crawl-app"; name: string; runId: string }
+  | { type: "generate-feature-document"; runId: string }
 ) & { jobId?: number };
 
 let connection: ChannelModel | undefined;
@@ -149,6 +150,11 @@ export function parseJob(value: unknown): Job {
     exactKeys(input, ["type", "name", "runId", "jobId"]);
     if (typeof input.runId !== "string" || !/^[1-9]\d*$/.test(input.runId)) invalidJob();
     return withJobId({ type, name: appSlug(input.name), runId: input.runId });
+  }
+  if (type === "generate-feature-document") {
+    exactKeys(input, ["type", "runId", "jobId"]);
+    if (typeof input.runId !== "string" || !/^[1-9]\d*$/.test(input.runId)) invalidJob();
+    return withJobId({ type, runId: input.runId });
   }
   return invalidJob();
 }

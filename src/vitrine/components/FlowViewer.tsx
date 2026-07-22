@@ -3,22 +3,34 @@ import { Badge, Button, Icon } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { PlaceholderImage } from './PlaceholderImage';
 import { Lightbox } from './Lightbox';
+import type { Platform } from '../../platformFromUrl.ts';
+import { FeatureDocumentSetupDialog } from './FeatureDocumentSetupDialog.tsx';
 
 type LightboxState = { index: number } | null;
 
 export function FlowViewer({
   flow,
+  app,
+  platform,
+  version,
   onBack,
 }: {
   flow: DesignFlow<EvidenceView>;
+  app?: string;
+  platform?: Platform;
+  version?: number;
   onBack: () => void;
 }) {
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const [featureDocumentOpen, setFeatureDocumentOpen] = useState(false);
   const stepImages = flow.steps.map((step) => step.evidence[0]).filter((evidence) => evidence !== undefined);
 
   return (
     <div>
-      <Button label="Back to flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} style={{ marginBottom: 20 }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+        <Button label="Back to flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} />
+        {app && platform && version && <Button label="Create Feature Document" variant="primary" size="sm" clickAction={() => setFeatureDocumentOpen(true)} />}
+      </div>
       {flow.category && <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{flow.category}</div>}
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 10 }}>{flow.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 32 }}>
@@ -62,6 +74,16 @@ export function FlowViewer({
           />
         );
       })()}
+      {app && platform && version && (
+        <FeatureDocumentSetupDialog
+          isOpen={featureDocumentOpen}
+          onClose={() => setFeatureDocumentOpen(false)}
+          flow={flow}
+          app={app}
+          platform={platform}
+          version={version}
+        />
+      )}
     </div>
   );
 }

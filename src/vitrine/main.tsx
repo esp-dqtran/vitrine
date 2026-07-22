@@ -8,6 +8,7 @@ import { BillingSuccess } from './components/BillingSuccess';
 import { SignIn } from './SignIn';
 import { navigate, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
+import { FeatureDocumentSharePage } from './components/FeatureDocumentSharePage.tsx';
 import './styles.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
@@ -26,6 +27,10 @@ function Root() {
     return <Pricing user={user} onBrowse={user ? goApps : goSignIn} onSignIn={goSignIn} />;
   }
 
+  if (route.name === 'feature-document-share') {
+    return <FeatureDocumentSharePage token={route.token} />;
+  }
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
@@ -42,7 +47,7 @@ function Root() {
   if (user) return <App />;
   // A deep link into the catalog (e.g. someone shared an app's URL) needs an account too —
   // send it through sign-in rather than the marketing page, path intact for App to pick up.
-  if (route.name === 'signin' || route.name === 'billing-success' || route.name === 'settings-billing' || route.name === 'apps' || route.name === 'app' || route.name === 'projects' || route.name === 'project' || route.name === 'admin') {
+  if (route.name === 'signin' || route.name === 'billing-success' || route.name === 'settings-billing' || route.name === 'apps' || route.name === 'app' || route.name === 'projects' || route.name === 'project' || route.name === 'feature-document' || route.name === 'admin') {
     return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} />;
   }
   return (
