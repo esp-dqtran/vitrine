@@ -38,6 +38,19 @@ async function ensureMigrationTestDatabase(): Promise<string | undefined> {
 
 const postgresSkipReason = await ensureMigrationTestDatabase();
 
+test("feature document migration defines revisions, resumable analyses, and revocable shares", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0015_feature_documents.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /CREATE TABLE feature_documents/);
+  assert.match(migration, /CREATE TABLE feature_document_revisions/);
+  assert.match(migration, /CREATE TABLE feature_document_jobs/);
+  assert.match(migration, /CREATE TABLE feature_document_step_analyses/);
+  assert.match(migration, /CREATE TABLE feature_document_shares/);
+  assert.match(migration, /pg_notify\('feature_document_jobs'/);
+});
+
 test("migration verification requires explicit disposable-database opt-in", () => {
   assert.throws(
     () => createMigrationVerificationConfig({}),
