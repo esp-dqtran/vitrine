@@ -43,3 +43,30 @@ test('renders observed components from their reconstruction spec, and rules grou
   assert.match(html, /Full-bleed cards/);
   assert.match(html, /layout/);
 });
+
+test('renders an evidence-free imported system as visible native UI', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'linear', generatedAt: '2026-07-22T00:00:00.000Z', summary: 'Dark, precise product UI.',
+    tokens: [
+      { id: 'primary', kind: 'color', name: 'Primary', value: '#5e6ad2', role: 'Brand', evidence: [] },
+      { id: 'display', kind: 'typography', name: 'Display', value: 'font-family: Linear; font-size: 56px; font-weight: 600', role: 'Display', evidence: [] },
+    ],
+    components: [{ id: 'button', name: 'Button', category: 'Components', description: 'Primary action', variants: [{ id: 'button-default', name: 'Default', description: 'Default action', evidence: [], reconstruction: { fill: '#5e6ad2', radius: 8, visibleText: 'Button' } }] }],
+    flows: [], rules: [{ id: 'responsive', kind: 'responsive', name: 'Responsive behavior', description: 'Use one column below 720px.', evidence: [] }],
+  }} status="ready" />);
+  assert.match(html, /Theme overview/);
+  assert.match(html, /Dark, precise product UI/);
+  assert.match(html, /#5e6ad2/);
+  assert.match(html, /font-size:56px/);
+  assert.match(html, /Button/);
+  assert.match(html, /Responsive behavior/);
+  assert.doesNotMatch(html, /source screen|confidence|Reviewed|Needs review/i);
+});
+
+test('uses a source-neutral empty state', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'empty', generatedAt: '2026-07-22T00:00:00.000Z', tokens: [], components: [], flows: [], rules: [],
+  }} status="ready" />);
+  assert.match(html, /No design tokens, components, or rules are available for this app/);
+  assert.doesNotMatch(html, /observed|evidence/i);
+});

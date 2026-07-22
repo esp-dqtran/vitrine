@@ -22,6 +22,11 @@ const pxValue = (value: string): number | undefined => {
   return match ? Number(match[1]) : undefined;
 };
 
+const typographySize = (value: string): number | undefined => {
+  const match = /font-size:\s*(-?\d+(?:\.\d+)?)px/i.exec(value);
+  return match ? Number(match[1]) : pxValue(value);
+};
+
 function EvidenceLinks({ evidence }: { evidence: EvidenceView[] }) {
   if (!evidence.length) return null;
   return (
@@ -61,7 +66,7 @@ function TokenPreview({ token }: { token: DesignSystemSnapshot<EvidenceView>['to
     return <div style={{ height: 40, borderRadius: 8, background: token.value, border: '1px solid var(--color-border)' }} />;
   }
   if (token.kind === 'typography') {
-    const size = Math.min(pxValue(token.value) ?? 16, 32);
+    const size = Math.min(typographySize(token.value) ?? 16, 64);
     return <Text as="div" style={{ fontSize: size, lineHeight: 1.2 }}>{token.name}</Text>;
   }
   if (token.kind === 'spacing') {
@@ -211,7 +216,7 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
 
   if (status === 'loading') return <Spinner size="lg" />;
   if (!snapshot) {
-    return <EmptyState title="No design system yet" description="Complete structured synthesis to publish observed foundations." />;
+    return <EmptyState title="No design system yet" description="No design-system data is available for this app." />;
   }
 
   const colorTokens = snapshot.tokens.filter((token) => token.kind === 'color');
@@ -222,12 +227,19 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
   const hasRules = (snapshot.rules?.length ?? 0) > 0;
 
   if (colorTokens.length === 0 && foundationKinds.length === 0 && !hasComponents && !hasRules) {
-    return <EmptyState title="No observed foundations" description="No reviewed token evidence is available for this app." />;
+    return <EmptyState title="No design system available" description="No design tokens, components, or rules are available for this app." />;
   }
 
   let sectionIndex = 0;
   return (
     <div style={{ display: 'grid', gap: 40, paddingTop: 28 }}>
+      {snapshot.summary ? (
+        <Card padding={4} style={{ display: 'grid', gap: 8, maxWidth: 860 }}>
+          <SectionEyebrow index={0} label="Theme overview" />
+          <Text as="div" color="secondary" style={{ fontSize: 17, lineHeight: 1.55 }}>{snapshot.summary}</Text>
+        </Card>
+      ) : null}
+
       {hasComponents ? (
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <SegmentedControl value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Component preview background">
