@@ -16,6 +16,7 @@ This is not a Markdown archive or a GetDesign reference surface. Users see nativ
 - A deterministic `DESIGN.md` parser and normalizer.
 - Native `DesignSystemSnapshot` persistence.
 - Replacement of the current `web` snapshot for each matched app.
+- Creation of a design-system-only `web` platform row when a matched app currently has only mobile platforms.
 - Preservation of iOS and Android snapshots.
 - Visual rendering in `/apps/:app/design-system` through the existing design-system API and page structure.
 - Operational dry-run, apply, reporting, backup, and rollback behavior.
@@ -82,7 +83,7 @@ The importer lives beside existing catalog-import tooling and uses the repositor
 
 1. Read the version-controlled 44-entry mapping.
 2. Confirm every target app exists.
-3. Confirm every target has a `web` platform.
+3. Confirm every target's current platforms. Create a `web` platform row during apply for a mapped app that does not already have one; never repurpose or overwrite an iOS or Android platform.
 4. Fetch the public `DESIGN.md` content for every mapped GetDesign slug.
 5. Record a content hash for reporting and idempotence.
 
@@ -115,7 +116,7 @@ Imported tokens, variants, and rules use empty evidence arrays. They must not be
 
 A system is eligible for replacement only when it has:
 
-- A mapped Astryx app and `web` platform.
+- A mapped Astryx app. Its `web` platform may already exist or be safely created during apply.
 - A non-empty title and generation timestamp.
 - At least one valid design token.
 - Unique token, component, variant, and rule IDs within their scopes.
@@ -134,10 +135,12 @@ The command has two modes:
 
 For each app, apply mode uses one database transaction:
 
-1. Lock the target app's current web design-system row.
-2. Save the current snapshot to an internal append-only import-history record.
-3. Upsert the new native snapshot into `design_systems` for `platform = 'web'`.
-4. Commit only after the backup and replacement both succeed.
+1. Lock the target app row.
+2. Create the app's `web` platform row if it does not exist. This applies to `my-bmw`, `playstation-app`, `raycast`, `starbucks`, and `tesla` in the verified database state.
+3. Lock the target app's current web design-system row when one exists.
+4. Save the current snapshot to an internal append-only import-history record.
+5. Upsert the new native snapshot into `design_systems` for `platform = 'web'`.
+6. Commit only after platform creation, backup, and replacement all succeed.
 
 One app's failure does not abort successful replacements for other apps. A failed app retains its previous snapshot. Rollback restores the latest pre-import snapshot for a named app and web platform in another transaction.
 
@@ -199,6 +202,7 @@ Secrets and database connection strings must never appear in output. Upstream co
 - Imported-snapshot validation tests, including empty evidence arrays.
 - UI tests for every visual section and for hidden evidence controls.
 - API tests proving web replacement and iOS/Android preservation.
+- Store tests proving a missing web platform is created without changing existing mobile platform rows.
 - Transaction tests proving backup-before-replace and no partial replacement.
 - Rollback tests.
 - Import-report tests with redacted errors.
@@ -209,8 +213,9 @@ Before apply mode is used against the live database:
 
 1. Run a complete dry run for all 44 mappings.
 2. Require 44 fetches and 44 valid target mappings.
-3. Review any parser failures; do not silently skip them in the acceptance total.
-4. Capture pre-import web, iOS, and Android snapshot counts and hashes.
+3. Report the five mappings that require a new `web` platform row and reject any unexpected missing platform state.
+4. Review any parser failures; do not silently skip them in the acceptance total.
+5. Capture pre-import web, iOS, and Android snapshot counts and hashes.
 
 After apply:
 
@@ -228,6 +233,7 @@ After apply:
 - Existing exports operate on imported data.
 - No imported item claims Astryx screenshot evidence.
 - No iOS or Android design system is changed.
+- All 44 apps have a web design-system surface after apply; only the five verified mobile-only apps receive a newly created `web` platform row.
 - A failed app retains its previous snapshot.
 - Every applied replacement is recoverable through rollback history.
 - The product UI contains no GetDesign reference or separate GetDesign surface.
