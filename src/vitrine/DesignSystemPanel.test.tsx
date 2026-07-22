@@ -63,6 +63,24 @@ test('renders an evidence-free imported system as visible native UI', () => {
   assert.doesNotMatch(html, /source screen|confidence|Reviewed|Needs review/i);
 });
 
+test('shows concise actionable patterns and keeps their full guidance on demand', () => {
+  const longGuidance = 'Collapse secondary table columns on compact screens so the asset, price, and primary action remain visible. Preserve access to lower-priority market metrics in an expanded row instead of squeezing every value into the viewport.';
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'binance', generatedAt: '2026-07-22T00:00:00.000Z', tokens: [], components: [], flows: [],
+    rules: [
+      { id: 'overview', kind: 'layout', name: 'Overview', description: 'A long product introduction that is reference material, not a usage pattern.', evidence: [] },
+      { id: 'responsive', kind: 'responsive', name: 'Responsive behavior', description: longGuidance, evidence: [] },
+      { id: 'observed', kind: 'layout', name: 'Full-bleed cards', description: 'Signature cards run edge to edge.', evidence: [{ imageId: 7, imageUrl: '/api/media/binance/a', description: 'Markets' }] },
+    ],
+  }} status="ready" />);
+
+  assert.doesNotMatch(html, />Overview</);
+  assert.match(html, /Collapse secondary table columns on compact screens/);
+  assert.match(html, /<summary>View details<\/summary>/);
+  assert.match(html, /Full-bleed cards/);
+  assert.match(html, /<strong>2<\/strong> patterns/);
+});
+
 test('opens imported systems as a specimen-first preview with document and theme controls', () => {
   const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
     app: 'binance', generatedAt: '2026-07-22T00:00:00.000Z', summary: 'Bold yellow accents on precise trading surfaces.',

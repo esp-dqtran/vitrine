@@ -338,6 +338,24 @@
 .ds-pattern > div { padding: 18px 0; border-bottom: 1px solid var(--ds-border); }
 .ds-pattern > div:last-child { padding-bottom: 0; border-bottom: 0; }
 .ds-pattern p { margin-top: 8px; font-size: 12px; white-space: pre-line; }
+.ds-pattern__summary { font-size: 13px !important; }
+.ds-pattern__details { margin-top: 12px; }
+.ds-pattern__details summary {
+  width: fit-content;
+  color: var(--ds-text);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ds-pattern__details[open] summary { margin-bottom: 10px; }
+.ds-pattern__details p {
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--ds-border);
+  border-radius: 8px;
+  background: var(--ds-muted);
+}
 
 .ds-evidence { margin-top: 10px; }
 .ds-canvas .ds-evidence [class*='text'] { color: var(--ds-secondary); }

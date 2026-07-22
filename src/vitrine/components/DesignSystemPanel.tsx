@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Badge, Button, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
+import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
 
 const KIND_LABELS: Record<TokenKind, string> = {
   color: 'Colors',
@@ -282,7 +283,13 @@ function PatternsSection({ index, rules }: { index: number; rules: NonNullable<S
             {kindRules.map((rule) => (
               <div key={rule.id}>
                 <h4>{rule.name}</h4>
-                <p>{rule.description}</p>
+                <p className="ds-pattern__summary">{usagePatternSummary(rule.description)}</p>
+                {usagePatternSummary(rule.description) !== rule.description.replace(/\s+/g, ' ').trim() ? (
+                  <details className="ds-pattern__details">
+                    <summary>View details</summary>
+                    <p>{rule.description}</p>
+                  </details>
+                ) : null}
                 <EvidenceLinks evidence={rule.evidence} />
                 <ReviewFooter confidence={rule.confidence} reviewStatus={rule.reviewStatus} />
               </div>
@@ -310,7 +317,8 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
     .map((kind) => [kind, snapshot.tokens.filter((token) => token.kind === kind)] as const)
     .filter(([, tokens]) => tokens.length > 0);
   const hasComponents = snapshot.components.length > 0;
-  const hasRules = (snapshot.rules?.length ?? 0) > 0;
+  const usageRules = (snapshot.rules ?? []).filter(isActionableUsageRule);
+  const hasRules = usageRules.length > 0;
   const showcaseComponent = snapshot.components.find((component) => /market.*table|table.*card/i.test(component.name))
     ?? snapshot.components.find((component) => /stat.*card/i.test(component.name))
     ?? snapshot.components.find((component) => /nav/i.test(component.name))
@@ -333,7 +341,7 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
         <div className="ds-page__stats">
           <span><strong>{snapshot.tokens.length}</strong> tokens</span>
           <span><strong>{snapshot.components.length}</strong> components</span>
-          <span><strong>{snapshot.rules?.length ?? 0}</strong> patterns</span>
+          <span><strong>{usageRules.length}</strong> patterns</span>
         </div>
       </header>
 
@@ -373,7 +381,7 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
             return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} />;
           })}
           {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
-          {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={snapshot.rules!} /> : null}
+          {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} /> : null}
         </div>
       )}
     </div>

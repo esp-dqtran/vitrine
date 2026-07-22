@@ -70,6 +70,38 @@ test("parses structured GetDesign foundations, components, and rules", () => {
   assert.doesNotThrow(() => validateImportedSnapshot(snapshot));
 });
 
+test("keeps actionable guidance out of documentation-heavy Markdown sections", () => {
+  const snapshot = parseGetDesignMarkdown(`${fixture}
+## Overview
+This section explains the product and its history in detail.
+
+## Buttons
+This section inventories every button variant and implementation property.
+
+## Do
+Keep primary actions visually dominant.
+
+## Known Gaps
+This section records incomplete research.
+
+## Voice Library
+This section inventories voices available in the product.
+
+## hero-photo-card
+This section defines a reusable image component.
+
+## Icon Button Inventory
+This section lists icon button variants.
+
+## Interaction Components
+This section inventories interactive components.
+
+## Spacing: 1px, 2px, 4px, 8px, 12px, 16px
+`, "linear", "2026-07-22T00:00:00.000Z");
+
+  assert.deepEqual(snapshot.rules?.map(({ name }) => name), ["Responsive behavior", "Do"]);
+});
+
 test("uses deterministic ids and rejects invalid imported structures", () => {
   const first = parseGetDesignMarkdown(fixture, "linear", "2026-07-22T00:00:00.000Z");
   const second = parseGetDesignMarkdown(fixture, "linear", "2026-07-22T00:00:00.000Z");

@@ -5,6 +5,7 @@ import type {
   DesignToken,
   TokenKind,
 } from "./designSystem.ts";
+import { isActionableUsageRule } from "./usagePatterns.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -178,7 +179,7 @@ function markdownRules(markdown: string): NonNullable<DesignSystemSnapshot["rule
       description: description || match[2],
       evidence: [],
     };
-  });
+  }).filter(isActionableUsageRule);
 }
 
 function legacySummary(markdown: string): string | undefined {
