@@ -35,6 +35,9 @@ const defaults = {
       throw new Error("Autonomous orchestrator is not configured");
     },
   },
+  generateFeatureDocument: async (_runId: string): Promise<void> => {
+    throw new Error("Feature document service is not configured");
+  },
 };
 type PipelineDeps = typeof defaults;
 
@@ -47,7 +50,7 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     await deps.publishJob({ ...job, jobId });
   }
 
-  async function handle(job: Exclude<Job, { type: "smart-crawl-app" | "autonomous-crawl-app" }>): Promise<StageOutcome> {
+  async function handle(job: Exclude<Job, { type: "smart-crawl-app" | "autonomous-crawl-app" | "generate-feature-document" }>): Promise<StageOutcome> {
     if (job.type === "discover-catalog") {
       const apps = await deps.discoverApps();
       for (const target of apps) {
@@ -132,6 +135,17 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
           const status = run.status === "succeeded" ? "done" : run.status === "cancelled" ? "cancelled" : "error";
           await deps.setJobStatus(job.jobId, status, status === "error" ? `Autonomous crawl run ${run.status}` : undefined);
         }
+      } catch (error) {
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
+        throw error;
+      }
+      return;
+    }
+
+    if (job.type === "generate-feature-document") {
+      try {
+        await deps.generateFeatureDocument(job.runId);
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, "done");
       } catch (error) {
         if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
         throw error;

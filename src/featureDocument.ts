@@ -166,6 +166,20 @@ export interface FeatureStepPrompt {
   validationError?: string;
 }
 
+export function featureEvidenceManifestSha256(manifest: FeatureEvidenceManifestItem[]): string {
+  const canonical = manifest.map((item) => ({
+    stepIndex: item.stepIndex,
+    imageIndex: item.imageIndex,
+    imageId: item.imageId,
+    evidenceId: item.evidenceId,
+    stepLabel: item.stepLabel,
+    interaction: item.interaction ?? null,
+    description: item.description,
+    capturedAt: item.capturedAt ?? null,
+  }));
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+
 export interface FeatureSynthesisPrompt {
   source: FeatureSourceFlow;
   focusInstruction: string;
@@ -473,3 +487,4 @@ export function renderFeatureDocumentMarkdown(
   lines.push("## Evidence appendix", "", ...[...evidence].sort().map((id) => `- ${id}`), "");
   return `${lines.join("\n").trim()}\n`;
 }
+import { createHash } from "node:crypto";

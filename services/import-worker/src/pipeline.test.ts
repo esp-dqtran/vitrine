@@ -173,6 +173,18 @@ test("dispatches autonomous work through the durable orchestrator", async () => 
   assert.deepEqual(statuses, ["running", "done"]);
 });
 
+test("pipeline dispatches feature document generation and tracks transport status", async () => {
+  const events: string[] = [];
+  const handler = createPipelineHandler({
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (id, status) => { events.push(`job:${id}:${status}`); },
+    generateFeatureDocument: async (runId) => { events.push(`feature:${runId}`); },
+  });
+
+  await handler({ type: "generate-feature-document", runId: "27", jobId: 9 });
+  assert.deepEqual(events, ["job:9:running", "feature:27", "job:9:done"]);
+});
+
 test("autonomous infrastructure interruptions remain retryable with the same run id", async () => {
   const interruption = new Error("discovery browser lost");
   const statuses: string[] = [];

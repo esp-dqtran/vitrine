@@ -36,6 +36,20 @@ test("queue accepts identifier-only durable crawler jobs and preserves BIGINT ru
   });
 });
 
+test("queue accepts only an identifier-only feature document job", () => {
+  assert.deepEqual(parseJob({ type: "generate-feature-document", runId: "27", jobId: 9 }), {
+    type: "generate-feature-document",
+    runId: "27",
+    jobId: 9,
+  });
+  for (const value of [
+    { type: "generate-feature-document", runId: "27", image: "base64", jobId: 9 },
+    { type: "generate-feature-document", runId: 27, jobId: 9 },
+    { type: "generate-feature-document", runId: "27", prompt: "private", jobId: 9 },
+    { type: "generate-feature-document", runId: "27", evidenceManifest: [], jobId: 9 },
+  ]) assert.throws(() => parseJob(value), /Invalid queue job/);
+});
+
 test("Apps queue rejects isolated Sites jobs", () => {
   assert.throws(
     () => parseJob({ type: "import-site", url: "https://mobbin.com/sites/site/version/preview", jobId: 7 }),
