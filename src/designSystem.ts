@@ -81,6 +81,7 @@ export interface DesignFlow<T = number> {
 export interface DesignSystemSnapshot<T = number> {
   app: string;
   generatedAt: string;
+  summary?: string;
   tokens: DesignToken<T>[];
   components: DesignComponent<T>[];
   flows: DesignFlow<T>[];
