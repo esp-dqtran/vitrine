@@ -227,6 +227,9 @@ export function App() {
   if (researchProjectsEnabled && route.name === 'project') {
     return frame(<ResearchProjectPage projectId={route.projectId} />);
   }
+  if (route.name === 'feature-document') {
+    return frame(<main aria-label="Feature Document workspace" data-document-id={route.documentId}>Feature Document</main>);
+  }
 
   if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
     return frame(
