@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "design-systems:getdesign:dry-run": "node --env-file=.env --import tsx scripts/import-getdesign-design-systems.ts --dry-run",
+    "design-systems:getdesign:apply": "node --env-file=.env --import tsx scripts/import-getdesign-design-systems.ts --apply",
+    "design-systems:getdesign:rollback": "node --env-file=.env --import tsx scripts/import-getdesign-design-systems.ts --rollback",
     "crawl": "tsx src/index.ts crawl",
     "crawl-bulk": "tsx src/index.ts crawl-bulk",
     "crawl-elements": "tsx src/index.ts crawl-elements",
