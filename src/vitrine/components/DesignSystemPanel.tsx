@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { Badge, Card, Divider, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text } from '@astryxdesign/core';
+import { Badge, Button, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
 
 const KIND_LABELS: Record<TokenKind, string> = {
@@ -11,32 +11,88 @@ const KIND_LABELS: Record<TokenKind, string> = {
   effect: 'Effects',
 };
 
+const SECTION_LABELS: Record<TokenKind, string> = {
+  color: 'Color palette',
+  typography: 'Typography scale',
+  spacing: 'Spacing rhythm',
+  radius: 'Corner radii',
+  border: 'Border styles',
+  effect: 'Effects & elevation',
+};
+
 const REVIEW_VARIANT: Record<ReviewStatus, 'success' | 'warning' | 'error'> = {
   reviewed: 'success',
   needs_review: 'warning',
   rejected: 'error',
 };
 
+type Snapshot = DesignSystemSnapshot<EvidenceView>;
+type Token = Snapshot['tokens'][number];
+
+const titleCase = (value: string) => value
+  .replace(/[-_]+/g, ' ')
+  .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
 const pxValue = (value: string): number | undefined => {
   const match = /(-?\d+(?:\.\d+)?)\s*px/.exec(value);
   return match ? Number(match[1]) : undefined;
 };
 
-const typographySize = (value: string): number | undefined => {
-  const match = /font-size:\s*(-?\d+(?:\.\d+)?)px/i.exec(value);
-  return match ? Number(match[1]) : pxValue(value);
+const typographyProperty = (value: string, property: string): string | undefined => {
+  const match = new RegExp(`${property}:\\s*([^;]+)`, 'i').exec(value);
+  return match?.[1]?.trim();
 };
+
+const safeColor = (value: string | undefined, fallback: string): string => {
+  if (!value) return fallback;
+  return /^(?:#[0-9a-f]{3,8}|rgba?\(|hsla?\(|[a-z]+$|var\()/i.test(value.trim()) ? value.trim() : fallback;
+};
+
+const markdownText = (value: string): string => value.replace(/\|/g, '\\|').replace(/\n+/g, ' ');
+
+export function designSystemMarkdown(snapshot: Snapshot): string {
+  const lines = [
+    `# ${titleCase(snapshot.app)} Design System`,
+    '',
+    snapshot.summary ?? 'A design system reconstructed from the available product evidence.',
+    '',
+  ];
+
+  for (const kind of Object.keys(KIND_LABELS) as TokenKind[]) {
+    const tokens = snapshot.tokens.filter((token) => token.kind === kind);
+    if (!tokens.length) continue;
+    lines.push(`## ${KIND_LABELS[kind]}`, '');
+    for (const token of tokens) lines.push(`- **${markdownText(token.name)}**: \`${markdownText(token.value)}\` — ${markdownText(token.role)}`);
+    lines.push('');
+  }
+
+  if (snapshot.components.length) {
+    lines.push('## Components', '');
+    for (const component of snapshot.components) {
+      lines.push(`### ${markdownText(component.name)}`, '', markdownText(component.description), '');
+      for (const variant of component.variants) lines.push(`- **${markdownText(variant.name)}**: ${markdownText(variant.description)}`);
+      lines.push('');
+    }
+  }
+
+  const rulesByKind = new Map<string, NonNullable<Snapshot['rules']>>();
+  for (const rule of snapshot.rules ?? []) rulesByKind.set(rule.kind, [...(rulesByKind.get(rule.kind) ?? []), rule]);
+  for (const [kind, rules] of rulesByKind) {
+    lines.push(`## ${titleCase(kind)}`, '');
+    for (const rule of rules) lines.push(`### ${markdownText(rule.name)}`, '', markdownText(rule.description), '');
+  }
+
+  return `${lines.join('\n').trim()}\n`;
+}
 
 function EvidenceLinks({ evidence }: { evidence: EvidenceView[] }) {
   if (!evidence.length) return null;
   return (
-    <div style={{ marginTop: 8 }}>
+    <div className="ds-evidence">
       <Text as="div" type="supporting" color="secondary">{evidence.length} source screen{evidence.length === 1 ? '' : 's'}</Text>
-      <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+      <div className="ds-evidence__links">
         {evidence.map((item) => (
-          <a key={item.imageId} href={item.imageUrl} target="_blank" rel="noreferrer" style={{ fontSize: 10.5, color: 'var(--color-text-accent)' }}>
-            Screen {item.imageId}
-          </a>
+          <a key={item.imageId} href={item.imageUrl} target="_blank" rel="noreferrer">Screen {item.imageId}</a>
         ))}
       </div>
     </div>
@@ -46,80 +102,99 @@ function EvidenceLinks({ evidence }: { evidence: EvidenceView[] }) {
 function ReviewFooter({ confidence, reviewStatus }: { confidence?: number; reviewStatus?: ReviewStatus }) {
   if (confidence == null && !reviewStatus) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+    <div className="ds-review">
       {reviewStatus ? <Badge variant={REVIEW_VARIANT[reviewStatus]} label={reviewStatus === 'reviewed' ? 'Reviewed' : reviewStatus === 'rejected' ? 'Rejected' : 'Needs review'} /> : null}
       {confidence != null ? <Text type="supporting" color="secondary">{Math.round(confidence * 100)}% confidence</Text> : null}
     </div>
   );
 }
 
-function SectionEyebrow({ index, label }: { index: number; label: string }) {
+function SectionHeading({ index, title, description }: { index: number; title: string; description: string }) {
   return (
-    <Text type="label" color="secondary" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-      {String(index).padStart(2, '0')} — {label}
-    </Text>
+    <header className="ds-section__heading">
+      <span>{String(index).padStart(2, '0')}</span>
+      <div>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+    </header>
   );
 }
 
-function TokenPreview({ token }: { token: DesignSystemSnapshot<EvidenceView>['tokens'][number] }) {
-  if (token.kind === 'color') {
-    return <div style={{ height: 40, borderRadius: 8, background: token.value, border: '1px solid var(--color-border)' }} />;
-  }
-  if (token.kind === 'typography') {
-    const size = Math.min(typographySize(token.value) ?? 16, 64);
-    return <Text as="div" style={{ fontSize: size, lineHeight: 1.2 }}>{token.name}</Text>;
-  }
-  if (token.kind === 'spacing') {
-    const width = Math.max(4, Math.min(pxValue(token.value) ?? 16, 160));
-    return <div style={{ height: 12, width, borderRadius: 3, background: 'var(--color-accent)' }} />;
-  }
-  if (token.kind === 'radius') {
-    const radius = pxValue(token.value) ?? 0;
-    return <div style={{ height: 36, width: 36, borderRadius: radius, background: 'var(--color-background-muted)', border: '1px solid var(--color-border-emphasized)' }} />;
-  }
-  if (token.kind === 'border') {
-    const width = pxValue(token.value) ?? 1;
-    return <div style={{ height: 36, width: 36, borderRadius: 6, border: `${width}px solid var(--color-text-primary)` }} />;
-  }
-  return <div style={{ height: 36, width: 56, borderRadius: 6, background: 'var(--color-background-surface)', boxShadow: token.value }} />;
+function TokenMeta({ token }: { token: Token }) {
+  return (
+    <div className="ds-token__meta">
+      <div className="ds-token__name">{token.name}</div>
+      <code>{token.value}</code>
+      <p>{token.role}</p>
+      <EvidenceLinks evidence={token.evidence} />
+      <ReviewFooter confidence={token.confidence} reviewStatus={token.reviewStatus} />
+    </div>
+  );
 }
 
-function ColorSection({ index, tokens }: { index: number; tokens: DesignSystemSnapshot<EvidenceView>['tokens'] }) {
+function ColorSection({ index, tokens }: { index: number; tokens: Token[] }) {
   return (
-    <section style={{ display: 'grid', gap: 14 }}>
-      <SectionEyebrow index={index} label="Colors" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12 }}>
+    <section className="ds-section">
+      <SectionHeading index={index} title="Color palette" description="Core colors and the roles they play across the product." />
+      <div className="ds-colors">
         {tokens.map((token) => (
-          <Card key={token.id} padding={3}>
-            <TokenPreview token={token} />
-            <Text as="div" type="label" style={{ marginTop: 10 }}>{token.name}</Text>
-            <Text as="div" type="supporting" color="secondary" style={{ fontFamily: 'var(--font-family-code)' }}>{token.value}</Text>
-            <Text as="div" type="supporting" color="secondary" style={{ marginTop: 4 }}>{token.role}</Text>
-            <EvidenceLinks evidence={token.evidence} />
-            <ReviewFooter confidence={token.confidence} reviewStatus={token.reviewStatus} />
-          </Card>
+          <article className="ds-color" key={token.id}>
+            <div className="ds-color__swatch" style={{ background: safeColor(token.value, 'var(--ds-muted)') }} />
+            <TokenMeta token={token} />
+          </article>
         ))}
       </div>
     </section>
   );
 }
 
-function FoundationSection({ index, label, tokens }: { index: number; label: string; tokens: DesignSystemSnapshot<EvidenceView>['tokens'] }) {
+function TypographySection({ index, tokens }: { index: number; tokens: Token[] }) {
   return (
-    <section style={{ display: 'grid', gap: 14 }}>
-      <SectionEyebrow index={index} label={label} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
+    <section className="ds-section">
+      <SectionHeading index={index} title="Typography scale" description="Type roles shown at their extracted size, weight, and rhythm." />
+      <div className="ds-type-list">
+        {tokens.map((token) => {
+          const size = Math.min(Number.parseFloat(typographyProperty(token.value, 'font-size') ?? '') || pxValue(token.value) || 18, 64);
+          const weight = typographyProperty(token.value, 'font-weight');
+          const lineHeight = typographyProperty(token.value, 'line-height');
+          const family = typographyProperty(token.value, 'font-family');
+          return (
+            <article className="ds-type" key={token.id}>
+              <div className="ds-type__sample" style={{ fontSize: size, fontWeight: weight, lineHeight, fontFamily: family }}>{token.name}</div>
+              <TokenMeta token={token} />
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function FoundationSample({ token }: { token: Token }) {
+  const amount = Math.max(2, Math.min(pxValue(token.value) ?? 16, 144));
+  if (token.kind === 'spacing') return <div className="ds-foundation__spacing" style={{ width: amount }} />;
+  if (token.kind === 'radius') return <div className="ds-foundation__shape" style={{ borderRadius: amount }} />;
+  if (token.kind === 'border') return <div className="ds-foundation__shape" style={{ borderWidth: Math.min(amount, 8) }} />;
+  return <div className="ds-foundation__effect" style={{ boxShadow: token.value }} />;
+}
+
+function FoundationSection({ index, kind, tokens }: { index: number; kind: TokenKind; tokens: Token[] }) {
+  const descriptions: Partial<Record<TokenKind, string>> = {
+    spacing: 'A consistent spacing rhythm for layout and controls.',
+    radius: 'Corner treatments used to shape product surfaces.',
+    border: 'Stroke treatments that separate and define surfaces.',
+    effect: 'Elevation and visual effects used to establish depth.',
+  };
+  return (
+    <section className="ds-section">
+      <SectionHeading index={index} title={SECTION_LABELS[kind]} description={descriptions[kind] ?? 'Extracted foundation tokens.'} />
+      <div className="ds-foundations">
         {tokens.map((token) => (
-          <Card key={token.id} padding={3} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', minHeight: 40 }}><TokenPreview token={token} /></div>
-            <div>
-              <Text as="div" type="label">{token.name}</Text>
-              <Text as="div" type="supporting" color="secondary" style={{ fontFamily: 'var(--font-family-code)' }}>{token.value}</Text>
-              <Text as="div" type="supporting" color="secondary" style={{ marginTop: 4 }}>{token.role}</Text>
-            </div>
-            <EvidenceLinks evidence={token.evidence} />
-            <ReviewFooter confidence={token.confidence} reviewStatus={token.reviewStatus} />
-          </Card>
+          <article className="ds-foundation" key={token.id}>
+            <div className="ds-foundation__preview"><FoundationSample token={token} /></div>
+            <TokenMeta token={token} />
+          </article>
         ))}
       </div>
     </section>
@@ -127,134 +202,180 @@ function FoundationSection({ index, label, tokens }: { index: number; label: str
 }
 
 function reconstructionStyle(spec: ComponentVariant<EvidenceView>['reconstruction']): CSSProperties {
-  if (!spec) return { padding: 16, borderRadius: 8, background: 'var(--color-background-muted)', color: 'var(--color-text-disabled)', fontSize: 12 };
   return {
-    display: 'flex',
-    flexDirection: spec.layoutMode === 'HORIZONTAL' ? 'row' : 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spec.gap,
-    padding: spec.padding ?? 12,
-    width: spec.width,
-    height: spec.height,
-    background: spec.fill || 'var(--color-background-muted)',
-    border: spec.stroke ? `1px solid ${spec.stroke}` : undefined,
-    borderRadius: spec.radius ?? 8,
-    color: 'var(--color-text-primary)',
-    fontSize: 13,
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
+    background: safeColor(spec?.fill, 'var(--ds-accent)'),
+    borderColor: safeColor(spec?.stroke, 'transparent'),
+    borderRadius: spec?.radius ?? 8,
+    padding: spec?.padding ?? 12,
+    gap: spec?.gap ?? 8,
+    width: spec?.width,
+    minHeight: spec?.height,
   };
 }
 
-function ComponentsSection({ index, components, stage }: { index: number; components: DesignSystemSnapshot<EvidenceView>['components']; stage: 'light' | 'dark' }) {
-  return (
-    <section style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <SectionEyebrow index={index} label="Components" />
+function ComponentSample({ componentName, variant }: { componentName: string; variant: ComponentVariant<EvidenceView> }) {
+  const kind = componentName.toLowerCase();
+  const label = variant.reconstruction?.visibleText || (variant.name.toLowerCase() === 'default' ? componentName : variant.name);
+  const style = reconstructionStyle(variant.reconstruction);
+  if (/market.*table|table.*card/.test(kind)) {
+    return (
+      <div className="ds-sample-market" style={style}>
+        <div className="ds-sample-market__tabs"><strong>Popular</strong><span>New listings</span><span>Top gainers</span></div>
+        <table>
+          <tbody>
+            <tr><th>BTC/USDT</th><td>78,065.04</td><td>+1.42%</td></tr>
+            <tr><th>ETH/USDT</th><td>3,219.18</td><td>+0.85%</td></tr>
+            <tr><th>SOL/USDT</th><td>162.40</td><td className="is-down">-2.31%</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+    );
+  }
+  if (/input|field|search/.test(kind)) return <div className="ds-sample-field"><TextInput label={componentName} value={label} onChange={() => undefined} width="100%" /></div>;
+  if (/badge|chip|tag/.test(kind)) return <span className="ds-sample-badge" style={style}>{label}</span>;
+  if (/card|panel|tile/.test(kind)) return <article className="ds-sample-card" style={style}><strong>{label}</strong><span>{variant.description}</span></article>;
+  if (/nav|tab|menu/.test(kind)) return <nav className="ds-sample-nav"><Button label={label} className="is-active" size="sm" /><Button label="Overview" variant="ghost" size="sm" /><Button label="Activity" variant="ghost" size="sm" /></nav>;
+  return <Button label={label} className="ds-sample-button" style={style} />;
+}
+
+function ComponentsSection({ index, components }: { index: number; components: Snapshot['components'] }) {
+  return (
+    <section className="ds-section">
+      <SectionHeading index={index} title="Component gallery" description="Reusable interface patterns rendered in their available variants." />
+      <div className="ds-components">
         {components.map((component) => (
-          <Card key={component.id} padding={4} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div>
-              <Text as="div" type="label">{component.name}</Text>
-              <Text as="div" type="supporting" color="secondary">{component.category}</Text>
-            </div>
-            <Text as="div" type="supporting" color="secondary">{component.description}</Text>
-            <div style={{ display: 'grid', gap: 10 }}>
+          <article className="ds-component" key={component.id}>
+            <header>
+              <div><span>{component.category}</span><h4>{component.name}</h4></div>
+              <p>{component.description}</p>
+            </header>
+            <div className="ds-component__variants">
               {component.variants.map((variant) => (
-                <div key={variant.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 10, borderRadius: 8, background: stage === 'dark' ? '#0b0b0d' : 'var(--color-background-muted)' }}>
-                  <div style={{ flexShrink: 0 }}><div style={reconstructionStyle(variant.reconstruction)}>{variant.reconstruction?.visibleText}</div></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text as="div" type="supporting" style={{ fontWeight: 600 }}>{variant.name}</Text>
-                    <Text as="div" type="supporting" color="secondary">{variant.description}</Text>
+                <div className="ds-variant" key={variant.id}>
+                  <div className="ds-variant__stage"><ComponentSample componentName={component.name} variant={variant} /></div>
+                  <div className="ds-variant__meta">
+                    <strong>{variant.name}</strong>
+                    <p>{variant.description}</p>
                     <EvidenceLinks evidence={variant.evidence} />
                     <ReviewFooter confidence={variant.confidence} reviewStatus={variant.reviewStatus} />
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          </article>
         ))}
       </div>
     </section>
   );
 }
 
-function PatternsSection({ index, rules }: { index: number; rules: NonNullable<DesignSystemSnapshot<EvidenceView>['rules']> }) {
+function PatternsSection({ index, rules }: { index: number; rules: NonNullable<Snapshot['rules']> }) {
   const byKind = new Map<string, typeof rules>();
   for (const rule of rules) byKind.set(rule.kind, [...(byKind.get(rule.kind) ?? []), rule]);
   return (
-    <section style={{ display: 'grid', gap: 14 }}>
-      <SectionEyebrow index={index} label="Patterns" />
-      {[...byKind.entries()].map(([kind, kindRules]) => (
-        <div key={kind} style={{ display: 'grid', gap: 10 }}>
-          <Text as="div" type="label" color="secondary" style={{ textTransform: 'capitalize' }}>{kind}</Text>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
+    <section className="ds-section">
+      <SectionHeading index={index} title="Usage patterns" description="Layout, responsive, interaction, imagery, and content guidance." />
+      <div className="ds-patterns">
+        {[...byKind.entries()].map(([kind, kindRules]) => (
+          <article className="ds-pattern" key={kind}>
+            <span>{titleCase(kind)}</span>
             {kindRules.map((rule) => (
-              <Card key={rule.id} padding={3}>
-                <Text as="div" type="label">{rule.name}</Text>
-                <Text as="div" type="supporting" color="secondary" style={{ marginTop: 4 }}>{rule.description}</Text>
+              <div key={rule.id}>
+                <h4>{rule.name}</h4>
+                <p>{rule.description}</p>
                 <EvidenceLinks evidence={rule.evidence} />
                 <ReviewFooter confidence={rule.confidence} reviewStatus={rule.reviewStatus} />
-              </Card>
+              </div>
             ))}
-          </div>
-        </div>
-      ))}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
 
 interface DesignSystemPanelProps {
-  snapshot: DesignSystemSnapshot<EvidenceView> | null;
+  snapshot: Snapshot | null;
   status: 'loading' | 'ready' | 'missing' | 'error';
 }
 
 export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) {
+  const [view, setView] = useState<'preview' | 'markdown'>('preview');
   const [stage, setStage] = useState<'light' | 'dark'>('dark');
 
   if (status === 'loading') return <Spinner size="lg" />;
-  if (!snapshot) {
-    return <EmptyState title="No design system yet" description="No design-system data is available for this app." />;
-  }
+  if (!snapshot) return <EmptyState title="No design system yet" description="No design-system data is available for this app." />;
 
-  const colorTokens = snapshot.tokens.filter((token) => token.kind === 'color');
-  const foundationKinds = (['typography', 'spacing', 'radius', 'border', 'effect'] as TokenKind[])
+  const tokenGroups = (Object.keys(KIND_LABELS) as TokenKind[])
     .map((kind) => [kind, snapshot.tokens.filter((token) => token.kind === kind)] as const)
     .filter(([, tokens]) => tokens.length > 0);
   const hasComponents = snapshot.components.length > 0;
   const hasRules = (snapshot.rules?.length ?? 0) > 0;
+  const showcaseComponent = snapshot.components.find((component) => /market.*table|table.*card/i.test(component.name))
+    ?? snapshot.components.find((component) => /stat.*card/i.test(component.name))
+    ?? snapshot.components.find((component) => /nav/i.test(component.name))
+    ?? snapshot.components[0];
+  const showcaseVariant = showcaseComponent?.variants[0];
 
-  if (colorTokens.length === 0 && foundationKinds.length === 0 && !hasComponents && !hasRules) {
+  if (!tokenGroups.length && !hasComponents && !hasRules) {
     return <EmptyState title="No design system available" description="No design tokens, components, or rules are available for this app." />;
   }
 
   let sectionIndex = 0;
   return (
-    <div style={{ display: 'grid', gap: 40, paddingTop: 28 }}>
-      {snapshot.summary ? (
-        <Card padding={4} style={{ display: 'grid', gap: 8, maxWidth: 860 }}>
-          <SectionEyebrow index={0} label="Theme overview" />
-          <Text as="div" color="secondary" style={{ fontSize: 17, lineHeight: 1.55 }}>{snapshot.summary}</Text>
-        </Card>
-      ) : null}
-
-      {hasComponents ? (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <SegmentedControl value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Component preview background">
-            <SegmentedControlItem value="light" label="Light" />
-            <SegmentedControlItem value="dark" label="Dark" />
-          </SegmentedControl>
+    <div className="ds-page">
+      <header className="ds-page__header">
+        <div>
+          <span className="ds-page__eyebrow">Design system analysis</span>
+          <h2>{titleCase(snapshot.app)}</h2>
+          <p>{snapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}</p>
         </div>
-      ) : null}
+        <div className="ds-page__stats">
+          <span><strong>{snapshot.tokens.length}</strong> tokens</span>
+          <span><strong>{snapshot.components.length}</strong> components</span>
+          <span><strong>{snapshot.rules?.length ?? 0}</strong> patterns</span>
+        </div>
+      </header>
 
-      {colorTokens.length > 0 ? <ColorSection index={(sectionIndex += 1)} tokens={colorTokens} /> : null}
-      {foundationKinds.map(([kind, tokens]) => <FoundationSection key={kind} index={(sectionIndex += 1)} label={KIND_LABELS[kind]} tokens={tokens} />)}
-      {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} stage={stage} /> : null}
-      {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={snapshot.rules!} /> : null}
+      <div className="ds-toolbar">
+        <SegmentedControl className="ds-toggle" value={view} onChange={(value) => setView(value as 'preview' | 'markdown')} label="Design system view">
+          <SegmentedControlItem value="preview" label="Preview" />
+          <SegmentedControlItem value="markdown" label="DESIGN.md" />
+        </SegmentedControl>
+        <SegmentedControl className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
+          <SegmentedControlItem value="light" label="Light" />
+          <SegmentedControlItem value="dark" label="Dark" />
+        </SegmentedControl>
+      </div>
 
-      <Divider />
+      {view === 'markdown' ? (
+        <section className="ds-markdown" aria-label="DESIGN.md document">
+          <header><span>DESIGN.md</span><small>Generated from the loaded design-system snapshot</small></header>
+          <pre>{designSystemMarkdown(snapshot)}</pre>
+        </section>
+      ) : (
+        <div className={`ds-canvas ds-canvas--${stage}`} data-theme={stage}>
+          <header className="ds-canvas__intro">
+            <div className="ds-canvas__intro-copy">
+              <span>Living styleguide</span>
+              <h3>{titleCase(snapshot.app)} foundations &amp; components</h3>
+              <p>Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Astryx.</p>
+            </div>
+            {showcaseComponent && showcaseVariant ? (
+              <div className="ds-canvas__showcase"><ComponentSample componentName={showcaseComponent.name} variant={showcaseVariant} /></div>
+            ) : null}
+          </header>
+
+          {tokenGroups.map(([kind, tokens]) => {
+            sectionIndex += 1;
+            if (kind === 'color') return <ColorSection key={kind} index={sectionIndex} tokens={tokens} />;
+            if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} />;
+            return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} />;
+          })}
+          {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
+          {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={snapshot.rules!} /> : null}
+        </div>
+      )}
     </div>
   );
 }

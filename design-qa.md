@@ -1,71 +1,43 @@
-# Admin Users Redesign QA
+# Design QA: GetDesign-Style Design System Preview
 
-- Source visual truth: `docs/superpowers/specs/assets/2026-07-19-admin-users-option-2.png`
-- Implementation screenshot: `docs/superpowers/specs/assets/2026-07-19-admin-users-implementation.png`
-- Side-by-side comparison: `docs/superpowers/specs/assets/2026-07-19-admin-users-comparison.png`
-- Desktop viewport: 1440 × 1024
-- Narrow viewport: 390 × 844
-- State: signed-in admin, Users surface, All members selected, no search query
+**Source visual truth:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/binance-source-preview.png`
 
-## Full-view comparison evidence
+**Implementation screenshot:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/astryx-binance-final-dark.png`
 
-The side-by-side artifact compares the complete selected mock with the complete browser-rendered implementation at the same desktop frame. The implementation preserves the selected member-first split, quiet list rows, compact search/filter bar, vertical divider, and narrow Growth pulse. The implementation intentionally replaces the mock's unsupported invitation, subscriber, and activity concepts with the real administrator/member groups and account fields available from `/api/users`.
+**Combined comparison:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/binance-final-dark-side-by-side.png`
 
-## Focused evidence
+**Viewport and normalization:** Both browser captures are 1280 x 720 pixels at the same desktop viewport and browser density. The comparison uses the dark Preview state and aligns each styleguide canvas at its top edge.
 
-A separate desktop crop was not needed because the 1440 × 1024 source and implementation remain legible in the full-view comparison and both originals were inspected at native resolution. The narrow browser capture `admin-users-narrow-final.png` was inspected separately because responsive row wrapping, shell clearance, and control stacking cannot be judged from the desktop frame.
+**Primary interactions tested:** Preview to Light, Light to DESIGN.md, DESIGN.md back to Preview, and Preview back to Dark. The theme changed the complete canvas and the document view rendered a selectable `# Binance Design System` document.
 
-## Comparison history
+**Browser diagnostics:** No error-level browser logs were recorded while loading or exercising the final preview. Existing development-only Vite messages and the repository's pre-existing runtime-theme performance warning remain non-blocking.
 
-### Pass 1
+## Full-view comparison
 
-- [P2] Header member count used `growth.stats.total_users`, which disagreed with the eight loaded users in the live API response.
-  - Fix: derive the directory header count from `users.length`; retain the growth API value only in Growth pulse.
-- [P2] The member count sat at the far right of the header instead of directly under the description as shown in the selected visual.
-  - Fix: move the count into the title stack and reduce it to supporting-text weight.
-- [P2] At 390px, the mobile shell obscured the Users heading.
-  - Fix: reserve 72px top padding at the phone breakpoint and add a CSS contract test.
-- [P3] Multi-letter initials created noisier avatars than the selected visual.
-  - Fix: use one deterministic uppercase initial.
+The reference and implementation now share the same specimen-first composition: dark canvas, large analysis title, a contextual market-table specimen, a numbered color section, and a broad swatch grid. Astryx intentionally retains its own surrounding app-detail shell and concise living-styleguide copy rather than reproducing GetDesign's site navigation or installation controls.
 
-### Pass 2
+## Focused comparison
 
-- Desktop browser capture matches the selected layout hierarchy with no actionable P0, P1, or P2 differences.
-- Mobile heading is visible at 121px from the viewport top, controls stack, Growth pulse follows the directory, and `scrollWidth === clientWidth` at 390px.
-- Search by email, Administrators, Pro, Free, Disabled, and Clear filters were exercised in the live page. The controls update the current in-memory user set without navigation.
-- Browser console error check returned zero errors.
-
-### Pass 3
-
-- The full repository suite caught the initial native search, selector, and retry controls against the Astryx component-compliance baseline.
-- Replaced those controls with the design-system `TextInput`, `Selector`, `Button`, and `Icon` components while preserving the approved layout.
-- Re-ran search and Administrators filtering through the rendered design-system controls. At 390px, the title remains at 121px, the toolbar remains stacked, Growth pulse follows the directory, and `scrollWidth === clientWidth`.
+The above-the-fold styleguide region was compared at readable scale in the combined artifact. The market specimen exposes tabs, pairs, prices, and positive/negative change states. The color section pairs swatches with token metadata immediately below the fold. No additional crop was required because both priority regions are legible in the normalized full-view comparison.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: Uses the existing Figtree stack. Display, section, row, metadata, and metric weights preserve the source hierarchy; dense row text remains 12–14px and the page title remains the only display-sized text.
-- Spacing and layout rhythm: Desktop uses the approved two-to-one directory/Growth pulse split, 36px column separation, thin list rules, and no nested cards. Phone spacing keeps the title clear of the shell and avoids horizontal overflow.
-- Colors and visual tokens: Existing Astryx body, surface, text, border, and accent tokens are reused. Blue remains the primary accent; restrained avatar tones and semantic green state dots are the only supporting colors.
-- Image quality and asset fidelity: The selected screen contains no raster content beyond the existing Vitrine mark. No placeholder imagery, custom SVG, emoji, gradient, or CSS illustration was introduced.
-- Copy and content: Title, description, search, filters, group labels, and Growth pulse copy match the selected intent. Unsupported mock data was not fabricated; every displayed member attribute comes from the current API or a deterministic formatting helper.
+- **Fonts and typography:** Hierarchy, weight contrast, line length, and display scale match the reference's intent. Astryx uses its existing application typeface because imported font-family names are not bundled web fonts; this is acceptable product integration rather than missing content.
+- **Spacing and layout rhythm:** The split hero, generous section padding, numbered section gutter, divider rhythm, and swatch density align with the reference. Responsive CSS collapses the hero and specimen rows below 760px.
+- **Colors and tokens:** The preview canvas uses neutral dark/light stage tokens while swatches and component specimens use imported Binance values. Light/Dark controls change the whole canvas.
+- **Image quality and asset fidelity:** Neither implementation nor required design-system data depends on raster imagery, logos, or illustrative assets. No placeholder or simulated image assets are present.
+- **Copy and content:** Astryx labels the source accurately as a reconstructed living styleguide, preserves the imported summary and raw values, and makes DESIGN.md explicitly generated from the loaded snapshot.
 
-## Findings
+## Comparison history
 
-No actionable P0, P1, or P2 findings remain.
+1. Initial implementation showed the correct specimen canvas but its hero contained only text, unlike the reference's contextual market-table preview. Classified P2 because the first visual did not immediately demonstrate real UI.
+2. Added a reusable market-table specimen and selected market/table components ahead of generic navigation components for the hero.
+3. A light implementation capture was initially paired with the dark reference. This was a state-normalization issue, not a design defect; the final comparison uses Dark on both sides.
+4. Final comparison has no actionable P0, P1, or P2 differences.
 
 ## Follow-up polish
 
-- [P3] The selected mock uses decorative metric icons. They were omitted because the current project has no matching UI icon dependency and the metrics remain equally understandable without them.
-- [P3] The live list is longer than the mock because all eight real users are rendered; this is an intentional product-data difference.
-
-## Implementation checklist
-
-- [x] Match selected desktop hierarchy.
-- [x] Use only real API fields.
-- [x] Make search, filters, and clear action functional.
-- [x] Preserve accessible labels and color-independent status text.
-- [x] Verify desktop and phone layouts without horizontal overflow.
-- [x] Check browser console errors.
-- [x] Pass focused tests and production build.
+- P3: Bundle extracted product fonts in a future importer extension when licensing and source files are available.
+- P3: Group very large color palettes by semantic role if the imported document gains explicit group metadata.
 
 final result: passed
