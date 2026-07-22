@@ -1,4 +1,4 @@
-import { TextArea } from '@astryxdesign/core';
+import { Button, TextArea } from '@astryxdesign/core';
 import type {
   FeatureClaim,
   FeatureDocumentContent,
@@ -10,7 +10,7 @@ function EvidenceLinks({ claim, onEvidence }: { claim: FeatureClaim; onEvidence:
   return (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
       {claim.evidenceIds.map((evidenceId) => (
-        <button type="button" key={evidenceId} className="feature-document-evidence-link" onClick={() => onEvidence(evidenceId)}>{evidenceId}</button>
+        <Button key={evidenceId} label={evidenceId} variant="ghost" size="sm" className="feature-document-evidence-link" onClick={() => onEvidence(evidenceId)} />
       ))}
     </div>
   );
@@ -93,7 +93,7 @@ function RequirementField({
             />
           ))}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {criterion.evidenceIds.map((evidenceId) => <button type="button" key={evidenceId} className="feature-document-evidence-link" onClick={() => onEvidence(evidenceId)}>{evidenceId}</button>)}
+            {criterion.evidenceIds.map((evidenceId) => <Button key={evidenceId} label={evidenceId} variant="ghost" size="sm" className="feature-document-evidence-link" onClick={() => onEvidence(evidenceId)} />)}
           </div>
         </fieldset>
       ))}

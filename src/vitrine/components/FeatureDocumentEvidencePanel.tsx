@@ -1,3 +1,4 @@
+import { Button } from '@astryxdesign/core';
 import type { FeatureDocumentRevisionView } from '../../featureDocument.ts';
 
 export function FeatureDocumentEvidencePanel({
@@ -31,9 +32,15 @@ export function FeatureDocumentEvidencePanel({
       ) : <p>No evidence in this revision.</p>}
       <div className="feature-document-evidence-list">
         {revision.evidenceManifest.map((item) => (
-          <button type="button" key={item.evidenceId} aria-pressed={item.evidenceId === selected?.evidenceId} onClick={() => onSelect(item.evidenceId)}>
-            Step {item.stepIndex + 1} · Image {item.imageIndex + 1}<span>{item.evidenceId}</span>
-          </button>
+          <Button
+            key={item.evidenceId}
+            label={`Step ${item.stepIndex + 1}, image ${item.imageIndex + 1}, ${item.evidenceId}`}
+            variant="ghost"
+            aria-pressed={item.evidenceId === selected?.evidenceId}
+            onClick={() => onSelect(item.evidenceId)}
+          >
+            <>Step {item.stepIndex + 1} · Image {item.imageIndex + 1}<span>{item.evidenceId}</span></>
+          </Button>
         ))}
       </div>
     </aside>

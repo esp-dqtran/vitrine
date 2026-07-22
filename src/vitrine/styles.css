@@ -1067,7 +1067,7 @@ body {
 .feature-document-kicker { color: var(--color-text-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .feature-document-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .feature-document-share-grant { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto auto auto auto; gap: 8px; align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-container); padding: 12px; }
-.feature-document-share-grant input { min-width: 0; border: 1px solid var(--color-border); border-radius: 8px; padding: 8px; background: var(--color-background-muted); }
+.feature-document-share-url { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid var(--color-border); border-radius: 8px; padding: 8px; background: var(--color-background-muted); }
 .feature-document-warning { border: 1px solid var(--color-border); background: var(--color-background-muted); padding: 12px 14px; border-radius: var(--radius-container); }
 .feature-document-workspace { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(260px, 340px); gap: 16px; align-items: start; }
 .feature-document-main { min-width: 0; }

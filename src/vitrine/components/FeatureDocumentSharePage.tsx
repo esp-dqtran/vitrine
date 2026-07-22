@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, EmptyState, Spinner } from '@astryxdesign/core';
+import { Badge, Button, EmptyState, Spinner } from '@astryxdesign/core';
 import type { PublicFeatureDocumentShare } from '../../featureDocumentStore.ts';
 import { getPublicFeatureDocumentShare } from '../featureDocumentsApi.ts';
 import { FeatureDocumentEditor } from './FeatureDocumentEditor.tsx';
@@ -46,7 +46,7 @@ export function FeatureDocumentSharePage({
             <img className="feature-document-evidence-image" src={`/api/feature-document-shares/${encodeURIComponent(token)}/media/${evidence.imageId}`} alt={`Flow step ${evidence.stepIndex + 1} image ${evidence.imageIndex + 1}`} />
             <strong>{evidence.stepLabel}</strong><p>{evidence.description}</p>
           </> : <p>No evidence supplied.</p>}
-          <div className="feature-document-evidence-list">{share.revision.evidenceManifest.map((item) => <button type="button" key={item.evidenceId} onClick={() => setSelectedEvidenceId(item.evidenceId)}>{item.evidenceId}</button>)}</div>
+          <div className="feature-document-evidence-list">{share.revision.evidenceManifest.map((item) => <Button label={item.evidenceId} variant="ghost" key={item.evidenceId} onClick={() => setSelectedEvidenceId(item.evidenceId)} />)}</div>
         </aside>
       </div>
     </div>

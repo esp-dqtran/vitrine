@@ -213,8 +213,8 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
       {error && <div role="alert" className="feature-document-warning">{error}</div>}
       {share?.url && (
         <div className="feature-document-share-grant">
-          <label htmlFor="feature-document-share-url">Share URL</label>
-          <input id="feature-document-share-url" aria-label="Share URL" readOnly value={share.url} />
+          <span>Share URL</span>
+          <code className="feature-document-share-url" aria-label="Share URL">{share.url}</code>
           <span>Expires {new Date(share.expiresAt).toLocaleString()}</span>
           <Button label="Copy share URL" variant="ghost" size="sm" clickAction={() => navigator.clipboard.writeText(share.url!)} />
           <Button label="Open share" variant="ghost" size="sm" clickAction={() => { window.open(share.url!, '_blank', 'noopener,noreferrer'); }} />
