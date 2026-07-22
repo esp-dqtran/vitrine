@@ -185,6 +185,9 @@ test("keeps generation, revisions, ownership, review, media, and shares durable"
   const secondApproval = await store.setReviewStatus(701, created.document.id, next!.id, "approved");
   assert.equal(secondApproval?.reviewStatus, "approved");
   assert.equal(secondApproval?.revisions.find(({ id }) => id === restored!.id)?.reviewStatus, "superseded");
+  assert.equal((await store.getDocument(701, created.document.id, "e".repeat(64)))?.sourceChanged, true);
+  assert.equal((await store.acknowledgeSourceChange(701, created.document.id, "e".repeat(64)))?.sourceChanged, false);
+  assert.equal((await store.getDocument(701, created.document.id, "e".repeat(64)))?.sourceChanged, false);
 
   const image = await store.documentImage(701, created.document.id, next!.id, 1);
   assert.equal(image?.key, "images/checkout.png");

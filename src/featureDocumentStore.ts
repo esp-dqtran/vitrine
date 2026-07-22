@@ -84,7 +84,7 @@ export interface PublicFeatureDocumentShare {
 export interface FeatureDocumentStore {
   createGeneration(userId: number, input: CreateFeatureGenerationInput): Promise<{ document: FeatureDocumentView; job: FeatureDocumentJobView }>;
   createRegeneration(userId: number, documentId: number, input: CreateFeatureGenerationInput): Promise<FeatureDocumentJobView | undefined>;
-  getDocument(userId: number, documentId: number): Promise<FeatureDocumentView | undefined>;
+  getDocument(userId: number, documentId: number, currentSourceSha256?: string): Promise<FeatureDocumentView | undefined>;
   getJob(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
   workerJob(jobId: number): Promise<FeatureDocumentWorkerJob | undefined>;
   requestCancel(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
@@ -281,7 +281,12 @@ const REVISION_COLUMNS = `r.id, r.document_id, r.revision_number, r.author_type,
   r.content, r.source_flow, r.evidence_manifest, r.focus_instruction, r.prompt_version,
   r.provider_model, r.created_at`;
 
-async function loadDocument(runQuery: DatabaseQuery, userId: number, documentId: number): Promise<FeatureDocumentView | undefined> {
+async function loadDocument(
+  runQuery: DatabaseQuery,
+  userId: number,
+  documentId: number,
+  currentSourceSha256?: string,
+): Promise<FeatureDocumentView | undefined> {
   const documentResult = await runQuery(
     `SELECT d.id, d.title, d.current_revision_id, d.source_change_acknowledged_sha256,
             current_revision.evidence_manifest_sha256 AS revision_source_sha256,
@@ -312,7 +317,9 @@ async function loadDocument(runQuery: DatabaseQuery, userId: number, documentId:
   const currentRevisionId = document.current_revision_id == null ? undefined : positiveInteger(document.current_revision_id);
   const currentRevision = currentRevisionId === undefined ? undefined : revisions.find(({ id }) => id === currentRevisionId);
   const revisionSha = document.revision_source_sha256 == null ? undefined : text(document.revision_source_sha256);
-  const currentSha = document.current_source_sha256 == null ? revisionSha : text(document.current_source_sha256);
+  const currentSha = currentSourceSha256
+    ? checkedSha256(currentSourceSha256)
+    : document.current_source_sha256 == null ? revisionSha : text(document.current_source_sha256);
   const acknowledgedSha = document.source_change_acknowledged_sha256 == null ? undefined : text(document.source_change_acknowledged_sha256);
   return {
     id: positiveInteger(document.id),
@@ -448,8 +455,8 @@ export function createFeatureDocumentStore(
       });
     },
 
-    getDocument(userId, documentId) {
-      return loadDocument(runQuery, userId, documentId);
+    getDocument(userId, documentId, currentSourceSha256) {
+      return loadDocument(runQuery, userId, documentId, currentSourceSha256);
     },
 
     async getJob(userId, jobId) {
@@ -709,22 +716,17 @@ export function createFeatureDocumentStore(
       const checksum = checkedSha256(currentSourceSha256);
       return runTransaction(async (tx) => {
         const changed = await tx(
-          `SELECT j.evidence_manifest_sha256
-           FROM feature_documents d
-           JOIN LATERAL (
-             SELECT evidence_manifest_sha256 FROM feature_document_jobs
-             WHERE document_id = d.id ORDER BY created_at DESC, id DESC LIMIT 1
-           ) j ON true
+          `SELECT d.id FROM feature_documents d
            WHERE d.id = $1 AND d.user_id = $2 FOR UPDATE OF d`,
           [documentId, userId],
         );
-        if (!changed.rows[0] || text(changed.rows[0].evidence_manifest_sha256) !== checksum) return undefined;
+        if (!changed.rows[0]) return undefined;
         await tx(
           `UPDATE feature_documents SET source_change_acknowledged_sha256 = $2,
              source_change_acknowledged_at = now(), updated_at = now() WHERE id = $1`,
           [documentId, checksum],
         );
-        return loadDocument(tx, userId, documentId);
+        return loadDocument(tx, userId, documentId, checksum);
       });
     },
 

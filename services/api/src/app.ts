@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import {
   query,
+  pool,
   allImages,
   adminAppPage,
   createJob,
@@ -131,6 +132,12 @@ import { createResearchSynthesisProvider } from "../../../src/researchSynthesisP
 import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
+import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
+import {
+  mountFeatureDocumentRoutes,
+  mountPublicFeatureDocumentRoutes,
+  type FeatureDocumentNotificationClient,
+} from "./featureDocuments.ts";
 import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
@@ -399,6 +406,10 @@ const defaults = {
   listResearchCandidates: undefined as ((userId: number) => Promise<ResearchSuggestionCandidate[]>) | undefined,
   sitesStore: apiSitesStore,
   publicPageStore: apiPublicPageStore,
+  featureDocumentStore: createFeatureDocumentStore(),
+  featureDocumentProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
+  featureDocumentPromptVersion: 1,
+  acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
 };
 type ApiDeps = typeof defaults;
 
@@ -834,6 +845,14 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  mountPublicFeatureDocumentRoutes(app, {
+    store: deps.featureDocumentStore,
+    sendObject: async (metadata, res) => {
+      if (!deps.objectStore) throw new Error("Object storage is unavailable");
+      await sendStoredObject(deps.objectStore, metadata, res);
+    },
+  });
+
   app.use(async (req, res, next) => {
     const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
     let resolution: Awaited<ReturnType<typeof resolveSessionState>> = { status: "invalid" };
@@ -895,6 +914,27 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.locals.user.role === "admin"
       ? "pro"
       : (await deps.getAccountEntitlements(res.locals.user.id)).plan;
+
+  mountFeatureDocumentRoutes(app, {
+    store: deps.featureDocumentStore,
+    canAccessApp: deps.canAccessApp,
+    listAppVersions: deps.listAppVersions,
+    getVersionFlows: deps.getVersionFlows,
+    flowEvidenceImages: deps.flowEvidenceImages,
+    imageObjectById: deps.imageObjectById,
+    createJob: deps.createJob,
+    setJobStatus: deps.setJobStatus,
+    publishJob: deps.publishJob,
+    providerModel: deps.featureDocumentProviderModel,
+    promptVersion: deps.featureDocumentPromptVersion,
+    appUrl: deps.appUrl,
+    acquireNotificationClient: deps.acquireFeatureDocumentNotificationClient,
+    recordEvent: deps.recordAccessEvent,
+    sendObject: async (metadata, res) => {
+      if (!deps.objectStore) throw new Error("Object storage is unavailable");
+      await sendStoredObject(deps.objectStore, metadata, res);
+    },
+  });
 
   app.post("/referrals/link", async (_req, res) => {
     const { token } = await deps.createReferralCode(res.locals.user.id);
