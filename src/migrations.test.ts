@@ -51,6 +51,17 @@ test("feature document migration defines revisions, resumable analyses, and revo
   assert.match(migration, /pg_notify\('feature_document_jobs'/);
 });
 
+test("GetDesign migration records origin and reversible import history", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0016_getdesign_imports.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS origin/);
+  assert.match(migration, /CREATE TABLE design_system_import_history/);
+  assert.match(migration, /previous_snapshot JSONB/);
+  assert.match(migration, /rolled_back_at TIMESTAMPTZ/);
+});
+
 test("migration verification requires explicit disposable-database opt-in", () => {
   assert.throws(
     () => createMigrationVerificationConfig({}),

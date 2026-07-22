@@ -574,9 +574,10 @@ export async function appImages(app: string, kind: ImageKind | ImageKind[] = "sc
 
 export async function saveDesignSystem(app: string, platform: string, snapshot: DesignSystemSnapshot): Promise<void> {
   await query(
-    `INSERT INTO design_systems (app_id, platform, snapshot)
-     SELECT id, $2, $3::jsonb FROM apps WHERE name = $1
-     ON CONFLICT (app_id, platform) DO UPDATE SET snapshot = EXCLUDED.snapshot, updated_at = now()`,
+    `INSERT INTO design_systems (app_id, platform, snapshot, origin)
+     SELECT id, $2, $3::jsonb, 'observed' FROM apps WHERE name = $1
+     ON CONFLICT (app_id, platform) DO UPDATE
+     SET snapshot = EXCLUDED.snapshot, origin = 'observed', updated_at = now()`,
     [app, platform, JSON.stringify(snapshot)]
   );
 }
