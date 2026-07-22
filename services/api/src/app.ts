@@ -133,6 +133,7 @@ import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestio
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
+import { getImportedCurrentDesignSystem } from "../../../src/getdesignImportStore.ts";
 import {
   mountFeatureDocumentRoutes,
   mountPublicFeatureDocumentRoutes,
@@ -305,6 +306,7 @@ const defaults = {
   submitAppVersionForReview,
   publishAppVersion,
   getVersionDesignSystem,
+  getImportedCurrentDesignSystem: (app: string, platform: string) => getImportedCurrentDesignSystem(pool, app, platform),
   versionImages,
   publishedImages,
   publishedPreviewImages,
@@ -1865,7 +1867,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const versioned = res.locals.user.role === "admin" ? undefined : await deps.getVersionDesignSystem(appSlug, platform);
-    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug, platform) : undefined);
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin"
+      ? await deps.getDesignSystem(appSlug, platform)
+      : await deps.getImportedCurrentDesignSystem(appSlug, platform));
     const [flows, images] = versioned
       ? [versioned.flows, await deps.versionImages(appSlug, platform, versioned.version.version_number, ["screen", "flow_step"])] as const
       : await Promise.all([deps.getAppFlows(appSlug, platform), deps.appImages(appSlug, ["screen", "flow_step"])]);
@@ -2657,7 +2661,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const versioned = requestedVersion !== undefined || res.locals.user.role !== "admin"
       ? await deps.getVersionDesignSystem(appSlug, platform, requestedVersion)
       : undefined;
-    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin" ? await deps.getDesignSystem(appSlug, platform) : undefined);
+    const snapshot = versioned?.snapshot ?? (res.locals.user.role === "admin"
+      ? await deps.getDesignSystem(appSlug, platform)
+      : requestedVersion === undefined
+        ? await deps.getImportedCurrentDesignSystem(appSlug, platform)
+        : undefined);
     const flows = versioned?.flows ?? await deps.getAppFlows(appSlug, platform);
     // Flows come from the crawl and don't require AI synthesis — don't hide them behind a
     // missing design-system snapshot (e.g. an app that's only been through crawl-only import).

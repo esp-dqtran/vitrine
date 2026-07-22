@@ -1568,6 +1568,72 @@ test("returns 404 when an app has no structured design system", async (t) => {
   );
 });
 
+test("serves imported current design when an entitled user has no published version", async (t) => {
+  const imported = {
+    app: "linear", generatedAt: "2026-07-22T00:00:00.000Z", summary: "Dark product UI",
+    tokens: [{ id: "primary", kind: "color" as const, name: "Primary", value: "#5e6ad2", role: "Brand", evidence: [] }],
+    components: [], flows: [], rules: [],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    canAccessApp: async () => true,
+    getVersionDesignSystem: async () => undefined,
+    getImportedCurrentDesignSystem: async (app, platform) => app === "linear" && platform === "web" ? imported : undefined,
+    getAppFlows: async () => [], appImages: async () => [],
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { cookie: "astryx_session=user" } });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).summary, "Dark product UI");
+});
+
+test("never uses imported-current fallback for an explicit version", async (t) => {
+  let fallbackReads = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    getVersionDesignSystem: async () => undefined,
+    getImportedCurrentDesignSystem: async () => { fallbackReads += 1; return undefined; },
+    getAppFlows: async () => [], appImages: async () => [],
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear?platform=web&version=2`, { headers: adminCookie });
+  assert.equal(response.status, 404);
+  assert.equal(fallbackReads, 0);
+});
+
+test("exports imported current design when an entitled user has no published version", async (t) => {
+  const bodies: Uint8Array[] = [];
+  const store: ObjectStore = {
+    put: async (input) => { bodies.push(input.body); return { created: true, metadata: input }; },
+    head: async () => undefined, get: async () => { throw new Error("unused"); },
+    signedGetUrl: async () => undefined, async *list() {}, delete: async () => false,
+  };
+  const imported = {
+    app: "linear", generatedAt: "2026-07-22T00:00:00.000Z", summary: "Dark product UI",
+    tokens: [{ id: "primary", kind: "color" as const, name: "Primary", value: "#5e6ad2", role: "Brand", evidence: [] }],
+    components: [], flows: [], rules: [],
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user, canAccessApp: async () => true,
+    getAccountEntitlements: async () => proEntitlements,
+    reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
+    createExport: async () => 99, completeExport: async () => undefined, failExport: async () => undefined,
+    recordAccessEvent: async () => undefined, objectStore: store,
+    getVersionDesignSystem: async () => undefined,
+    getImportedCurrentDesignSystem: async () => imported,
+    getAppFlows: async () => [], appImages: async () => [],
+  }));
+  t.after(() => close(server));
+  const response = await fetch(`${base}/design-systems/linear/exports`, {
+    method: "POST",
+    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    body: JSON.stringify({ format: "json", platform: "web", selection: { kind: "design-system" } }),
+  });
+  assert.equal(response.status, 200);
+  assert.equal(JSON.parse(Buffer.from(bodies[0]).toString("utf8")).summary, "Dark product UI");
+});
+
 test("serves crawled flows even when an app has not been through AI synthesis", async (t) => {
   const { base, server } = await serve(
     createApiApp({
