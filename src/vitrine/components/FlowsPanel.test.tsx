@@ -38,6 +38,14 @@ test("FlowViewer renders curator-ordered flow steps with real evidence images", 
   assert.match(html, /\/api\/media\/linear\/fedcba9876543210/);
 });
 
+test("FlowViewer offers Feature Document creation only with exact source context", () => {
+  assert.doesNotMatch(renderToStaticMarkup(<FlowViewer flow={loginFlow} onBack={() => {}} />), /Create Feature Document/);
+  const html = renderToStaticMarkup(
+    <FlowViewer flow={loginFlow} app="linear" platform="web" version={3} onBack={() => {}} />,
+  );
+  assert.match(html, /Create Feature Document/);
+});
+
 test("FlowViewer does not render the auto-generated crawl description", () => {
   const html = renderToStaticMarkup(
     <FlowViewer flow={{ ...loginFlow, description: "Imported from Mobbin: https://mobbin.com/flows/abc" }} onBack={() => {}} />

@@ -22,7 +22,7 @@ function groupByCategory(flows: DesignFlow<EvidenceView>[]) {
   return uncategorized ? [[UNCATEGORIZED, uncategorized] as const, ...categorized] : categorized;
 }
 
-export function FlowsPanel({ flows, app, platform }: { flows: DesignFlow<EvidenceView>[]; app?: string; platform?: Platform }) {
+export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlow<EvidenceView>[]; app?: string; platform?: Platform; version?: number }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [editingDoc, setEditingDoc] = useState(false);
@@ -30,7 +30,7 @@ export function FlowsPanel({ flows, app, platform }: { flows: DesignFlow<Evidenc
   if (editingDoc && app && platform) return <FlowDocEditor app={app} platform={platform} onBack={() => setEditingDoc(false)} />;
 
   const selected = flows.find((flow) => flow.id === selectedId);
-  if (selected) return <FlowViewer flow={selected} onBack={() => setSelectedId(null)} />;
+  if (selected) return <FlowViewer flow={selected} app={app} platform={platform} version={version} onBack={() => setSelectedId(null)} />;
 
   if (flows.length === 0) {
     return <EmptyState title="No captured flows yet" description="Import a curator-reviewed flow manifest to publish ordered evidence." />;

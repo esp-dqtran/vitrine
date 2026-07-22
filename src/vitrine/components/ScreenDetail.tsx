@@ -259,7 +259,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
                   : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-                      : section === 'flows' ? (flows.length ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} /> : <EmptyState title="No flows captured" isCompact />)
+                      : section === 'flows' ? (flows.length ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} /> : <EmptyState title="No flows captured" isCompact />)
                         : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
         </div>
       </ReferenceDetailShell>
