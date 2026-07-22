@@ -150,7 +150,7 @@ function checkedSha256(value: string): string {
 
 function checkedErrorCode(value: string): string {
   const result = value.trim();
-  if (!/^[A-Z0-9_]{1,80}$/.test(result)) throw new Error("Invalid feature document error code");
+  if (!/^[a-z0-9_]{1,80}$/.test(result)) throw new Error("Invalid feature document error code");
   return result;
 }
 
@@ -605,7 +605,7 @@ export function createFeatureDocumentStore(
     async markStale(jobId) {
       await runQuery(
         `UPDATE feature_document_jobs
-         SET status = 'stale', error_code = 'SOURCE_CHANGED', error_message = 'The source Flow changed during generation',
+         SET status = 'stale', error_code = 'source_changed', error_message = 'The source Flow changed during generation',
              updated_at = now(), completed_at = now()
          WHERE id = $1 AND status IN ('queued', 'running')`,
         [jobId],
