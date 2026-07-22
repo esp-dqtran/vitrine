@@ -3,16 +3,22 @@ import { Badge, Button, EmptyState, Spinner } from '@astryxdesign/core';
 import type {
   FeatureDocumentContent,
   FeatureDocumentJobView,
+  FeatureDocumentReviewStatus,
   FeatureDocumentRevisionView,
+  FeatureDocumentShareView,
   FeatureDocumentView,
 } from '../../featureDocument.ts';
 import {
   acknowledgeFeatureDocumentSourceChange,
   cancelFeatureDocumentJob,
+  createFeatureDocumentShare,
+  downloadFeatureDocumentMarkdown,
   getFeatureDocument,
   regenerateFeatureDocument,
+  revokeFeatureDocumentShare,
   restoreFeatureDocumentRevision,
   saveFeatureDocumentRevision,
+  setFeatureDocumentReviewStatus,
   subscribeFeatureDocumentJob,
 } from '../featureDocumentsApi.ts';
 import { FeatureDocumentEditor } from './FeatureDocumentEditor.tsx';
@@ -21,6 +27,10 @@ import { FeatureDocumentProgress } from './FeatureDocumentProgress.tsx';
 import { FeatureDocumentRevisionHistory } from './FeatureDocumentRevisionHistory.tsx';
 
 const activeJob = (job: FeatureDocumentJobView | undefined) => job?.status === 'queued' || job?.status === 'running';
+
+export function featureDocumentReviewActions(status: FeatureDocumentReviewStatus): FeatureDocumentReviewStatus[] {
+  return status === 'draft' ? ['in_review'] : status === 'in_review' ? ['draft', 'approved'] : [];
+}
 
 export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const [document, setDocument] = useState<FeatureDocumentView | null>(null);
@@ -32,6 +42,7 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
   const [connectionError, setConnectionError] = useState('');
   const [subscriptionRevision, setSubscriptionRevision] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [share, setShare] = useState<FeatureDocumentShareView>();
   const [error, setError] = useState('');
 
   const applyDocument = (next: FeatureDocumentView) => {
@@ -131,6 +142,45 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
     finally { setBusy(false); }
   };
 
+  const transitionReview = async (status: FeatureDocumentReviewStatus) => {
+    if (!selectedRevision || !isCurrent) return;
+    setBusy(true); setError('');
+    try { applyDocument(await setFeatureDocumentReviewStatus(documentId, selectedRevision.id, status)); }
+    catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const downloadMarkdown = async () => {
+    if (!selectedRevision) return;
+    setBusy(true); setError('');
+    try {
+      const download = await downloadFeatureDocumentMarkdown(documentId, selectedRevision.id);
+      const url = URL.createObjectURL(download.blob);
+      const anchor = window.document.createElement('a');
+      anchor.href = url;
+      anchor.download = download.filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const createShare = async () => {
+    if (!selectedRevision) return;
+    setBusy(true); setError('');
+    try { setShare(await createFeatureDocumentShare(documentId, selectedRevision.id)); }
+    catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const revokeShare = async () => {
+    if (!share) return;
+    setBusy(true); setError('');
+    try { await revokeFeatureDocumentShare(documentId, share.id); setShare(undefined); }
+    catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  };
+
   const title = document?.title ?? 'Feature Document';
   const canSave = Boolean(isCurrent && dirty && !busy);
   const selectedLabel = useMemo(() => selectedRevision ? `Revision ${selectedRevision.revisionNumber}` : '', [selectedRevision]);
@@ -143,6 +193,17 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
       <header className="feature-document-header">
         <div><div className="feature-document-kicker">Feature Document</div><h1>{title}</h1><div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Badge label={selectedRevision.reviewStatus} variant="neutral" /><span>{selectedLabel}</span></div></div>
         <div className="feature-document-actions">
+          {isCurrent && featureDocumentReviewActions(selectedRevision.reviewStatus).map((status) => (
+            <Button
+              key={status}
+              label={status === 'in_review' ? 'Submit for review' : status === 'approved' ? 'Approve revision' : 'Return to draft'}
+              variant={status === 'approved' ? 'primary' : 'ghost'}
+              isDisabled={busy || dirty}
+              clickAction={() => transitionReview(status)}
+            />
+          ))}
+          <Button label="Download Markdown" variant="ghost" isDisabled={busy} clickAction={downloadMarkdown} />
+          <Button label="Create read-only share" variant="ghost" isDisabled={busy} clickAction={createShare} />
           {document.sourceChanged && <Button label="Retain current document" variant="ghost" isDisabled={busy} clickAction={retain} />}
           <Button label="Regenerate" variant="ghost" isDisabled={busy || activeJob(job)} clickAction={regenerate} />
           <Button label="Save new revision" variant="primary" isDisabled={!canSave} isLoading={busy} clickAction={save} />
@@ -150,6 +211,16 @@ export function FeatureDocumentPage({ documentId }: { documentId: number }) {
       </header>
       {document.sourceChanged && <div role="alert" className="feature-document-warning">The source Flow changed. Regenerate from current evidence or explicitly retain this revision.</div>}
       {error && <div role="alert" className="feature-document-warning">{error}</div>}
+      {share?.url && (
+        <div className="feature-document-share-grant">
+          <label htmlFor="feature-document-share-url">Share URL</label>
+          <input id="feature-document-share-url" aria-label="Share URL" readOnly value={share.url} />
+          <span>Expires {new Date(share.expiresAt).toLocaleString()}</span>
+          <Button label="Copy share URL" variant="ghost" size="sm" clickAction={() => navigator.clipboard.writeText(share.url!)} />
+          <Button label="Open share" variant="ghost" size="sm" clickAction={() => { window.open(share.url!, '_blank', 'noopener,noreferrer'); }} />
+          <Button label="Revoke share" variant="ghost" size="sm" isDisabled={busy} clickAction={revokeShare} />
+        </div>
+      )}
       {job && (activeJob(job) || job.status === 'error' || job.status === 'stale') && (
         <FeatureDocumentProgress
           job={job}

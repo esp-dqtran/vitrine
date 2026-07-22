@@ -8,6 +8,7 @@ import { BillingSuccess } from './components/BillingSuccess';
 import { SignIn } from './SignIn';
 import { navigate, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
+import { FeatureDocumentSharePage } from './components/FeatureDocumentSharePage.tsx';
 import './styles.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
@@ -27,7 +28,7 @@ function Root() {
   }
 
   if (route.name === 'feature-document-share') {
-    return <main aria-label="Read-only Feature Document" data-feature-document-share={route.token}>Read-only Feature Document</main>;
+    return <FeatureDocumentSharePage token={route.token} />;
   }
 
   if (loading) {

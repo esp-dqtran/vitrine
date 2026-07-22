@@ -132,6 +132,22 @@ export function revokeFeatureDocumentShare(
   return json(`/api/feature-documents/${pathId(documentId)}/shares/${pathId(shareId)}`, { method: 'DELETE' }, request);
 }
 
+export async function downloadFeatureDocumentMarkdown(
+  documentId: number,
+  revisionId: number,
+  request: typeof fetch = fetch,
+): Promise<{ blob: Blob; filename: string }> {
+  pathId(revisionId);
+  const response = await request(`/api/feature-documents/${pathId(documentId)}/export.md?revisionId=${revisionId}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error ?? `Feature Document export returned ${response.status}`);
+  }
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `feature-document-${documentId}-r${revisionId}.md`;
+  return { blob: await response.blob(), filename };
+}
+
 export function getPublicFeatureDocumentShare(token: string, request: typeof fetch = fetch): Promise<PublicFeatureDocumentShare> {
   return json(`/api/feature-document-shares/${encodeURIComponent(token)}`, undefined, request);
 }

@@ -40,6 +40,7 @@ interface FeatureEvent {
   action: string;
   outcome: string;
   volume?: number;
+  metadata?: Record<string, string | number | boolean | null>;
 }
 
 export interface PublicFeatureDocumentRouteDependencies {
@@ -296,12 +297,13 @@ export function mountFeatureDocumentRoutes(
   app: express.Express,
   deps: FeatureDocumentRouteDependencies,
 ): void {
-  const event = (res: express.Response, action: string, outcome: string, volume?: number) => deps.recordEvent?.({
+  const event = (res: express.Response, action: string, outcome: string, volume?: number, metadata?: FeatureEvent["metadata"]) => deps.recordEvent?.({
     userId: res.locals.user.id,
     featureKey: "feature_documents",
     action,
     outcome,
     ...(volume === undefined ? {} : { volume }),
+    ...(metadata === undefined ? {} : { metadata }),
   });
 
   app.post("/feature-documents", asyncRoute(async (req, res) => {
@@ -438,7 +440,11 @@ export function mountFeatureDocumentRoutes(
     const documentId = positiveId(req.params.documentId);
     if (!documentId) { res.status(400).json({ error: "Invalid Feature Document" }); return; }
     const document = await deps.store.getDocument(res.locals.user.id, documentId);
-    const revision = document?.currentRevision;
+    const requestedRevisionId = req.query.revisionId === undefined ? undefined : positiveId(req.query.revisionId);
+    if (req.query.revisionId !== undefined && !requestedRevisionId) { res.status(400).json({ error: "Invalid Feature Document revision" }); return; }
+    const revision = requestedRevisionId
+      ? document?.revisions.find(({ id }) => id === requestedRevisionId)
+      : document?.currentRevision;
     if (!document || !revision) { res.status(404).json({ error: "Feature Document not found" }); return; }
     const markdown = renderFeatureDocumentMarkdown(document.title, revision.content, {
       sourceFlowTitle: revision.source.title,
@@ -446,7 +452,7 @@ export function mountFeatureDocumentRoutes(
     });
     res.type("text/markdown");
     res.setHeader("Content-Disposition", `attachment; filename="feature-document-${document.id}-r${revision.revisionNumber}.md"`);
-    await event(res, "feature_document_exported", "completed");
+    await event(res, "feature_document_exported", "completed", undefined, { documentId, revisionId: revision.id });
     res.send(markdown);
   }));
 
@@ -458,7 +464,7 @@ export function mountFeatureDocumentRoutes(
     const token = randomBytes(32).toString("base64url");
     const share = await deps.store.createShare(res.locals.user.id, documentId, revisionId, shareHash(token), new Date());
     if (!share) { res.status(404).json({ error: "Feature Document not found" }); return; }
-    await event(res, "feature_document_share_created", "created");
+    await event(res, "feature_document_share_created", "created", undefined, { documentId, revisionId });
     res.status(201).json({ ...share, url: `${deps.appUrl}/feature-document-shares/${token}` });
   }));
 

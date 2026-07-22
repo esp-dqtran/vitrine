@@ -1066,6 +1066,8 @@ body {
 .feature-document-header h1 { margin: 4px 0 10px; font-size: 28px; }
 .feature-document-kicker { color: var(--color-text-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .feature-document-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.feature-document-share-grant { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto auto auto auto; gap: 8px; align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-container); padding: 12px; }
+.feature-document-share-grant input { min-width: 0; border: 1px solid var(--color-border); border-radius: 8px; padding: 8px; background: var(--color-background-muted); }
 .feature-document-warning { border: 1px solid var(--color-border); background: var(--color-background-muted); padding: 12px 14px; border-radius: var(--radius-container); }
 .feature-document-workspace { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(260px, 340px); gap: 16px; align-items: start; }
 .feature-document-main { min-width: 0; }
@@ -1089,10 +1091,15 @@ body {
 .feature-document-revision-history article.is-selected { background: var(--color-background-muted); }
 .feature-document-readonly-note { margin-bottom: 12px; color: var(--color-text-secondary); }
 .feature-document-comparison { margin-top: 20px; border-top: 2px solid var(--color-border); padding-top: 20px; }
+.feature-document-share-page { max-width: 1280px; margin: 0 auto; padding: 32px 28px 72px; display: flex; flex-direction: column; gap: 22px; }
+.feature-document-share-page h1 { margin: 4px 0 10px; }
+.feature-document-share-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 18px; align-items: start; }
 @media (max-width: 980px) {
   .feature-document-workspace { grid-template-columns: 1fr; }
   .feature-document-evidence-panel, .feature-document-revision-history { position: static; }
   .feature-document-revision-history { order: 1; }
   .feature-document-main { order: 2; }
   .feature-document-evidence-panel { order: 3; }
+  .feature-document-share-layout { grid-template-columns: 1fr; }
+  .feature-document-share-grant { grid-template-columns: 1fr; }
 }
