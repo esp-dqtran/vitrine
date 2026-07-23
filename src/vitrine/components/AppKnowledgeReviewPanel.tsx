@@ -245,24 +245,27 @@ export function AppKnowledgeReviewPanel(props: {
                 <h3 style={{ margin: '0 0 7px', fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>{section}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {sectionClaims.map(({ claim: item }) => (
-                    <button
+                    <Button
                       key={item.id}
-                      type="button"
+                      label={item.text}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setSelectedClaimId(item.id)}
                       aria-pressed={selected?.claim.id === item.id}
+                      endContent={decisionFor(props.view, item.id)
+                        ? <Badge label={decisionFor(props.view, item.id)!.replace('claim_', '')} variant="neutral" />
+                        : undefined}
                       style={{
-                        border: 0,
-                        borderRadius: 8,
-                        padding: '8px 10px',
+                        width: '100%',
+                        height: 'auto',
+                        minHeight: 34,
+                        justifyContent: 'space-between',
                         textAlign: 'left',
                         background: selected?.claim.id === item.id ? 'var(--color-background-surface)' : 'transparent',
-                        color: 'var(--color-text-primary)',
-                        cursor: 'pointer',
                       }}
                     >
                       <span style={{ display: 'block', fontSize: 12.5, lineHeight: 1.35 }}>{item.text}</span>
-                      {decisionFor(props.view, item.id) && <Badge label={decisionFor(props.view, item.id)!.replace('claim_', '')} variant="neutral" />}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </section>
