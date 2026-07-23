@@ -206,6 +206,21 @@ test("pipeline dispatches App Knowledge generation and maps stale to transport e
   ]);
 });
 
+test("caption jobs never start App Knowledge generation", async () => {
+  let generated = false;
+  const handler = createPipelineHandler({
+    caption: async () => ({ status: "done" }),
+    appPlatforms: async () => [],
+    generateAppKnowledge: async () => {
+      generated = true;
+      return "done";
+    },
+  });
+
+  await handler({ type: "caption-app", name: "linear" });
+  assert.equal(generated, false);
+});
+
 test("autonomous infrastructure interruptions remain retryable with the same run id", async () => {
   const interruption = new Error("discovery browser lost");
   const statuses: string[] = [];

@@ -18,10 +18,10 @@ import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts
 import { featureDocumentProviderFromMultimodalJsonProvider } from "../../../src/featureDocumentProvider.ts";
 import { createFeatureDocumentService } from "../../../src/featureDocumentService.ts";
 import { createMultimodalJsonProvider } from "../../../src/evidenceAnalysisProvider.ts";
-import { appKnowledgeProviderFromMultimodalJsonProvider } from "../../../src/appKnowledgeProvider.ts";
 import { createAppKnowledgeStore } from "../../../src/appKnowledgeStore.ts";
 import { createAppKnowledgeService } from "../../../src/appKnowledgeService.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
+import { createBrowserAppKnowledgeGenerator } from "./appKnowledgeWorker.ts";
 import {
   featureEvidenceManifestSha256,
   type FeatureEvidenceManifestItem,
@@ -129,35 +129,42 @@ const featureDocumentService = featureDocumentProvider ? createFeatureDocumentSe
 }) : undefined;
 
 const appKnowledgeStore = createAppKnowledgeStore();
-const appKnowledgeProvider = multimodalProvider
-  ? appKnowledgeProviderFromMultimodalJsonProvider(multimodalProvider)
-  : undefined;
-const appKnowledgeService = appKnowledgeProvider ? createAppKnowledgeService({
-  store: appKnowledgeStore,
-  provider: appKnowledgeProvider,
-  objectStore,
-  evidenceSource: (target) => appKnowledgeEvidenceSource({
-    app: target.app,
-    platform: target.platform,
-    versionNumber: target.versionNumber,
-  }),
-  evidenceOverrides: (versionId) => appKnowledgeStore.evidenceOverrides(versionId),
-  imageObjectById,
-  currentSourceSha256: async (target) => {
-    const source = await appKnowledgeEvidenceSource({
+const generateAppKnowledge = createBrowserAppKnowledgeGenerator({
+  failProviderUnavailable: (runId) => appKnowledgeStore.failJob(
+    Number(runId),
+    "provider_unavailable",
+    "Analysis provider is temporarily unavailable",
+  ),
+  createService: (provider, concurrency) => createAppKnowledgeService({
+    store: appKnowledgeStore,
+    provider,
+    objectStore,
+    evidenceSource: (target) => appKnowledgeEvidenceSource({
       app: target.app,
       platform: target.platform,
       versionNumber: target.versionNumber,
-    });
-    if (!source) return undefined;
-    const prepared = await buildAppKnowledgeEvidenceManifest({
-      source,
-      objectStore,
-      overrides: await appKnowledgeStore.evidenceOverrides(target.captureVersionId),
-    });
-    return prepared.sourceSha256;
-  },
-}) : undefined;
+    }),
+    evidenceOverrides: (versionId) => appKnowledgeStore.evidenceOverrides(versionId),
+    imageObjectById,
+    currentSourceSha256: async (target) => {
+      const source = await appKnowledgeEvidenceSource({
+        app: target.app,
+        platform: target.platform,
+        versionNumber: target.versionNumber,
+      });
+      if (!source) return undefined;
+      const prepared = await buildAppKnowledgeEvidenceManifest({
+        source,
+        objectStore,
+        overrides: await appKnowledgeStore.evidenceOverrides(target.captureVersionId),
+      });
+      return prepared.sourceSha256;
+    },
+    screenConcurrency: concurrency,
+    flowConcurrency: concurrency,
+    timeoutMs: 6 * 60_000,
+  }),
+});
 
 const bulkStorage: BulkObjectDependencies = {
   objectStore,
@@ -204,10 +211,7 @@ await startImportWorker({
         if (!featureDocumentService) throw new Error("Feature document provider is not configured");
         return featureDocumentService.generate(runId);
       },
-      generateAppKnowledge: async (runId) => {
-        if (!appKnowledgeService) throw new Error("App Knowledge provider is not configured");
-        return appKnowledgeService.generate(runId);
-      },
+      generateAppKnowledge,
     }));
   },
 });
