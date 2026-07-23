@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 export type Route =
   | { name: 'landing' }
+  | { name: 'build-in-public' }
   | { name: 'pricing' }
   | { name: 'billing-success' }
   | { name: 'settings-billing' }
@@ -23,6 +24,7 @@ function subscribe(fn: () => void) {
 
 export function parseRoutePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
+  if (path === '/build-in-public') return { name: 'build-in-public' };
   if (path === '/pricing') return { name: 'pricing' };
   if (path === '/billing/success') return { name: 'billing-success' };
   if (path === '/settings/billing') return { name: 'settings-billing' };
@@ -66,6 +68,7 @@ export function parseRoutePath(pathname: string): Route {
 export function routeToPath(route: Route): string {
   switch (route.name) {
     case 'landing': return '/landing';
+    case 'build-in-public': return '/build-in-public';
     case 'pricing': return '/pricing';
     case 'billing-success': return '/billing/success';
     case 'settings-billing': return '/settings/billing';
