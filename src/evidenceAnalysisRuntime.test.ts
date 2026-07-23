@@ -89,6 +89,28 @@ test("classifies an aborted timeout without exposing its original message", asyn
   );
 });
 
+test("external cancellation is neither retried nor reclassified", async () => {
+  const controller = new AbortController();
+  let calls = 0;
+  const promise = runValidatedProviderCall({
+    signal: controller.signal,
+    call: async (_validationError, signal) => {
+      calls += 1;
+      await new Promise((_resolve, reject) =>
+        signal.addEventListener("abort", () => reject(signal.reason), { once: true }));
+    },
+    parse: () => ({ ok: true }),
+    timeoutMs: 20,
+    retryDelayMs: 0,
+  });
+  controller.abort(new DOMException("cancelled", "AbortError"));
+  await assert.rejects(
+    promise,
+    (error: unknown) => error instanceof DOMException && error.name === "AbortError",
+  );
+  assert.equal(calls, 1);
+});
+
 test("maps with bounded concurrency and preserves input order", async () => {
   let active = 0;
   let maximum = 0;

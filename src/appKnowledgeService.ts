@@ -221,6 +221,7 @@ export function createAppKnowledgeService(deps: {
   timeoutMs?: number;
   retryDelayMs?: number;
   maxImageBytes?: number;
+  cancelCheckIntervalMs?: number;
 }): { generate(jobId: string): Promise<AppKnowledgeJobStatus | undefined> } {
   const screenConcurrency = deps.screenConcurrency ?? 3;
   const flowConcurrency = deps.flowConcurrency ?? 2;
@@ -233,6 +234,28 @@ export function createAppKnowledgeService(deps: {
       let job = await deps.store.claimJob(jobId);
       if (!job || job.status === "cancelled") return job?.status;
       if (job.status !== "running") return job.status;
+      const cancellation = new AbortController();
+      const monitorStop = new AbortController();
+      const waitForCheck = () => new Promise<void>((resolve) => {
+        let timer: ReturnType<typeof setTimeout>;
+        const complete = () => {
+          clearTimeout(timer);
+          monitorStop.signal.removeEventListener("abort", complete);
+          resolve();
+        };
+        timer = setTimeout(complete, deps.cancelCheckIntervalMs ?? 1_000);
+        monitorStop.signal.addEventListener("abort", complete, { once: true });
+      });
+      const monitor = (async () => {
+        while (!monitorStop.signal.aborted && !cancellation.signal.aborted) {
+          await waitForCheck();
+          if (monitorStop.signal.aborted) return;
+          const current = await deps.store.workerJob(jobId);
+          if (current?.cancelRequested) {
+            cancellation.abort(new DOMException("cancelled", "AbortError"));
+          }
+        }
+      })();
       try {
         const source = await deps.evidenceSource(job.target);
         if (!source) {
@@ -311,6 +334,7 @@ export function createAppKnowledgeService(deps: {
                 parse: (raw) => parseAppKnowledgeEvidenceAnalysis(raw, item.evidenceId),
                 timeoutMs,
                 retryDelayMs,
+                signal: cancellation.signal,
               });
               result = analyzed.value;
               attemptCount = analyzed.attemptCount;
@@ -341,6 +365,7 @@ export function createAppKnowledgeService(deps: {
             analyses.set(item.evidenceId, result);
             return result;
           } catch (error) {
+            if (cancellation.signal.aborted) return undefined;
             await deps.store.recordEvidenceFailure(jobId, {
               evidenceId: item.evidenceId,
               errorCode: failureCode(error),
@@ -418,6 +443,7 @@ export function createAppKnowledgeService(deps: {
           },
           timeoutMs,
           retryDelayMs,
+          signal: cancellation.signal,
         });
         if (await stopped(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
         const currentSha = await deps.currentSourceSha256(job.target);
@@ -429,6 +455,9 @@ export function createAppKnowledgeService(deps: {
         const saved = await deps.store.completeGeneration(jobId, synthesized.value);
         return saved.reviewStatus === "draft" ? "done" : "error";
       } catch (error) {
+        if (cancellation.signal.aborted) {
+          return (await deps.store.claimJob(jobId))?.status;
+        }
         if (error instanceof EvidenceAnalysisError) {
           await deps.store.failJob(jobId, error.code, error.message);
         } else {
@@ -439,6 +468,9 @@ export function createAppKnowledgeService(deps: {
           );
         }
         return "error";
+      } finally {
+        monitorStop.abort();
+        await monitor;
       }
     },
   };

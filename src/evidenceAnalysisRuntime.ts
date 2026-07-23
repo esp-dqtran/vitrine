@@ -44,6 +44,7 @@ export async function runValidatedProviderCall<T>(input: {
   parse(value: unknown): T;
   timeoutMs: number;
   retryDelayMs: number;
+  signal?: AbortSignal;
 }): Promise<{ value: T; attemptCount: number }> {
   if (!Number.isSafeInteger(input.timeoutMs) || input.timeoutMs < 1) {
     throw new Error("Analysis timeout must be a positive integer");
@@ -53,10 +54,15 @@ export async function runValidatedProviderCall<T>(input: {
   }
   let validationError = "";
   for (let attempt = 1; attempt <= 3; attempt += 1) {
+    input.signal?.throwIfAborted();
     let raw: unknown;
     try {
-      raw = await input.call(validationError, AbortSignal.timeout(input.timeoutMs));
+      const attemptSignal = input.signal
+        ? AbortSignal.any([input.signal, AbortSignal.timeout(input.timeoutMs)])
+        : AbortSignal.timeout(input.timeoutMs);
+      raw = await input.call(validationError, attemptSignal);
     } catch (error) {
+      if (input.signal?.aborted) throw input.signal.reason;
       const failure = classified(error);
       const retryable = failure.code === "provider_unavailable"
         || failure.code === "provider_timeout"
@@ -69,6 +75,7 @@ export async function runValidatedProviderCall<T>(input: {
       continue;
     }
     try {
+      input.signal?.throwIfAborted();
       return { value: input.parse(raw), attemptCount: attempt };
     } catch (error) {
       validationError = error instanceof Error ? error.message : "Invalid analysis output";

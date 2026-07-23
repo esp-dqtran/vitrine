@@ -133,6 +133,7 @@ async function harness(options: {
   drift?: boolean;
   failEvidenceId?: string;
   cachedEvidenceId?: string;
+  blockEvidenceId?: string;
 } = {}) {
   const bodies = new Map<number, Buffer>([
     [1, await png(10)],
@@ -268,11 +269,12 @@ async function harness(options: {
     async delete() { return false; },
   };
   const calls: Array<{ evidenceId: string; previous: string | null }> = [];
+  const providerGate = Promise.withResolvers<void>();
   let active = 0;
   let maximum = 0;
   const provider: AppKnowledgeProvider = {
     model: "test-model",
-    async analyzeEvidence(prompt) {
+    async analyzeEvidence(prompt, _image, signal) {
       active += 1;
       maximum = Math.max(maximum, active);
       await Promise.resolve();
@@ -283,6 +285,15 @@ async function harness(options: {
           ? prompt.previousStepContext.evidenceId
           : null,
       });
+      if (prompt.evidenceId === options.blockEvidenceId) {
+        providerGate.resolve();
+        await new Promise<never>((_resolve, reject) =>
+          signal.addEventListener(
+            "abort",
+            () => reject(signal.reason),
+            { once: true },
+          ));
+      }
       if (prompt.evidenceId === options.failEvidenceId) throw new Error("provider exploded secret /tmp/key");
       return analysis(prompt.evidenceId);
     },
@@ -301,6 +312,8 @@ async function harness(options: {
     retryDelayMs: 0,
     screenConcurrency: 2,
     flowConcurrency: 2,
+    timeoutMs: 20,
+    cancelCheckIntervalMs: 1,
   });
   return {
     service,
@@ -312,6 +325,8 @@ async function harness(options: {
     get completed() { return completed; },
     get stale() { return stale; },
     get failed() { return failed; },
+    providerStarted: providerGate.promise,
+    cancel: () => { job.cancelRequested = true; },
   };
 }
 
@@ -342,4 +357,15 @@ test("marks source drift stale before save", async () => {
   assert.equal(await state.service.generate("1"), "stale", JSON.stringify(state.failed));
   assert.equal(state.stale, true);
   assert.equal(state.completed, undefined);
+});
+
+test("cancels an active provider call without recording evidence failure", async () => {
+  const state = await harness({ blockEvidenceId: "SCREEN-1" });
+  const generation = state.service.generate("1");
+  await state.providerStarted;
+  state.cancel();
+
+  assert.equal(await generation, "cancelled");
+  assert.equal(state.records.has("SCREEN-1"), false);
+  assert.equal(state.failed, undefined);
 });
