@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { MultimodalJsonProvider } from "./evidenceAnalysisProvider.ts";
-import { appKnowledgeProviderFromMultimodalJsonProvider } from "./appKnowledgeProvider.ts";
+import {
+  appKnowledgeBrowserPrompt,
+  appKnowledgeProviderFromMultimodalJsonProvider,
+} from "./appKnowledgeProvider.ts";
 
 test("adapts evidence and synthesis prompts to one multimodal JSON transport", async () => {
   const calls: Array<{ system: string; text: unknown; image?: unknown }> = [];
@@ -43,4 +46,18 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.ok(calls[0].image);
   assert.match(calls[1].system, /observed or inferred/i);
   assert.equal(calls[1].image, undefined);
+});
+
+test("renders browser prompts with the same instructions and structured payload", () => {
+  const rendered = appKnowledgeBrowserPrompt("Return JSON only.", {
+    evidenceId: "SCREEN-1",
+    app: "15five",
+    platform: "web",
+    kind: "screen",
+    flowContext: null,
+    previousStepContext: null,
+    validationError: "",
+  });
+  assert.match(rendered, /^Return JSON only\./);
+  assert.match(rendered, /"evidenceId":"SCREEN-1"/);
 });

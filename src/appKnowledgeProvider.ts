@@ -38,7 +38,7 @@ export interface AppKnowledgeProvider {
   ): Promise<unknown>;
 }
 
-const EVIDENCE_SYSTEM_PROMPT = [
+export const APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS = [
   "Return JSON only.",
   "Analyze only visible evidence in the supplied image and context.",
   "Record exact visible text, visible UI, purpose, page type, product area, theme, viewport, layout, content, imagery, icons, interactions, states, available actions, system feedback, and visible accessibility observations.",
@@ -46,7 +46,7 @@ const EVIDENCE_SYSTEM_PROMPT = [
   "Use exactly the supplied evidenceId and a confidence from zero to one.",
 ].join(" ");
 
-const SYNTHESIS_SYSTEM_PROMPT = [
+export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
   "Return JSON only using the canonical App Knowledge snapshot structure.",
   "Produce one shared model for Designer, Developer, and Product projections.",
   "Each claim has id, kind, text, evidenceIds, and confidence.",
@@ -56,6 +56,13 @@ const SYNTHESIS_SYSTEM_PROMPT = [
   "Full-page screenshots may produce component candidates only, never trusted components.",
 ].join(" ");
 
+export function appKnowledgeBrowserPrompt(
+  instructions: string,
+  payload: AppKnowledgeEvidencePrompt | AppKnowledgeSynthesisPrompt,
+): string {
+  return `${instructions}\n\nReturn one JSON object for this payload:\n${JSON.stringify(payload)}`;
+}
+
 export function appKnowledgeProviderFromMultimodalJsonProvider(
   provider: MultimodalJsonProvider,
 ): AppKnowledgeProvider {
@@ -63,7 +70,7 @@ export function appKnowledgeProviderFromMultimodalJsonProvider(
     model: provider.model,
     analyzeEvidence(prompt, image, signal) {
       return provider.completeJson({
-        system: EVIDENCE_SYSTEM_PROMPT,
+        system: APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS,
         text: prompt,
         image,
         signal,
@@ -71,7 +78,7 @@ export function appKnowledgeProviderFromMultimodalJsonProvider(
     },
     synthesize(prompt, signal) {
       return provider.completeJson({
-        system: SYNTHESIS_SYSTEM_PROMPT,
+        system: APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS,
         text: prompt,
         signal,
       });
