@@ -131,9 +131,9 @@ function IconMarquee() {
 // ---------- stats block ----------
 // ponytail: headline figures are marketing copy, not live counts — update by hand.
 const STATS = [
-  { n: '12', label: 'apps' },
-  { n: '25+', label: 'screens' },
-  { n: '160+', label: 'UI elements' },
+  { n: '465', label: 'apps' },
+  { n: '137K+', label: 'screens' },
+  { n: '647', label: 'UI elements' },
 ];
 const STAT_ICONS = [
   { glyph: 'coin', color: '#3b6ef6', size: 44, top: '4%', left: '8%', dur: 5.6, delay: -1.2, rotate: -6, rswing: 8 },
