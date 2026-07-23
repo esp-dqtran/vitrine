@@ -1,6 +1,7 @@
 import pg from "pg";
 import { databasePoolOptions } from "./dbPoolConfig.ts";
 import type { DesignFlow, DesignSystemSnapshot } from "./designSystem.ts";
+import type { ObjectMetadata } from "./objectStore.ts";
 import type { PublishedSearchSource } from "./searchProjection.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
 import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
@@ -192,6 +193,100 @@ export interface CrawledImage {
   viewport_height?: number | null;
   state_context?: string | null;
   captured_at?: string | null;
+}
+
+export interface AppKnowledgeEvidenceSource {
+  appId: number;
+  app: string;
+  platformId: number;
+  platform: "ios" | "android" | "web";
+  versionId: number;
+  versionNumber: number;
+  images: Array<CrawledImage & { object?: ObjectMetadata }>;
+  flows: DesignFlow[];
+}
+
+export type AppKnowledgeEvidenceQuery = (
+  text: string,
+  params?: unknown[],
+) => Promise<pg.QueryResult<Record<string, unknown>>>;
+
+export async function appKnowledgeEvidenceSource(
+  input: { app: string; platform: string; versionNumber: number },
+  runQuery: AppKnowledgeEvidenceQuery = query,
+): Promise<AppKnowledgeEvidenceSource | undefined> {
+  const result = await runQuery(
+    `WITH selected AS (
+       SELECT a.id AS app_id, a.name AS app, p.id AS platform_id, av.platform,
+         av.id AS version_id, av.version_number, av.status
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       JOIN platforms p ON p.app_id = a.id AND p.name = av.platform
+       WHERE a.name = $1 AND av.platform = $2 AND av.version_number = $3
+       LIMIT 1
+     )
+     SELECT selected.app_id, selected.app, selected.platform_id, selected.platform,
+       selected.version_id, selected.version_number,
+       COALESCE((
+         SELECT jsonb_agg(jsonb_build_object(
+           'id', i.id,
+           'app', selected.app,
+           'platform', selected.platform,
+           'image_url', i.image_url,
+           'kind', i.kind,
+           'description', i.description,
+           'analysis', i.analysis,
+           'capture_url', COALESCE(vi.source_url, i.image_url),
+           'viewport_width', vi.viewport_width,
+           'viewport_height', vi.viewport_height,
+           'state_context', vi.state_context,
+           'captured_at', vi.captured_at,
+           'object', CASE WHEN so.object_key IS NULL THEN NULL ELSE jsonb_build_object(
+             'key', so.object_key,
+             'sha256', so.sha256,
+             'byteSize', so.byte_size,
+             'contentType', so.content_type,
+             'accessClass', so.access_class
+           ) END
+         ) ORDER BY i.id)
+         FROM version_images vi
+         JOIN images i ON i.id = vi.image_id
+         LEFT JOIN stored_objects so ON so.object_key = i.object_key
+         WHERE vi.version_id = selected.version_id
+           AND i.platform_id = selected.platform_id
+           AND i.kind IN ('screen', 'flow_step', 'ui_element')
+       ), '[]'::jsonb) AS images,
+       COALESCE(
+         CASE WHEN selected.status IN ('draft', 'in_review') THEN af.flows ELSE afv.flows END,
+         '[]'::jsonb
+       ) AS flows
+     FROM selected
+     LEFT JOIN app_flows af
+       ON af.app_id = selected.app_id AND af.platform = selected.platform
+     LEFT JOIN app_flow_versions afv ON afv.version_id = selected.version_id`,
+    [input.app, input.platform, input.versionNumber],
+  );
+  const row = result.rows[0] as {
+    app_id: number;
+    app: string;
+    platform_id: number;
+    platform: "ios" | "android" | "web";
+    version_id: number;
+    version_number: number;
+    images: Array<CrawledImage & { object?: ObjectMetadata }>;
+    flows: DesignFlow[];
+  } | undefined;
+  if (!row) return undefined;
+  return {
+    appId: Number(row.app_id),
+    app: row.app,
+    platformId: Number(row.platform_id),
+    platform: row.platform,
+    versionId: Number(row.version_id),
+    versionNumber: Number(row.version_number),
+    images: row.images,
+    flows: row.flows,
+  };
 }
 
 export interface AppMetadataRow {
