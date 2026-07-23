@@ -25,8 +25,19 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
+  assert.match(html, /Analysis/);
   assert.match(html, /aria-label="Design System"/);
   assert.doesNotMatch(html, /Crawler/);
+});
+
+test('mounts App Knowledge only for the Analysis section and preserves route selections', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.match(source, /section === 'analysis' \? <AppKnowledgePanel/);
+  assert.match(source, /initialPlatform/);
+  assert.match(source, /initialVersion/);
+  assert.match(source, /initialEvidence/);
+  assert.match(source, /initialFlow/);
+  assert.match(source, /initialStep/);
 });
 
 test('does not use generic component or flow libraries', () => {

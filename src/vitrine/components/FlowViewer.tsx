@@ -13,17 +13,22 @@ export function FlowViewer({
   app,
   platform,
   version,
+  initialStep,
   onBack,
 }: {
   flow: DesignFlow<EvidenceView>;
   app?: string;
   platform?: Platform;
   version?: number;
+  initialStep?: number;
   onBack: () => void;
 }) {
-  const [lightbox, setLightbox] = useState<LightboxState>(null);
-  const [featureDocumentOpen, setFeatureDocumentOpen] = useState(false);
   const stepImages = flow.steps.map((step) => step.evidence[0]).filter((evidence) => evidence !== undefined);
+  const initialEvidence = initialStep ? flow.steps[initialStep - 1]?.evidence[0] : undefined;
+  const [lightbox, setLightbox] = useState<LightboxState>(
+    initialEvidence ? { index: stepImages.indexOf(initialEvidence) } : null,
+  );
+  const [featureDocumentOpen, setFeatureDocumentOpen] = useState(false);
 
   return (
     <div>

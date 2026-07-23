@@ -9,6 +9,7 @@ import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { AppMetadata, Screen } from '../types';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
+import { AppKnowledgePanel } from './AppKnowledgePanel';
 import { AppOverviewPanel } from './AppOverviewPanel';
 import { CuratorReviewPanel } from './CuratorReviewPanel';
 import { ExportPanel } from './ExportPanel';
@@ -26,7 +27,7 @@ const DesignSystemPanel = lazy(() =>
 );
 
 type LightboxState = { index: number } | null;
-const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
+const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'analysis', 'design-system', 'export', 'review'];
 
 const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
   const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as DetailSection);
@@ -40,20 +41,43 @@ interface ScreenDetailProps {
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   role: 'admin' | 'user';
   initialSection?: string;
-  onSectionChange?: (section: DetailSection) => void;
+  initialPlatform?: Platform;
+  initialVersion?: number;
+  initialEvidence?: string;
+  initialFlow?: string;
+  initialStep?: number;
+  onSectionChange?: (section: DetailSection, platform: Platform, version?: number) => void;
 }
 
-export function ScreenDetail({ app, onBack, role, initialSection, onSectionChange }: ScreenDetailProps) {
+export function ScreenDetail({
+  app,
+  onBack,
+  role,
+  initialSection,
+  initialPlatform,
+  initialVersion,
+  initialEvidence,
+  initialFlow,
+  initialStep,
+  onSectionChange,
+}: ScreenDetailProps) {
   const appPlatforms = (app.platforms ?? []).filter(
     (platform): platform is Platform => platform === 'ios' || platform === 'android' || platform === 'web',
   );
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(appPlatforms[0] ?? 'web');
-  const [selectedVersion, setSelectedVersion] = useState<number | undefined>();
+  const routedPlatform = initialPlatform && (appPlatforms.length === 0 || appPlatforms.includes(initialPlatform))
+    ? initialPlatform
+    : undefined;
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>(routedPlatform ?? appPlatforms[0] ?? 'web');
+  const [selectedVersion, setSelectedVersion] = useState<number | undefined>(initialVersion);
   const [section, setSectionState] = useState<DetailSection>(() => resolveSection(initialSection, role));
   useEffect(() => setSectionState(resolveSection(initialSection, role)), [initialSection, role]);
+  useEffect(() => {
+    if (routedPlatform) setSelectedPlatform(routedPlatform);
+  }, [routedPlatform]);
+  useEffect(() => setSelectedVersion(initialVersion), [initialVersion]);
   const setSection = (next: DetailSection) => {
     setSectionState(next);
-    onSectionChange?.(next);
+    onSectionChange?.(next, selectedPlatform, sectionData.resolvedVersion);
   };
 
   const sectionData = useAppSectionData({
@@ -121,6 +145,19 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [section, nextCursor, loadingMore, sectionData.resolvedVersion]);
+
+  useEffect(() => {
+    if (!initialEvidence || (section !== 'screens' && section !== 'elements')) return;
+    const match = /^(?:SCREEN|UI-ELEMENT)-(\d+)$/.exec(initialEvidence);
+    if (!match) return;
+    const imageId = Number(match[1]);
+    const index = screens.findIndex(({ id }) => id === imageId);
+    if (index >= 0) {
+      setLightbox({ index });
+      return;
+    }
+    if (nextCursor && !loadingMore) void loadMore();
+  }, [initialEvidence, section, screens, nextCursor, loadingMore]);
 
   useLayoutEffect(() => {
     if (!contentRef.current) return;
@@ -218,6 +255,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     { id: 'screens' as const, label: 'Screens' },
     { id: 'elements' as const, label: 'UI Elements' },
     { id: 'flows' as const, label: 'Flows' },
+    { id: 'analysis' as const, label: 'Analysis' },
     { id: 'design-system' as const, label: 'Design System' },
     { id: 'export' as const, label: 'Export' },
     ...(role === 'admin' ? [{ id: 'review' as const, label: 'Review' }] : []),
@@ -261,9 +299,10 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
             : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
               : sectionLoading ? <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
-                  : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
+                  : section === 'analysis' ? <AppKnowledgePanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} userRole={role} />
+                    : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-                      : section === 'flows' ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} />
+                      : section === 'flows' ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} initialFlowId={initialFlow} initialStep={initialStep} />
                         : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
         </div>
       </ReferenceDetailShell>

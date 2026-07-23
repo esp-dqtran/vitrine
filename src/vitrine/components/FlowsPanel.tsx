@@ -24,8 +24,22 @@ function groupByCategory(flows: DesignFlow<EvidenceView>[]) {
   return uncategorized ? [[UNCATEGORIZED, uncategorized] as const, ...categorized] : categorized;
 }
 
-export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlow<EvidenceView>[]; app?: string; platform?: Platform; version?: number }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function FlowsPanel({
+  flows,
+  app,
+  platform,
+  version,
+  initialFlowId,
+  initialStep,
+}: {
+  flows: DesignFlow<EvidenceView>[];
+  app?: string;
+  platform?: Platform;
+  version?: number;
+  initialFlowId?: string;
+  initialStep?: number;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialFlowId ?? null);
   const [search, setSearch] = useState('');
   const [editingDoc, setEditingDoc] = useState(false);
   const [visibleCount, setVisibleCount] = useState(FLOW_BATCH_SIZE);
@@ -37,6 +51,8 @@ export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlo
   const ordered = allGroups.flatMap(([, groupFlows]) => groupFlows);
   const visibleGroups = groupByCategory(ordered.slice(0, visibleCount));
   const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => setSelectedId(initialFlowId ?? null), [initialFlowId]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -53,7 +69,7 @@ export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlo
   if (editingDoc && app && platform) return <FlowDocEditor app={app} platform={platform} onBack={() => setEditingDoc(false)} />;
 
   const selected = flows.find((flow) => flow.id === selectedId);
-  if (selected) return <FlowViewer flow={selected} app={app} platform={platform} version={version} onBack={() => setSelectedId(null)} />;
+  if (selected) return <FlowViewer flow={selected} app={app} platform={platform} version={version} initialStep={initialStep} onBack={() => setSelectedId(null)} />;
 
   if (flows.length === 0) {
     return (

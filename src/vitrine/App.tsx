@@ -365,7 +365,18 @@ export function App() {
           app={detailApp}
           role={user?.role ?? 'user'}
           initialSection={route.name === 'app' ? route.section : undefined}
-          onSectionChange={(section) => navigate({ name: 'app', appId: detailApp.id, section })}
+          initialPlatform={route.name === 'app' ? route.platform : undefined}
+          initialVersion={route.name === 'app' ? route.version : undefined}
+          initialEvidence={route.name === 'app' ? route.evidence : undefined}
+          initialFlow={route.name === 'app' ? route.flow : undefined}
+          initialStep={route.name === 'app' ? route.step : undefined}
+          onSectionChange={(section, platform, version) => navigate({
+            name: 'app',
+            appId: detailApp.id,
+            section,
+            platform,
+            version,
+          })}
           onBack={() => navigate({ name: 'apps' })}
           collections={collections}
           onCollectionsChange={setCollections}

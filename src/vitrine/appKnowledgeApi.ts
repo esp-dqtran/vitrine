@@ -29,12 +29,23 @@ export interface AdminAppKnowledgeView {
   qualityDiagnostics: AppKnowledgeQualityDiagnostics | null;
 }
 
+export interface AppKnowledgeEvidenceReference {
+  evidenceId: string;
+  imageId: number;
+  kind: 'screen' | 'flow_step' | 'ui_element';
+  flow?: {
+    id: string;
+    stepIndex: number;
+  };
+}
+
 export interface ApprovedAppKnowledgeView {
   revision: {
     id: number;
     revisionNumber: number;
     reviewStatus: 'approved';
     createdAt: string;
+    evidence: AppKnowledgeEvidenceReference[];
     content: Omit<AppKnowledgeSnapshot, 'identity' | 'coverage'> & {
       identity: Pick<
         AppKnowledgeSnapshot['identity'],

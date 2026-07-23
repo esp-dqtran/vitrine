@@ -161,6 +161,19 @@ function publicRevision(view: AppKnowledgeSnapshotView) {
     revisionNumber: revision.revisionNumber,
     reviewStatus: revision.reviewStatus,
     createdAt: revision.createdAt,
+    evidence: revision.manifest
+      .filter(({ eligibility }) => eligibility !== "quarantined")
+      .map(({ evidenceId, imageId, kind, flow }) => ({
+        evidenceId,
+        imageId,
+        kind,
+        ...(flow ? {
+          flow: {
+            id: flow.id,
+            stepIndex: flow.stepIndex,
+          },
+        } : {}),
+      })),
     content: {
       identity: {
         app: identity.app,

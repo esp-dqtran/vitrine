@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseRoutePath, routeToPath } from './router.ts';
+import { parseRouteLocation, parseRoutePath, routeToPath } from './router.ts';
 
 test('round-trips the billing success route', () => {
   assert.deepEqual(parseRoutePath('/billing/success'), { name: 'billing-success' });
@@ -36,4 +36,47 @@ test('round-trips current and legacy Site detail tabs while keeping the base rou
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/sections'), { name: 'site-version', siteId: 1, versionId: 2, section: 'sections' });
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2, section: 'preview' }), '/sites/1/versions/2/preview');
+});
+
+test('round-trips allowlisted App evidence selections', () => {
+  const screen = {
+    name: 'app' as const,
+    appId: '15five',
+    section: 'screens',
+    platform: 'web' as const,
+    version: 1,
+    evidence: 'SCREEN-42',
+  };
+  assert.equal(
+    routeToPath(screen),
+    '/apps/15five/screens?platform=web&version=1&evidence=SCREEN-42',
+  );
+  assert.deepEqual(
+    parseRouteLocation('/apps/15five/screens', '?platform=web&version=1&evidence=SCREEN-42'),
+    screen,
+  );
+  const flow = {
+    name: 'app' as const,
+    appId: '15five',
+    section: 'flows',
+    platform: 'web' as const,
+    version: 1,
+    flow: 'onboarding',
+    step: 3,
+  };
+  assert.equal(
+    routeToPath(flow),
+    '/apps/15five/flows?platform=web&version=1&flow=onboarding&step=3',
+  );
+  assert.deepEqual(
+    parseRouteLocation('/apps/15five/flows', '?platform=web&version=1&flow=onboarding&step=3'),
+    flow,
+  );
+});
+
+test('drops unknown or invalid App selection parameters', () => {
+  assert.deepEqual(
+    parseRouteLocation('/apps/linear/analysis', '?platform=windows&version=-1&secret=x'),
+    { name: 'app', appId: 'linear', section: 'analysis' },
+  );
 });

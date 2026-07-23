@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { Platform } from '../platformFromUrl.ts';
 
 export type Route =
   | { name: 'landing' }
@@ -9,7 +10,16 @@ export type Route =
   | { name: 'signin' }
   | { name: 'search' }
   | { name: 'apps' }
-  | { name: 'app'; appId: string; section?: string }
+  | {
+      name: 'app';
+      appId: string;
+      section?: string;
+      platform?: Platform;
+      version?: number;
+      evidence?: string;
+      flow?: string;
+      step?: number;
+    }
   | { name: 'sites' }
   | { name: 'site-version'; siteId: number; versionId: number; section?: string }
   | { name: 'projects' }
@@ -67,6 +77,42 @@ export function parseRoutePath(pathname: string): Route {
   return { name: 'landing' };
 }
 
+function positive(value: string | null): number | undefined {
+  if (!value || !/^[1-9]\d*$/.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+function bounded(value: string | null, pattern: RegExp, maximum = 240): string | undefined {
+  return value && value.length <= maximum && pattern.test(value) ? value : undefined;
+}
+
+export function parseRouteLocation(pathname: string, search = ''): Route {
+  const route = parseRoutePath(pathname);
+  if (route.name !== 'app') return route;
+  const params = new URLSearchParams(search);
+  const rawPlatform = params.get('platform');
+  const platform = rawPlatform === 'ios' || rawPlatform === 'android' || rawPlatform === 'web'
+    ? rawPlatform
+    : undefined;
+  const version = positive(params.get('version'));
+  const evidence = bounded(
+    params.get('evidence'),
+    /^(?:SCREEN|FLOW|UI-ELEMENT)-[A-Za-z0-9-]+$/,
+    300,
+  );
+  const flow = bounded(params.get('flow'), /^[A-Za-z0-9][A-Za-z0-9._:-]*$/);
+  const step = positive(params.get('step'));
+  return {
+    ...route,
+    ...(platform ? { platform } : {}),
+    ...(version ? { version } : {}),
+    ...(evidence ? { evidence } : {}),
+    ...(flow ? { flow } : {}),
+    ...(step ? { step } : {}),
+  };
+}
+
 export function routeToPath(route: Route): string {
   switch (route.name) {
     case 'landing': return '/landing';
@@ -84,19 +130,36 @@ export function routeToPath(route: Route): string {
     case 'feature-document': return `/feature-documents/${route.documentId}`;
     case 'feature-document-share': return `/feature-document-shares/${encodeURIComponent(route.token)}`;
     case 'admin': return '/admin';
-    case 'app': return `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${route.section}` : ''}`;
+    case 'app': {
+      const path = `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;
+      const params = new URLSearchParams();
+      if (route.platform) params.set('platform', route.platform);
+      if (route.version) params.set('version', String(route.version));
+      if (route.evidence) params.set('evidence', route.evidence);
+      if (route.flow) params.set('flow', route.flow);
+      if (route.step) params.set('step', String(route.step));
+      const search = params.toString();
+      return search ? `${path}?${search}` : path;
+    }
   }
 }
 
 export function navigate(route: Route) {
   const path = routeToPath(route);
-  if (path === window.location.pathname) return;
+  if (path === `${window.location.pathname}${window.location.search}`) return;
   window.history.pushState(null, '', path);
   // pushState doesn't fire popstate itself — dispatch one so useRoute() re-reads the path.
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
 export function useRoute(): Route {
-  const pathname = useSyncExternalStore(subscribe, () => window.location.pathname);
-  return parseRoutePath(pathname);
+  const location = useSyncExternalStore(
+    subscribe,
+    () => `${window.location.pathname}${window.location.search}`,
+  );
+  const split = location.indexOf('?');
+  return parseRouteLocation(
+    split < 0 ? location : location.slice(0, split),
+    split < 0 ? '' : location.slice(split),
+  );
 }

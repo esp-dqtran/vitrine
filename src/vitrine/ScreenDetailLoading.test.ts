@@ -9,7 +9,7 @@ test('keeps Overview free of section and design-system activation', async () => 
   ]);
   assert.match(detail, /<AppOverviewPanel app=\{app\}/);
   assert.match(sectionHook, /case 'overview': return \[\]/);
-  assert.doesNotMatch(detail, /initialVersion|initialNextCursor|app\.screens/);
+  assert.doesNotMatch(detail, /initialNextCursor|app\.screens/);
 });
 
 test('maps visible sections to dedicated lazy dependencies', async () => {

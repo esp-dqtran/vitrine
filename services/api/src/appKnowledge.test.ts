@@ -354,8 +354,12 @@ test("ordinary entitled reads expose only the approved revision and deterministi
   const body = await response.json() as Record<string, unknown>;
   assert.deepEqual(Object.keys(body).sort(), ["projection", "revision"]);
   assert.equal((body.projection as { role: string }).role, "developer");
+  assert.deepEqual(
+    (body.revision as { evidence: unknown }).evidence,
+    [{ evidenceId: "SCREEN-1", imageId: 9, kind: "screen" }],
+  );
   const serialized = JSON.stringify(body);
-  assert.doesNotMatch(serialized, /vision-model|reviewEvents|errorMessage|quarantined/);
+  assert.doesNotMatch(serialized, /vision-model|reviewEvents|errorMessage|quarantined|sha256|byteSize/);
   approvedView = undefined;
   assert.equal((await fetch(`${base}/apps/linear/analysis?platform=web&version=2`)).status, 404);
 });
