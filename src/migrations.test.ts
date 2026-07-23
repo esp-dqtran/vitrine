@@ -27,6 +27,12 @@ async function ensureMigrationTestDatabase(): Promise<string | undefined> {
     return "Postgres not running — docker compose up -d postgres";
   }
   try {
+    const vector = await client.query(
+      "SELECT 1 FROM pg_available_extensions WHERE name = 'vector'",
+    );
+    if (vector.rowCount === 0) {
+      return "Postgres does not provide pgvector — docker compose --profile legacy-db up -d postgres";
+    }
     await client.query("CREATE DATABASE astryx_migrations_test");
   } catch (error) {
     if ((error as { code?: string }).code !== "42P04") throw error;
@@ -60,6 +66,38 @@ test("GetDesign migration records origin and reversible import history", async (
   assert.match(migration, /CREATE TABLE design_system_import_history/);
   assert.match(migration, /previous_snapshot JSONB/);
   assert.match(migration, /rolled_back_at TIMESTAMPTZ/);
+});
+
+test("adaptive search migration defines versioned vector documents and indexing triggers", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0017_adaptive_search.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /CREATE EXTENSION IF NOT EXISTS vector/);
+  assert.match(migration, /PRIMARY KEY \(index_version, document_id\)/);
+  assert.match(migration, /embedding VECTOR\(1536\)/);
+  assert.match(migration, /search_vector TSVECTOR GENERATED ALWAYS/);
+  assert.match(migration, /PRIMARY KEY \(app_id, platform\)/);
+  assert.match(migration, /CREATE TRIGGER images_search_queue/);
+});
+
+test("adaptive search migration creates versioned documents and a deduplicated queue", { skip: postgresSkipReason }, async (t) => {
+  const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
+  t.after(() => pool.end());
+  await applyMigrations(pool);
+
+  const columns = await pool.query<{ column_name: string }>(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_name = 'search_documents' ORDER BY column_name`,
+  );
+  assert.ok(columns.rows.some(({ column_name }) => column_name === "embedding"));
+  assert.ok(columns.rows.some(({ column_name }) => column_name === "search_vector"));
+
+  const queueKey = await pool.query<{ constraint_name: string }>(
+    `SELECT constraint_name FROM information_schema.table_constraints
+     WHERE table_name = 'search_index_queue' AND constraint_type = 'PRIMARY KEY'`,
+  );
+  assert.equal(queueKey.rowCount, 1);
 });
 
 test("migration verification requires explicit disposable-database opt-in", () => {
