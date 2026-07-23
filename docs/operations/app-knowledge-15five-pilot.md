@@ -4,6 +4,33 @@ This pilot is the release gate for App Knowledge extraction and analysis. It
 targets one capture at a time. There is no catalog-wide App Knowledge queue in
 this release.
 
+## ChatGPT browser provider
+
+Set:
+
+```env
+APP_KNOWLEDGE_PROVIDER=chatgpt-browser
+APP_KNOWLEDGE_BROWSER_CONCURRENCY=2
+```
+
+The local worker reuses `~/.config/chatgpt-cli/profile`. Start the worker
+headed for the first pilot:
+
+```bash
+HEADLESS=false npm run service:import-worker
+```
+
+If ChatGPT is logged out, authenticate in the window opened by the worker,
+allow the current job to fail safely, then resume the same durable App
+Knowledge job. Do not copy or inspect browser cookies. Containerized headless
+workers require an already-authenticated Linux profile volume and are not the
+first-pilot path.
+
+The two tabs share one login, but each evidence request and the final synthesis
+start a fresh conversation. Browser selector drift is treated as a safe
+provider-unavailable failure. Completed evidence, cache entries, and review
+records remain durable across worker restarts and job resume.
+
 ## Automated gate
 
 Run the read-only verifier against the intended capture version:
