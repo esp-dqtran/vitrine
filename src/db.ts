@@ -493,60 +493,71 @@ export interface AdminAppPage {
 export async function adminAppPage(cursor?: string, requestedLimit = 24): Promise<AdminAppPage> {
   const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 24, 1), 48);
   const res = await query<AdminGalleryPageRow>(
-    `WITH all_apps AS (
+    `WITH eligible_apps AS (
        SELECT a.id, a.name, a.icon_url, a.category,
               a.display_name, a.website_url, a.accent_color,
               COUNT(*) OVER()::integer AS total_apps
        FROM apps a
        WHERE EXISTS (
-           SELECT 1 FROM platforms p JOIN images i ON i.platform_id = p.id
-           WHERE p.app_id = a.id AND i.kind = 'screen'
-         )
+         SELECT 1
+         FROM platforms p
+         JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+         WHERE p.app_id = a.id
+       )
      ), candidate_apps AS (
        SELECT *
-       FROM all_apps
+       FROM eligible_apps
        WHERE ($1::text IS NULL OR name > $1)
        ORDER BY name
        LIMIT ($2::integer + 1)
      ), page_apps AS (
        SELECT * FROM candidate_apps ORDER BY name LIMIT $2
-     ), counts AS (
-       SELECT pa.id AS app_id, COUNT(*)::integer AS total_screens,
-              COUNT(i.analysis)::integer AS analyzed_screens,
-              MAX(i.created_at) AS last_captured_at
+     ), page_image_facts AS MATERIALIZED (
+       SELECT pa.id AS app_id, p.name AS platform, i.id AS image_id,
+              i.created_at, (i.analysis IS NOT NULL) AS analyzed
        FROM page_apps pa
        JOIN platforms p ON p.app_id = pa.id
        JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
-       GROUP BY pa.id
-     ), ranked_images AS (
-       SELECT i.id, pa.name AS app, p.name AS platform, i.image_url, i.kind,
-              i.description, i.analysis, pa.icon_url, pa.category,
-              pa.display_name, pa.website_url, pa.accent_color,
-              i.image_url AS capture_url, i.created_at AS captured_at,
-              ROW_NUMBER() OVER (PARTITION BY pa.id ORDER BY i.created_at ASC, i.id ASC) AS preview_rank,
-              pa.id AS app_id, pa.total_apps
-       FROM page_apps pa
-       JOIN platforms p ON p.app_id = pa.id
-       JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+     ), app_counts AS (
+       SELECT app_id, COUNT(*)::integer AS total_screens,
+              COUNT(*) FILTER (WHERE analyzed)::integer AS analyzed_screens,
+              MAX(created_at) AS last_captured_at
+       FROM page_image_facts
+       GROUP BY app_id
+     ), app_platforms AS (
+       SELECT app_id,
+              ARRAY_AGG(platform ORDER BY
+                CASE platform WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END,
+                platform
+              ) AS available_platforms
+       FROM (
+         SELECT DISTINCT app_id, platform FROM page_image_facts
+       ) distinct_platforms
+       GROUP BY app_id
+     ), ranked_preview_ids AS (
+       SELECT app_id, platform, image_id,
+              ROW_NUMBER() OVER (
+                PARTITION BY app_id ORDER BY created_at ASC, image_id ASC
+              ) AS preview_rank
+       FROM page_image_facts
+     ), preview_ids AS (
+       SELECT app_id, platform, image_id, preview_rank
+       FROM ranked_preview_ids
+       WHERE preview_rank <= 5
      )
-     SELECT ri.id, ri.app, ri.platform, ri.image_url, ri.kind, ri.description, ri.analysis,
-            ri.icon_url, ri.category, ri.display_name, ri.website_url, ri.accent_color,
-            ri.capture_url, ri.captured_at,
+     SELECT i.id, pa.name AS app, pi.platform, i.image_url, i.kind,
+            i.description, i.analysis, pa.icon_url, pa.category,
+            pa.display_name, pa.website_url, pa.accent_color,
+            i.image_url AS capture_url, i.created_at AS captured_at,
             c.total_screens, c.analyzed_screens, c.last_captured_at,
-            ri.total_apps,
-            ARRAY(
-              SELECT p2.name
-              FROM platforms p2
-              JOIN images i2 ON i2.platform_id = p2.id AND i2.kind = 'screen'
-              WHERE p2.app_id = ri.app_id
-              GROUP BY p2.name
-              ORDER BY CASE p2.name WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END, p2.name
-            ) AS available_platforms,
+            pa.total_apps, ap.available_platforms,
             ((SELECT COUNT(*) FROM candidate_apps) > $2)::boolean AS has_more
-     FROM ranked_images ri
-     JOIN counts c ON c.app_id = ri.app_id
-     WHERE ri.preview_rank <= 5
-     ORDER BY ri.app, ri.preview_rank`,
+     FROM preview_ids pi
+     JOIN page_apps pa ON pa.id = pi.app_id
+     JOIN images i ON i.id = pi.image_id
+     JOIN app_counts c ON c.app_id = pi.app_id
+     JOIN app_platforms ap ON ap.app_id = pi.app_id
+     ORDER BY pa.name, pi.preview_rank`,
     [cursor ?? null, limit],
   );
   const lastApp = res.rows.at(-1)?.app ?? null;

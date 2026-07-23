@@ -61,6 +61,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     listPublishedDesignSystems,
     listPublishedFlowSets,
     appMetadata,
+    adminAppPage,
     appEvidencePage,
     getVersionFlows,
     flowEvidenceImages,
@@ -169,6 +170,14 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal(adminMetadata?.total_ui_elements, 1);
   assert.equal(adminMetadata?.total_flows, 2);
   assert.deepEqual(adminMetadata?.available_platforms, ["web", "ios"]);
+  const scopeGallery = await adminAppPage(undefined, 24);
+  assert.equal(scopeGallery.total, 1);
+  assert.equal(scopeGallery.nextCursor, null);
+  assert.deepEqual(scopeGallery.images.map(({ id }) => id), [scopedWebImage, scopedIosImage]);
+  assert.ok(scopeGallery.images.every(({ total_screens }) => total_screens === 2));
+  assert.ok(scopeGallery.images.every(({ analyzed_screens }) => analyzed_screens === 2));
+  assert.ok(scopeGallery.images.every(({ available_platforms }) =>
+    JSON.stringify(available_platforms) === JSON.stringify(["web", "ios"])));
   const customerMetadata = await appMetadata("scope-app", true);
   assert.equal(customerMetadata?.total_screens, 2);
   assert.equal(customerMetadata?.total_ui_elements, 1);
@@ -205,6 +214,15 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal(duplicateLoginId, airbnbLoginId);
   const airbnbSearchId = await insertImage("airbnb", "web", "https://cdn.example.com/b.png");
   await insertImage("linear", "web", "https://cdn.example.com/linear.png");
+  const firstGalleryPage = await adminAppPage(undefined, 1);
+  assert.equal(firstGalleryPage.total, 2);
+  assert.equal(firstGalleryPage.nextCursor, "airbnb");
+  assert.deepEqual([...new Set(firstGalleryPage.images.map(({ app }) => app))], ["airbnb"]);
+
+  const secondGalleryPage = await adminAppPage(firstGalleryPage.nextCursor ?? undefined, 1);
+  assert.equal(secondGalleryPage.total, 2);
+  assert.equal(secondGalleryPage.nextCursor, null);
+  assert.deepEqual([...new Set(secondGalleryPage.images.map(({ app }) => app))], ["linear"]);
 
   // Two apps, two platforms, three images — duplicate URLs are still ignored.
   assert.equal((await query("SELECT 1 FROM apps")).rowCount, 2);
