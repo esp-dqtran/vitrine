@@ -81,6 +81,30 @@ test("adaptive search migration defines versioned vector documents and indexing 
   assert.match(migration, /CREATE TRIGGER images_search_queue/);
 });
 
+test("App Knowledge migration defines immutable evidence, revisions, review, cache, and job notifications", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0018_app_knowledge_analysis.sql", import.meta.url),
+    "utf8",
+  );
+  for (const table of [
+    "app_knowledge_snapshots",
+    "app_knowledge_revisions",
+    "app_knowledge_jobs",
+    "app_knowledge_job_evidence",
+    "app_knowledge_evidence_cache",
+    "app_knowledge_review_events",
+    "app_knowledge_evidence_overrides",
+  ]) {
+    assert.match(migration, new RegExp(`CREATE TABLE ${table}`));
+  }
+  assert.match(migration, /done_count <= total_count/);
+  assert.match(migration, /FOREIGN KEY \(id, current_revision_id\)/);
+  assert.match(migration, /FOREIGN KEY \(id, approved_revision_id\)/);
+  assert.match(migration, /UNIQUE \(job_id, evidence_id\)/);
+  assert.match(migration, /UNIQUE \(version_id, image_id\)/);
+  assert.match(migration, /pg_notify\('app_knowledge_jobs'/);
+});
+
 test("adaptive search migration creates versioned documents and a deduplicated queue", { skip: postgresSkipReason }, async (t) => {
   const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
   t.after(() => pool.end());
