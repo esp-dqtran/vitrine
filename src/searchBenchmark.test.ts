@@ -37,7 +37,8 @@ test("search release surfaces keep bounded SQL and accessible interaction contra
   assert.match(store, /Math\.min\(10/);
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /role="combobox"/);
-  assert.match(page, /aria-current=/);
+  assert.match(page, /role="tablist"/);
+  assert.match(page, /aria-selected=/);
   assert.match(card, /aria-label=\{`Preview/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /advanced-search-preview/);

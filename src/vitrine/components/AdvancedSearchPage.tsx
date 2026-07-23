@@ -70,12 +70,14 @@ export function AdvancedSearchPage({
             aria-label="Search the research library"
           />
         </form>
-        <nav className="advanced-search-tabs" aria-label="Result type">
+        <nav className="advanced-search-tabs" aria-label="Result type" role="tablist">
           {tabs.map(([type, label]) => (
             <button
               key={type}
               type="button"
-              aria-current={state.type === type ? "page" : undefined}
+              role="tab"
+              aria-selected={state.type === type}
+              tabIndex={state.type === type ? 0 : -1}
               onClick={() => commit({ ...state, type })}
             >{label}</button>
           ))}
