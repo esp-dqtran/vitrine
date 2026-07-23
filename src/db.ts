@@ -1,6 +1,7 @@
 import pg from "pg";
 import { databasePoolOptions } from "./dbPoolConfig.ts";
 import type { DesignFlow, DesignSystemSnapshot } from "./designSystem.ts";
+import type { PublishedSearchSource } from "./searchProjection.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
 import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
 
@@ -933,6 +934,71 @@ export async function versionImages(app: string, platform: string, versionNumber
     [app, platform, versionNumber ?? null, kinds]
   );
   return res.rows;
+}
+
+export async function publishedSearchSource(
+  appId: number,
+  platform: string,
+): Promise<PublishedSearchSource | undefined> {
+  const version = await query<{
+    id: number;
+    app_id: number;
+    app: string;
+    category: string | null;
+    platform: string;
+    published_at: string;
+  }>(
+    `SELECT av.id, av.app_id, a.name AS app, a.category, av.platform, av.published_at
+     FROM app_versions av JOIN apps a ON a.id = av.app_id
+     WHERE av.app_id = $1 AND av.platform = $2 AND av.status = 'published'
+     ORDER BY av.version_number DESC LIMIT 1`,
+    [appId, platform],
+  );
+  const selected = version.rows[0];
+  if (!selected) return undefined;
+
+  const [images, system, flows] = await Promise.all([
+    query<CrawledImage>(
+      `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+         vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height, vi.state_context,
+         vi.captured_at, a.icon_url, a.category
+       FROM version_images vi
+       JOIN app_versions av ON av.id = vi.version_id
+       JOIN apps a ON a.id = av.app_id
+       JOIN images i ON i.id = vi.image_id
+       JOIN platforms p ON p.id = i.platform_id
+       WHERE vi.version_id = $1 AND i.kind IN ('screen', 'ui_element')
+       ORDER BY i.id`,
+      [selected.id],
+    ),
+    query<{ snapshot: DesignSystemSnapshot }>(
+      "SELECT snapshot FROM design_system_versions WHERE version_id = $1",
+      [selected.id],
+    ),
+    query<{ flows: DesignFlow[] }>(
+      "SELECT flows FROM app_flow_versions WHERE version_id = $1",
+      [selected.id],
+    ),
+  ]);
+
+  return {
+    version: {
+      id: selected.id,
+      appId: selected.app_id,
+      app: selected.app,
+      platform: selected.platform,
+      ...(selected.category ? { category: selected.category } : {}),
+      publishedAt: new Date(selected.published_at).toISOString(),
+    },
+    images: images.rows.map((image) => ({
+      ...image,
+      ...(image.captured_at
+        ? { captured_at: new Date(image.captured_at).toISOString() }
+        : {}),
+    })),
+    ...(system.rows[0] ? { system: system.rows[0].snapshot } : {}),
+    flows: flows.rows[0]?.flows ?? [],
+  };
 }
 
 export async function publishedImages(): Promise<CrawledImage[]> {
