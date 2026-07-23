@@ -1,0 +1,43 @@
+[
+  {"id":"exact-linear-checkout","category":"exact","query":"Linear checkout","filters":{},"expectedSourceIds":["app:linear:web"],"excludedSourceIds":[]},
+  {"id":"exact-checkout-summary","category":"exact","query":"Checkout summary","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+  {"id":"exact-mobile-checkout","category":"exact","query":"Mobile checkout","filters":{},"expectedSourceIds":["screen:mobile"],"excludedSourceIds":[]},
+  {"id":"exact-order-complete","category":"exact","query":"Order complete","filters":{},"expectedSourceIds":["screen:semantic"],"excludedSourceIds":[]},
+  {"id":"exact-linear-filtered","category":"exact","query":"Linear checkout","filters":{"platform":["web"]},"expectedSourceIds":["app:linear:web"],"excludedSourceIds":[]},
+
+  {"id":"intent-checkout","category":"intent","query":"checkout","filters":{},"expectedSourceIds":["app:linear:web","screen:cross","screen:mobile"],"excludedSourceIds":[]},
+  {"id":"intent-confirmation","category":"intent","query":"checkout confirmation","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+  {"id":"intent-mobile-sheet","category":"intent","query":"mobile checkout bottom sheet","filters":{"platform":["ios"]},"expectedSourceIds":["screen:mobile"],"excludedSourceIds":[]},
+  {"id":"intent-order-complete","category":"intent","query":"order complete","filters":{},"expectedSourceIds":["screen:semantic"],"excludedSourceIds":[]},
+  {"id":"intent-checkout-modal","category":"intent","query":"checkout modal","filters":{"platform":["web"]},"expectedSourceIds":["app:linear:web","screen:cross"],"excludedSourceIds":[]},
+
+  {"id":"flow-confirmation","category":"flow","query":"checkout confirmation","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+  {"id":"flow-linear-checkout","category":"flow","query":"linear checkout","filters":{},"expectedSourceIds":["app:linear:web","screen:cross"],"excludedSourceIds":[]},
+  {"id":"flow-mobile-checkout","category":"flow","query":"mobile checkout","filters":{"platform":["ios"]},"expectedSourceIds":["screen:mobile"],"excludedSourceIds":[]},
+  {"id":"flow-order-complete","category":"flow","query":"order complete","filters":{},"expectedSourceIds":["screen:semantic"],"excludedSourceIds":[]},
+  {"id":"flow-checkout-summary","category":"flow","query":"checkout summary","filters":{"productArea":["Checkout"]},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+
+  {"id":"visible-linear-confirmation","category":"visible-text","query":"linear checkout confirmation","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+  {"id":"visible-bottom-sheet","category":"visible-text","query":"bottom sheet","filters":{},"expectedSourceIds":["screen:mobile"],"excludedSourceIds":[]},
+  {"id":"visible-modal","category":"visible-text","query":"modal","filters":{"platform":["web"]},"expectedSourceIds":["app:linear:web","screen:cross"],"excludedSourceIds":[]},
+  {"id":"visible-summary","category":"visible-text","query":"checkout summary","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+  {"id":"visible-order","category":"visible-text","query":"order complete","filters":{},"expectedSourceIds":["screen:semantic"],"excludedSourceIds":[]},
+
+  {"id":"ambiguous-checkout","category":"ambiguous","query":"checkout","filters":{},"expectedSourceIds":["app:linear:web","screen:cross","screen:mobile"],"excludedSourceIds":[]},
+  {"id":"ambiguous-linear","category":"ambiguous","query":"Linear","filters":{},"expectedSourceIds":["app:linear:web","screen:cross"],"excludedSourceIds":[]},
+  {"id":"ambiguous-mobile","category":"ambiguous","query":"Mobile","filters":{},"expectedSourceIds":["screen:mobile"],"excludedSourceIds":[]},
+  {"id":"ambiguous-order","category":"ambiguous","query":"Order","filters":{},"expectedSourceIds":["screen:semantic"],"excludedSourceIds":[]},
+  {"id":"ambiguous-summary","category":"ambiguous","query":"summary","filters":{},"expectedSourceIds":["screen:cross"],"excludedSourceIds":[]},
+
+  {"id":"authorization-draft-name","category":"authorization","query":"Draft Secret","filters":{},"expectedSourceIds":[],"excludedSourceIds":["app:draft-secret:web"]},
+  {"id":"authorization-draft-prefix","category":"authorization","query":"Draft","filters":{},"expectedSourceIds":[],"excludedSourceIds":["app:draft-secret:web"]},
+  {"id":"authorization-secret","category":"authorization","query":"Secret","filters":{},"expectedSourceIds":[],"excludedSourceIds":["app:draft-secret:web"]},
+  {"id":"authorization-draft-web","category":"authorization","query":"Draft Secret","filters":{"platform":["web"]},"expectedSourceIds":[],"excludedSourceIds":["app:draft-secret:web"]},
+  {"id":"authorization-draft-app","category":"authorization","query":"Draft Secret","filters":{"app":["Draft Secret"]},"expectedSourceIds":[],"excludedSourceIds":["app:draft-secret:web"]},
+
+  {"id":"zero-gibberish-a","category":"zero-result","query":"zzzxxyy nonexistent","filters":{},"expectedSourceIds":[],"excludedSourceIds":[]},
+  {"id":"zero-gibberish-b","category":"zero-result","query":"quantum submarine dashboard","filters":{},"expectedSourceIds":[],"excludedSourceIds":[]},
+  {"id":"zero-filter","category":"zero-result","query":"checkout","filters":{"platform":["android"]},"expectedSourceIds":[],"excludedSourceIds":[]},
+  {"id":"zero-product-area","category":"zero-result","query":"checkout","filters":{"productArea":["Healthcare"]},"expectedSourceIds":[],"excludedSourceIds":[]},
+  {"id":"zero-component","category":"zero-result","query":"checkout","filters":{"component":["Date picker"]},"expectedSourceIds":[],"excludedSourceIds":[]}
+]

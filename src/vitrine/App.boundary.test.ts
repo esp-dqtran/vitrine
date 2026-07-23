@@ -10,6 +10,21 @@ test('keeps the Apps shell independent from job-list loading', async () => {
   assert.doesNotMatch(source, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 
+test('keeps adaptive Search and Quick Search in dedicated state boundaries', async () => {
+  const [appSource, pageSource, quickSource, apiSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AdvancedSearchPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/QuickSearch.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./advancedSearchApi.ts', import.meta.url), 'utf8'),
+  ]);
+  assert.match(appSource, /VITE_ADVANCED_SEARCH_ENABLED/);
+  assert.match(appSource, /<AdvancedSearchPage/);
+  assert.match(appSource, /<QuickSearch/);
+  assert.match(appSource, /<CommandPalette/);
+  assert.match(pageSource, /useAdvancedSearch/);
+  assert.doesNotMatch(`${pageSource}\n${quickSource}\n${apiSource}`, /\/api\/jobs|jobsApi|useJobs/);
+});
+
 test('keeps Sites routes ahead of Apps branches and free from job-list reads', async () => {
   const [appSource, sitesSource, sitesApiSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),

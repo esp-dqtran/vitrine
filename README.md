@@ -77,6 +77,35 @@ Opens on `http://localhost:5173`, proxying `/api` to the API service (`VITRINE_A
 npm test
 ```
 
+## Adaptive Hybrid Search rollout
+
+Advanced Search combines PostgreSQL full-text retrieval with optional 1536-dimension semantic embeddings. Search documents are versioned independently from published catalog versions, and the existing deterministic search remains the rollback path.
+
+Roll out in this order:
+
+1. Confirm the target PostgreSQL server permits `CREATE EXTENSION vector`.
+2. Apply migrations with `npm run db:migrate`, then verify with `npm run db:check` and `npm run db:verify`.
+3. Deploy `search-index-worker` while both `ADVANCED_SEARCH_ENABLED=false` and `VITE_ADVANCED_SEARCH_ENABLED=false`.
+4. Queue every published app/platform once with `npm run search:index:backfill`.
+5. Wait until `search_index_queue` has no `queued` or `running` rows. Run `npm run search:verify-relevance` and `npm run search:benchmark` against the verification database.
+6. Enable `ADVANCED_SEARCH_ENABLED=true` for the intended API cohort.
+7. Build the frontend with `VITE_ADVANCED_SEARCH_ENABLED=true` only after the backend gates pass.
+
+Configuration:
+
+```dotenv
+ADVANCED_SEARCH_ENABLED=false
+VITE_ADVANCED_SEARCH_ENABLED=false
+SEARCH_EMBEDDING_BASE_URL=https://api.openai.com/v1
+SEARCH_EMBEDDING_API_KEY=
+SEARCH_EMBEDDING_MODEL=text-embedding-3-small
+SEARCH_INDEX_WORKER_ID=
+```
+
+The index worker runs even while the API flag is disabled. Without an embedding key, indexing and queries remain available in keyword-only degraded mode. The backfill is enqueue-only and safe to rerun because `(app_id, platform)` is the queue key.
+
+For rollback, disable both flags and redeploy the API/frontend. This immediately routes `/search` back to deterministic catalog search and restores the existing Command Palette. Leave `search_documents` and the queue intact for diagnosis; they are not read while the backend flag is disabled.
+
 ## Autonomous app-flow discovery
 
 Administrators can open an app's Intelligent crawler workspace, enter a public app URL, upload a shared Playwright storage state, and start a deep autonomous crawl. The parent run first builds a cited product dossier, then delegates bounded missions to concurrent discovery agents. Read missions may overlap; authentication and mutations use durable single-account leases. Complete high-confidence paths become ordered, evidence-backed Flows, while uncertain paths remain drafts with exact blockers.

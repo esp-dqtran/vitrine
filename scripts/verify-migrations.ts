@@ -94,7 +94,13 @@ const FEATURE_DOCUMENT_TABLES = [
   "feature_documents",
 ] as const;
 
+const SEARCH_TABLES = [
+  "search_documents",
+  "search_index_queue",
+] as const;
+
 const AUXILIARY_MIGRATION_TABLES = [
+  "design_system_import_history",
   "flow_documents",
   "organization_members",
   "organizations",
@@ -106,7 +112,7 @@ const ADDED_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>
   app_flows: ["platform"],
   app_versions: ["platform"],
   crawl_runs: ["run_kind", "parent_run_id", "platform", "allow_all", "pause_requested_at"],
-  design_systems: ["platform"],
+  design_systems: ["origin", "platform"],
   images: ["object_key", "thumbnail_object_key"],
   exports: ["object_key"],
   crawl_run_steps: ["failure_object_key"],
@@ -287,6 +293,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...PUBLIC_PAGE_TABLES,
       ...REFERRAL_TABLES,
       ...FEATURE_DOCUMENT_TABLES,
+      ...SEARCH_TABLES,
       ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();

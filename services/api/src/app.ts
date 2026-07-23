@@ -144,6 +144,13 @@ import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import { mountSitesRoutes } from "./sites.ts";
+import { PostgresSearchStore } from "../../../src/searchStore.ts";
+import {
+  createSearchService,
+  hydrateSearchMedia,
+  searchRequestFromExpressQuery,
+  sendSearchError,
+} from "./search.ts";
 import { canonicalPublicPageUrl } from "../../../src/publicPage.ts";
 import { publishPublicPageJob } from "../../../src/publicPageQueue.ts";
 import { createPublicPageStore } from "../../../src/publicPageStore.ts";
@@ -414,6 +421,11 @@ const defaults = {
   featureDocumentProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
   featureDocumentPromptVersion: 1,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
+  advancedSearchEnabled: false,
+  adaptiveSearch: createSearchService({
+    store: new PostgresSearchStore(pool),
+    embedder: null,
+  }),
 };
 type ApiDeps = typeof defaults;
 
@@ -1595,7 +1607,67 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.get("/search/suggestions", async (req, res) => {
+    if (!deps.advancedSearchEnabled) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    if (await effectiveCustomerPlan(res) !== "pro") {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const prefix = optionalQuery(req.query.prefix) ?? "";
+    const rawLimit = optionalQuery(req.query.limit);
+    if (
+      prefix.length > 100
+      || (rawLimit !== undefined
+        && (!/^\d+$/.test(rawLimit) || Number(rawLimit) < 1 || Number(rawLimit) > 10))
+    ) {
+      res.status(400).json({ error: "invalid search suggestions" });
+      return;
+    }
+    try {
+      res.json({
+        items: await deps.adaptiveSearch.suggest(prefix, {
+          userId: res.locals.user.id,
+          role: res.locals.user.role,
+          plan: "pro",
+          publishedOnly: true,
+        }, rawLimit ? Number(rawLimit) : 10),
+      });
+    } catch (error) {
+      sendSearchError(res, error);
+    }
+  });
+
   app.get("/search", async (req, res) => {
+    if (deps.advancedSearchEnabled) {
+      if (await effectiveCustomerPlan(res) !== "pro") {
+        res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+        return;
+      }
+      try {
+        const request = searchRequestFromExpressQuery(req.query as Record<string, unknown>);
+        const access = {
+          userId: res.locals.user.id,
+          role: res.locals.user.role,
+          plan: "pro",
+          publishedOnly: true,
+        };
+        const relatedTo = optionalQuery(req.query.relatedTo);
+        if (relatedTo && relatedTo.length > 240) {
+          res.status(400).json({ error: "invalid related search source" });
+          return;
+        }
+        const result = relatedTo
+          ? await deps.adaptiveSearch.related(relatedTo, access, request.limit)
+          : await deps.adaptiveSearch.search(request, access);
+        res.json(hydrateSearchMedia(result));
+      } catch (error) {
+        sendSearchError(res, error);
+      }
+      return;
+    }
     const requestedKind = optionalQuery(req.query.kind) ?? "all";
     if (requestedKind !== "all" && !catalogKinds.has(requestedKind as CatalogEntityKind)) {
       res.status(400).json({ error: "invalid search kind" });

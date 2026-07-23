@@ -1409,6 +1409,86 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal((await fetch(`${base}/compare?apps=linear`, { headers: { cookie: "astryx_session=user" } })).status, 400);
 });
 
+test("feature-flagged search bypasses legacy catalog assembly and protects media", async (t) => {
+  let legacyReads = 0;
+  const result = {
+    requestId: "request-1",
+    items: [{
+      documentId: "screen:7",
+      indexVersion: 1 as const,
+      versionId: 1,
+      appId: 1,
+      appName: "linear",
+      platform: "web",
+      entityType: "screen" as const,
+      sourceId: "screen:7",
+      title: "Checkout",
+      description: "",
+      aliases: [],
+      visibleText: "",
+      components: [],
+      states: [],
+      layoutPatterns: [],
+      publishedAt: "2026-07-23T00:00:00.000Z",
+      mediaImageId: 7,
+      sourcePayload: {
+        imageUrl: "https://storage.example/private/screen.png",
+        objectKey: "prod/private/screen.png",
+      },
+      matchedContext: [],
+    }],
+    facets: {
+      platform: [], app: [], appCategory: [], pageType: [], productArea: [],
+      flow: [], component: [], state: [], theme: [], layout: [],
+    },
+    typeCounts: { app: 0, screen: 1, flow: 0, component: 0, pattern: 0 },
+    nextCursor: null,
+    hasMore: false,
+    degraded: true,
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    getAccountEntitlements: async () => proEntitlements,
+    advancedSearchEnabled: true,
+    adaptiveSearch: {
+      search: async () => result,
+      suggest: async () => [{ kind: "app", value: "Linear", resultCount: 1 }],
+    },
+    allImages: async () => { legacyReads += 1; return []; },
+    publishedImages: async () => { legacyReads += 1; return []; },
+    listDesignSystems: async () => { legacyReads += 1; return []; },
+    listPublishedDesignSystems: async () => { legacyReads += 1; return []; },
+    listAppFlowSets: async () => { legacyReads += 1; return []; },
+    listPublishedFlowSets: async () => { legacyReads += 1; return []; },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/search?q=checkout&type=screen`, {
+    headers: { cookie: "astryx_session=user" },
+  });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(legacyReads, 0);
+  assert.match(body.items[0].imageUrl, /^\/api\/media\/linear\//);
+  assert.equal(JSON.stringify(body).includes("storage.example"), false);
+  assert.equal(JSON.stringify(body).includes("prod/private"), false);
+
+  const suggestions = await fetch(`${base}/search/suggestions?prefix=Lin`, {
+    headers: { cookie: "astryx_session=user" },
+  });
+  assert.deepEqual((await suggestions.json()).items, [{
+    kind: "app",
+    value: "Linear",
+    resultCount: 1,
+  }]);
+  assert.equal(
+    (await fetch(`${base}/search?type=token`, {
+      headers: { cookie: "astryx_session=user" },
+    })).status,
+    400,
+  );
+});
+
 test("creates user-owned collections and edits item notes", async (t) => {
   const now = "2026-07-11T00:00:00.000Z";
   const collection = { id: 4, name: "Onboarding", description: "", created_at: now, updated_at: now, items: [] };

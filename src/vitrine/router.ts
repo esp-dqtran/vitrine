@@ -7,6 +7,7 @@ export type Route =
   | { name: 'billing-success' }
   | { name: 'settings-billing' }
   | { name: 'signin' }
+  | { name: 'search' }
   | { name: 'apps' }
   | { name: 'app'; appId: string; section?: string }
   | { name: 'sites' }
@@ -29,6 +30,7 @@ export function parseRoutePath(pathname: string): Route {
   if (path === '/billing/success') return { name: 'billing-success' };
   if (path === '/settings/billing') return { name: 'settings-billing' };
   if (path === '/signin') return { name: 'signin' };
+  if (path === '/search') return { name: 'search' };
   if (path === '/apps') return { name: 'apps' };
   if (path === '/sites') return { name: 'sites' };
   const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+))?$/);
@@ -73,6 +75,7 @@ export function routeToPath(route: Route): string {
     case 'billing-success': return '/billing/success';
     case 'settings-billing': return '/settings/billing';
     case 'signin': return '/signin';
+    case 'search': return '/search';
     case 'apps': return '/apps';
     case 'sites': return '/sites';
     case 'site-version': return `/sites/${route.siteId}/versions/${route.versionId}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;

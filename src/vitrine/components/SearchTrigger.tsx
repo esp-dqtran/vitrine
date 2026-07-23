@@ -6,11 +6,12 @@ interface SearchTriggerProps {
   activeCategory: string | null;
   onOpen: () => void;
   onClearCategory: () => void;
+  mode?: 'legacy' | 'advanced';
 }
 
 // Compact header control that replaces both the old inline search input and the
 // category pill row — opens the CommandPalette on click or ⌘K/Ctrl+K from anywhere.
-export function SearchTrigger({ label, activeCategory, onOpen, onClearCategory }: SearchTriggerProps) {
+export function SearchTrigger({ label, activeCategory, onOpen, onClearCategory, mode = 'legacy' }: SearchTriggerProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -26,6 +27,7 @@ export function SearchTrigger({ label, activeCategory, onOpen, onClearCategory }
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 220, maxWidth: 420 }}>
       <Button
         label={label}
+        aria-label={mode === 'advanced' ? 'Open Quick Search' : 'Open search and filters'}
         variant="secondary"
         onClick={onOpen}
         icon={<Icon icon="search" size="sm" color="disabled" />}
