@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   EvidenceAnalysisError,
+  mapBounded,
   runValidatedProviderCall,
 } from "./evidenceAnalysisRuntime.ts";
 
@@ -86,4 +87,19 @@ test("classifies an aborted timeout without exposing its original message", asyn
       && error.code === "provider_timeout"
       && error.message === "Analysis provider timed out",
   );
+});
+
+test("maps with bounded concurrency and preserves input order", async () => {
+  let active = 0;
+  let maximum = 0;
+  const values = await mapBounded([3, 1, 2, 4], 2, async (value) => {
+    active += 1;
+    maximum = Math.max(maximum, active);
+    await new Promise((resolve) => setTimeout(resolve, value));
+    active -= 1;
+    return value * 2;
+  });
+  assert.deepEqual(values, [6, 2, 4, 8]);
+  assert.equal(maximum, 2);
+  await assert.rejects(() => mapBounded([1], 0, async (value) => value), /concurrency/i);
 });

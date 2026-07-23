@@ -114,6 +114,15 @@ export interface AppKnowledgeEvidenceFailureInput {
   attemptCount: number;
 }
 
+export interface AppKnowledgeJobEvidenceRecord {
+  evidenceId: string;
+  status: "pending" | "complete" | "failed" | "cached" | "quarantined" | "duplicate";
+  cacheKey?: string;
+  analysis?: Record<string, unknown>;
+  attemptCount: number;
+  errorCode?: string;
+}
+
 export interface AppKnowledgeStore {
   createJob(
     requestedBy: number,
@@ -130,6 +139,7 @@ export interface AppKnowledgeStore {
   ): Promise<AppKnowledgeWorkerJob>;
   workerJob(jobId: number): Promise<AppKnowledgeWorkerJob | undefined>;
   updateProgress(jobId: number, stage: AppKnowledgeJobStage, doneCount: number): Promise<void>;
+  evidenceRecords(jobId: number): Promise<AppKnowledgeJobEvidenceRecord[]>;
   cachedAnalysis(cacheKey: string): Promise<AppKnowledgeCacheEntry | undefined>;
   saveCachedAnalysis(input: AppKnowledgeCacheEntry): Promise<AppKnowledgeCacheEntry>;
   recordEvidenceResult(jobId: number, input: AppKnowledgeEvidenceResultInput): Promise<void>;
@@ -624,6 +634,22 @@ export function createAppKnowledgeStore(
         [jobId, stage, doneCount],
       );
       if (result.rowCount !== 1) throw new Error("App Knowledge job cannot accept progress");
+    },
+
+    async evidenceRecords(jobId) {
+      const result = await runQuery(
+        `SELECT evidence_id, status, cache_key, analysis, attempt_count, error_code
+         FROM app_knowledge_job_evidence WHERE job_id = $1 ORDER BY ordinal`,
+        [jobId],
+      );
+      return result.rows.map((row) => ({
+        evidenceId: text(row.evidence_id),
+        status: row.status as AppKnowledgeJobEvidenceRecord["status"],
+        ...(row.cache_key == null ? {} : { cacheKey: sha256(text(row.cache_key)) }),
+        ...(row.analysis == null ? {} : { analysis: jsonObject(row.analysis, "analysis") }),
+        attemptCount: integer(row.attempt_count, "attempt count"),
+        ...(row.error_code == null ? {} : { errorCode: text(row.error_code) }),
+      }));
     },
 
     async cachedAnalysis(cacheKey) {

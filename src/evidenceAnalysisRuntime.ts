@@ -77,3 +77,28 @@ export async function runValidatedProviderCall<T>(input: {
   }
   throw new EvidenceAnalysisError("output_invalid");
 }
+
+export async function mapBounded<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  operation: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+    throw new Error("Bounded map concurrency must be a positive integer");
+  }
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (true) {
+        const index = cursor;
+        cursor += 1;
+        if (index >= items.length) return;
+        results[index] = await operation(items[index], index);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
