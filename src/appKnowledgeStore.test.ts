@@ -166,8 +166,10 @@ test("persists resumable jobs, cache, immutable manifests, revisions, review, an
   const sameSnapshotTransport = await db.query<{ id: number }>(
     "INSERT INTO jobs (type, payload) VALUES ('app-knowledge', '{}') RETURNING id",
   );
-  const sameIdentity = await store.createJob(801, target, sameSnapshotTransport.rows[0].id, "test-model", 1);
-  assert.equal(sameIdentity.snapshotId, created.snapshotId);
+  await assert.rejects(
+    store.createJob(801, target, sameSnapshotTransport.rows[0].id, "test-model", 1),
+    /already active/i,
+  );
 
   const frozen = await store.freezeManifest(created.id, manifest, "c".repeat(64));
   assert.equal(frozen.totalCount, 1);
@@ -248,6 +250,14 @@ test("persists resumable jobs, cache, immutable manifests, revisions, review, an
   assert.equal(admin?.approvedRevisionId, next.id);
   assert.equal(admin?.revisions.find(({ id }) => id === edited.id)?.reviewStatus, "superseded");
   assert.ok((admin?.reviewEvents.length ?? 0) >= 4);
+  assert.equal(
+    (await store.getAdminSnapshotForApp("knowledge-app", "web", 1))?.id,
+    created.snapshotId,
+  );
+  assert.equal(
+    (await store.getLatestJobForSnapshot(created.snapshotId))?.id,
+    created.id,
+  );
 
   await store.setEvidenceOverride({
     versionId: 1,

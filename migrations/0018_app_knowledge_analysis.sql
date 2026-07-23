@@ -75,6 +75,9 @@ CREATE INDEX app_knowledge_jobs_snapshot_idx
   ON app_knowledge_jobs(snapshot_id, created_at DESC, id DESC);
 CREATE INDEX app_knowledge_jobs_status_idx
   ON app_knowledge_jobs(status, created_at, id);
+CREATE UNIQUE INDEX app_knowledge_one_active_job_per_snapshot
+  ON app_knowledge_jobs(snapshot_id)
+  WHERE status IN ('queued', 'running');
 
 CREATE TABLE app_knowledge_job_evidence (
   id BIGSERIAL PRIMARY KEY,

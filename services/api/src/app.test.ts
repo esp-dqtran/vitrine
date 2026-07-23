@@ -175,6 +175,72 @@ test("uses the repository's free host API port", async () => {
   assert.equal((appModule as { DEFAULT_API_PORT?: number }).DEFAULT_API_PORT, 3010);
 });
 
+test("mounts scoped App Knowledge generation after session and admin authorization", async () => {
+  const published: unknown[] = [];
+  const created = {
+    id: 44,
+    snapshotId: 45,
+    transportJobId: 91,
+    requestedBy: admin.id,
+    status: "queued" as const,
+    stage: "preparing" as const,
+    doneCount: 0,
+    totalCount: 0,
+    cacheHitCount: 0,
+    failedCount: 0,
+    providerModel: "vision-model",
+    promptVersion: 1,
+    cancelRequested: false,
+    retryFailedOnly: false,
+    updatedAt: "2026-07-23T00:00:00.000Z",
+  };
+  const api = createApiApp({
+    resolveSession: async (token) => token === "admin" ? admin : token === "user" ? user : undefined,
+    canAccessApp: async () => true,
+    resolveAppVersion: async () => ({
+      ...publishedVersion,
+      app_id: 3,
+      platform_id: 5,
+      id: 7,
+      version_number: 2,
+    }),
+    createJob: async () => 91,
+    publishJob: async (job) => { published.push(job); },
+    recordAccessEvent: async () => {},
+    appKnowledgeStore: {
+      createJob: async () => created,
+    } as never,
+    appKnowledgeProviderModel: "vision-model",
+    appKnowledgePromptVersion: 1,
+  });
+  const { base, server } = await serve(api);
+  try {
+    const request = {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ app: "linear", platform: "web", version: 2 }),
+    };
+    assert.equal((await fetch(`${base}/app-knowledge/jobs`, request)).status, 401);
+    assert.equal((await fetch(`${base}/app-knowledge/jobs`, {
+      ...request,
+      headers: { ...request.headers, cookie: "astryx_session=user" },
+    })).status, 403);
+    const response = await fetch(`${base}/app-knowledge/jobs`, {
+      ...request,
+      headers: { ...request.headers, cookie: "astryx_session=admin" },
+    });
+    assert.equal(response.status, 201);
+    assert.equal((await response.json() as { id: number }).id, 44);
+    assert.deepEqual(published, [{
+      type: "generate-app-knowledge",
+      runId: "44",
+      jobId: 91,
+    }]);
+  } finally {
+    await close(server);
+  }
+});
+
 async function serve(app: ReturnType<typeof createApiApp>): Promise<{ base: string; server: Server }> {
   const server = app.listen(0);
   await new Promise<void>((resolve) => server.once("listening", resolve));

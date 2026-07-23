@@ -753,6 +753,8 @@ export async function listAppFlowSets(): Promise<Array<{ app: string; flows: Des
 
 export interface AppVersion {
   id: number;
+  app_id?: number;
+  platform_id?: number;
   app: string;
   platform: string;
   version_number: number;
@@ -770,7 +772,8 @@ export interface AppVersion {
   flow_count: number;
 }
 
-const versionSelect = `SELECT av.id, a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
+const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform_id,
+  a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
   COALESCE(image_counts.screen_count, 0)::int AS screen_count,
   COALESCE(image_counts.analyzed_count, 0)::int AS analyzed_count,
@@ -778,6 +781,8 @@ const versionSelect = `SELECT av.id, a.name AS app, av.platform, av.version_numb
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'tokens'), 0)::int AS token_count,
   COALESCE(jsonb_array_length(CASE WHEN av.status IN ('draft','in_review') THEN af.flows ELSE afv.flows END), 0)::int AS flow_count
   FROM app_versions av JOIN apps a ON a.id = av.app_id
+  JOIN platforms platform_identity ON platform_identity.app_id = av.app_id
+    AND platform_identity.name = av.platform
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count

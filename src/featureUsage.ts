@@ -10,6 +10,7 @@ export const FEATURE_LABELS = {
   flows: "Flows",
   ai_analysis: "AI analysis",
   feature_documents: "Feature documents",
+  app_knowledge: "App knowledge",
 } as const;
 
 export type FeatureKey = keyof typeof FEATURE_LABELS;

@@ -42,6 +42,7 @@ import {
   listPublishedFlowSets,
   appMetadata,
   appEvidencePage,
+  appKnowledgeEvidenceSource,
   getVersionFlows,
   flowEvidenceImages,
 } from "../../../src/db.ts";
@@ -140,6 +141,15 @@ import {
   mountPublicFeatureDocumentRoutes,
   type FeatureDocumentNotificationClient,
 } from "./featureDocuments.ts";
+import {
+  mountAppKnowledgeRoutes,
+  type AppKnowledgeNotificationClient,
+} from "./appKnowledge.ts";
+import {
+  createAppKnowledgeStore,
+  type AppKnowledgeTarget,
+} from "../../../src/appKnowledgeStore.ts";
+import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
@@ -421,6 +431,14 @@ const defaults = {
   featureDocumentProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
   featureDocumentPromptVersion: 1,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
+  appKnowledgeStore: createAppKnowledgeStore(),
+  appKnowledgeProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
+  appKnowledgePromptVersion: 1,
+  appKnowledgeCurrentSourceSha256: undefined as
+    | ((target: AppKnowledgeTarget) => Promise<string | undefined>)
+    | undefined,
+  acquireAppKnowledgeNotificationClient: async () =>
+    pool.connect() as unknown as AppKnowledgeNotificationClient,
   advancedSearchEnabled: false,
   adaptiveSearch: createSearchService({
     store: new PostgresSearchStore(pool),
@@ -950,6 +968,34 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       if (!deps.objectStore) throw new Error("Object storage is unavailable");
       await sendStoredObject(deps.objectStore, metadata, res);
     },
+  });
+
+  mountAppKnowledgeRoutes(app, requireAdmin, {
+    store: deps.appKnowledgeStore,
+    canAccessApp: deps.canAccessApp,
+    resolveAppVersion: deps.resolveAppVersion,
+    createJob: deps.createJob,
+    setJobStatus: deps.setJobStatus,
+    publishJob: deps.publishJob,
+    providerModel: deps.appKnowledgeProviderModel,
+    promptVersion: deps.appKnowledgePromptVersion,
+    acquireNotificationClient: deps.acquireAppKnowledgeNotificationClient,
+    recordEvent: deps.recordAccessEvent,
+    currentSourceSha256: deps.appKnowledgeCurrentSourceSha256 ?? (async (target) => {
+      if (!deps.objectStore) return undefined;
+      const source = await appKnowledgeEvidenceSource({
+        app: target.app,
+        platform: target.platform,
+        versionNumber: target.versionNumber,
+      });
+      if (!source) return undefined;
+      const prepared = await buildAppKnowledgeEvidenceManifest({
+        source,
+        objectStore: deps.objectStore,
+        overrides: await deps.appKnowledgeStore.evidenceOverrides(target.captureVersionId),
+      });
+      return prepared.sourceSha256;
+    }),
   });
 
   app.post("/referrals/link", async (_req, res) => {

@@ -151,12 +151,18 @@ export interface AppKnowledgeStore {
   completeGeneration(jobId: number, snapshot: AppKnowledgeSnapshot): Promise<AppKnowledgeRevisionView>;
   failJob(jobId: number, code: string, safeMessage: string): Promise<void>;
   getAdminSnapshot(snapshotId: number): Promise<AppKnowledgeSnapshotView | undefined>;
+  getAdminSnapshotForApp(
+    app: string,
+    platform: string,
+    versionNumber: number,
+  ): Promise<AppKnowledgeSnapshotView | undefined>;
   getApprovedSnapshotForApp(
     app: string,
     platform: string,
     versionNumber: number,
   ): Promise<AppKnowledgeSnapshotView | undefined>;
   getJob(jobId: number): Promise<AppKnowledgeJobView | undefined>;
+  getLatestJobForSnapshot(snapshotId: number): Promise<AppKnowledgeJobView | undefined>;
   saveRevision(
     snapshotId: number,
     baseRevisionId: number,
@@ -186,6 +192,13 @@ export interface AppKnowledgeStore {
     userId: number;
   }): Promise<void>;
   evidenceOverrides(versionId: number): Promise<AppKnowledgeEvidenceOverride[]>;
+}
+
+export class ActiveAppKnowledgeJobError extends Error {
+  constructor() {
+    super("An App Knowledge job is already active for this capture version");
+    this.name = "ActiveAppKnowledgeJobError";
+  }
 }
 
 const SHA256 = /^[0-9a-f]{64}$/;
@@ -512,47 +525,55 @@ export function createAppKnowledgeStore(
       positiveInteger(transportJobId, "transport job");
       positiveInteger(promptVersion, "prompt version");
       const checkedModel = providerModel(model);
-      return runTransaction(async (tx) => {
-        const found = await tx(
-          `SELECT av.id FROM app_versions av
-           JOIN apps a ON a.id = av.app_id
-           JOIN platforms p ON p.app_id = a.id
-           WHERE av.id = $1 AND av.app_id = $2 AND av.platform = $3
-             AND av.version_number = $4 AND p.id = $5 AND p.name = $3 AND a.name = $6
-           FOR SHARE OF av`,
-          [
-            checkedTarget.captureVersionId,
-            checkedTarget.appId,
-            checkedTarget.platform,
-            checkedTarget.versionNumber,
-            checkedTarget.platformId,
-            checkedTarget.app,
-          ],
-        );
-        if (!found.rows[0]) throw new Error("App Knowledge target was not found");
-        const snapshot = await tx(
-          `INSERT INTO app_knowledge_snapshots (app_id, platform_id, capture_version_id)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (app_id, platform_id, capture_version_id)
-           DO UPDATE SET updated_at = app_knowledge_snapshots.updated_at
-           RETURNING id`,
-          [checkedTarget.appId, checkedTarget.platformId, checkedTarget.captureVersionId],
-        );
-        const result = await tx(
-          `INSERT INTO app_knowledge_jobs AS j
-             (snapshot_id, transport_job_id, requested_by, provider_model, prompt_version)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING ${JOB_COLUMNS}`,
-          [
-            snapshot.rows[0].id,
-            transportJobId,
-            requestedBy,
-            checkedModel,
-            promptVersion,
-          ],
-        );
-        return jobFromRow(result.rows[0])!;
-      });
+      try {
+        return await runTransaction(async (tx) => {
+          const found = await tx(
+            `SELECT av.id FROM app_versions av
+             JOIN apps a ON a.id = av.app_id
+             JOIN platforms p ON p.app_id = a.id
+             WHERE av.id = $1 AND av.app_id = $2 AND av.platform = $3
+               AND av.version_number = $4 AND p.id = $5 AND p.name = $3 AND a.name = $6
+             FOR SHARE OF av`,
+            [
+              checkedTarget.captureVersionId,
+              checkedTarget.appId,
+              checkedTarget.platform,
+              checkedTarget.versionNumber,
+              checkedTarget.platformId,
+              checkedTarget.app,
+            ],
+          );
+          if (!found.rows[0]) throw new Error("App Knowledge target was not found");
+          const snapshot = await tx(
+            `INSERT INTO app_knowledge_snapshots (app_id, platform_id, capture_version_id)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (app_id, platform_id, capture_version_id)
+             DO UPDATE SET updated_at = app_knowledge_snapshots.updated_at
+             RETURNING id`,
+            [checkedTarget.appId, checkedTarget.platformId, checkedTarget.captureVersionId],
+          );
+          const result = await tx(
+            `INSERT INTO app_knowledge_jobs AS j
+               (snapshot_id, transport_job_id, requested_by, provider_model, prompt_version)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING ${JOB_COLUMNS}`,
+            [
+              snapshot.rows[0].id,
+              transportJobId,
+              requestedBy,
+              checkedModel,
+              promptVersion,
+            ],
+          );
+          return jobFromRow(result.rows[0])!;
+        });
+      } catch (error) {
+        if (
+          (error as { code?: string; constraint?: string }).code === "23505"
+          && (error as { constraint?: string }).constraint === "app_knowledge_one_active_job_per_snapshot"
+        ) throw new ActiveAppKnowledgeJobError();
+        throw error;
+      }
     },
 
     async claimJob(jobId) {
@@ -853,6 +874,22 @@ export function createAppKnowledgeStore(
       return loadSnapshot(runQuery, snapshotId);
     },
 
+    async getAdminSnapshotForApp(app, platform, versionNumber) {
+      positiveInteger(versionNumber, "version number");
+      const result = await runQuery(
+        `SELECT s.id FROM app_knowledge_snapshots s
+         JOIN apps a ON a.id = s.app_id
+         JOIN platforms p ON p.id = s.platform_id
+         JOIN app_versions av ON av.id = s.capture_version_id
+         WHERE a.name = $1 AND p.name = $2 AND av.version_number = $3
+         LIMIT 1`,
+        [app, platform, versionNumber],
+      );
+      return result.rows[0]
+        ? loadSnapshot(runQuery, positiveInteger(result.rows[0].id))
+        : undefined;
+    },
+
     async getApprovedSnapshotForApp(app, platform, versionNumber) {
       positiveInteger(versionNumber, "version number");
       const result = await runQuery(
@@ -874,6 +911,16 @@ export function createAppKnowledgeStore(
       const result = await runQuery(
         `SELECT ${JOB_COLUMNS} FROM app_knowledge_jobs j WHERE j.id = $1`,
         [jobId],
+      );
+      return jobFromRow(result.rows[0]);
+    },
+
+    async getLatestJobForSnapshot(snapshotId) {
+      positiveInteger(snapshotId, "snapshot");
+      const result = await runQuery(
+        `SELECT ${JOB_COLUMNS} FROM app_knowledge_jobs j
+         WHERE j.snapshot_id = $1 ORDER BY j.created_at DESC, j.id DESC LIMIT 1`,
+        [snapshotId],
       );
       return jobFromRow(result.rows[0]);
     },
