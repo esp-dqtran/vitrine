@@ -67,7 +67,8 @@ CREATE INDEX search_index_queue_claim_idx
 CREATE OR REPLACE FUNCTION enqueue_search_index(target_app_id INTEGER, target_platform TEXT)
 RETURNS VOID LANGUAGE sql AS $$
   INSERT INTO search_index_queue (app_id, platform, status, attempts, next_attempt_at, requested_at, updated_at)
-  VALUES (target_app_id, target_platform, 'queued', 0, now(), now(), now())
+  SELECT target_app_id, target_platform, 'queued', 0, now(), now(), now()
+  WHERE EXISTS (SELECT 1 FROM apps WHERE id = target_app_id)
   ON CONFLICT (app_id, platform) DO UPDATE SET
     status = 'queued',
     attempts = 0,
