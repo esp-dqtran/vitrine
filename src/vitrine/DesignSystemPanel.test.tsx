@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DesignSystemPanel, designSystemMarkdown } from './components/DesignSystemPanel.tsx';
 
@@ -154,4 +155,12 @@ test('uses a source-neutral empty state', () => {
   }} status="ready" />);
   assert.match(html, /No design tokens, components, or rules are available for this app/);
   assert.doesNotMatch(html, /observed|evidence/i);
+});
+
+test('keeps Design System as the default review workspace and offers App Knowledge review', () => {
+  const source = readFileSync(new URL('./components/CuratorReviewPanel.tsx', import.meta.url), 'utf8');
+  assert.match(source, /useState<'design-system' \| 'app-knowledge'>\('design-system'\)/);
+  assert.match(source, /label="Design System"/);
+  assert.match(source, /label="App Knowledge"/);
+  assert.match(source, /<AppKnowledgeReviewWorkspace/);
 });

@@ -114,3 +114,25 @@ test('shows every platform reported by app metadata even when the first screen p
   assert.match(html, /role="tablist" aria-label="Platform"/);
   assert.match(html, /role="tab"[^>]*aria-selected="true"[^>]*aria-label="Web"/);
 });
+
+test('keeps Analysis visible to members while Review remains admin-only', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="user"
+      app={{
+        id: 'linear',
+        app: 'Linear',
+        cat: 'Productivity',
+        accent: '#5E6AD2',
+        totalScreens: 1,
+        totalUiElements: 0,
+        totalFlows: 0,
+      }}
+      onBack={() => undefined}
+    />,
+  );
+  assert.match(html, /aria-label="Analysis"/);
+  assert.doesNotMatch(html, /aria-label="Review"/);
+});

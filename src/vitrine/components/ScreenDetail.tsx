@@ -298,7 +298,7 @@ export function ScreenDetail({
           {section === 'overview' ? <AppOverviewPanel app={app} />
             : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
               : sectionLoading ? <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
-                : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
+                : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} snapshot={snapshot} />
                   : section === 'analysis' ? <AppKnowledgePanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} userRole={role} />
                     : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />

@@ -385,6 +385,11 @@ test("all lifecycle and review mutations are admin-only", async () => {
     ["POST", "/app-knowledge/snapshots/41/regenerations", {}],
     ["PATCH", "/app-knowledge/snapshots/41/revisions", { revisionId: 51, content: snapshot() }],
     ["POST", "/app-knowledge/snapshots/41/review-status", { revisionId: 51, status: "in_review" }],
+    ["POST", "/app-knowledge/snapshots/41/review-actions", {
+      revisionId: 51,
+      action: "claim_approved",
+      entityId: "home-purpose",
+    }],
   ];
   for (const [method, path, body] of routes) {
     assert.equal((await fetch(`${base}${path}`, {
@@ -403,6 +408,30 @@ test("all lifecycle and review mutations are admin-only", async () => {
   for (const action of ["cancel", "resume", "retry", "edit", "in_review"]) {
     assert.ok(actions.includes(action), action);
   }
+});
+
+test("records only allowlisted App Knowledge review actions without mutating evidence", async () => {
+  const response = await fetch(`${base}/app-knowledge/snapshots/41/review-actions`, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      revisionId: 51,
+      action: "claim_rejected",
+      entityId: "home-purpose",
+    }),
+  });
+  assert.equal(response.status, 201);
+  assert.ok(actions.includes("claim_rejected"));
+  const invalid = await fetch(`${base}/app-knowledge/snapshots/41/review-actions`, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      revisionId: 51,
+      action: "evidence_deleted",
+      entityId: "SCREEN-1",
+    }),
+  });
+  assert.equal(invalid.status, 400);
 });
 
 test("approval rejects stale sources and unacknowledged partial coverage", async () => {

@@ -5,7 +5,9 @@ import type {
 } from '../appKnowledge.ts';
 import type { Platform } from '../platformFromUrl.ts';
 import {
+  acknowledgeAppKnowledgeCoverage,
   cancelAppKnowledgeJob,
+  recordAppKnowledgeReviewAction,
   regenerateAppKnowledge,
   resumeAppKnowledgeJob,
   retryAppKnowledgeJob,
@@ -28,6 +30,8 @@ export interface AppKnowledgeActionClients {
   regenerate: typeof regenerateAppKnowledge;
   saveRevision: typeof saveAppKnowledgeRevision;
   setReviewStatus: typeof setAppKnowledgeReviewStatus;
+  acknowledgeCoverage: typeof acknowledgeAppKnowledgeCoverage;
+  recordReviewAction: typeof recordAppKnowledgeReviewAction;
 }
 
 const defaultActionClients: AppKnowledgeActionClients = {
@@ -38,6 +42,8 @@ const defaultActionClients: AppKnowledgeActionClients = {
   regenerate: regenerateAppKnowledge,
   saveRevision: saveAppKnowledgeRevision,
   setReviewStatus: setAppKnowledgeReviewStatus,
+  acknowledgeCoverage: acknowledgeAppKnowledgeCoverage,
+  recordReviewAction: recordAppKnowledgeReviewAction,
 };
 
 export function createAppKnowledgeActions(
@@ -78,6 +84,17 @@ export function createAppKnowledgeActions(
       status: Exclude<AppKnowledgeReviewStatus, 'superseded'>,
     ) {
       return refresh(clients.setReviewStatus(snapshotId, revisionId, status));
+    },
+    acknowledgeCoverage(snapshotId: number, revisionId: number, note = '') {
+      return refresh(clients.acknowledgeCoverage(snapshotId, revisionId, note));
+    },
+    recordReviewAction(
+      snapshotId: number,
+      revisionId: number,
+      action: Parameters<typeof recordAppKnowledgeReviewAction>[2],
+      entityId: string,
+    ) {
+      return refresh(clients.recordReviewAction(snapshotId, revisionId, action, entityId));
     },
     reload() {
       return store.retry(key);

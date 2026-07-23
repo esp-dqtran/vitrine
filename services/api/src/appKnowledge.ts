@@ -65,6 +65,17 @@ export interface AppKnowledgeRouteDependencies {
 const PLATFORMS = new Set(["ios", "android", "web"]);
 const ROLES = new Set(["designer", "developer", "product"]);
 const REVIEW_STATUSES = new Set<AppKnowledgeReviewStatus>(["draft", "in_review", "approved"]);
+const REVIEW_ACTIONS = new Set([
+  "claim_edited",
+  "claim_approved",
+  "claim_rejected",
+  "component_confirmed",
+  "component_rejected",
+  "token_confirmed",
+  "token_rejected",
+  "snapshot_submitted",
+  "snapshot_approved",
+]);
 const TERMINAL_JOB_STATUSES = new Set(["done", "error", "cancelled", "stale"]);
 
 function asyncRoute(
@@ -215,6 +226,28 @@ function claims(snapshot: AppKnowledgeSnapshot) {
       ...flow.steps.flatMap((step) => step.claims),
     ]),
   ];
+}
+
+function hasReviewEntity(
+  snapshot: AppKnowledgeSnapshot,
+  action: string,
+  entityId: string,
+): boolean {
+  if (action === "snapshot_submitted" || action === "snapshot_approved") {
+    return entityId === "snapshot";
+  }
+  if (action.startsWith("claim_")) {
+    return claims(snapshot).some(({ id }) => id === entityId);
+  }
+  if (action.startsWith("component_")) {
+    return snapshot.componentCandidates.some(({ id }) => id === entityId);
+  }
+  if (action.startsWith("token_")) {
+    return Object.values(snapshot.designLanguage)
+      .flat()
+      .some(({ id }) => id === entityId);
+  }
+  return false;
 }
 
 function qualityDiagnostics(snapshot: AppKnowledgeSnapshot) {
@@ -581,6 +614,41 @@ export function mountAppKnowledgeRoutes(
         }
         throw error;
       }
+    }),
+  );
+
+  app.post(
+    "/app-knowledge/snapshots/:snapshotId/review-actions",
+    requireAdmin,
+    asyncRoute(async (req, res) => {
+      const snapshotId = positiveInteger(req.params.snapshotId);
+      const body = exactBody(req.body, ["revisionId", "action", "entityId"]);
+      const revisionId = positiveInteger(body?.revisionId);
+      const action = boundedText(body?.action, 80, true);
+      const entityId = boundedText(body?.entityId, 240, true);
+      if (!snapshotId || !revisionId || !action || !entityId || !REVIEW_ACTIONS.has(action)) {
+        res.status(400).json({ error: "Invalid review action", code: "invalid_request" });
+        return;
+      }
+      const view = await deps.store.getAdminSnapshot(snapshotId);
+      const revision = view?.revisions.find(({ id }) => id === revisionId);
+      if (!revision) {
+        res.status(404).json({ error: "App Knowledge revision not found" });
+        return;
+      }
+      if (!hasReviewEntity(revision.content, action, entityId)) {
+        res.status(400).json({ error: "Invalid review entity", code: "invalid_review_entity" });
+        return;
+      }
+      const event = await deps.store.recordReviewEvent({
+        snapshotId,
+        revisionId,
+        userId: res.locals.user.id,
+        action,
+        details: { entityId },
+      });
+      await audit(res, `app_knowledge_${action}`, "completed", { snapshotId });
+      res.status(201).json(event);
     }),
   );
 

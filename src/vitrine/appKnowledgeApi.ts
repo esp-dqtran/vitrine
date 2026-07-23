@@ -309,6 +309,30 @@ export function acknowledgeAppKnowledgeCoverage(
   }, request);
 }
 
+export function recordAppKnowledgeReviewAction(
+  snapshotId: number,
+  revisionId: number,
+  action:
+    | 'claim_edited'
+    | 'claim_approved'
+    | 'claim_rejected'
+    | 'component_confirmed'
+    | 'component_rejected'
+    | 'token_confirmed'
+    | 'token_rejected'
+    | 'snapshot_submitted'
+    | 'snapshot_approved',
+  entityId: string,
+  request: Fetch = fetch,
+): Promise<unknown> {
+  pathId(revisionId);
+  return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/review-actions`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ revisionId, action, entityId }),
+  }, request);
+}
+
 export function subscribeAppKnowledgeJob(
   jobId: number,
   onUpdate: (job: AppKnowledgeJobView) => void,
