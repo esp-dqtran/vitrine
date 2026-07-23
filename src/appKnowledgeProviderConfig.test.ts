@@ -5,10 +5,10 @@ import {
   appKnowledgeProviderModelFromEnvironment,
 } from "./appKnowledgeProviderConfig.ts";
 
-test("enables the normal ChatGPT browser with two tabs by default", () => {
+test("enables the normal ChatGPT browser with one paced lane by default", () => {
   assert.deepEqual(appKnowledgeProviderConfigFromEnvironment({
     APP_KNOWLEDGE_PROVIDER: "chatgpt-browser",
-  }), { kind: "chatgpt-browser", model: "chatgpt-browser", concurrency: 2 });
+  }), { kind: "chatgpt-browser", model: "chatgpt-browser", concurrency: 1 });
 });
 
 test("accepts one or two tabs and rejects every other value", () => {

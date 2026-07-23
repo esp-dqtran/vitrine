@@ -10,7 +10,7 @@ Set:
 
 ```env
 APP_KNOWLEDGE_PROVIDER=chatgpt-browser
-APP_KNOWLEDGE_BROWSER_CONCURRENCY=2
+APP_KNOWLEDGE_BROWSER_CONCURRENCY=1
 ```
 
 The local worker reuses `~/.config/chatgpt-cli/profile`. Start the worker
@@ -26,10 +26,15 @@ Knowledge job. Do not copy or inspect browser cookies. Containerized headless
 workers require an already-authenticated Linux profile volume and are not the
 first-pilot path.
 
-The two tabs share one login, but each evidence request and the final synthesis
-start a fresh conversation. Browser selector drift is treated as a safe
-provider-unavailable failure. Completed evidence, cache entries, and review
-records remain durable across worker restarts and job resume.
+One tab is the safe default for normal ChatGPT conversation limits. A second
+tab is supported only for controlled testing. Each evidence request and the
+final synthesis start a fresh conversation. If ChatGPT temporarily limits
+conversation access, the worker fails the durable job once with
+`provider_rate_limited` instead of retrying or failing individual evidence.
+Wait until a manual ChatGPT conversation works, then resume the same job.
+Browser selector drift is treated as a safe provider-unavailable failure.
+Completed evidence, cache entries, and review records remain durable across
+worker restarts and job resume.
 
 ## Automated gate
 

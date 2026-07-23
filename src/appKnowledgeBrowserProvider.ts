@@ -11,6 +11,12 @@ export const CHATGPT_BROWSER_MODEL = "chatgpt-browser";
 
 export function parseBrowserJsonObject(reply: string): Record<string, unknown> {
   const trimmed = reply.trim();
+  if (
+    /you(?:'|’)re making requests too quickly/i.test(trimmed)
+    || /temporarily limited access to your conversations/i.test(trimmed)
+  ) {
+    throw new EvidenceAnalysisError("provider_rate_limited");
+  }
   const fenced = /^```json[ \t]*\r?\n([\s\S]*?)\r?\n```\s*$/i.exec(trimmed);
   const source = fenced?.[1].trim() ?? trimmed;
   try {

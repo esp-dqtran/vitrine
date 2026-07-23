@@ -2,12 +2,14 @@ export type EvidenceAnalysisFailureCode =
   | "provider_unavailable"
   | "provider_timeout"
   | "provider_refused"
+  | "provider_rate_limited"
   | "output_invalid";
 
 const SAFE_MESSAGES: Record<EvidenceAnalysisFailureCode, string> = {
   provider_unavailable: "Analysis provider is temporarily unavailable",
   provider_timeout: "Analysis provider timed out",
   provider_refused: "Analysis provider refused the request",
+  provider_rate_limited: "ChatGPT temporarily limited browser requests",
   output_invalid: "Analysis provider returned invalid output",
 };
 

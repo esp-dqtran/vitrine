@@ -70,6 +70,25 @@ test("does not retry a provider refusal", async () => {
   assert.equal(attempts, 1);
 });
 
+test("does not retry a browser rate limit", async () => {
+  let attempts = 0;
+  await assert.rejects(
+    runValidatedProviderCall({
+      call: async () => {
+        attempts += 1;
+        throw new EvidenceAnalysisError("provider_rate_limited");
+      },
+      parse: (value) => value,
+      timeoutMs: 1_000,
+      retryDelayMs: 0,
+    }),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_rate_limited",
+  );
+  assert.equal(attempts, 1);
+});
+
 test("classifies an aborted timeout without exposing its original message", async () => {
   await assert.rejects(
     runValidatedProviderCall({

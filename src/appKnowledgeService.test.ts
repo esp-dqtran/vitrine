@@ -4,6 +4,7 @@ import { test } from "node:test";
 import sharp from "sharp";
 import type { AppKnowledgeSnapshot } from "./appKnowledge.ts";
 import type { AppKnowledgeProvider } from "./appKnowledgeProvider.ts";
+import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 import {
   createAppKnowledgeService,
   type AppKnowledgeEvidenceAnalysis,
@@ -134,6 +135,7 @@ async function harness(options: {
   failEvidenceId?: string;
   cachedEvidenceId?: string;
   blockEvidenceId?: string;
+  rateLimitEvidenceId?: string;
 } = {}) {
   const bodies = new Map<number, Buffer>([
     [1, await png(10)],
@@ -294,6 +296,9 @@ async function harness(options: {
             { once: true },
           ));
       }
+      if (prompt.evidenceId === options.rateLimitEvidenceId) {
+        throw new EvidenceAnalysisError("provider_rate_limited");
+      }
       if (prompt.evidenceId === options.failEvidenceId) throw new Error("provider exploded secret /tmp/key");
       return analysis(prompt.evidenceId);
     },
@@ -368,4 +373,14 @@ test("cancels an active provider call without recording evidence failure", async
   assert.equal(await generation, "cancelled");
   assert.equal(state.records.has("SCREEN-1"), false);
   assert.equal(state.failed, undefined);
+});
+
+test("stops the whole job on a browser rate limit without recording evidence failure", async () => {
+  const state = await harness({ rateLimitEvidenceId: "SCREEN-1" });
+  assert.equal(await state.service.generate("1"), "error");
+  assert.equal(state.records.has("SCREEN-1"), false);
+  assert.deepEqual(state.failed, {
+    code: "provider_rate_limited",
+    message: "ChatGPT temporarily limited browser requests",
+  });
 });

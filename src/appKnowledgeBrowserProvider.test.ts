@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ChatAttachment, ChatSession } from "./llmChat.ts";
+import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 import {
   createChatGptBrowserAppKnowledgeProvider,
   parseBrowserJsonObject,
@@ -35,6 +36,18 @@ test("rejects prose, multiple objects, arrays, and malformed JSON", () => {
     "```\n{\"ok\":true}\n```",
     "```json\n{bad}\n```",
   ]) assert.throws(() => parseBrowserJsonObject(reply), /invalid JSON output/i);
+});
+
+test("classifies the ChatGPT conversation limit without exposing its reply", () => {
+  const reply = "You’re making requests too quickly. We’ve temporarily limited access to your conversations to protect your data.\n\nPlease wait a few minutes before trying again.";
+  assert.throws(
+    () => parseBrowserJsonObject(reply),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_rate_limited"
+      && error.message === "ChatGPT temporarily limited browser requests"
+      && !error.message.includes(reply),
+  );
 });
 
 test("uploads verified bytes and uses no attachment for synthesis", async () => {

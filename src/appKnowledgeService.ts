@@ -365,6 +365,13 @@ export function createAppKnowledgeService(deps: {
             analyses.set(item.evidenceId, result);
             return result;
           } catch (error) {
+            if (
+              error instanceof EvidenceAnalysisError
+              && error.code === "provider_rate_limited"
+            ) {
+              if (!cancellation.signal.aborted) cancellation.abort(error);
+              throw error;
+            }
             if (cancellation.signal.aborted) return undefined;
             await deps.store.recordEvidenceFailure(jobId, {
               evidenceId: item.evidenceId,
@@ -455,11 +462,15 @@ export function createAppKnowledgeService(deps: {
         const saved = await deps.store.completeGeneration(jobId, synthesized.value);
         return saved.reviewStatus === "draft" ? "done" : "error";
       } catch (error) {
-        if (cancellation.signal.aborted) {
+        const cancellationReason = cancellation.signal.reason;
+        const rateLimited = cancellationReason instanceof EvidenceAnalysisError
+          && cancellationReason.code === "provider_rate_limited";
+        if (cancellation.signal.aborted && !rateLimited) {
           return (await deps.store.claimJob(jobId))?.status;
         }
-        if (error instanceof EvidenceAnalysisError) {
-          await deps.store.failJob(jobId, error.code, error.message);
+        const failure = rateLimited ? cancellationReason : error;
+        if (failure instanceof EvidenceAnalysisError) {
+          await deps.store.failJob(jobId, failure.code, failure.message);
         } else {
           await deps.store.failJob(
             jobId,

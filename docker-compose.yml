@@ -78,7 +78,7 @@ services:
       MEDIA_RATE_LIMIT: ${MEDIA_RATE_LIMIT:-500}
       APP_TRAVERSAL_LIMIT: ${APP_TRAVERSAL_LIMIT:-20}
       APP_KNOWLEDGE_PROVIDER: ${APP_KNOWLEDGE_PROVIDER:-chatgpt-browser}
-      APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-2}
+      APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-1}
       ADVANCED_SEARCH_ENABLED: ${ADVANCED_SEARCH_ENABLED:-false}
       SEARCH_EMBEDDING_BASE_URL: ${SEARCH_EMBEDDING_BASE_URL:-https://api.openai.com/v1}
       SEARCH_EMBEDDING_API_KEY: ${SEARCH_EMBEDDING_API_KEY:-}
@@ -128,7 +128,7 @@ services:
       CRAWL_PROFILE_ROOT: /app/data/browser-profiles-linux
       CHAT_PROFILE_ROOT: /app/data/chat-profiles-linux
       APP_KNOWLEDGE_PROVIDER: ${APP_KNOWLEDGE_PROVIDER:-chatgpt-browser}
-      APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-2}
+      APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-1}
       CRAWL_STALE_RUN_THRESHOLD_MS: ${CRAWL_STALE_RUN_THRESHOLD_MS:-300000}
       RESEARCH_LLM_BASE_URL: ${RESEARCH_LLM_BASE_URL:-https://api.openai.com/v1}
       RESEARCH_LLM_API_KEY: ${RESEARCH_LLM_API_KEY:-}
@@ -144,6 +144,7 @@ services:
       MOBBIN_STORAGE_STATE_PATH: /app/secrets/mobbin-storage-state.json
     volumes:
       - import-worker-profile:/app/browser-profile
+      - import-worker-chat-profile:/app/data/chat-profiles-linux
       - import-worker-downloads:/app/data/downloads
       - ./data/mobbin-storage-state.json:/app/secrets/mobbin-storage-state.json:ro
       - ~/.aws:/root/.aws:ro
@@ -245,5 +246,6 @@ volumes:
   postgres-data:
   minio-data:
   import-worker-profile:
+  import-worker-chat-profile:
   sites-import-worker-profile:
   import-worker-downloads:

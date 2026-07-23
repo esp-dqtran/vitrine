@@ -14,7 +14,7 @@ export function appKnowledgeProviderConfigFromEnvironment(
   if (provider !== "chatgpt-browser") {
     throw new Error(`Unsupported App Knowledge provider "${provider}"`);
   }
-  const raw = env.APP_KNOWLEDGE_BROWSER_CONCURRENCY?.trim() || "2";
+  const raw = env.APP_KNOWLEDGE_BROWSER_CONCURRENCY?.trim() || "1";
   if (raw !== "1" && raw !== "2") {
     throw new Error("App Knowledge browser concurrency must be one or two");
   }
