@@ -233,3 +233,11 @@ test("suggestions use factual published taxonomy only", { skip }, async (t) => {
     false,
   );
 });
+
+test("related search excludes its authorized source document", { skip }, async (t) => {
+  const { pool, store } = await fixture();
+  t.after(() => pool.end());
+  const result = await store.related("app:linear:web", access, 12);
+  assert.equal(result.items.some(({ sourceId }) => sourceId === "app:linear:web"), false);
+  assert.ok(result.items.some(({ sourceId }) => sourceId === "screen:cross"));
+});

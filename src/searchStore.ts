@@ -432,4 +432,53 @@ export class PostgresSearchStore {
       resultCount: result_count,
     }));
   }
+
+  async related(
+    sourceId: string,
+    access: SearchAccess,
+    limit = 12,
+  ): Promise<AdvancedSearchResult> {
+    const request = {
+      query: "",
+      type: "all" as const,
+      filters: {
+        platform: [], app: [], appCategory: [], pageType: [], productArea: [],
+        flow: [], component: [], state: [], theme: [], layout: [],
+      },
+      sort: "relevance" as const,
+      limit: Math.min(12, Math.max(1, limit + 1)),
+    };
+    const parameters = new SqlParameters();
+    const where = authorizedWhere(parameters, request, access);
+    const source = parameters.add(sourceId);
+    const row = await this.pool.query<{
+      title: string;
+      app_name: string;
+      product_area: string | null;
+      flow_name: string | null;
+      components: string[];
+      layout_patterns: string[];
+    }>(
+      `SELECT d.title, d.app_name, d.product_area, d.flow_name, d.components, d.layout_patterns
+       FROM search_documents d WHERE ${where} AND d.source_id = ${source} LIMIT 1`,
+      parameters.values,
+    );
+    if (!row.rows[0]) throw new Error("related search source is unavailable");
+    const metadata = row.rows[0];
+    const result = await this.search({
+      ...request,
+      query: [
+        metadata.title,
+        metadata.app_name,
+        metadata.product_area,
+        metadata.flow_name,
+        ...metadata.components,
+        ...metadata.layout_patterns,
+      ].filter(Boolean).join(" "),
+    }, undefined, access);
+    result.items = result.items.filter((item) => item.sourceId !== sourceId).slice(0, limit);
+    result.hasMore = false;
+    result.nextCursor = null;
+    return result;
+  }
 }

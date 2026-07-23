@@ -51,3 +51,15 @@ export function loadSearchSuggestions(
     signal,
   ).then(({ items }) => items);
 }
+
+export function loadRelatedSearchResults(
+  sourceId: string,
+  signal?: AbortSignal,
+): Promise<AdvancedSearchResult> {
+  const params = new URLSearchParams({
+    relatedTo: sourceId,
+    type: "all",
+    limit: "12",
+  });
+  return json(`/api/search?${params}`, signal);
+}

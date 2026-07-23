@@ -1648,12 +1648,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
       try {
         const request = searchRequestFromExpressQuery(req.query as Record<string, unknown>);
-        const result = await deps.adaptiveSearch.search(request, {
+        const access = {
           userId: res.locals.user.id,
           role: res.locals.user.role,
           plan: "pro",
           publishedOnly: true,
-        });
+        };
+        const relatedTo = optionalQuery(req.query.relatedTo);
+        if (relatedTo && relatedTo.length > 240) {
+          res.status(400).json({ error: "invalid related search source" });
+          return;
+        }
+        const result = relatedTo
+          ? await deps.adaptiveSearch.related(relatedTo, access, request.limit)
+          : await deps.adaptiveSearch.search(request, access);
         res.json(hydrateSearchMedia(result));
       } catch (error) {
         sendSearchError(res, error);

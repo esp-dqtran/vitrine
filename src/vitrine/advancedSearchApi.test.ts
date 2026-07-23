@@ -48,3 +48,18 @@ test("preserves API errors and requests bounded suggestions", async () => {
   await assert.rejects(() => loadSearchSuggestions("Lin"), /Upgrade required/);
   assert.equal(requested[0], "/api/search/suggestions?prefix=Lin&limit=10");
 });
+
+test("requests related results by stable source identity", async () => {
+  let requested = "";
+  globalThis.fetch = async (url) => {
+    requested = String(url);
+    return new Response(JSON.stringify({
+      requestId: "1", items: [], facets: {}, typeCounts: {},
+      nextCursor: null, hasMore: false, degraded: false,
+    }), { status: 200 });
+  };
+  await loadSearchSuggestions;
+  const { loadRelatedSearchResults } = await import("./advancedSearchApi.ts");
+  await loadRelatedSearchResults("screen:101");
+  assert.equal(requested, "/api/search?relatedTo=screen%3A101&type=all&limit=12");
+});

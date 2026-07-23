@@ -38,6 +38,7 @@ interface SearchServiceStore {
     access: SearchAccess,
   ): Promise<AdvancedSearchResult>;
   suggest(prefix: string, access: SearchAccess, limit?: number): Promise<SearchSuggestion[]>;
+  related?(sourceId: string, access: SearchAccess, limit?: number): Promise<AdvancedSearchResult>;
 }
 
 const FILTER_KEYS: Array<keyof SearchFilters> = [
@@ -159,6 +160,11 @@ export function createSearchService(input: {
     },
     suggest(prefix: string, access: SearchAccess, limit = 10) {
       return input.store.suggest(prefix, access, Math.min(10, Math.max(1, limit)));
+    },
+    async related(sourceId: string, access: SearchAccess, limit = 12) {
+      if (!input.store.related) throw new Error("Related search is unavailable");
+      const result = await input.store.related(sourceId, access, Math.min(12, Math.max(1, limit)));
+      return { ...result, requestId: randomUUID() };
     },
   };
 }
