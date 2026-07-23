@@ -249,7 +249,11 @@ export function App() {
   if (advancedSearchEnabled && route.name === 'search') {
     return frame(
       <>
-        <AdvancedSearchPage onPreview={setAdvancedPreview} />
+        <AdvancedSearchPage
+          onPreview={setAdvancedPreview}
+          comparison={comparison}
+          onComparisonChange={setComparison}
+        />
         {advancedPreview ? (
           <AdvancedSearchPreview
             item={advancedPreview}

@@ -26,6 +26,7 @@ export function AdvancedSearchPreview({
   const [related, setRelated] = useState<SearchResultItem[]>([]);
   const [relatedState, setRelatedState] = useState<"loading" | "ready" | "error">("loading");
   useEffect(() => {
+    const origin = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     close.current?.focus();
     const controller = new AbortController();
     void loadRelatedSearchResults(item.sourceId, controller.signal)
@@ -33,7 +34,7 @@ export function AdvancedSearchPreview({
       .catch((error) => {
         if (error.name !== "AbortError") setRelatedState("error");
       });
-    return () => controller.abort();
+    return () => { controller.abort(); origin?.focus(); };
   }, [item.sourceId]);
   return (
     <div className="advanced-search-preview" role="dialog" aria-modal="true" aria-label={`Preview ${item.title}`}>

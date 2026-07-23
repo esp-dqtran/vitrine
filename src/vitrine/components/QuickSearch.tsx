@@ -104,6 +104,8 @@ export function QuickSearch({
       <div className="quick-search__panel">
         <header>
           <input
+            role="combobox"
+            aria-expanded={groups.length > 0}
             ref={input}
             value={query}
             onChange={(event) => setQuery(event.target.value)}

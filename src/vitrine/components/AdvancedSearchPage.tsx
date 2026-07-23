@@ -11,6 +11,7 @@ import { ActiveSearchFilters } from "./ActiveSearchFilters.tsx";
 import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
 import { AdvancedSearchResults } from "./AdvancedSearchResults.tsx";
+import { addComparisonSelection } from "./SearchResearchActions.tsx";
 
 const tabs: Array<[SearchType, string]> = [
   ["all", "All"],
@@ -29,8 +30,12 @@ function initialSearchState(): SearchPageState {
 
 export function AdvancedSearchPage({
   onPreview = () => {},
+  comparison = [],
+  onComparisonChange = () => {},
 }: {
   onPreview?(item: SearchResultItem): void;
+  comparison?: SearchResultItem[];
+  onComparisonChange?(items: SearchResultItem[]): void;
 }) {
   const [state, setState] = useState(initialSearchState);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -57,6 +62,8 @@ export function AdvancedSearchPage({
           commit(state);
         }}>
           <input
+            role="combobox"
+            aria-expanded="false"
             value={state.query}
             onChange={(event) => commit({ ...state, query: event.target.value }, false)}
             placeholder="Try “dark mobile checkout with trust signals”"
@@ -110,7 +117,18 @@ export function AdvancedSearchPage({
           {search.result ? (
             <>
               {search.result.degraded ? <p className="advanced-search-degraded">Showing keyword results while semantic search is unavailable.</p> : null}
-              <AdvancedSearchResults items={search.result.items} onPreview={onPreview} />
+              <AdvancedSearchResults
+                items={search.result.items}
+                onPreview={onPreview}
+                comparisonAppIds={comparison.map(({ appId }) => appId)}
+                onToggleCompare={(item) => {
+                  if (comparison.some(({ appId }) => appId === item.appId)) {
+                    onComparisonChange(comparison.filter(({ appId }) => appId !== item.appId));
+                    return;
+                  }
+                  try { onComparisonChange(addComparisonSelection(comparison, item)); } catch {}
+                }}
+              />
               {search.result.hasMore ? (
                 <button type="button" onClick={() => void search.loadMore()} disabled={search.loadingMore}>
                   {search.loadingMore ? "Loading…" : "Load more"}
@@ -128,6 +146,21 @@ export function AdvancedSearchPage({
           onApply={applyFilters}
           onClose={() => setFiltersOpen(false)}
         />
+      ) : null}
+      {comparison.length ? (
+        <div className="advanced-search-comparison-tray" role="status">
+          <span>{comparison.length} {comparison.length === 1 ? "app" : "apps"} selected for comparison</span>
+          <button
+            type="button"
+            disabled={comparison.length < 2}
+            onClick={() => window.open(
+              `/api/compare?apps=${encodeURIComponent(comparison.map(({ appName }) => appName).join(","))}`,
+              "_blank",
+              "noopener,noreferrer",
+            )}
+          >Compare selected</button>
+          <button type="button" onClick={() => onComparisonChange([])}>Clear</button>
+        </div>
       ) : null}
     </main>
   );
