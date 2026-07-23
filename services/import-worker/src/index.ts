@@ -1,5 +1,5 @@
 import { consumeJobs } from "../../../src/queue.ts";
-import { insertImage, pool, query } from "../../../src/db.ts";
+import { appKnowledgeEvidenceSource, insertImage, pool, query } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { attachImageObject, attachThumbnailObject, imageObjectById } from "../../../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
@@ -15,8 +15,13 @@ import { createAutonomousStore } from "../../../src/autonomousStore.ts";
 import { decryptStorageState, encryptStorageState } from "../../../src/crawlSession.ts";
 import { createProductionAutonomousOrchestrator } from "../../../src/autonomousWorker.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
-import { createFeatureDocumentProvider } from "../../../src/featureDocumentProvider.ts";
+import { featureDocumentProviderFromMultimodalJsonProvider } from "../../../src/featureDocumentProvider.ts";
 import { createFeatureDocumentService } from "../../../src/featureDocumentService.ts";
+import { createMultimodalJsonProvider } from "../../../src/evidenceAnalysisProvider.ts";
+import { appKnowledgeProviderFromMultimodalJsonProvider } from "../../../src/appKnowledgeProvider.ts";
+import { createAppKnowledgeStore } from "../../../src/appKnowledgeStore.ts";
+import { createAppKnowledgeService } from "../../../src/appKnowledgeService.ts";
+import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import {
   featureEvidenceManifestSha256,
   type FeatureEvidenceManifestItem,
@@ -111,13 +116,47 @@ async function currentFeatureSourceManifest(source: FeatureSourceFlow): Promise<
   return { sha256: featureEvidenceManifestSha256(manifest) };
 }
 
-const featureDocumentProvider = createFeatureDocumentProvider();
+const multimodalProvider = createMultimodalJsonProvider();
+const featureDocumentProvider = multimodalProvider
+  ? featureDocumentProviderFromMultimodalJsonProvider(multimodalProvider)
+  : undefined;
 const featureDocumentService = featureDocumentProvider ? createFeatureDocumentService({
   store: createFeatureDocumentStore(),
   provider: featureDocumentProvider,
   objectStore,
   imageObjectById,
   currentSourceManifest: currentFeatureSourceManifest,
+}) : undefined;
+
+const appKnowledgeStore = createAppKnowledgeStore();
+const appKnowledgeProvider = multimodalProvider
+  ? appKnowledgeProviderFromMultimodalJsonProvider(multimodalProvider)
+  : undefined;
+const appKnowledgeService = appKnowledgeProvider ? createAppKnowledgeService({
+  store: appKnowledgeStore,
+  provider: appKnowledgeProvider,
+  objectStore,
+  evidenceSource: (target) => appKnowledgeEvidenceSource({
+    app: target.app,
+    platform: target.platform,
+    versionNumber: target.versionNumber,
+  }),
+  evidenceOverrides: (versionId) => appKnowledgeStore.evidenceOverrides(versionId),
+  imageObjectById,
+  currentSourceSha256: async (target) => {
+    const source = await appKnowledgeEvidenceSource({
+      app: target.app,
+      platform: target.platform,
+      versionNumber: target.versionNumber,
+    });
+    if (!source) return undefined;
+    const prepared = await buildAppKnowledgeEvidenceManifest({
+      source,
+      objectStore,
+      overrides: await appKnowledgeStore.evidenceOverrides(target.captureVersionId),
+    });
+    return prepared.sourceSha256;
+  },
 }) : undefined;
 
 const bulkStorage: BulkObjectDependencies = {
@@ -164,6 +203,10 @@ await startImportWorker({
       generateFeatureDocument: async (runId) => {
         if (!featureDocumentService) throw new Error("Feature document provider is not configured");
         return featureDocumentService.generate(runId);
+      },
+      generateAppKnowledge: async (runId) => {
+        if (!appKnowledgeService) throw new Error("App Knowledge provider is not configured");
+        return appKnowledgeService.generate(runId);
       },
     }));
   },

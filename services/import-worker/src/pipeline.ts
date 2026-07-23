@@ -9,6 +9,7 @@ import type { StageOutcome } from "../../../src/progress.ts";
 import { CrawlRunInterruptedError, type CrawlRunService } from "../../../src/crawlRun.ts";
 import { researchAppJob, type ResearchAppJobInput } from "../../../src/crawlJobs.ts";
 import type { FeatureDocumentJobStatus } from "../../../src/featureDocument.ts";
+import type { AppKnowledgeJobStatus } from "../../../src/appKnowledge.ts";
 
 const DEFAULT_PROVIDER = "chatgpt";
 // Screens establishes login (up to 30 min); UI Elements / Flows then fail fast if the app
@@ -39,6 +40,9 @@ const defaults = {
   generateFeatureDocument: async (_runId: string): Promise<FeatureDocumentJobStatus | undefined> => {
     throw new Error("Feature document service is not configured");
   },
+  generateAppKnowledge: async (_runId: string): Promise<AppKnowledgeJobStatus | undefined> => {
+    throw new Error("App Knowledge service is not configured");
+  },
 };
 type PipelineDeps = typeof defaults;
 
@@ -51,7 +55,7 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
     await deps.publishJob({ ...job, jobId });
   }
 
-  async function handle(job: Exclude<Job, { type: "smart-crawl-app" | "autonomous-crawl-app" | "generate-feature-document" }>): Promise<StageOutcome> {
+  async function handle(job: Exclude<Job, { type: "smart-crawl-app" | "autonomous-crawl-app" | "generate-feature-document" | "generate-app-knowledge" }>): Promise<StageOutcome> {
     if (job.type === "discover-catalog") {
       const apps = await deps.discoverApps();
       for (const target of apps) {
@@ -148,6 +152,26 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
         const outcome = await deps.generateFeatureDocument(job.runId);
         const transportStatus = outcome === "done" ? "done" : outcome === "cancelled" ? "cancelled" : "error";
         if (job.jobId != null) await deps.setJobStatus(job.jobId, transportStatus, transportStatus === "error" ? `Feature document run ${outcome ?? "unavailable"}` : undefined);
+      } catch (error) {
+        if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
+        throw error;
+      }
+      return;
+    }
+
+    if (job.type === "generate-app-knowledge") {
+      try {
+        const outcome = await deps.generateAppKnowledge(job.runId);
+        const transportStatus = outcome === "done"
+          ? "done"
+          : outcome === "cancelled" ? "cancelled" : "error";
+        if (job.jobId != null) {
+          await deps.setJobStatus(
+            job.jobId,
+            transportStatus,
+            transportStatus === "error" ? `App Knowledge run ${outcome ?? "unavailable"}` : undefined,
+          );
+        }
       } catch (error) {
         if (job.jobId != null) await deps.setJobStatus(job.jobId, "error", (error as Error).message);
         throw error;

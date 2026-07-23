@@ -185,6 +185,27 @@ test("pipeline dispatches feature document generation and tracks transport statu
   assert.deepEqual(events, ["job:9:running", "feature:27", "job:9:done"]);
 });
 
+test("pipeline dispatches App Knowledge generation and maps stale to transport error", async () => {
+  const events: string[] = [];
+  const handler = createPipelineHandler({
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (id, status, message) => {
+      events.push(`job:${id}:${status}:${message ?? ""}`);
+    },
+    generateAppKnowledge: async (runId) => {
+      events.push(`knowledge:${runId}`);
+      return "stale";
+    },
+  });
+
+  await handler({ type: "generate-app-knowledge", runId: "31", jobId: 10 });
+  assert.deepEqual(events, [
+    "job:10:running:",
+    "knowledge:31",
+    "job:10:error:App Knowledge run stale",
+  ]);
+});
+
 test("autonomous infrastructure interruptions remain retryable with the same run id", async () => {
   const interruption = new Error("discovery browser lost");
   const statuses: string[] = [];

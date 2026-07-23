@@ -50,6 +50,20 @@ test("queue accepts only an identifier-only feature document job", () => {
   ]) assert.throws(() => parseJob(value), /Invalid queue job/);
 });
 
+test("queue accepts only a positive App Knowledge run reference", () => {
+  assert.deepEqual(parseJob({ type: "generate-app-knowledge", runId: "31", jobId: 10 }), {
+    type: "generate-app-knowledge",
+    runId: "31",
+    jobId: 10,
+  });
+  for (const value of [
+    { type: "generate-app-knowledge", runId: "0" },
+    { type: "generate-app-knowledge", runId: "-1" },
+    { type: "generate-app-knowledge", runId: 31 },
+    { type: "generate-app-knowledge", runId: "31", evidence: [] },
+  ]) assert.throws(() => parseJob(value), /Invalid queue job/);
+});
+
 test("Apps queue rejects isolated Sites jobs", () => {
   assert.throws(
     () => parseJob({ type: "import-site", url: "https://mobbin.com/sites/site/version/preview", jobId: 7 }),
