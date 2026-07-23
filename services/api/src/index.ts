@@ -14,6 +14,10 @@ import {
   upsertSubscription,
 } from "../../../src/pricingStore.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
+import { advancedSearchConfigFromEnv } from "../../../src/searchConfig.ts";
+import { OpenAICompatibleSearchEmbeddingProvider } from "../../../src/searchEmbedding.ts";
+import { PostgresSearchStore } from "../../../src/searchStore.ts";
+import { createSearchService } from "./search.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -23,6 +27,10 @@ await startApi({
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
     const referralCampaign = referralCampaignFromEnv(process.env);
+    const searchConfig = advancedSearchConfigFromEnv(process.env);
+    const searchEmbedder = searchConfig.embedding
+      ? new OpenAICompatibleSearchEmbeddingProvider(searchConfig.embedding)
+      : null;
     await seedAdmin(seed.email, seed.password);
     const stripe = new Stripe(config.stripeSecretKey);
     const billing = createBillingService({
@@ -45,6 +53,16 @@ await startApi({
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
       referralCampaign,
+      advancedSearchEnabled: searchConfig.enabled,
+      adaptiveSearch: createSearchService({
+        store: new PostgresSearchStore(pool),
+        embedder: searchEmbedder,
+        telemetry: {
+          record: (event) => {
+            console.log(JSON.stringify({ event: "adaptive_search", ...event }));
+          },
+        },
+      }),
     }).listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },
 });
