@@ -282,6 +282,17 @@ async function waitForCondition(predicate: () => boolean): Promise<void> {
   }
 }
 
+test("serves real catalog stats publicly, without a session", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    catalogStats: async () => ({ apps: 512, screens: 137412, uiElements: 647 }),
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog/stats`);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { apps: 512, screens: 137412, uiElements: 647 });
+});
+
 test("keeps the progress stream admin-only without opening a subscription", async (t) => {
   let subscriptions = 0;
   const { base, server } = await serve(createApiApp({

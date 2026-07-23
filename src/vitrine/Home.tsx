@@ -6,7 +6,7 @@ import { PlaceholderImage } from './components/PlaceholderImage';
 import { useFloatDrift } from './useFloatDrift';
 import { useRevealOnScroll } from './useRevealOnScroll';
 import { useSlidingIndicator } from './useSlidingIndicator';
-import { useCatalogPreview } from './useCatalogPreview';
+import { useCatalogPreview, useCatalogStats } from './useCatalogPreview';
 
 const wrap: CSSProperties = { maxWidth: 1160, margin: '0 auto', padding: '0 32px' };
 
@@ -130,7 +130,8 @@ function IconMarquee() {
 }
 
 // ---------- stats block ----------
-// ponytail: headline figures are marketing copy, not live counts — update by hand.
+// Fallback headline figures, shown until the real catalog counts load (or if the
+// catalog is empty). Home swaps in live counts from /api/catalog/stats when present.
 const STATS = [
   { n: '465', label: 'apps' },
   { n: '137K+', label: 'screens' },
@@ -189,14 +190,14 @@ function CountUpNumber({ value }: { value: string }) {
   return <div ref={ref} style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>{value}</div>;
 }
 
-function StatsBlock() {
+function StatsBlock({ stats = STATS }: { stats?: { n: string; label: string }[] }) {
   return (
     <div style={{ position: 'relative', textAlign: 'center', padding: '32px 20px' }}>
       {STAT_ICONS.map((ic, i) => <FloatIcon key={i} ic={ic} />)}
       <div style={{ position: 'relative', zIndex: 2 }}>
         <Text type="large" color="secondary">A growing library of</Text>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 44, marginTop: 14, flexWrap: 'wrap' }}>
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <div key={s.label}>
               <CountUpNumber value={s.n} />
               <div style={{ fontSize: 14, color: 'var(--color-text-disabled)', marginTop: 2 }}>{s.label}</div>
@@ -279,6 +280,14 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
   const realApps = useCatalogPreview();
   // One screen from each of the first few real apps, for variety across the tiles.
   const screenSrc = (realApps ?? []).map((a) => a.screens[0]?.url).filter((u): u is string => Boolean(u)).slice(0, 3);
+  const statCounts = useCatalogStats();
+  const stats = statCounts
+    ? [
+        { n: String(statCounts.apps), label: 'apps' },
+        { n: String(statCounts.screens), label: 'screens' },
+        { n: String(statCounts.uiElements), label: 'UI elements' },
+      ]
+    : STATS;
   const marqueeRef = useRef<HTMLDivElement>(null);
   const patternsRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -366,7 +375,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
       {/* stats block */}
       <Section style={{ padding: '56px 32px 24px' }}>
         <div ref={statsRef}>
-          <StatsBlock />
+          <StatsBlock stats={stats} />
         </div>
       </Section>
 

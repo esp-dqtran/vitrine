@@ -1139,6 +1139,35 @@ export async function publishedPreviewImages(): Promise<PublishedPreviewImage[]>
   return res.rows;
 }
 
+export interface CatalogStats {
+  apps: number;
+  screens: number;
+  uiElements: number;
+}
+
+// Real headline counts for the public marketing pages. Counts screens/elements in
+// each app's latest published version — the same set `publishedImages()` exposes.
+export async function catalogStats(): Promise<CatalogStats> {
+  const res = await query<{ apps: number; screens: number; ui_elements: number }>(
+    `WITH pub AS (
+       SELECT av.id AS version_id, av.app_id
+       FROM app_versions av
+       WHERE av.status = 'published' AND av.version_number = (
+         SELECT MAX(latest.version_number) FROM app_versions latest
+         WHERE latest.app_id = av.app_id AND latest.status = 'published'
+       )
+     )
+     SELECT COUNT(DISTINCT pub.app_id)::int AS apps,
+       COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screens,
+       COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_elements
+     FROM pub
+     LEFT JOIN version_images vi ON vi.version_id = pub.version_id
+     LEFT JOIN images i ON i.id = vi.image_id`,
+  );
+  const row = res.rows[0];
+  return { apps: row?.apps ?? 0, screens: row?.screens ?? 0, uiElements: row?.ui_elements ?? 0 };
+}
+
 export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot[]> {
   const res = await query<{ snapshot: DesignSystemSnapshot }>(
     `SELECT dsv.snapshot FROM design_system_versions dsv JOIN app_versions av ON av.id = dsv.version_id

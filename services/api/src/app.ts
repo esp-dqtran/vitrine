@@ -38,6 +38,7 @@ import {
   versionImages,
   publishedImages,
   publishedPreviewImages,
+  catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
   appMetadata,
@@ -329,6 +330,7 @@ const defaults = {
   versionImages,
   publishedImages,
   publishedPreviewImages,
+  catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
   appMetadata,
@@ -855,6 +857,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const [images, previews] = await Promise.all([deps.publishedImages(), deps.publishedPreviewImages()]);
     res.setHeader("Cache-Control", "private, max-age=280");
     res.json(buildCatalogPage(images, cursor, limit, previews));
+  });
+
+  app.get("/catalog/stats", async (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=600");
+    res.json(await deps.catalogStats());
   });
 
   app.get("/preview-media/:app/:rank", async (req, res) => {

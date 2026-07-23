@@ -40,6 +40,28 @@ export function toPreviewApps(page: { apps?: CatalogAppShape[] }): PreviewApp[] 
     .filter((a) => a.screens.length > 0);
 }
 
+export interface CatalogStatCounts {
+  apps: number;
+  screens: number;
+  uiElements: number;
+}
+
+// Real headline counts for the landing page. Returns null while loading, when
+// unavailable, or when the catalog is empty — all of which keep the hand-set
+// marketing figures as a fallback.
+export function useCatalogStats(): CatalogStatCounts | null {
+  const [stats, setStats] = useState<CatalogStatCounts | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/catalog/stats', { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((s: CatalogStatCounts) => { if (s && s.apps > 0) setStats(s); })
+      .catch(() => { /* keep null → marketing fallback */ });
+    return () => controller.abort();
+  }, []);
+  return stats;
+}
+
 // `/api/catalog` is public (registered before the auth middleware), so the
 // logged-out marketing pages can show real apps and real preview screenshots.
 // Returns null while loading and [] when unavailable — both keep placeholders.
