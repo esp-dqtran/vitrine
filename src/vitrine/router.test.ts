@@ -12,6 +12,11 @@ test('round-trips the billing settings route used by the Stripe customer portal'
   assert.equal(routeToPath({ name: 'settings-billing' }), '/settings/billing');
 });
 
+test('round-trips the advanced search route without owning its query parameters', () => {
+  assert.deepEqual(parseRoutePath('/search'), { name: 'search' });
+  assert.equal(routeToPath({ name: 'search' }), '/search');
+});
+
 test('round-trips the public build-in-public route', () => {
   assert.deepEqual(parseRoutePath('/build-in-public'), { name: 'build-in-public' });
   assert.deepEqual(parseRoutePath('/build-in-public/'), { name: 'build-in-public' });
