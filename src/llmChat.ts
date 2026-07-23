@@ -46,11 +46,39 @@ const PROVIDERS: Record<string, Provider> = {
   },
 };
 
-async function waitForCount(page: Page, selector: string, timeoutMs: number): Promise<boolean> {
+export async function raceChatAbort<T>(
+  operation: Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (!signal) return operation;
+  signal.throwIfAborted();
+  return new Promise<T>((resolve, reject) => {
+    const aborted = () => reject(signal.reason);
+    signal.addEventListener("abort", aborted, { once: true });
+    operation.then(
+      (value) => {
+        signal.removeEventListener("abort", aborted);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", aborted);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function waitForCount(
+  page: Page,
+  selector: string,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if ((await page.locator(selector).count()) > 0) return true;
-    await page.waitForTimeout(300);
+    signal?.throwIfAborted();
+    if ((await raceChatAbort(page.locator(selector).count(), signal)) > 0) return true;
+    await raceChatAbort(page.waitForTimeout(300), signal);
   }
   return false;
 }
@@ -67,13 +95,19 @@ async function isLoggedIn(page: Page, provider: Provider): Promise<boolean> {
   return hasInput > 0 && loggedOutCount === 0;
 }
 
-async function waitForLogin(page: Page, provider: Provider, timeoutMs: number): Promise<void> {
+async function waitForLogin(
+  page: Page,
+  provider: Provider,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    signal?.throwIfAborted();
     if (await isLoggedIn(page, provider)) return;
     console.log("Waiting for you to log in...");
     await page.screenshot({ path: "scripts/login-wait.png" }).catch(() => {});
-    await page.waitForTimeout(3000);
+    await raceChatAbort(page.waitForTimeout(3000), signal);
   }
   throw new Error(`Timed out after ${timeoutMs}ms waiting to log in.`);
 }
@@ -85,12 +119,18 @@ async function waitForLogin(page: Page, provider: Provider, timeoutMs: number): 
 // multi-section markdown reply, so anything real is comfortably longer than this.
 const MIN_STABLE_REPLY_LENGTH = 200;
 
-async function waitForStableReply(page: Page, selector: string, timeoutMs: number): Promise<string> {
+async function waitForStableReply(
+  page: Page,
+  selector: string,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<string> {
   const deadline = Date.now() + timeoutMs;
   let last = "";
   let stableSince = 0;
   while (Date.now() < deadline) {
-    const bubbles = await page.locator(selector).allTextContents();
+    signal?.throwIfAborted();
+    const bubbles = await raceChatAbort(page.locator(selector).allTextContents(), signal);
     const text = bubbles.at(-1)?.trim() ?? "";
     if (text && text === last) {
       if (stableSince === 0) stableSince = Date.now();
@@ -99,7 +139,7 @@ async function waitForStableReply(page: Page, selector: string, timeoutMs: numbe
       stableSince = 0;
     }
     last = text;
-    await page.waitForTimeout(500);
+    await raceChatAbort(page.waitForTimeout(500), signal);
   }
   return last;
 }
@@ -108,13 +148,19 @@ async function waitForStableReply(page: Page, selector: string, timeoutMs: numbe
 // (observed live: the upload was still settling when Enter was pressed, and nothing
 // happened — no assistant bubble ever appeared). Confirm the textbox actually cleared,
 // and retry the send if it didn't, rather than trusting a fixed delay.
-async function sendPrompt(page: Page, input: import("playwright").Locator, prompt: string): Promise<void> {
+async function sendPrompt(
+  page: Page,
+  input: import("playwright").Locator,
+  prompt: string,
+  signal?: AbortSignal,
+): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    await input.click();
-    await input.fill(prompt);
-    await input.press("Enter");
-    await page.waitForTimeout(1500);
-    const remaining = (await input.textContent())?.trim() ?? "";
+    signal?.throwIfAborted();
+    await raceChatAbort(input.click(), signal);
+    await raceChatAbort(input.fill(prompt), signal);
+    await raceChatAbort(input.press("Enter"), signal);
+    await raceChatAbort(page.waitForTimeout(1500), signal);
+    const remaining = (await raceChatAbort(input.textContent(), signal))?.trim() ?? "";
     if (remaining === "") return; // textbox cleared — message was accepted
   }
 }
@@ -125,9 +171,17 @@ export interface ChatAttachment {
   buffer: Buffer;
 }
 
+export interface ChatAskOptions {
+  signal?: AbortSignal;
+}
+
 export interface ChatSession {
   /** Sends a fresh message (each call starts a clean chat, no history carries over) and returns the reply. */
-  ask(prompt: string, filePath?: string | ChatAttachment): Promise<string>;
+  ask(
+    prompt: string,
+    filePath?: string | ChatAttachment,
+    options?: ChatAskOptions,
+  ): Promise<string>;
   close(): Promise<void>;
 }
 
@@ -135,46 +189,65 @@ export interface ChatSession {
 // them is how many `Page`s share the same authenticated context, and who closes it.
 function bindSession(page: Page, providerName: string, provider: Provider, onClose: () => Promise<void>): ChatSession {
   return {
-    async ask(prompt, filePath) {
-      await page.goto(provider.url, { waitUntil: "domcontentloaded" });
+    async ask(prompt, filePath, options) {
+      const signal = options?.signal;
+      signal?.throwIfAborted();
+      await raceChatAbort(
+        page.goto(provider.url, { waitUntil: "domcontentloaded" }),
+        signal,
+      );
       // ChatGPT (at least) briefly renders a logged-out shell before hydrating into the
       // authenticated UI — wait for the real (and actually logged-in) input, don't guess a delay.
-      await waitForCount(page, provider.textInput, 15_000);
+      await waitForCount(page, provider.textInput, 15_000, signal);
       // Image uploads are login-gated by the provider itself, so only require real login
       // when this call actually attaches a file — a guest session's working (but upload-less)
       // textarea is enough for a text-only prompt.
+      signal?.throwIfAborted();
       if (filePath && !(await isLoggedIn(page, provider))) {
         throw new Error(`Logged out of ${providerName} mid-run — log back in and re-run to pick up where this left off.`);
       }
       if (filePath) {
-        await page.locator(provider.fileInput).setInputFiles(filePath);
+        signal?.throwIfAborted();
+        await raceChatAbort(
+          page.locator(provider.fileInput).setInputFiles(filePath),
+          signal,
+        );
         // A thumbnail (`form img`) renders immediately as a local preview, well before the
         // file has actually finished uploading — sending while it's still a spinner-covered
         // placeholder silently drops the attachment. Where we know the send button's selector,
         // wait for it to become enabled instead; that's the real "still uploading" signal.
         if (provider.sendButton) {
           try {
-            await page.waitForFunction(
-              (sel) => {
-                const btn = document.querySelector(sel) as HTMLButtonElement | null;
-                return !!btn && !btn.disabled;
-              },
-              provider.sendButton,
-              { timeout: 30_000 }
+            await raceChatAbort(
+              page.waitForFunction(
+                (sel) => {
+                  const btn = document.querySelector(sel) as HTMLButtonElement | null;
+                  return !!btn && !btn.disabled;
+                },
+                provider.sendButton,
+                { timeout: 30_000 },
+              ),
+              signal,
             );
           } catch {
+            if (signal?.aborted) throw signal.reason;
             throw new Error(`Attachment never finished uploading for ${filePath}`);
           }
-        } else if (!(await waitForCount(page, "form img", 10_000))) {
+        } else if (!(await waitForCount(page, "form img", 10_000, signal))) {
           throw new Error(`Attachment never appeared for ${filePath}`);
         }
       }
       const input = page.locator(provider.textInput);
-      await sendPrompt(page, input, prompt);
+      await sendPrompt(page, input, prompt, signal);
 
       // A detailed vision prompt under "Extra High" reasoning effort can run 3-4+ minutes
       // before the reply even starts, let alone settles — 60s was cutting these off cold.
-      const reply = await waitForStableReply(page, provider.response, 6 * 60_000);
+      const reply = await waitForStableReply(
+        page,
+        provider.response,
+        6 * 60_000,
+        signal,
+      );
       if (!reply) {
         throw new Error("No reply captured");
       }
