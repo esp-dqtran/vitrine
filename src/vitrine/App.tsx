@@ -145,7 +145,7 @@ export function App() {
   }, [advancedSearchEnabled, canUseProResearch, q, filters, searchRetry]);
 
   useEffect(() => {
-    if (!isAdmin || route.name === 'app' || !hasMore || loadingMore) return;
+    if (route.name === 'app' || !hasMore || loadingMore) return;
     const sentinel = appsSentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
@@ -153,7 +153,7 @@ export function App() {
     }, { rootMargin: '600px' });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, isAdmin, loadMore, loadingMore, route.name]);
+  }, [hasMore, loadMore, loadingMore, route.name]);
 
   const openApp = async (appId: string) => {
     if (isFreeGated(appId)) {
@@ -458,8 +458,8 @@ export function App() {
               />
             ))}
           </div>
-          {isAdmin && hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
-          {isAdmin && loadingMore && (
+          {hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
+          {loadingMore && (
             <div role="status" aria-label="Loading" style={{ display: 'flex', justifyContent: 'center', padding: '0 0 40px' }}>
               <Spinner size="sm" aria-hidden="true" />
             </div>

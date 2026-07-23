@@ -48,7 +48,7 @@ test('keeps the sticky Apps search container background transparent', async () =
   );
 });
 
-test('loads additional admin app pages only when the gallery sentinel approaches the viewport', async () => {
+test('loads additional app pages only when the gallery sentinel approaches the viewport', async () => {
   const [appSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
@@ -61,6 +61,19 @@ test('loads additional admin app pages only when the gallery sentinel approaches
   assert.match(appSource, /void loadMore\(\)/);
   assert.match(appSource, /<Spinner size="sm"/);
   assert.doesNotMatch(appSource, /Loading more apps/);
+});
+
+test('loads the member catalog one page at a time near the gallery viewport', async () => {
+  const [appSource, hookSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.doesNotMatch(hookSource, /do\s*\{/);
+  assert.match(hookSource, /role === 'admin' \? `\/api\/apps\?cursor=/);
+  assert.match(hookSource, /: `\/api\/catalog\?cursor=/);
+  assert.match(appSource, /if \(route\.name === 'app' \|\| !hasMore \|\| loadingMore\) return/);
+  assert.match(appSource, /\{hasMore && <div ref=\{appsSentinelRef\}/);
 });
 
 test('separates gallery and detail route loaders', async () => {
@@ -76,7 +89,7 @@ test('separates gallery and detail route loaders', async () => {
   assert.match(detailSource, /fetchAppMetadata/);
   assert.doesNotMatch(detailSource, /fetchAppDetailPage|limit=48/);
   assert.doesNotMatch(detailSource, /fetch\(['"]\/api\/apps['"]/);
-  assert.doesNotMatch(appSource, /initialVersion=|initialNextCursor=/);
+  assert.doesNotMatch(appSource, /initialVersion=\{detail\?\.version\}|initialNextCursor=/);
 });
 
 test('does not reload a retained gallery merely because it is re-enabled', async () => {

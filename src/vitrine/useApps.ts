@@ -31,17 +31,13 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
         setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
         return;
       }
-      const results: App[] = [];
-      let cursor: string | null = null;
-      do {
-        const response = await fetch(`/api/catalog${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, { signal });
-        if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
-        const page = await response.json() as CatalogResponse;
-        results.push(...page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens })));
-        setApps([...results]); // paint each page as it arrives instead of awaiting the whole catalog
-        setTotalApps(results.length);
-        cursor = page.nextCursor;
-      } while (cursor);
+      const response = await fetch('/api/catalog', { signal });
+      if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
+      const page = await response.json() as CatalogResponse;
+      const firstPage = page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
+      setApps(firstPage);
+      setNextCursor(page.nextCursor);
+      setTotalApps(firstPage.length);
     })().catch((err: Error) => {
         if (err.name !== 'AbortError') setError(err.message);
       });
@@ -55,15 +51,22 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   }, [apps, enabled, refresh]);
 
   const loadMore = useCallback(async () => {
-    if (role !== 'admin' || !nextCursor || loadingMore) return;
+    if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const response = await fetch(`/api/apps?cursor=${encodeURIComponent(nextCursor)}`);
-      if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
-      const page = await response.json() as AdminAppsResponse;
-      setApps((current) => [...(current ?? []), ...page.apps]);
+      const endpoint = role === 'admin' ? `/api/apps?cursor=${encodeURIComponent(nextCursor)}`
+        : `/api/catalog?cursor=${encodeURIComponent(nextCursor)}`;
+      const response = await fetch(endpoint);
+      if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
+      const page = await response.json() as AdminAppsResponse | CatalogResponse;
+      const nextApps = role === 'admin'
+        ? (page as AdminAppsResponse).apps
+        : (page as CatalogResponse).apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
+      setApps((current) => [...(current ?? []), ...nextApps]);
       setNextCursor(page.nextCursor);
-      if (Number.isFinite(page.total)) setTotalApps(page.total);
+      if (role === 'admin' && Number.isFinite((page as AdminAppsResponse).total)) {
+        setTotalApps((page as AdminAppsResponse).total);
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
