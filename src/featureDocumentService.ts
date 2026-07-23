@@ -9,6 +9,10 @@ import {
 import type { FeatureDocumentProvider } from "./featureDocumentProvider.ts";
 import type { FeatureDocumentStore, FeatureDocumentWorkerJob } from "./featureDocumentStore.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
+import {
+  EvidenceAnalysisError,
+  runValidatedProviderCall,
+} from "./evidenceAnalysisRuntime.ts";
 
 type FailureCode =
   | "image_missing"
@@ -78,11 +82,11 @@ function checkedImage(
 }
 
 function providerFailure(error: unknown, invalidCode: "step_invalid" | "document_invalid"): FeatureGenerationError {
-  const name = error instanceof Error ? error.name : "";
-  const message = error instanceof Error ? error.message : "";
-  if (name === "TimeoutError" || /timed? ?out|timeout/i.test(message)) return new FeatureGenerationError("provider_timeout");
-  if (/\((400|401|403|422)\)/.test(message)) return new FeatureGenerationError("provider_refused");
-  if (/invalid JSON|invalid response|returned no content/i.test(message)) return new FeatureGenerationError(invalidCode);
+  if (error instanceof EvidenceAnalysisError) {
+    if (error.code === "provider_timeout") return new FeatureGenerationError("provider_timeout");
+    if (error.code === "provider_refused") return new FeatureGenerationError("provider_refused");
+    if (error.code === "output_invalid") return new FeatureGenerationError(invalidCode);
+  }
   return new FeatureGenerationError("provider_unavailable");
 }
 
@@ -109,31 +113,21 @@ async function analyzeStep(input: {
   timeoutMs: number;
   retryDelayMs: number;
 }): Promise<{ result: FeatureStepAnalysis; attemptCount: number }> {
-  let validationError = "";
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    let raw: unknown;
-    try {
-      raw = await input.provider.analyzeImage(
+  try {
+    const analyzed = await runValidatedProviderCall({
+      call: (validationError, signal) => input.provider.analyzeImage(
         { ...input.prompt, ...(validationError ? { validationError } : {}) },
         input.image,
-        AbortSignal.timeout(input.timeoutMs),
-      );
-    } catch (error) {
-      const failure = providerFailure(error, "step_invalid");
-      if ((failure.code === "provider_timeout" || failure.code === "provider_unavailable") && attempt < 3) {
-        if (input.retryDelayMs) await new Promise((resolve) => setTimeout(resolve, input.retryDelayMs * attempt));
-        continue;
-      }
-      throw failure;
-    }
-    try {
-      return { result: parseFeatureStepAnalysis(raw, input.prompt.evidenceId), attemptCount: attempt };
-    } catch (error) {
-      validationError = error instanceof Error ? error.message : "Invalid step analysis";
-      if (attempt === 3) throw new FeatureGenerationError("step_invalid");
-    }
+        signal,
+      ),
+      parse: (raw) => parseFeatureStepAnalysis(raw, input.prompt.evidenceId),
+      timeoutMs: input.timeoutMs,
+      retryDelayMs: input.retryDelayMs,
+    });
+    return { result: analyzed.value, attemptCount: analyzed.attemptCount };
+  } catch (error) {
+    throw providerFailure(error, "step_invalid");
   }
-  throw new FeatureGenerationError("step_invalid");
 }
 
 async function synthesizeDocument(input: {
@@ -145,34 +139,27 @@ async function synthesizeDocument(input: {
   onValidation(): Promise<void>;
 }): Promise<FeatureDocumentContent> {
   const allowedEvidenceIds = input.job.evidenceManifest.map(({ evidenceId }) => evidenceId);
-  let validationError = "";
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    let raw: unknown;
-    try {
-      raw = await input.provider.synthesize({
-        source: input.job.source,
-        focusInstruction: input.job.focusInstruction,
-        analyses: input.analyses,
-        allowedEvidenceIds,
-        ...(validationError ? { validationError } : {}),
-      }, AbortSignal.timeout(input.timeoutMs));
-    } catch (error) {
-      const failure = providerFailure(error, "document_invalid");
-      if ((failure.code === "provider_timeout" || failure.code === "provider_unavailable") && attempt < 3) {
-        if (input.retryDelayMs) await new Promise((resolve) => setTimeout(resolve, input.retryDelayMs * attempt));
-        continue;
-      }
-      throw failure;
-    }
-    await input.onValidation();
-    try {
-      return parseFeatureDocumentContent(raw, new Set(allowedEvidenceIds));
-    } catch (error) {
-      validationError = error instanceof Error ? error.message : "Invalid feature document";
-      if (attempt === 3) throw new FeatureGenerationError("document_invalid");
-    }
+  try {
+    const synthesized = await runValidatedProviderCall({
+      call: async (validationError, signal) => {
+        const raw = await input.provider.synthesize({
+          source: input.job.source,
+          focusInstruction: input.job.focusInstruction,
+          analyses: input.analyses,
+          allowedEvidenceIds,
+          ...(validationError ? { validationError } : {}),
+        }, signal);
+        await input.onValidation();
+        return raw;
+      },
+      parse: (raw) => parseFeatureDocumentContent(raw, new Set(allowedEvidenceIds)),
+      timeoutMs: input.timeoutMs,
+      retryDelayMs: input.retryDelayMs,
+    });
+    return synthesized.value;
+  } catch (error) {
+    throw providerFailure(error, "document_invalid");
   }
-  throw new FeatureGenerationError("document_invalid");
 }
 
 export function createFeatureDocumentService(deps: {

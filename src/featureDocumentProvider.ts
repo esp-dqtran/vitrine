@@ -1,23 +1,23 @@
 import type { FeatureStepPrompt, FeatureSynthesisPrompt } from "./featureDocument.ts";
+import {
+  createMultimodalJsonProvider,
+  type MultimodalJsonProvider,
+  type ProviderEnvironment,
+  type RasterImage,
+} from "./evidenceAnalysisProvider.ts";
+import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 
-export type ProviderEnvironment = Partial<Record<
-  "RESEARCH_LLM_BASE_URL" | "RESEARCH_LLM_API_KEY" | "RESEARCH_LLM_MODEL",
-  string
->>;
+export type { ProviderEnvironment };
 
 export interface FeatureDocumentProvider {
   readonly model: string;
   analyzeImage(
     prompt: FeatureStepPrompt,
-    image: { bytes: Buffer; contentType: "image/png" | "image/jpeg" | "image/webp" },
+    image: RasterImage,
     signal: AbortSignal,
   ): Promise<unknown>;
   synthesize(prompt: FeatureSynthesisPrompt, signal: AbortSignal): Promise<unknown>;
 }
-
-type CompletionPayload = {
-  choices?: Array<{ message?: { content?: string } }>;
-};
 
 const STEP_SYSTEM_PROMPT = [
   "Return JSON only.",
@@ -35,82 +35,46 @@ const SYNTHESIS_SYSTEM_PROMPT = [
   "Never invent an evidence ID.",
 ].join(" ");
 
-function providerContent(payload: CompletionPayload): unknown {
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Feature analysis provider returned no content");
+async function legacyErrors<T>(operation: () => Promise<T>): Promise<T> {
   try {
-    return JSON.parse(content);
-  } catch {
-    throw new Error("Feature analysis provider returned invalid JSON");
+    return await operation();
+  } catch (error) {
+    if (!(error instanceof EvidenceAnalysisError)) throw error;
+    const message = error.message.replace(/^Analysis provider/, "Feature analysis provider");
+    throw new Error(message);
   }
+}
+
+export function featureDocumentProviderFromMultimodalJsonProvider(
+  provider: MultimodalJsonProvider,
+): FeatureDocumentProvider {
+  return {
+    model: provider.model,
+    analyzeImage(prompt, image, signal) {
+      if (image.bytes.byteLength < 1) {
+        throw new Error("Feature analysis image is empty");
+      }
+      return legacyErrors(() => provider.completeJson({
+        system: STEP_SYSTEM_PROMPT,
+        text: prompt,
+        image,
+        signal,
+      }));
+    },
+    synthesize(prompt, signal) {
+      return legacyErrors(() => provider.completeJson({
+        system: SYNTHESIS_SYSTEM_PROMPT,
+        text: prompt,
+        signal,
+      }));
+    },
+  };
 }
 
 export function createFeatureDocumentProvider(
   environment: ProviderEnvironment = process.env,
   request: typeof fetch = fetch,
 ): FeatureDocumentProvider | undefined {
-  const baseUrl = environment.RESEARCH_LLM_BASE_URL?.replace(/\/+$/, "");
-  const apiKey = environment.RESEARCH_LLM_API_KEY;
-  const model = environment.RESEARCH_LLM_MODEL;
-  if (!baseUrl || !apiKey || !model) return undefined;
-
-  async function complete(messages: unknown[], signal: AbortSignal): Promise<unknown> {
-    let response: Response;
-    try {
-      response = await request(`${baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          temperature: 0.1,
-          response_format: { type: "json_object" },
-          messages,
-        }),
-        signal,
-      });
-    } catch (error) {
-      if (signal.aborted) throw error;
-      throw new Error("Feature analysis provider request failed");
-    }
-    if (!response.ok) throw new Error(`Feature analysis provider request failed (${response.status})`);
-    let payload: CompletionPayload;
-    try {
-      payload = await response.json() as CompletionPayload;
-    } catch {
-      throw new Error("Feature analysis provider returned invalid response");
-    }
-    return providerContent(payload);
-  }
-
-  return {
-    model,
-    analyzeImage(prompt, image, signal) {
-      if (image.bytes.byteLength < 1) throw new Error("Feature analysis image is empty");
-      return complete([
-        { role: "system", content: STEP_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: JSON.stringify(prompt) },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${image.contentType};base64,${image.bytes.toString("base64")}`,
-                detail: "high",
-              },
-            },
-          ],
-        },
-      ], signal);
-    },
-    synthesize(prompt, signal) {
-      return complete([
-        { role: "system", content: SYNTHESIS_SYSTEM_PROMPT },
-        { role: "user", content: JSON.stringify(prompt) },
-      ], signal);
-    },
-  };
+  const provider = createMultimodalJsonProvider(environment, request);
+  return provider ? featureDocumentProviderFromMultimodalJsonProvider(provider) : undefined;
 }

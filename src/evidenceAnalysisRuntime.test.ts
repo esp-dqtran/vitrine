@@ -1,0 +1,89 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  EvidenceAnalysisError,
+  runValidatedProviderCall,
+} from "./evidenceAnalysisRuntime.ts";
+
+test("retries invalid structured output with the parser error", async () => {
+  const validationErrors: string[] = [];
+  const result = await runValidatedProviderCall({
+    call: async (validationError) => {
+      validationErrors.push(validationError);
+      return validationErrors.length === 1 ? { value: 0 } : { value: 2 };
+    },
+    parse: (value) => {
+      const number = (value as { value: number }).value;
+      if (number < 1) throw new Error("value must be positive");
+      return number;
+    },
+    timeoutMs: 1_000,
+    retryDelayMs: 0,
+  });
+
+  assert.deepEqual(result, { value: 2, attemptCount: 2 });
+  assert.deepEqual(validationErrors, ["", "value must be positive"]);
+});
+
+test("retries temporary provider failures at most three times", async () => {
+  let attempts = 0;
+  await assert.rejects(
+    runValidatedProviderCall({
+      call: async () => {
+        attempts += 1;
+        throw new EvidenceAnalysisError(
+          "provider_unavailable",
+          "Analysis provider is temporarily unavailable",
+        );
+      },
+      parse: (value) => value,
+      timeoutMs: 1_000,
+      retryDelayMs: 0,
+    }),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_unavailable",
+  );
+  assert.equal(attempts, 3);
+});
+
+test("does not retry a provider refusal", async () => {
+  let attempts = 0;
+  await assert.rejects(
+    runValidatedProviderCall({
+      call: async () => {
+        attempts += 1;
+        throw new EvidenceAnalysisError(
+          "provider_refused",
+          "Analysis provider refused the request",
+        );
+      },
+      parse: (value) => value,
+      timeoutMs: 1_000,
+      retryDelayMs: 0,
+    }),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_refused",
+  );
+  assert.equal(attempts, 1);
+});
+
+test("classifies an aborted timeout without exposing its original message", async () => {
+  await assert.rejects(
+    runValidatedProviderCall({
+      call: async () => {
+        const error = new Error("secret upstream timeout details");
+        error.name = "TimeoutError";
+        throw error;
+      },
+      parse: (value) => value,
+      timeoutMs: 1,
+      retryDelayMs: 0,
+    }),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_timeout"
+      && error.message === "Analysis provider timed out",
+  );
+});
