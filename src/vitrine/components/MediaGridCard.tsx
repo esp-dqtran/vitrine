@@ -4,12 +4,13 @@ import { Badge, ClickableCard } from '@astryxdesign/core';
 interface MediaGridCardProps {
   label: string;
   kind: 'image' | 'video';
-  url: string;
+  url?: string;
   thumbnailUrl?: string | null;
   posterUrl?: string;
   accent?: string;
   aspectRatio?: string | number;
   badges?: string[];
+  title?: string;
   delay?: number;
   onOpen: () => void;
 }
@@ -23,6 +24,7 @@ export function MediaGridCard({
   accent,
   aspectRatio = '16 / 10',
   badges = [],
+  title,
   delay = 0,
   onOpen,
 }: MediaGridCardProps) {
@@ -46,7 +48,7 @@ export function MediaGridCard({
         transform: hovered ? 'translateY(-4px)' : 'none',
       }}
     >
-      {mediaFailed ? (
+      {mediaFailed || !url ? (
         <div role="img" aria-label="Preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--color-text-secondary)', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))` }}>
           Preview unavailable
         </div>
@@ -72,7 +74,27 @@ export function MediaGridCard({
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: accent ? `${accent}22` : 'var(--color-background-muted)', transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
         />
       )}
-      <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
+      {title && (
+        <div
+          data-media-grid-card-title="true"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2,
+            padding: '28px 10px 10px',
+            background: 'linear-gradient(to top, rgba(0,0,0,.72), transparent)',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            pointerEvents: 'none',
+          }}
+        >
+          {title}
+        </div>
+      )}
+      <div style={{ position: 'absolute', left: 10, right: 10, ...(title ? { top: 8, justifyContent: 'flex-end' } : { bottom: 10 }), zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
         {badges.filter(Boolean).map((badge) => <Badge key={badge} label={badge} variant="neutral" style={{ background: 'rgba(24,24,27,.72)', color: '#fff', backdropFilter: 'blur(4px)' }} />)}
       </div>
     </ClickableCard>

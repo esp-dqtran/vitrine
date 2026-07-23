@@ -17,10 +17,18 @@ const loginFlow = {
 
 test("renders each flow as a compact card with its title, step count, and lead image", () => {
   const html = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} />);
+  assert.match(html, /data-reference-gallery="section"/);
+  assert.match(html, /data-reference-gallery="grid"/);
   assert.match(html, /Login/);
   assert.match(html, /2 steps/);
   assert.match(html, /\/api\/media\/linear\/0123456789abcdef/);
   assert.match(html, /aria-label="Open Login flow"/);
+});
+
+test("keeps the empty flows state inside the shared gallery section", () => {
+  const html = renderToStaticMarkup(<FlowsPanel flows={[]} />);
+  assert.match(html, /data-reference-gallery="section"/);
+  assert.match(html, /No captured flows yet/);
 });
 
 test("offers the FLOW.md editor only when app and platform are known", () => {

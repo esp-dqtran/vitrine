@@ -5,6 +5,7 @@ import type { Platform } from '../../platformFromUrl';
 import { FlowCard } from './FlowCard';
 import { FlowDocEditor } from './FlowDocEditor';
 import { FlowViewer } from './FlowViewer';
+import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
 import { SearchInput } from './SearchInput';
 
 const UNCATEGORIZED = '';
@@ -55,32 +56,42 @@ export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlo
   if (selected) return <FlowViewer flow={selected} app={app} platform={platform} version={version} onBack={() => setSelectedId(null)} />;
 
   if (flows.length === 0) {
-    return <EmptyState title="No captured flows yet" description="Import a curator-reviewed flow manifest to publish ordered evidence." />;
+    return (
+      <ReferenceGallerySection>
+        <EmptyState title="No captured flows yet" description="Import a curator-reviewed flow manifest to publish ordered evidence." />
+      </ReferenceGallerySection>
+    );
   }
 
+  const toolbar = flows.length > 8 || (app && platform) ? (
+    <>
+      {flows.length > 8 ? (
+        <div style={{ maxWidth: 320, flex: 1 }}>
+          <SearchInput
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setVisibleCount(FLOW_BATCH_SIZE);
+            }}
+            placeholder="Search flows…"
+          />
+        </div>
+      ) : <span />}
+      {app && platform && (
+        <Button label="Open FLOW.md" variant="primary" size="sm" tooltip="Open the ordered, evidence-cited product flow document to edit, preview, save, or download." onClick={() => setEditingDoc(true)} style={{ borderRadius: 999 }} />
+      )}
+    </>
+  ) : undefined;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        {flows.length > 8 ? (
-          <div style={{ maxWidth: 320, flex: 1 }}>
-            <SearchInput
-              value={search}
-              onChange={(value) => {
-                setSearch(value);
-                setVisibleCount(FLOW_BATCH_SIZE);
-              }}
-              placeholder="Search flows…"
-            />
-          </div>
-        ) : <span />}
-        {app && platform && (
-          <Button label="Open FLOW.md" variant="primary" size="sm" tooltip="Open the ordered, evidence-cited product flow document to edit, preview, save, or download." onClick={() => setEditingDoc(true)} style={{ borderRadius: 999 }} />
-        )}
-      </div>
+    <ReferenceGallerySection
+      toolbar={toolbar}
+      sentinel={hasMore ? <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} /> : undefined}
+    >
       {filtered.length === 0 ? (
         <EmptyState title="No flows match your search" description={`Nothing found for "${search}".`} />
       ) : (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {visibleGroups.map(([category, groupFlows]) => (
             <div key={category || 'uncategorized'} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {category && (
@@ -89,14 +100,13 @@ export function FlowsPanel({ flows, app, platform, version }: { flows: DesignFlo
                   <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{categoryTotals.get(category)}</span>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
+              <ReferenceGalleryGrid minCardWidth={220}>
                 {groupFlows.map((flow) => <FlowCard key={flow.id} flow={flow} onOpen={() => setSelectedId(flow.id)} />)}
-              </div>
+              </ReferenceGalleryGrid>
             </div>
           ))}
-          {hasMore && <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />}
-        </>
+        </div>
       )}
-    </div>
+    </ReferenceGallerySection>
   );
 }

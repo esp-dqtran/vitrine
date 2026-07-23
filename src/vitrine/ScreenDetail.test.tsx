@@ -46,6 +46,15 @@ test('renders Apps through the shared reference detail shell', () => {
   assert.match(source, /<ReferenceDetailShell/);
 });
 
+test('renders Screens and UI Elements through the shared gallery section and grid', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.match(source, /import \{ ReferenceGalleryGrid, ReferenceGallerySection \} from '.\/ReferenceGallerySection'/);
+  assert.match(source, /<ReferenceGallerySection/);
+  assert.match(source, /<ReferenceGalleryGrid/);
+  assert.match(source, /section === 'screens' \|\| section === 'elements' \|\| section === 'flows'/);
+  assert.match(source, /section === 'flows' \? <FlowsPanel flows=\{flows\}/);
+});
+
 test('renders metadata-only aggregate counts on Overview', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail

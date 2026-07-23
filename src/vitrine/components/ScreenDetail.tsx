@@ -19,6 +19,7 @@ import { ScreenGridCard } from './ScreenGridCard';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { VersionPanel } from './VersionPanel';
 import { ReferenceDetailShell } from './ReferenceDetailShell';
+import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
 
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
@@ -148,22 +149,35 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
 
   const sectionLoading = sectionData.versionsLoading || sectionData.state.status === 'loading' || (needsDesignSystem && designSystemStatus === 'loading');
   const sectionError = sectionData.state.status === 'error' ? sectionData.state.error : null;
-  const renderEvidence = (items: Screen[], emptyTitle: string) => items.length ? (
+  const hasScreenFilters = types.length > 1 || layouts.length > 0 || screenComponents.length > 0 || states.length > 0;
+  const screenFilterControls = hasScreenFilters ? (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: section === 'elements' ? 'repeat(auto-fill,minmax(200px,1fr))' : 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
-        {(section === 'screens' ? filtered : items).map((screen, index) => (
-          <ScreenGridCard
-            key={screen.id}
-            screen={screen}
-            accent={app.accent}
-            delay={Math.min(index * 0.04, 0.32)}
-            onOpen={() => setLightbox({ index: screens.indexOf(screen) })}
-          />
-        ))}
-      </div>
-      {nextCursor && <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div>}
+      {types.length > 1 && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{['All', ...types].map((type) => <ToggleButton key={type} label={type} isPressed={typeFilter === type} onPressedChange={() => setTypeFilter(type)} size="sm" />)}</div>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{([
+        ['Layout', layoutFilter, setLayoutFilter, layouts], ['Component', componentFilter, setComponentFilter, screenComponents], ['State', stateFilter, setStateFilter, states],
+      ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? <Selector key={label} label={label} size="sm" value={value} onChange={change} options={['All', ...options]} /> : null)}</div>
     </>
-  ) : <EmptyState title={emptyTitle} isCompact />;
+  ) : undefined;
+  const renderEvidence = (items: Screen[], emptyTitle: string) => (
+    <ReferenceGallerySection
+      toolbar={section === 'screens' ? screenFilterControls : undefined}
+      sentinel={nextCursor ? <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div> : undefined}
+    >
+      {items.length ? (
+        <ReferenceGalleryGrid minCardWidth={section === 'elements' ? 200 : 280}>
+          {(section === 'screens' ? filtered : items).map((screen, index) => (
+            <ScreenGridCard
+              key={screen.id}
+              screen={screen}
+              accent={app.accent}
+              delay={Math.min(index * 0.04, 0.32)}
+              onOpen={() => setLightbox({ index: screens.indexOf(screen) })}
+            />
+          ))}
+        </ReferenceGalleryGrid>
+      ) : <EmptyState title={emptyTitle} isCompact />}
+    </ReferenceGallerySection>
+  );
 
   const platformControls = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -208,15 +222,6 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
     { id: 'export' as const, label: 'Export' },
     ...(role === 'admin' ? [{ id: 'review' as const, label: 'Review' }] : []),
   ];
-  const tabControls = section === 'screens' ? (
-    <>
-      {types.length > 1 && <div style={{ display: 'flex', gap: 8, padding: '16px 0', flexWrap: 'wrap' }}>{['All', ...types].map((type) => <ToggleButton key={type} label={type} isPressed={typeFilter === type} onPressedChange={() => setTypeFilter(type)} size="sm" />)}</div>}
-      <div style={{ display: 'flex', gap: 8, padding: '16px 0', flexWrap: 'wrap' }}>{([
-        ['Layout', layoutFilter, setLayoutFilter, layouts], ['Component', componentFilter, setComponentFilter, screenComponents], ['State', stateFilter, setStateFilter, states],
-      ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? <Selector key={label} label={label} size="sm" value={value} onChange={change} options={['All', ...options]} /> : null)}</div>
-    </>
-  ) : undefined;
-
   return (
     <>
       <ReferenceDetailShell
@@ -233,9 +238,8 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
         tabs={tabs}
         activeTab={section}
         onTabChange={setSection}
-        tabControls={tabControls}
         tabTrailing={<span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${screens.length} screens` : section === 'elements' ? `${screens.length} UI elements` : section === 'flows' ? `${flows.length} flows` : ''}</span>}
-        bodyPadding={section === 'screens' ? '32px 40px 72px' : '8px 40px 80px'}
+        bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>
           {section !== 'overview' && sectionData.versions !== null && (
@@ -259,7 +263,7 @@ export function ScreenDetail({ app, onBack, role, initialSection, onSectionChang
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} />
                   : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-                      : section === 'flows' ? (flows.length ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} /> : <EmptyState title="No flows captured" isCompact />)
+                      : section === 'flows' ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} />
                         : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
         </div>
       </ReferenceDetailShell>
