@@ -6,6 +6,7 @@ import { PlaceholderImage } from './components/PlaceholderImage';
 import { useFloatDrift } from './useFloatDrift';
 import { useRevealOnScroll } from './useRevealOnScroll';
 import { useSlidingIndicator } from './useSlidingIndicator';
+import { useCatalogPreview } from './useCatalogPreview';
 
 const wrap: CSSProperties = { maxWidth: 1160, margin: '0 auto', padding: '0 32px' };
 
@@ -215,10 +216,15 @@ const PATTERN_TABS = [
   { key: 'tokens', label: 'Tokens & evidence', desc: 'The color, spacing and type decisions behind the screen, reconstructed and cited.', images: [{ seed: 'home-inside-tokens', placeholder: 'Tokens & evidence' }] },
 ];
 
-function PatternTabs() {
+function PatternTabs({ screenSrc = [] }: { screenSrc?: string[] }) {
   const [active, setActive] = useState('screens');
   const tab = PATTERN_TABS.find((t) => t.key === active)!;
   const { indicatorRef, registerItem } = useSlidingIndicator(active, { wraps: true });
+  // The Screens tab shows real captured screenshots when the catalog has them;
+  // the other tabs stay neutral placeholders (no public element/flow crop to load).
+  const images = active === 'screens'
+    ? tab.images.map((img, i) => ({ ...img, src: screenSrc[i] }))
+    : tab.images.map((img) => ({ ...img, src: undefined as string | undefined }));
   return (
     <div>
       <div style={{ position: 'relative', display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 28, padding: 5, background: 'var(--color-background-muted)', borderRadius: 999, width: 'fit-content' }}>
@@ -251,9 +257,9 @@ function PatternTabs() {
         <Text type="body" color="secondary">{tab.desc}</Text>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20 }}>
-        {tab.images.map((img) => (
-          <div key={img.seed} style={{ position: 'relative', aspectRatio: tab.images.length === 1 ? '16/9' : '4/3', borderRadius: 'var(--radius-container)', overflow: 'hidden', background: 'var(--color-background-muted)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-low)' }}>
-            <PlaceholderImage seed={img.seed} />
+        {images.map((img) => (
+          <div key={img.seed} style={{ position: 'relative', aspectRatio: images.length === 1 ? '16/9' : '4/3', borderRadius: 'var(--radius-container)', overflow: 'hidden', background: 'var(--color-background-muted)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-low)' }}>
+            <PlaceholderImage seed={img.seed} src={img.src} />
           </div>
         ))}
       </div>
@@ -270,6 +276,9 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
   onLogin: () => void;
 }) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
+  const realApps = useCatalogPreview();
+  // One screen from each of the first few real apps, for variety across the tiles.
+  const screenSrc = (realApps ?? []).map((a) => a.screens[0]?.url).filter((u): u is string => Boolean(u)).slice(0, 3);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const patternsRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -350,7 +359,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
               <Text type="body" color="secondary">Not just a screenshot — the full anatomy of the product.</Text>
             </div>
           </div>
-          <PatternTabs />
+          <PatternTabs screenSrc={screenSrc} />
         </Section>
       </div>
 

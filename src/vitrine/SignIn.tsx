@@ -4,6 +4,7 @@ import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type
 import type { AuthUser } from './authApi';
 import { validateReferral } from './referralApi';
 import { useFloatDrift } from './useFloatDrift';
+import { useCatalogPreview } from './useCatalogPreview';
 
 interface ReferralStorage {
   getItem(key: string): string | null;
@@ -138,9 +139,17 @@ function SuccessPanel() {
   );
 }
 
-// Cards echoing the rest of Vitrine's catalog on the right-hand showcase panel.
-// These are marketing placeholders (no real screenshot to load), not live data.
-const SHOWCASE = [
+interface Slide {
+  id: string;
+  app: string;
+  accent: string;
+  type: string;
+  // Real preview screenshot from the catalog; absent → gradient placeholder.
+  image?: string;
+}
+
+// Fallback shown until the real catalog previews load (or if none are servable).
+const SHOWCASE: Slide[] = [
   { app: 'Ledgerly', id: 'si-ledgerly', accent: '#3b6ef6', type: 'Dashboard' },
   { app: 'Cadence', id: 'si-cadence', accent: '#6b5bd6', type: 'Board' },
   { app: 'Beacon', id: 'si-beacon', accent: '#0891b2', type: 'Reports' },
@@ -155,13 +164,23 @@ function slidePos(i: number, index: number, count: number) {
   return { tx: 0, rot: 0, scale: 0.88, opacity: 0, z: 0 };
 }
 
-function SlidePlaceholder({ accent, app, type }: { accent: string; app: string; type: string }) {
+function SlidePlaceholder({ accent, app, type, image }: Slide) {
   return (
     <>
       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(160deg,${accent}33,#101012 68%)` }} />
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, textAlign: 'center', padding: 24 }}>
-        {app} {type.toLowerCase()}
-      </div>
+      {image ? (
+        <img
+          src={image}
+          alt={`${app} — ${type}`}
+          loading="lazy"
+          decoding="async"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, textAlign: 'center', padding: 24 }}>
+          {app} {type.toLowerCase()}
+        </div>
+      )}
     </>
   );
 }
@@ -319,9 +338,13 @@ function HeroCopy() {
 }
 
 function Showcase() {
+  const realApps = useCatalogPreview(8);
+  const slides: Slide[] = realApps && realApps.length
+    ? realApps.slice(0, 5).map((a) => ({ id: a.id, app: a.name, accent: a.accent, type: a.screens[0].type, image: a.screens[0].url }))
+    : SHOWCASE;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const count = SHOWCASE.length;
+  const count = slides.length;
 
   const cardStackRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -336,7 +359,7 @@ function Showcase() {
   // Animate the card stack to its new positions with GSAP instead of relying on
   // CSS transitions, matching the tab-indicator pattern in ScreenDetail.tsx.
   useLayoutEffect(() => {
-    SHOWCASE.forEach((_, i) => {
+    slides.forEach((_, i) => {
       const el = slideRefs.current[i];
       if (!el) return;
       const p = slidePos(i, index, count);
@@ -371,7 +394,7 @@ function Showcase() {
     tilt(py * -8, px * 8);
   };
 
-  const active = SHOWCASE[index];
+  const active = slides[index] ?? slides[0];
   const prevIdx = (index - 1 + count) % count;
   const nextIdx = (index + 1) % count;
 
@@ -412,7 +435,7 @@ function Showcase() {
             transform: 'translate(-22px,10px) rotate(-6deg)',
             borderRadius: 16,
             overflow: 'hidden',
-            background: `linear-gradient(160deg,${SHOWCASE[prevIdx].accent}26,#1c1c1f 70%)`,
+            background: `linear-gradient(160deg,${slides[prevIdx].accent}26,#1c1c1f 70%)`,
             border: '1px solid rgba(255,255,255,0.08)',
             opacity: 0.55,
             transition: 'transform .5s cubic-bezier(.16,1,.3,1)',
@@ -425,7 +448,7 @@ function Showcase() {
             transform: 'translate(22px,14px) rotate(6deg)',
             borderRadius: 16,
             overflow: 'hidden',
-            background: `linear-gradient(160deg,${SHOWCASE[nextIdx].accent}26,#1c1c1f 70%)`,
+            background: `linear-gradient(160deg,${slides[nextIdx].accent}26,#1c1c1f 70%)`,
             border: '1px solid rgba(255,255,255,0.08)',
             opacity: 0.4,
             transition: 'transform .5s cubic-bezier(.16,1,.3,1)',
@@ -445,7 +468,7 @@ function Showcase() {
             perspective: 1000,
           }}
         >
-          {SHOWCASE.map((s, i) => (
+          {slides.map((s, i) => (
             <div
               key={s.id}
               ref={(el) => {
@@ -453,7 +476,7 @@ function Showcase() {
               }}
               style={{ position: 'absolute', inset: 0 }}
             >
-              <SlidePlaceholder accent={s.accent} app={s.app} type={s.type} />
+              <SlidePlaceholder {...s} />
             </div>
           ))}
           <div
@@ -472,7 +495,7 @@ function Showcase() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', gap: 6, justifyContent: 'center', marginTop: 36, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .5s both' }}>
-        {SHOWCASE.map((s, i) => (
+        {slides.map((s, i) => (
           <div
             key={s.id}
             onClick={() => setIndex(i)}
