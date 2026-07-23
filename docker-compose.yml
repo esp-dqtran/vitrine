@@ -146,6 +146,21 @@ services:
         condition: service_completed_successfully
     restart: on-failure
 
+  search-index-worker:
+    build:
+      context: .
+      dockerfile: services/search-index-worker/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      ADVANCED_SEARCH_ENABLED: ${ADVANCED_SEARCH_ENABLED:-false}
+      SEARCH_EMBEDDING_BASE_URL: ${SEARCH_EMBEDDING_BASE_URL:-https://api.openai.com/v1}
+      SEARCH_EMBEDDING_API_KEY: ${SEARCH_EMBEDDING_API_KEY:-}
+      SEARCH_EMBEDDING_MODEL: ${SEARCH_EMBEDDING_MODEL:-text-embedding-3-small}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
+
   sites-import-worker:
     build:
       context: .
