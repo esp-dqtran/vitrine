@@ -131,9 +131,9 @@ function IconMarquee() {
 // ---------- stats block ----------
 // ponytail: headline figures are marketing copy, not live counts — update by hand.
 const STATS = [
-  { n: '12', label: 'apps' },
-  { n: '25+', label: 'screens' },
-  { n: '160+', label: 'UI elements' },
+  { n: '465', label: 'apps' },
+  { n: '137K+', label: 'screens' },
+  { n: '647', label: 'UI elements' },
 ];
 const STAT_ICONS = [
   { glyph: 'coin', color: '#3b6ef6', size: 44, top: '4%', left: '8%', dur: 5.6, delay: -1.2, rotate: -6, rswing: 8 },
@@ -263,7 +263,12 @@ function PatternTabs() {
 
 const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' };
 
-export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void }) {
+export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
+  onBrowse: () => void;
+  onPricing: () => void;
+  onBuildInPublic: () => void;
+  onLogin: () => void;
+}) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const patternsRef = useRef<HTMLDivElement>(null);
@@ -304,6 +309,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
             items={[
               { label: 'Browse', onClick: onBrowse },
               { label: 'Pricing', onClick: onPricing },
+              { label: 'Build in public', onClick: onBuildInPublic },
               { label: 'Log in', onClick: onLogin },
             ]}
           />
@@ -311,6 +317,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
           <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
             <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
             <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
+            <Button label="Build in public" variant="ghost" onClick={onBuildInPublic} style={navLink} />
             <Button label="Log in" variant="ghost" onClick={onLogin} style={navLink} />
           </div>
         )}
@@ -373,6 +380,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
           <div style={{ display: 'flex', gap: 20 }}>
             <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
             <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Build in public" variant="ghost" size="sm" onClick={onBuildInPublic} style={{ ...navLink, fontSize: 13 }} />
             <Button label="Sign in" variant="ghost" size="sm" onClick={onLogin} style={{ ...navLink, fontSize: 13 }} />
           </div>
         </div>

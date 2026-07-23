@@ -12,6 +12,12 @@ test('round-trips the billing settings route used by the Stripe customer portal'
   assert.equal(routeToPath({ name: 'settings-billing' }), '/settings/billing');
 });
 
+test('round-trips the public build-in-public route', () => {
+  assert.deepEqual(parseRoutePath('/build-in-public'), { name: 'build-in-public' });
+  assert.deepEqual(parseRoutePath('/build-in-public/'), { name: 'build-in-public' });
+  assert.equal(routeToPath({ name: 'build-in-public' }), '/build-in-public');
+});
+
 test('round-trips authenticated documents and public share routes', () => {
   assert.deepEqual(parseRoutePath('/feature-documents/12'), { name: 'feature-document', documentId: 12 });
   assert.equal(routeToPath({ name: 'feature-document', documentId: 12 }), '/feature-documents/12');

@@ -3,6 +3,7 @@ import { Spinner, Theme, defineTheme } from '@astryxdesign/core';
 import { App } from './App';
 import { AuthProvider, useAuth } from './AuthProvider';
 import { Home } from './Home';
+import { BuildInPublicPage } from './BuildInPublic';
 import { Pricing } from './Pricing';
 import { BillingSuccess } from './components/BillingSuccess';
 import { SignIn } from './SignIn';
@@ -16,6 +17,8 @@ import './styles.css';
 const appTheme = defineTheme({ name: 'neutral' });
 
 const goApps = () => navigate({ name: 'apps' });
+const goHome = () => navigate({ name: 'landing' });
+const goBuildInPublic = () => navigate({ name: 'build-in-public' });
 const goPricing = () => navigate({ name: 'pricing' });
 const goSignIn = () => navigate({ name: 'signin' });
 
@@ -29,6 +32,10 @@ function Root() {
 
   if (route.name === 'feature-document-share') {
     return <FeatureDocumentSharePage token={route.token} />;
+  }
+
+  if (route.name === 'build-in-public') {
+    return <BuildInPublicPage onHome={goHome} onBrowse={user ? goApps : goSignIn} onPricing={goPricing} />;
   }
 
   if (loading) {
@@ -54,6 +61,7 @@ function Root() {
     <Home
       onBrowse={goSignIn}
       onPricing={goPricing}
+      onBuildInPublic={goBuildInPublic}
       onLogin={goSignIn}
     />
   );
