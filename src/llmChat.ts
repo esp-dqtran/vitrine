@@ -119,6 +119,30 @@ async function waitForLogin(
 // multi-section markdown reply, so anything real is comfortably longer than this.
 const MIN_STABLE_REPLY_LENGTH = 200;
 
+export function isChatRateLimitText(text: string): boolean {
+  return /you(?:'|’)re making requests too quickly/i.test(text)
+    || /temporarily limited access to your conversations/i.test(text);
+}
+
+export class ChatRateLimitError extends Error {
+  constructor() {
+    super("ChatGPT temporarily limited browser requests");
+    this.name = "ChatRateLimitError";
+  }
+}
+
+async function throwIfChatRateLimited(
+  page: Page,
+  signal?: AbortSignal,
+): Promise<void> {
+  const messages = await raceChatAbort(
+    page.getByText(/making requests too quickly|temporarily limited access to your conversations/i)
+      .allTextContents(),
+    signal,
+  );
+  if (messages.some(isChatRateLimitText)) throw new ChatRateLimitError();
+}
+
 async function waitForStableReply(
   page: Page,
   selector: string,
@@ -130,6 +154,7 @@ async function waitForStableReply(
   let stableSince = 0;
   while (Date.now() < deadline) {
     signal?.throwIfAborted();
+    await throwIfChatRateLimited(page, signal);
     const bubbles = await raceChatAbort(page.locator(selector).allTextContents(), signal);
     const text = bubbles.at(-1)?.trim() ?? "";
     if (text && text === last) {
@@ -160,6 +185,7 @@ async function sendPrompt(
     await raceChatAbort(input.fill(prompt), signal);
     await raceChatAbort(input.press("Enter"), signal);
     await raceChatAbort(page.waitForTimeout(1500), signal);
+    await throwIfChatRateLimited(page, signal);
     const remaining = (await raceChatAbort(input.textContent(), signal))?.trim() ?? "";
     if (remaining === "") return; // textbox cleared — message was accepted
   }

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  ChatRateLimitError,
   chatSessionHeadless,
+  isChatRateLimitText,
   raceChatAbort,
   resolveChatProfileDir,
   type ChatSession,
@@ -32,6 +34,20 @@ test("browser waits reject immediately when the request is aborted", async () =>
 
 test("browser waits preserve the operation result without a signal", async () => {
   assert.equal(await raceChatAbort(Promise.resolve("ready")), "ready");
+});
+
+test("recognizes the ChatGPT conversation-limit modal safely", () => {
+  assert.equal(
+    isChatRateLimitText(
+      "You’re making requests too quickly. We’ve temporarily limited access to your conversations to protect your data.",
+    ),
+    true,
+  );
+  assert.equal(isChatRateLimitText("A normal assistant response"), false);
+  assert.equal(
+    new ChatRateLimitError().message,
+    "ChatGPT temporarily limited browser requests",
+  );
 });
 
 test("ChatSession keeps existing callers compatible while accepting request options", () => {

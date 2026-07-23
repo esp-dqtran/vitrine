@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { ChatAttachment, ChatSession } from "./llmChat.ts";
+import {
+  ChatRateLimitError,
+  type ChatAttachment,
+  type ChatSession,
+} from "./llmChat.ts";
 import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 import {
   createChatGptBrowserAppKnowledgeProvider,
@@ -91,6 +95,27 @@ test("uploads verified bytes and uses no attachment for synthesis", async () => 
   assert.equal(calls[0].signal, signal);
   assert.match(calls[0].prompt, /SCREEN-1/);
   assert.match(calls[1].prompt, /captureVersionId/);
+});
+
+test("maps the ChatGPT rate-limit modal to a non-retryable provider failure", async () => {
+  const session: ChatSession = {
+    async ask() {
+      throw new ChatRateLimitError();
+    },
+    close: async () => {},
+  };
+  const provider = createChatGptBrowserAppKnowledgeProvider([session]);
+
+  await assert.rejects(
+    () => provider.analyzeEvidence(evidencePrompt("SCREEN-LIMITED"), {
+      bytes: Buffer.from("png"),
+      contentType: "image/png",
+    }, AbortSignal.timeout(1_000)),
+    (error: unknown) =>
+      error instanceof EvidenceAnalysisError
+      && error.code === "provider_rate_limited"
+      && error.message === "ChatGPT temporarily limited browser requests",
+  );
 });
 
 test("serializes work per session while using two sessions concurrently", async () => {

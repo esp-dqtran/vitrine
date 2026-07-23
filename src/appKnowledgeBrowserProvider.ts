@@ -1,5 +1,9 @@
 import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
-import type { ChatAttachment, ChatSession } from "./llmChat.ts";
+import {
+  ChatRateLimitError,
+  type ChatAttachment,
+  type ChatSession,
+} from "./llmChat.ts";
 import {
   APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS,
   APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS,
@@ -47,6 +51,17 @@ function attachment(image: {
   };
 }
 
+async function requestBrowserJson(request: () => Promise<string>): Promise<Record<string, unknown>> {
+  try {
+    return parseBrowserJsonObject(await request());
+  } catch (error) {
+    if (error instanceof ChatRateLimitError) {
+      throw new EvidenceAnalysisError("provider_rate_limited");
+    }
+    throw error;
+  }
+}
+
 export function createChatGptBrowserAppKnowledgeProvider(
   sessions: readonly ChatSession[],
 ): AppKnowledgeProvider {
@@ -74,8 +89,8 @@ export function createChatGptBrowserAppKnowledgeProvider(
   return {
     model: CHATGPT_BROWSER_MODEL,
     analyzeEvidence(prompt, image, signal) {
-      return useSession(signal, async (session) => parseBrowserJsonObject(
-        await session.ask(
+      return useSession(signal, async (session) => requestBrowserJson(
+        () => session.ask(
           appKnowledgeBrowserPrompt(APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS, prompt),
           attachment(image),
           { signal },
@@ -83,8 +98,8 @@ export function createChatGptBrowserAppKnowledgeProvider(
       ));
     },
     synthesize(prompt, signal) {
-      return useSession(signal, async (session) => parseBrowserJsonObject(
-        await session.ask(
+      return useSession(signal, async (session) => requestBrowserJson(
+        () => session.ask(
           appKnowledgeBrowserPrompt(APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS, prompt),
           undefined,
           { signal },
