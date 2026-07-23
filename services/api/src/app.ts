@@ -151,6 +151,7 @@ import {
   type AppKnowledgeTarget,
 } from "../../../src/appKnowledgeStore.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
+import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowledgeProviderConfig.ts";
 import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
@@ -434,7 +435,7 @@ const defaults = {
   featureDocumentPromptVersion: 1,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
   appKnowledgeStore: createAppKnowledgeStore(),
-  appKnowledgeProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
+  appKnowledgeProviderModel: appKnowledgeProviderModelFromEnvironment(),
   appKnowledgePromptVersion: 1,
   appKnowledgeCurrentSourceSha256: undefined as
     | ((target: AppKnowledgeTarget) => Promise<string | undefined>)

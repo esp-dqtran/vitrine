@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -173,6 +181,15 @@ function crawlRun(overrides: Record<string, unknown> = {}) {
 test("uses the repository's free host API port", async () => {
   const appModule = await import("./app.ts");
   assert.equal((appModule as { DEFAULT_API_PORT?: number }).DEFAULT_API_PORT, 3010);
+});
+
+test("App Knowledge availability comes from its browser provider config", () => {
+  const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
+  assert.match(source, /appKnowledgeProviderModelFromEnvironment/);
+  assert.doesNotMatch(
+    source.match(/appKnowledgeProviderModel:[^\n]+/)?.[0] ?? "",
+    /RESEARCH_LLM_MODEL/,
+  );
 });
 
 test("mounts scoped App Knowledge generation after session and admin authorization", async () => {
