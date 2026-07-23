@@ -29,3 +29,10 @@ test('keeps roadmap content typed, static, and independent from APIs', () => {
   assert.match(source, /const ROADMAP_ITEMS: readonly RoadmapItemData\[\]/);
   assert.doesNotMatch(source, /fetch\(|useEffect|setInterval|setTimeout/);
 });
+
+test('renders the roadmap before authentication gates', () => {
+  const source = readFileSync(new URL('./main.tsx', import.meta.url), 'utf8');
+
+  assert.ok(source.indexOf("route.name === 'build-in-public'") < source.indexOf('if (loading)'));
+  assert.match(source, /<BuildInPublicPage/);
+});

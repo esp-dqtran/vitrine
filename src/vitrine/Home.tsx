@@ -263,7 +263,12 @@ function PatternTabs() {
 
 const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' };
 
-export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; onPricing: () => void; onLogin: () => void }) {
+export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
+  onBrowse: () => void;
+  onPricing: () => void;
+  onBuildInPublic: () => void;
+  onLogin: () => void;
+}) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const patternsRef = useRef<HTMLDivElement>(null);
@@ -304,6 +309,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
             items={[
               { label: 'Browse', onClick: onBrowse },
               { label: 'Pricing', onClick: onPricing },
+              { label: 'Build in public', onClick: onBuildInPublic },
               { label: 'Log in', onClick: onLogin },
             ]}
           />
@@ -311,6 +317,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
           <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
             <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
             <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
+            <Button label="Build in public" variant="ghost" onClick={onBuildInPublic} style={navLink} />
             <Button label="Log in" variant="ghost" onClick={onLogin} style={navLink} />
           </div>
         )}
@@ -373,6 +380,7 @@ export function Home({ onBrowse, onPricing, onLogin }: { onBrowse: () => void; o
           <div style={{ display: 'flex', gap: 20 }}>
             <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
             <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Build in public" variant="ghost" size="sm" onClick={onBuildInPublic} style={{ ...navLink, fontSize: 13 }} />
             <Button label="Sign in" variant="ghost" size="sm" onClick={onLogin} style={{ ...navLink, fontSize: 13 }} />
           </div>
         </div>
