@@ -78,7 +78,20 @@ const content = {
     typography: [], spacing: [], radius: [], border: [], effects: [], layout: [],
     iconography: [], imagery: [], responsive: [], content: [], interaction: [],
   },
-  flows: [],
+  flows: [{
+    id: 'flow-onboarding',
+    sourceFlowId: 'onboarding',
+    title: 'Onboarding',
+    userGoal: { ...claim, id: 'flow-goal', text: 'The user completes onboarding.' },
+    actors: [],
+    entryPoint: { ...claim, id: 'flow-entry', text: 'The user opens onboarding.' },
+    completionPoint: { ...claim, id: 'flow-complete', text: 'The workspace is ready.' },
+    steps: [],
+    effectivePatterns: [],
+    risks: [],
+    inconsistencies: [],
+    openQuestions: [],
+  }],
   productKnowledge: {
     capabilities: [], featureRelationships: [], userJourneys: [], actorResponsibilities: [],
     requirements: [], acceptanceCriteria: [], edgeCases: [], dependencies: [], risks: [],
@@ -163,6 +176,9 @@ test('renders claim editing, exact evidence, candidate decisions, and guarded sn
   assert.match(html, /Acknowledge partial coverage/);
   assert.match(html, /Submit for review/);
   assert.match(html, /Regenerate/);
+  assert.match(html, /Mark Onboarding reviewed/);
+  assert.match(html, /Record designer review/);
+  assert.match(html, /Record auth test passed/);
 });
 
 test('saves a complete cloned snapshot and records review decisions without browser prompts', () => {

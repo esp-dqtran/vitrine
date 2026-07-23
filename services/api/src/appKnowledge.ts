@@ -73,6 +73,9 @@ const REVIEW_ACTIONS = new Set([
   "component_rejected",
   "token_confirmed",
   "token_rejected",
+  "flow_reviewed",
+  "role_projection_reviewed",
+  "pilot_auth_accepted",
   "snapshot_submitted",
   "snapshot_approved",
 ]);
@@ -235,6 +238,13 @@ function hasReviewEntity(
 ): boolean {
   if (action === "snapshot_submitted" || action === "snapshot_approved") {
     return entityId === "snapshot";
+  }
+  if (action === "pilot_auth_accepted") return entityId === "auth";
+  if (action === "role_projection_reviewed") {
+    return ROLES.has(entityId);
+  }
+  if (action === "flow_reviewed") {
+    return snapshot.flows.some(({ id }) => id === entityId);
   }
   if (action.startsWith("claim_")) {
     return claims(snapshot).some(({ id }) => id === entityId);

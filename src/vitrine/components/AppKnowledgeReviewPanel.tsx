@@ -26,6 +26,9 @@ type ReviewAction =
   | 'component_rejected'
   | 'token_confirmed'
   | 'token_rejected'
+  | 'flow_reviewed'
+  | 'role_projection_reviewed'
+  | 'pilot_auth_accepted'
   | 'snapshot_submitted'
   | 'snapshot_approved';
 
@@ -333,6 +336,48 @@ export function AppKnowledgeReviewPanel(props: {
             </Card>
           ))}
         </div>
+      </section>
+
+      <section>
+        <h3 style={{ color: 'var(--color-text-primary)' }}>Pilot acceptance</h3>
+        <Card variant="muted" padding={4}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <strong style={{ color: 'var(--color-text-primary)' }}>Complete Flows</strong>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                {revision.content.flows.map((flow) => (
+                  <Button
+                    key={flow.id}
+                    label={decisionFor(props.view, flow.id) === 'flow_reviewed' ? `${flow.title} reviewed` : `Mark ${flow.title} reviewed`}
+                    size="sm"
+                    isDisabled={pending || decisionFor(props.view, flow.id) === 'flow_reviewed'}
+                    clickAction={() => void decide('flow_reviewed', flow.id, `${flow.title} marked reviewed.`)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <strong style={{ color: 'var(--color-text-primary)' }}>Role projections</strong>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                {(['designer', 'developer', 'product'] as const).map((role) => (
+                  <Button
+                    key={role}
+                    label={decisionFor(props.view, role) === 'role_projection_reviewed' ? `${role} reviewed` : `Record ${role} review`}
+                    size="sm"
+                    isDisabled={pending || decisionFor(props.view, role) === 'role_projection_reviewed'}
+                    clickAction={() => void decide('role_projection_reviewed', role, `${role} projection marked reviewed.`)}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button
+              label={decisionFor(props.view, 'auth') === 'pilot_auth_accepted' ? 'Auth test recorded' : 'Record auth test passed'}
+              size="sm"
+              isDisabled={pending || decisionFor(props.view, 'auth') === 'pilot_auth_accepted'}
+              clickAction={() => void decide('pilot_auth_accepted', 'auth', 'Admin/member auth boundary accepted.')}
+            />
+          </div>
+        </Card>
       </section>
       {message && <div role="status">{message}</div>}
     </div>

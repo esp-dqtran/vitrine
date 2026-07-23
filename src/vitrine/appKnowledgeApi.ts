@@ -320,6 +320,9 @@ export function recordAppKnowledgeReviewAction(
     | 'component_rejected'
     | 'token_confirmed'
     | 'token_rejected'
+    | 'flow_reviewed'
+    | 'role_projection_reviewed'
+    | 'pilot_auth_accepted'
     | 'snapshot_submitted'
     | 'snapshot_approved',
   entityId: string,
