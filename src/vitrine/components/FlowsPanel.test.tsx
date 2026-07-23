@@ -71,3 +71,23 @@ test("filters flows by title via the search box once there are enough to warrant
   const html = renderToStaticMarkup(<FlowsPanel flows={flows} />);
   assert.match(html, /Search flows/);
 });
+
+test("renders only the first flow batch before the scroll sentinel is reached", () => {
+  const flows = Array.from(
+    { length: 30 },
+    (_, i) => ({ ...loginFlow, id: `f${i}`, title: `Flow ${i + 1}` }),
+  );
+  const html = renderToStaticMarkup(<FlowsPanel flows={flows} />);
+  assert.equal((html.match(/aria-label="Open Flow \d+ flow"/g) ?? []).length, 24);
+  assert.match(html, /Open Flow 24 flow/);
+  assert.doesNotMatch(html, /Open Flow 25 flow/);
+});
+
+test("keeps the full category total while progressively rendering its cards", () => {
+  const flows = Array.from(
+    { length: 30 },
+    (_, i) => ({ ...loginFlow, id: `f${i}`, title: `Flow ${i + 1}`, category: "Settings" }),
+  );
+  const html = renderToStaticMarkup(<FlowsPanel flows={flows} />);
+  assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
+});
