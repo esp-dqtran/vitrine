@@ -30,6 +30,7 @@ import {
   createAppVersion,
   ensureActiveAppVersion,
   listAppVersions,
+  resolveAppVersion,
   getVersionPublicationBlockers,
   submitAppVersionForReview,
   publishAppVersion,
@@ -302,6 +303,7 @@ const defaults = {
   deleteCollection,
   createAppVersion,
   listAppVersions,
+  resolveAppVersion,
   getVersionPublicationBlockers,
   submitAppVersionForReview,
   publishAppVersion,
@@ -2193,10 +2195,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return undefined;
     }
     const publishedOnly = res.locals.user.role !== "admin";
-    const versions = await deps.listAppVersions(appSlug, platform, publishedOnly);
-    const version = requestedVersion === undefined
-      ? versions.find(({ status }) => status === "published")
-      : versions.find(({ version_number }) => version_number === requestedVersion);
+    const version = await deps.resolveAppVersion(appSlug, platform, requestedVersion, publishedOnly);
     if (requestedVersion !== undefined && !version) {
       res.status(404).json({ error: publishedOnly ? "published app version not found" : "app version not found" });
       return undefined;

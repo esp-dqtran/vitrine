@@ -52,6 +52,7 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
     removeCollectionItem,
     deleteCollection,
     listAppVersions,
+    resolveAppVersion,
     getVersionPublicationBlockers,
     submitAppVersionForReview,
     publishAppVersion,
@@ -146,6 +147,11 @@ test("insert, list uncaptioned, then save description", { skip: skipReason }, as
   assert.equal((await submitAppVersionForReview(scopedWebVersion.id, -103)).status, "in_review");
   assert.equal((await publishAppVersion(scopedWebVersion.id, -103)).status, "published");
   const scopedWebV2 = await createAppVersion("scope-app", "web", -103, "https://example.com/web-v2");
+  const resolvedPublished = await resolveAppVersion("scope-app", "web", undefined, false);
+  assert.equal(resolvedPublished?.id, scopedWebVersion.id);
+  assert.equal(resolvedPublished?.screen_count, 1);
+  assert.equal((await resolveAppVersion("scope-app", "web", scopedWebV2.version_number, false))?.status, "draft");
+  assert.equal(await resolveAppVersion("scope-app", "web", scopedWebV2.version_number, true), undefined);
   await saveDesignSystem("scope-app", "web", {
     app: "scope-app", generatedAt: "2026-07-16T01:00:00.000Z",
     tokens: [{ id: "web-token-v2", kind: "color", name: "Web v2", value: "#111111", role: "web", evidence: [scopedWebImage] }],

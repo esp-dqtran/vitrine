@@ -676,14 +676,18 @@ export interface AppVersion {
 
 const versionSelect = `SELECT av.id, a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
-  COUNT(DISTINCT vi.image_id) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
-  COUNT(DISTINCT vi.image_id) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count,
+  COALESCE(image_counts.screen_count, 0)::int AS screen_count,
+  COALESCE(image_counts.analyzed_count, 0)::int AS analyzed_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'components'), 0)::int AS component_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'tokens'), 0)::int AS token_count,
   COALESCE(jsonb_array_length(CASE WHEN av.status IN ('draft','in_review') THEN af.flows ELSE afv.flows END), 0)::int AS flow_count
   FROM app_versions av JOIN apps a ON a.id = av.app_id
-  LEFT JOIN version_images vi ON vi.version_id = av.id
-  LEFT JOIN images i ON i.id = vi.image_id
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
+      COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
+    FROM version_images vi JOIN images i ON i.id = vi.image_id
+    WHERE vi.version_id = av.id
+  ) image_counts ON true
   LEFT JOIN design_system_versions dsv ON dsv.version_id = av.id
   LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
   LEFT JOIN design_systems ds ON ds.app_id = av.app_id AND ds.platform = av.platform
@@ -692,15 +696,32 @@ const versionSelect = `SELECT av.id, a.name AS app, av.platform, av.version_numb
 export async function listAppVersions(app: string, platform: string, publishedOnly = false): Promise<AppVersion[]> {
   const res = await query<AppVersion>(
     `${versionSelect} WHERE a.name = $1 AND av.platform = $2 AND ($3::boolean = false OR av.status = 'published')
-     GROUP BY av.id, a.name, dsv.snapshot, afv.flows, ds.snapshot, af.flows ORDER BY av.version_number DESC`,
+     ORDER BY av.version_number DESC`,
     [app, platform, publishedOnly]
   );
   return res.rows;
 }
 
+export async function resolveAppVersion(
+  app: string,
+  platform: string,
+  versionNumber?: number,
+  publishedOnly = false,
+): Promise<AppVersion | undefined> {
+  const res = await query<AppVersion>(
+    `${versionSelect}
+     WHERE a.name = $1 AND av.platform = $2
+       AND (($3::integer IS NULL AND av.status = 'published') OR av.version_number = $3)
+       AND ($4::boolean = false OR av.status = 'published')
+     ORDER BY av.version_number DESC LIMIT 1`,
+    [app, platform, versionNumber ?? null, publishedOnly],
+  );
+  return res.rows[0];
+}
+
 async function appVersionById(id: number): Promise<AppVersion | undefined> {
   const res = await query<AppVersion>(
-    `${versionSelect} WHERE av.id = $1 GROUP BY av.id, a.name, dsv.snapshot, afv.flows, ds.snapshot, af.flows`, [id]
+    `${versionSelect} WHERE av.id = $1`, [id]
   );
   return res.rows[0];
 }

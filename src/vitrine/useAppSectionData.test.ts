@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sectionDependencies } from './useAppSectionData.ts';
+import { activeAppSectionKey, sectionDependencies } from './useAppSectionData.ts';
 
 test('Overview has no data dependencies', () => {
   assert.deepEqual(sectionDependencies('overview'), []);
@@ -13,4 +13,19 @@ test('each detail section declares only its active dependencies', () => {
   assert.deepEqual(sectionDependencies('design-system'), ['versions', 'design-system']);
   assert.deepEqual(sectionDependencies('export'), ['versions', 'design-system', 'screens']);
   assert.deepEqual(sectionDependencies('review'), ['versions', 'design-system']);
+});
+
+test('starts Screens with the latest version while version metadata is loading', () => {
+  assert.deepEqual(activeAppSectionKey({
+    appId: 'linear',
+    activeSection: 'screens',
+    platform: 'ios',
+    selectedVersion: undefined,
+    versions: null,
+  }), {
+    appId: 'linear',
+    section: 'screens',
+    platform: 'ios',
+    version: 'latest',
+  });
 });

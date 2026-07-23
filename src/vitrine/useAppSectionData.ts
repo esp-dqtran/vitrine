@@ -26,6 +26,22 @@ function activeDataSection(section: DetailSection): AppDataSection | null {
   return null;
 }
 
+export function activeAppSectionKey(input: {
+  appId: string;
+  activeSection: DetailSection;
+  platform: Platform;
+  selectedVersion?: number;
+  versions: AppVersion[] | null;
+}): AppSectionKey | null {
+  const section = activeDataSection(input.activeSection);
+  return section ? {
+    appId: input.appId,
+    section,
+    platform: input.platform,
+    version: input.selectedVersion ?? 'latest',
+  } : null;
+}
+
 export function useAppSectionData(input: {
   appId: string;
   activeSection: DetailSection;
@@ -63,13 +79,10 @@ export function useAppSectionData(input: {
   const resolvedVersion = input.selectedVersion
     ?? versions?.find(({ status }) => status === 'published')?.version_number
     ?? versions?.[0]?.version_number;
-  const section = activeDataSection(input.activeSection);
-  const activeKey = useMemo<AppSectionKey | null>(() => section && versions !== null ? {
-    appId: input.appId,
-    section,
-    platform: input.platform,
-    version: resolvedVersion ?? 'latest',
-  } : null, [input.appId, input.platform, resolvedVersion, section, versions]);
+  const activeKey = useMemo<AppSectionKey | null>(() => activeAppSectionKey({
+    ...input,
+    versions,
+  }), [input.appId, input.activeSection, input.platform, input.selectedVersion, versions]);
 
   useEffect(() => {
     if (!activeKey) return;

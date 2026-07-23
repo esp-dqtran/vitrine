@@ -2021,11 +2021,16 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
 
 test("loads screens and UI elements from dedicated paged endpoints", async (t) => {
   const calls: Array<{ kind: string; limit?: number }> = [];
+  let versionResolutions = 0;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => admin,
     canAccessApp: async () => true,
     appPlatforms: async () => ["ios"],
-    listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
+    listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
+    resolveAppVersion: async () => {
+      versionResolutions += 1;
+      return { ...publishedVersion, app: "linear", platform: "ios" };
+    },
     appEvidencePage: async (input) => {
       calls.push({ kind: input.kind, limit: input.limit });
       return { rows: catalogImages.map((image) => ({ ...image, platform: "ios", kind: input.kind })), nextCursor: "next" };
@@ -2041,6 +2046,7 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   assert.equal(screens.status, 200);
   assert.equal(elements.status, 200);
   assert.deepEqual(calls, [{ kind: "screen", limit: 48 }, { kind: "ui_element", limit: 24 }]);
+  assert.equal(versionResolutions, 2);
   assert.equal((await screens.json()).screens.length, 1);
   assert.equal((await elements.json()).nextCursor, "next");
 });
@@ -2052,6 +2058,7 @@ test("loads flows without loading a design-system snapshot", async (t) => {
     canAccessApp: async () => true,
     appPlatforms: async () => ["ios"],
     listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
+    resolveAppVersion: async () => ({ ...publishedVersion, app: "linear", platform: "ios" }),
     getVersionFlows: async () => [{
       id: "login", title: "Login", description: "Authenticate", tags: [],
       steps: [{ label: "Enter email", evidence: [7] }],
@@ -2078,7 +2085,8 @@ test("uses app-scoped evidence for an admin app without a published version", as
     ...platformMetadata,
     resolveSession: async () => admin,
     canAccessApp: async () => true,
-    listAppVersions: async (app) => [{ ...publishedVersion, app, status: "draft" }],
+    listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
+    resolveAppVersion: async () => undefined,
     appEvidencePage: async (input) => {
       requested = { app: input.app, kind: input.kind, platform: input.platform };
       return { rows: catalogImages.filter((image) => image.app === input.app), nextCursor: null };
