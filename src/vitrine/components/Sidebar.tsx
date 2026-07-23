@@ -3,6 +3,9 @@ import { navigate, useRoute, type Route } from '../router';
 
 const NAV_ITEMS: Array<{ label: string; route: Route; match: (route: Route) => boolean }> = [
   { label: 'References', route: { name: 'apps' }, match: (r) => r.name === 'apps' || r.name === 'app' || r.name === 'sites' || r.name === 'site-version' },
+  ...((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true'
+    ? [{ label: 'Search', route: { name: 'search' } as Route, match: (r: Route) => r.name === 'search' }]
+    : []),
   ...((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true'
     ? [{ label: 'Projects', route: { name: 'projects' } as Route, match: (r: Route) => r.name === 'projects' || r.name === 'project' }]
     : []),

@@ -1,9 +1,9 @@
+import { createHash } from "node:crypto";
 import type pg from "pg";
 import {
   decodeSearchCursor,
   encodeSearchCursor,
   fuseSearchRanks,
-  searchFingerprint,
   SEARCH_ENTITY_TYPES,
   type AdvancedSearchResult,
   type NormalizedSearchRequest,
@@ -173,7 +173,7 @@ function rowToItem(row: SearchDocumentRow, query: string): SearchResultItem {
 
 function requestFingerprint(request: NormalizedSearchRequest): string {
   const { cursor: _cursor, limit: _limit, ...state } = request;
-  return searchFingerprint(state);
+  return createHash("sha256").update(JSON.stringify(state)).digest("base64url");
 }
 
 export class PostgresSearchStore {

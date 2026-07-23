@@ -20,6 +20,9 @@ import { ResearchProjectPage } from './components/ResearchProjectPage';
 import { SitesPage } from './components/SitesPage';
 import { SiteVersionPage } from './components/SiteVersionPage';
 import { FeatureDocumentPage } from './components/FeatureDocumentPage.tsx';
+import { AdvancedSearchPage } from './components/AdvancedSearchPage.tsx';
+import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
+import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
 import { GalleryCardSkeleton, GalleryToolbar } from './components/GalleryToolbar';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
@@ -30,6 +33,8 @@ import { searchCatalog, type SearchFilters } from './researchApi';
 import { navigate, useRoute } from './router';
 import { loadSubscription, type SubscriptionView } from './billingApi';
 import type { CatalogSearchResult } from '../catalogResearch';
+import type { SearchResultItem } from '../searchTypes.ts';
+import { readRecentSearches } from './searchState.ts';
 
 export function App() {
   const { user, logout } = useAuth();
@@ -53,6 +58,8 @@ export function App() {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [advancedPreview, setAdvancedPreview] = useState<SearchResultItem | null>(null);
+  const [comparison, setComparison] = useState<SearchResultItem[]>([]);
   const [entitlements, setEntitlements] = useState<SubscriptionView | null>(null);
   const [entitlementsResolved, setEntitlementsResolved] = useState(isAdmin);
   const [entitlementsError, setEntitlementsError] = useState('');
@@ -60,6 +67,8 @@ export function App() {
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
+  const advancedSearchEnabled =
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
   const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
   const canUseProResearch = isAdmin || customerPlan === 'pro';
   const openPricing = () => navigate({ name: 'pricing' });
@@ -106,6 +115,12 @@ export function App() {
   };
 
   useEffect(() => {
+    if (advancedSearchEnabled) {
+      setSearchResult(null);
+      setSearchError('');
+      setSearchLoading(false);
+      return;
+    }
     if (!canUseProResearch) {
       setSearchResult(null);
       setSearchError('');
@@ -127,7 +142,7 @@ export function App() {
         .finally(() => { if (!controller.signal.aborted) setSearchLoading(false); });
     }, 180);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [canUseProResearch, q, filters, searchRetry]);
+  }, [advancedSearchEnabled, canUseProResearch, q, filters, searchRetry]);
 
   useEffect(() => {
     if (!isAdmin || route.name === 'app' || !hasMore || loadingMore) return;
@@ -230,6 +245,24 @@ export function App() {
   }
   if (route.name === 'feature-document') {
     return frame(<FeatureDocumentPage documentId={route.documentId} />);
+  }
+  if (advancedSearchEnabled && route.name === 'search') {
+    return frame(
+      <>
+        <AdvancedSearchPage onPreview={setAdvancedPreview} />
+        {advancedPreview ? (
+          <AdvancedSearchPreview
+            item={advancedPreview}
+            onClose={() => setAdvancedPreview(null)}
+            collections={collections}
+            onCollectionsChange={setCollections}
+            plan={customerPlan}
+            comparison={comparison}
+            onComparisonChange={setComparison}
+          />
+        ) : null}
+      </>,
+    );
   }
 
   if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
@@ -373,6 +406,7 @@ export function App() {
                 activeCategory={cat}
                 onOpen={() => void openPalette()}
                 onClearCategory={() => setCat('All')}
+                mode={advancedSearchEnabled ? 'advanced' : 'legacy'}
               />
               {!isAdmin && accountControls}
             </div>
@@ -422,6 +456,23 @@ export function App() {
       {collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
       {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
       {paletteOpen && (
+        advancedSearchEnabled ? (
+          <QuickSearch
+            initialQuery=""
+            recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
+            onClose={() => setPaletteOpen(false)}
+            onPreview={(item) => {
+              setPaletteOpen(false);
+              setAdvancedPreview(item);
+            }}
+            onViewAll={(value) => {
+              const handoff = quickSearchHandoff(value);
+              setPaletteOpen(false);
+              window.history.pushState(null, '', `/search${handoff.search ? `?${handoff.search}` : ''}`);
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+          />
+        ) : (
         <CommandPalette
           apps={apps ?? []}
           query={q}
@@ -440,7 +491,19 @@ export function App() {
           onSelectFlow={(appId) => navigate({ name: 'app', appId, section: 'flows' })}
           onSelectCategory={setCat}
         />
+        )
       )}
+      {advancedSearchEnabled && advancedPreview ? (
+        <AdvancedSearchPreview
+          item={advancedPreview}
+          onClose={() => setAdvancedPreview(null)}
+          collections={collections}
+          onCollectionsChange={setCollections}
+          plan={customerPlan}
+          comparison={comparison}
+          onComparisonChange={setComparison}
+        />
+      ) : null}
     </AnimatePresence>
     {isAdmin && (
       <ImportDialog

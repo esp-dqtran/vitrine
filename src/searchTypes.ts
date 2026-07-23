@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 export const SEARCH_ENTITY_TYPES = ["app", "screen", "flow", "component", "pattern"] as const;
 export type SearchEntityType = typeof SEARCH_ENTITY_TYPES[number];
 export type SearchType = SearchEntityType | "all";
@@ -131,12 +129,6 @@ export function normalizeSearchRequest(input: Record<string, unknown>): Normaliz
     ...(input.cursor ? { cursor: String(input.cursor) } : {}),
     limit: Math.min(48, Math.max(1, Number(input.limit) || 24)),
   };
-}
-
-export function searchFingerprint(
-  request: Omit<NormalizedSearchRequest, "cursor" | "limit">,
-): string {
-  return createHash("sha256").update(JSON.stringify(request)).digest("base64url");
 }
 
 export interface SearchCursor {
