@@ -68,6 +68,7 @@ interface CommandPaletteProps {
   searchError: string;
   collections: ResearchCollection[];
   plan: 'free' | 'pro';
+  publicBrowse?: boolean;
   onUpgrade: () => void;
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   onQueryChange: (value: string) => void;
@@ -87,6 +88,7 @@ export function CommandPalette({
   searchError,
   collections,
   plan,
+  publicBrowse = false,
   onUpgrade,
   onCollectionsChange,
   onQueryChange,
@@ -127,6 +129,23 @@ export function CommandPalette({
     for (const app of apps) for (const screen of app.screens) for (const name of screen.componentNames ?? []) names.add(name);
     return Array.from(names);
   }, [apps]);
+  const publicApps = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return apps;
+    return apps.filter((app) => {
+      const searchText = [
+        app.app,
+        app.cat,
+        ...app.screens.flatMap((screen) => [
+          screen.type,
+          screen.productArea,
+          ...(screen.componentNames ?? []),
+          ...(screen.visibleText ?? []),
+        ]),
+      ].join(' ').toLowerCase();
+      return searchText.includes(normalizedQuery);
+    });
+  }, [apps, query]);
   const visibleItems = useMemo(() => groupInspirationResults(result?.items ?? []).flatMap((group) => group.items), [result]);
 
   useEffect(() => {
@@ -335,7 +354,7 @@ export function CommandPalette({
               startIcon={<Icon icon="search" size="sm" />}
               hasClear={Boolean(query)}
               width="100%"
-              isDisabled={plan === 'free'}
+              isDisabled={plan === 'free' && !publicBrowse}
             />
           </div>
           <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 7px' }}>Esc</span>
@@ -364,7 +383,20 @@ export function CommandPalette({
           </div>
 
           <div ref={resultsScrollRef} className="inspiration-modal-content" style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 24px 28px' }}>
-            {plan === 'free' ? (
+            {publicBrowse ? (
+              nav === 'categories' ? browseContent : (
+                <>
+                  <div style={SECTION_LABEL}>{query.trim() ? `${publicApps.length} matching apps` : 'Browse apps'}</div>
+                  {publicApps.length ? (
+                    <div style={TILE_GRID}>
+                      {publicApps.map((app) => <AppTile key={app.id} app={app} onSelect={() => selectApp(app.id)} />)}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--color-text-disabled)', fontSize: 14 }}>No apps match this search.</div>
+                  )}
+                </>
+              )
+            ) : plan === 'free' ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12 }}>
                   <div style={{ flex: 1 }}><strong>Search, filters, screens, elements, and flows are Pro.</strong><div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>You can still browse trending apps and categories.</div></div>

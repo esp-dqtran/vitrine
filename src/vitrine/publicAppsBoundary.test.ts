@@ -20,3 +20,26 @@ test('keeps Landing implementation outside the public Apps change', async () => 
   assert.match(home, /export function Home/);
   assert.doesNotMatch(home, /GuestCatalogControls|requiresAuthentication|isGuest/);
 });
+
+test('keeps guest discovery overlays reachable from an empty catalog', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const overlays = source.indexOf('const discoveryOverlays =');
+  const emptyCatalog = source.indexOf("if (route.name === 'apps' && (appsError || !apps || apps.length === 0))");
+
+  assert.notEqual(overlays, -1, 'discovery overlays should be shared');
+  assert.notEqual(emptyCatalog, -1, 'empty catalog branch should exist');
+  assert.ok(overlays < emptyCatalog, 'overlays must be defined before the empty catalog return');
+  assert.equal(source.match(/\{discoveryOverlays\}/g)?.length, 2);
+});
+
+test('lets guests search the public catalog without enabling member research', async () => {
+  const [app, palette] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/CommandPalette.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(app, /publicBrowse=\{isGuest\}/);
+  assert.match(palette, /publicBrowse\?: boolean/);
+  assert.match(palette, /isDisabled=\{plan === 'free' && !publicBrowse\}/);
+  assert.match(palette, /publicBrowse \? \(/);
+});

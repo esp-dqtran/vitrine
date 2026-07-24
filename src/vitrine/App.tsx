@@ -353,6 +353,63 @@ export function App() {
     );
   }
 
+  const discoveryOverlays = (
+    <AnimatePresence>
+      {user && collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
+      {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
+      {paletteOpen && (
+        canUseAdvancedSearch ? (
+          <QuickSearch
+            initialQuery=""
+            recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
+            onClose={() => setPaletteOpen(false)}
+            onPreview={(item) => {
+              setPaletteOpen(false);
+              setAdvancedPreview(item);
+            }}
+            onViewAll={(value) => {
+              const handoff = quickSearchHandoff(value);
+              setPaletteOpen(false);
+              window.history.pushState(null, '', `/search${handoff.search ? `?${handoff.search}` : ''}`);
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+          />
+        ) : (
+          <CommandPalette
+            apps={apps ?? []}
+            query={q}
+            result={searchResult}
+            searchLoading={searchLoading}
+            searchError={searchError}
+            collections={paletteCollections}
+            plan={palettePlan}
+            publicBrowse={isGuest}
+            onUpgrade={paletteUpgrade}
+            onCollectionsChange={user ? setCollections : () => undefined}
+            onQueryChange={setQ}
+            onRetrySearch={() => setSearchRetry((value) => value + 1)}
+            onClose={() => setPaletteOpen(false)}
+            onSelectApp={(appId) => void openApp(appId)}
+            onSelectScreen={(appId) => navigate({ name: 'app', appId, section: 'screens' })}
+            onSelectFlow={(appId) => navigate({ name: 'app', appId, section: 'flows' })}
+            onSelectCategory={setCat}
+          />
+        )
+      )}
+      {canUseAdvancedSearch && advancedPreview ? (
+        <AdvancedSearchPreview
+          item={advancedPreview}
+          onClose={() => setAdvancedPreview(null)}
+          collections={collections}
+          onCollectionsChange={setCollections}
+          plan={customerPlan}
+          comparison={comparison}
+          onComparisonChange={setComparison}
+        />
+      ) : null}
+    </AnimatePresence>
+  );
+
   if (route.name === 'apps' && (appsError || !apps || apps.length === 0)) {
     return frame(
       <>
@@ -391,6 +448,7 @@ export function App() {
             submitImport={submitUrlImport}
           />
         )}
+        {discoveryOverlays}
       </>,
     );
   }
@@ -501,59 +559,7 @@ export function App() {
         </motion.div>
       )}
     </AnimatePresence>
-    <AnimatePresence>
-      {user && collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
-      {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
-      {paletteOpen && (
-        canUseAdvancedSearch ? (
-          <QuickSearch
-            initialQuery=""
-            recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
-            onClose={() => setPaletteOpen(false)}
-            onPreview={(item) => {
-              setPaletteOpen(false);
-              setAdvancedPreview(item);
-            }}
-            onViewAll={(value) => {
-              const handoff = quickSearchHandoff(value);
-              setPaletteOpen(false);
-              window.history.pushState(null, '', `/search${handoff.search ? `?${handoff.search}` : ''}`);
-              window.dispatchEvent(new PopStateEvent('popstate'));
-            }}
-          />
-        ) : (
-        <CommandPalette
-          apps={apps ?? []}
-          query={q}
-          result={searchResult}
-          searchLoading={searchLoading}
-          searchError={searchError}
-          collections={paletteCollections}
-          plan={palettePlan}
-          onUpgrade={paletteUpgrade}
-          onCollectionsChange={user ? setCollections : () => undefined}
-          onQueryChange={setQ}
-          onRetrySearch={() => setSearchRetry((value) => value + 1)}
-          onClose={() => setPaletteOpen(false)}
-          onSelectApp={(appId) => void openApp(appId)}
-          onSelectScreen={(appId) => navigate({ name: 'app', appId, section: 'screens' })}
-          onSelectFlow={(appId) => navigate({ name: 'app', appId, section: 'flows' })}
-          onSelectCategory={setCat}
-        />
-        )
-      )}
-      {canUseAdvancedSearch && advancedPreview ? (
-        <AdvancedSearchPreview
-          item={advancedPreview}
-          onClose={() => setAdvancedPreview(null)}
-          collections={collections}
-          onCollectionsChange={setCollections}
-          plan={customerPlan}
-          comparison={comparison}
-          onComparisonChange={setComparison}
-        />
-      ) : null}
-    </AnimatePresence>
+    {discoveryOverlays}
     {isAdmin && (
       <ImportDialog
         isOpen={importOpen}
