@@ -13,9 +13,12 @@ export interface EvidenceView {
 }
 
 export type ReviewStatus = "needs_review" | "reviewed" | "rejected";
+export type DesignInferenceSource = "llm_inferred";
 export interface EvidenceOccurrence {
   imageId: number;
   region?: { x: number; y: number; width: number; height: number };
+  coordinateSpace?: "normalized";
+  cropImageId?: number;
   confidence?: number;
 }
 
@@ -30,6 +33,7 @@ export interface DesignToken<T = number> {
   reviewStatus?: ReviewStatus;
   responsiveViewports?: string[];
   occurrences?: EvidenceOccurrence[];
+  source?: DesignInferenceSource;
 }
 
 export interface ComponentVariant<T = number> {
@@ -43,6 +47,7 @@ export interface ComponentVariant<T = number> {
   reviewStatus?: ReviewStatus;
   responsiveViewports?: string[];
   occurrences?: EvidenceOccurrence[];
+  source?: DesignInferenceSource;
   reconstruction?: {
     layoutMode?: "HORIZONTAL" | "VERTICAL";
     width?: number;
@@ -93,6 +98,7 @@ export interface DesignSystemSnapshot<T = number> {
     evidence: T[];
     confidence?: number;
     reviewStatus?: ReviewStatus;
+    source?: DesignInferenceSource;
   }>;
 }
 
@@ -174,6 +180,7 @@ export function parseDesignSystemSnapshot(
       reviewStatus: "needs_review",
       responsiveViewports: list(item.responsiveViewports).filter((value): value is string => typeof value === "string"),
       occurrences: refs.map((imageId) => ({ imageId, confidence: confidence(item.confidence) })),
+      ...(item.source === "llm_inferred" ? { source: "llm_inferred" as const } : {}),
     }];
   });
 
@@ -194,6 +201,7 @@ export function parseDesignSystemSnapshot(
         responsiveViewports: list(variant.responsiveViewports).filter((value): value is string => typeof value === "string"),
         occurrences: refs.map((imageId) => ({ imageId, confidence: confidence(variant.confidence) })),
         reconstruction: reconstruction(variant.reconstruction),
+        ...(variant.source === "llm_inferred" ? { source: "llm_inferred" as const } : {}),
       }];
     });
     if (variants.length === 0) return [];
@@ -214,7 +222,7 @@ export function parseDesignSystemSnapshot(
     const refs = evidence(item.evidence, allowedImageIds);
     const kind = text(item.kind, "rule.kind") as NonNullable<DesignSystemSnapshot["rules"]>[number]["kind"];
     if (!refs.length || !["layout", "icon", "imagery", "responsive", "content", "interaction"].includes(kind)) return [];
-    return [{ id: text(item.id, "rule.id"), kind, name: text(item.name, "rule.name"), description: text(item.description, "rule.description"), evidence: refs, confidence: confidence(item.confidence), reviewStatus: "needs_review" as const }];
+    return [{ id: text(item.id, "rule.id"), kind, name: text(item.name, "rule.name"), description: text(item.description, "rule.description"), evidence: refs, confidence: confidence(item.confidence), reviewStatus: "needs_review" as const, ...(item.source === "llm_inferred" ? { source: "llm_inferred" as const } : {}) }];
   });
   return { app, generatedAt, tokens, components, flows: [], rules };
 }
