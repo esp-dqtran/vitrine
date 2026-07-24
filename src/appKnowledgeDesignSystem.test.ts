@@ -73,6 +73,7 @@ function designSystem(evidenceId: string): AppKnowledgeDesignSystemResult {
     confidence: 0.9,
   };
   return {
+    tokenCandidates: [],
     componentCandidates: [{
       id: "component-sidebar",
       name: "Sidebar",
@@ -81,6 +82,7 @@ function designSystem(evidenceId: string): AppKnowledgeDesignSystemResult {
       anatomy: ["Brand", "Navigation items"],
       observedProperties: ["Persistent left placement"],
       variants: [],
+      variantCandidates: [],
       states: ["Selected"],
       responsiveEvidence: [],
       evidenceIds: [evidenceId],
@@ -90,6 +92,7 @@ function designSystem(evidenceId: string): AppKnowledgeDesignSystemResult {
       confidence: 0.9,
       status: "candidate",
     }],
+    rules: [],
     designLanguage: {
       color: [],
       typography: [],
@@ -104,6 +107,7 @@ function designSystem(evidenceId: string): AppKnowledgeDesignSystemResult {
       content: [],
       interaction: [],
     },
+    unresolvedConflicts: [],
   };
 }
 
@@ -130,6 +134,37 @@ test("rejects a compact signal larger than the provider byte ceiling", () => {
   assert.throws(
     () => planDesignSystemChunks([oversized], 10_000),
     /design-system signal exceeds/i,
+  );
+});
+
+test("keeps token candidates and component occurrences in bounded signals", () => {
+  const source = analysis("SCREEN-1", {
+    tokenCandidates: [{
+      kind: "color",
+      name: "Primary action",
+      value: "#F26B38",
+      role: "Primary action fill",
+      confidence: 0.82,
+    }],
+    componentOccurrences: [{
+      family: "Button",
+      variant: "Primary",
+      category: "Inputs",
+      purpose: "Submit",
+      anatomy: ["container", "label"],
+      visibleStates: ["default"],
+      observedProperties: ["orange fill"],
+      region: { x: 0.7, y: 0.6, width: 0.2, height: 0.08 },
+      confidence: 0.88,
+    }],
+  });
+
+  const [chunk] = planDesignSystemChunks([source], 24_000);
+
+  assert.deepEqual(chunk.signals[0].tokenCandidates, source.tokenCandidates);
+  assert.deepEqual(
+    chunk.signals[0].componentOccurrences,
+    source.componentOccurrences,
   );
 });
 

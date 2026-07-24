@@ -11,6 +11,21 @@ export type AppKnowledgeJobStage =
   | "complete";
 export type AppKnowledgeEvidenceKind = "screen" | "flow_step" | "ui_element";
 export type AppKnowledgeEntityReviewStatus = "needs_review" | "reviewed" | "rejected";
+export type AppKnowledgeInferenceSource = "llm_inferred";
+export type AppKnowledgeDesignTokenKind =
+  | "color"
+  | "typography"
+  | "spacing"
+  | "radius"
+  | "border"
+  | "effect";
+export type AppKnowledgeDesignRuleKind =
+  | "layout"
+  | "icon"
+  | "imagery"
+  | "responsive"
+  | "content"
+  | "interaction";
 
 export interface AppKnowledgeClaim {
   id: string;
@@ -74,6 +89,7 @@ export interface AppKnowledgeComponentCandidate {
   anatomy: string[];
   observedProperties: string[];
   variants: string[];
+  variantCandidates: AppKnowledgeComponentVariant[];
   states: string[];
   responsiveEvidence: string[];
   evidenceIds: string[];
@@ -82,6 +98,59 @@ export interface AppKnowledgeComponentCandidate {
   claims: AppKnowledgeClaim[];
   confidence: number;
   status: "candidate" | "reviewed" | "rejected";
+}
+
+export interface AppKnowledgeComponentOccurrenceCandidate {
+  evidenceId: string;
+  region: { x: number; y: number; width: number; height: number };
+  confidence: number;
+}
+
+export interface AppKnowledgeComponentVariant {
+  id: string;
+  name: string;
+  description: string;
+  observedProperties: string[];
+  visibleStates: string[];
+  evidenceIds: string[];
+  occurrences: AppKnowledgeComponentOccurrenceCandidate[];
+  confidence: number;
+  source: AppKnowledgeInferenceSource;
+  reviewStatus: "needs_review";
+}
+
+export interface AppKnowledgeSynthesizedToken {
+  id: string;
+  kind: AppKnowledgeDesignTokenKind;
+  name: string;
+  value: string;
+  role: string;
+  evidenceIds: string[];
+  confidence: number;
+  source: AppKnowledgeInferenceSource;
+  reviewStatus: "needs_review";
+}
+
+export interface AppKnowledgeDesignRule {
+  id: string;
+  kind: AppKnowledgeDesignRuleKind;
+  name: string;
+  description: string;
+  evidenceIds: string[];
+  confidence: number;
+  source: AppKnowledgeInferenceSource;
+  reviewStatus: "needs_review";
+}
+
+export interface AppKnowledgeDesignConflict {
+  id: string;
+  entityKind: "token" | "component" | "rule";
+  summary: string;
+  candidateIds: string[];
+  evidenceIds: string[];
+  confidence: number;
+  source: AppKnowledgeInferenceSource;
+  reviewStatus: "needs_review";
 }
 
 export interface AppKnowledgeDesignLanguage {
@@ -100,8 +169,11 @@ export interface AppKnowledgeDesignLanguage {
 }
 
 export interface AppKnowledgeDesignSystemResult {
+  tokenCandidates: AppKnowledgeSynthesizedToken[];
   componentCandidates: AppKnowledgeComponentCandidate[];
+  rules: AppKnowledgeDesignRule[];
   designLanguage: AppKnowledgeDesignLanguage;
+  unresolvedConflicts: AppKnowledgeDesignConflict[];
 }
 
 export interface AppKnowledgeFlowStep {
@@ -162,6 +234,9 @@ export interface AppKnowledgeSnapshot {
   screens: AppKnowledgeScreen[];
   componentCandidates: AppKnowledgeComponentCandidate[];
   designLanguage: AppKnowledgeDesignLanguage;
+  tokenCandidates?: AppKnowledgeSynthesizedToken[];
+  designRules?: AppKnowledgeDesignRule[];
+  designConflicts?: AppKnowledgeDesignConflict[];
   flows: AppKnowledgeFlow[];
   productKnowledge: AppKnowledgeProductKnowledge;
 }
@@ -185,6 +260,13 @@ type JsonObject = Record<string, unknown>;
 const CLAIM_KINDS = new Set<AppKnowledgeClaimKind>(["observed", "inferred", "proposed", "unknown"]);
 const ENTITY_REVIEW_STATUSES = new Set<AppKnowledgeEntityReviewStatus>(["needs_review", "reviewed", "rejected"]);
 const COMPONENT_STATUSES = new Set(["candidate", "reviewed", "rejected"]);
+const DESIGN_TOKEN_KINDS = new Set<AppKnowledgeDesignTokenKind>([
+  "color", "typography", "spacing", "radius", "border", "effect",
+]);
+const DESIGN_RULE_KINDS = new Set<AppKnowledgeDesignRuleKind>([
+  "layout", "icon", "imagery", "responsive", "content", "interaction",
+]);
+const DESIGN_CONFLICT_KINDS = new Set(["token", "component", "rule"]);
 const PLATFORMS = new Set(["ios", "android", "web"]);
 const VIEWPORTS = new Set(["desktop", "tablet", "mobile", "unknown"]);
 const THEMES = new Set(["light", "dark", "mixed"]);
@@ -397,11 +479,90 @@ function parseScreen(
   };
 }
 
+function generatedSource(value: unknown, label: string): AppKnowledgeInferenceSource {
+  if (value !== "llm_inferred") throw new Error(`${label}.source must be llm_inferred`);
+  return value;
+}
+
+function generatedReviewStatus(value: unknown, label: string): "needs_review" {
+  if (value !== "needs_review") throw new Error(`${label}.reviewStatus must be needs_review`);
+  return value;
+}
+
+function normalizedRegion(
+  value: unknown,
+  label: string,
+): { x: number; y: number; width: number; height: number } {
+  const item = object(value, label);
+  const x = Number(item.x);
+  const y = Number(item.y);
+  const width = Number(item.width);
+  const height = Number(item.height);
+  if (
+    !Number.isFinite(x)
+    || !Number.isFinite(y)
+    || !Number.isFinite(width)
+    || !Number.isFinite(height)
+    || x < 0
+    || y < 0
+    || x > 1
+    || y > 1
+    || width <= 0
+    || height <= 0
+    || width > 1
+    || height > 1
+  ) throw new Error(`${label} is invalid`);
+  if (x + width > 1 || y + height > 1) {
+    throw new Error(`${label} exceeds source bounds`);
+  }
+  return { x, y, width, height };
+}
+
+function parseComponentVariant(
+  value: unknown,
+  allowed: ReadonlySet<string>,
+  ids: Set<string>,
+  label: string,
+): AppKnowledgeComponentVariant {
+  const item = object(value, label);
+  const evidenceIds = citations(item.evidenceIds, allowed, label);
+  if (evidenceIds.length === 0) throw new Error(`${label} requires evidence`);
+  const occurrences = list(item.occurrences, `${label}.occurrences`, 200).map((raw, index) => {
+    const occurrenceLabel = `${label}.occurrences[${index}]`;
+    const occurrence = object(raw, occurrenceLabel);
+    const evidenceId = text(occurrence.evidenceId, `${occurrenceLabel}.evidenceId`, 240);
+    if (!allowed.has(evidenceId)) {
+      throw new Error(`${occurrenceLabel} cites unknown evidence: ${evidenceId}`);
+    }
+    if (!evidenceIds.includes(evidenceId)) {
+      throw new Error(`${occurrenceLabel} is not included in variant evidence`);
+    }
+    return {
+      evidenceId,
+      region: normalizedRegion(occurrence.region, `${occurrenceLabel}.region`),
+      confidence: confidence(occurrence.confidence, occurrenceLabel),
+    };
+  });
+  return {
+    id: identity(item.id, `${label}.id`, ids, "component variant"),
+    name: text(item.name, `${label}.name`, 160),
+    description: text(item.description, `${label}.description`, 2_000),
+    observedProperties: strings(item.observedProperties, `${label}.observedProperties`),
+    visibleStates: strings(item.visibleStates, `${label}.visibleStates`),
+    evidenceIds,
+    occurrences,
+    confidence: confidence(item.confidence, label),
+    source: generatedSource(item.source, label),
+    reviewStatus: generatedReviewStatus(item.reviewStatus, label),
+  };
+}
+
 function parseComponent(
   value: unknown,
   allowed: ReadonlySet<string>,
   claims: Set<string>,
   ids: Set<string>,
+  variantIds: Set<string>,
   index: number,
 ): AppKnowledgeComponentCandidate {
   const label = `componentCandidates[${index}]`;
@@ -418,6 +579,17 @@ function parseComponent(
     anatomy: strings(item.anatomy, `${label}.anatomy`),
     observedProperties: strings(item.observedProperties, `${label}.observedProperties`),
     variants: strings(item.variants, `${label}.variants`),
+    variantCandidates: list(
+      item.variantCandidates ?? [],
+      `${label}.variantCandidates`,
+      200,
+    ).map((variant, variantIndex) =>
+      parseComponentVariant(
+        variant,
+        allowed,
+        variantIds,
+        `${label}.variantCandidates[${variantIndex}]`,
+      )),
     states: strings(item.states, `${label}.states`),
     responsiveEvidence: strings(item.responsiveEvidence, `${label}.responsiveEvidence`),
     evidenceIds,
@@ -426,6 +598,83 @@ function parseComponent(
     claims: parseClaims(item.claims, allowed, claims, `${label}.claims`),
     confidence: confidence(item.confidence, label),
     status,
+  };
+}
+
+function parseSynthesizedToken(
+  value: unknown,
+  allowed: ReadonlySet<string>,
+  ids: Set<string>,
+  index: number,
+): AppKnowledgeSynthesizedToken {
+  const label = `tokenCandidates[${index}]`;
+  const item = object(value, label);
+  const kind = item.kind as AppKnowledgeDesignTokenKind;
+  if (!DESIGN_TOKEN_KINDS.has(kind)) throw new Error(`${label}.kind is invalid`);
+  const evidenceIds = citations(item.evidenceIds, allowed, label);
+  if (evidenceIds.length === 0) throw new Error(`${label} requires evidence`);
+  return {
+    id: identity(item.id, `${label}.id`, ids, "design token"),
+    kind,
+    name: text(item.name, `${label}.name`, 160),
+    value: text(item.value, `${label}.value`, 500),
+    role: text(item.role, `${label}.role`, 1_000),
+    evidenceIds,
+    confidence: confidence(item.confidence, label),
+    source: generatedSource(item.source, label),
+    reviewStatus: generatedReviewStatus(item.reviewStatus, label),
+  };
+}
+
+function parseDesignRule(
+  value: unknown,
+  allowed: ReadonlySet<string>,
+  ids: Set<string>,
+  index: number,
+): AppKnowledgeDesignRule {
+  const label = `rules[${index}]`;
+  const item = object(value, label);
+  const kind = item.kind as AppKnowledgeDesignRuleKind;
+  if (!DESIGN_RULE_KINDS.has(kind)) throw new Error(`${label}.kind is invalid`);
+  const evidenceIds = citations(item.evidenceIds, allowed, label);
+  if (evidenceIds.length === 0) throw new Error(`${label} requires evidence`);
+  return {
+    id: identity(item.id, `${label}.id`, ids, "design rule"),
+    kind,
+    name: text(item.name, `${label}.name`, 160),
+    description: text(item.description, `${label}.description`, 2_000),
+    evidenceIds,
+    confidence: confidence(item.confidence, label),
+    source: generatedSource(item.source, label),
+    reviewStatus: generatedReviewStatus(item.reviewStatus, label),
+  };
+}
+
+function parseDesignConflict(
+  value: unknown,
+  allowed: ReadonlySet<string>,
+  ids: Set<string>,
+  index: number,
+): AppKnowledgeDesignConflict {
+  const label = `unresolvedConflicts[${index}]`;
+  const item = object(value, label);
+  const entityKind = item.entityKind as AppKnowledgeDesignConflict["entityKind"];
+  if (!DESIGN_CONFLICT_KINDS.has(entityKind)) {
+    throw new Error(`${label}.entityKind is invalid`);
+  }
+  const candidateIds = uniqueStrings(item.candidateIds, `${label}.candidateIds`, 100);
+  if (candidateIds.length < 2) throw new Error(`${label} requires at least two candidate IDs`);
+  const evidenceIds = citations(item.evidenceIds, allowed, label);
+  if (evidenceIds.length === 0) throw new Error(`${label} requires evidence`);
+  return {
+    id: identity(item.id, `${label}.id`, ids, "design conflict"),
+    entityKind,
+    summary: text(item.summary, `${label}.summary`, 2_000),
+    candidateIds,
+    evidenceIds,
+    confidence: confidence(item.confidence, label),
+    source: generatedSource(item.source, label),
+    reviewStatus: generatedReviewStatus(item.reviewStatus, label),
   };
 }
 
@@ -463,10 +712,20 @@ export function parseAppKnowledgeDesignSystemResult(
   const root = object(value, "App Knowledge design system");
   const claims = new Set<string>();
   const componentIds = new Set<string>();
+  const variantIds = new Set<string>();
+  const tokenIds = new Set<string>();
+  const ruleIds = new Set<string>();
+  const conflictIds = new Set<string>();
   const result = {
+    tokenCandidates: list(root.tokenCandidates, "tokenCandidates").map((item, index) =>
+      parseSynthesizedToken(item, allowedEvidenceIds, tokenIds, index)),
     componentCandidates: list(root.componentCandidates, "componentCandidates").map((item, index) =>
-      parseComponent(item, allowedEvidenceIds, claims, componentIds, index)),
+      parseComponent(item, allowedEvidenceIds, claims, componentIds, variantIds, index)),
+    rules: list(root.rules, "rules").map((item, index) =>
+      parseDesignRule(item, allowedEvidenceIds, ruleIds, index)),
     designLanguage: parseDesignLanguage(root.designLanguage, allowedEvidenceIds, claims),
+    unresolvedConflicts: list(root.unresolvedConflicts, "unresolvedConflicts").map((item, index) =>
+      parseDesignConflict(item, allowedEvidenceIds, conflictIds, index)),
   };
   if (Object.values(result.designLanguage).every((items) => items.length === 0)) {
     throw new Error("designLanguage must contain at least one claim");
@@ -572,6 +831,10 @@ export function parseAppKnowledgeSnapshot(
   const claimIds = new Set<string>();
   const screenIds = new Set<string>();
   const componentIds = new Set<string>();
+  const componentVariantIds = new Set<string>();
+  const tokenIds = new Set<string>();
+  const ruleIds = new Set<string>();
+  const conflictIds = new Set<string>();
   const flowIds = new Set<string>();
   const stepIds = new Set<string>();
 
@@ -589,8 +852,21 @@ export function parseAppKnowledgeSnapshot(
     screens: nonEmptyList(root.screens, "screens", 2_000).map((item, index) =>
       parseScreen(item, allowedEvidenceIds, claimIds, screenIds, index)),
     componentCandidates: list(root.componentCandidates, "componentCandidates").map((item, index) =>
-      parseComponent(item, allowedEvidenceIds, claimIds, componentIds, index)),
+      parseComponent(
+        item,
+        allowedEvidenceIds,
+        claimIds,
+        componentIds,
+        componentVariantIds,
+        index,
+      )),
     designLanguage: parseDesignLanguage(root.designLanguage, allowedEvidenceIds, claimIds),
+    tokenCandidates: list(root.tokenCandidates ?? [], "tokenCandidates").map((item, index) =>
+      parseSynthesizedToken(item, allowedEvidenceIds, tokenIds, index)),
+    designRules: list(root.designRules ?? [], "designRules").map((item, index) =>
+      parseDesignRule(item, allowedEvidenceIds, ruleIds, index)),
+    designConflicts: list(root.designConflicts ?? [], "designConflicts").map((item, index) =>
+      parseDesignConflict(item, allowedEvidenceIds, conflictIds, index)),
     flows: list(root.flows, "flows").map((item, index) =>
       parseFlow(item, allowedEvidenceIds, claimIds, flowIds, stepIds, index)),
     productKnowledge: parseProductKnowledge(root.productKnowledge, allowedEvidenceIds, claimIds),

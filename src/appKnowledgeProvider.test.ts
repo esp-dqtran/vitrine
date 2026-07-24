@@ -75,6 +75,13 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.match(calls[2].system, /design language/i);
   assert.match(calls[2].system, /"category": string/);
   assert.match(calls[2].system, /"anatomy": string\[\]/);
+  assert.match(calls[2].system, /"tokenCandidates": SynthesizedToken\[\]/);
+  assert.match(calls[2].system, /"variantCandidates": ComponentVariant\[\]/);
+  assert.match(calls[2].system, /"occurrences": ComponentOccurrence\[\]/);
+  assert.match(calls[2].system, /"rules": DesignRule\[\]/);
+  assert.match(calls[2].system, /"unresolvedConflicts": DesignConflict\[\]/);
+  assert.match(calls[2].system, /"source": "llm_inferred"/);
+  assert.match(calls[2].system, /"reviewStatus": "needs_review"/);
   assert.match(calls[2].system, /"designLanguageCandidateIds": string\[\]/);
   assert.match(calls[2].system, /"status": "candidate"/);
   assert.match(calls[2].system, /"color": Claim\[\]/);

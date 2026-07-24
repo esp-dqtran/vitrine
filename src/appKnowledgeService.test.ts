@@ -232,6 +232,7 @@ function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesign
     confidence: 0.9,
   };
   return {
+    tokenCandidates: [],
     componentCandidates: [{
       id: `component-page-frame-${suffix}`,
       name: "Page frame",
@@ -240,6 +241,7 @@ function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesign
       anatomy: ["Navigation", "Content"],
       observedProperties: ["Consistent content frame"],
       variants: [],
+      variantCandidates: [],
       states: [],
       responsiveEvidence: [],
       evidenceIds: [evidenceId],
@@ -249,6 +251,7 @@ function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesign
       confidence: 0.9,
       status: "candidate",
     }],
+    rules: [],
     designLanguage: {
       color: [],
       typography: [],
@@ -263,6 +266,7 @@ function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesign
       content: [],
       interaction: [],
     },
+    unresolvedConflicts: [],
   };
 }
 

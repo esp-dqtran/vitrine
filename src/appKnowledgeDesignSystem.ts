@@ -21,6 +21,8 @@ export interface AppKnowledgeDesignSignal {
   interactionPatterns: string[];
   visibleStates: string[];
   accessibilityObservations: string[];
+  tokenCandidates: AppKnowledgeEvidenceAnalysis["tokenCandidates"];
+  componentOccurrences: AppKnowledgeEvidenceAnalysis["componentOccurrences"];
 }
 
 export interface AppKnowledgeDesignSystemChunk {
@@ -59,6 +61,8 @@ export function compactDesignSignal(
     interactionPatterns: analysis.interactionPatterns,
     visibleStates: analysis.visibleStates,
     accessibilityObservations: analysis.accessibilityObservations,
+    tokenCandidates: analysis.tokenCandidates,
+    componentOccurrences: analysis.componentOccurrences,
   };
 }
 
@@ -162,6 +166,9 @@ export function assembleDesignSystemSnapshot(input: {
     })),
     componentCandidates: input.result.componentCandidates,
     designLanguage: input.result.designLanguage,
+    tokenCandidates: input.result.tokenCandidates,
+    designRules: input.result.rules,
+    designConflicts: input.result.unresolvedConflicts,
     flows: [],
     productKnowledge: {
       capabilities: [...productAreas.entries()].map(([key, analysis]) => ({

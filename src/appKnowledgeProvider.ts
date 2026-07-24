@@ -88,15 +88,22 @@ export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
 ].join(" ");
 
 export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
-  "Return JSON only with componentCandidates and designLanguage.",
+  "Return JSON only with tokenCandidates, componentCandidates, rules, designLanguage, and unresolvedConflicts.",
   "Extract a reusable design language from only the supplied screen signals.",
   'Use this Claim shape: {"id": string, "kind": "observed" | "inferred" | "proposed" | "unknown", "text": string, "evidenceIds": string[], "confidence": number}.',
-  'Use exactly this result shape: {"componentCandidates":[{"id": string, "name": string, "category": string, "purpose": string, "anatomy": string[], "observedProperties": string[], "variants": string[], "states": string[], "responsiveEvidence": string[], "evidenceIds": string[], "visualRegions": string[], "designLanguageCandidateIds": string[], "claims": Claim[], "confidence": number, "status": "candidate"}],"designLanguage":{"color": Claim[], "typography": Claim[], "spacing": Claim[], "radius": Claim[], "border": Claim[], "effects": Claim[], "layout": Claim[], "iconography": Claim[], "imagery": Claim[], "responsive": Claim[], "content": Claim[], "interaction": Claim[]}}.',
+  'Use this ComponentOccurrence shape: {"evidenceId": string, "region": {"x": number, "y": number, "width": number, "height": number}, "confidence": number}.',
+  'Use this ComponentVariant shape: {"id": string, "name": string, "description": string, "observedProperties": string[], "visibleStates": string[], "evidenceIds": string[], "occurrences": ComponentOccurrence[], "confidence": number, "source": "llm_inferred", "reviewStatus": "needs_review"}.',
+  'Use this SynthesizedToken shape: {"id": string, "kind": "color" | "typography" | "spacing" | "radius" | "border" | "effect", "name": string, "value": string, "role": string, "evidenceIds": string[], "confidence": number, "source": "llm_inferred", "reviewStatus": "needs_review"}.',
+  'Use this DesignRule shape: {"id": string, "kind": "layout" | "icon" | "imagery" | "responsive" | "content" | "interaction", "name": string, "description": string, "evidenceIds": string[], "confidence": number, "source": "llm_inferred", "reviewStatus": "needs_review"}.',
+  'Use this DesignConflict shape: {"id": string, "entityKind": "token" | "component" | "rule", "summary": string, "candidateIds": string[], "evidenceIds": string[], "confidence": number, "source": "llm_inferred", "reviewStatus": "needs_review"}.',
+  'Use exactly this result shape: {"tokenCandidates": SynthesizedToken[], "componentCandidates":[{"id": string, "name": string, "category": string, "purpose": string, "anatomy": string[], "observedProperties": string[], "variants": string[], "variantCandidates": ComponentVariant[], "states": string[], "responsiveEvidence": string[], "evidenceIds": string[], "visualRegions": string[], "designLanguageCandidateIds": string[], "claims": Claim[], "confidence": number, "status": "candidate"}], "rules": DesignRule[], "designLanguage":{"color": Claim[], "typography": Claim[], "spacing": Claim[], "radius": Claim[], "border": Claim[], "effects": Claim[], "layout": Claim[], "iconography": Claim[], "imagery": Claim[], "responsive": Claim[], "content": Claim[], "interaction": Claim[]}, "unresolvedConflicts": DesignConflict[]}.',
   "Every field is required. Use [] when no evidence supports an array field.",
   "At least one designLanguage category must contain one claim.",
+  "Every token, component variant, rule, and conflict must use source llm_inferred and reviewStatus needs_review.",
   "Every component candidate must cite at least one supplied evidence ID.",
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
-  "Never invent an evidence ID, exact token value, font, measurement, or interaction not supported by evidence.",
+  "Never invent an evidence ID, exact source token, original CSS value, font, measurement, or interaction not supported by evidence.",
+  "Keep materially different observed token values or component variants separate and record unresolved contradictions instead of inventing false precision.",
   "Full-page screenshots may produce component candidates only with status candidate.",
 ].join(" ");
 

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  parseAppKnowledgeDesignSystemResult,
   parseAppKnowledgeSnapshot,
   projectAppKnowledge,
   type AppKnowledgeSnapshot,
@@ -75,6 +76,7 @@ function snapshotFixture(): AppKnowledgeSnapshot {
       anatomy: ["Icon", "Label"],
       observedProperties: ["Persistent left rail"],
       variants: ["Selected", "Default"],
+      variantCandidates: [],
       states: ["Selected"],
       responsiveEvidence: [],
       evidenceIds: ["SCREEN-1"],
@@ -214,4 +216,131 @@ test("accepts a large captured screen inventory", () => {
     ...raw.screens.map(({ evidenceId }) => evidenceId),
   ]);
   assert.equal(parseAppKnowledgeSnapshot(raw, allowed).screens.length, 610);
+});
+
+test("parses synthesized tokens, component occurrences, rules, and conflicts", () => {
+  const result = parseAppKnowledgeDesignSystemResult({
+    tokenCandidates: [{
+      id: "token-color-primary",
+      kind: "color",
+      name: "Primary action",
+      value: "#F26B38",
+      role: "Primary action fill",
+      evidenceIds: ["SCREEN-1"],
+      confidence: 0.82,
+      source: "llm_inferred",
+      reviewStatus: "needs_review",
+    }],
+    componentCandidates: [{
+      id: "component-button",
+      name: "Button",
+      category: "Inputs",
+      purpose: "Trigger an action",
+      anatomy: ["container", "label"],
+      observedProperties: ["orange fill"],
+      variants: ["Primary"],
+      variantCandidates: [{
+        id: "component-button-primary",
+        name: "Primary",
+        description: "Primary action button",
+        observedProperties: ["orange fill"],
+        visibleStates: ["default"],
+        evidenceIds: ["SCREEN-1"],
+        occurrences: [{
+          evidenceId: "SCREEN-1",
+          region: { x: 0.7, y: 0.6, width: 0.2, height: 0.08 },
+          confidence: 0.88,
+        }],
+        confidence: 0.88,
+        source: "llm_inferred",
+        reviewStatus: "needs_review",
+      }],
+      states: ["default"],
+      responsiveEvidence: ["desktop"],
+      evidenceIds: ["SCREEN-1"],
+      visualRegions: ["Primary action"],
+      designLanguageCandidateIds: ["language-layout"],
+      claims: [],
+      confidence: 0.88,
+      status: "candidate",
+    }],
+    rules: [{
+      id: "rule-layout-page",
+      kind: "layout",
+      name: "Page frame",
+      description: "Content uses a persistent page frame.",
+      evidenceIds: ["SCREEN-1"],
+      confidence: 0.86,
+      source: "llm_inferred",
+      reviewStatus: "needs_review",
+    }],
+    designLanguage: {
+      color: [],
+      typography: [],
+      spacing: [],
+      radius: [],
+      border: [],
+      effects: [],
+      layout: [claim("language-layout", "Content uses a persistent page frame.")],
+      iconography: [],
+      imagery: [],
+      responsive: [],
+      content: [],
+      interaction: [],
+    },
+    unresolvedConflicts: [{
+      id: "conflict-primary-color",
+      entityKind: "token",
+      summary: "Two primary action colors are visible.",
+      candidateIds: ["token-color-primary", "token-color-secondary"],
+      evidenceIds: ["SCREEN-1"],
+      confidence: 0.6,
+      source: "llm_inferred",
+      reviewStatus: "needs_review",
+    }],
+  }, new Set(["SCREEN-1"]));
+
+  assert.equal(result.tokenCandidates[0].source, "llm_inferred");
+  assert.equal(
+    result.componentCandidates[0].variantCandidates[0].occurrences[0].evidenceId,
+    "SCREEN-1",
+  );
+  assert.equal(result.rules[0].reviewStatus, "needs_review");
+  assert.equal(result.unresolvedConflicts[0].entityKind, "token");
+});
+
+test("rejects synthesized design evidence outside the allowlist", () => {
+  assert.throws(
+    () => parseAppKnowledgeDesignSystemResult({
+      tokenCandidates: [{
+        id: "token-color-primary",
+        kind: "color",
+        name: "Primary action",
+        value: "#F26B38",
+        role: "Primary action fill",
+        evidenceIds: ["SCREEN-999"],
+        confidence: 0.82,
+        source: "llm_inferred",
+        reviewStatus: "needs_review",
+      }],
+      componentCandidates: [],
+      rules: [],
+      designLanguage: {
+        color: [],
+        typography: [],
+        spacing: [],
+        radius: [],
+        border: [],
+        effects: [],
+        layout: [claim("language-layout", "Content uses a page frame.")],
+        iconography: [],
+        imagery: [],
+        responsive: [],
+        content: [],
+        interaction: [],
+      },
+      unresolvedConflicts: [],
+    }, new Set(["SCREEN-1"])),
+    /unknown evidence/,
+  );
 });
