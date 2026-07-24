@@ -63,6 +63,26 @@ test("recognizes project and outside-of-project Antigravity conversations", asyn
   assert.equal(isConversation("https://example.com/?section=outside-of-project"), false);
 });
 
+test("ignores complete JSON copied from the submitted prompt", async () => {
+  const module = await import("./antigravityChat.ts") as Record<string, unknown>;
+  const extract = module.lastJsonObjectInText as (
+    value: string,
+    excludedText?: string,
+  ) => string;
+
+  assert.equal(
+    extract(
+      'request {"app":"15five"} response {"componentCandidates":[]}',
+      'request {"app":"15five"}',
+    ),
+    '{"componentCandidates":[]}',
+  );
+  assert.equal(
+    extract('request {"app":"15five"}', 'request {"app":"15five"}'),
+    "",
+  );
+});
+
 test("drives a fresh Antigravity conversation with a genuine image attachment", async () => {
   const module = await import("./antigravityChat.ts") as Record<string, unknown>;
   assert.equal(typeof module.bindAntigravityChatSession, "function");

@@ -44,7 +44,10 @@ export function isAntigravityConversationUrl(value: string): boolean {
   }
 }
 
-export function lastJsonObjectInText(text: string): string {
+export function lastJsonObjectInText(
+  text: string,
+  excludedText = "",
+): string {
   let best = "";
   let bestEnd = -1;
   for (let start = 0; start < text.length; start += 1) {
@@ -74,6 +77,7 @@ export function lastJsonObjectInText(text: string): string {
           parsed
           && typeof parsed === "object"
           && !Array.isArray(parsed)
+          && !excludedText.includes(candidate)
           && end > bestEnd
         ) {
           best = candidate;
@@ -112,11 +116,13 @@ async function waitForStableAntigravityReply(
   page: Page,
   timeoutMs: number,
   stableMs: number,
+  prompt: string,
   signal?: AbortSignal,
 ): Promise<string> {
   const replies = page.locator([
     ".leading-relaxed.select-text.text-sm",
     '[aria-label="Agent response"] .select-text',
+    ".select-text",
   ].join(", "));
   const loading = page.locator('[data-testid="agent-loading"]');
   const deadline = Date.now() + timeoutMs;
@@ -129,12 +135,14 @@ async function waitForStableAntigravityReply(
     const selectedReply = count > 0
       ? (await raceChatAbort(replies.last().innerText(), signal)).trim()
       : "";
+    const selectedJson = lastJsonObjectInText(selectedReply);
     const visibleJson = !working
       ? lastJsonObjectInText(
         await raceChatAbort(page.locator("body").innerText(), signal),
+        prompt,
       )
       : "";
-    const text = visibleJson || selectedReply;
+    const text = selectedJson || visibleJson || selectedReply;
     if (!working && text && text === previous) {
       if (stableSince === 0) stableSince = Date.now();
       if (Date.now() - stableSince >= stableMs) return text;
@@ -196,6 +204,7 @@ export function bindAntigravityChatSession(
         page,
         options.responseTimeoutMs ?? 6 * 60_000,
         options.stableMs ?? 1_500,
+        prompt,
         signal,
       );
     },
