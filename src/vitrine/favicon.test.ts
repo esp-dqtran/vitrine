@@ -19,7 +19,6 @@ test('uses the Vitrine brand mark as the browser favicon', async () => {
 test('keeps every in-app Vitrine mark center white in all themes', async () => {
   const marks = [
     ['./SignIn.tsx', 11],
-    ['./Home.tsx', 10],
     ['./Pricing.tsx', 11],
     ['./App.tsx', 11],
     ['./components/Sidebar.tsx', 9],
@@ -33,4 +32,7 @@ test('keeps every in-app Vitrine mark center white in all themes', async () => {
       path,
     );
   }
+
+  const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
+  assert.equal((home.match(/src="\/favicon\.svg"/g) ?? []).length, 2);
 });

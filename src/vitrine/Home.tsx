@@ -17,7 +17,7 @@ function Section({ style, children }: { style?: CSSProperties; children: ReactNo
 // ---------- hero icon mark (layered, floating above the headline) ----------
 function HeroIconStack() {
   const backRef = useRef<HTMLDivElement>(null);
-  const frontRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLImageElement>(null);
   useFloatDrift(backRef, { rotate: -9, dx: 8, dy: 14, rswing: 5, duration: 6.4, delay: -1.6 });
   useFloatDrift(frontRef, { dx: 8, dy: 14, rswing: 4, duration: 6.4 });
   return (
@@ -26,22 +26,22 @@ function HeroIconStack() {
         ref={backRef}
         style={{ position: 'absolute', inset: 6, borderRadius: 24, background: 'var(--color-background-muted)', willChange: 'transform' }}
       />
-      <div
+      <img
         ref={frontRef}
+        src="/favicon.svg"
+        alt=""
+        aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
+          width: '100%',
+          height: '100%',
           borderRadius: 26,
-          background: 'linear-gradient(155deg,#4c7cf9,#2955d8)',
           boxShadow: '0 18px 34px rgba(41,85,216,0.28), inset 0 1px 0 rgba(255,255,255,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: 'block',
           willChange: 'transform',
         }}
-      >
-        <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff', transform: 'rotate(-12deg)', boxShadow: '0 3px 8px rgba(0,0,0,0.18)' }} />
-      </div>
+      />
     </div>
   );
 }
@@ -320,7 +320,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
           boxShadow: 'light-dark(0 8px 30px rgba(24,24,27,0.08), 0 8px 30px rgba(0,0,0,0.4)), inset 0 1px 0 light-dark(rgba(255,255,255,0.5), rgba(255,255,255,0.06))',
         }}
       >
-        <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: '#FFFFFF' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
+        <Button type="button" label="Vitrine" variant="ghost" size="lg" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={24} height={24} style={{ display: 'block' }} />} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
         {isCompactNav ? (
           <DropdownMenu
             button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}

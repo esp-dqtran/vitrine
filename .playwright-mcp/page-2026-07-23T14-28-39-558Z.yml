@@ -1,0 +1,91 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=e6]:
+    - generic [ref=e8]:
+      - navigation "Sidebar":
+        - generic:
+          - generic:
+            - generic:
+              - button "Open sidebar"
+        - generic:
+          - generic:
+            - link "New chat":
+              - /url: /
+          - generic: Search chats
+          - generic:
+            - link "Images":
+              - /url: /images
+        - generic:
+          - generic:
+            - button "Open profile menu"
+      - generic [ref=e9]:
+        - heading "Chat history" [level=2] [ref=e10]
+        - navigation "Chat history" [ref=e12]:
+          - generic [ref=e15]:
+            - link "Home" [ref=e16] [cursor=pointer]:
+              - /url: /
+            - generic [ref=e19]:
+              - button "Search chats" [ref=e20] [cursor=pointer]
+              - button "Close sidebar" [expanded] [ref=e23]
+          - list [ref=e27]:
+            - listitem [ref=e28]:
+              - link "New chat Shift Command O" [ref=e29] [cursor=pointer]:
+                - /url: /
+                - generic [ref=e30]: New chat
+                - generic [ref=e38]:
+                  - generic "Shift" [ref=e39]: ⇧
+                  - generic "Command" [ref=e41]: ⌘
+                  - generic [ref=e43]: O
+            - listitem
+          - link "Images" [ref=e45] [cursor=pointer]:
+            - /url: /images
+          - generic [ref=e52]:
+            - link "Plugins" [ref=e53] [cursor=pointer]:
+              - /url: /plugins
+            - generic [ref=e60] [cursor=pointer]: Deep research
+          - generic [ref=e67]:
+            - link [ref=e68] [cursor=pointer]:
+              - /url: https://openai.com/chatgpt/pricing/
+            - generic [ref=e76] [cursor=pointer]: Settings
+            - generic [ref=e80] [cursor=pointer]: Help
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - paragraph [ref=e92]: Get responses tailored to you
+              - paragraph [ref=e93]: Log in to get answers based on saved chats, plus create images and upload files.
+            - button "Log in" [ref=e95] [cursor=pointer]
+    - generic [ref=e99]:
+      - generic [ref=e100]:
+        - banner:
+          - button "Model selector" [ref=e102] [cursor=pointer]:
+            - generic [ref=e103]: ChatGPT
+          - generic [ref=e111]:
+            - button "Log in" [ref=e112] [cursor=pointer]
+            - button "Sign up for free" [ref=e114] [cursor=pointer]
+      - main [ref=e117]:
+        - generic [ref=e119]:
+          - heading "What’s on the agenda today?" [level=1] [ref=e127]
+          - generic [ref=e129]:
+            - generic [ref=e135]:
+              - generic [ref=e139]:
+                - button "Add files and more" [ref=e142] [cursor=pointer]
+                - textbox "Chat with ChatGPT" [ref=e145]:
+                  - paragraph [ref=e146]: Ask anything
+                - generic [ref=e148]:
+                  - button "Start dictation" [ref=e149] [cursor=pointer]
+                  - button "Start Voice" [ref=e152] [cursor=pointer]:
+                    - generic [ref=e156]: Voice
+              - button [ref=e157]
+              - button [ref=e158]
+            - generic [ref=e165]:
+              - text: ChatGPT is AI. By using it, you agree to our
+              - link "Terms" [ref=e166] [cursor=pointer]:
+                - /url: https://openai.com/terms
+              - text: "&"
+              - link "Privacy Policy" [ref=e167] [cursor=pointer]:
+                - /url: https://openai.com/privacy
+              - text: . Chats may be reviewed and used to improve our AI models.
+              - link "Learn more" [ref=e168] [cursor=pointer]:
+                - /url: https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance
+  - alert [ref=e183]
+  - status [ref=e184]

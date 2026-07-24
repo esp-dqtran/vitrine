@@ -17,3 +17,16 @@ test('exposes Build in public from every landing navigation mode', async () => {
   assert.equal((source.match(/label: 'Build in public'/g) ?? []).length, 1);
   assert.equal((source.match(/label="Build in public"/g) ?? []).length, 2);
 });
+
+test('uses the canonical Vitrine brand asset for both landing-page logos', async () => {
+  const source = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
+
+  assert.equal((source.match(/src="\/favicon\.svg"/g) ?? []).length, 2);
+  assert.doesNotMatch(source, /linear-gradient\(155deg,#4c7cf9,#2955d8\)/);
+});
+
+test('renders the landing header logo at the large button size', async () => {
+  const source = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /label="Vitrine" variant="ghost" size="lg"/);
+});
