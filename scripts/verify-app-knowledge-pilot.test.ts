@@ -6,107 +6,143 @@ import {
 } from './verify-app-knowledge-pilot.ts';
 
 function fixture(): PilotVerifierInput {
-  const uiElements = Array.from({ length: 610 }, (_, index) => ({
-    evidenceId: `UI-ELEMENT-${index + 1}`,
-    imageId: index + 1,
-    kind: 'ui_element' as const,
-    eligibility: 'quarantined' as const,
-  }));
-  const flowSteps = Array.from({ length: 754 }, (_, index) => ({
-    evidenceId: `FLOW-${index + 1}`,
-    imageId: (index % 610) + 1,
-    kind: 'flow_step' as const,
-    eligibility: 'eligible' as const,
-    flow: { id: `flow-${Math.floor(index / 151) + 1}`, stepIndex: index },
-  }));
-  const manifest = [
-    { evidenceId: 'SCREEN-1', imageId: 900, kind: 'screen' as const, eligibility: 'eligible' as const },
-    ...uiElements,
-    ...flowSteps,
-  ];
   return {
-    app: '15five',
-    platform: 'web',
-    version: 1,
-    manifest,
-    evidenceRecords: manifest
-      .filter(({ eligibility }) => eligibility === 'eligible')
-      .map(({ evidenceId }) => ({ evidenceId, status: 'cached' as const })),
-    snapshot: {
-      coverage: {
-        flowReferences: { total: 754, resolved: 754, uniqueImages: 610 },
-      },
-      claims: [{
-        id: 'claim-1',
-        kind: 'observed',
-        text: 'The dashboard exposes current priorities.',
-        evidenceIds: ['SCREEN-1'],
+    captureVersion: 7,
+    completedAutomaticJobs: 1,
+    sourceHashDrift: 0,
+    quarantinedUiElementsBefore: 610,
+    quarantinedUiElementsAfter: 610,
+    protectedSnapshotOverwrites: 0,
+    designSystemSeedOutcome: 'seeded',
+    tokens: [{
+      id: 'token-color-action',
+      evidence: [11],
+      confidence: 0.94,
+      source: 'llm_inferred',
+      reviewStatus: 'needs_review',
+    }],
+    components: [{
+      id: 'component-button',
+      evidence: [11],
+      confidence: 0.9,
+      status: 'candidate',
+      variants: [{
+        id: 'variant-primary',
+        evidence: [11],
+        confidence: 0.91,
+        source: 'llm_inferred',
+        reviewStatus: 'needs_review',
+        occurrences: [{
+          imageId: 11,
+          region: { x: 0.1, y: 0.2, width: 0.3, height: 0.1 },
+          coordinateSpace: 'normalized',
+          cropImageId: 211,
+        }],
       }],
-      designLanguage: {
-        color: [],
-        typography: [],
-        spacing: [],
-        radius: [],
-        border: [],
-        effects: [],
-        layout: [{ id: 'layout-1' }],
-        iconography: [],
-        imagery: [],
-        responsive: [],
-        content: [],
-        interaction: [],
-      },
-      componentCandidates: [{ status: 'candidate' }],
-      flows: Array.from({ length: 5 }, (_, index) => ({
-        id: `flow-${index + 1}`,
-        evidenceIds: flowSteps
-          .filter(({ flow }) => flow.id === `flow-${index + 1}`)
-          .map(({ evidenceId }) => evidenceId),
-      })),
-    },
-    repeatedManifest: {
-      repeated: true,
-      eligible: 755,
-      cacheHits: 755,
-      missingCacheEntries: 0,
-    },
-    acceptance: {
-      resume: true,
-      cancel: true,
-      retry: true,
-      stale: true,
-      auth: true,
-      review: true,
-    },
-    reviewedFlowIds: ['flow-1', 'flow-2', 'flow-3', 'flow-4', 'flow-5'],
-    reviewedRoles: ['designer', 'developer', 'product'],
+    }],
+    rules: [{
+      id: 'rule-spacing',
+      evidence: [11],
+      confidence: 0.87,
+      source: 'llm_inferred',
+      reviewStatus: 'needs_review',
+    }],
+    crops: [{
+      derivedImageId: 211,
+      sourceImageId: 11,
+      region: { x: 0.1, y: 0.2, width: 0.3, height: 0.1 },
+      metadataVerified: true,
+    }],
+    flows: [{
+      id: 'flow-onboarding',
+      steps: [
+        { order: 0, interaction: 'Click continue', evidence: [11] },
+        { order: 1, interaction: 'Submit profile', evidence: [12] },
+      ],
+    }],
+    crawledFlows: [{
+      id: 'flow-onboarding',
+      steps: [
+        { order: 0, interaction: 'Click continue', evidence: [11] },
+        { order: 1, interaction: 'Submit profile', evidence: [12] },
+      ],
+    }],
   };
 }
 
-test('passes the exact 15five pilot fixture', () => {
+test('passes a bounded evidence-backed automatic design-system pilot', () => {
   const result = verifyAppKnowledgePilot(fixture());
   assert.equal(result.ok, true);
   assert.deepEqual(result.failedGates, []);
+  assert.deepEqual(result.summary, {
+    captureVersion: 7,
+    completedAutomaticJobs: 1,
+    sourceHashDrift: 0,
+    tokens: 1,
+    components: 1,
+    variants: 1,
+    rules: 1,
+    regions: 1,
+    verifiedCrops: 1,
+    flows: 1,
+    flowSteps: 2,
+    quarantinedUiElements: 610,
+    protectedSnapshotOverwrites: 0,
+  });
 });
 
 const cases: Array<[string, (input: PilotVerifierInput) => void, string]> = [
-  ['UI Element quarantine count', (input) => {
-    input.manifest.splice(input.manifest.findIndex(({ kind }) => kind === 'ui_element'), 1);
+  ['missing completed automatic job', (input) => {
+    input.completedAutomaticJobs = 0;
+  }, 'completed_automatic_job'],
+  ['duplicate completed automatic identity', (input) => {
+    input.completedAutomaticJobs = 2;
+  }, 'completed_automatic_job'],
+  ['source hash drift', (input) => {
+    input.sourceHashDrift = 1;
+  }, 'source_hash_drift'],
+  ['missing token', (input) => {
+    input.tokens = [];
+  }, 'generated_entities_present'],
+  ['uncited token', (input) => {
+    input.tokens[0]!.evidence = [];
+  }, 'generated_entity_provenance'],
+  ['trusted generated rule', (input) => {
+    input.rules[0]!.reviewStatus = 'reviewed' as never;
+  }, 'generated_entity_provenance'],
+  ['invalid confidence', (input) => {
+    input.components[0]!.variants[0]!.confidence = 2;
+  }, 'generated_entity_provenance'],
+  ['unbounded region', (input) => {
+    const region = input.components[0]!.variants[0]!.occurrences[0]!.region;
+    assert.ok(region);
+    region.x = 0.8;
+    region.width = 0.3;
+  }, 'normalized_regions'],
+  ['non-normalized coordinate space', (input) => {
+    input.components[0]!.variants[0]!.occurrences[0]!.coordinateSpace = 'pixels' as never;
+  }, 'normalized_regions'],
+  ['unverified crop metadata', (input) => {
+    input.crops[0]!.metadataVerified = false;
+  }, 'verified_crop_metadata'],
+  ['missing crop reference', (input) => {
+    input.components[0]!.variants[0]!.occurrences[0]!.cropImageId = 999;
+  }, 'verified_crop_metadata'],
+  ['mutated flow order', (input) => {
+    input.flows[0]!.steps.reverse();
+  }, 'raw_flows_preserved'],
+  ['mutated flow interaction', (input) => {
+    input.flows[0]!.steps[0]!.interaction = 'Different action';
+  }, 'raw_flows_preserved'],
+  ['mutated flow evidence', (input) => {
+    input.flows[0]!.steps[0]!.evidence = [999];
+  }, 'raw_flows_preserved'],
+  ['changed quarantine count', (input) => {
+    input.quarantinedUiElementsAfter -= 1;
   }, 'ui_element_quarantine'],
-  ['Flow reference count', (input) => { input.snapshot.coverage.flowReferences.total = 753; }, 'flow_reference_count'],
-  ['unique Flow image count', (input) => { input.snapshot.coverage.flowReferences.uniqueImages = 609; }, 'unique_flow_images'],
-  ['unresolved Flow reference', (input) => { input.snapshot.coverage.flowReferences.resolved = 753; }, 'flow_references_resolved'],
-  ['silently missing eligible evidence', (input) => { input.evidenceRecords.pop(); }, 'eligible_evidence_complete'],
-  ['unknown citation', (input) => { input.snapshot.claims[0]!.evidenceIds = ['SCREEN-404']; }, 'citations_known'],
-  ['uncited observed claim', (input) => { input.snapshot.claims[0]!.evidenceIds = []; }, 'observed_inferred_cited'],
-  ['empty design language', (input) => { input.snapshot.designLanguage.layout = []; }, 'design_language_present'],
-  ['trusted component from full-page evidence', (input) => {
-    input.snapshot.componentCandidates[0]!.status = 'reviewed';
-  }, 'components_remain_candidates'],
-  ['cache miss on repeated manifest', (input) => { input.repeatedManifest.cacheHits -= 1; }, 'repeated_manifest_cache'],
-  ['untested lifecycle flag', (input) => { input.acceptance.auth = false; }, 'lifecycle_acceptance'],
-  ['fewer than five reviewed Flows', (input) => { input.reviewedFlowIds.pop(); }, 'reviewed_flows'],
-  ['unreviewed role projection', (input) => { input.reviewedRoles.pop(); }, 'role_projections_reviewed'],
+  ['protected snapshot overwrite', (input) => {
+    input.protectedSnapshotOverwrites = 1;
+  }, 'protected_snapshots'],
 ];
 
 for (const [label, mutate, failedGate] of cases) {

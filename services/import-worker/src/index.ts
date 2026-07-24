@@ -32,7 +32,7 @@ import { createAppKnowledgeService } from "../../../src/appKnowledgeService.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import { createBrowserAppKnowledgeGenerator } from "./appKnowledgeWorker.ts";
 import {
-  automaticAppKnowledgeAllowlistFromEnvironment,
+  automaticAppKnowledgeConfigFromEnvironment,
   ensureAutomaticAppKnowledgeJob,
 } from "../../../src/appKnowledgeAutomatic.ts";
 import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowledgeProviderConfig.ts";
@@ -143,11 +143,13 @@ const featureDocumentService = featureDocumentProvider ? createFeatureDocumentSe
 }) : undefined;
 
 const appKnowledgeStore = createAppKnowledgeStore();
+const automaticAppKnowledgeConfig =
+  automaticAppKnowledgeConfigFromEnvironment(process.env);
 async function ensureAutomaticKnowledgeForCapture(
   app: string,
   platform: "ios" | "android" | "web",
 ): Promise<void> {
-  if (process.env.APP_KNOWLEDGE_AUTO_GENERATE !== "1") return;
+  if (!automaticAppKnowledgeConfig.enabled) return;
   const version = (await listAppVersions(app, platform, false))
     .find(({ status }) => status === "draft" || status === "in_review");
   if (!version) throw new Error("Automatic App Knowledge capture version was not found");
@@ -168,10 +170,10 @@ async function ensureAutomaticKnowledgeForCapture(
     captureVersionId: version.id,
     sourceSha256: prepared.sourceSha256,
     providerModel: appKnowledgeProviderModelFromEnvironment(process.env),
-    promptVersion: 1,
+    promptVersion: automaticAppKnowledgeConfig.promptVersion,
   }, {
     environment: process.env,
-    allowlist: automaticAppKnowledgeAllowlistFromEnvironment(process.env),
+    allowlist: automaticAppKnowledgeConfig.allowlist,
     store: appKnowledgeStore,
     createTransportJob: () => createJob("generate-app-knowledge", {}),
     getTransportJob: getJob,
@@ -214,6 +216,12 @@ const generateAppKnowledge = createBrowserAppKnowledgeGenerator({
     screenConcurrency: concurrency,
     flowConcurrency: concurrency,
     timeoutMs: 6 * 60_000,
+    designSystemChunkBytes:
+      automaticAppKnowledgeConfig.designSystemChunkBytes,
+    designSystemChunkConcurrency:
+      automaticAppKnowledgeConfig.designSystemChunkConcurrency,
+    flowSynthesisChunkBytes:
+      automaticAppKnowledgeConfig.flowSynthesisChunkBytes,
   }),
 });
 

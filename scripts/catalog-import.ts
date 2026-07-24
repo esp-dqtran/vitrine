@@ -56,7 +56,7 @@ import { launchMobbinContext } from "../src/crawler.ts";
 import { createAppKnowledgeStore } from "../src/appKnowledgeStore.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../src/appKnowledgeEvidence.ts";
 import {
-  automaticAppKnowledgeAllowlistFromEnvironment,
+  automaticAppKnowledgeConfigFromEnvironment,
   completeCatalogCrawlAndHandoff,
   ensureAutomaticAppKnowledgeJob,
 } from "../src/appKnowledgeAutomatic.ts";
@@ -138,11 +138,13 @@ function log(message: string): void {
 
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 const appKnowledgeStore = createAppKnowledgeStore();
+const automaticAppKnowledgeConfig =
+  automaticAppKnowledgeConfigFromEnvironment(process.env);
 async function ensureAutomaticKnowledgeForCapture(
   app: string,
   platform: Platform,
 ): Promise<void> {
-  if (process.env.APP_KNOWLEDGE_AUTO_GENERATE !== "1") return;
+  if (!automaticAppKnowledgeConfig.enabled) return;
   const version = (await listAppVersions(app, platform, false))
     .find(({ status }) => status === "draft" || status === "in_review");
   if (!version) throw new Error("Automatic App Knowledge capture version was not found");
@@ -163,10 +165,10 @@ async function ensureAutomaticKnowledgeForCapture(
     captureVersionId: version.id,
     sourceSha256: prepared.sourceSha256,
     providerModel: appKnowledgeProviderModelFromEnvironment(process.env),
-    promptVersion: 1,
+    promptVersion: automaticAppKnowledgeConfig.promptVersion,
   }, {
     environment: process.env,
-    allowlist: automaticAppKnowledgeAllowlistFromEnvironment(process.env),
+    allowlist: automaticAppKnowledgeConfig.allowlist,
     store: appKnowledgeStore,
     createTransportJob: () => createJob("generate-app-knowledge", {}),
     getTransportJob: getJob,

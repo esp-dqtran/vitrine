@@ -67,3 +67,63 @@ If synthesis fails:
 
 `ANTIGRAVITY_CDP_ENDPOINT` is an optional override for a locally reachable CDP
 endpoint. Do not expose the endpoint beyond the local machine.
+
+## Automatic Design System rollout
+
+Automatic extraction is disabled unless both the feature flag and an exact
+app/platform allowlist entry are present. An empty allowlist enables nothing.
+For the first production pilot, use only:
+
+```env
+APP_KNOWLEDGE_AUTO_GENERATE=1
+APP_KNOWLEDGE_AUTO_ALLOWLIST=15five:web
+APP_KNOWLEDGE_DESIGN_PROMPT_VERSION=2
+APP_KNOWLEDGE_DESIGN_CHUNK_BYTES=24000
+APP_KNOWLEDGE_DESIGN_CHUNK_CONCURRENCY=3
+APP_KNOWLEDGE_FLOW_CHUNK_BYTES=24000
+```
+
+Restart the import worker after changing these values. Configuration is parsed
+once when the worker starts. A completed, fully verified Crawl Data job is
+persisted before its automatic handoff is attempted. The handoff identity
+includes app, platform, capture version, source hash, provider model, and
+prompt version, so repeating an unchanged handoff reuses the durable job.
+
+Keep the rollout in this order:
+
+1. Run `15five:web` and leave every other target excluded.
+2. Run `npm run analysis:pilot:verify` against the authorized database.
+3. Review the generated draft and crop specimens in the Design System tab.
+4. Add a small number of newly crawled app/platform targets.
+5. Only after those pass, enqueue a bounded historical backfill.
+
+Do not expand the allowlist when the verifier returns a failed gate. The
+verifier uses a read-only transaction and prints counts and invariant names;
+it never prints prompts, credentials, object keys, or provider responses.
+
+## Recovery
+
+- **Queued job without a RabbitMQ consumer:** run the bounded automatic-job
+  reconciliation path. It republishes only durable queued automatic jobs whose
+  transport is not already queued or running.
+- **Failed evidence or synthesis chunk:** use retry-failed-evidence. Completed
+  evidence cache rows and completed design-system chunks remain the resume
+  boundary; do not delete them.
+- **Provider rate limit:** pause the consumer, wait for the provider window to
+  recover, then resume the same durable job. Keep browser concurrency at one
+  for Antigravity.
+- **Source changed during analysis:** treat the job as stale. Finish or verify
+  the new crawl, then create a new automatic identity from its new source hash.
+  Never force the stale revision into the working copy.
+- **Rejected crop:** inspect the source occurrence. Rejections mean the region
+  was out of bounds, smaller than 16 by 16 pixels, effectively full-screen, or
+  lacked verified source/object metadata. The component may remain an inferred
+  preview, but the rejected crop must not be presented as observed evidence.
+- **Working-copy conflict:** keep the current imported, reviewed, or
+  human-edited Design System unchanged. Review the generated App Knowledge
+  revision separately; never overwrite the protected working copy.
+
+The Design System tab follows job progress over SSE. It makes one initial
+analysis read and one Design System reload when the job completes; it does not
+poll. During regeneration, the previous draft stays visible until the new
+candidate is safely available.

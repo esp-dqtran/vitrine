@@ -8,6 +8,7 @@ import {
 } from "./appKnowledgeStore.ts";
 import {
   automaticAppKnowledgeAllowlistFromEnvironment,
+  automaticAppKnowledgeConfigFromEnvironment,
   completeCatalogCrawlAndHandoff,
   ensureAutomaticAppKnowledgeJob,
   reconcileQueuedAppKnowledgeJobs,
@@ -134,7 +135,7 @@ function automaticDependencies(options: {
     environment: {
       APP_KNOWLEDGE_AUTO_GENERATE: options.enabled === false ? "0" : "1",
     },
-    allowlist: options.allowlist,
+    allowlist: options.allowlist ?? new Set(["linear:web"]),
     store: {
       findAutomaticJob: async (input) => durable.get(identity(input)),
       createAutomaticJob: async (input, transportJobId) => {
@@ -253,15 +254,17 @@ test("a unique-identity race reuses the winner without duplicate publication", a
   assert.equal(h.transports.get(101)?.status, "cancelled");
 });
 
-test("automatic generation is disabled or allowlisted before any mutation", async () => {
+test("automatic generation is off unless explicitly enabled", async () => {
   const disabled = automaticDependencies({ enabled: false });
   assert.deepEqual(
     await ensureAutomaticAppKnowledgeJob(target(), disabled.dependencies),
     { status: "disabled" },
   );
   assert.equal(disabled.createdDurableJobs.length, 0);
+});
 
-  const excluded = automaticDependencies({ allowlist: new Set(["figma"]) });
+test("an empty allowlist enables no automatic targets during the pilot", async () => {
+  const excluded = automaticDependencies({ allowlist: new Set() });
   assert.deepEqual(
     await ensureAutomaticAppKnowledgeJob(target(), excluded.dependencies),
     { status: "excluded" },
@@ -269,17 +272,51 @@ test("automatic generation is disabled or allowlisted before any mutation", asyn
   assert.equal(excluded.createdDurableJobs.length, 0);
 });
 
-test("parses the optional automatic app and app-platform allowlist", () => {
-  assert.equal(
+test("limits the first rollout to exact app and platform allowlist entries", async () => {
+  const h = automaticDependencies({
+    allowlist: new Set(["15five:web"]),
+  });
+  assert.deepEqual(
+    await ensureAutomaticAppKnowledgeJob(target({ app: "15five", platform: "ios" }), h.dependencies),
+    { status: "excluded" },
+  );
+  const result = await ensureAutomaticAppKnowledgeJob(
+    target({ app: "15five", platform: "web" }),
+    h.dependencies,
+  );
+  assert.equal(result.status, "ready");
+  assert.equal(h.createdDurableJobs.length, 1);
+});
+
+test("parses rollout controls once into safe pilot defaults", () => {
+  assert.deepEqual(
     automaticAppKnowledgeAllowlistFromEnvironment({}),
-    undefined,
+    new Set(),
   );
   assert.deepEqual(
     automaticAppKnowledgeAllowlistFromEnvironment({
-      APP_KNOWLEDGE_AUTO_ALLOWLIST: "linear, figma/web, linear",
+      APP_KNOWLEDGE_AUTO_ALLOWLIST: "15five:web, figma:ios, 15five:web",
     }),
-    new Set(["linear", "figma/web"]),
+    new Set(["15five:web", "figma:ios"]),
   );
+  assert.deepEqual(automaticAppKnowledgeConfigFromEnvironment({
+    APP_KNOWLEDGE_AUTO_GENERATE: "1",
+    APP_KNOWLEDGE_AUTO_ALLOWLIST: "15five:web",
+    APP_KNOWLEDGE_DESIGN_PROMPT_VERSION: "2",
+    APP_KNOWLEDGE_DESIGN_CHUNK_BYTES: "24000",
+    APP_KNOWLEDGE_DESIGN_CHUNK_CONCURRENCY: "3",
+    APP_KNOWLEDGE_FLOW_CHUNK_BYTES: "24000",
+  }), {
+    enabled: true,
+    allowlist: new Set(["15five:web"]),
+    promptVersion: 2,
+    designSystemChunkBytes: 24_000,
+    designSystemChunkConcurrency: 3,
+    flowSynthesisChunkBytes: 24_000,
+  });
+  assert.throws(() => automaticAppKnowledgeAllowlistFromEnvironment({
+    APP_KNOWLEDGE_AUTO_ALLOWLIST: "15five",
+  }), /app:platform/);
 });
 
 test("reconciliation skips active transports and bounds queued work", async () => {

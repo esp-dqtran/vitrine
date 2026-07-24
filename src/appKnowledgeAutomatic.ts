@@ -50,6 +50,15 @@ export interface AutomaticAppKnowledgeDependencies {
   publishJob(job: Job): Promise<void>;
 }
 
+export interface AutomaticAppKnowledgeConfig {
+  enabled: boolean;
+  allowlist: ReadonlySet<string>;
+  promptVersion: number;
+  designSystemChunkBytes: number;
+  designSystemChunkConcurrency: number;
+  flowSynthesisChunkBytes: number;
+}
+
 export type AutomaticAppKnowledgeResult =
   | { status: "disabled" }
   | { status: "excluded" }
@@ -84,21 +93,78 @@ function enabled(dependencies: AutomaticAppKnowledgeDependencies): boolean {
 
 export function automaticAppKnowledgeAllowlistFromEnvironment(
   environment: Record<string, string | undefined> = process.env,
-): ReadonlySet<string> | undefined {
-  const values = environment.APP_KNOWLEDGE_AUTO_ALLOWLIST
-    ?.split(",")
+): ReadonlySet<string> {
+  const values = (environment.APP_KNOWLEDGE_AUTO_ALLOWLIST ?? "")
+    .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  return values?.length ? new Set(values) : undefined;
+  for (const value of values) {
+    if (!/^[^,\s:]+:(?:ios|android|web)$/.test(value)) {
+      throw new Error(
+        "Automatic App Knowledge allowlist entries must use app:platform",
+      );
+    }
+  }
+  return new Set(values);
+}
+
+function positiveEnvironmentInteger(
+  environment: Record<string, string | undefined>,
+  name: string,
+  fallback: number,
+  maximum: number,
+): number {
+  const raw = environment[name]?.trim();
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value < 1 || value > maximum) {
+    throw new Error(`Invalid ${name}`);
+  }
+  return value;
+}
+
+export function automaticAppKnowledgeConfigFromEnvironment(
+  environment: Record<string, string | undefined> = process.env,
+): AutomaticAppKnowledgeConfig {
+  return {
+    enabled: environment.APP_KNOWLEDGE_AUTO_GENERATE === "1",
+    allowlist: automaticAppKnowledgeAllowlistFromEnvironment(environment),
+    promptVersion: positiveEnvironmentInteger(
+      environment,
+      "APP_KNOWLEDGE_DESIGN_PROMPT_VERSION",
+      2,
+      10_000,
+    ),
+    designSystemChunkBytes: positiveEnvironmentInteger(
+      environment,
+      "APP_KNOWLEDGE_DESIGN_CHUNK_BYTES",
+      24_000,
+      2_000_000,
+    ),
+    designSystemChunkConcurrency: positiveEnvironmentInteger(
+      environment,
+      "APP_KNOWLEDGE_DESIGN_CHUNK_CONCURRENCY",
+      3,
+      16,
+    ),
+    flowSynthesisChunkBytes: positiveEnvironmentInteger(
+      environment,
+      "APP_KNOWLEDGE_FLOW_CHUNK_BYTES",
+      24_000,
+      2_000_000,
+    ),
+  };
 }
 
 function allowed(
   input: AutomaticAppKnowledgeTarget,
   dependencies: AutomaticAppKnowledgeDependencies,
 ): boolean {
-  if (!dependencies.allowlist) return true;
-  return dependencies.allowlist.has(input.app)
-    || dependencies.allowlist.has(`${input.app}/${input.platform}`);
+  const allowlist = dependencies.allowlist
+    ?? automaticAppKnowledgeAllowlistFromEnvironment(
+      dependencies.environment ?? process.env,
+    );
+  return allowlist.has(`${input.app}:${input.platform}`);
 }
 
 async function publish(

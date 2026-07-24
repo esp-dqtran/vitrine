@@ -153,6 +153,30 @@ RESEARCH_LLM_MODEL=<multimodal-json-capable-model>
 
 Pass these variables to the API/worker runtime, never to a `VITE_*` client variable. The provider receives every source image required by the pinned Flow. Application logs and analytics contain status, identifiers, counts, and outcomes only; they exclude prompts, image bytes, generated document content, credentials, and signed media URLs.
 
+## Automatic Design System extraction
+
+After a Crawl Data job has durably completed and verified its Screens, UI
+Elements, and Flows, Astryx can start an evidence-backed App Knowledge job and
+seed a review-only Design System draft. Automatic extraction is default-off and
+requires an exact app/platform allowlist; an empty allowlist enables nothing.
+The initial pilot is `15five:web`.
+
+```dotenv
+APP_KNOWLEDGE_AUTO_GENERATE=1
+APP_KNOWLEDGE_AUTO_ALLOWLIST=15five:web
+APP_KNOWLEDGE_DESIGN_PROMPT_VERSION=2
+APP_KNOWLEDGE_DESIGN_CHUNK_BYTES=24000
+APP_KNOWLEDGE_DESIGN_CHUNK_CONCURRENCY=3
+APP_KNOWLEDGE_FLOW_CHUNK_BYTES=24000
+```
+
+The Design System tab streams progress over SSE, keeps the previous draft
+visible during regeneration, and distinguishes verified component crops from
+inferred previews. Run `npm run analysis:pilot:verify` before expanding the
+allowlist. See
+[App Knowledge with Antigravity](docs/operations/app-knowledge-antigravity.md)
+for provider setup, recovery, rollout order, and acceptance gates.
+
 ## Product flow documentation (`FLOW.md`) for product managers
 
 Astryx reconstructs the same app three ways for three readers: designers export an editable design system (Figma/tokens), developers export tokens as code (CSS/Tailwind/JSON/React), and product managers export **`FLOW.md`** — the app's observed user flows as an ordered, evidence-cited Markdown doc, a PRD-ready reference.
