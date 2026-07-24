@@ -123,6 +123,15 @@ export interface AppKnowledgeJobEvidenceRecord {
   errorCode?: string;
 }
 
+export interface AppKnowledgeDesignSystemChunkRecord {
+  key: string;
+  ordinal: number;
+  status: "pending" | "complete" | "failed";
+  fragment?: Record<string, unknown>;
+  attemptCount: number;
+  errorCode?: string;
+}
+
 export interface AppKnowledgeStore {
   createJob(
     requestedBy: number,
@@ -144,6 +153,21 @@ export interface AppKnowledgeStore {
   saveCachedAnalysis(input: AppKnowledgeCacheEntry): Promise<AppKnowledgeCacheEntry>;
   recordEvidenceResult(jobId: number, input: AppKnowledgeEvidenceResultInput): Promise<void>;
   recordEvidenceFailure(jobId: number, input: AppKnowledgeEvidenceFailureInput): Promise<void>;
+  prepareDesignSystemChunks(
+    jobId: number,
+    chunks: Array<{ key: string; ordinal: number }>,
+  ): Promise<AppKnowledgeDesignSystemChunkRecord[]>;
+  designSystemChunkRecords(jobId: number): Promise<AppKnowledgeDesignSystemChunkRecord[]>;
+  recordDesignSystemChunkResult(jobId: number, input: {
+    key: string;
+    fragment: Record<string, unknown>;
+    attemptCount: number;
+  }): Promise<void>;
+  recordDesignSystemChunkFailure(jobId: number, input: {
+    key: string;
+    errorCode: string;
+    attemptCount: number;
+  }): Promise<void>;
   requestCancel(jobId: number): Promise<AppKnowledgeJobView | undefined>;
   resumeJob(jobId: number, transportJobId: number): Promise<AppKnowledgeJobView | undefined>;
   retryFailedEvidence(jobId: number, transportJobId: number): Promise<AppKnowledgeJobView | undefined>;
@@ -398,6 +422,25 @@ function reviewEventFromRow(row: Record<string, unknown>): AppKnowledgeReviewEve
     ...(row.to_status == null ? {} : { toStatus: row.to_status as AppKnowledgeReviewStatus }),
     details: jsonObject(row.details),
     createdAt: iso(row.created_at),
+  };
+}
+
+function designSystemChunkFromRow(
+  row: Record<string, unknown>,
+): AppKnowledgeDesignSystemChunkRecord {
+  const status = row.status as AppKnowledgeDesignSystemChunkRecord["status"];
+  if (!["pending", "complete", "failed"].includes(status)) {
+    throw new Error("Invalid design-system chunk status");
+  }
+  return {
+    key: sha256(text(row.chunk_key)),
+    ordinal: integer(row.ordinal, "chunk ordinal"),
+    status,
+    ...(row.fragment == null ? {} : {
+      fragment: jsonObject(row.fragment, "design-system fragment"),
+    }),
+    attemptCount: integer(row.attempt_count, "attempt count"),
+    ...(row.error_code == null ? {} : { errorCode: text(row.error_code) }),
   };
 }
 
@@ -744,6 +787,87 @@ export function createAppKnowledgeStore(
       );
       if (result.rowCount !== 1) throw new Error("App Knowledge evidence cannot accept a failure");
       await recountJob(runQuery, jobId);
+    },
+
+    async prepareDesignSystemChunks(jobId, chunks) {
+      positiveInteger(jobId, "job");
+      if (!Array.isArray(chunks) || chunks.length < 1 || chunks.length > 10_000) {
+        throw new Error("Invalid design-system chunk plan");
+      }
+      const keys = new Set<string>();
+      const ordinals = new Set<number>();
+      for (const chunk of chunks) {
+        sha256(chunk.key);
+        integer(chunk.ordinal, "chunk ordinal");
+        if (keys.has(chunk.key) || ordinals.has(chunk.ordinal)) {
+          throw new Error("Invalid design-system chunk plan");
+        }
+        keys.add(chunk.key);
+        ordinals.add(chunk.ordinal);
+      }
+      await runQuery(
+        `INSERT INTO app_knowledge_design_system_chunks (job_id, chunk_key, ordinal)
+         SELECT $1, chunks.chunk_key, chunks.ordinal
+         FROM unnest($2::text[], $3::integer[]) AS chunks(chunk_key, ordinal)
+         JOIN app_knowledge_jobs j ON j.id = $1 AND j.status = 'running'
+         ON CONFLICT (job_id, chunk_key) DO NOTHING`,
+        [jobId, chunks.map(({ key }) => key), chunks.map(({ ordinal }) => ordinal)],
+      );
+      const records = await this.designSystemChunkRecords(jobId);
+      if (
+        records.length !== chunks.length
+        || records.some((record, index) =>
+          record.key !== chunks[index].key || record.ordinal !== chunks[index].ordinal)
+      ) throw new Error("Stored design-system chunks do not match the current plan");
+      return records;
+    },
+
+    async designSystemChunkRecords(jobId) {
+      positiveInteger(jobId, "job");
+      const result = await runQuery(
+        `SELECT chunk_key, ordinal, status, fragment, attempt_count, error_code
+         FROM app_knowledge_design_system_chunks
+         WHERE job_id = $1 ORDER BY ordinal`,
+        [jobId],
+      );
+      return result.rows.map(designSystemChunkFromRow);
+    },
+
+    async recordDesignSystemChunkResult(jobId, input) {
+      positiveInteger(jobId, "job");
+      const key = sha256(input.key);
+      positiveInteger(input.attemptCount, "attempt count");
+      const fragment = jsonObject(input.fragment, "design-system fragment");
+      const result = await runQuery(
+        `UPDATE app_knowledge_design_system_chunks c SET status = 'complete',
+           fragment = $3::jsonb, attempt_count = $4, error_code = NULL, updated_at = now()
+         FROM app_knowledge_jobs j
+         WHERE c.job_id = $1 AND c.chunk_key = $2 AND j.id = c.job_id
+           AND j.status = 'running' AND c.status IN ('pending', 'failed')
+         RETURNING c.id`,
+        [jobId, key, JSON.stringify(fragment), input.attemptCount],
+      );
+      if (result.rowCount !== 1) {
+        throw new Error("Design-system chunk cannot accept a result");
+      }
+    },
+
+    async recordDesignSystemChunkFailure(jobId, input) {
+      positiveInteger(jobId, "job");
+      const key = sha256(input.key);
+      positiveInteger(input.attemptCount, "attempt count");
+      const result = await runQuery(
+        `UPDATE app_knowledge_design_system_chunks c SET status = 'failed',
+           fragment = NULL, error_code = $3, attempt_count = $4, updated_at = now()
+         FROM app_knowledge_jobs j
+         WHERE c.job_id = $1 AND c.chunk_key = $2 AND j.id = c.job_id
+           AND j.status = 'running' AND c.status IN ('pending', 'failed')
+         RETURNING c.id`,
+        [jobId, key, errorCode(input.errorCode), input.attemptCount],
+      );
+      if (result.rowCount !== 1) {
+        throw new Error("Design-system chunk cannot accept a failure");
+      }
     },
 
     async requestCancel(jobId) {

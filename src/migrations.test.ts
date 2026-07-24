@@ -105,6 +105,18 @@ test("App Knowledge migration defines immutable evidence, revisions, review, cac
   assert.match(migration, /pg_notify\('app_knowledge_jobs'/);
 });
 
+test("App Knowledge design-system migration defines resumable synthesis chunks", async () => {
+  const migration = await readFile(
+    new URL("../migrations/0019_app_knowledge_design_system_chunks.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /CREATE TABLE app_knowledge_design_system_chunks/);
+  assert.match(migration, /UNIQUE \(job_id, chunk_key\)/);
+  assert.match(migration, /UNIQUE \(job_id, ordinal\)/);
+  assert.match(migration, /status IN \('pending', 'complete', 'failed'\)/);
+  assert.match(migration, /jsonb_typeof\(fragment\) = 'object'/);
+});
+
 test("adaptive search migration creates versioned documents and a deduplicated queue", { skip: postgresSkipReason }, async (t) => {
   const pool = new pg.Pool({ connectionString: TEST_DATABASE_URL });
   t.after(() => pool.end());
