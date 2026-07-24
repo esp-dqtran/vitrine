@@ -72,6 +72,16 @@ export interface DesignComponent<T = number> {
   responsiveBehavior?: string[];
 }
 
+export interface DesignFlowInsights<T = number> {
+  purpose: string;
+  feedback: string[];
+  openQuestions: string[];
+  confidence: number;
+  reviewStatus: "needs_review";
+  source: "llm_inferred";
+  evidence: T[];
+}
+
 export interface DesignFlow<T = number> {
   id: string;
   title: string;
@@ -81,6 +91,7 @@ export interface DesignFlow<T = number> {
   tags: string[];
   steps: Array<{ label: string; interaction?: string; evidence: T[] }>;
   provenance?: FlowProvenance;
+  insights?: DesignFlowInsights<T>;
 }
 
 export interface DesignSystemSnapshot<T = number> {
@@ -252,9 +263,12 @@ export function hydrateDesignSystem(
       ...component,
       variants: component.variants.map((variant) => ({ ...variant, evidence: hydrate(variant.evidence) })),
     })),
-    flows: snapshot.flows.map((flow) => ({
+    flows: snapshot.flows.map(({ insights, ...flow }) => ({
       ...flow,
       steps: flow.steps.map((step) => ({ ...step, evidence: hydrate(step.evidence) })),
+      ...(insights ? {
+        insights: { ...insights, evidence: hydrate(insights.evidence) },
+      } : {}),
     })),
     rules: snapshot.rules?.map((rule) => ({ ...rule, evidence: hydrate(rule.evidence) })),
   };

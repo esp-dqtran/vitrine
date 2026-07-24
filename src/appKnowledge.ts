@@ -181,11 +181,23 @@ export interface AppKnowledgeFlowStep {
   order: number;
   evidenceId: string;
   label: string;
+  interaction?: string;
+  visibleStates?: string[];
   availableActions: string[];
   systemFeedback: string[];
   friction: string[];
   uncertainStates: string[];
   claims: AppKnowledgeClaim[];
+}
+
+export interface AppKnowledgeFlowInsights {
+  purpose: string;
+  feedback: string[];
+  openQuestions: string[];
+  confidence: number;
+  reviewStatus: "needs_review";
+  source: "llm_inferred";
+  evidenceIds: string[];
 }
 
 export interface AppKnowledgeFlow {
@@ -202,6 +214,7 @@ export interface AppKnowledgeFlow {
   risks: AppKnowledgeClaim[];
   inconsistencies: AppKnowledgeClaim[];
   openQuestions: AppKnowledgeClaim[];
+  insights?: AppKnowledgeFlowInsights;
 }
 
 export interface AppKnowledgeProductKnowledge {
@@ -753,6 +766,10 @@ function parseFlow(
       order: positiveInteger(step.order, `${stepLabel}.order`),
       evidenceId,
       label: text(step.label, `${stepLabel}.label`),
+      ...(optionalText(step.interaction, `${stepLabel}.interaction`, 1_000) ? {
+        interaction: optionalText(step.interaction, `${stepLabel}.interaction`, 1_000),
+      } : {}),
+      visibleStates: strings(step.visibleStates ?? [], `${stepLabel}.visibleStates`),
       availableActions: strings(step.availableActions, `${stepLabel}.availableActions`),
       systemFeedback: strings(step.systemFeedback, `${stepLabel}.systemFeedback`),
       friction: strings(step.friction, `${stepLabel}.friction`),
@@ -764,6 +781,22 @@ function parseFlow(
   if (new Set(orders).size !== orders.length || orders.some((order, position) => order !== position + 1)) {
     throw new Error(`${label}.steps must use contiguous order`);
   }
+  const insights = item.insights === undefined
+    ? undefined
+    : (() => {
+        const insight = object(item.insights, `${label}.insights`);
+        const evidenceIds = citations(insight.evidenceIds, allowed, `${label}.insights`);
+        if (evidenceIds.length === 0) throw new Error(`${label}.insights requires evidence`);
+        return {
+          purpose: text(insight.purpose, `${label}.insights.purpose`, 2_000),
+          feedback: strings(insight.feedback, `${label}.insights.feedback`),
+          openQuestions: strings(insight.openQuestions, `${label}.insights.openQuestions`),
+          confidence: confidence(insight.confidence, `${label}.insights`),
+          reviewStatus: generatedReviewStatus(insight.reviewStatus, `${label}.insights`),
+          source: generatedSource(insight.source, `${label}.insights`),
+          evidenceIds,
+        };
+      })();
   return {
     id: identity(item.id, `${label}.id`, flowIds, "Flow"),
     sourceFlowId: text(item.sourceFlowId, `${label}.sourceFlowId`, 240),
@@ -780,6 +813,7 @@ function parseFlow(
     risks: parseClaims(item.risks, allowed, claims, `${label}.risks`),
     inconsistencies: parseClaims(item.inconsistencies, allowed, claims, `${label}.inconsistencies`),
     openQuestions: parseClaims(item.openQuestions, allowed, claims, `${label}.openQuestions`),
+    ...(insights ? { insights } : {}),
   };
 }
 

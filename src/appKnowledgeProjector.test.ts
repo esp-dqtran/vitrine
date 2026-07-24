@@ -231,3 +231,87 @@ test("rejects revision evidence that is absent from the frozen manifest", () => 
     /frozen manifest/,
   );
 });
+
+test("projects Flow insights without replacing a crawled interaction", () => {
+  const input = revision();
+  input.manifest.push({
+    evidenceId: "FLOW-weekly-check-in-STEP-01-IMAGE-9",
+    imageId: 109,
+    kind: "flow_step",
+    eligibility: "eligible",
+    reason: "flow_step_capture",
+    flow: {
+      id: "weekly-check-in",
+      title: "Submit a weekly check-in",
+      category: "Check-ins",
+      stepIndex: 0,
+      stepLabel: "Review answers",
+      interaction: "Tap Continue",
+    },
+    object: {
+      sha256: "d".repeat(64),
+      byteSize: 100,
+      contentType: "image/png",
+    },
+  });
+  input.content.flows = [{
+    id: "flow-weekly-check-in",
+    sourceFlowId: "weekly-check-in",
+    title: "Submit a weekly check-in",
+    category: "Check-ins",
+    userGoal: {
+      id: "flow-weekly-check-in-purpose",
+      kind: "inferred",
+      text: "Complete a weekly check-in",
+      evidenceIds: ["FLOW-weekly-check-in-STEP-01-IMAGE-9"],
+      confidence: 0.86,
+    },
+    actors: [],
+    entryPoint: {
+      id: "flow-weekly-check-in-entry",
+      kind: "observed",
+      text: "The review screen is visible.",
+      evidenceIds: ["FLOW-weekly-check-in-STEP-01-IMAGE-9"],
+      confidence: 0.9,
+    },
+    completionPoint: {
+      id: "flow-weekly-check-in-completion",
+      kind: "unknown",
+      text: "Completion is not captured.",
+      evidenceIds: [],
+      confidence: 0.5,
+    },
+    steps: [{
+      id: "weekly-check-in-step-1",
+      order: 1,
+      evidenceId: "FLOW-weekly-check-in-STEP-01-IMAGE-9",
+      label: "Review answers",
+      interaction: "Tap Continue",
+      visibleStates: ["Review"],
+      availableActions: ["Continue"],
+      systemFeedback: [],
+      friction: [],
+      uncertainStates: [],
+      claims: [],
+    }],
+    effectivePatterns: [],
+    risks: [],
+    inconsistencies: [],
+    openQuestions: [],
+    insights: {
+      purpose: "Complete a weekly check-in",
+      feedback: ["Submission confirmation is shown"],
+      openQuestions: ["What happens when a response is missing?"],
+      confidence: 0.86,
+      reviewStatus: "needs_review",
+      source: "llm_inferred",
+      evidenceIds: ["FLOW-weekly-check-in-STEP-01-IMAGE-9"],
+    },
+  }];
+
+  const [flow] = projectAppKnowledgeDesignSystem(input).flows;
+
+  assert.equal(flow.steps[0].interaction, "Tap Continue");
+  assert.equal(flow.insights?.source, "llm_inferred");
+  assert.deepEqual(flow.insights?.evidence, [109]);
+});

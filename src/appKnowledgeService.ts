@@ -12,6 +12,12 @@ import {
   planDesignSystemChunks,
 } from "./appKnowledgeDesignSystem.ts";
 import {
+  enrichOrderedFlows,
+  parseAppKnowledgeFlowSynthesisResult,
+  planFlowSynthesisChunks,
+  planOrderedFlows,
+} from "./appKnowledgeFlow.ts";
+import {
   appKnowledgeCacheKey,
   buildAppKnowledgeEvidenceManifest,
   type AppKnowledgeEvidenceManifestItem,
@@ -348,6 +354,7 @@ export function createAppKnowledgeService(deps: {
   cancelCheckIntervalMs?: number;
   designSystemChunkBytes?: number;
   designSystemChunkConcurrency?: number;
+  flowSynthesisChunkBytes?: number;
 }): { generate(jobId: string): Promise<AppKnowledgeJobStatus | undefined> } {
   const screenConcurrency = deps.screenConcurrency ?? 3;
   const flowConcurrency = deps.flowConcurrency ?? 2;
@@ -355,6 +362,7 @@ export function createAppKnowledgeService(deps: {
   const retryDelayMs = deps.retryDelayMs ?? 250;
   const designSystemChunkBytes = deps.designSystemChunkBytes ?? 120_000;
   const designSystemChunkConcurrency = deps.designSystemChunkConcurrency ?? 1;
+  const flowSynthesisChunkBytes = deps.flowSynthesisChunkBytes ?? 120_000;
 
   return {
     async generate(rawJobId) {
@@ -636,6 +644,48 @@ export function createAppKnowledgeService(deps: {
           retryDelayMs,
           signal: cancellation.signal,
         });
+        const flowGroupsForSynthesis = new Map<string, AppKnowledgeEvidenceManifestItem[]>();
+        for (const item of manifest) {
+          if (item.kind !== "flow_step" || !item.flow) continue;
+          const group = flowGroupsForSynthesis.get(item.flow.id);
+          if (group) group.push(item);
+          else flowGroupsForSynthesis.set(item.flow.id, [item]);
+        }
+        const completeFlowManifest = [...flowGroupsForSynthesis.values()].flatMap((items) => {
+          const complete = items.every((item) => {
+            const sourceEvidenceId = item.duplicateOfEvidenceId ?? item.evidenceId;
+            return analyses.has(item.evidenceId) || analyses.has(sourceEvidenceId);
+          });
+          return complete ? items : [];
+        });
+        const orderedFlows = planOrderedFlows(completeFlowManifest, analyses);
+        const flowChunks = planFlowSynthesisChunks(
+          orderedFlows,
+          flowSynthesisChunkBytes,
+        );
+        const enrichedFlows = (
+          await mapBounded(flowChunks, flowConcurrency, async (chunk) => {
+            const synthesized = await runValidatedProviderCall({
+              call: (validationError, signal) => deps.provider.synthesizeFlows({
+                app: job!.target.app,
+                platform: job!.target.platform,
+                flows: chunk.flows,
+                allowedFlowIds: chunk.flows.map(({ id }) => id),
+                allowedStepIds: chunk.flows.flatMap(({ steps }) =>
+                  steps.map(({ id }) => id)),
+                validationError,
+              }, signal),
+              parse: (raw) => parseAppKnowledgeFlowSynthesisResult(
+                raw,
+                chunk.flows,
+              ),
+              timeoutMs,
+              retryDelayMs,
+              signal: cancellation.signal,
+            });
+            return enrichOrderedFlows(chunk.flows, synthesized.value);
+          })
+        ).flat();
         const snapshot = assembleDesignSystemSnapshot({
           identity: {
             app: job.target.app,
@@ -647,7 +697,9 @@ export function createAppKnowledgeService(deps: {
           },
           coverage,
           analyses: screenAnalyses,
+          allowedEvidenceIds: [...analyses.keys()],
           result: merged.value,
+          flows: enrichedFlows,
           generatedAt: new Date().toISOString(),
         });
         if (await stopped(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;

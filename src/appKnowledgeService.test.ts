@@ -9,6 +9,7 @@ import type {
 import type {
   AppKnowledgeDesignSystemChunkPrompt,
   AppKnowledgeDesignSystemMergePrompt,
+  AppKnowledgeFlowSynthesisPrompt,
   AppKnowledgeProvider,
 } from "./appKnowledgeProvider.ts";
 import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts";
@@ -312,7 +313,7 @@ async function harness(options: {
       tags: [],
       steps: [
         { label: "First", evidence: [2] },
-        { label: "Second", evidence: [3] },
+        { label: "Second", interaction: "Tap Continue", evidence: [3] },
       ],
     }],
   };
@@ -464,6 +465,7 @@ async function harness(options: {
   const calls: Array<{ evidenceId: string; previous: string | null }> = [];
   const designChunkCalls: AppKnowledgeDesignSystemChunkPrompt[] = [];
   const designMergeCalls: AppKnowledgeDesignSystemMergePrompt[] = [];
+  const flowSynthesisCalls: AppKnowledgeFlowSynthesisPrompt[] = [];
   const providerGate = Promise.withResolvers<void>();
   let active = 0;
   let maximum = 0;
@@ -500,6 +502,30 @@ async function harness(options: {
     },
     async synthesize(prompt) {
       return synthesized(prompt.allowedEvidenceIds[0]);
+    },
+    async synthesizeFlows(prompt) {
+      flowSynthesisCalls.push(structuredClone(prompt));
+      return {
+        flows: (prompt.flows as Array<{
+          id: string;
+          steps: Array<{ id: string }>;
+        }>).map((flow) => ({
+          flowId: flow.id,
+          purpose: `Complete ${flow.id}`,
+          tags: ["Flow"],
+          feedback: ["Completion feedback"],
+          openQuestions: [],
+          confidence: 0.86,
+          source: "llm_inferred",
+          reviewStatus: "needs_review",
+          steps: flow.steps.map((step) => ({
+            stepId: step.id,
+            interaction: "Inferred interaction",
+            visibleStates: ["Default"],
+            systemFeedback: [],
+          })),
+        })),
+      };
     },
     async synthesizeDesignSystemChunk(prompt) {
       designChunkCalls.push(structuredClone(prompt));
@@ -543,6 +569,7 @@ async function harness(options: {
     calls,
     designChunkCalls,
     designMergeCalls,
+    flowSynthesisCalls,
     designSystemChunks,
     progress,
     get maximum() { return maximum; },
@@ -665,6 +692,10 @@ test("prepares, quarantines UI Elements, deduplicates visuals, and keeps Flow st
   assert.equal(flow[0].previous, null);
   assert.equal(flow[1].previous, flow[0].evidenceId);
   assert.equal(state.completed?.screens[0].evidenceId, "SCREEN-1");
+  assert.equal(state.flowSynthesisCalls.length, 1);
+  assert.equal(state.completed?.flows.length, 1);
+  assert.equal(state.completed?.flows[0].steps[1].interaction, "Tap Continue");
+  assert.equal(state.completed?.flows[0].insights?.source, "llm_inferred");
 });
 
 test("persists an evidence failure, synthesizes a partial draft, and redacts failure detail", async () => {

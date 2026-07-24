@@ -33,6 +33,15 @@ export interface AppKnowledgeDesignSystemChunkPrompt {
   validationError: string;
 }
 
+export interface AppKnowledgeFlowSynthesisPrompt {
+  app: string;
+  platform: "ios" | "android" | "web";
+  flows: unknown[];
+  allowedFlowIds: string[];
+  allowedStepIds: string[];
+  validationError: string;
+}
+
 export interface AppKnowledgeDesignSystemMergePrompt {
   app: string;
   platform: "ios" | "android" | "web";
@@ -50,6 +59,10 @@ export interface AppKnowledgeProvider {
   ): Promise<unknown>;
   synthesize(
     prompt: AppKnowledgeSynthesisPrompt,
+    signal: AbortSignal,
+  ): Promise<unknown>;
+  synthesizeFlows(
+    prompt: AppKnowledgeFlowSynthesisPrompt,
     signal: AbortSignal,
   ): Promise<unknown>;
   synthesizeDesignSystemChunk(
@@ -87,6 +100,17 @@ export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
   "Full-page screenshots may produce component candidates only, never trusted components.",
 ].join(" ");
 
+export const APP_KNOWLEDGE_FLOW_INSTRUCTIONS = [
+  "Return JSON only.",
+  "Enrich only the supplied ordered Flow evidence.",
+  "Preserve every supplied Flow and step ID in exactly the supplied order.",
+  "Never remove, add, merge, or reorder a Flow or step.",
+  "Use the visible analysis attached to each step and do not invent uncaptured behavior.",
+  'Use exactly this result shape: {"flows":[{"flowId": string, "purpose": string, "tags": string[], "feedback": string[], "openQuestions": string[], "confidence": number, "source": "llm_inferred", "reviewStatus": "needs_review", "steps":[{"stepId": string, "interaction": string, "visibleStates": string[], "systemFeedback": string[]}]}]}.',
+  "Every field is required. Use [] when no evidence supports an array field.",
+  "Keep confidence from zero to one and keep text concise.",
+].join(" ");
+
 export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
   "Return JSON only with tokenCandidates, componentCandidates, rules, designLanguage, and unresolvedConflicts.",
   "Extract a reusable design language from only the supplied screen signals.",
@@ -122,6 +146,7 @@ export function appKnowledgeBrowserPrompt(
   payload:
     | AppKnowledgeEvidencePrompt
     | AppKnowledgeSynthesisPrompt
+    | AppKnowledgeFlowSynthesisPrompt
     | AppKnowledgeDesignSystemChunkPrompt
     | AppKnowledgeDesignSystemMergePrompt,
 ): string {
@@ -144,6 +169,13 @@ export function appKnowledgeProviderFromMultimodalJsonProvider(
     synthesize(prompt, signal) {
       return provider.completeJson({
         system: APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS,
+        text: prompt,
+        signal,
+      });
+    },
+    synthesizeFlows(prompt, signal) {
+      return provider.completeJson({
+        system: APP_KNOWLEDGE_FLOW_INSTRUCTIONS,
         text: prompt,
         signal,
       });

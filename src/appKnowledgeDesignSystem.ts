@@ -3,6 +3,7 @@ import {
   parseAppKnowledgeSnapshot,
   type AppKnowledgeCoverage,
   type AppKnowledgeDesignSystemResult,
+  type AppKnowledgeFlow,
   type AppKnowledgeSnapshot,
 } from "./appKnowledge.ts";
 import type { AppKnowledgeEvidenceAnalysis } from "./appKnowledgeService.ts";
@@ -125,7 +126,9 @@ export function assembleDesignSystemSnapshot(input: {
   identity: Omit<AppKnowledgeSnapshot["identity"], "generatedAt">;
   coverage: AppKnowledgeCoverage;
   analyses: readonly AppKnowledgeEvidenceAnalysis[];
+  allowedEvidenceIds?: readonly string[];
   result: AppKnowledgeDesignSystemResult;
+  flows?: readonly AppKnowledgeFlow[];
   generatedAt: string;
 }): AppKnowledgeSnapshot {
   const analyses = [...input.analyses].sort((left, right) =>
@@ -169,7 +172,7 @@ export function assembleDesignSystemSnapshot(input: {
     tokenCandidates: input.result.tokenCandidates,
     designRules: input.result.rules,
     designConflicts: input.result.unresolvedConflicts,
-    flows: [],
+    flows: input.flows ? structuredClone([...input.flows]) : [],
     productKnowledge: {
       capabilities: [...productAreas.entries()].map(([key, analysis]) => ({
         id: stableId("capability", key),
@@ -194,6 +197,6 @@ export function assembleDesignSystemSnapshot(input: {
   };
   return parseAppKnowledgeSnapshot(
     snapshot,
-    new Set(analyses.map(({ evidenceId }) => evidenceId)),
+    new Set(input.allowedEvidenceIds ?? analyses.map(({ evidenceId }) => evidenceId)),
   );
 }

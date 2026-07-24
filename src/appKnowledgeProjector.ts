@@ -201,6 +201,7 @@ function projectFlows(
         .sort((left, right) => left.order - right.order)
         .map((step) => ({
           label: step.label,
+          ...(step.interaction ? { interaction: step.interaction } : {}),
           evidence: imageIds(
             [step.evidenceId],
             manifest,
@@ -208,6 +209,22 @@ function projectFlows(
             "flow_step",
           ),
         })),
+      ...(flow.insights ? {
+        insights: {
+          purpose: flow.insights.purpose,
+          feedback: uniqueSorted(flow.insights.feedback),
+          openQuestions: uniqueSorted(flow.insights.openQuestions),
+          confidence: flow.insights.confidence,
+          reviewStatus: "needs_review" as const,
+          source: "llm_inferred" as const,
+          evidence: imageIds(
+            flow.insights.evidenceIds,
+            manifest,
+            `Flow ${flow.sourceFlowId} insights`,
+            "flow_step",
+          ),
+        },
+      } : {}),
     }));
 }
 

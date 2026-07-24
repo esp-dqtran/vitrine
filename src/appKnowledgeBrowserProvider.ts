@@ -8,6 +8,7 @@ import {
   APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS,
   APP_KNOWLEDGE_DESIGN_SYSTEM_MERGE_INSTRUCTIONS,
   APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS,
+  APP_KNOWLEDGE_FLOW_INSTRUCTIONS,
   APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS,
   appKnowledgeBrowserPrompt,
   type AppKnowledgeProvider,
@@ -107,6 +108,15 @@ function createBrowserAppKnowledgeProvider(
       return useSession(signal, async (session) => requestBrowserJson(
         () => session.ask(
           appKnowledgeBrowserPrompt(APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS, prompt),
+          undefined,
+          { signal },
+        ),
+      ));
+    },
+    synthesizeFlows(prompt, signal) {
+      return useSession(signal, async (session) => requestBrowserJson(
+        () => session.ask(
+          appKnowledgeBrowserPrompt(APP_KNOWLEDGE_FLOW_INSTRUCTIONS, prompt),
           undefined,
           { signal },
         ),

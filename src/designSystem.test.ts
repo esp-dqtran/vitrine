@@ -88,6 +88,39 @@ test("hydrates ordered flow steps without changing curator order", () => {
   ]);
 });
 
+test("hydrates Flow insight evidence with the same captured images", () => {
+  const hydrated = hydrateDesignSystem({
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [],
+    components: [],
+    flows: [{
+      id: "login",
+      title: "Login",
+      description: "Authenticate",
+      tags: ["Authentication"],
+      steps: [{ label: "Email", evidence: [7] }],
+      insights: {
+        purpose: "Authenticate the user",
+        feedback: ["Session begins"],
+        openQuestions: [],
+        confidence: 0.82,
+        reviewStatus: "needs_review",
+        source: "llm_inferred",
+        evidence: [7],
+      },
+    }],
+  }, [
+    { id: 7, image_url: "mobbin-bulk:0123456789abcdef", description: "Email" },
+  ]);
+
+  assert.deepEqual(hydrated.flows[0].insights?.evidence, [{
+    imageId: 7,
+    imageUrl: "/api/media/linear/0123456789abcdef",
+    description: "Email",
+  }]);
+});
+
 test("preserves autonomous flow provenance while hydrating evidence", () => {
   const hydrated = hydrateDesignSystem({
     app: "linear",

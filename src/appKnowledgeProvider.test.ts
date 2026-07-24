@@ -39,6 +39,22 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
     allowedEvidenceIds: ["SCREEN-1"],
     validationError: "",
   }, AbortSignal.timeout(1_000));
+  await provider.synthesizeFlows({
+    app: "15five",
+    platform: "web",
+    flows: [{
+      id: "weekly-check-in",
+      title: "Submit a weekly check-in",
+      steps: [{
+        id: "weekly-check-in-step-1",
+        order: 1,
+        evidenceId: "FLOW-weekly-check-in-STEP-01-IMAGE-9",
+      }],
+    }],
+    allowedFlowIds: ["weekly-check-in"],
+    allowedStepIds: ["weekly-check-in-step-1"],
+    validationError: "",
+  }, AbortSignal.timeout(1_000));
   await provider.synthesizeDesignSystemChunk({
     app: "15five",
     platform: "web",
@@ -55,7 +71,7 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   }, AbortSignal.timeout(1_000));
 
   assert.equal(provider.model, "vision-model");
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
   assert.match(calls[0].system, /visible/i);
   assert.match(calls[0].system, /"viewport": "desktop" \| "tablet" \| "mobile" \| "unknown"/);
   assert.match(calls[0].system, /"layoutPatterns": string\[\]/);
@@ -72,27 +88,31 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.ok(calls[0].image);
   assert.match(calls[1].system, /observed or inferred/i);
   assert.equal(calls[1].image, undefined);
-  assert.match(calls[2].system, /design language/i);
-  assert.match(calls[2].system, /"category": string/);
-  assert.match(calls[2].system, /"anatomy": string\[\]/);
-  assert.match(calls[2].system, /"tokenCandidates": SynthesizedToken\[\]/);
-  assert.match(calls[2].system, /"variantCandidates": ComponentVariant\[\]/);
-  assert.match(calls[2].system, /"occurrences": ComponentOccurrence\[\]/);
-  assert.match(calls[2].system, /"rules": DesignRule\[\]/);
-  assert.match(calls[2].system, /"unresolvedConflicts": DesignConflict\[\]/);
+  assert.match(calls[2].system, /preserve every supplied Flow and step ID/i);
   assert.match(calls[2].system, /"source": "llm_inferred"/);
   assert.match(calls[2].system, /"reviewStatus": "needs_review"/);
-  assert.match(calls[2].system, /"designLanguageCandidateIds": string\[\]/);
-  assert.match(calls[2].system, /"status": "candidate"/);
-  assert.match(calls[2].system, /"color": Claim\[\]/);
-  assert.match(calls[2].system, /Every field is required/);
   assert.equal(calls[2].image, undefined);
-  assert.match(calls[3].system, /merge/i);
-  assert.match(calls[3].system, /Do not use tools, terminal, files, or code execution/);
-  assert.match(calls[3].system, /at most 16 componentCandidates/);
-  assert.match(calls[3].system, /at most 4 claims/);
-  assert.match(calls[3].system, /at most 12 representative evidence IDs/);
+  assert.match(calls[3].system, /design language/i);
+  assert.match(calls[3].system, /"category": string/);
+  assert.match(calls[3].system, /"anatomy": string\[\]/);
+  assert.match(calls[3].system, /"tokenCandidates": SynthesizedToken\[\]/);
+  assert.match(calls[3].system, /"variantCandidates": ComponentVariant\[\]/);
+  assert.match(calls[3].system, /"occurrences": ComponentOccurrence\[\]/);
+  assert.match(calls[3].system, /"rules": DesignRule\[\]/);
+  assert.match(calls[3].system, /"unresolvedConflicts": DesignConflict\[\]/);
+  assert.match(calls[3].system, /"source": "llm_inferred"/);
+  assert.match(calls[3].system, /"reviewStatus": "needs_review"/);
+  assert.match(calls[3].system, /"designLanguageCandidateIds": string\[\]/);
+  assert.match(calls[3].system, /"status": "candidate"/);
+  assert.match(calls[3].system, /"color": Claim\[\]/);
+  assert.match(calls[3].system, /Every field is required/);
   assert.equal(calls[3].image, undefined);
+  assert.match(calls[4].system, /merge/i);
+  assert.match(calls[4].system, /Do not use tools, terminal, files, or code execution/);
+  assert.match(calls[4].system, /at most 16 componentCandidates/);
+  assert.match(calls[4].system, /at most 4 claims/);
+  assert.match(calls[4].system, /at most 12 representative evidence IDs/);
+  assert.equal(calls[4].image, undefined);
 });
 
 test("passes one evidence validation error only to the retried request", async () => {
