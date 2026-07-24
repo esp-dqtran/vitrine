@@ -50,6 +50,19 @@ test('renders Apps and Sites through the shared reference gallery shell', async 
   assert.match(sitesSource, /<ReferenceGalleryShell[\s\S]*active="sites"/);
 });
 
+test('keeps Apps retry and terminal no-results states inside the shared shell', async () => {
+  const [appSource, hookSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(hookSource, /return \{[\s\S]*refresh,[\s\S]*loadMore \}/);
+  assert.match(appSource, /refresh: refreshApps/);
+  assert.match(appSource, /actions: appsError[\s\S]*label="Retry"[\s\S]*refreshApps\(\)/);
+  assert.match(appSource, /const appsGalleryState =[\s\S]*list\.length === 0[\s\S]*!hasMore/);
+  assert.match(appSource, /state=\{appsGalleryState\}/);
+});
+
 test('keeps the sticky Apps search container background transparent', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

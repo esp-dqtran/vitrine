@@ -82,7 +82,7 @@ export function App() {
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
   const detailGateLoading = route.name === 'app' && !entitlementsResolved;
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
-  const { apps, totalApps, loading: appsLoading, loadingMore, hasMore, error: appsError, loadMore } = useApps(user?.role, route.name === 'apps');
+  const { apps, totalApps, loading: appsLoading, loadingMore, hasMore, error: appsError, refresh: refreshApps, loadMore } = useApps(user?.role, route.name === 'apps');
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
     route.name === 'app' ? route.appId : undefined,
     route.name === 'app' && !detailGateLoading && !entitlementsError && !detailLocked,
@@ -369,6 +369,9 @@ export function App() {
               : isAdmin
                 ? 'Import captured web screens to build the first observed design system.'
                 : 'No curated web apps have been published yet.',
+            actions: appsError
+              ? <Button variant="primary" label="Retry" clickAction={() => void refreshApps()} />
+              : undefined,
             role: appsError ? 'alert' : undefined,
           }}
         />
@@ -390,6 +393,12 @@ export function App() {
       (cat === 'All' || r.cat === cat) &&
       (!query || `${r.name} ${r.cat} ${r.app?.screens.map((s) => s.type).join(' ') ?? ''}`.toLowerCase().includes(query)),
   );
+  const appsGalleryState = route.name === 'apps' && list.length === 0 && !hasMore && (query || cat !== 'All')
+    ? {
+        title: 'No Apps match these filters',
+        description: 'Try a different search or category.',
+      }
+    : undefined;
   const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail ?? undefined : undefined;
 
   return frame(
@@ -458,6 +467,7 @@ export function App() {
               ? `Showing ${list.length} of ${totalApps} apps`
               : `${list.length} apps`
             }
+            state={appsGalleryState}
             trailing={
               <>
                 {hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}

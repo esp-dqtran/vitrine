@@ -39,9 +39,10 @@ export function ReferenceGalleryShell({
   trailing,
 }: ReferenceGalleryShellProps) {
   const label = active === 'apps' ? 'Apps' : 'Sites';
+  const Root = isAdmin ? 'div' : 'main';
 
   return (
-    <main
+    <Root
       data-reference-gallery-shell={active}
       style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px 72px' }}
     >
@@ -116,6 +117,6 @@ export function ReferenceGalleryShell({
           {trailing}
         </>
       )}
-    </main>
+    </Root>
   );
 }

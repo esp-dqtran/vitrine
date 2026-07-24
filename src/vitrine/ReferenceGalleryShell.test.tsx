@@ -24,6 +24,7 @@ test('renders the member identity, controls, tabs, count, and shared grid', () =
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /2 sites/);
   assert.match(html, /data-reference-gallery-grid="true"/);
+  assert.match(html, /^<main /);
   assert.doesNotMatch(html, /<h1[^>]*>References<\/h1>/);
 });
 
@@ -43,6 +44,8 @@ test('renders the admin header action without the member identity', () => {
   assert.match(html, /<h1[^>]*>References<\/h1>/);
   assert.match(html, /Browse app and website design references/);
   assert.match(html, /Import from URL/);
+  assert.match(html, /^<div /);
+  assert.doesNotMatch(html, /<main/);
   assert.doesNotMatch(html, /data-reference-gallery-identity="true"/);
 });
 
@@ -55,7 +58,11 @@ test('renders loading and message states inside the shared shell', () => {
       active="sites"
       isAdmin={false}
       toolbar={<div>Search</div>}
-      state={{ title: 'No Sites imported yet', description: 'No ready website references are available yet.' }}
+      state={{
+        title: 'No Sites imported yet',
+        description: 'No ready website references are available yet.',
+        actions: <Button variant="primary" label="Retry" clickAction={() => undefined} />,
+      }}
     />,
   );
 
@@ -64,5 +71,6 @@ test('renders loading and message states inside the shared shell', () => {
   assert.equal((loading.match(/data-reference-gallery-skeleton="true"/g) ?? []).length, 9);
   assert.match(empty, /No Sites imported yet/);
   assert.match(empty, /No ready website references are available yet/);
+  assert.match(empty, />Retry</);
   assert.match(empty, /aria-label="Reference type"/);
 });
