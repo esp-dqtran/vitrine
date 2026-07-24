@@ -560,12 +560,37 @@ export function createAppKnowledgeService(deps: {
         if (screenAnalyses.length === 0) {
           throw new EvidenceAnalysisError("output_invalid", "No completed screen evidence is available");
         }
+        const flowGroupsForSynthesis = new Map<string, AppKnowledgeEvidenceManifestItem[]>();
+        for (const item of manifest) {
+          if (item.kind !== "flow_step" || !item.flow) continue;
+          const group = flowGroupsForSynthesis.get(item.flow.id);
+          if (group) group.push(item);
+          else flowGroupsForSynthesis.set(item.flow.id, [item]);
+        }
+        const completeFlowManifest = [...flowGroupsForSynthesis.values()].flatMap((items) => {
+          const complete = items.every((item) => {
+            const sourceEvidenceId = item.duplicateOfEvidenceId ?? item.evidenceId;
+            return analyses.has(item.evidenceId) || analyses.has(sourceEvidenceId);
+          });
+          return complete ? items : [];
+        });
+        const orderedFlows = planOrderedFlows(completeFlowManifest, analyses);
+        const flowChunks = planFlowSynthesisChunks(
+          orderedFlows,
+          flowSynthesisChunkBytes,
+        );
         const chunks = planDesignSystemChunks(screenAnalyses, designSystemChunkBytes);
+        const persistedRecords = await deps.store.prepareDesignSystemChunks(
+          jobId,
+          chunks.map(({ key, ordinal }) => ({ key, ordinal })),
+        );
         const persisted = new Map(
-          (await deps.store.prepareDesignSystemChunks(
-            jobId,
-            chunks.map(({ key, ordinal }) => ({ key, ordinal })),
-          )).map((record) => [record.key, record]),
+          persistedRecords.map((record) => [record.key, record]),
+        );
+        await deps.store.setSynthesisPlan(
+          jobId,
+          chunks.length + flowChunks.length,
+          persistedRecords.filter(({ status }) => status === "complete").length,
         );
         await deps.store.updateProgress(jobId, "synthesizing", Math.min(processed, job.totalCount));
         const fragments = new Map<string, ReturnType<typeof parseAppKnowledgeDesignSystemResult>>();
@@ -644,25 +669,6 @@ export function createAppKnowledgeService(deps: {
           retryDelayMs,
           signal: cancellation.signal,
         });
-        const flowGroupsForSynthesis = new Map<string, AppKnowledgeEvidenceManifestItem[]>();
-        for (const item of manifest) {
-          if (item.kind !== "flow_step" || !item.flow) continue;
-          const group = flowGroupsForSynthesis.get(item.flow.id);
-          if (group) group.push(item);
-          else flowGroupsForSynthesis.set(item.flow.id, [item]);
-        }
-        const completeFlowManifest = [...flowGroupsForSynthesis.values()].flatMap((items) => {
-          const complete = items.every((item) => {
-            const sourceEvidenceId = item.duplicateOfEvidenceId ?? item.evidenceId;
-            return analyses.has(item.evidenceId) || analyses.has(sourceEvidenceId);
-          });
-          return complete ? items : [];
-        });
-        const orderedFlows = planOrderedFlows(completeFlowManifest, analyses);
-        const flowChunks = planFlowSynthesisChunks(
-          orderedFlows,
-          flowSynthesisChunkBytes,
-        );
         const enrichedFlows = (
           await mapBounded(flowChunks, flowConcurrency, async (chunk) => {
             const synthesized = await runValidatedProviderCall({

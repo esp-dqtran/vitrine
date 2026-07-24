@@ -6,6 +6,7 @@ export type AppKnowledgeJobStage =
   | "validating_evidence"
   | "analyzing"
   | "synthesizing"
+  | "merging"
   | "validating_output"
   | "saving"
   | "complete";

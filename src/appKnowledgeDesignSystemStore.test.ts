@@ -5,6 +5,8 @@ import {
   createAppKnowledgeStore,
   type DatabaseQuery,
 } from "./appKnowledgeStore.ts";
+import type { AppKnowledgeSnapshot } from "./appKnowledge.ts";
+import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts";
 
 function result(rows: Record<string, unknown>[] = [], rowCount = rows.length): QueryResult<Record<string, unknown>> {
   return {
@@ -15,6 +17,185 @@ function result(rows: Record<string, unknown>[] = [], rowCount = rows.length): Q
     rows,
   };
 }
+
+const manifest: AppKnowledgeEvidenceManifestItem[] = [{
+  evidenceId: "SCREEN-1",
+  imageId: 11,
+  kind: "screen",
+  eligibility: "eligible",
+  reason: "screen_capture",
+  object: {
+    sha256: "b".repeat(64),
+    byteSize: 1_024,
+    contentType: "image/webp",
+  },
+}];
+
+function snapshot(): AppKnowledgeSnapshot {
+  const observed = {
+    id: "language-layout",
+    kind: "observed" as const,
+    text: "The primary content uses a single column.",
+    evidenceIds: ["SCREEN-1"],
+    confidence: 0.9,
+  };
+  return {
+    identity: {
+      app: "Alpha",
+      platform: "web",
+      captureVersionId: 3,
+      sourceSha256: "a".repeat(64),
+      providerModel: "test-model",
+      promptVersion: 1,
+      generatedAt: "2026-07-24T00:00:00.000Z",
+    },
+    coverage: {
+      total: 1,
+      eligible: 1,
+      analyzed: 1,
+      cached: 0,
+      quarantined: 0,
+      skipped: 0,
+      failed: 0,
+      duplicateVisuals: 0,
+      byKind: {
+        screen: { total: 1, eligible: 1, analyzed: 1, cached: 0, quarantined: 0, failed: 0 },
+        flow_step: { total: 0, eligible: 0, analyzed: 0, cached: 0, quarantined: 0, failed: 0 },
+        ui_element: { total: 0, eligible: 0, analyzed: 0, cached: 0, quarantined: 0, failed: 0 },
+      },
+      flowReferences: { total: 0, resolved: 0, uniqueImages: 0 },
+    },
+    screens: [{
+      id: "screen-1",
+      evidenceId: "SCREEN-1",
+      pageType: "Dashboard",
+      productArea: "Home",
+      purpose: "Orient the user",
+      viewport: "desktop",
+      visibleText: ["Home"],
+      theme: "light",
+      visualHierarchy: ["Heading"],
+      layoutPatterns: ["Single column"],
+      contentPatterns: ["Summary"],
+      imagery: [],
+      icons: [],
+      interactionPatterns: [],
+      visibleStates: ["Default"],
+      availableActions: [],
+      systemFeedback: [],
+      accessibilityObservations: [],
+      claims: [],
+      confidence: 0.9,
+      reviewStatus: "needs_review",
+    }],
+    componentCandidates: [],
+    designLanguage: {
+      color: [],
+      typography: [],
+      spacing: [],
+      radius: [],
+      border: [],
+      effects: [],
+      layout: [observed],
+      iconography: [],
+      imagery: [],
+      responsive: [],
+      content: [],
+      interaction: [],
+    },
+    flows: [],
+    productKnowledge: {
+      capabilities: [{ ...observed, id: "capability-home" }],
+      featureRelationships: [],
+      userJourneys: [],
+      actorResponsibilities: [],
+      requirements: [],
+      acceptanceCriteria: [],
+      edgeCases: [],
+      dependencies: [],
+      risks: [],
+      successMetrics: [],
+      guardrails: [],
+      analyticsEvents: [],
+      openQuestions: [],
+    },
+  };
+}
+
+test("parses an automatic job without a requesting user", async () => {
+  const query: DatabaseQuery = async () => result([{
+    id: 9,
+    snapshot_id: 3,
+    transport_job_id: 7,
+    requested_by: null,
+    request_origin: "automatic",
+    status: "queued",
+    stage: "preparing",
+    done_count: 0,
+    total_count: 1,
+    synthesis_done_count: 0,
+    synthesis_total_count: 2,
+    cache_hit_count: 0,
+    failed_count: 0,
+    evidence_manifest: null,
+    source_sha256: null,
+    provider_model: "test-model",
+    prompt_version: 1,
+    cancel_requested: false,
+    retry_failed_only: false,
+    error_code: null,
+    error_message: null,
+    updated_at: "2026-07-24T00:00:00.000Z",
+  }]);
+
+  const job = await createAppKnowledgeStore(query).getJob(9);
+
+  assert.equal(job?.requestedBy, null);
+  assert.equal(job?.requestOrigin, "automatic");
+  assert.equal(job?.synthesisDoneCount, 0);
+  assert.equal(job?.synthesisTotalCount, 2);
+});
+
+test("parses a generated revision without a creating user", async () => {
+  const content = snapshot();
+  const query: DatabaseQuery = async (sql) => {
+    if (sql.includes("FROM app_knowledge_snapshots s")) {
+      return result([{
+        id: 3,
+        current_revision_id: 4,
+        approved_revision_id: null,
+        app_id: 1,
+        app: "Alpha",
+        platform_id: 2,
+        platform: "web",
+        capture_version_id: 3,
+        version_number: 1,
+      }]);
+    }
+    if (sql.includes("FROM app_knowledge_revisions r")) {
+      return result([{
+        id: 4,
+        snapshot_id: 3,
+        revision_number: 1,
+        author_type: "generated",
+        review_status: "draft",
+        content,
+        evidence_manifest: manifest,
+        source_sha256: "a".repeat(64),
+        provider_model: "test-model",
+        prompt_version: 1,
+        created_by: null,
+        created_at: "2026-07-24T00:00:00.000Z",
+      }]);
+    }
+    return result();
+  };
+
+  const view = await createAppKnowledgeStore(query).getAdminSnapshot(3);
+
+  assert.equal(view?.currentRevision?.authorType, "generated");
+  assert.equal(view?.currentRevision?.createdBy, null);
+});
 
 test("prepares deterministic design-system chunks and returns their durable state", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
@@ -99,11 +280,28 @@ test("records design-system chunk success and failure only for active jobs", asy
     JSON.stringify({ designLanguage: { color: [] } }),
     2,
   ]);
-  assert.match(calls[1].sql, /status = 'failed'/);
-  assert.deepEqual(calls[1].values, [
+  assert.match(calls[1].sql, /synthesis_done_count = synthesis_done_count \+ 1/);
+  assert.deepEqual(calls[1].values, [9]);
+  assert.match(calls[2].sql, /status = 'failed'/);
+  assert.deepEqual(calls[2].values, [
     9,
     "d".repeat(64),
     "provider_timeout",
     3,
   ]);
+});
+
+test("sets a bounded synthesis plan before chunk results advance progress", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result([{ id: 9 }], 1);
+  };
+  const store = createAppKnowledgeStore(query);
+
+  await store.setSynthesisPlan(9, 3, 1);
+
+  assert.match(calls[0].sql, /synthesis_total_count = \$2/);
+  assert.match(calls[0].sql, /synthesis_done_count = \$3/);
+  assert.deepEqual(calls[0].values, [9, 3, 1]);
 });

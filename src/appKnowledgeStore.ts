@@ -28,15 +28,24 @@ export interface AppKnowledgeTarget {
   versionNumber: number;
 }
 
+export type AppKnowledgeRequestOrigin =
+  | "manual"
+  | "retry"
+  | "regeneration"
+  | "automatic";
+
 export interface AppKnowledgeJobView {
   id: number;
   snapshotId: number;
   transportJobId: number;
-  requestedBy: number;
+  requestedBy: number | null;
+  requestOrigin: AppKnowledgeRequestOrigin;
   status: AppKnowledgeJobStatus;
   stage: AppKnowledgeJobStage;
   doneCount: number;
   totalCount: number;
+  synthesisDoneCount: number;
+  synthesisTotalCount: number;
   cacheHitCount: number;
   failedCount: number;
   providerModel: string;
@@ -65,7 +74,7 @@ export interface AppKnowledgeRevisionView {
   sourceSha256: string;
   providerModel: string;
   promptVersion: number;
-  createdBy: number;
+  createdBy: number | null;
   createdAt: string;
 }
 
@@ -134,11 +143,12 @@ export interface AppKnowledgeDesignSystemChunkRecord {
 
 export interface AppKnowledgeStore {
   createJob(
-    requestedBy: number,
+    requestedBy: number | null,
     target: AppKnowledgeTarget,
     transportJobId: number,
     model: string,
     promptVersion: number,
+    requestOrigin?: AppKnowledgeRequestOrigin,
   ): Promise<AppKnowledgeJobView>;
   claimJob(jobId: number): Promise<AppKnowledgeWorkerJob | undefined>;
   freezeManifest(
@@ -148,6 +158,7 @@ export interface AppKnowledgeStore {
   ): Promise<AppKnowledgeWorkerJob>;
   workerJob(jobId: number): Promise<AppKnowledgeWorkerJob | undefined>;
   updateProgress(jobId: number, stage: AppKnowledgeJobStage, doneCount: number): Promise<void>;
+  setSynthesisPlan(jobId: number, totalCount: number, doneCount: number): Promise<void>;
   evidenceRecords(jobId: number): Promise<AppKnowledgeJobEvidenceRecord[]>;
   cachedAnalysis(cacheKey: string): Promise<AppKnowledgeCacheEntry | undefined>;
   saveCachedAnalysis(input: AppKnowledgeCacheEntry): Promise<AppKnowledgeCacheEntry>;
@@ -232,6 +243,7 @@ const JOB_STAGES = new Set<AppKnowledgeJobStage>([
   "validating_evidence",
   "analyzing",
   "synthesizing",
+  "merging",
   "validating_output",
   "saving",
   "complete",
@@ -241,6 +253,12 @@ const REVIEW_STATUSES = new Set<AppKnowledgeReviewStatus>([
   "in_review",
   "approved",
   "superseded",
+]);
+const REQUEST_ORIGINS = new Set<AppKnowledgeRequestOrigin>([
+  "manual",
+  "retry",
+  "regeneration",
+  "automatic",
 ]);
 
 const liveQuery: DatabaseQuery = (sql, values) =>
@@ -297,6 +315,13 @@ function safeMessage(value: string): string {
     || "App Knowledge generation failed";
 }
 
+function requestOrigin(value: unknown): AppKnowledgeRequestOrigin {
+  if (!REQUEST_ORIGINS.has(value as AppKnowledgeRequestOrigin)) {
+    throw new Error("Invalid App Knowledge request origin");
+  }
+  return value as AppKnowledgeRequestOrigin;
+}
+
 function jsonObject(value: unknown, label = "database JSON object"): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid ${label}`);
   return structuredClone(value as Record<string, unknown>);
@@ -336,8 +361,9 @@ function manifestFrom(value: unknown): AppKnowledgeEvidenceManifestItem[] {
   return checkedManifest(value as AppKnowledgeEvidenceManifestItem[]);
 }
 
-const JOB_COLUMNS = `j.id, j.snapshot_id, j.transport_job_id, j.requested_by, j.status, j.stage,
-  j.done_count, j.total_count, j.cache_hit_count, j.failed_count, j.evidence_manifest,
+const JOB_COLUMNS = `j.id, j.snapshot_id, j.transport_job_id, j.requested_by, j.request_origin,
+  j.status, j.stage, j.done_count, j.total_count, j.synthesis_done_count,
+  j.synthesis_total_count, j.cache_hit_count, j.failed_count, j.evidence_manifest,
   j.source_sha256, j.provider_model, j.prompt_version, j.cancel_requested,
   j.retry_failed_only, j.error_code, j.error_message, j.updated_at`;
 
@@ -354,11 +380,16 @@ function jobFromRow(row: Record<string, unknown> | undefined): AppKnowledgeJobVi
     id: positiveInteger(row.id),
     snapshotId: positiveInteger(row.snapshot_id),
     transportJobId: positiveInteger(row.transport_job_id, "transport job"),
-    requestedBy: positiveInteger(row.requested_by, "requester"),
+    requestedBy: row.requested_by == null
+      ? null
+      : positiveInteger(row.requested_by, "requester"),
+    requestOrigin: requestOrigin(row.request_origin),
     status: row.status as AppKnowledgeJobStatus,
     stage: row.stage as AppKnowledgeJobStage,
     doneCount: integer(row.done_count, "job progress"),
     totalCount: integer(row.total_count, "job total"),
+    synthesisDoneCount: integer(row.synthesis_done_count, "synthesis progress"),
+    synthesisTotalCount: integer(row.synthesis_total_count, "synthesis total"),
     cacheHitCount: integer(row.cache_hit_count, "job cache hits"),
     failedCount: integer(row.failed_count, "job failures"),
     providerModel: text(row.provider_model),
@@ -406,7 +437,9 @@ function revisionFromRow(row: Record<string, unknown>): AppKnowledgeRevisionView
     sourceSha256: sha256(text(row.source_sha256)),
     providerModel: text(row.provider_model),
     promptVersion: positiveInteger(row.prompt_version, "prompt version"),
-    createdBy: positiveInteger(row.created_by, "revision creator"),
+    createdBy: row.created_by == null
+      ? null
+      : positiveInteger(row.created_by, "revision creator"),
     createdAt: iso(row.created_at),
   };
 }
@@ -517,7 +550,7 @@ async function insertRevision(
     sourceSha256: string;
     providerModel: string;
     promptVersion: number;
-    createdBy: number;
+    createdBy: number | null;
   },
 ): Promise<AppKnowledgeRevisionView> {
   const result = await runQuery(
@@ -562,9 +595,23 @@ export function createAppKnowledgeStore(
   };
 
   return {
-    async createJob(requestedBy, rawTarget, transportJobId, model, promptVersion) {
+    async createJob(
+      requestedBy,
+      rawTarget,
+      transportJobId,
+      model,
+      promptVersion,
+      rawRequestOrigin = "manual",
+    ) {
       const checkedTarget = target(rawTarget);
-      positiveInteger(requestedBy, "requester");
+      const checkedRequestOrigin = requestOrigin(rawRequestOrigin);
+      if (requestedBy == null) {
+        if (checkedRequestOrigin !== "automatic") {
+          throw new Error("Only automatic App Knowledge jobs may omit a requester");
+        }
+      } else {
+        positiveInteger(requestedBy, "requester");
+      }
       positiveInteger(transportJobId, "transport job");
       positiveInteger(promptVersion, "prompt version");
       const checkedModel = providerModel(model);
@@ -597,8 +644,9 @@ export function createAppKnowledgeStore(
           );
           const result = await tx(
             `INSERT INTO app_knowledge_jobs AS j
-               (snapshot_id, transport_job_id, requested_by, provider_model, prompt_version)
-             VALUES ($1, $2, $3, $4, $5)
+               (snapshot_id, transport_job_id, requested_by, provider_model, prompt_version,
+                request_origin)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING ${JOB_COLUMNS}`,
             [
               snapshot.rows[0].id,
@@ -606,6 +654,7 @@ export function createAppKnowledgeStore(
               requestedBy,
               checkedModel,
               promptVersion,
+              checkedRequestOrigin,
             ],
           );
           return jobFromRow(result.rows[0])!;
@@ -698,6 +747,22 @@ export function createAppKnowledgeStore(
         [jobId, stage, doneCount],
       );
       if (result.rowCount !== 1) throw new Error("App Knowledge job cannot accept progress");
+    },
+
+    async setSynthesisPlan(jobId, totalCount, doneCount) {
+      positiveInteger(jobId, "job");
+      integer(totalCount, "synthesis total");
+      integer(doneCount, "synthesis progress");
+      if (doneCount > totalCount) throw new Error("Invalid App Knowledge synthesis progress");
+      const result = await runQuery(
+        `UPDATE app_knowledge_jobs SET synthesis_total_count = $2,
+           synthesis_done_count = $3, updated_at = now()
+         WHERE id = $1 AND status = 'running'`,
+        [jobId, totalCount, doneCount],
+      );
+      if (result.rowCount !== 1) {
+        throw new Error("App Knowledge job cannot accept a synthesis plan");
+      }
     },
 
     async evidenceRecords(jobId) {
@@ -838,18 +903,31 @@ export function createAppKnowledgeStore(
       const key = sha256(input.key);
       positiveInteger(input.attemptCount, "attempt count");
       const fragment = jsonObject(input.fragment, "design-system fragment");
-      const result = await runQuery(
-        `UPDATE app_knowledge_design_system_chunks c SET status = 'complete',
-           fragment = $3::jsonb, attempt_count = $4, error_code = NULL, updated_at = now()
-         FROM app_knowledge_jobs j
-         WHERE c.job_id = $1 AND c.chunk_key = $2 AND j.id = c.job_id
-           AND j.status = 'running' AND c.status IN ('pending', 'failed')
-         RETURNING c.id`,
-        [jobId, key, JSON.stringify(fragment), input.attemptCount],
-      );
-      if (result.rowCount !== 1) {
-        throw new Error("Design-system chunk cannot accept a result");
-      }
+      await runTransaction(async (tx) => {
+        const result = await tx(
+          `UPDATE app_knowledge_design_system_chunks c SET status = 'complete',
+             fragment = $3::jsonb, attempt_count = $4, error_code = NULL, updated_at = now()
+           FROM app_knowledge_jobs j
+           WHERE c.job_id = $1 AND c.chunk_key = $2 AND j.id = c.job_id
+             AND j.status = 'running' AND c.status IN ('pending', 'failed')
+           RETURNING c.id`,
+          [jobId, key, JSON.stringify(fragment), input.attemptCount],
+        );
+        if (result.rowCount !== 1) {
+          throw new Error("Design-system chunk cannot accept a result");
+        }
+        const progress = await tx(
+          `UPDATE app_knowledge_jobs SET
+             synthesis_done_count = synthesis_done_count + 1, updated_at = now()
+           WHERE id = $1 AND status = 'running'
+             AND synthesis_done_count < synthesis_total_count
+           RETURNING id`,
+          [jobId],
+        );
+        if (progress.rowCount !== 1) {
+          throw new Error("App Knowledge job cannot accept synthesis progress");
+        }
+      });
     },
 
     async recordDesignSystemChunkFailure(jobId, input) {

@@ -336,10 +336,13 @@ async function harness(options: {
     snapshotId: 1,
     transportJobId: 1,
     requestedBy: 1,
+    requestOrigin: "manual",
     status: "queued",
     stage: "preparing",
     doneCount: 0,
     totalCount: 0,
+    synthesisDoneCount: 0,
+    synthesisTotalCount: 0,
     cacheHitCount: 0,
     failedCount: 0,
     providerModel: "test-model",
@@ -374,6 +377,11 @@ async function harness(options: {
       job.stage = stage;
       job.doneCount = done;
       progress.push({ stage, done });
+    },
+    async setSynthesisPlan(_jobId: number, totalCount: number, doneCount: number) {
+      job.synthesisTotalCount = totalCount;
+      job.synthesisDoneCount = doneCount;
+      synthesisPlans.push({ totalCount, doneCount });
     },
     async evidenceRecords() {
       return [...records.values()].map((record) => structuredClone(record));
@@ -466,6 +474,7 @@ async function harness(options: {
   const designChunkCalls: AppKnowledgeDesignSystemChunkPrompt[] = [];
   const designMergeCalls: AppKnowledgeDesignSystemMergePrompt[] = [];
   const flowSynthesisCalls: AppKnowledgeFlowSynthesisPrompt[] = [];
+  const synthesisPlans: Array<{ totalCount: number; doneCount: number }> = [];
   const providerGate = Promise.withResolvers<void>();
   let active = 0;
   let maximum = 0;
@@ -570,6 +579,7 @@ async function harness(options: {
     designChunkCalls,
     designMergeCalls,
     flowSynthesisCalls,
+    synthesisPlans,
     designSystemChunks,
     progress,
     get maximum() { return maximum; },
@@ -693,6 +703,7 @@ test("prepares, quarantines UI Elements, deduplicates visuals, and keeps Flow st
   assert.equal(flow[1].previous, flow[0].evidenceId);
   assert.equal(state.completed?.screens[0].evidenceId, "SCREEN-1");
   assert.equal(state.flowSynthesisCalls.length, 1);
+  assert.deepEqual(state.synthesisPlans, [{ totalCount: 2, doneCount: 0 }]);
   assert.equal(state.completed?.flows.length, 1);
   assert.equal(state.completed?.flows[0].steps[1].interaction, "Tap Continue");
   assert.equal(state.completed?.flows[0].insights?.source, "llm_inferred");
