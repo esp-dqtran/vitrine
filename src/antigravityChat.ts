@@ -50,45 +50,50 @@ export function lastJsonObjectInText(
 ): string {
   let best = "";
   let bestEnd = -1;
-  for (let start = 0; start < text.length; start += 1) {
-    if (text[start] !== "{") continue;
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-    for (let end = start; end < text.length; end += 1) {
-      const character = text[end];
-      if (inString) {
-        if (escaped) escaped = false;
-        else if (character === "\\") escaped = true;
-        else if (character === '"') inString = false;
-        continue;
-      }
-      if (character === '"') {
-        inString = true;
-        continue;
-      }
-      if (character === "{") depth += 1;
-      else if (character === "}") depth -= 1;
-      if (depth !== 0) continue;
-      const candidate = text.slice(start, end + 1);
-      try {
-        const parsed = JSON.parse(candidate);
-        if (
-          parsed
-          && typeof parsed === "object"
-          && !Array.isArray(parsed)
-          && !excludedText.includes(candidate)
-          && end > bestEnd
-        ) {
-          best = candidate;
-          bestEnd = end;
-        }
-      } catch {
-        // The conversation also contains JSON-like schemas from the prompt.
-      }
-      start = end;
-      break;
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (start < 0) {
+      if (character !== "{") continue;
+      start = index;
+      depth = 1;
+      continue;
     }
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+    if (character === "{") depth += 1;
+    else if (character === "}") depth -= 1;
+    if (depth !== 0) continue;
+    const candidate = text.slice(start, index + 1);
+    try {
+      const parsed = JSON.parse(candidate);
+      if (
+        parsed
+        && typeof parsed === "object"
+        && !Array.isArray(parsed)
+        && !excludedText.includes(candidate)
+        && index > bestEnd
+      ) {
+        best = candidate;
+        bestEnd = index;
+      }
+    } catch {
+      // The conversation also contains JSON-like schemas from the prompt.
+    }
+    start = -1;
+    inString = false;
+    escaped = false;
   }
   return best;
 }
@@ -157,7 +162,6 @@ async function waitForStableAntigravityReply(
   const replies = page.locator([
     ".leading-relaxed.select-text.text-sm",
     '[aria-label="Agent response"] .select-text',
-    ".select-text",
   ].join(", "));
   const loading = page.locator('[data-testid="agent-loading"]');
   const deadline = Date.now() + timeoutMs;
@@ -165,10 +169,14 @@ async function waitForStableAntigravityReply(
   let stableSince = 0;
   while (Date.now() < deadline) {
     signal?.throwIfAborted();
-    const transcriptJson = lastJsonObjectInText(
-      completedAntigravityTranscriptReply(page.url()),
-    );
+    const conversationUrl = page.url();
+    const transcriptReply = completedAntigravityTranscriptReply(conversationUrl);
+    const transcriptJson = lastJsonObjectInText(transcriptReply);
     if (transcriptJson) return transcriptJson;
+    if (isAntigravityConversationUrl(conversationUrl)) {
+      await raceChatAbort(page.waitForTimeout(100), signal);
+      continue;
+    }
     const working = await raceChatAbort(loading.isVisible(), signal);
     const count = await raceChatAbort(replies.count(), signal);
     const selectedReply = count > 0
