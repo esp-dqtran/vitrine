@@ -1957,6 +1957,31 @@ test("serves public catalog previews without exposing the admin gallery", async 
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
 });
 
+test("keeps the catalog public and every App detail endpoint private", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    allImages: async () => catalogImages,
+    publishedPreviewImages: async () => [{ ...catalogImages[0], preview_rank: 1 }],
+    resolveSession: async () => undefined,
+  }));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/catalog`)).status, 200);
+  assert.equal((await fetch(`${base}/preview-media/linear/1`)).status, 503);
+
+  const privatePaths = [
+    "/apps/linear",
+    "/apps/linear/versions",
+    "/apps/linear/screens?platform=web",
+    "/apps/linear/ui-elements?platform=web",
+    "/apps/linear/flows?platform=web",
+    "/apps/linear/page-preview/1",
+  ];
+
+  for (const path of privatePaths) {
+    assert.equal((await fetch(`${base}${path}`)).status, 401, path);
+  }
+});
+
 test("serves only the first three public preview images", async (t) => {
   const ranks: number[] = [];
   const { base, server } = await serve(createApiApp({
