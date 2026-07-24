@@ -171,9 +171,9 @@ async function waitForStableAntigravityReply(
       ? (await raceChatAbort(replies.last().innerText(), signal)).trim()
       : "";
     const selectedJson = lastJsonObjectInText(selectedReply);
-    const transcriptJson = !working
-      ? lastJsonObjectInText(completedAntigravityTranscriptReply(page.url()))
-      : "";
+    const transcriptJson = lastJsonObjectInText(
+      completedAntigravityTranscriptReply(page.url()),
+    );
     const visibleJson = !working
       ? lastJsonObjectInText(
         await raceChatAbort(page.locator("body").innerText(), signal),
@@ -181,7 +181,7 @@ async function waitForStableAntigravityReply(
       )
       : "";
     const text = transcriptJson || selectedJson || visibleJson || selectedReply;
-    if (!working && text && text === previous) {
+    if ((!working || transcriptJson) && text && text === previous) {
       if (stableSince === 0) stableSince = Date.now();
       if (Date.now() - stableSince >= stableMs) return text;
     } else {
