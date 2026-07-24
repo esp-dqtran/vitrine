@@ -177,14 +177,6 @@ allowlist. See
 [App Knowledge with Antigravity](docs/operations/app-knowledge-antigravity.md)
 for provider setup, recovery, rollout order, and acceptance gates.
 
-## Product flow documentation (`FLOW.md`) for product managers
-
-Astryx reconstructs the same app three ways for three readers: designers export an editable design system (Figma/tokens), developers export tokens as code (CSS/Tailwind/JSON/React), and product managers export **`FLOW.md`** — the app's observed user flows as an ordered, evidence-cited Markdown doc, a PRD-ready reference.
-
-The `FLOW.md` export renders every observed flow with a clickable index, then per-flow sections carrying category, tags, description, and a numbered user journey where each step names the screen(s) it was seen on. When the autonomous crawler recorded provenance, each flow also shows its verification status (`complete` / `uncertain` / `incomplete`), confidence, and source — so a PM can tell a verified flow from a draft.
-
-PMs reach it from an app's **Flows** tab ("Export FLOW.md"); it is also available in the design-system export panel. Like all catalog exports it requires a Pro entitlement and counts against the export fair-use limit.
-
 ## Bulk-importing apps from Mobbin (optional, advanced)
 
 `scripts/catalog-import.ts` is a standalone, resumable script that crawls Mobbin's full app catalog directly (outside the queue/worker system) — useful for large batch imports. It requires an authenticated Mobbin browser profile (Playwright persistent context) and a real S3 bucket; not needed to just run the app against existing data.

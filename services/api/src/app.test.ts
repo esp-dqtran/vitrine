@@ -1278,70 +1278,32 @@ test("downloads a complete editable Figma library and secondary exports", async 
   })).status, 400);
 });
 
-test("stores a FLOW.md export as a markdown object (regression: md extension was rejected)", async (t) => {
-  const uploaded: Array<ObjectMetadata & { body: Uint8Array }> = [];
-  const store: ObjectStore = {
-    put: async (input) => { uploaded.push(input); return { created: true, metadata: input }; },
-    head: async () => undefined, get: async () => { throw new Error("unused"); },
-    signedGetUrl: async () => undefined, async *list() {}, delete: async () => false,
-  };
+test("rejects the retired flow-md export format", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
-    canAccessApp: async () => true,
-    getAccountEntitlements: async () => proEntitlements,
-    countUserCollections: async () => 1,
-    reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
-    recordAccessEvent: async () => undefined,
-    createExport: async () => 7, completeExport: async () => undefined, failExport: async () => undefined,
-    objectStore: store,
-    imageObjectById: async () => undefined,
-    getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: { app: "linear", generatedAt: "2026-07-10T00:00:00.000Z", tokens: [], components: [], flows: [] }, flows: [{ id: "login", title: "Login", description: "", tags: [], steps: [{ label: "Enter email", evidence: [7] }] }] }),
-    getAppFlows: async () => [], appImages: async () => catalogImages, versionImages: async () => catalogImages,
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" },
     body: JSON.stringify({ format: "flow-md", platform: "web", selection: { kind: "design-system" } }),
   });
-  assert.equal(response.status, 200);
-  assert.equal(response.headers.get("content-type"), "text/markdown");
-  assert.equal(uploaded.length, 1);
-  assert.match(uploaded[0].key, /^exports\/7\/[0-9a-f]{64}\.md$/);
-  assert.equal(uploaded[0].contentType, "text/markdown");
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "invalid export request" });
 });
 
-test("flow-doc endpoint generates a default, then serves and updates the saved copy", async (t) => {
-  const saves: Array<{ app: string; platform: string; body: string; userId: number }> = [];
-  let stored: { body: string; updatedAt: string } | undefined;
+test("does not mount the retired flow-doc endpoints", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
-    canAccessApp: async () => true,
-    recordAccessEvent: async () => undefined,
-    getAppFlows: async () => [{ id: "login", title: "Login", description: "", tags: [], steps: [{ label: "Enter email", evidence: [7] }] }],
-    appImages: async () => catalogImages,
-    getFlowDocument: async () => stored,
-    saveFlowDocument: async (app, platform, body, userId) => {
-      saves.push({ app, platform, body, userId });
-      stored = { body, updatedAt: "2026-07-17T00:00:00.000Z" };
-      return stored.updatedAt;
-    },
   }));
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
 
-  const generated = await (await fetch(`${base}/design-systems/linear/flow-doc?platform=web`, { headers })).json();
-  assert.equal(generated.saved, false);
-  assert.match(generated.body, /Login/);
-
+  const get = await fetch(`${base}/design-systems/linear/flow-doc?platform=web`, { headers });
   const put = await fetch(`${base}/design-systems/linear/flow-doc`, {
     method: "PUT", headers, body: JSON.stringify({ platform: "web", body: "# Edited flow doc" }),
   });
-  assert.equal(put.status, 200);
-  assert.deepEqual(saves, [{ app: "linear", platform: "web", body: "# Edited flow doc", userId: user.id }]);
-
-  const reloaded = await (await fetch(`${base}/design-systems/linear/flow-doc?platform=web`, { headers })).json();
-  assert.equal(reloaded.saved, true);
-  assert.equal(reloaded.body, "# Edited flow doc");
+  assert.equal(get.status, 404);
+  assert.equal(put.status, 404);
 });
 
 test("does not fall back to legacy media when an associated object fails verification", async (t) => {

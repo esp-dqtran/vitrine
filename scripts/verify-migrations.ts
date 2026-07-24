@@ -101,7 +101,6 @@ const SEARCH_TABLES = [
 
 const AUXILIARY_MIGRATION_TABLES = [
   "design_system_import_history",
-  "flow_documents",
   "organization_members",
   "organizations",
 ] as const;

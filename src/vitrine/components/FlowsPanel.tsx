@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, EmptyState } from '@astryxdesign/core';
+import { EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { Platform } from '../../platformFromUrl';
 import { FlowCard } from './FlowCard';
-import { FlowDocEditor } from './FlowDocEditor';
 import { FlowViewer } from './FlowViewer';
 import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
 import { SearchInput } from './SearchInput';
@@ -41,7 +40,6 @@ export function FlowsPanel({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(initialFlowId ?? null);
   const [search, setSearch] = useState('');
-  const [editingDoc, setEditingDoc] = useState(false);
   const [visibleCount, setVisibleCount] = useState(FLOW_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const query = search.trim().toLowerCase();
@@ -66,8 +64,6 @@ export function FlowsPanel({
     return () => observer.disconnect();
   }, [filtered.length, hasMore]);
 
-  if (editingDoc && app && platform) return <FlowDocEditor app={app} platform={platform} onBack={() => setEditingDoc(false)} />;
-
   const selected = flows.find((flow) => flow.id === selectedId);
   if (selected) return <FlowViewer flow={selected} app={app} platform={platform} version={version} initialStep={initialStep} onBack={() => setSelectedId(null)} />;
 
@@ -79,24 +75,17 @@ export function FlowsPanel({
     );
   }
 
-  const toolbar = flows.length > 8 || (app && platform) ? (
-    <>
-      {flows.length > 8 ? (
-        <div style={{ maxWidth: 320, flex: 1 }}>
-          <SearchInput
-            value={search}
-            onChange={(value) => {
-              setSearch(value);
-              setVisibleCount(FLOW_BATCH_SIZE);
-            }}
-            placeholder="Search flows…"
-          />
-        </div>
-      ) : <span />}
-      {app && platform && (
-        <Button label="Open FLOW.md" variant="primary" size="sm" tooltip="Open the ordered, evidence-cited product flow document to edit, preview, save, or download." onClick={() => setEditingDoc(true)} style={{ borderRadius: 999 }} />
-      )}
-    </>
+  const toolbar = flows.length > 8 ? (
+    <div style={{ maxWidth: 320, flex: 1 }}>
+      <SearchInput
+        value={search}
+        onChange={(value) => {
+          setSearch(value);
+          setVisibleCount(FLOW_BATCH_SIZE);
+        }}
+        placeholder="Search flows…"
+      />
+    </div>
   ) : undefined;
 
   return (

@@ -89,11 +89,6 @@ export const updateCollectionItemNotes = (collectionId: number, itemId: number, 
 export const removeCollectionItem = (collectionId: number, itemId: number): Promise<void> =>
   json(`/api/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' });
 
-export const loadFlowDoc = (app: string, platform: Platform): Promise<{ body: string; saved: boolean; updatedAt?: string }> =>
-  json(`/api/design-systems/${app}/flow-doc?platform=${platform}`);
-export const saveFlowDoc = (app: string, platform: Platform, body: string): Promise<{ saved: true; updatedAt: string }> =>
-  json(`/api/design-systems/${app}/flow-doc`, { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ platform, body }) });
-
 export async function requestExport(app: string, platform: Platform, format: ExportFormat, selection: ExportScope): Promise<{ blob: Blob; filename: string }> {
   const response = await fetch(`/api/design-systems/${app}/exports`, {
     method: 'POST', headers: jsonHeaders, body: JSON.stringify({ format, platform, selection }),

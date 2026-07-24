@@ -57,11 +57,9 @@ test('makes editable Figma the primary export and keeps code formats secondary',
   assert.match(html, /Tailwind/);
 });
 
-test('surfaces a dedicated FLOW.md product-manager export card', () => {
+test('does not surface the retired FLOW.md export card', () => {
   const html = renderToStaticMarkup(<ExportPanel app="linear" />);
-  assert.match(html, /For product managers/);
-  assert.match(html, /Product flow documentation/);
-  assert.match(html, /Export FLOW\.md/);
+  assert.doesNotMatch(html, /For product managers|Product flow documentation|Export FLOW\.md/);
 });
 
 test('shows capture counts and curator review actions without exposing draft as published', () => {

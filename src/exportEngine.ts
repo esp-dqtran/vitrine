@@ -1,7 +1,7 @@
 import type { CrawledImage } from './db.ts';
 import type { ComponentVariant, DesignComponent, DesignSystemSnapshot, DesignToken, TokenKind } from './designSystem.ts';
 
-export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react' | 'design-md' | 'flow-md';
+export type ExportFormat = 'figma' | 'json' | 'css' | 'tailwind' | 'component-spec' | 'react' | 'design-md';
 export type ExportScope =
   | { kind: 'design-system' }
   | { kind: 'foundation-category'; id: string }
@@ -200,49 +200,6 @@ function designMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
     `## Agent Prompt Guide\n\nWhen building UI for ${snapshot.app}, reference these observed colors:\n\n${promptGuide || '_No color tokens observed in this scope._'}\n`;
 }
 
-// PM-facing product flow documentation. Renders the app's observed flows as an
-// ordered, evidence-cited journey doc (a "PRD reference") from the same snapshot
-// the design exports use — no new data, just a reader-first view of snapshot.flows.
-function flowMd(snapshot: ReturnType<typeof scopeSnapshot>): string {
-  const screenName = new Map(snapshot.images.map(({ id, description }) => [id, description]));
-  const evidence = (ids: number[]): string =>
-    ids.map((id) => screenName.get(id) || `screen #${id}`).join('; ');
-  const flows = snapshot.flows;
-
-  const frontmatter = [
-    `title: ${JSON.stringify(`${snapshot.app} product flows`)}`,
-    `description: ${JSON.stringify(`${flows.length} observed user flow(s) across ${snapshot.app}, documented by Astryx from ${snapshot.images.length} evidence screen(s).`)}`,
-    `app: ${JSON.stringify(snapshot.app)}`,
-    `flows: ${flows.length}`,
-    `generated: ${JSON.stringify(snapshot.generatedAt)}`,
-  ].join('\n');
-
-  const index = flows.length
-    ? flows.map((flow, i) => `${i + 1}. [${flow.title}](#${slug(flow.title)})${flow.category ? ` — _${flow.category}_` : ''} · ${flow.steps.length} step(s)`).join('\n')
-    : '_No flows observed in this scope._';
-
-  const sections = flows.map((flow) => {
-    const meta = [...new Map([flow.category, ...(flow.tags || [])].filter(Boolean).map((v) => [v!.toLowerCase(), v!])).values()].join(' · ');
-    const p = flow.provenance;
-    const status = p
-      ? `> **Status:** ${p.validationStatus} · confidence ${Math.round(p.confidence * 100)}%${p.sourceUrls[0] ? ` · [source](${p.sourceUrls[0]})` : ''}\n\n`
-      : '';
-    const steps = flow.steps.length
-      ? flow.steps.map((step, i) => {
-          const interaction = step.interaction ? ` — ${step.interaction}` : '';
-          const seen = evidence(step.evidence);
-          return `${i + 1}. **${step.label}**${interaction}${seen ? `  \n   _Seen on: ${seen}_` : ''}`;
-        }).join('\n')
-      : '_No steps recorded._';
-    return `## ${flow.title}\n${meta ? `_${meta}_\n\n` : ''}${status}${flow.description || ''}\n\n**User journey**\n\n${steps}`;
-  }).join('\n\n');
-
-  return `---\n${frontmatter}\n---\n\n` +
-    `# ${snapshot.app} — Product Flows\n\n` +
-    `> ${flows.length} user journey(s) reconstructed by Astryx from observed evidence. Every step cites the screen(s) it was seen on.\n\n` +
-    `## Flow index\n\n${index}\n\n${sections}\n`;
-}
-
 function figmaCode(snapshot: ReturnType<typeof scopeSnapshot>): string {
   const data = JSON.stringify({
     app: snapshot.app,
@@ -331,7 +288,6 @@ export function buildExportArtifact(
     'component-spec': { suffix: 'component-spec.json', mime: 'application/json', content: componentSpecs(scoped) },
     react: { suffix: 'components.tsx', mime: 'text/typescript', content: react(scoped) },
     'design-md': { suffix: 'DESIGN.md', mime: 'text/markdown', content: designMd(scoped) },
-    'flow-md': { suffix: 'FLOW.md', mime: 'text/markdown', content: flowMd(scoped) },
   };
   const output = outputs[format];
   const content = evidenceBacked ? output.content : evidenceNeutral(output.content, scoped);

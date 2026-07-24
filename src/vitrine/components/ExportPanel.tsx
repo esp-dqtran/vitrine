@@ -17,12 +17,10 @@ export function ExportPanel({ app, platform = 'web', snapshot, screens = [] }: {
   const [message, setMessage] = useState('');
   const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
   const [selectedScreens, setSelectedScreens] = useState<number[]>([]);
-  // flow-md is a whole-app PM document, so it always exports at design-system scope
-  // regardless of the panel's selected scope; every other format honours the selection.
-  const run = async (format: ExportFormat, scopeOverride?: ExportScope) => {
+  const run = async (format: ExportFormat) => {
     setBusy(format); setMessage('');
     try {
-      const { blob, filename } = await requestExport(app, platform, format, scopeOverride ?? scope);
+      const { blob, filename } = await requestExport(app, platform, format, scope);
       const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
       setMessage(`${filename} is ready.`);
     } catch (error) { setMessage((error as Error).message); }
@@ -51,12 +49,6 @@ export function ExportPanel({ app, platform = 'web', snapshot, screens = [] }: {
         <p style={{ margin: '0 0 18px', maxWidth: 680, lineHeight: 1.5, color: 'rgba(255,255,255,.82)' }}>Variable collections, text/effect documentation, auto-layout components, observed variant sets, and source-reference frames in a Figma development plugin.</p>
         <Button label="Export editable Figma library" variant="secondary" isDisabled={busy !== null} isLoading={busy === 'figma'} clickAction={() => run('figma')} style={{ borderRadius: 999 }} />
         <div style={{ marginTop: 10, fontSize: 11.5, opacity: .75 }}>Unzip, create a Figma development plugin to receive its ID, replace its code.js with the exported file, then run it in a blank design file.</div>
-      </Card>
-      <Card padding={5}>
-        <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--color-text-secondary)' }}>For product managers</div>
-        <h3 style={{ margin: '8px 0 6px', fontSize: 18 }}>Product flow documentation</h3>
-        <p style={{ margin: '0 0 16px', maxWidth: 680, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>Every observed user flow as an ordered, evidence-cited Markdown doc — a PRD-ready reference. Each step names the screen it was seen on and its verification status.</p>
-        <Button label="Export FLOW.md" variant="primary" isDisabled={busy !== null} isLoading={busy === 'flow-md'} clickAction={() => run('flow-md', { kind: 'design-system' })} style={{ borderRadius: 999 }} />
       </Card>
       <div><h3 style={{ margin: '0 0 10px', fontSize: 14 }}>Secondary formats</h3><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{secondary.map(([format, label]) => <Button key={format} label={label} size="sm" isDisabled={busy !== null} isLoading={busy === format} clickAction={() => run(format)} />)}</div></div>
       <details style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: 14 }}><summary style={{ cursor: 'pointer', fontWeight: 650, fontSize: 13 }}>Selected components and screens</summary><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 18, marginTop: 14 }}><div style={{ display: 'grid', gap: 7 }}><strong style={{ fontSize: 12 }}>Components</strong>{(snapshot?.components ?? []).map((component) => <CheckboxInput key={component.id} label={component.name} value={selectedComponents.includes(component.id)} onChange={(checked) => setSelectedComponents((current) => checked ? [...current, component.id] : current.filter((id) => id !== component.id))} size="sm" />)}</div><div style={{ display: 'grid', gap: 7 }}><strong style={{ fontSize: 12 }}>Screens</strong>{screens.map((screen) => <CheckboxInput key={screen.id} label={`${screen.type} · ${screen.productArea}`} value={selectedScreens.includes(screen.id)} onChange={(checked) => setSelectedScreens((current) => checked ? [...current, screen.id] : current.filter((id) => id !== screen.id))} size="sm" />)}</div></div><Button label="Use selected scope" size="sm" isDisabled={selectedComponents.length + selectedScreens.length === 0} onClick={() => setScope({ kind: 'selected', componentIds: selectedComponents, screenIds: selectedScreens })} style={{ marginTop: 14 }} /></details>

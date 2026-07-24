@@ -31,10 +31,9 @@ test("keeps the empty flows state inside the shared gallery section", () => {
   assert.match(html, /No captured flows yet/);
 });
 
-test("offers the FLOW.md editor only when app and platform are known", () => {
-  assert.doesNotMatch(renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} />), /Open FLOW\.md/);
-  const withApp = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} app="linear" platform="web" />);
-  assert.match(withApp, /Open FLOW\.md/);
+test("does not offer the retired FLOW.md editor", () => {
+  const html = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} app="linear" platform="web" />);
+  assert.doesNotMatch(html, /FLOW\.md/);
 });
 
 test("FlowViewer renders curator-ordered flow steps with real evidence images", () => {

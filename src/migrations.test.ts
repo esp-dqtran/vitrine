@@ -66,6 +66,12 @@ const migrationDefinitions = [
       /jsonb_typeof\(fragment\) = 'object'/,
     ],
   },
+  {
+    file: "0020_drop_flow_documents.sql",
+    patterns: [
+      /DROP TABLE IF EXISTS flow_documents/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {

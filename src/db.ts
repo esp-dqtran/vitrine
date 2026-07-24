@@ -723,27 +723,6 @@ export async function getAppFlows(app: string, platform: string): Promise<Design
   return res.rows[0]?.flows ?? [];
 }
 
-export async function getFlowDocument(app: string, platform: string): Promise<{ body: string; updatedAt: string } | undefined> {
-  const res = await query<{ body: string; updated_at: string }>(
-    `SELECT d.body, d.updated_at FROM flow_documents d JOIN apps a ON a.id = d.app_id WHERE a.name = $1 AND d.platform = $2`,
-    [app, platform]
-  );
-  const row = res.rows[0];
-  return row ? { body: row.body, updatedAt: row.updated_at } : undefined;
-}
-
-export async function saveFlowDocument(app: string, platform: string, body: string, userId: number): Promise<string> {
-  const res = await query<{ updated_at: string }>(
-    `INSERT INTO flow_documents (app_id, platform, body, updated_by, updated_at)
-     SELECT a.id, $2, $3, $4, now() FROM apps a WHERE a.name = $1
-     ON CONFLICT (app_id, platform) DO UPDATE SET body = EXCLUDED.body, updated_by = EXCLUDED.updated_by, updated_at = now()
-     RETURNING updated_at`,
-    [app, platform, body, userId]
-  );
-  if (!res.rows[0]) throw new Error("Flow document app not found");
-  return res.rows[0].updated_at;
-}
-
 export async function listAppFlowSets(): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
   const res = await query<{ app: string; flows: DesignFlow[] }>(
     `SELECT a.name AS app, f.flows FROM app_flows f JOIN apps a ON a.id = f.app_id ORDER BY a.name`

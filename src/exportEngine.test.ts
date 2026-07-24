@@ -92,40 +92,6 @@ test('renders a DESIGN.md with token frontmatter and observed components', () =>
   assert.match(text, /- Accent: `#5E6AD2` — Primary action/);
 });
 
-test('renders a FLOW.md PM doc with an index and evidence-cited steps', () => {
-  const text = buildExportArtifact(snapshot, images, 'flow-md', whole).content.toString();
-  assert.match(text, /^---\n/);
-  assert.match(text, /title: "linear product flows"/);
-  assert.match(text, /flows: 1/);
-  assert.match(text, /## Flow index\n\n1\. \[Sign in\]\(#sign-in\) · 1 step\(s\)/);
-  assert.match(text, /## Sign in/);
-  assert.match(text, /_Auth_/);
-  assert.match(text, /1\. \*\*Submit\*\*/);
-  assert.match(text, /_Seen on: Workspace toolbar_/);
-});
-
-test('FLOW.md surfaces flow verification status when provenance is present', () => {
-  const withProvenance: DesignSystemSnapshot = {
-    ...snapshot,
-    flows: [{
-      ...snapshot.flows[0],
-      provenance: { autonomousRunId: 'r1', missionId: 'm1', confidence: 0.9, sourceUrls: ['https://ex.com/x'], validationStatus: 'uncertain' },
-    }],
-  };
-  const text = buildExportArtifact(withProvenance, images, 'flow-md', whole).content.toString();
-  assert.match(text, /\*\*Status:\*\* uncertain · confidence 90% · \[source\]\(https:\/\/ex\.com\/x\)/);
-});
-
-test('FLOW.md does not repeat a tag that duplicates the flow category', () => {
-  const dupe: DesignSystemSnapshot = {
-    ...snapshot,
-    flows: [{ id: 'f', title: 'Repair', category: 'Retention', description: '', tags: ['Retention', 'Monetization'], steps: [{ label: 'Go', evidence: [7] }] }],
-  };
-  const text = buildExportArtifact(dupe, images, 'flow-md', whole).content.toString();
-  assert.match(text, /_Retention · Monetization_/);
-  assert.doesNotMatch(text, /Retention · Monetization · Retention|Retention · Retention/);
-});
-
 test('exports only the selected observed family or foundation category', () => {
   const family = buildExportArtifact(snapshot, images, 'json', { kind: 'component-family', id: 'button' });
   const familyJson = JSON.parse(family.content.toString());
