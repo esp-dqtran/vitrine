@@ -15,6 +15,7 @@ import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts
 import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 import {
   createAppKnowledgeService,
+  parseAppKnowledgeEvidenceAnalysis,
   type AppKnowledgeEvidenceAnalysis,
 } from "./appKnowledgeService.ts";
 import type {
@@ -70,8 +71,92 @@ function analysis(evidenceId: string): AppKnowledgeEvidenceAnalysis {
     friction: [],
     uncertainStates: [],
     confidence: 0.9,
+    tokenCandidates: [],
+    componentOccurrences: [],
   };
 }
+
+test("parses LLM token candidates and normalized component occurrences", () => {
+  const raw = {
+    ...analysis("SCREEN-1"),
+    tokenCandidates: [
+      "color",
+      "typography",
+      "spacing",
+      "radius",
+      "border",
+      "effect",
+    ].map((kind) => ({
+      kind,
+      name: `${kind} candidate`,
+      value: kind === "color" ? "#F26B38" : "16px",
+      role: "Observed visual role",
+      confidence: 0.82,
+    })),
+    componentOccurrences: [{
+      family: "Button",
+      variant: "Primary",
+      category: "Inputs",
+      purpose: "Triggers the primary action",
+      anatomy: ["container", "label"],
+      visibleStates: ["default"],
+      observedProperties: ["orange fill", "white label"],
+      region: { x: 0.72, y: 0.61, width: 0.18, height: 0.06 },
+      confidence: 0.88,
+    }],
+  };
+
+  const parsed = parseAppKnowledgeEvidenceAnalysis(raw, "SCREEN-1");
+
+  assert.deepEqual(
+    parsed.tokenCandidates.map(({ kind }) => kind),
+    ["color", "typography", "spacing", "radius", "border", "effect"],
+  );
+  assert.deepEqual(parsed.componentOccurrences[0].region, {
+    x: 0.72,
+    y: 0.61,
+    width: 0.18,
+    height: 0.06,
+  });
+});
+
+test("rejects unsupported tokens and out-of-bounds normalized regions", () => {
+  const token = {
+    ...analysis("SCREEN-1"),
+    tokenCandidates: [{
+      kind: "opacity",
+      name: "Disabled",
+      value: "0.5",
+      role: "Disabled content",
+      confidence: 0.8,
+    }],
+    componentOccurrences: [],
+  };
+  assert.throws(
+    () => parseAppKnowledgeEvidenceAnalysis(token, "SCREEN-1"),
+    /token kind is invalid/,
+  );
+
+  const region = {
+    ...analysis("SCREEN-1"),
+    tokenCandidates: [],
+    componentOccurrences: [{
+      family: "Button",
+      variant: "Primary",
+      category: "Inputs",
+      purpose: "Submit",
+      anatomy: [],
+      visibleStates: ["default"],
+      observedProperties: [],
+      region: { x: 0.9, y: 0.9, width: 0.2, height: 0.2 },
+      confidence: 0.8,
+    }],
+  };
+  assert.throws(
+    () => parseAppKnowledgeEvidenceAnalysis(region, "SCREEN-1"),
+    /normalized region exceeds source bounds/,
+  );
+});
 
 function synthesized(evidenceId: string): AppKnowledgeSnapshot {
   return {

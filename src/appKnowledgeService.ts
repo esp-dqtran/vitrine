@@ -35,6 +35,41 @@ import {
 } from "./evidenceAnalysisRuntime.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 
+export type AppKnowledgeTokenKind =
+  | "color"
+  | "typography"
+  | "spacing"
+  | "radius"
+  | "border"
+  | "effect";
+
+export interface AppKnowledgeTokenCandidate {
+  kind: AppKnowledgeTokenKind;
+  name: string;
+  value: string;
+  role: string;
+  confidence: number;
+}
+
+export interface AppKnowledgeNormalizedRegion {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface AppKnowledgeComponentOccurrence {
+  family: string;
+  variant: string;
+  category: string;
+  purpose: string;
+  anatomy: string[];
+  visibleStates: string[];
+  observedProperties: string[];
+  region: AppKnowledgeNormalizedRegion;
+  confidence: number;
+}
+
 export interface AppKnowledgeEvidenceAnalysis extends Record<string, unknown> {
   evidenceId: string;
   pageType: string;
@@ -57,10 +92,20 @@ export interface AppKnowledgeEvidenceAnalysis extends Record<string, unknown> {
   friction: string[];
   uncertainStates: string[];
   confidence: number;
+  tokenCandidates: AppKnowledgeTokenCandidate[];
+  componentOccurrences: AppKnowledgeComponentOccurrence[];
 }
 
 const VIEWPORTS = new Set(["desktop", "tablet", "mobile", "unknown"]);
 const THEMES = new Set(["light", "dark", "mixed"]);
+const TOKEN_KINDS = new Set<AppKnowledgeTokenKind>([
+  "color",
+  "typography",
+  "spacing",
+  "radius",
+  "border",
+  "effect",
+]);
 
 function object(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
@@ -79,6 +124,82 @@ function strings(value: unknown, label: string): string[] {
   return value.map((item, index) => text(item, `${label}[${index}]`, 2_000));
 }
 
+function confidence(value: unknown, label: string): number {
+  const result = Number(value);
+  if (!Number.isFinite(result) || result < 0 || result > 1) {
+    throw new Error(`${label} must be between 0 and 1`);
+  }
+  return result;
+}
+
+function candidates(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value) || value.length > 24) {
+    throw new Error(`${label} must be a bounded array`);
+  }
+  return value;
+}
+
+function tokenCandidates(value: unknown): AppKnowledgeTokenCandidate[] {
+  return candidates(value, "tokenCandidates").map((item, index) => {
+    const raw = object(item, `tokenCandidates[${index}]`);
+    const kind = raw.kind as AppKnowledgeTokenKind;
+    if (!TOKEN_KINDS.has(kind)) throw new Error("Evidence analysis token kind is invalid");
+    return {
+      kind,
+      name: text(raw.name, `tokenCandidates[${index}].name`, 160),
+      value: text(raw.value, `tokenCandidates[${index}].value`, 500),
+      role: text(raw.role, `tokenCandidates[${index}].role`, 1_000),
+      confidence: confidence(raw.confidence, `tokenCandidates[${index}].confidence`),
+    };
+  });
+}
+
+function normalizedRegion(value: unknown, label: string): AppKnowledgeNormalizedRegion {
+  const raw = object(value, label);
+  const x = Number(raw.x);
+  const y = Number(raw.y);
+  const width = Number(raw.width);
+  const height = Number(raw.height);
+  if (
+    !Number.isFinite(x)
+    || !Number.isFinite(y)
+    || !Number.isFinite(width)
+    || !Number.isFinite(height)
+    || x < 0
+    || y < 0
+    || x > 1
+    || y > 1
+    || width <= 0
+    || height <= 0
+    || width > 1
+    || height > 1
+  ) throw new Error("Evidence analysis normalized region is invalid");
+  if (x + width > 1 || y + height > 1) {
+    throw new Error("Evidence analysis normalized region exceeds source bounds");
+  }
+  return { x, y, width, height };
+}
+
+function componentOccurrences(value: unknown): AppKnowledgeComponentOccurrence[] {
+  return candidates(value, "componentOccurrences").map((item, index) => {
+    const raw = object(item, `componentOccurrences[${index}]`);
+    return {
+      family: text(raw.family, `componentOccurrences[${index}].family`, 160),
+      variant: text(raw.variant, `componentOccurrences[${index}].variant`, 160),
+      category: text(raw.category, `componentOccurrences[${index}].category`, 160),
+      purpose: text(raw.purpose, `componentOccurrences[${index}].purpose`, 1_000),
+      anatomy: strings(raw.anatomy, `componentOccurrences[${index}].anatomy`),
+      visibleStates: strings(raw.visibleStates, `componentOccurrences[${index}].visibleStates`),
+      observedProperties: strings(
+        raw.observedProperties,
+        `componentOccurrences[${index}].observedProperties`,
+      ),
+      region: normalizedRegion(raw.region, `componentOccurrences[${index}].region`),
+      confidence: confidence(raw.confidence, `componentOccurrences[${index}].confidence`),
+    };
+  });
+}
+
 export function parseAppKnowledgeEvidenceAnalysis(
   value: unknown,
   evidenceId: string,
@@ -89,10 +210,7 @@ export function parseAppKnowledgeEvidenceAnalysis(
   const theme = raw.theme as AppKnowledgeEvidenceAnalysis["theme"];
   if (!VIEWPORTS.has(viewport)) throw new Error("Evidence analysis viewport is invalid");
   if (!THEMES.has(theme)) throw new Error("Evidence analysis theme is invalid");
-  const confidence = Number(raw.confidence);
-  if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
-    throw new Error("Evidence analysis confidence must be between 0 and 1");
-  }
+  const analysisConfidence = confidence(raw.confidence, "Evidence analysis confidence");
   return {
     evidenceId,
     pageType: text(raw.pageType, "pageType"),
@@ -114,7 +232,9 @@ export function parseAppKnowledgeEvidenceAnalysis(
     likelyIntent: text(raw.likelyIntent, "likelyIntent"),
     friction: strings(raw.friction, "friction"),
     uncertainStates: strings(raw.uncertainStates, "uncertainStates"),
-    confidence,
+    confidence: analysisConfidence,
+    tokenCandidates: tokenCandidates(raw.tokenCandidates),
+    componentOccurrences: componentOccurrences(raw.componentOccurrences),
   };
 }
 

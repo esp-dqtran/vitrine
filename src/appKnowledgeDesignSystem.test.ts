@@ -38,6 +38,8 @@ function analysis(
     friction: [],
     uncertainStates: [],
     confidence: 0.9,
+    tokenCandidates: [],
+    componentOccurrences: [],
     ...overrides,
   };
 }
