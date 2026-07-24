@@ -74,8 +74,12 @@ export function App() {
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
   const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
   const canUseProResearch = isAdmin || customerPlan === 'pro';
+  const canUseAdvancedSearch = advancedSearchEnabled && user !== null;
   const openSignIn = () => navigate({ name: 'signin' });
   const openPricing = () => navigate({ name: 'pricing' });
+  const paletteCollections = isGuest ? [] : collections;
+  const palettePlan = isGuest ? 'free' : customerPlan;
+  const paletteUpgrade = isGuest ? openSignIn : openPricing;
   const closeSettings = () => {
     setSettingsOpen(false);
     if (route.name === 'settings-billing') navigate({ name: 'apps' });
@@ -114,7 +118,7 @@ export function App() {
   };
 
   const openPalette = async () => {
-    await ensureCollections().catch(() => []);
+    if (user) await ensureCollections().catch(() => []);
     setPaletteOpen(true);
   };
 
@@ -362,7 +366,7 @@ export function App() {
               activeCategory={cat}
               onOpen={() => void openPalette()}
               onClearCategory={() => setCat('All')}
-              mode={advancedSearchEnabled ? 'advanced' : 'legacy'}
+              mode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
             />
           }
           memberControls={!isAdmin ? accountControls : undefined}
@@ -447,7 +451,7 @@ export function App() {
                 activeCategory={cat}
                 onOpen={() => void openPalette()}
                 onClearCategory={() => setCat('All')}
-                mode={advancedSearchEnabled ? 'advanced' : 'legacy'}
+                mode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
               />
             }
             memberControls={!isAdmin ? accountControls : undefined}
@@ -498,10 +502,10 @@ export function App() {
       )}
     </AnimatePresence>
     <AnimatePresence>
-      {collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
+      {user && collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
       {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
       {paletteOpen && (
-        advancedSearchEnabled ? (
+        canUseAdvancedSearch ? (
           <QuickSearch
             initialQuery=""
             recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
@@ -524,10 +528,10 @@ export function App() {
           result={searchResult}
           searchLoading={searchLoading}
           searchError={searchError}
-          collections={collections}
-          plan={customerPlan}
-          onUpgrade={openPricing}
-          onCollectionsChange={setCollections}
+          collections={paletteCollections}
+          plan={palettePlan}
+          onUpgrade={paletteUpgrade}
+          onCollectionsChange={user ? setCollections : () => undefined}
           onQueryChange={setQ}
           onRetrySearch={() => setSearchRetry((value) => value + 1)}
           onClose={() => setPaletteOpen(false)}
@@ -538,7 +542,7 @@ export function App() {
         />
         )
       )}
-      {advancedSearchEnabled && advancedPreview ? (
+      {canUseAdvancedSearch && advancedPreview ? (
         <AdvancedSearchPreview
           item={advancedPreview}
           onClose={() => setAdvancedPreview(null)}
