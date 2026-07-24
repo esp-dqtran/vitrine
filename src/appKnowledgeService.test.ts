@@ -26,6 +26,10 @@ import type {
 } from "./appKnowledgeStore.ts";
 import type { AppKnowledgeEvidenceSource } from "./db.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
+import type {
+  SeedDesignSystemResult,
+  SeedDesignSystemWorkingCopyInput,
+} from "./designSystemWorkingCopy.ts";
 
 async function png(red: number, width = 8, height = 8): Promise<Buffer> {
   return sharp({
@@ -282,6 +286,7 @@ async function harness(options: {
   failDesignChunkFromCall?: number;
   failDesignChunkAttempts?: number;
   componentOccurrence?: boolean;
+  seedOutcome?: SeedDesignSystemResult;
 } = {}) {
   const bodies = new Map<number, Buffer>([
     [1, await png(10, 100, 100)],
@@ -324,7 +329,9 @@ async function harness(options: {
   let stale = false;
   let failed: { code: string; message: string } | undefined;
   const cropWrites: Array<Record<string, unknown>> = [];
+  const seedCalls: SeedDesignSystemWorkingCopyInput[] = [];
   let attachedCropRevision: { jobId: number; revisionId: number } | undefined;
+  let recordedSeedOutcome: SeedDesignSystemResult | undefined;
   const progress: Array<{ stage: AppKnowledgeWorkerJob["stage"]; done: number }> = [];
   const designSystemChunks = new Map<string, {
     key: string;
@@ -457,10 +464,26 @@ async function harness(options: {
     async attachCropsToRevision(jobId: number, revisionId: number) {
       attachedCropRevision = { jobId, revisionId };
     },
+    async recordDesignSystemSeedOutcome(_jobId: number, outcome: SeedDesignSystemResult) {
+      recordedSeedOutcome = outcome;
+    },
     async completeGeneration(_jobId: number, snapshot: AppKnowledgeSnapshot) {
       completed = snapshot;
       job.status = "done";
-      return { id: 12, reviewStatus: "draft" };
+      return {
+        id: 12,
+        snapshotId: job.snapshotId,
+        revisionNumber: 1,
+        authorType: "generated",
+        reviewStatus: "draft",
+        content: snapshot,
+        manifest: structuredClone(job.manifest!),
+        sourceSha256: job.sourceSha256!,
+        providerModel: job.providerModel,
+        promptVersion: job.promptVersion,
+        createdBy: job.requestedBy,
+        createdAt: "2026-07-24T00:00:00.000Z",
+      };
     },
     async markStale() {
       stale = true;
@@ -611,6 +634,10 @@ async function harness(options: {
     timeoutMs: 20,
     cancelCheckIntervalMs: 1,
     designSystemChunkBytes: options.designSystemChunkBytes,
+    seedDesignSystemWorkingCopy: async (input) => {
+      seedCalls.push(structuredClone(input));
+      return options.seedOutcome ?? "seeded";
+    },
   });
   return {
     service,
@@ -623,6 +650,7 @@ async function harness(options: {
     flowSynthesisCalls,
     synthesisPlans,
     cropWrites,
+    seedCalls,
     designSystemChunks,
     progress,
     get maximum() { return maximum; },
@@ -630,6 +658,7 @@ async function harness(options: {
     get stale() { return stale; },
     get failed() { return failed; },
     get attachedCropRevision() { return attachedCropRevision; },
+    get recordedSeedOutcome() { return recordedSeedOutcome; },
     providerStarted: providerGate.promise,
     cancel: () => { job.cancelRequested = true; },
   };
@@ -761,6 +790,20 @@ test("derives verified component crops and attaches them after revision creation
   assert.equal(state.cropWrites[0].sourceImageId, 1);
   assert.equal(state.cropWrites[0].componentFamily, "Page frame");
   assert.deepEqual(state.attachedCropRevision, { jobId: 1, revisionId: 12 });
+  assert.equal(state.seedCalls.length, 1);
+  assert.equal(
+    state.seedCalls[0].candidate.components[0].variants[0].occurrences?.[0].cropImageId,
+    99,
+  );
+  assert.equal(state.recordedSeedOutcome, "seeded");
+});
+
+test("completes generation when a curated Design System blocks automatic replacement", async () => {
+  const state = await harness({ seedOutcome: "conflict" });
+
+  assert.equal(await state.service.generate("1"), "done", JSON.stringify(state.failed));
+  assert.equal(state.seedCalls.length, 1);
+  assert.equal(state.recordedSeedOutcome, "conflict");
 });
 
 test("persists an evidence failure, synthesizes a partial draft, and redacts failure detail", async () => {

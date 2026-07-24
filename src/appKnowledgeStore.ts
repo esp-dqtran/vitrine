@@ -17,6 +17,7 @@ import type {
 } from "./appKnowledgeCrop.ts";
 import { query as databaseQuery, withTransaction } from "./db.ts";
 import { validateObjectMetadata } from "./objectStore.ts";
+import type { SeedDesignSystemResult } from "./designSystemWorkingCopy.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -58,6 +59,7 @@ export interface AppKnowledgeJobView {
   promptVersion: number;
   cancelRequested: boolean;
   retryFailedOnly: boolean;
+  designSystemSeedOutcome?: SeedDesignSystemResult;
   manifest?: AppKnowledgeEvidenceManifestItem[];
   sourceSha256?: string;
   errorCode?: string;
@@ -165,6 +167,10 @@ export interface AppKnowledgeStore extends AppKnowledgeCropStore {
   workerJob(jobId: number): Promise<AppKnowledgeWorkerJob | undefined>;
   updateProgress(jobId: number, stage: AppKnowledgeJobStage, doneCount: number): Promise<void>;
   setSynthesisPlan(jobId: number, totalCount: number, doneCount: number): Promise<void>;
+  recordDesignSystemSeedOutcome(
+    jobId: number,
+    outcome: SeedDesignSystemResult,
+  ): Promise<void>;
   evidenceRecords(jobId: number): Promise<AppKnowledgeJobEvidenceRecord[]>;
   cachedAnalysis(cacheKey: string): Promise<AppKnowledgeCacheEntry | undefined>;
   saveCachedAnalysis(input: AppKnowledgeCacheEntry): Promise<AppKnowledgeCacheEntry>;
@@ -405,7 +411,8 @@ const JOB_COLUMNS = `j.id, j.snapshot_id, j.transport_job_id, j.requested_by, j.
   j.status, j.stage, j.done_count, j.total_count, j.synthesis_done_count,
   j.synthesis_total_count, j.cache_hit_count, j.failed_count, j.evidence_manifest,
   j.source_sha256, j.provider_model, j.prompt_version, j.cancel_requested,
-  j.retry_failed_only, j.error_code, j.error_message, j.updated_at`;
+  j.retry_failed_only, j.design_system_seed_outcome, j.error_code,
+  j.error_message, j.updated_at`;
 
 const TARGET_COLUMNS = `s.app_id, a.name AS app, s.platform_id, p.name AS platform,
   s.capture_version_id, av.version_number`;
@@ -436,6 +443,9 @@ function jobFromRow(row: Record<string, unknown> | undefined): AppKnowledgeJobVi
     promptVersion: positiveInteger(row.prompt_version, "prompt version"),
     cancelRequested: row.cancel_requested === true,
     retryFailedOnly: row.retry_failed_only === true,
+    ...(row.design_system_seed_outcome == null ? {} : {
+      designSystemSeedOutcome: row.design_system_seed_outcome as SeedDesignSystemResult,
+    }),
     ...(row.evidence_manifest == null ? {} : { manifest: manifestFrom(row.evidence_manifest) }),
     ...(row.source_sha256 == null ? {} : { sourceSha256: sha256(text(row.source_sha256)) }),
     ...(row.error_code == null ? {} : { errorCode: text(row.error_code) }),
@@ -802,6 +812,23 @@ export function createAppKnowledgeStore(
       );
       if (result.rowCount !== 1) {
         throw new Error("App Knowledge job cannot accept a synthesis plan");
+      }
+    },
+
+    async recordDesignSystemSeedOutcome(jobId, outcome) {
+      positiveInteger(jobId, "job");
+      if (!["seeded", "replaced", "unchanged", "conflict"].includes(outcome)) {
+        throw new Error("Invalid Design System seed outcome");
+      }
+      const result = await runQuery(
+        `UPDATE app_knowledge_jobs SET design_system_seed_outcome = $2,
+           updated_at = now()
+         WHERE id = $1 AND status = 'done'
+         RETURNING id`,
+        [jobId, outcome],
+      );
+      if (result.rowCount !== 1) {
+        throw new Error("App Knowledge job cannot accept a Design System seed outcome");
       }
     },
 

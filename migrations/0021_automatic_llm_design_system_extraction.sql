@@ -6,6 +6,8 @@ ALTER TABLE app_knowledge_jobs
     CHECK (synthesis_done_count >= 0),
   ADD COLUMN synthesis_total_count INTEGER NOT NULL DEFAULT 0
     CHECK (synthesis_total_count >= 0),
+  ADD COLUMN design_system_seed_outcome TEXT
+    CHECK (design_system_seed_outcome IN ('seeded', 'replaced', 'unchanged', 'conflict')),
   ADD CONSTRAINT app_knowledge_synthesis_progress_check
     CHECK (synthesis_done_count <= synthesis_total_count);
 

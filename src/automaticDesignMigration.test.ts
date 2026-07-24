@@ -17,6 +17,7 @@ test("migration 0021 adds automatic design-generation provenance", () => {
   assert.match(sql, /app_knowledge_automatic_generation_identity/);
   assert.match(sql, /synthesis_done_count INTEGER NOT NULL DEFAULT 0/);
   assert.match(sql, /synthesis_total_count INTEGER NOT NULL DEFAULT 0/);
+  assert.match(sql, /design_system_seed_outcome TEXT/);
   assert.match(sql, /'merging'/);
   assert.match(sql, /origin IN \('observed', 'automatic', 'imported'\)/);
 });

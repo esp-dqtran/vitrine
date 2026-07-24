@@ -379,3 +379,18 @@ test("finds a reusable crop by exact source region and model identity", async ()
     2,
   ]);
 });
+
+test("records the safe working-copy seed outcome on a completed generation job", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result([{ id: 9 }], 1);
+  };
+  const store = createAppKnowledgeStore(query);
+
+  await store.recordDesignSystemSeedOutcome(9, "conflict");
+
+  assert.match(calls[0].sql, /design_system_seed_outcome = \$2/);
+  assert.match(calls[0].sql, /status = 'done'/);
+  assert.deepEqual(calls[0].values, [9, "conflict"]);
+});

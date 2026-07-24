@@ -12,6 +12,11 @@ import {
   planDesignSystemChunks,
 } from "./appKnowledgeDesignSystem.ts";
 import { deriveComponentCrops } from "./appKnowledgeCrop.ts";
+import { projectAppKnowledgeDesignSystem } from "./appKnowledgeProjector.ts";
+import {
+  seedDesignSystemWorkingCopy,
+  type SeedDesignSystemWorkingCopyInput,
+} from "./designSystemWorkingCopy.ts";
 import {
   enrichOrderedFlows,
   parseAppKnowledgeFlowSynthesisResult,
@@ -356,6 +361,9 @@ export function createAppKnowledgeService(deps: {
   designSystemChunkBytes?: number;
   designSystemChunkConcurrency?: number;
   flowSynthesisChunkBytes?: number;
+  seedDesignSystemWorkingCopy?(
+    input: SeedDesignSystemWorkingCopyInput,
+  ): Promise<"seeded" | "replaced" | "unchanged" | "conflict">;
 }): { generate(jobId: string): Promise<AppKnowledgeJobStatus | undefined> } {
   const screenConcurrency = deps.screenConcurrency ?? 3;
   const flowConcurrency = deps.flowConcurrency ?? 2;
@@ -727,7 +735,18 @@ export function createAppKnowledgeService(deps: {
         await deps.store.updateProgress(jobId, "saving", job.totalCount);
         const saved = await deps.store.completeGeneration(jobId, snapshot);
         await deps.store.attachCropsToRevision(jobId, saved.id);
-        void crops;
+        const candidate = projectAppKnowledgeDesignSystem(saved, crops);
+        const seedOutcome = await (
+          deps.seedDesignSystemWorkingCopy ?? seedDesignSystemWorkingCopy
+        )({
+          app: job.target.app,
+          platform: job.target.platform,
+          candidate,
+          captureVersionId: job.target.captureVersionId,
+          sourceAppKnowledgeRevisionId: saved.id,
+          generatedAt: candidate.generatedAt,
+        });
+        await deps.store.recordDesignSystemSeedOutcome(jobId, seedOutcome);
         return saved.reviewStatus === "draft" ? "done" : "error";
       } catch (error) {
         const cancellationReason = cancellation.signal.reason;
