@@ -39,6 +39,17 @@ test('keeps Sites routes ahead of Apps branches and free from job-list reads', a
   assert.doesNotMatch(sitesSource, /setInterval|setTimeout/);
 });
 
+test('renders Apps and Sites through the shared reference gallery shell', async () => {
+  const [appSource, sitesSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(appSource, /from ['"]\.\/components\/ReferenceGalleryShell['"]/);
+  assert.match(appSource, /<ReferenceGalleryShell[\s\S]*active="apps"/);
+  assert.match(sitesSource, /<ReferenceGalleryShell[\s\S]*active="sites"/);
+});
+
 test('keeps the sticky Apps search container background transparent', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 

@@ -23,7 +23,8 @@ import { FeatureDocumentPage } from './components/FeatureDocumentPage.tsx';
 import { AdvancedSearchPage } from './components/AdvancedSearchPage.tsx';
 import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
 import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
-import { GalleryCardSkeleton, GalleryToolbar } from './components/GalleryToolbar';
+import { GalleryCardSkeleton } from './components/GalleryToolbar';
+import { ReferenceGalleryShell } from './components/ReferenceGalleryShell';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
@@ -223,7 +224,14 @@ export function App() {
   }
 
   if (route.name === 'sites') {
-    return frame(<SitesPage isAdmin={isAdmin} query={siteQuery} onQueryChange={setSiteQuery} />);
+    return frame(
+      <SitesPage
+        isAdmin={isAdmin}
+        query={siteQuery}
+        onQueryChange={setSiteQuery}
+        memberControls={!isAdmin ? accountControls : undefined}
+      />,
+    );
   }
   if (route.name === 'site-version') {
     return frame(
@@ -269,7 +277,7 @@ export function App() {
     );
   }
 
-  if ((route.name === 'app' && (detailGateLoading || detailLoading)) || (route.name === 'apps' && appsLoading)) {
+  if (route.name === 'app' && (detailGateLoading || detailLoading)) {
     return frame(
       <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}>
         {isAdmin && <PageHeader title="References" description="Browse app and website design references." />}
@@ -281,6 +289,18 @@ export function App() {
           {Array.from({ length: 9 }, (_, i) => <GalleryCardSkeleton key={i} index={i} />)}
         </div>
       </div>,
+    );
+  }
+
+  if (route.name === 'apps' && appsLoading) {
+    return frame(
+      <ReferenceGalleryShell
+        active="apps"
+        isAdmin={isAdmin}
+        toolbar={<Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />}
+        memberControls={!isAdmin ? accountControls : undefined}
+        loading
+      />,
     );
   }
 
@@ -326,24 +346,40 @@ export function App() {
 
   if (route.name === 'apps' && (appsError || !apps || apps.length === 0)) {
     return frame(
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: '20px 28px 0', width: '100%' }}>
-          {!isAdmin && accountControls}
-          {isAdmin && <ProgressBanner />}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: 24 }}>
-          <EmptyState
-            title={appsError ? 'Could not load crawled screens' : 'No screens crawled yet'}
-            description={
-              appsError
-                ? `The catalog could not be loaded: ${appsError}`
-                : isAdmin
-                  ? 'Import captured web screens to build the first observed design system.'
-                  : 'No curated web apps have been published yet.'
-            }
+      <>
+        <ReferenceGalleryShell
+          active="apps"
+          isAdmin={isAdmin}
+          headerAction={isAdmin ? <Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} /> : undefined}
+          toolbar={
+            <SearchTrigger
+              label="Search apps, screens, UI elements, flows…"
+              activeCategory={cat}
+              onOpen={() => void openPalette()}
+              onClearCategory={() => setCat('All')}
+              mode={advancedSearchEnabled ? 'advanced' : 'legacy'}
+            />
+          }
+          memberControls={!isAdmin ? accountControls : undefined}
+          beforeCount={isAdmin ? <ProgressBanner /> : undefined}
+          state={{
+            title: appsError ? 'Could not load crawled screens' : 'No screens crawled yet',
+            description: appsError
+              ? `The catalog could not be loaded: ${appsError}`
+              : isAdmin
+                ? 'Import captured web screens to build the first observed design system.'
+                : 'No curated web apps have been published yet.',
+            role: appsError ? 'alert' : undefined,
+          }}
+        />
+        {isAdmin && (
+          <ImportDialog
+            isOpen={importOpen}
+            onClose={() => setImportOpen(false)}
+            submitImport={submitUrlImport}
           />
-        </div>
-      </div>,
+        )}
+      </>,
     );
   }
 
@@ -386,36 +422,12 @@ export function App() {
           key="gallery"
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}
         >
-          {isAdmin && (
-            <PageHeader
-              title="References"
-              description="Browse app and website design references."
-              action={<Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} />}
-            />
-          )}
-          <ReferenceTypeTabs active="apps" />
-          <GalleryToolbar>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              {!isAdmin && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9, flex: '0 0 auto' }}>
-                  <div
-                    style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: 8,
-                      background: 'var(--color-accent)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />
-                  </div>
-                  <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
-                </div>
-              )}
+          <ReferenceGalleryShell
+            active="apps"
+            isAdmin={isAdmin}
+            headerAction={isAdmin ? <Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} /> : undefined}
+            toolbar={
               <SearchTrigger
                 label={q.trim() || cat !== 'All' ? `${list.length} apps · search or filter…` : 'Search apps, screens, UI elements, flows…'}
                 activeCategory={cat}
@@ -423,31 +435,40 @@ export function App() {
                 onClearCategory={() => setCat('All')}
                 mode={advancedSearchEnabled ? 'advanced' : 'legacy'}
               />
-              {!isAdmin && accountControls}
-            </div>
-          </GalleryToolbar>
-
-          {isAdmin && <ProgressBanner />}
-
-          {searchError && <div role="alert" style={{ margin: '10px 0', color: 'var(--color-text-danger)' }}>{searchError}</div>}
-          {q.trim() && searchResult && (
-            <SearchResults
-              result={searchResult}
-              filters={filters}
-              onFiltersChange={setFilters}
-              onOpen={(appId) => void openApp(appId)}
-              collections={collections}
-              onCollectionsChange={setCollections}
-            />
-          )}
-
-          <div style={{ padding: '6px 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
-            {isAdmin && !q.trim() && cat === 'All' && totalApps !== null
+            }
+            memberControls={!isAdmin ? accountControls : undefined}
+            beforeCount={
+              <>
+                {isAdmin ? <ProgressBanner /> : null}
+                {searchError ? <div role="alert" style={{ margin: '10px 0', color: 'var(--color-text-danger)' }}>{searchError}</div> : null}
+                {q.trim() && searchResult ? (
+                  <SearchResults
+                    result={searchResult}
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    onOpen={(appId) => void openApp(appId)}
+                    collections={collections}
+                    onCollectionsChange={setCollections}
+                  />
+                ) : null}
+              </>
+            }
+            countLabel={
+              isAdmin && !q.trim() && cat === 'All' && totalApps !== null
               ? `Showing ${list.length} of ${totalApps} apps`
-              : `${list.length} apps`}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
+              : `${list.length} apps`
+            }
+            trailing={
+              <>
+                {hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
+                {loadingMore && (
+                  <div role="status" aria-label="Loading" style={{ display: 'flex', justifyContent: 'center', padding: '0 0 40px' }}>
+                    <Spinner size="sm" aria-hidden="true" />
+                  </div>
+                )}
+              </>
+            }
+          >
             {list.map((r) => (
               <AppCard
                 key={r.slug}
@@ -457,13 +478,7 @@ export function App() {
                 progressLabel={`${r.analyzed}/${r.captured} analyzed`}
               />
             ))}
-          </div>
-          {hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
-          {loadingMore && (
-            <div role="status" aria-label="Loading" style={{ display: 'flex', justifyContent: 'center', padding: '0 0 40px' }}>
-              <Spinner size="sm" aria-hidden="true" />
-            </div>
-          )}
+          </ReferenceGalleryShell>
         </motion.div>
       )}
     </AnimatePresence>
