@@ -69,7 +69,10 @@ async function waitForStableAntigravityReply(
   stableMs: number,
   signal?: AbortSignal,
 ): Promise<string> {
-  const replies = page.locator(".leading-relaxed.select-text.text-sm");
+  const replies = page.locator([
+    ".leading-relaxed.select-text.text-sm",
+    '[aria-label="Agent response"] .select-text',
+  ].join(", "));
   const loading = page.locator('[data-testid="agent-loading"]');
   const deadline = Date.now() + timeoutMs;
   let previous = "";

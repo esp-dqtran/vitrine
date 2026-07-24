@@ -137,3 +137,54 @@ test("drives a fresh Antigravity conversation with a genuine image attachment", 
     await browser.close();
   }
 });
+
+test("accepts Antigravity file-style responses rendered outside the legacy reply class", async () => {
+  const module = await import("./antigravityChat.ts") as Record<string, unknown>;
+  const bindSession = module.bindAntigravityChatSession as (
+    page: Page,
+    options: {
+      modelLabel: string;
+      responseTimeoutMs: number;
+      stableMs: number;
+      close(): Promise<void>;
+    },
+  ) => ChatSession;
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  try {
+    await page.setContent(`
+      <button aria-label="New Conversation">New</button>
+      <button aria-label="Select model, current: Gemini 3.6 Flash (High)">Model</button>
+      <div aria-label="Message input" contenteditable="true"></div>
+      <div data-testid="agent-loading" hidden>Working.</div>
+      <div aria-label="Agent response"><pre class="select-text"></pre></div>
+      <script>
+        const editor = document.querySelector('[aria-label="Message input"]');
+        editor.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          const loading = document.querySelector('[data-testid="agent-loading"]');
+          loading.hidden = false;
+          setTimeout(() => {
+            document.querySelector('[aria-label="Agent response"] .select-text').textContent =
+              '{"componentCandidates":[],"designLanguage":{"color":[]}}';
+            loading.remove();
+          }, 10);
+        });
+      </script>
+    `);
+    const session = bindSession(page, {
+      modelLabel: "Gemini 3.6 Flash (High)",
+      responseTimeoutMs: 500,
+      stableMs: 20,
+      close: async () => {},
+    });
+
+    assert.equal(
+      await session.ask("merge"),
+      '{"componentCandidates":[],"designLanguage":{"color":[]}}',
+    );
+  } finally {
+    await browser.close();
+  }
+});
