@@ -7,10 +7,13 @@ import {
   type DatabaseQuery,
 } from "./appKnowledgeStore.ts";
 import {
+  automaticAppKnowledgeAllowlistFromEnvironment,
+  completeCatalogCrawlAndHandoff,
   ensureAutomaticAppKnowledgeJob,
   reconcileQueuedAppKnowledgeJobs,
   type AutomaticAppKnowledgeDependencies,
   type AutomaticAppKnowledgeTarget,
+  type CatalogAutomaticHandoffJob,
 } from "./appKnowledgeAutomatic.ts";
 import type { Job } from "./queue.ts";
 
@@ -266,6 +269,19 @@ test("automatic generation is disabled or allowlisted before any mutation", asyn
   assert.equal(excluded.createdDurableJobs.length, 0);
 });
 
+test("parses the optional automatic app and app-platform allowlist", () => {
+  assert.equal(
+    automaticAppKnowledgeAllowlistFromEnvironment({}),
+    undefined,
+  );
+  assert.deepEqual(
+    automaticAppKnowledgeAllowlistFromEnvironment({
+      APP_KNOWLEDGE_AUTO_ALLOWLIST: "linear, figma/web, linear",
+    }),
+    new Set(["linear", "figma/web"]),
+  );
+});
+
 test("reconciliation skips active transports and bounds queued work", async () => {
   const h = automaticDependencies();
   const first = await ensureAutomaticAppKnowledgeJob(target(), h.dependencies);
@@ -383,4 +399,63 @@ test("the database reconciler query is bounded and ordered by creation time", as
   assert.match(calls[0].sql, /status = 'queued'/);
   assert.match(calls[0].sql, /ORDER BY j\.created_at, j\.id/);
   assert.deepEqual(calls[0].values, [25]);
+});
+
+test("catalog completion is durable before automatic handoff starts", async () => {
+  const events: string[] = [];
+  const catalogJob: CatalogAutomaticHandoffJob & {
+    repair?: { screens: boolean; uiElements: boolean; flows: boolean };
+  } = {
+    slug: "linear",
+    platform: "web" as const,
+    status: "pending",
+    repair: { screens: false, uiElements: false, flows: false },
+  };
+
+  const result = await completeCatalogCrawlAndHandoff({
+    job: catalogJob,
+    saveState: () => {
+      assert.equal(catalogJob.status, "done");
+      assert.equal("repair" in catalogJob, false);
+      events.push("saved");
+    },
+    log: (message) => events.push(`log:${message}`),
+    handoff: async () => {
+      events.push("automatic");
+    },
+    now: () => "2026-07-24T00:00:00.000Z",
+  });
+
+  assert.deepEqual(events, [
+    "saved",
+    "log:Done: linear (web)",
+    "automatic",
+  ]);
+  assert.equal(result.warning, undefined);
+  assert.equal(catalogJob.finishedAt, "2026-07-24T00:00:00.000Z");
+});
+
+test("catalog automatic handoff failure remains a bounded warning", async () => {
+  const logs: string[] = [];
+  const catalogJob: CatalogAutomaticHandoffJob = {
+    slug: "linear",
+    platform: "web" as const,
+    status: "pending",
+  };
+
+  const result = await completeCatalogCrawlAndHandoff({
+    job: catalogJob,
+    saveState: () => {},
+    log: (message) => logs.push(message),
+    handoff: async () => {
+      throw new Error("broker token=TOPSECRET");
+    },
+  });
+
+  assert.equal(catalogJob.status, "done");
+  assert.equal(result.warning, "Automatic analysis enqueue failed");
+  assert.deepEqual(logs, [
+    "Done: linear (web)",
+    "Automatic analysis enqueue failed",
+  ]);
 });

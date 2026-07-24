@@ -82,6 +82,16 @@ function enabled(dependencies: AutomaticAppKnowledgeDependencies): boolean {
   return (dependencies.environment ?? process.env).APP_KNOWLEDGE_AUTO_GENERATE === "1";
 }
 
+export function automaticAppKnowledgeAllowlistFromEnvironment(
+  environment: Record<string, string | undefined> = process.env,
+): ReadonlySet<string> | undefined {
+  const values = environment.APP_KNOWLEDGE_AUTO_ALLOWLIST
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return values?.length ? new Set(values) : undefined;
+}
+
 function allowed(
   input: AutomaticAppKnowledgeTarget,
   dependencies: AutomaticAppKnowledgeDependencies,
@@ -153,6 +163,38 @@ export interface AutomaticAppKnowledgeReconciliation {
   published: number;
   skipped: number;
   failed: number;
+}
+
+export interface CatalogAutomaticHandoffJob {
+  slug: string;
+  platform: "ios" | "android" | "web";
+  status: string;
+  repair?: unknown;
+  finishedAt?: string;
+}
+
+export async function completeCatalogCrawlAndHandoff<
+  T extends CatalogAutomaticHandoffJob,
+>(input: {
+  job: T;
+  saveState(): void;
+  log(message: string): void;
+  handoff(): Promise<unknown>;
+  now?: () => string;
+}): Promise<{ warning?: string }> {
+  delete input.job.repair;
+  input.job.status = "done";
+  input.job.finishedAt = (input.now ?? (() => new Date().toISOString()))();
+  input.saveState();
+  input.log(`Done: ${input.job.slug} (${input.job.platform})`);
+  try {
+    await input.handoff();
+    return {};
+  } catch {
+    const warning = "Automatic analysis enqueue failed";
+    input.log(warning);
+    return { warning };
+  }
 }
 
 export async function reconcileQueuedAppKnowledgeJobs(

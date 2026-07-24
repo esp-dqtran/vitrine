@@ -1,5 +1,14 @@
-import { consumeJobs } from "../../../src/queue.ts";
-import { appKnowledgeEvidenceSource, insertImage, pool, query } from "../../../src/db.ts";
+import { consumeJobs, publishJob } from "../../../src/queue.ts";
+import {
+  appKnowledgeEvidenceSource,
+  createJob,
+  getJob,
+  insertImage,
+  listAppVersions,
+  pool,
+  query,
+  setJobStatus,
+} from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { attachImageObject, attachThumbnailObject, imageObjectById } from "../../../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
@@ -22,6 +31,11 @@ import { createAppKnowledgeStore } from "../../../src/appKnowledgeStore.ts";
 import { createAppKnowledgeService } from "../../../src/appKnowledgeService.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import { createBrowserAppKnowledgeGenerator } from "./appKnowledgeWorker.ts";
+import {
+  automaticAppKnowledgeAllowlistFromEnvironment,
+  ensureAutomaticAppKnowledgeJob,
+} from "../../../src/appKnowledgeAutomatic.ts";
+import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowledgeProviderConfig.ts";
 import {
   featureEvidenceManifestSha256,
   type FeatureEvidenceManifestItem,
@@ -129,6 +143,43 @@ const featureDocumentService = featureDocumentProvider ? createFeatureDocumentSe
 }) : undefined;
 
 const appKnowledgeStore = createAppKnowledgeStore();
+async function ensureAutomaticKnowledgeForCapture(
+  app: string,
+  platform: "ios" | "android" | "web",
+): Promise<void> {
+  if (process.env.APP_KNOWLEDGE_AUTO_GENERATE !== "1") return;
+  const version = (await listAppVersions(app, platform, false))
+    .find(({ status }) => status === "draft" || status === "in_review");
+  if (!version) throw new Error("Automatic App Knowledge capture version was not found");
+  const source = await appKnowledgeEvidenceSource({
+    app,
+    platform,
+    versionNumber: version.version_number,
+  });
+  if (!source) throw new Error("Automatic App Knowledge evidence was not found");
+  const prepared = await buildAppKnowledgeEvidenceManifest({
+    source,
+    objectStore,
+    overrides: await appKnowledgeStore.evidenceOverrides(version.id),
+  });
+  await ensureAutomaticAppKnowledgeJob({
+    app,
+    platform,
+    captureVersionId: version.id,
+    sourceSha256: prepared.sourceSha256,
+    providerModel: appKnowledgeProviderModelFromEnvironment(process.env),
+    promptVersion: 1,
+  }, {
+    environment: process.env,
+    allowlist: automaticAppKnowledgeAllowlistFromEnvironment(process.env),
+    store: appKnowledgeStore,
+    createTransportJob: () => createJob("generate-app-knowledge", {}),
+    getTransportJob: getJob,
+    setTransportJobStatus: setJobStatus,
+    publishJob,
+  });
+}
+
 const generateAppKnowledge = createBrowserAppKnowledgeGenerator({
   failProviderUnavailable: (runId) => appKnowledgeStore.failJob(
     Number(runId),
@@ -212,6 +263,7 @@ await startImportWorker({
         return featureDocumentService.generate(runId);
       },
       generateAppKnowledge,
+      ensureAutomaticAppKnowledgeJob: ensureAutomaticKnowledgeForCapture,
     }));
   },
 });

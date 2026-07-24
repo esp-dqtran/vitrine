@@ -24,7 +24,16 @@ process.env.MOBBIN_PROFILE_DIR = WORKER_ID && WORKER_ID !== "1"
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
-import { insertImage, pool, query } from "../src/db.ts";
+import {
+  appKnowledgeEvidenceSource,
+  createJob,
+  getJob,
+  insertImage,
+  listAppVersions,
+  pool,
+  query,
+  setJobStatus,
+} from "../src/db.ts";
 import { attachImageObject, attachThumbnailObject } from "../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../src/bulkDownload.ts";
@@ -44,6 +53,15 @@ import {
   type CatalogRepairPhases,
 } from "../src/progress.ts";
 import { launchMobbinContext } from "../src/crawler.ts";
+import { createAppKnowledgeStore } from "../src/appKnowledgeStore.ts";
+import { buildAppKnowledgeEvidenceManifest } from "../src/appKnowledgeEvidence.ts";
+import {
+  automaticAppKnowledgeAllowlistFromEnvironment,
+  completeCatalogCrawlAndHandoff,
+  ensureAutomaticAppKnowledgeJob,
+} from "../src/appKnowledgeAutomatic.ts";
+import { appKnowledgeProviderModelFromEnvironment } from "../src/appKnowledgeProviderConfig.ts";
+import { publishJob } from "../src/queue.ts";
 
 const STATE_PATH = WORKER_ID ? `data/catalog-import-state-${WORKER_ID}.json` : "data/catalog-import-state.json";
 const LOG_PREFIX = WORKER_ID ? `w${WORKER_ID}:` : "";
@@ -119,6 +137,44 @@ function log(message: string): void {
 }
 
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
+const appKnowledgeStore = createAppKnowledgeStore();
+async function ensureAutomaticKnowledgeForCapture(
+  app: string,
+  platform: Platform,
+): Promise<void> {
+  if (process.env.APP_KNOWLEDGE_AUTO_GENERATE !== "1") return;
+  const version = (await listAppVersions(app, platform, false))
+    .find(({ status }) => status === "draft" || status === "in_review");
+  if (!version) throw new Error("Automatic App Knowledge capture version was not found");
+  const source = await appKnowledgeEvidenceSource({
+    app,
+    platform,
+    versionNumber: version.version_number,
+  });
+  if (!source) throw new Error("Automatic App Knowledge evidence was not found");
+  const prepared = await buildAppKnowledgeEvidenceManifest({
+    source,
+    objectStore,
+    overrides: await appKnowledgeStore.evidenceOverrides(version.id),
+  });
+  await ensureAutomaticAppKnowledgeJob({
+    app,
+    platform,
+    captureVersionId: version.id,
+    sourceSha256: prepared.sourceSha256,
+    providerModel: appKnowledgeProviderModelFromEnvironment(process.env),
+    promptVersion: 1,
+  }, {
+    environment: process.env,
+    allowlist: automaticAppKnowledgeAllowlistFromEnvironment(process.env),
+    store: appKnowledgeStore,
+    createTransportJob: () => createJob("generate-app-knowledge", {}),
+    getTransportJob: getJob,
+    setTransportJobStatus: setJobStatus,
+    publishJob,
+  });
+}
+
 const storage: BulkObjectDependencies = {
   objectStore,
   insertImage,
@@ -224,9 +280,12 @@ for (const job of state.jobs) {
       if (error instanceof CatalogPersistenceError) job.repair = error.repair;
       throw error;
     }
-    delete job.repair;
-    job.status = "done";
-    log(`Done: ${job.slug} (${job.platform})`);
+    await completeCatalogCrawlAndHandoff({
+      job,
+      saveState: () => saveState(state),
+      log,
+      handoff: () => ensureAutomaticKnowledgeForCapture(job.slug, job.platform),
+    });
   } catch (error) {
     job.status = "failed";
     job.error = String((error as Error)?.message ?? error);

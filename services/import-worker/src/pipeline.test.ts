@@ -52,6 +52,103 @@ test("successful import creates a caption child linked to the import", async () 
   assert.deepEqual(h.statuses.map(([, status]) => status), ["running", "done"]);
 });
 
+test("starts automatic App Knowledge only after every crawl phase succeeds", async () => {
+  const events: string[] = [];
+  const statuses: Array<[string, string | undefined]> = [];
+  const handler = createPipelineHandler({
+    crawlBulkDownload: async (_url, _name, tab = "screens") => {
+      events.push(tab);
+      return { status: "done", discovered: 1, captured: 1 };
+    },
+    crawlFlowsDownload: async () => {
+      events.push("flows");
+      return { status: "done", discovered: 1, captured: 1 };
+    },
+    ensureAutomaticAppKnowledgeJob: async (app, platform) => {
+      events.push(`automatic:${app}:${platform}`);
+    },
+    createJob: async () => 101,
+    publishJob: async (published) => {
+      events.push(`publish:${published.type}`);
+    },
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (_id, status, message) => {
+      statuses.push([status, message]);
+    },
+  });
+
+  await handler({
+    type: "import-app",
+    name: "linear",
+    url: "https://mobbin.com/apps/a/b/screens",
+    platform: "web",
+    jobId: 7,
+  });
+
+  assert.deepEqual(events, [
+    "screens",
+    "ui-elements",
+    "flows",
+    "automatic:linear:web",
+    "publish:caption-app",
+  ]);
+  assert.deepEqual(statuses, [["running", undefined], ["done", undefined]]);
+});
+
+test("keeps crawl success and records a warning when automatic handoff fails", async () => {
+  const statuses: Array<[string, string | undefined]> = [];
+  const handler = createPipelineHandler({
+    crawlBulkDownload: async () => ({ status: "done", discovered: 1, captured: 1 }),
+    crawlFlowsDownload: async () => ({ status: "done", discovered: 1, captured: 1 }),
+    ensureAutomaticAppKnowledgeJob: async () => {
+      throw new Error("provider queue unavailable token=secret");
+    },
+    createJob: async () => 101,
+    publishJob: async () => {},
+    getJob: async () => ({ status: "queued" }) as never,
+    setJobStatus: async (_id, status, message) => {
+      statuses.push([status, message]);
+    },
+  });
+
+  await handler({
+    type: "import-app",
+    name: "linear",
+    url: "https://mobbin.com/apps/a/b/screens",
+    platform: "web",
+    jobId: 7,
+  });
+
+  assert.equal(statuses.at(-1)?.[0], "done");
+  assert.match(
+    statuses.at(-1)?.[1] ?? "",
+    /^Automatic analysis enqueue failed$/,
+  );
+  assert.doesNotMatch(statuses.at(-1)?.[1] ?? "", /secret|provider queue/i);
+});
+
+test("does not start automatic analysis from unaudited crawl counts", async () => {
+  let automatic = false;
+  const handler = createPipelineHandler({
+    crawlBulkDownload: async () => ({ status: "done" }),
+    crawlFlowsDownload: async () => ({ status: "done" }),
+    ensureAutomaticAppKnowledgeJob: async () => {
+      automatic = true;
+    },
+    createJob: async () => 101,
+    publishJob: async () => {},
+  });
+
+  await handler({
+    type: "import-app",
+    name: "linear",
+    url: "https://mobbin.com/apps/a/b/screens",
+    platform: "web",
+  });
+
+  assert.equal(automatic, false);
+});
+
 test("failed import does not create a caption child and remains retryable", async () => {
   const h = harness("error");
   await assert.rejects(

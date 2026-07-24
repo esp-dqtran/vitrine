@@ -43,11 +43,20 @@ const defaults = {
   generateAppKnowledge: async (_runId: string): Promise<AppKnowledgeJobStatus | undefined> => {
     throw new Error("App Knowledge service is not configured");
   },
+  ensureAutomaticAppKnowledgeJob: async (
+    _app: string,
+    _platform: "ios" | "android" | "web",
+  ): Promise<void> => {},
 };
 type PipelineDeps = typeof defaults;
 
 export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
   const deps = { ...defaults, ...overrides };
+  const verified = (outcome: StageOutcome): boolean =>
+    outcome.status === "done"
+    && Number.isSafeInteger(outcome.discovered)
+    && Number.isSafeInteger(outcome.captured)
+    && outcome.discovered === outcome.captured;
 
   async function enqueue(job: Job, parentId?: number): Promise<void> {
     const { type, jobId: _ignored, ...payload } = job;
@@ -82,8 +91,16 @@ export function createPipelineHandler(overrides: Partial<PipelineDeps> = {}) {
       const flows = await deps.crawlFlowsDownload(job.url, job.name, SUPPLEMENTARY_GRID_WAIT_MS, undefined, job.platform);
       if (flows.status === "cancelled") return flows;
 
+      let warning: string | undefined;
+      if (verified(screens) && verified(uiElements) && verified(flows)) {
+        try {
+          await deps.ensureAutomaticAppKnowledgeJob(job.name, job.platform);
+        } catch {
+          warning = "Automatic analysis enqueue failed";
+        }
+      }
       await enqueue({ type: "caption-app", name: job.name }, job.jobId);
-      return screens;
+      return warning ? { ...screens, message: warning } : screens;
     }
 
     if (job.type === "caption-app") {
