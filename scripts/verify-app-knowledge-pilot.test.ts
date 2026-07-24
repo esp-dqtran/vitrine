@@ -42,6 +42,21 @@ function fixture(): PilotVerifierInput {
         text: 'The dashboard exposes current priorities.',
         evidenceIds: ['SCREEN-1'],
       }],
+      designLanguage: {
+        color: [],
+        typography: [],
+        spacing: [],
+        radius: [],
+        border: [],
+        effects: [],
+        layout: [{ id: 'layout-1' }],
+        iconography: [],
+        imagery: [],
+        responsive: [],
+        content: [],
+        interaction: [],
+      },
+      componentCandidates: [{ status: 'candidate' }],
       flows: Array.from({ length: 5 }, (_, index) => ({
         id: `flow-${index + 1}`,
         evidenceIds: flowSteps
@@ -84,6 +99,10 @@ const cases: Array<[string, (input: PilotVerifierInput) => void, string]> = [
   ['silently missing eligible evidence', (input) => { input.evidenceRecords.pop(); }, 'eligible_evidence_complete'],
   ['unknown citation', (input) => { input.snapshot.claims[0]!.evidenceIds = ['SCREEN-404']; }, 'citations_known'],
   ['uncited observed claim', (input) => { input.snapshot.claims[0]!.evidenceIds = []; }, 'observed_inferred_cited'],
+  ['empty design language', (input) => { input.snapshot.designLanguage.layout = []; }, 'design_language_present'],
+  ['trusted component from full-page evidence', (input) => {
+    input.snapshot.componentCandidates[0]!.status = 'reviewed';
+  }, 'components_remain_candidates'],
   ['cache miss on repeated manifest', (input) => { input.repeatedManifest.cacheHits -= 1; }, 'repeated_manifest_cache'],
   ['untested lifecycle flag', (input) => { input.acceptance.auth = false; }, 'lifecycle_acceptance'],
   ['fewer than five reviewed Flows', (input) => { input.reviewedFlowIds.pop(); }, 'reviewed_flows'],

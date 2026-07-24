@@ -29,6 +29,10 @@ test("accepts raw JSON and one exact json fence", () => {
     parseBrowserJsonObject("```json\n{\"ok\":true}\n```"),
     { ok: true },
   );
+  assert.deepEqual(
+    parseBrowserJsonObject("json\n{\"ok\":true}"),
+    { ok: true },
+  );
 });
 
 test("rejects prose, multiple objects, arrays, and malformed JSON", () => {
@@ -84,6 +88,20 @@ test("uploads verified bytes and uses no attachment for synthesis", async () => 
     allowedEvidenceIds: ["SCREEN-1"],
     validationError: "",
   }, signal);
+  await provider.synthesizeDesignSystemChunk({
+    app: "15five",
+    platform: "web",
+    signals: [{ evidenceId: "SCREEN-1" }],
+    allowedEvidenceIds: ["SCREEN-1"],
+    validationError: "",
+  }, signal);
+  await provider.mergeDesignSystem({
+    app: "15five",
+    platform: "web",
+    fragments: [{ componentCandidates: [], designLanguage: {} }],
+    allowedEvidenceIds: ["SCREEN-1"],
+    validationError: "",
+  }, signal);
 
   assert.equal(provider.model, "chatgpt-browser");
   assert.deepEqual(calls[0].attachment, {
@@ -92,9 +110,13 @@ test("uploads verified bytes and uses no attachment for synthesis", async () => 
     buffer: Buffer.from("png"),
   });
   assert.equal(calls[1].attachment, undefined);
+  assert.equal(calls[2].attachment, undefined);
+  assert.equal(calls[3].attachment, undefined);
   assert.equal(calls[0].signal, signal);
   assert.match(calls[0].prompt, /SCREEN-1/);
   assert.match(calls[1].prompt, /captureVersionId/);
+  assert.match(calls[2].prompt, /signals/);
+  assert.match(calls[3].prompt, /fragments/);
 });
 
 test("maps the ChatGPT rate-limit modal to a non-retryable provider failure", async () => {
@@ -157,4 +179,32 @@ test("requires one or two browser sessions", () => {
     ]),
     /one or two sessions/i,
   );
+});
+
+test("Antigravity provider sends real image bytes and records the selected Gemini model", async () => {
+  const module = await import("./appKnowledgeBrowserProvider.ts") as Record<string, unknown>;
+  assert.equal(typeof module.createAntigravityBrowserAppKnowledgeProvider, "function");
+  const createProvider = module.createAntigravityBrowserAppKnowledgeProvider as
+    ((session: ChatSession) => ReturnType<typeof createChatGptBrowserAppKnowledgeProvider>);
+  let uploaded: string | ChatAttachment | undefined;
+  const session: ChatSession = {
+    async ask(_prompt, file) {
+      uploaded = file;
+      return '{"ok":true}';
+    },
+    close: async () => {},
+  };
+
+  const provider = createProvider(session);
+  await provider.analyzeEvidence(evidencePrompt("SCREEN-ANTIGRAVITY"), {
+    bytes: Buffer.from("real-image"),
+    contentType: "image/png",
+  }, AbortSignal.timeout(1_000));
+
+  assert.equal(provider.model, "gemini-3.6-flash-high");
+  assert.deepEqual(uploaded, {
+    name: "app-knowledge.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("real-image"),
+  });
 });

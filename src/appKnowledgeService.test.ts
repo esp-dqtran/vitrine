@@ -2,8 +2,16 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import sharp from "sharp";
-import type { AppKnowledgeSnapshot } from "./appKnowledge.ts";
-import type { AppKnowledgeProvider } from "./appKnowledgeProvider.ts";
+import type {
+  AppKnowledgeDesignSystemResult,
+  AppKnowledgeSnapshot,
+} from "./appKnowledge.ts";
+import type {
+  AppKnowledgeDesignSystemChunkPrompt,
+  AppKnowledgeDesignSystemMergePrompt,
+  AppKnowledgeProvider,
+} from "./appKnowledgeProvider.ts";
+import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts";
 import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
 import {
   createAppKnowledgeService,
@@ -130,12 +138,59 @@ function synthesized(evidenceId: string): AppKnowledgeSnapshot {
   };
 }
 
+function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesignSystemResult {
+  const claim = {
+    id: `language-layout-${suffix}`,
+    kind: "observed" as const,
+    text: "Primary content uses a consistent page frame.",
+    evidenceIds: [evidenceId],
+    confidence: 0.9,
+  };
+  return {
+    componentCandidates: [{
+      id: `component-page-frame-${suffix}`,
+      name: "Page frame",
+      category: "layout",
+      purpose: "Frame primary application content",
+      anatomy: ["Navigation", "Content"],
+      observedProperties: ["Consistent content frame"],
+      variants: [],
+      states: [],
+      responsiveEvidence: [],
+      evidenceIds: [evidenceId],
+      visualRegions: ["Page"],
+      designLanguageCandidateIds: [claim.id],
+      claims: [],
+      confidence: 0.9,
+      status: "candidate",
+    }],
+    designLanguage: {
+      color: [],
+      typography: [],
+      spacing: [],
+      radius: [],
+      border: [],
+      effects: [],
+      layout: [claim],
+      iconography: [],
+      imagery: [],
+      responsive: [],
+      content: [],
+      interaction: [],
+    },
+  };
+}
+
 async function harness(options: {
   drift?: boolean;
   failEvidenceId?: string;
+  failEvidenceKind?: "screen" | "flow_step" | "ui_element";
   cachedEvidenceId?: string;
   blockEvidenceId?: string;
   rateLimitEvidenceId?: string;
+  designSystemChunkBytes?: number;
+  failDesignChunkFromCall?: number;
+  failDesignChunkAttempts?: number;
 } = {}) {
   const bodies = new Map<number, Buffer>([
     [1, await png(10)],
@@ -177,6 +232,15 @@ async function harness(options: {
   let completed: AppKnowledgeSnapshot | undefined;
   let stale = false;
   let failed: { code: string; message: string } | undefined;
+  const progress: Array<{ stage: AppKnowledgeWorkerJob["stage"]; done: number }> = [];
+  const designSystemChunks = new Map<string, {
+    key: string;
+    ordinal: number;
+    status: "pending" | "complete" | "failed";
+    fragment?: Record<string, unknown>;
+    attemptCount: number;
+    errorCode?: string;
+  }>();
   const job: AppKnowledgeWorkerJob = {
     id: 1,
     snapshotId: 1,
@@ -219,6 +283,7 @@ async function harness(options: {
     async updateProgress(_jobId: number, stage: AppKnowledgeWorkerJob["stage"], done: number) {
       job.stage = stage;
       job.doneCount = done;
+      progress.push({ stage, done });
     },
     async evidenceRecords() {
       return [...records.values()].map((record) => structuredClone(record));
@@ -243,6 +308,43 @@ async function harness(options: {
     },
     async recordEvidenceFailure(_jobId: number, input: { evidenceId: string; errorCode: string; attemptCount: number }) {
       records.set(input.evidenceId, { evidenceId: input.evidenceId, status: "failed", attemptCount: input.attemptCount, errorCode: input.errorCode });
+    },
+    async prepareDesignSystemChunks(_jobId: number, chunks: Array<{ key: string; ordinal: number }>) {
+      for (const chunk of chunks) {
+        if (!designSystemChunks.has(chunk.key)) {
+          designSystemChunks.set(chunk.key, {
+            ...chunk,
+            status: "pending",
+            attemptCount: 0,
+          });
+        }
+      }
+      return [...designSystemChunks.values()]
+        .sort((left, right) => left.ordinal - right.ordinal)
+        .map((chunk) => structuredClone(chunk));
+    },
+    async designSystemChunkRecords() {
+      return [...designSystemChunks.values()]
+        .sort((left, right) => left.ordinal - right.ordinal)
+        .map((chunk) => structuredClone(chunk));
+    },
+    async recordDesignSystemChunkResult(_jobId: number, input: { key: string; fragment: Record<string, unknown>; attemptCount: number }) {
+      const chunk = designSystemChunks.get(input.key)!;
+      designSystemChunks.set(input.key, {
+        ...chunk,
+        status: "complete",
+        fragment: structuredClone(input.fragment),
+        attemptCount: input.attemptCount,
+      });
+    },
+    async recordDesignSystemChunkFailure(_jobId: number, input: { key: string; errorCode: string; attemptCount: number }) {
+      const chunk = designSystemChunks.get(input.key)!;
+      designSystemChunks.set(input.key, {
+        ...chunk,
+        status: "failed",
+        attemptCount: input.attemptCount,
+        errorCode: input.errorCode,
+      });
     },
     async completeGeneration(_jobId: number, snapshot: AppKnowledgeSnapshot) {
       completed = snapshot;
@@ -271,6 +373,8 @@ async function harness(options: {
     async delete() { return false; },
   };
   const calls: Array<{ evidenceId: string; previous: string | null }> = [];
+  const designChunkCalls: AppKnowledgeDesignSystemChunkPrompt[] = [];
+  const designMergeCalls: AppKnowledgeDesignSystemMergePrompt[] = [];
   const providerGate = Promise.withResolvers<void>();
   let active = 0;
   let maximum = 0;
@@ -299,11 +403,32 @@ async function harness(options: {
       if (prompt.evidenceId === options.rateLimitEvidenceId) {
         throw new EvidenceAnalysisError("provider_rate_limited");
       }
-      if (prompt.evidenceId === options.failEvidenceId) throw new Error("provider exploded secret /tmp/key");
+      if (
+        prompt.evidenceId === options.failEvidenceId
+        || prompt.kind === options.failEvidenceKind
+      ) throw new Error("provider exploded secret /tmp/key");
       return analysis(prompt.evidenceId);
     },
     async synthesize(prompt) {
       return synthesized(prompt.allowedEvidenceIds[0]);
+    },
+    async synthesizeDesignSystemChunk(prompt) {
+      designChunkCalls.push(structuredClone(prompt));
+      const callNumber = designChunkCalls.length;
+      if (
+        options.failDesignChunkFromCall !== undefined
+        && callNumber >= options.failDesignChunkFromCall
+        && callNumber < options.failDesignChunkFromCall
+          + (options.failDesignChunkAttempts ?? 3)
+      ) throw new Error("temporary design-system failure");
+      return designSystem(
+        prompt.allowedEvidenceIds[0],
+        `chunk-${designChunkCalls.length}`,
+      );
+    },
+    async mergeDesignSystem(prompt) {
+      designMergeCalls.push(structuredClone(prompt));
+      return designSystem(prompt.allowedEvidenceIds[0]);
     },
   };
   const service = createAppKnowledgeService({
@@ -319,6 +444,7 @@ async function harness(options: {
     flowConcurrency: 2,
     timeoutMs: 20,
     cancelCheckIntervalMs: 1,
+    designSystemChunkBytes: options.designSystemChunkBytes,
   });
   return {
     service,
@@ -326,6 +452,10 @@ async function harness(options: {
     records,
     cache,
     calls,
+    designChunkCalls,
+    designMergeCalls,
+    designSystemChunks,
+    progress,
     get maximum() { return maximum; },
     get completed() { return completed; },
     get stale() { return stale; },
@@ -334,6 +464,105 @@ async function harness(options: {
     cancel: () => { job.cancelRequested = true; },
   };
 }
+
+function seedCompletedScreens(
+  state: Awaited<ReturnType<typeof harness>>,
+  count: number,
+  duplicateFlowStepCount = 0,
+): void {
+  const screenManifest: AppKnowledgeEvidenceManifestItem[] = Array.from(
+    { length: count },
+    (_, index) => {
+    const evidenceId = `SCREEN-${index + 1}`;
+    state.records.set(evidenceId, {
+      evidenceId,
+      status: "complete",
+      analysis: analysis(evidenceId),
+      attemptCount: 1,
+    });
+    return {
+      evidenceId,
+      imageId: index + 1,
+      kind: "screen" as const,
+      eligibility: "eligible" as const,
+      reason: "screen_capture",
+      normalizedVisualSha256: `${(index + 1).toString(16).padStart(64, "0")}`,
+      capturedAt: "2026-07-23T00:00:00.000Z",
+      object: {
+        sha256: "a".repeat(64),
+        byteSize: 1,
+        contentType: "image/png",
+      },
+    };
+    },
+  );
+  const duplicateFlows: AppKnowledgeEvidenceManifestItem[] = Array.from(
+    { length: duplicateFlowStepCount },
+    (_, index) => ({
+    evidenceId: `FLOW-DUPLICATE-${index + 1}`,
+    imageId: 10_000 + index,
+    kind: "flow_step" as const,
+    eligibility: "duplicate" as const,
+    reason: "visual_duplicate",
+    duplicateOfEvidenceId: "SCREEN-1",
+    capturedAt: "2026-07-23T00:00:00.000Z",
+    object: {
+      sha256: "a".repeat(64),
+      byteSize: 1,
+      contentType: "image/png",
+    },
+    }),
+  );
+  state.job.manifest = [...screenManifest, ...duplicateFlows];
+  state.job.sourceSha256 = "0".repeat(64);
+  state.job.totalCount = count;
+}
+
+test("synthesizes 610 completed screens in bounded chunks without expanding flow duplicates", async () => {
+  const state = await harness({ designSystemChunkBytes: 24_000 });
+  seedCompletedScreens(state, 610, 754);
+
+  assert.equal(await state.service.generate("1"), "done", JSON.stringify(state.failed));
+  assert.equal(state.calls.length, 0, "completed screen analyses must be reused");
+  assert.equal(
+    state.designChunkCalls.flatMap(({ allowedEvidenceIds }) => allowedEvidenceIds).length,
+    610,
+  );
+  assert.ok(state.designChunkCalls.length > 1);
+  assert.equal(state.designMergeCalls.length, 1);
+  assert.equal(state.completed?.screens.length, 610);
+  assert.equal(state.completed?.flows.length, 0);
+  assert.ok(state.completed?.designLanguage.layout.length);
+});
+
+test("reuses completed design-system chunks and retries only the failed chunk after resume", async () => {
+  const state = await harness({
+    designSystemChunkBytes: 1_000,
+    failDesignChunkFromCall: 2,
+    failDesignChunkAttempts: 3,
+  });
+  seedCompletedScreens(state, 8);
+
+  assert.equal(await state.service.generate("1"), "error");
+  const firstChunkEvidence = state.designChunkCalls[0].allowedEvidenceIds;
+  assert.equal(
+    [...state.designSystemChunks.values()].filter(({ status }) => status === "complete").length,
+    1,
+  );
+  assert.equal(
+    [...state.designSystemChunks.values()].filter(({ status }) => status === "failed").length,
+    1,
+  );
+
+  assert.equal(await state.service.generate("1"), "done", JSON.stringify(state.failed));
+  assert.equal(
+    state.designChunkCalls.filter(({ allowedEvidenceIds }) =>
+      JSON.stringify(allowedEvidenceIds) === JSON.stringify(firstChunkEvidence)).length,
+    1,
+    "the completed first chunk must not be sent to the provider again",
+  );
+  assert.ok([...state.designSystemChunks.values()].every(({ status }) => status === "complete"));
+});
 
 test("prepares, quarantines UI Elements, deduplicates visuals, and keeps Flow steps sequential", async () => {
   const state = await harness();
@@ -350,11 +579,29 @@ test("prepares, quarantines UI Elements, deduplicates visuals, and keeps Flow st
 });
 
 test("persists an evidence failure, synthesizes a partial draft, and redacts failure detail", async () => {
-  const state = await harness({ failEvidenceId: "SCREEN-1" });
+  const state = await harness({ failEvidenceKind: "flow_step" });
   assert.equal(await state.service.generate("1"), "done");
-  assert.equal(state.records.get("SCREEN-1")?.status, "failed");
-  assert.equal(state.completed?.coverage.failed, 1);
+  assert.equal(
+    [...state.records.values()].filter(({ status }) => status === "failed").length,
+    2,
+  );
+  assert.equal(state.completed?.coverage.failed, 2);
   assert.equal(state.failed, undefined);
+});
+
+test("does not double-count a failed evidence row when a resumed worker recovers it", async () => {
+  const state = await harness();
+  state.records.set("SCREEN-1", {
+    evidenceId: "SCREEN-1",
+    status: "failed",
+    attemptCount: 3,
+    errorCode: "output_invalid",
+  });
+
+  assert.equal(await state.service.generate("1"), "done");
+  const analyzing = state.progress.filter(({ stage }) => stage === "analyzing");
+  assert.deepEqual(analyzing.slice(0, 2).map(({ done }) => done), [0, 1]);
+  assert.equal(state.records.get("SCREEN-1")?.status, "complete");
 });
 
 test("marks source drift stale before save", async () => {

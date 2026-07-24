@@ -25,6 +25,22 @@ export interface AppKnowledgeSynthesisPrompt {
   validationError: string;
 }
 
+export interface AppKnowledgeDesignSystemChunkPrompt {
+  app: string;
+  platform: "ios" | "android" | "web";
+  signals: unknown[];
+  allowedEvidenceIds: string[];
+  validationError: string;
+}
+
+export interface AppKnowledgeDesignSystemMergePrompt {
+  app: string;
+  platform: "ios" | "android" | "web";
+  fragments: unknown[];
+  allowedEvidenceIds: string[];
+  validationError: string;
+}
+
 export interface AppKnowledgeProvider {
   readonly model: string;
   analyzeEvidence(
@@ -36,6 +52,14 @@ export interface AppKnowledgeProvider {
     prompt: AppKnowledgeSynthesisPrompt,
     signal: AbortSignal,
   ): Promise<unknown>;
+  synthesizeDesignSystemChunk(
+    prompt: AppKnowledgeDesignSystemChunkPrompt,
+    signal: AbortSignal,
+  ): Promise<unknown>;
+  mergeDesignSystem(
+    prompt: AppKnowledgeDesignSystemMergePrompt,
+    signal: AbortSignal,
+  ): Promise<unknown>;
 }
 
 export const APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS = [
@@ -44,6 +68,9 @@ export const APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS = [
   "Record exact visible text, visible UI, purpose, page type, product area, theme, viewport, layout, content, imagery, icons, interactions, states, available actions, system feedback, and visible accessibility observations.",
   "Keep visible facts separate from likely intent, friction, and missing or uncertain states.",
   "Use exactly the supplied evidenceId and a confidence from zero to one.",
+  'Use exactly this shape and value casing: {"evidenceId": string, "pageType": string, "productArea": string, "purpose": string, "viewport": "desktop" | "tablet" | "mobile" | "unknown", "visibleText": string[], "theme": "light" | "dark" | "mixed", "visualHierarchy": string[], "layoutPatterns": string[], "contentPatterns": string[], "imagery": string[], "icons": string[], "interactionPatterns": string[], "visibleStates": string[], "availableActions": string[], "systemFeedback": string[], "accessibilityObservations": string[], "likelyIntent": string, "friction": string[], "uncertainStates": string[], "confidence": number}.',
+  "Every field is required. Use an empty array when no visible evidence supports an array field.",
+  "Keep visibleText to at most 24 distinct high-value strings and every other array to at most 12 concise items.",
 ].join(" ");
 
 export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
@@ -56,9 +83,29 @@ export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
   "Full-page screenshots may produce component candidates only, never trusted components.",
 ].join(" ");
 
+export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
+  "Return JSON only with componentCandidates and designLanguage.",
+  "Extract a reusable design language from only the supplied screen signals.",
+  "Use canonical designLanguage categories: color, typography, spacing, radius, border, effects, layout, iconography, imagery, responsive, content, and interaction.",
+  "Each claim has id, kind, text, evidenceIds, and confidence.",
+  "Every observed or inferred claim must cite one or more supplied evidence IDs.",
+  "Never invent an evidence ID, exact token value, font, measurement, or interaction not supported by evidence.",
+  "Full-page screenshots may produce component candidates only with status candidate.",
+].join(" ");
+
+export const APP_KNOWLEDGE_DESIGN_SYSTEM_MERGE_INSTRUCTIONS = [
+  APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS,
+  "Merge semantically equivalent claims and component candidates across fragments.",
+  "Preserve evidence citations, normalize names conservatively, and return one deduplicated design system.",
+].join(" ");
+
 export function appKnowledgeBrowserPrompt(
   instructions: string,
-  payload: AppKnowledgeEvidencePrompt | AppKnowledgeSynthesisPrompt,
+  payload:
+    | AppKnowledgeEvidencePrompt
+    | AppKnowledgeSynthesisPrompt
+    | AppKnowledgeDesignSystemChunkPrompt
+    | AppKnowledgeDesignSystemMergePrompt,
 ): string {
   return `${instructions}\n\nReturn one JSON object for this payload:\n${JSON.stringify(payload)}`;
 }
@@ -79,6 +126,20 @@ export function appKnowledgeProviderFromMultimodalJsonProvider(
     synthesize(prompt, signal) {
       return provider.completeJson({
         system: APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS,
+        text: prompt,
+        signal,
+      });
+    },
+    synthesizeDesignSystemChunk(prompt, signal) {
+      return provider.completeJson({
+        system: APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS,
+        text: prompt,
+        signal,
+      });
+    },
+    mergeDesignSystem(prompt, signal) {
+      return provider.completeJson({
+        system: APP_KNOWLEDGE_DESIGN_SYSTEM_MERGE_INSTRUCTIONS,
         text: prompt,
         signal,
       });

@@ -39,13 +39,36 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
     allowedEvidenceIds: ["SCREEN-1"],
     validationError: "",
   }, AbortSignal.timeout(1_000));
+  await provider.synthesizeDesignSystemChunk({
+    app: "15five",
+    platform: "web",
+    signals: [{ evidenceId: "SCREEN-1" }],
+    allowedEvidenceIds: ["SCREEN-1"],
+    validationError: "",
+  }, AbortSignal.timeout(1_000));
+  await provider.mergeDesignSystem({
+    app: "15five",
+    platform: "web",
+    fragments: [{ componentCandidates: [], designLanguage: {} }],
+    allowedEvidenceIds: ["SCREEN-1"],
+    validationError: "",
+  }, AbortSignal.timeout(1_000));
 
   assert.equal(provider.model, "vision-model");
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 4);
   assert.match(calls[0].system, /visible/i);
+  assert.match(calls[0].system, /"viewport": "desktop" \| "tablet" \| "mobile" \| "unknown"/);
+  assert.match(calls[0].system, /"layoutPatterns": string\[\]/);
+  assert.match(calls[0].system, /"friction": string\[\]/);
+  assert.match(calls[0].system, /visibleText to at most 24/);
+  assert.match(calls[0].system, /every other array to at most 12/);
   assert.ok(calls[0].image);
   assert.match(calls[1].system, /observed or inferred/i);
   assert.equal(calls[1].image, undefined);
+  assert.match(calls[2].system, /design language/i);
+  assert.equal(calls[2].image, undefined);
+  assert.match(calls[3].system, /merge/i);
+  assert.equal(calls[3].image, undefined);
 });
 
 test("renders browser prompts with the same instructions and structured payload", () => {

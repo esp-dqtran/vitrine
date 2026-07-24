@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import * as llmChat from "./llmChat.ts";
 import {
   ChatRateLimitError,
   chatSessionHeadless,
@@ -48,6 +49,38 @@ test("recognizes the ChatGPT conversation-limit modal safely", () => {
     new ChatRateLimitError().message,
     "ChatGPT temporarily limited browser requests",
   );
+});
+
+test("dismisses ChatGPT's recoverable conversation-limit modal", async () => {
+  const dismiss = (llmChat as unknown as {
+    dismissChatRateLimitDialog?: (
+      page: {
+        getByRole(role: string, options: { name: string; exact: boolean }): {
+          count(): Promise<number>;
+          first(): { isVisible(): Promise<boolean>; click(): Promise<void> };
+        };
+      },
+    ) => Promise<boolean>;
+  }).dismissChatRateLimitDialog;
+  assert.equal(typeof dismiss, "function");
+
+  let clicks = 0;
+  const page = {
+    getByRole(role: string, options: { name: string; exact: boolean }) {
+      assert.equal(role, "button");
+      assert.deepEqual(options, { name: "Got it", exact: true });
+      return {
+        count: async () => 1,
+        first: () => ({
+          isVisible: async () => true,
+          click: async () => { clicks += 1; },
+        }),
+      };
+    },
+  };
+
+  assert.equal(await dismiss!(page), true);
+  assert.equal(clicks, 1);
 });
 
 test("ChatSession keeps existing callers compatible while accepting request options", () => {

@@ -131,6 +131,18 @@ export class ChatRateLimitError extends Error {
   }
 }
 
+export async function dismissChatRateLimitDialog(
+  page: Pick<Page, "getByRole">,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const button = page.getByRole("button", { name: "Got it", exact: true });
+  if (await raceChatAbort(button.count(), signal) === 0) return false;
+  const first = button.first();
+  if (!(await raceChatAbort(first.isVisible(), signal))) return false;
+  await raceChatAbort(first.click(), signal);
+  return true;
+}
+
 async function throwIfChatRateLimited(
   page: Page,
   signal?: AbortSignal,
@@ -140,7 +152,10 @@ async function throwIfChatRateLimited(
       .allTextContents(),
     signal,
   );
-  if (messages.some(isChatRateLimitText)) throw new ChatRateLimitError();
+  if (messages.some(isChatRateLimitText)) {
+    if (await dismissChatRateLimitDialog(page, signal)) return;
+    throw new ChatRateLimitError();
+  }
 }
 
 async function waitForStableReply(

@@ -1,12 +1,16 @@
 import { createHash } from "node:crypto";
 import {
-  parseAppKnowledgeSnapshot,
+  parseAppKnowledgeDesignSystemResult,
   type AppKnowledgeCoverage,
   type AppKnowledgeCoverageKind,
   type AppKnowledgeEvidenceKind,
   type AppKnowledgeJobStatus,
   type AppKnowledgeSnapshot,
 } from "./appKnowledge.ts";
+import {
+  assembleDesignSystemSnapshot,
+  planDesignSystemChunks,
+} from "./appKnowledgeDesignSystem.ts";
 import {
   appKnowledgeCacheKey,
   buildAppKnowledgeEvidenceManifest,
@@ -222,11 +226,15 @@ export function createAppKnowledgeService(deps: {
   retryDelayMs?: number;
   maxImageBytes?: number;
   cancelCheckIntervalMs?: number;
+  designSystemChunkBytes?: number;
+  designSystemChunkConcurrency?: number;
 }): { generate(jobId: string): Promise<AppKnowledgeJobStatus | undefined> } {
   const screenConcurrency = deps.screenConcurrency ?? 3;
   const flowConcurrency = deps.flowConcurrency ?? 2;
   const timeoutMs = deps.timeoutMs ?? 60_000;
   const retryDelayMs = deps.retryDelayMs ?? 250;
+  const designSystemChunkBytes = deps.designSystemChunkBytes ?? 120_000;
+  const designSystemChunkConcurrency = deps.designSystemChunkConcurrency ?? 1;
 
   return {
     async generate(rawJobId) {
@@ -293,8 +301,7 @@ export function createAppKnowledgeService(deps: {
           }
         }
         await deps.store.updateProgress(jobId, "analyzing", analyses.size);
-        let processed = [...records.values()].filter(({ status }) =>
-          status === "complete" || status === "cached" || status === "failed").length;
+        let processed = analyses.size;
 
         const analyze = async (
           item: AppKnowledgeEvidenceManifestItem,
@@ -412,45 +419,116 @@ export function createAppKnowledgeService(deps: {
           }
         });
 
-        for (const item of manifest.filter(({ eligibility }) => eligibility === "duplicate")) {
-          const original = item.duplicateOfEvidenceId && analyses.get(item.duplicateOfEvidenceId);
-          if (original) analyses.set(item.evidenceId, { ...original, evidenceId: item.evidenceId });
-        }
         const interrupted = await stopped(deps.store, jobId);
         if (interrupted) return interrupted;
-        const allowedEvidenceIds = [...analyses.keys()];
-        const coverage = coverageFrom(manifest, records, new Set(allowedEvidenceIds));
+        const successfulEvidenceIds = new Set(analyses.keys());
+        const coverage = coverageFrom(manifest, records, successfulEvidenceIds);
+        const screenAnalyses = manifest
+          .filter(({ kind, eligibility }) => kind === "screen" && eligibility === "eligible")
+          .flatMap(({ evidenceId }) => {
+            const analysis = analyses.get(evidenceId);
+            return analysis ? [analysis] : [];
+          });
+        if (screenAnalyses.length === 0) {
+          throw new EvidenceAnalysisError("output_invalid", "No completed screen evidence is available");
+        }
+        const chunks = planDesignSystemChunks(screenAnalyses, designSystemChunkBytes);
+        const persisted = new Map(
+          (await deps.store.prepareDesignSystemChunks(
+            jobId,
+            chunks.map(({ key, ordinal }) => ({ key, ordinal })),
+          )).map((record) => [record.key, record]),
+        );
         await deps.store.updateProgress(jobId, "synthesizing", Math.min(processed, job.totalCount));
-        const synthesized = await runValidatedProviderCall({
-          call: (validationError, signal) => deps.provider.synthesize({
+        const fragments = new Map<string, ReturnType<typeof parseAppKnowledgeDesignSystemResult>>();
+        await mapBounded(chunks, designSystemChunkConcurrency, async (chunk) => {
+          const current = persisted.get(chunk.key);
+          if (current?.status === "complete" && current.fragment) {
+            fragments.set(
+              chunk.key,
+              parseAppKnowledgeDesignSystemResult(
+                current.fragment,
+                new Set(chunk.evidenceIds),
+              ),
+            );
+            return;
+          }
+          try {
+            const synthesized = await runValidatedProviderCall({
+              call: (validationError, signal) =>
+                deps.provider.synthesizeDesignSystemChunk({
+                  app: job!.target.app,
+                  platform: job!.target.platform,
+                  signals: chunk.signals,
+                  allowedEvidenceIds: chunk.evidenceIds,
+                  validationError,
+                }, signal),
+              parse: (raw) => parseAppKnowledgeDesignSystemResult(
+                raw,
+                new Set(chunk.evidenceIds),
+              ),
+              timeoutMs,
+              retryDelayMs,
+              signal: cancellation.signal,
+            });
+            const fragment = synthesized.value;
+            await deps.store.recordDesignSystemChunkResult(jobId, {
+              key: chunk.key,
+              fragment: structuredClone(fragment) as unknown as Record<string, unknown>,
+              attemptCount: synthesized.attemptCount,
+            });
+            fragments.set(chunk.key, fragment);
+          } catch (error) {
+            if (
+              error instanceof EvidenceAnalysisError
+              && error.code === "provider_rate_limited"
+              && !cancellation.signal.aborted
+            ) cancellation.abort(error);
+            if (!cancellation.signal.aborted) {
+              await deps.store.recordDesignSystemChunkFailure(jobId, {
+                key: chunk.key,
+                errorCode: failureCode(error),
+                attemptCount: 3,
+              });
+            }
+            throw error;
+          }
+        });
+        const allowedEvidenceIds = screenAnalyses.map(({ evidenceId }) => evidenceId);
+        const orderedFragments = chunks.map(({ key }) => {
+          const fragment = fragments.get(key);
+          if (!fragment) throw new Error("Design-system synthesis chunk is missing");
+          return fragment;
+        });
+        const merged = await runValidatedProviderCall({
+          call: (validationError, signal) => deps.provider.mergeDesignSystem({
             app: job!.target.app,
             platform: job!.target.platform,
-            captureVersionId: job!.target.captureVersionId,
-            analyses: allowedEvidenceIds.map((id) => analyses.get(id)),
-            flows: source.flows,
-            coverage,
+            fragments: orderedFragments,
             allowedEvidenceIds,
             validationError,
           }, signal),
-          parse: (raw) => {
-            const candidate = object(raw, "App Knowledge snapshot");
-            return parseAppKnowledgeSnapshot({
-              ...candidate,
-              identity: {
-                app: job!.target.app,
-                platform: job!.target.platform,
-                captureVersionId: job!.target.captureVersionId,
-                sourceSha256: job!.sourceSha256,
-                providerModel: job!.providerModel,
-                promptVersion: job!.promptVersion,
-                generatedAt: new Date().toISOString(),
-              },
-              coverage,
-            }, new Set(allowedEvidenceIds));
-          },
+          parse: (raw) => parseAppKnowledgeDesignSystemResult(
+            raw,
+            new Set(allowedEvidenceIds),
+          ),
           timeoutMs,
           retryDelayMs,
           signal: cancellation.signal,
+        });
+        const snapshot = assembleDesignSystemSnapshot({
+          identity: {
+            app: job.target.app,
+            platform: job.target.platform,
+            captureVersionId: job.target.captureVersionId,
+            sourceSha256: job.sourceSha256!,
+            providerModel: job.providerModel,
+            promptVersion: job.promptVersion,
+          },
+          coverage,
+          analyses: screenAnalyses,
+          result: merged.value,
+          generatedAt: new Date().toISOString(),
         });
         if (await stopped(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
         const currentSha = await deps.currentSourceSha256(job.target);
@@ -459,7 +537,7 @@ export function createAppKnowledgeService(deps: {
           return "stale";
         }
         await deps.store.updateProgress(jobId, "saving", job.totalCount);
-        const saved = await deps.store.completeGeneration(jobId, synthesized.value);
+        const saved = await deps.store.completeGeneration(jobId, snapshot);
         return saved.reviewStatus === "draft" ? "done" : "error";
       } catch (error) {
         const cancellationReason = cancellation.signal.reason;

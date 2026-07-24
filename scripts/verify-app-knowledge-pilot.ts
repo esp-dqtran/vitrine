@@ -29,6 +29,8 @@ export interface PilotVerifierInput {
       text: string;
       evidenceIds: string[];
     }>;
+    designLanguage: Record<string, unknown[]>;
+    componentCandidates: Array<{ status: string }>;
     flows: Array<{ id: string; evidenceIds: string[] }>;
   };
   repeatedManifest: {
@@ -62,6 +64,8 @@ export interface PilotVerificationResult {
     flowReferences: number;
     uniqueFlowImages: number;
     claims: number;
+    designLanguageClaims: number;
+    componentCandidates: number;
     reviewedCompleteFlows: number;
     reviewedRoles: number;
     cacheHits: number;
@@ -115,6 +119,12 @@ export function verifyAppKnowledgePilot(input: PilotVerifierInput): PilotVerific
     (kind === 'observed' || kind === 'inferred') && citations.length === 0)) {
     failed.add('observed_inferred_cited');
   }
+  const designLanguageClaims = Object.values(input.snapshot.designLanguage)
+    .reduce((total, claims) => total + claims.length, 0);
+  if (designLanguageClaims === 0) failed.add('design_language_present');
+  if (input.snapshot.componentCandidates.some(({ status }) => status !== 'candidate')) {
+    failed.add('components_remain_candidates');
+  }
 
   if (
     !input.repeatedManifest.repeated
@@ -158,6 +168,8 @@ export function verifyAppKnowledgePilot(input: PilotVerifierInput): PilotVerific
       flowReferences: flowItems.length,
       uniqueFlowImages,
       claims: input.snapshot.claims.length,
+      designLanguageClaims,
+      componentCandidates: input.snapshot.componentCandidates.length,
       reviewedCompleteFlows,
       reviewedRoles: reviewedRoles.size,
       cacheHits: input.repeatedManifest.cacheHits,
@@ -337,6 +349,19 @@ async function loadPilotInput(
     .filter(({ outcome }) => outcome === 'completed' || outcome === 'created')
     .map(({ action }) => String(action)));
   const rawFlows = jsonArray(content.flows);
+  const rawDesignLanguage = content.designLanguage;
+  if (!rawDesignLanguage || typeof rawDesignLanguage !== 'object' || Array.isArray(rawDesignLanguage)) {
+    throw new Error('Pilot design language is invalid');
+  }
+  const designLanguage = Object.fromEntries(
+    Object.entries(rawDesignLanguage).map(([key, value]) => [key, jsonArray(value)]),
+  );
+  const componentCandidates = jsonArray(content.componentCandidates).map((raw) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new Error('Pilot component candidate is invalid');
+    }
+    return { status: String((raw as Record<string, unknown>).status) };
+  });
   const flows = rawFlows.map((raw) => {
     const flow = raw as Record<string, unknown>;
     const steps = jsonArray(flow.steps);
@@ -368,6 +393,8 @@ async function loadPilotInput(
         },
       },
       claims: collectClaims(content),
+      designLanguage,
+      componentCandidates,
       flows,
     },
     repeatedManifest: {

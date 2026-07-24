@@ -85,3 +85,40 @@ test("marks the durable job unavailable when ChatGPT pool startup fails", async 
   assert.equal(await generate("31"), "error");
   assert.deepEqual(failed, ["31"]);
 });
+
+test("uses the authenticated Antigravity desktop with the newest Gemini model", async () => {
+  let chatGptOpened = false;
+  let antigravityOpened = "";
+  let closed = 0;
+  let providerModel = "";
+  let serviceConcurrency = 0;
+  const generate = createBrowserAppKnowledgeGenerator({
+    environment: { APP_KNOWLEDGE_PROVIDER: "antigravity-browser" },
+    startChatPool: async () => {
+      chatGptOpened = true;
+      throw new Error("must not open ChatGPT");
+    },
+    startAntigravitySession: async (modelLabel: string) => {
+      antigravityOpened = modelLabel;
+      return {
+        ...session(),
+        close: async () => { closed += 1; },
+      };
+    },
+    failProviderUnavailable: async () => {
+      throw new Error("must not fail a configured job");
+    },
+    createService: (provider, concurrency) => {
+      providerModel = provider.model;
+      serviceConcurrency = concurrency;
+      return { generate: async () => "done" };
+    },
+  });
+
+  assert.equal(await generate("31"), "done");
+  assert.equal(chatGptOpened, false);
+  assert.equal(antigravityOpened, "Gemini 3.6 Flash (High)");
+  assert.equal(providerModel, "gemini-3.6-flash-high");
+  assert.equal(serviceConcurrency, 1);
+  assert.equal(closed, 1);
+});

@@ -1,4 +1,13 @@
-import { CHATGPT_BROWSER_MODEL } from "./appKnowledgeBrowserProvider.ts";
+import {
+  ANTIGRAVITY_BROWSER_MODEL,
+  ANTIGRAVITY_BROWSER_MODEL_LABEL,
+  CHATGPT_BROWSER_MODEL,
+} from "./appKnowledgeBrowserProvider.ts";
+
+export {
+  ANTIGRAVITY_BROWSER_MODEL,
+  ANTIGRAVITY_BROWSER_MODEL_LABEL,
+} from "./appKnowledgeBrowserProvider.ts";
 
 export interface ChatGptBrowserAppKnowledgeConfig {
   kind: "chatgpt-browser";
@@ -6,11 +15,30 @@ export interface ChatGptBrowserAppKnowledgeConfig {
   concurrency: 1 | 2;
 }
 
+export interface AntigravityBrowserAppKnowledgeConfig {
+  kind: "antigravity-browser";
+  model: typeof ANTIGRAVITY_BROWSER_MODEL;
+  modelLabel: typeof ANTIGRAVITY_BROWSER_MODEL_LABEL;
+  concurrency: 1;
+}
+
+export type AppKnowledgeProviderConfig =
+  | ChatGptBrowserAppKnowledgeConfig
+  | AntigravityBrowserAppKnowledgeConfig;
+
 export function appKnowledgeProviderConfigFromEnvironment(
   env: Record<string, string | undefined> = process.env,
-): ChatGptBrowserAppKnowledgeConfig | undefined {
+): AppKnowledgeProviderConfig | undefined {
   const provider = env.APP_KNOWLEDGE_PROVIDER?.trim();
   if (!provider) return undefined;
+  if (provider === "antigravity-browser") {
+    return {
+      kind: "antigravity-browser",
+      model: ANTIGRAVITY_BROWSER_MODEL,
+      modelLabel: ANTIGRAVITY_BROWSER_MODEL_LABEL,
+      concurrency: 1,
+    };
+  }
   if (provider !== "chatgpt-browser") {
     throw new Error(`Unsupported App Knowledge provider "${provider}"`);
   }
