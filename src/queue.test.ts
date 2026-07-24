@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseJob, publishJob } from "./queue.ts";
+import { appKnowledgeQueueJob, parseJob, publishJob } from "./queue.ts";
 
 test("queue accepts identifier-only durable crawler jobs and preserves BIGINT run ids as strings", () => {
   assert.deepEqual(parseJob({
@@ -103,6 +103,16 @@ test("publishing validates the payload before opening a broker connection", asyn
     if (previous === undefined) delete process.env.RABBITMQ_URL;
     else process.env.RABBITMQ_URL = previous;
   }
+});
+
+test("builds the shared App Knowledge transport payload from durable ids", () => {
+  assert.deepEqual(appKnowledgeQueueJob(31, 10), {
+    type: "generate-app-knowledge",
+    runId: "31",
+    jobId: 10,
+  });
+  assert.throws(() => appKnowledgeQueueJob(0, 10), /invalid queue job/i);
+  assert.throws(() => appKnowledgeQueueJob(31, -1), /invalid queue job/i);
 });
 
 test("queue rejects secret-bearing research URLs and unsupported providers without echoing values", () => {

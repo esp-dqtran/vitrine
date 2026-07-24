@@ -22,6 +22,21 @@ export type Job = (
   | { type: "generate-app-knowledge"; runId: string }
 ) & { jobId?: number };
 
+export function appKnowledgeQueueJob(
+  durableJobId: number,
+  transportJobId: number,
+): Job {
+  if (
+    !Number.isSafeInteger(durableJobId) || durableJobId <= 0
+    || !Number.isSafeInteger(transportJobId) || transportJobId <= 0
+  ) invalidJob();
+  return {
+    type: "generate-app-knowledge",
+    runId: String(durableJobId),
+    jobId: transportJobId,
+  };
+}
+
 let connection: ChannelModel | undefined;
 let channel: Channel | undefined;
 

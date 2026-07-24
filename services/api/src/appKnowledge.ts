@@ -12,7 +12,10 @@ import {
   type AppKnowledgeTarget,
 } from "../../../src/appKnowledgeStore.ts";
 import type { AppVersion } from "../../../src/db.ts";
-import type { Job } from "../../../src/queue.ts";
+import {
+  appKnowledgeQueueJob,
+  type Job,
+} from "../../../src/queue.ts";
 
 export interface ApiUser {
   id: number;
@@ -299,11 +302,7 @@ async function publishDurableJob(
   transportJobId: number,
 ): Promise<boolean> {
   try {
-    await deps.publishJob({
-      type: "generate-app-knowledge",
-      runId: String(durable.id),
-      jobId: transportJobId,
-    });
+    await deps.publishJob(appKnowledgeQueueJob(durable.id, transportJobId));
     return true;
   } catch {
     await markQueueFailure(deps, durable.id, transportJobId);

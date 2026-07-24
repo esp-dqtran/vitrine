@@ -18,6 +18,7 @@ import type {
 import { query as databaseQuery, withTransaction } from "./db.ts";
 import { validateObjectMetadata } from "./objectStore.ts";
 import type { SeedDesignSystemResult } from "./designSystemWorkingCopy.ts";
+import type { AutomaticAppKnowledgeTarget } from "./appKnowledgeAutomatic.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -158,6 +159,14 @@ export interface AppKnowledgeStore extends AppKnowledgeCropStore {
     promptVersion: number,
     requestOrigin?: AppKnowledgeRequestOrigin,
   ): Promise<AppKnowledgeJobView>;
+  findAutomaticJob(
+    target: AutomaticAppKnowledgeTarget,
+  ): Promise<AppKnowledgeJobView | undefined>;
+  createAutomaticJob(
+    target: AutomaticAppKnowledgeTarget,
+    transportJobId: number,
+  ): Promise<AppKnowledgeJobView>;
+  listQueuedAutomaticJobs(limit: number): Promise<AppKnowledgeJobView[]>;
   claimJob(jobId: number): Promise<AppKnowledgeWorkerJob | undefined>;
   freezeManifest(
     jobId: number,
@@ -716,6 +725,110 @@ export function createAppKnowledgeStore(
         ) throw new ActiveAppKnowledgeJobError();
         throw error;
       }
+    },
+
+    async findAutomaticJob(rawTarget) {
+      const checkedSourceSha256 = sha256(rawTarget.sourceSha256);
+      const checkedModel = providerModel(rawTarget.providerModel);
+      positiveInteger(rawTarget.captureVersionId, "capture version");
+      positiveInteger(rawTarget.promptVersion, "prompt version");
+      const result = await runQuery(
+        `SELECT ${JOB_COLUMNS}
+         FROM app_knowledge_jobs j
+         JOIN app_knowledge_snapshots s ON s.id = j.snapshot_id
+         JOIN apps a ON a.id = s.app_id
+         JOIN platforms p ON p.id = s.platform_id
+         WHERE a.name = $1 AND p.name = $2 AND s.capture_version_id = $3
+           AND j.source_sha256 = $4 AND j.provider_model = $5
+           AND j.prompt_version = $6 AND j.request_origin = 'automatic'
+           AND j.status <> 'cancelled'
+         ORDER BY j.id DESC
+         LIMIT 1`,
+        [
+          rawTarget.app,
+          rawTarget.platform,
+          rawTarget.captureVersionId,
+          checkedSourceSha256,
+          checkedModel,
+          rawTarget.promptVersion,
+        ],
+      );
+      return jobFromRow(result.rows[0]);
+    },
+
+    async createAutomaticJob(rawTarget, transportJobId) {
+      const checkedSourceSha256 = sha256(rawTarget.sourceSha256);
+      const checkedModel = providerModel(rawTarget.providerModel);
+      positiveInteger(rawTarget.captureVersionId, "capture version");
+      positiveInteger(rawTarget.promptVersion, "prompt version");
+      positiveInteger(transportJobId, "transport job");
+      const findWinner = () => this.findAutomaticJob(rawTarget);
+      try {
+        return await runTransaction(async (tx) => {
+          const found = await tx(
+            `SELECT av.id AS capture_version_id, av.app_id, a.name AS app,
+                    av.version_number, p.id AS platform_id, p.name AS platform
+             FROM app_versions av
+             JOIN apps a ON a.id = av.app_id
+             JOIN platforms p ON p.app_id = a.id AND p.name = av.platform
+             WHERE av.id = $1 AND a.name = $2 AND av.platform = $3
+             FOR SHARE OF av`,
+            [rawTarget.captureVersionId, rawTarget.app, rawTarget.platform],
+          );
+          if (!found.rows[0]) throw new Error("Automatic App Knowledge target was not found");
+          const resolved = targetFromRow(found.rows[0]);
+          const snapshot = await tx(
+            `INSERT INTO app_knowledge_snapshots (app_id, platform_id, capture_version_id)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (app_id, platform_id, capture_version_id)
+             DO UPDATE SET updated_at = app_knowledge_snapshots.updated_at
+             RETURNING id`,
+            [resolved.appId, resolved.platformId, resolved.captureVersionId],
+          );
+          const result = await tx(
+            `INSERT INTO app_knowledge_jobs AS j
+               (snapshot_id, transport_job_id, requested_by, provider_model,
+                prompt_version, request_origin, source_sha256)
+             VALUES ($1, $2, NULL, $3, $4, 'automatic', $5)
+             RETURNING ${JOB_COLUMNS}`,
+            [
+              snapshot.rows[0].id,
+              transportJobId,
+              checkedModel,
+              rawTarget.promptVersion,
+              checkedSourceSha256,
+            ],
+          );
+          return jobFromRow(result.rows[0])!;
+        });
+      } catch (error) {
+        const databaseError = error as { code?: string; constraint?: string };
+        if (
+          databaseError.code === "23505"
+          && databaseError.constraint === "app_knowledge_automatic_generation_identity"
+        ) {
+          const winner = await findWinner();
+          if (winner) return winner;
+        }
+        if (
+          databaseError.code === "23505"
+          && databaseError.constraint === "app_knowledge_one_active_job_per_snapshot"
+        ) throw new ActiveAppKnowledgeJobError();
+        throw error;
+      }
+    },
+
+    async listQueuedAutomaticJobs(limit) {
+      positiveInteger(limit, "automatic job limit");
+      const result = await runQuery(
+        `SELECT ${JOB_COLUMNS}
+         FROM app_knowledge_jobs j
+         WHERE j.request_origin = 'automatic' AND j.status = 'queued'
+         ORDER BY j.created_at, j.id
+         LIMIT $1`,
+        [limit],
+      );
+      return result.rows.map((row) => jobFromRow(row)!);
     },
 
     async claimJob(jobId) {
