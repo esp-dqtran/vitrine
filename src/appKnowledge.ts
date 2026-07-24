@@ -99,6 +99,11 @@ export interface AppKnowledgeDesignLanguage {
   interaction: AppKnowledgeClaim[];
 }
 
+export interface AppKnowledgeDesignSystemResult {
+  componentCandidates: AppKnowledgeComponentCandidate[];
+  designLanguage: AppKnowledgeDesignLanguage;
+}
+
 export interface AppKnowledgeFlowStep {
   id: string;
   order: number;
@@ -451,6 +456,24 @@ function parseDesignLanguage(
   ])) as unknown as AppKnowledgeDesignLanguage;
 }
 
+export function parseAppKnowledgeDesignSystemResult(
+  value: unknown,
+  allowedEvidenceIds: ReadonlySet<string>,
+): AppKnowledgeDesignSystemResult {
+  const root = object(value, "App Knowledge design system");
+  const claims = new Set<string>();
+  const componentIds = new Set<string>();
+  const result = {
+    componentCandidates: list(root.componentCandidates, "componentCandidates").map((item, index) =>
+      parseComponent(item, allowedEvidenceIds, claims, componentIds, index)),
+    designLanguage: parseDesignLanguage(root.designLanguage, allowedEvidenceIds, claims),
+  };
+  if (Object.values(result.designLanguage).every((items) => items.length === 0)) {
+    throw new Error("designLanguage must contain at least one claim");
+  }
+  return result;
+}
+
 function parseFlow(
   value: unknown,
   allowed: ReadonlySet<string>,
@@ -563,7 +586,7 @@ export function parseAppKnowledgeSnapshot(
       generatedAt: new Date(generatedAt).toISOString(),
     },
     coverage: parseCoverage(root.coverage),
-    screens: nonEmptyList(root.screens, "screens").map((item, index) =>
+    screens: nonEmptyList(root.screens, "screens", 2_000).map((item, index) =>
       parseScreen(item, allowedEvidenceIds, claimIds, screenIds, index)),
     componentCandidates: list(root.componentCandidates, "componentCandidates").map((item, index) =>
       parseComponent(item, allowedEvidenceIds, claimIds, componentIds, index)),

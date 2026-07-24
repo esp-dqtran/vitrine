@@ -200,3 +200,18 @@ test("rejects a snapshot without a Screen catalog", () => {
   raw.screens = [];
   assert.throws(() => parseAppKnowledgeSnapshot(raw, evidence), /screens must contain at least one item/);
 });
+
+test("accepts a large captured screen inventory", () => {
+  const raw = snapshotFixture();
+  raw.screens = Array.from({ length: 610 }, (_, index) => ({
+    ...structuredClone(raw.screens[0]),
+    id: `screen-${index + 1}`,
+    evidenceId: `SCREEN-${index + 1}`,
+    claims: [],
+  }));
+  const allowed = new Set([
+    ...evidence,
+    ...raw.screens.map(({ evidenceId }) => evidenceId),
+  ]);
+  assert.equal(parseAppKnowledgeSnapshot(raw, allowed).screens.length, 610);
+});
