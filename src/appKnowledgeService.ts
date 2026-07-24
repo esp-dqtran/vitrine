@@ -11,6 +11,7 @@ import {
   assembleDesignSystemSnapshot,
   planDesignSystemChunks,
 } from "./appKnowledgeDesignSystem.ts";
+import { deriveComponentCrops } from "./appKnowledgeCrop.ts";
 import {
   enrichOrderedFlows,
   parseAppKnowledgeFlowSynthesisResult,
@@ -692,6 +693,15 @@ export function createAppKnowledgeService(deps: {
             return enrichOrderedFlows(chunk.flows, synthesized.value);
           })
         ).flat();
+        const crops = await deriveComponentCrops({
+          job,
+          manifest,
+          result: merged.value,
+          objectStore: deps.objectStore,
+          imageObjectById: deps.imageObjectById,
+          store: deps.store,
+          signal: cancellation.signal,
+        });
         const snapshot = assembleDesignSystemSnapshot({
           identity: {
             app: job.target.app,
@@ -716,6 +726,8 @@ export function createAppKnowledgeService(deps: {
         }
         await deps.store.updateProgress(jobId, "saving", job.totalCount);
         const saved = await deps.store.completeGeneration(jobId, snapshot);
+        await deps.store.attachCropsToRevision(jobId, saved.id);
+        void crops;
         return saved.reviewStatus === "draft" ? "done" : "error";
       } catch (error) {
         const cancellationReason = cancellation.signal.reason;

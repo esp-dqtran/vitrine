@@ -305,3 +305,77 @@ test("sets a bounded synthesis plan before chunk results advance progress", asyn
   assert.match(calls[0].sql, /synthesis_done_count = \$3/);
   assert.deepEqual(calls[0].values, [9, 3, 1]);
 });
+
+test("persists one verified crop and attaches it to the generated revision", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    if (sql.includes("INSERT INTO stored_objects")) {
+      return result([{ object_key: values?.[0] }]);
+    }
+    if (sql.includes("INSERT INTO images")) {
+      return result([{ id: 88 }]);
+    }
+    if (sql.includes("INSERT INTO app_knowledge_component_crops")) {
+      return result([{ derived_image_id: 88 }]);
+    }
+    return result([{ id: 9 }], 1);
+  };
+  const store = createAppKnowledgeStore(query);
+  const region = { x: 0.1, y: 0.2, width: 0.3, height: 0.2 };
+
+  const imageId = await store.persistComponentCrop({
+    sourceImageId: 11,
+    region,
+    providerModel: "gemini-2.5-pro",
+    promptVersion: 2,
+    jobId: 9,
+    platformId: 2,
+    componentFamily: "Button",
+    componentVariant: "Primary",
+    sourceSha256: "a".repeat(64),
+    object: {
+      key: `app-knowledge/component-crops/${"b".repeat(64)}.png`,
+      sha256: "b".repeat(64),
+      byteSize: 1_024,
+      contentType: "image/png",
+      accessClass: "protected",
+    },
+  });
+  await store.attachCropsToRevision(9, 12);
+
+  assert.equal(imageId, 88);
+  assert.ok(calls.some(({ sql }) => /INSERT INTO stored_objects/.test(sql)));
+  assert.ok(calls.some(({ sql }) => /INSERT INTO images/.test(sql)));
+  assert.ok(calls.some(({ sql }) => /INSERT INTO app_knowledge_component_crops/.test(sql)));
+  const attach = calls.find(({ sql }) => /SET revision_id = \$2/.test(sql));
+  assert.deepEqual(attach?.values, [9, 12]);
+});
+
+test("finds a reusable crop by exact source region and model identity", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result([{ derived_image_id: 77 }]);
+  };
+  const store = createAppKnowledgeStore(query);
+
+  const imageId = await store.findComponentCrop({
+    sourceImageId: 11,
+    region: { x: 0.1, y: 0.2, width: 0.3, height: 0.2 },
+    providerModel: "gemini-2.5-pro",
+    promptVersion: 2,
+  });
+
+  assert.equal(imageId, 77);
+  assert.match(calls[0].sql, /source_image_id = \$1/);
+  assert.deepEqual(calls[0].values, [
+    11,
+    0.1,
+    0.2,
+    0.3,
+    0.2,
+    "gemini-2.5-pro",
+    2,
+  ]);
+});

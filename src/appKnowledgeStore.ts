@@ -10,7 +10,13 @@ import type {
   AppKnowledgeEvidenceManifestItem,
   AppKnowledgeEvidenceOverride,
 } from "./appKnowledgeEvidence.ts";
+import type {
+  AppKnowledgeComponentCropIdentity,
+  AppKnowledgeCropStore,
+  PersistComponentCropInput,
+} from "./appKnowledgeCrop.ts";
 import { query as databaseQuery, withTransaction } from "./db.ts";
+import { validateObjectMetadata } from "./objectStore.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -141,7 +147,7 @@ export interface AppKnowledgeDesignSystemChunkRecord {
   errorCode?: string;
 }
 
-export interface AppKnowledgeStore {
+export interface AppKnowledgeStore extends AppKnowledgeCropStore {
   createJob(
     requestedBy: number | null,
     target: AppKnowledgeTarget,
@@ -302,6 +308,40 @@ function providerModel(value: string): string {
   const result = value.trim();
   if (!result || result.length > 160) throw new Error("Invalid provider model");
   return result;
+}
+
+function componentName(value: string, label: string): string {
+  const result = value.trim();
+  if (!result || result.length > 160) throw new Error(`Invalid ${label}`);
+  return result;
+}
+
+function cropIdentity(
+  input: AppKnowledgeComponentCropIdentity,
+): AppKnowledgeComponentCropIdentity {
+  positiveInteger(input.sourceImageId, "source image");
+  positiveInteger(input.promptVersion, "prompt version");
+  const values = [
+    input.region.x,
+    input.region.y,
+    input.region.width,
+    input.region.height,
+  ];
+  if (
+    values.some((value) => !Number.isFinite(value))
+    || input.region.x < 0
+    || input.region.y < 0
+    || input.region.width <= 0
+    || input.region.height <= 0
+    || input.region.x + input.region.width > 1
+    || input.region.y + input.region.height > 1
+  ) throw new Error("Invalid component crop region");
+  return {
+    sourceImageId: input.sourceImageId,
+    region: { ...input.region },
+    providerModel: providerModel(input.providerModel),
+    promptVersion: input.promptVersion,
+  };
 }
 
 function errorCode(value: string): string {
@@ -763,6 +803,120 @@ export function createAppKnowledgeStore(
       if (result.rowCount !== 1) {
         throw new Error("App Knowledge job cannot accept a synthesis plan");
       }
+    },
+
+    async findComponentCrop(rawIdentity) {
+      const identity = cropIdentity(rawIdentity);
+      const result = await runQuery(
+        `SELECT derived_image_id FROM app_knowledge_component_crops
+         WHERE source_image_id = $1
+           AND region_x = $2 AND region_y = $3
+           AND region_width = $4 AND region_height = $5
+           AND provider_model = $6 AND prompt_version = $7
+         LIMIT 1`,
+        [
+          identity.sourceImageId,
+          identity.region.x,
+          identity.region.y,
+          identity.region.width,
+          identity.region.height,
+          identity.providerModel,
+          identity.promptVersion,
+        ],
+      );
+      return result.rows[0]
+        ? positiveInteger(result.rows[0].derived_image_id, "derived image")
+        : undefined;
+    },
+
+    async persistComponentCrop(rawInput: PersistComponentCropInput) {
+      const identity = cropIdentity(rawInput);
+      positiveInteger(rawInput.jobId, "job");
+      positiveInteger(rawInput.platformId, "platform");
+      const family = componentName(rawInput.componentFamily, "component family");
+      const variant = componentName(rawInput.componentVariant, "component variant");
+      const sourceSha256 = sha256(rawInput.sourceSha256);
+      validateObjectMetadata(rawInput.object);
+      if (rawInput.object.contentType !== "image/png" || rawInput.object.accessClass !== "protected") {
+        throw new Error("Invalid component crop object");
+      }
+      return runTransaction(async (tx) => {
+        const stored = await tx(
+          `INSERT INTO stored_objects
+             (object_key, sha256, byte_size, content_type, access_class)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (object_key) DO UPDATE SET object_key = EXCLUDED.object_key
+           WHERE stored_objects.sha256 = EXCLUDED.sha256
+             AND stored_objects.byte_size = EXCLUDED.byte_size
+             AND stored_objects.content_type = EXCLUDED.content_type
+             AND stored_objects.access_class = EXCLUDED.access_class
+           RETURNING object_key`,
+          [
+            rawInput.object.key,
+            rawInput.object.sha256,
+            rawInput.object.byteSize,
+            rawInput.object.contentType,
+            rawInput.object.accessClass,
+          ],
+        );
+        if (stored.rowCount !== 1) {
+          throw new Error("Component crop object metadata conflicts with storage");
+        }
+        const imageRef = `capture:${rawInput.object.sha256.slice(0, 16)}`;
+        const image = await tx(
+          `INSERT INTO images (platform_id, image_url, kind, object_key)
+           VALUES ($1, $2, 'ui_element', $3)
+           ON CONFLICT (platform_id, image_url) DO UPDATE SET
+             object_key = EXCLUDED.object_key
+           WHERE images.kind = 'ui_element'
+             AND images.object_key = EXCLUDED.object_key
+           RETURNING id`,
+          [rawInput.platformId, imageRef, rawInput.object.key],
+        );
+        if (image.rowCount !== 1) {
+          throw new Error("Component crop image identity conflicts with existing media");
+        }
+        const derivedImageId = positiveInteger(image.rows[0].id, "derived image");
+        const crop = await tx(
+          `INSERT INTO app_knowledge_component_crops
+             (derived_image_id, source_image_id, job_id, component_family,
+              component_variant, region_x, region_y, region_width, region_height,
+              source_sha256, crop_sha256, provider_model, prompt_version)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+           ON CONFLICT (
+             source_image_id, region_x, region_y, region_width, region_height,
+             provider_model, prompt_version
+           ) DO UPDATE SET source_image_id = EXCLUDED.source_image_id
+           RETURNING derived_image_id`,
+          [
+            derivedImageId,
+            identity.sourceImageId,
+            rawInput.jobId,
+            family,
+            variant,
+            identity.region.x,
+            identity.region.y,
+            identity.region.width,
+            identity.region.height,
+            sourceSha256,
+            rawInput.object.sha256,
+            identity.providerModel,
+            identity.promptVersion,
+          ],
+        );
+        if (crop.rowCount !== 1) throw new Error("Component crop could not be persisted");
+        return positiveInteger(crop.rows[0].derived_image_id, "derived image");
+      });
+    },
+
+    async attachCropsToRevision(jobId, revisionId) {
+      positiveInteger(jobId, "job");
+      positiveInteger(revisionId, "revision");
+      await runQuery(
+        `UPDATE app_knowledge_component_crops SET revision_id = $2
+         WHERE job_id = $1 AND revision_id IS NULL`,
+        [jobId, revisionId],
+      );
     },
 
     async evidenceRecords(jobId) {

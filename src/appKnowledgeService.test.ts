@@ -27,11 +27,11 @@ import type {
 import type { AppKnowledgeEvidenceSource } from "./db.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 
-async function png(red: number): Promise<Buffer> {
+async function png(red: number, width = 8, height = 8): Promise<Buffer> {
   return sharp({
     create: {
-      width: 8,
-      height: 8,
+      width,
+      height,
       channels: 4,
       background: { r: red, g: 20, b: 30, alpha: 1 },
     },
@@ -281,13 +281,14 @@ async function harness(options: {
   designSystemChunkBytes?: number;
   failDesignChunkFromCall?: number;
   failDesignChunkAttempts?: number;
+  componentOccurrence?: boolean;
 } = {}) {
   const bodies = new Map<number, Buffer>([
-    [1, await png(10)],
+    [1, await png(10, 100, 100)],
     [2, await png(20)],
     [3, await png(21)],
     [4, await png(30)],
-    [5, await png(10)],
+    [5, await png(10, 100, 100)],
   ]);
   const objects = new Map<number, ObjectMetadata>(
     [...bodies].map(([id, body]) => [id, metadata(id, body)]),
@@ -322,6 +323,8 @@ async function harness(options: {
   let completed: AppKnowledgeSnapshot | undefined;
   let stale = false;
   let failed: { code: string; message: string } | undefined;
+  const cropWrites: Array<Record<string, unknown>> = [];
+  let attachedCropRevision: { jobId: number; revisionId: number } | undefined;
   const progress: Array<{ stage: AppKnowledgeWorkerJob["stage"]; done: number }> = [];
   const designSystemChunks = new Map<string, {
     key: string;
@@ -444,10 +447,20 @@ async function harness(options: {
         errorCode: input.errorCode,
       });
     },
+    async findComponentCrop() {
+      return undefined;
+    },
+    async persistComponentCrop(input: Record<string, unknown>) {
+      cropWrites.push(structuredClone(input));
+      return 99;
+    },
+    async attachCropsToRevision(jobId: number, revisionId: number) {
+      attachedCropRevision = { jobId, revisionId };
+    },
     async completeGeneration(_jobId: number, snapshot: AppKnowledgeSnapshot) {
       completed = snapshot;
       job.status = "done";
-      return { reviewStatus: "draft" };
+      return { id: 12, reviewStatus: "draft" };
     },
     async markStale() {
       stale = true;
@@ -461,11 +474,20 @@ async function harness(options: {
   const objectStore: ObjectStore = {
     async get(key) {
       const entry = [...objects.entries()].find(([, object]) => object.key === key);
-      if (!entry) throw new Error("missing");
-      return { metadata: entry[1], body: bodies.get(entry[0])! };
+      if (entry) return { metadata: entry[1], body: bodies.get(entry[0])! };
+      const crop = cropObjects.get(key);
+      if (crop) return crop;
+      throw new Error("missing");
     },
-    async head() { return undefined; },
-    async put() { throw new Error("not used"); },
+    async head(key) {
+      return [...objects.values()].find((object) => object.key === key)
+        ?? cropObjects.get(key)?.metadata;
+    },
+    async put(input) {
+      const { body, ...metadata } = input;
+      cropObjects.set(metadata.key, { metadata, body: Buffer.from(body) });
+      return { created: true, metadata };
+    },
     async signedGetUrl() { return undefined; },
     async *list() {},
     async delete() { return false; },
@@ -475,6 +497,7 @@ async function harness(options: {
   const designMergeCalls: AppKnowledgeDesignSystemMergePrompt[] = [];
   const flowSynthesisCalls: AppKnowledgeFlowSynthesisPrompt[] = [];
   const synthesisPlans: Array<{ totalCount: number; doneCount: number }> = [];
+  const cropObjects = new Map<string, { metadata: ObjectMetadata; body: Buffer }>();
   const providerGate = Promise.withResolvers<void>();
   let active = 0;
   let maximum = 0;
@@ -552,7 +575,26 @@ async function harness(options: {
     },
     async mergeDesignSystem(prompt) {
       designMergeCalls.push(structuredClone(prompt));
-      return designSystem(prompt.allowedEvidenceIds[0]);
+      const result = designSystem(prompt.allowedEvidenceIds[0]);
+      if (options.componentOccurrence) {
+        result.componentCandidates[0].variantCandidates = [{
+          id: "variant-page-frame-default",
+          name: "Default",
+          description: "Default page frame",
+          observedProperties: ["Consistent content frame"],
+          visibleStates: ["Default"],
+          evidenceIds: [prompt.allowedEvidenceIds[0]],
+          occurrences: [{
+            evidenceId: prompt.allowedEvidenceIds[0],
+            region: { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
+            confidence: 0.88,
+          }],
+          confidence: 0.88,
+          source: "llm_inferred",
+          reviewStatus: "needs_review",
+        }];
+      }
+      return result;
     },
   };
   const service = createAppKnowledgeService({
@@ -580,12 +622,14 @@ async function harness(options: {
     designMergeCalls,
     flowSynthesisCalls,
     synthesisPlans,
+    cropWrites,
     designSystemChunks,
     progress,
     get maximum() { return maximum; },
     get completed() { return completed; },
     get stale() { return stale; },
     get failed() { return failed; },
+    get attachedCropRevision() { return attachedCropRevision; },
     providerStarted: providerGate.promise,
     cancel: () => { job.cancelRequested = true; },
   };
@@ -707,6 +751,16 @@ test("prepares, quarantines UI Elements, deduplicates visuals, and keeps Flow st
   assert.equal(state.completed?.flows.length, 1);
   assert.equal(state.completed?.flows[0].steps[1].interaction, "Tap Continue");
   assert.equal(state.completed?.flows[0].insights?.source, "llm_inferred");
+});
+
+test("derives verified component crops and attaches them after revision creation", async () => {
+  const state = await harness({ componentOccurrence: true });
+
+  assert.equal(await state.service.generate("1"), "done", JSON.stringify(state.failed));
+  assert.equal(state.cropWrites.length, 1);
+  assert.equal(state.cropWrites[0].sourceImageId, 1);
+  assert.equal(state.cropWrites[0].componentFamily, "Page frame");
+  assert.deepEqual(state.attachedCropRevision, { jobId: 1, revisionId: 12 });
 });
 
 test("persists an evidence failure, synthesizes a partial draft, and redacts failure detail", async () => {
