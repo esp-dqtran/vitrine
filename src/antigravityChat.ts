@@ -93,6 +93,41 @@ export function lastJsonObjectInText(
   return best;
 }
 
+export function completedAntigravityTranscriptReply(
+  conversationUrl: string,
+  home = homedir(),
+  readFile: (path: string) => string = (path) => readFileSync(path, "utf8"),
+): string {
+  try {
+    const url = new URL(conversationUrl);
+    const match = /^\/c\/([A-Za-z0-9-]+)$/.exec(url.pathname);
+    if (!match) return "";
+    const transcript = readFile(join(
+      home,
+      ".gemini/antigravity/brain",
+      match[1],
+      ".system_generated/logs/transcript_full.jsonl",
+    ));
+    const lines = transcript.trim().split(/\r?\n/);
+    for (let index = lines.length - 1; index >= 0; index -= 1) {
+      try {
+        const record = JSON.parse(lines[index]) as Record<string, unknown>;
+        if (
+          record.source === "MODEL"
+          && record.type === "PLANNER_RESPONSE"
+          && record.status === "DONE"
+          && typeof record.content === "string"
+        ) return record.content;
+      } catch {
+        // Ignore a partially written final line while Antigravity is working.
+      }
+    }
+  } catch {
+    // The transcript is an implementation detail, so DOM capture remains the fallback.
+  }
+  return "";
+}
+
 interface AntigravitySessionOptions {
   modelLabel: string;
   responseTimeoutMs?: number;
@@ -136,13 +171,16 @@ async function waitForStableAntigravityReply(
       ? (await raceChatAbort(replies.last().innerText(), signal)).trim()
       : "";
     const selectedJson = lastJsonObjectInText(selectedReply);
+    const transcriptJson = !working
+      ? lastJsonObjectInText(completedAntigravityTranscriptReply(page.url()))
+      : "";
     const visibleJson = !working
       ? lastJsonObjectInText(
         await raceChatAbort(page.locator("body").innerText(), signal),
         prompt,
       )
       : "";
-    const text = selectedJson || visibleJson || selectedReply;
+    const text = transcriptJson || selectedJson || visibleJson || selectedReply;
     if (!working && text && text === previous) {
       if (stableSince === 0) stableSince = Date.now();
       if (Date.now() - stableSince >= stableMs) return text;

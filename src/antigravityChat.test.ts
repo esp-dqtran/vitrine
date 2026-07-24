@@ -83,6 +83,49 @@ test("ignores complete JSON copied from the submitted prompt", async () => {
   );
 });
 
+test("reads the completed model reply from the full Antigravity transcript", async () => {
+  const module = await import("./antigravityChat.ts") as Record<string, unknown>;
+  const readReply = module.completedAntigravityTranscriptReply as (
+    conversationUrl: string,
+    home: string,
+    readFile: (path: string) => string,
+  ) => string;
+  let readPath = "";
+  const reply = readReply(
+    "https://127.0.0.1:51532/c/conversation-123?section=outside-of-project",
+    "/Users/test",
+    (path) => {
+      readPath = path;
+      return [
+        JSON.stringify({ source: "MODEL", type: "PLANNER_RESPONSE", status: "WORKING", content: "{}" }),
+        JSON.stringify({
+          source: "MODEL",
+          type: "PLANNER_RESPONSE",
+          status: "DONE",
+          content: '{"componentCandidates":[],"designLanguage":{"color":[]}}',
+        }),
+      ].join("\n");
+    },
+  );
+
+  assert.equal(
+    readPath,
+    "/Users/test/.gemini/antigravity/brain/conversation-123/.system_generated/logs/transcript_full.jsonl",
+  );
+  assert.equal(
+    reply,
+    '{"componentCandidates":[],"designLanguage":{"color":[]}}',
+  );
+  assert.equal(
+    readReply(
+      "https://127.0.0.1:51532/c/../secret?section=outside-of-project",
+      "/Users/test",
+      () => { throw new Error("must not read"); },
+    ),
+    "",
+  );
+});
+
 test("drives a fresh Antigravity conversation with a genuine image attachment", async () => {
   const module = await import("./antigravityChat.ts") as Record<string, unknown>;
   assert.equal(typeof module.bindAntigravityChatSession, "function");
