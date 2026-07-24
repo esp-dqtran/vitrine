@@ -2806,9 +2806,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const effectiveSnapshot = snapshot ?? { app: appSlug, generatedAt: new Date().toISOString(), tokens: [], components: [], flows: [] };
-    const images = versioned
+    const sourceImages = versioned
       ? await deps.versionImages(appSlug, platform, versioned.version.version_number, ["screen", "flow_step"])
       : await deps.appImages(appSlug, ["screen", "flow_step"]);
+    const cropImageIds = new Set(
+      effectiveSnapshot.components.flatMap(({ variants }) =>
+        variants.flatMap(({ occurrences }) =>
+          (occurrences ?? []).flatMap(({ cropImageId }) =>
+            cropImageId === undefined ? [] : [cropImageId]))),
+    );
+    const cropImages = cropImageIds.size === 0
+      ? []
+      : (await deps.appImages(appSlug, ["ui_element"]))
+          .filter(({ id }) => cropImageIds.has(id));
+    const images = [...sourceImages, ...cropImages];
     const hydrated = res.locals.user.role === "admin"
       ? hydrateDesignSystem({ ...effectiveSnapshot, flows }, images)
       : hydrateDesignSystem(

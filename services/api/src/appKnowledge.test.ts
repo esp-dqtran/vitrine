@@ -169,6 +169,7 @@ let providerModel = "vision-model";
 let publishFailure = false;
 let resolveVersion = true;
 let activeJobExists = false;
+let latestJob: AppKnowledgeJobView = job;
 let transportId = 70;
 const published: unknown[] = [];
 const statuses: unknown[] = [];
@@ -194,7 +195,7 @@ const store = {
   },
   async getApprovedSnapshotForApp() { return approvedView; },
   async getLatestJobForSnapshot(snapshotId: number) {
-    return snapshotId === 41 ? job : undefined;
+    return snapshotId === 41 ? latestJob : undefined;
   },
   async getJob(jobId: number) {
     return jobId === 31 ? { ...job, status: "running" as const } : undefined;
@@ -369,15 +370,27 @@ test("ordinary entitled reads expose only the approved revision and deterministi
 
 test("admin reads include job, coverage, diagnostics, revisions, and review events", async () => {
   adminView = snapshotView("draft");
+  latestJob = {
+    ...job,
+    requestedBy: null,
+    requestOrigin: "automatic",
+    status: "running",
+    stage: "merging",
+    doneCount: 10,
+    totalCount: 10,
+    synthesisDoneCount: 2,
+    synthesisTotalCount: 3,
+  };
   const response = await fetch(`${base}/apps/linear/analysis?platform=web&version=2`, {
     headers: { "x-role": "admin" },
   });
   assert.equal(response.status, 200);
   const body = await response.json() as Record<string, unknown>;
   assert.ok(body.snapshot);
-  assert.ok(body.job);
+  assert.deepEqual(body.job, latestJob);
   assert.ok(body.coverage);
   assert.ok(body.qualityDiagnostics);
+  latestJob = job;
 });
 
 test("all lifecycle and review mutations are admin-only", async () => {

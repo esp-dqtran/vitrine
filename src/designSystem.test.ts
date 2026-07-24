@@ -60,6 +60,41 @@ test("hydrates evidence ids with public image data", () => {
   ]);
 });
 
+test("hydrates verified component crop media without object-storage fields", () => {
+  const hydrated = hydrateDesignSystem({
+    app: "linear",
+    generatedAt: "2026-07-10T00:00:00.000Z",
+    tokens: [],
+    components: [{
+      id: "button",
+      name: "Button",
+      category: "Action",
+      description: "Primary action",
+      variants: [{
+        id: "primary",
+        name: "Primary",
+        description: "Filled button",
+        evidence: [7],
+        occurrences: [{
+          imageId: 7,
+          cropImageId: 88,
+          coordinateSpace: "normalized",
+          region: { x: 0.1, y: 0.2, width: 0.3, height: 0.1 },
+        }],
+      }],
+    }],
+    flows: [],
+  }, [
+    { id: 7, image_url: "mobbin-bulk:0123456789abcdef", description: "Form" },
+    { id: 88, image_url: "capture:fedcba9876543210", description: "Button crop" },
+  ]);
+
+  const occurrence = hydrated.components[0].variants[0].occurrences?.[0];
+  assert.equal(occurrence?.crop?.imageId, 88);
+  assert.match(occurrence?.crop?.imageUrl ?? "", /^\/api\/media\/linear\//);
+  assert.equal("objectKey" in (occurrence?.crop ?? {}), false);
+});
+
 test("hydrates ordered flow steps without changing curator order", () => {
   const hydrated = hydrateDesignSystem({
     app: "linear",

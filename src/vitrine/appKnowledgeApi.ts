@@ -73,11 +73,14 @@ type Fetch = typeof fetch;
 const jsonHeaders = { 'content-type': 'application/json' };
 const statuses = new Set(['queued', 'running', 'done', 'error', 'cancelled', 'stale']);
 const terminalStatuses = new Set(['done', 'error', 'cancelled', 'stale']);
+const requestOrigins = new Set(['manual', 'retry', 'regeneration', 'automatic']);
+const designSystemSeedOutcomes = new Set(['seeded', 'replaced', 'unchanged', 'conflict']);
 const stages = new Set([
   'preparing',
   'validating_evidence',
   'analyzing',
   'synthesizing',
+  'merging',
   'validating_output',
   'saving',
   'complete',
@@ -87,10 +90,13 @@ const jobKeys = new Set([
   'snapshotId',
   'transportJobId',
   'requestedBy',
+  'requestOrigin',
   'status',
   'stage',
   'doneCount',
   'totalCount',
+  'synthesisDoneCount',
+  'synthesisTotalCount',
   'cacheHitCount',
   'failedCount',
   'providerModel',
@@ -101,6 +107,7 @@ const jobKeys = new Set([
   'sourceSha256',
   'errorCode',
   'errorMessage',
+  'designSystemSeedOutcome',
   'updatedAt',
 ]);
 
@@ -173,12 +180,16 @@ export function parseAppKnowledgeProgress(
     || job.id !== expectedJobId
     || !positive(job.snapshotId)
     || !positive(job.transportJobId)
-    || !positive(job.requestedBy)
+    || (job.requestedBy !== null && !positive(job.requestedBy))
+    || !requestOrigins.has(job.requestOrigin as string)
     || !statuses.has(job.status as string)
     || !stages.has(job.stage as string)
     || !count(job.doneCount)
     || !count(job.totalCount)
     || Number(job.doneCount) > Number(job.totalCount)
+    || !count(job.synthesisDoneCount)
+    || !count(job.synthesisTotalCount)
+    || Number(job.synthesisDoneCount) > Number(job.synthesisTotalCount)
     || !count(job.cacheHitCount)
     || !count(job.failedCount)
     || !string(job.providerModel, 160)
@@ -190,6 +201,10 @@ export function parseAppKnowledgeProgress(
     || (job.sourceSha256 !== undefined && !/^[0-9a-f]{64}$/.test(job.sourceSha256 as string))
     || !optionalSafeText(job.errorCode, 80)
     || !optionalSafeText(job.errorMessage, 1_000)
+    || (
+      job.designSystemSeedOutcome !== undefined
+      && !designSystemSeedOutcomes.has(job.designSystemSeedOutcome as string)
+    )
     || !string(job.updatedAt, 80)
     || !Number.isFinite(Date.parse(job.updatedAt as string))
   ) throw new Error('Invalid App Knowledge progress event');

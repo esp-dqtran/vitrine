@@ -55,10 +55,13 @@ function progress(overrides: Record<string, unknown> = {}) {
     snapshotId: 41,
     transportJobId: 71,
     requestedBy: 1,
+    requestOrigin: 'manual',
     status: 'running',
     stage: 'analyzing',
     doneCount: 1,
     totalCount: 3,
+    synthesisDoneCount: 0,
+    synthesisTotalCount: 2,
     cacheHitCount: 0,
     failedCount: 0,
     providerModel: 'vision-model',
@@ -69,6 +72,31 @@ function progress(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+test('accepts nullable automatic actors, provenance, and merging progress', () => {
+  const source = new FakeEventSource();
+  const updates: unknown[] = [];
+  subscribeAppKnowledgeJob(
+    31,
+    (job) => updates.push(job),
+    () => {},
+    () => source,
+  );
+
+  source.emit('app-knowledge-progress', progress({
+    requestedBy: null,
+    requestOrigin: 'automatic',
+    stage: 'merging',
+    doneCount: 3,
+    totalCount: 3,
+    synthesisDoneCount: 2,
+    synthesisTotalCount: 2,
+  }));
+
+  assert.equal(updates.length, 1);
+  assert.equal((updates[0] as { requestedBy: unknown }).requestedBy, null);
+  assert.equal((updates[0] as { requestOrigin: unknown }).requestOrigin, 'automatic');
+});
 
 test('validates progress events and closes on terminal state', () => {
   const source = new FakeEventSource();

@@ -14,11 +14,12 @@ export interface EvidenceView {
 
 export type ReviewStatus = "needs_review" | "reviewed" | "rejected";
 export type DesignInferenceSource = "llm_inferred";
-export interface EvidenceOccurrence {
+export interface EvidenceOccurrence<T = number> {
   imageId: number;
   region?: { x: number; y: number; width: number; height: number };
   coordinateSpace?: "normalized";
   cropImageId?: number;
+  crop?: T;
   confidence?: number;
 }
 
@@ -32,7 +33,7 @@ export interface DesignToken<T = number> {
   confidence?: number;
   reviewStatus?: ReviewStatus;
   responsiveViewports?: string[];
-  occurrences?: EvidenceOccurrence[];
+  occurrences?: EvidenceOccurrence<T>[];
   source?: DesignInferenceSource;
 }
 
@@ -46,7 +47,7 @@ export interface ComponentVariant<T = number> {
   confidence?: number;
   reviewStatus?: ReviewStatus;
   responsiveViewports?: string[];
-  occurrences?: EvidenceOccurrence[];
+  occurrences?: EvidenceOccurrence<T>[];
   source?: DesignInferenceSource;
   reconstruction?: {
     layoutMode?: "HORIZONTAL" | "VERTICAL";
@@ -244,24 +245,44 @@ export function hydrateDesignSystem(
   imageUrl: (app: string, source: string) => string = publicImageUrl,
 ): DesignSystemSnapshot<EvidenceView> {
   const byId = new Map(images.map((image) => [image.id, image]));
-  const hydrate = (ids: number[]): EvidenceView[] => ids.flatMap((imageId) => {
+  const hydrateOne = (imageId: number): EvidenceView | undefined => {
     const image = byId.get(imageId);
-    return image ? [{
+    return image ? {
       imageId,
       imageUrl: imageUrl(snapshot.app, image.image_url),
       description: image.description,
       ...(image.captured_at !== undefined ? { capturedAt: image.captured_at } : {}),
       ...(image.analysis?.responsiveViewport ? { responsiveViewport: image.analysis.responsiveViewport } : {}),
       ...(image.capture_url !== undefined ? { sourceUrl: image.capture_url } : {}),
-    }] : [];
-  });
+    } : undefined;
+  };
+  const hydrate = (ids: number[]): EvidenceView[] =>
+    ids.flatMap((imageId) => {
+      const result = hydrateOne(imageId);
+      return result ? [result] : [];
+    });
+  const hydrateOccurrences = (occurrences: EvidenceOccurrence[] | undefined) =>
+    occurrences?.map(({ crop: _ignored, ...occurrence }) => {
+      const crop = occurrence.cropImageId === undefined
+        ? undefined
+        : hydrateOne(occurrence.cropImageId);
+      return { ...occurrence, ...(crop ? { crop } : {}) };
+    });
 
   return {
     ...snapshot,
-    tokens: snapshot.tokens.map((token) => ({ ...token, evidence: hydrate(token.evidence) })),
+    tokens: snapshot.tokens.map((token) => ({
+      ...token,
+      evidence: hydrate(token.evidence),
+      occurrences: hydrateOccurrences(token.occurrences),
+    })),
     components: snapshot.components.map((component) => ({
       ...component,
-      variants: component.variants.map((variant) => ({ ...variant, evidence: hydrate(variant.evidence) })),
+      variants: component.variants.map((variant) => ({
+        ...variant,
+        evidence: hydrate(variant.evidence),
+        occurrences: hydrateOccurrences(variant.occurrences),
+      })),
     })),
     flows: snapshot.flows.map(({ insights, ...flow }) => ({
       ...flow,
