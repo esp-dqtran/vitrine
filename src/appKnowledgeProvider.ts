@@ -98,6 +98,7 @@ export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
 
 export const APP_KNOWLEDGE_DESIGN_SYSTEM_MERGE_INSTRUCTIONS = [
   APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS,
+  "Do not use tools, terminal, files, or code execution. Reason over the supplied fragments in the conversation and answer directly.",
   "Merge semantically equivalent claims and component candidates across fragments.",
   "Preserve evidence citations, normalize names conservatively, and return one deduplicated design system.",
 ].join(" ");
