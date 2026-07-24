@@ -165,23 +165,24 @@ async function waitForStableAntigravityReply(
   let stableSince = 0;
   while (Date.now() < deadline) {
     signal?.throwIfAborted();
+    const transcriptJson = lastJsonObjectInText(
+      completedAntigravityTranscriptReply(page.url()),
+    );
+    if (transcriptJson) return transcriptJson;
     const working = await raceChatAbort(loading.isVisible(), signal);
     const count = await raceChatAbort(replies.count(), signal);
     const selectedReply = count > 0
       ? (await raceChatAbort(replies.last().innerText(), signal)).trim()
       : "";
     const selectedJson = lastJsonObjectInText(selectedReply);
-    const transcriptJson = lastJsonObjectInText(
-      completedAntigravityTranscriptReply(page.url()),
-    );
     const visibleJson = !working
       ? lastJsonObjectInText(
         await raceChatAbort(page.locator("body").innerText(), signal),
         prompt,
       )
       : "";
-    const text = transcriptJson || selectedJson || visibleJson || selectedReply;
-    if ((!working || transcriptJson) && text && text === previous) {
+    const text = selectedJson || visibleJson || selectedReply;
+    if (!working && text && text === previous) {
       if (stableSince === 0) stableSince = Date.now();
       if (Date.now() - stableSince >= stableMs) return text;
     } else {
