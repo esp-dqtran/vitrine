@@ -24,3 +24,17 @@ test('synchronizes the visible section when browser history changes the route', 
   const source = await readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   assert.match(source, /useEffect\(\(\) => setSectionState\(resolveSection\(initialSection, role\)\), \[initialSection, role\]\)/);
 });
+
+test('streams automatic design generation without hiding an existing snapshot', async () => {
+  const [detail, designSystemHook] = await Promise.all([
+    readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./useDesignSystem.ts', import.meta.url), 'utf8'),
+  ]);
+  assert.match(detail, /useDesignSystemGeneration\(\{/);
+  assert.match(detail, /enabled: role === 'admin' && section === 'design-system'/);
+  assert.match(detail, /hasSnapshot: snapshot !== null/);
+  assert.match(detail, /designSystemStatus === 'loading' && !snapshot/);
+  assert.match(detail, /generation=\{designSystemGeneration\}/);
+  assert.match(designSystemHook, /reload: \(\) => store\.reload\(key\)/);
+  assert.doesNotMatch(detail, /setInterval/);
+});

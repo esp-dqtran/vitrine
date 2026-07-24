@@ -3,6 +3,60 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DesignSystemPanel, designSystemMarkdown } from './components/DesignSystemPanel.tsx';
+import type { DesignSystemGenerationView } from './useDesignSystemGeneration.ts';
+
+function generation(
+  phase: DesignSystemGenerationView['phase'],
+): DesignSystemGenerationView {
+  return {
+    phase,
+    regenerating: true,
+    coverage: {
+      total: 10,
+      eligible: 8,
+      analyzed: 6,
+      cached: 0,
+      quarantined: 1,
+      skipped: 1,
+      failed: 1,
+      duplicateVisuals: 0,
+      byKind: {
+        screen: { total: 8, eligible: 8, analyzed: 6, cached: 0, quarantined: 0, failed: 1 },
+        flow_step: { total: 1, eligible: 0, analyzed: 0, cached: 0, quarantined: 0, failed: 0 },
+        ui_element: { total: 1, eligible: 0, analyzed: 0, cached: 0, quarantined: 1, failed: 0 },
+      },
+      flowReferences: { total: 1, resolved: 1, uniqueImages: 1 },
+    },
+    qualityDiagnostics: null,
+    job: {
+      id: 31,
+      snapshotId: 41,
+      transportJobId: 71,
+      requestedBy: null,
+      requestOrigin: 'automatic',
+      status: phase === 'queued' ? 'queued'
+        : phase === 'draft_ready' ? 'done'
+          : phase === 'failed' ? 'error'
+            : phase === 'stale' ? 'stale'
+              : 'running',
+      stage: phase === 'synthesizing' ? 'synthesizing'
+        : phase === 'merging' ? 'merging'
+          : phase === 'saving' || phase === 'draft_ready' ? 'saving'
+            : 'analyzing',
+      doneCount: 6,
+      totalCount: 8,
+      synthesisDoneCount: 2,
+      synthesisTotalCount: 3,
+      cacheHitCount: 0,
+      failedCount: 1,
+      providerModel: 'gemini',
+      promptVersion: 2,
+      cancelRequested: false,
+      retryFailedOnly: false,
+      updatedAt: '2026-07-24T00:00:00.000Z',
+    },
+  };
+}
 
 test('renders observed foundations with evidence counts', () => {
   const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
@@ -43,6 +97,65 @@ test('renders observed components from their reconstruction spec, and rules grou
   assert.match(html, /94% confidence/);
   assert.match(html, /Full-bleed cards/);
   assert.match(html, /layout/i);
+});
+
+test('shows automatic generation stages while retaining the previous snapshot', () => {
+  const snapshot = {
+    app: 'linear',
+    generatedAt: '2026-07-10T00:00:00.000Z',
+    tokens: [{ id: 'primary', kind: 'color' as const, name: 'Primary', value: '#5e6ad2', role: 'Brand', evidence: [] }],
+    components: [],
+    flows: [],
+  };
+  const expectations = new Map<DesignSystemGenerationView['phase'], RegExp>([
+    ['queued', /Waiting for analysis worker/],
+    ['analyzing', /Analyzing Screens · 6\/8/],
+    ['synthesizing', /Extracting design system · 2\/3/],
+    ['merging', /Merging extracted design evidence/],
+    ['saving', /Saving Design System draft/],
+    ['draft_ready', /Draft ready for review/],
+    ['failed', /Analysis failed/],
+    ['stale', /Capture changed during analysis/],
+  ]);
+  for (const [phase, message] of expectations) {
+    const html = renderToStaticMarkup(
+      <DesignSystemPanel snapshot={snapshot} status="ready" generation={generation(phase)} />,
+    );
+    assert.match(html, message);
+    assert.match(html, /#5e6ad2/);
+  }
+});
+
+test('uses verified crop specimens and labels reconstruction fallback', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'linear',
+    generatedAt: '2026-07-10T00:00:00.000Z',
+    tokens: [],
+    components: [{
+      id: 'button', name: 'Button', category: 'Action', description: 'Action',
+      variants: [
+        {
+          id: 'crop', name: 'Observed', description: 'Observed button',
+          evidence: [{ imageId: 7, imageUrl: '/screen', description: 'Form' }],
+          occurrences: [{
+            imageId: 7,
+            cropImageId: 88,
+            crop: { imageId: 88, imageUrl: '/crop.png', description: 'Button crop' },
+          }],
+        },
+        {
+          id: 'inferred', name: 'Inferred', description: 'Inferred button',
+          evidence: [],
+          reconstruction: { visibleText: 'Continue' },
+        },
+      ],
+    }],
+    flows: [],
+  }} status="ready" />);
+
+  assert.match(html, /src="\/crop\.png"/);
+  assert.match(html, /Observed specimen/);
+  assert.match(html, /Inferred preview/);
 });
 
 test('renders an evidence-free imported system as visible native UI', () => {

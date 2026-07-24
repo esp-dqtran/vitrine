@@ -43,6 +43,7 @@ export function useDesignSystem(appId: string, platform: Platform, version?: num
     status: state.status === "idle" ? "loading" as const : state.status,
     error: state.error,
     retry: () => store.retry(key),
+    reload: () => store.reload(key),
     invalidate: () => store.invalidate((candidate) => candidate === `${appId}|${platform}|${version ?? 'latest'}`),
   };
 }

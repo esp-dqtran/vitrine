@@ -28,10 +28,12 @@ export function createDesignSystemStore(loader: Loader) {
   const emit = () => listeners.forEach((listener) => listener());
   const get = (key: DesignSystemKey) => states.get(cacheKey(key)) ?? idle();
 
-  const load = (key: DesignSystemKey, signal?: AbortSignal) => {
+  const load = (key: DesignSystemKey, signal?: AbortSignal, force = false) => {
     const id = cacheKey(key);
     const state = states.get(id);
-    if (state?.status === 'ready' || state?.status === 'missing') return Promise.resolve(state.snapshot);
+    if (!force && (state?.status === 'ready' || state?.status === 'missing')) {
+      return Promise.resolve(state.snapshot);
+    }
     const pending = inFlight.get(id);
     if (pending && !pending.signal?.aborted) return pending.promise;
     if (pending) inFlight.delete(id);
@@ -59,12 +61,17 @@ export function createDesignSystemStore(loader: Loader) {
     get,
     load,
     retry(key: DesignSystemKey, signal?: AbortSignal) {
-      states.delete(cacheKey(key));
-      emit();
-      return load(key, signal);
+      return load(key, signal, true);
+    },
+    reload(key: DesignSystemKey, signal?: AbortSignal) {
+      return load(key, signal, true);
     },
     invalidate(predicate: (key: string) => boolean) {
-      for (const key of states.keys()) if (predicate(key)) states.delete(key);
+      for (const [key, state] of states) {
+        if (predicate(key)) {
+          states.set(key, { status: 'idle', snapshot: state.snapshot, error: null });
+        }
+      }
       emit();
     },
     subscribe(listener: () => void) {

@@ -57,3 +57,21 @@ test('keeps aborts silent', async () => {
   assert.equal(store.get(key).status, 'idle');
   assert.equal(store.get(key).error, null);
 });
+
+test('invalidates and reloads while retaining the previous snapshot', async () => {
+  let current = snapshot;
+  const store = createDesignSystemStore(async () => current);
+  await store.load(key);
+  const newer = { ...snapshot, generatedAt: '2026-07-24T00:00:00.000Z' };
+  current = newer;
+
+  store.invalidate((candidate) => candidate === 'claude|ios|4');
+  assert.equal(store.get(key).snapshot?.generatedAt, snapshot.generatedAt);
+  assert.equal(store.get(key).status, 'idle');
+
+  const reloading = store.reload(key);
+  assert.equal(store.get(key).status, 'loading');
+  assert.equal(store.get(key).snapshot?.generatedAt, snapshot.generatedAt);
+  await reloading;
+  assert.equal(store.get(key).snapshot?.generatedAt, newer.generatedAt);
+});

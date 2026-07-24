@@ -9,6 +9,7 @@ import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { AppMetadata, Screen } from '../types';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
+import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
 import { AppKnowledgePanel } from './AppKnowledgePanel';
 import { AppOverviewPanel } from './AppOverviewPanel';
 import { CuratorReviewPanel } from './CuratorReviewPanel';
@@ -87,12 +88,28 @@ export function ScreenDetail({
     selectedVersion,
   });
   const needsDesignSystem = section === 'design-system' || section === 'export' || section === 'review';
-  const { snapshot, status: designSystemStatus, error: designSystemError, retry: retryDesignSystem, invalidate: invalidateDesignSystem } = useDesignSystem(
+  const {
+    snapshot,
+    status: designSystemStatus,
+    error: designSystemError,
+    retry: retryDesignSystem,
+    reload: reloadDesignSystem,
+    invalidate: invalidateDesignSystem,
+  } = useDesignSystem(
     app.id,
     selectedPlatform,
     sectionData.resolvedVersion,
     needsDesignSystem && !sectionData.versionsLoading,
   );
+  const designSystemGeneration = useDesignSystemGeneration({
+    app: app.id,
+    platform: selectedPlatform,
+    version: sectionData.resolvedVersion,
+    enabled: role === 'admin' && section === 'design-system' && !sectionData.versionsLoading,
+    hasSnapshot: snapshot !== null,
+    invalidateDesignSystem,
+    reloadDesignSystem,
+  });
 
   const evidence = sectionData.state.data && 'screens' in sectionData.state.data
     ? sectionData.state.data
@@ -184,7 +201,9 @@ export function ScreenDetail({
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox, screens.length, onBack]);
 
-  const sectionLoading = sectionData.versionsLoading || sectionData.state.status === 'loading' || (needsDesignSystem && designSystemStatus === 'loading');
+  const sectionLoading = sectionData.versionsLoading
+    || sectionData.state.status === 'loading'
+    || (needsDesignSystem && designSystemStatus === 'loading' && !snapshot);
   const sectionError = sectionData.state.status === 'error' ? sectionData.state.error : null;
   const hasScreenFilters = types.length > 1 || layouts.length > 0 || screenComponents.length > 0 || states.length > 0;
   const screenFilterControls = hasScreenFilters ? (
@@ -300,7 +319,7 @@ export function ScreenDetail({
               : sectionLoading ? <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} snapshot={snapshot} />
                   : section === 'analysis' ? <AppKnowledgePanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} userRole={role} />
-                    : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} /></Suspense>
+                    : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
                       : section === 'flows' ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} initialFlowId={initialFlow} initialStep={initialStep} />
                         : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}

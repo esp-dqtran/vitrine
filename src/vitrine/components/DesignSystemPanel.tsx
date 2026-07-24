@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { Badge, Button, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
 import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
+import type { DesignSystemGenerationView } from '../useDesignSystemGeneration.ts';
 
 const KIND_LABELS: Record<TokenKind, string> = {
   color: 'Colors',
@@ -215,11 +216,21 @@ function reconstructionStyle(spec: ComponentVariant<EvidenceView>['reconstructio
 }
 
 function ComponentSample({ componentName, variant }: { componentName: string; variant: ComponentVariant<EvidenceView> }) {
+  const crop = variant.occurrences?.find((occurrence) => occurrence.crop)?.crop;
+  if (crop) {
+    return (
+      <figure className="ds-specimen">
+        <img src={crop.imageUrl} alt={`${componentName} ${variant.name}`} />
+        <figcaption>Observed specimen</figcaption>
+      </figure>
+    );
+  }
   const kind = componentName.toLowerCase();
   const label = variant.reconstruction?.visibleText || (variant.name.toLowerCase() === 'default' ? componentName : variant.name);
   const style = reconstructionStyle(variant.reconstruction);
+  let preview;
   if (/market.*table|table.*card/.test(kind)) {
-    return (
+    preview = (
       <div className="ds-sample-market" style={style}>
         <div className="ds-sample-market__tabs"><strong>Popular</strong><span>New listings</span><span>Top gainers</span></div>
         <table>
@@ -231,12 +242,18 @@ function ComponentSample({ componentName, variant }: { componentName: string; va
         </table>
       </div>
     );
+  } else if (/input|field|search/.test(kind)) {
+    preview = <div className="ds-sample-field"><TextInput label={componentName} value={label} onChange={() => undefined} width="100%" /></div>;
+  } else if (/badge|chip|tag/.test(kind)) {
+    preview = <span className="ds-sample-badge" style={style}>{label}</span>;
+  } else if (/card|panel|tile/.test(kind)) {
+    preview = <article className="ds-sample-card" style={style}><strong>{label}</strong><span>{variant.description}</span></article>;
+  } else if (/nav|tab|menu/.test(kind)) {
+    preview = <nav className="ds-sample-nav"><Button label={label} className="is-active" size="sm" /><Button label="Overview" variant="ghost" size="sm" /><Button label="Activity" variant="ghost" size="sm" /></nav>;
+  } else {
+    preview = <Button label={label} className="ds-sample-button" style={style} />;
   }
-  if (/input|field|search/.test(kind)) return <div className="ds-sample-field"><TextInput label={componentName} value={label} onChange={() => undefined} width="100%" /></div>;
-  if (/badge|chip|tag/.test(kind)) return <span className="ds-sample-badge" style={style}>{label}</span>;
-  if (/card|panel|tile/.test(kind)) return <article className="ds-sample-card" style={style}><strong>{label}</strong><span>{variant.description}</span></article>;
-  if (/nav|tab|menu/.test(kind)) return <nav className="ds-sample-nav"><Button label={label} className="is-active" size="sm" /><Button label="Overview" variant="ghost" size="sm" /><Button label="Activity" variant="ghost" size="sm" /></nav>;
-  return <Button label={label} className="ds-sample-button" style={style} />;
+  return <div className="ds-inferred-preview">{preview}<small>Inferred preview</small></div>;
 }
 
 function ComponentsSection({ index, components }: { index: number; components: Snapshot['components'] }) {
@@ -304,14 +321,67 @@ function PatternsSection({ index, rules }: { index: number; rules: NonNullable<S
 interface DesignSystemPanelProps {
   snapshot: Snapshot | null;
   status: 'loading' | 'ready' | 'missing' | 'error';
+  generation?: DesignSystemGenerationView | null;
+  onRetryGeneration?: () => void;
 }
 
-export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) {
+function GenerationBanner(props: {
+  generation: DesignSystemGenerationView;
+  onRetry?: () => void;
+}) {
+  const { generation } = props;
+  const { job } = generation;
+  const messages: Record<DesignSystemGenerationView['phase'], string> = {
+    queued: 'Waiting for analysis worker',
+    analyzing: `Analyzing Screens · ${job.doneCount}/${job.totalCount}`,
+    synthesizing: `Extracting design system · ${job.synthesisDoneCount}/${job.synthesisTotalCount}`,
+    merging: 'Merging extracted design evidence',
+    saving: 'Saving Design System draft',
+    draft_ready: 'Draft ready for review',
+    failed: 'Analysis failed',
+    stale: 'Capture changed during analysis',
+  };
+  const partial = generation.coverage
+    && (generation.coverage.failed > 0 || generation.coverage.quarantined > 0)
+    ? `${generation.coverage.failed} failed · ${generation.coverage.quarantined} quarantined`
+    : undefined;
+  return (
+    <aside className={`ds-generation ds-generation--${generation.phase}`} role="status">
+      <div>
+        <strong>{messages[generation.phase]}</strong>
+        {generation.regenerating && generation.phase !== 'draft_ready'
+          ? <span>Refreshing the existing Design System</span>
+          : null}
+        {partial ? <span>{partial}</span> : null}
+        {generation.phase === 'draft_ready'
+          ? <span>LLM-inferred candidates need human review before publication.</span>
+          : null}
+      </div>
+      {(generation.phase === 'failed' || generation.phase === 'stale') && props.onRetry
+        ? <Button label="Retry analysis" size="sm" clickAction={props.onRetry} />
+        : null}
+    </aside>
+  );
+}
+
+export function DesignSystemPanel({
+  snapshot,
+  status,
+  generation,
+  onRetryGeneration,
+}: DesignSystemPanelProps) {
   const [view, setView] = useState<'preview' | 'markdown'>('preview');
   const [stage, setStage] = useState<'light' | 'dark'>('dark');
 
-  if (status === 'loading') return <Spinner size="lg" />;
-  if (!snapshot) return <EmptyState title="No design system yet" description="No design-system data is available for this app." />;
+  if (status === 'loading' && !snapshot && !generation) return <Spinner size="lg" />;
+  if (!snapshot) {
+    return (
+      <>
+        {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
+        <EmptyState title="No design system yet" description="No design-system data is available for this app." />
+      </>
+    );
+  }
 
   const tokenGroups = (Object.keys(KIND_LABELS) as TokenKind[])
     .map((kind) => [kind, snapshot.tokens.filter((token) => token.kind === kind)] as const)
@@ -332,6 +402,7 @@ export function DesignSystemPanel({ snapshot, status }: DesignSystemPanelProps) 
   let sectionIndex = 0;
   return (
     <div className="ds-page">
+      {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
       <header className="ds-page__header">
         <div>
           <span className="ds-page__eyebrow">Design system analysis</span>
