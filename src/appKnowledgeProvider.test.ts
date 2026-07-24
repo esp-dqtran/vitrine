@@ -75,6 +75,9 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.equal(calls[2].image, undefined);
   assert.match(calls[3].system, /merge/i);
   assert.match(calls[3].system, /Do not use tools, terminal, files, or code execution/);
+  assert.match(calls[3].system, /at most 16 componentCandidates/);
+  assert.match(calls[3].system, /at most 4 claims/);
+  assert.match(calls[3].system, /at most 12 representative evidence IDs/);
   assert.equal(calls[3].image, undefined);
 });
 

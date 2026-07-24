@@ -100,6 +100,9 @@ export const APP_KNOWLEDGE_DESIGN_SYSTEM_MERGE_INSTRUCTIONS = [
   APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS,
   "Do not use tools, terminal, files, or code execution. Reason over the supplied fragments in the conversation and answer directly.",
   "Merge semantically equivalent claims and component candidates across fragments.",
+  "Return at most 16 componentCandidates, prioritizing the most reusable and well-supported patterns.",
+  "Return at most 4 claims in each designLanguage category and at most 12 representative evidence IDs on each claim or component candidate.",
+  "Keep every other string array to at most 8 concise items and every claim text to at most 180 characters.",
   "Preserve evidence citations, normalize names conservatively, and return one deduplicated design system.",
 ].join(" ");
 
