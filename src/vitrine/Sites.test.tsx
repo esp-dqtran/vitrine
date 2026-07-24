@@ -58,6 +58,57 @@ test('filters Sites by name, version, and source page title', () => {
   assert.match(html, /Showing 1 of 1 sites/);
 });
 
+test('renders member Sites with the Apps gallery identity and account-control slots', () => {
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      sites={[site]}
+      isAdmin={false}
+      query=""
+      onQueryChange={() => undefined}
+      onRefresh={() => undefined}
+      onImport={() => undefined}
+      memberControls={<button type="button">Account</button>}
+    />,
+  );
+
+  assert.match(html, /data-reference-gallery-shell="sites"/);
+  assert.match(html, /data-reference-gallery-identity="true"/);
+  assert.match(html, />Vitrine</);
+  assert.match(html, />Account</);
+  assert.doesNotMatch(html, /<h1[^>]*>References<\/h1>/);
+});
+
+test('keeps shared Sites chrome visible for errors and no-result searches', () => {
+  const error = renderToStaticMarkup(
+    <SitesPageView
+      sites={[]}
+      isAdmin
+      error="network down"
+      query=""
+      onQueryChange={() => undefined}
+      onRefresh={() => undefined}
+      onImport={() => undefined}
+    />,
+  );
+  const noResults = renderToStaticMarkup(
+    <SitesPageView
+      sites={[site]}
+      isAdmin={false}
+      query="missing"
+      onQueryChange={() => undefined}
+      onRefresh={() => undefined}
+      onImport={() => undefined}
+    />,
+  );
+
+  assert.match(error, /aria-label="Reference type"/);
+  assert.match(error, /Could not load Sites/);
+  assert.match(error, /network down/);
+  assert.match(error, />Retry</);
+  assert.match(noResults, /aria-label="Reference type"/);
+  assert.match(noResults, /No Sites match this search/);
+});
+
 test('keeps the Site import dialog URL-only', () => {
   const html = renderToStaticMarkup(<SiteImportDialog isOpen onClose={() => undefined} onExisting={() => undefined} />);
   assert.match(html, /Mobbin Sites URL/);
