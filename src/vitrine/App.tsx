@@ -24,6 +24,7 @@ import { AdvancedSearchPage } from './components/AdvancedSearchPage.tsx';
 import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
 import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
 import { GalleryCardSkeleton } from './components/GalleryToolbar';
+import { GuestCatalogControls } from './components/GuestCatalogControls.tsx';
 import { ReferenceGalleryShell } from './components/ReferenceGalleryShell';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
 import { useApps } from './useApps';
@@ -39,6 +40,7 @@ import { readRecentSearches } from './searchState.ts';
 
 export function App() {
   const { user, logout } = useAuth();
+  const isGuest = user === null;
   const route = useRoute();
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
@@ -72,6 +74,7 @@ export function App() {
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
   const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
   const canUseProResearch = isAdmin || customerPlan === 'pro';
+  const openSignIn = () => navigate({ name: 'signin' });
   const openPricing = () => navigate({ name: 'pricing' });
   const closeSettings = () => {
     setSettingsOpen(false);
@@ -182,10 +185,10 @@ export function App() {
     if (route.name === 'app' && isFreeGated(route.appId)) setUnlockTarget(route.appId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.name, route.name === 'app' ? route.appId : undefined, entitlements]);
-  const accountControls = (
+  const accountControls = user ? (
     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
       <DropdownMenu
-        button={{ label: user?.email ?? '', size: 'sm', variant: 'ghost' }}
+        button={{ label: user.email, size: 'sm', variant: 'ghost' }}
         hasChevron
         items={[
           ...(researchProjectsEnabled ? [{ label: 'Research projects', onClick: () => navigate({ name: 'projects' }) }] : []),
@@ -196,6 +199,8 @@ export function App() {
         ]}
       />
     </div>
+  ) : (
+    <GuestCatalogControls onSignIn={openSignIn} />
   );
 
   // Admins get a left sidebar to jump between screens without typing URLs. AppShell
