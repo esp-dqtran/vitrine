@@ -67,10 +67,14 @@ export const APP_KNOWLEDGE_EVIDENCE_INSTRUCTIONS = [
   "Analyze only visible evidence in the supplied image and context.",
   "Record exact visible text, visible UI, purpose, page type, product area, theme, viewport, layout, content, imagery, icons, interactions, states, available actions, system feedback, and visible accessibility observations.",
   "Keep visible facts separate from likely intent, friction, and missing or uncertain states.",
+  "Treat token values and component geometry as approximate screenshot observations; do not claim original CSS, source design tokens, or Figma values.",
+  'Use this TokenCandidate shape: {"kind": "color" | "typography" | "spacing" | "radius" | "border" | "effect", "name": string, "value": string, "role": string, "confidence": number}.',
+  'Use this ComponentOccurrence shape: {"family": string, "variant": string, "category": string, "purpose": string, "anatomy": string[], "visibleStates": string[], "observedProperties": string[], "region": {"x": number, "y": number, "width": number, "height": number}, "confidence": number}.',
+  "Component regions use normalized top-left coordinates from zero to one and must stay within the supplied image.",
   "Use exactly the supplied evidenceId and a confidence from zero to one.",
-  'Use exactly this shape and value casing: {"evidenceId": string, "pageType": string, "productArea": string, "purpose": string, "viewport": "desktop" | "tablet" | "mobile" | "unknown", "visibleText": string[], "theme": "light" | "dark" | "mixed", "visualHierarchy": string[], "layoutPatterns": string[], "contentPatterns": string[], "imagery": string[], "icons": string[], "interactionPatterns": string[], "visibleStates": string[], "availableActions": string[], "systemFeedback": string[], "accessibilityObservations": string[], "likelyIntent": string, "friction": string[], "uncertainStates": string[], "confidence": number}.',
+  'Use exactly this shape and value casing: {"evidenceId": string, "pageType": string, "productArea": string, "purpose": string, "viewport": "desktop" | "tablet" | "mobile" | "unknown", "visibleText": string[], "theme": "light" | "dark" | "mixed", "visualHierarchy": string[], "layoutPatterns": string[], "contentPatterns": string[], "imagery": string[], "icons": string[], "interactionPatterns": string[], "visibleStates": string[], "availableActions": string[], "systemFeedback": string[], "accessibilityObservations": string[], "likelyIntent": string, "friction": string[], "uncertainStates": string[], "confidence": number, "tokenCandidates": TokenCandidate[], "componentOccurrences": ComponentOccurrence[]}.',
   "Every field is required. Use an empty array when no visible evidence supports an array field.",
-  "Keep visibleText to at most 24 distinct high-value strings and every other array to at most 12 concise items.",
+  "Keep visibleText to at most 24 distinct high-value strings, at most 24 token candidates, at most 24 component occurrences, and every other array to at most 12 concise items.",
 ].join(" ");
 
 export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [

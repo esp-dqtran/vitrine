@@ -60,6 +60,13 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.match(calls[0].system, /"viewport": "desktop" \| "tablet" \| "mobile" \| "unknown"/);
   assert.match(calls[0].system, /"layoutPatterns": string\[\]/);
   assert.match(calls[0].system, /"friction": string\[\]/);
+  assert.match(calls[0].system, /"tokenCandidates": TokenCandidate\[\]/);
+  assert.match(calls[0].system, /"componentOccurrences": ComponentOccurrence\[\]/);
+  assert.match(calls[0].system, /normalized top-left coordinates/i);
+  assert.match(calls[0].system, /approximate screenshot observations/i);
+  assert.match(calls[0].system, /do not claim original CSS/i);
+  assert.match(calls[0].system, /at most 24 token candidates/i);
+  assert.match(calls[0].system, /at most 24 component occurrences/i);
   assert.match(calls[0].system, /visibleText to at most 24/);
   assert.match(calls[0].system, /every other array to at most 12/);
   assert.ok(calls[0].image);
@@ -79,6 +86,46 @@ test("adapts evidence and synthesis prompts to one multimodal JSON transport", a
   assert.match(calls[3].system, /at most 4 claims/);
   assert.match(calls[3].system, /at most 12 representative evidence IDs/);
   assert.equal(calls[3].image, undefined);
+});
+
+test("passes one evidence validation error only to the retried request", async () => {
+  const calls: Array<{ text: unknown }> = [];
+  const provider = appKnowledgeProviderFromMultimodalJsonProvider({
+    model: "vision-model",
+    async completeJson(input) {
+      calls.push(input);
+      return { ok: true };
+    },
+  });
+  const base = {
+    evidenceId: "SCREEN-1",
+    app: "15five",
+    platform: "web" as const,
+    kind: "screen" as const,
+    flowContext: null,
+    previousStepContext: null,
+  };
+  const image = {
+    bytes: Buffer.from("image"),
+    contentType: "image/png" as const,
+  };
+
+  await provider.analyzeEvidence(
+    { ...base, validationError: "" },
+    image,
+    AbortSignal.timeout(1_000),
+  );
+  await provider.analyzeEvidence(
+    { ...base, validationError: "token kind is invalid" },
+    image,
+    AbortSignal.timeout(1_000),
+  );
+
+  assert.equal((calls[0].text as { validationError: string }).validationError, "");
+  assert.equal(
+    (calls[1].text as { validationError: string }).validationError,
+    "token kind is invalid",
+  );
 });
 
 test("renders browser prompts with the same instructions and structured payload", () => {
