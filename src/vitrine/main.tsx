@@ -8,6 +8,7 @@ import { Pricing } from './Pricing';
 import { BillingSuccess } from './components/BillingSuccess';
 import { SignIn } from './SignIn';
 import { navigate, useRoute } from './router';
+import { requiresAuthentication } from './routeAccess.ts';
 import { ThemeModeProvider, useThemeMode } from './theme';
 import { FeatureDocumentSharePage } from './components/FeatureDocumentSharePage.tsx';
 import './styles.css';
@@ -27,7 +28,7 @@ function Root() {
   const route = useRoute();
 
   if (route.name === 'pricing') {
-    return <Pricing user={user} onBrowse={user ? goApps : goSignIn} onSignIn={goSignIn} />;
+    return <Pricing user={user} onBrowse={goApps} onSignIn={goSignIn} />;
   }
 
   if (route.name === 'feature-document-share') {
@@ -35,7 +36,7 @@ function Root() {
   }
 
   if (route.name === 'build-in-public') {
-    return <BuildInPublicPage onHome={goHome} onBrowse={user ? goApps : goSignIn} onPricing={goPricing} />;
+    return <BuildInPublicPage onHome={goHome} onBrowse={goApps} onPricing={goPricing} />;
   }
 
   if (loading) {
@@ -50,16 +51,16 @@ function Root() {
     return <BillingSuccess onContinue={goApps} />;
   }
 
-  // Logged-in users always land in the catalog; the marketing pages are the logged-out front door.
+  // Logged-in users always land in the application.
   if (user) return <App />;
-  // A deep link into the catalog (e.g. someone shared an app's URL) needs an account too —
-  // send it through sign-in rather than the marketing page, path intact for App to pick up.
-  if (route.name === 'signin' || route.name === 'billing-success' || route.name === 'settings-billing' || route.name === 'apps' || route.name === 'app' || route.name === 'projects' || route.name === 'project' || route.name === 'feature-document' || route.name === 'admin') {
+  // The published catalog is the public Home. Detail and member routes remain private.
+  if (route.name === 'apps') return <App />;
+  if (requiresAuthentication(route)) {
     return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} />;
   }
   return (
     <Home
-      onBrowse={goSignIn}
+      onBrowse={goApps}
       onPricing={goPricing}
       onBuildInPublic={goBuildInPublic}
       onLogin={goSignIn}
