@@ -138,7 +138,7 @@ test("drives a fresh Antigravity conversation with a genuine image attachment", 
   }
 });
 
-test("accepts Antigravity file-style responses rendered outside the legacy reply class", async () => {
+test("accepts Antigravity file-style responses without a stable reply selector", async () => {
   const module = await import("./antigravityChat.ts") as Record<string, unknown>;
   const bindSession = module.bindAntigravityChatSession as (
     page: Page,
@@ -157,7 +157,7 @@ test("accepts Antigravity file-style responses rendered outside the legacy reply
       <button aria-label="Select model, current: Gemini 3.6 Flash (High)">Model</button>
       <div aria-label="Message input" contenteditable="true"></div>
       <div data-testid="agent-loading" hidden>Working.</div>
-      <div aria-label="Agent response"><pre class="select-text"></pre></div>
+      <div><pre id="artifact-output"></pre></div>
       <script>
         const editor = document.querySelector('[aria-label="Message input"]');
         editor.addEventListener('keydown', (event) => {
@@ -166,7 +166,7 @@ test("accepts Antigravity file-style responses rendered outside the legacy reply
           const loading = document.querySelector('[data-testid="agent-loading"]');
           loading.hidden = false;
           setTimeout(() => {
-            document.querySelector('[aria-label="Agent response"] .select-text').textContent =
+            document.querySelector('#artifact-output').textContent =
               '{"componentCandidates":[],"designLanguage":{"color":[]}}';
             loading.remove();
           }, 10);

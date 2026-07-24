@@ -44,6 +44,51 @@ export function isAntigravityConversationUrl(value: string): boolean {
   }
 }
 
+export function lastJsonObjectInText(text: string): string {
+  let best = "";
+  let bestEnd = -1;
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== "{") continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let end = start; end < text.length; end += 1) {
+      const character = text[end];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') {
+        inString = true;
+        continue;
+      }
+      if (character === "{") depth += 1;
+      else if (character === "}") depth -= 1;
+      if (depth !== 0) continue;
+      const candidate = text.slice(start, end + 1);
+      try {
+        const parsed = JSON.parse(candidate);
+        if (
+          parsed
+          && typeof parsed === "object"
+          && !Array.isArray(parsed)
+          && end > bestEnd
+        ) {
+          best = candidate;
+          bestEnd = end;
+        }
+      } catch {
+        // The conversation also contains JSON-like schemas from the prompt.
+      }
+      start = end;
+      break;
+    }
+  }
+  return best;
+}
+
 interface AntigravitySessionOptions {
   modelLabel: string;
   responseTimeoutMs?: number;
@@ -81,9 +126,15 @@ async function waitForStableAntigravityReply(
     signal?.throwIfAborted();
     const working = await raceChatAbort(loading.isVisible(), signal);
     const count = await raceChatAbort(replies.count(), signal);
-    const text = count > 0
+    const selectedReply = count > 0
       ? (await raceChatAbort(replies.last().innerText(), signal)).trim()
       : "";
+    const visibleJson = !working
+      ? lastJsonObjectInText(
+        await raceChatAbort(page.locator("body").innerText(), signal),
+      )
+      : "";
+    const text = visibleJson || selectedReply;
     if (!working && text && text === previous) {
       if (stableSince === 0) stableSince = Date.now();
       if (Date.now() - stableSince >= stableMs) return text;
