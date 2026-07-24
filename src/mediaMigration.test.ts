@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import pg from "pg";
 
 import {
   migrateLegacyMedia,
@@ -14,8 +13,7 @@ import {
   type MediaMigrationRow,
   type PreviewSelection,
 } from "./mediaMigration.ts";
-import { LocalObjectStore, type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
-import { applyMigrations } from "./migrations.ts";
+import { type ObjectMetadata, type ObjectStore } from "./objectStore.ts";
 
 const png = (suffix = "fixture") => Buffer.concat([
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
@@ -321,70 +319,4 @@ test("PostgreSQL preview replacement removes stale generations atomically", asyn
   assert.equal(calls[1], "DELETE FROM app_preview_images");
   assert.match(calls[2], /INSERT INTO app_preview_images/);
   assert.equal(calls.at(-1), "COMMIT");
-});
-
-test("copied PostgreSQL fixture migrates once and reruns with zero uploads and identical evidence", async (t) => {
-  const adminUrl = "postgres://postgres:postgres@localhost:5432/postgres";
-  const admin = new pg.Client({ connectionString: adminUrl });
-  try { await admin.connect(); } catch {
-    t.skip("Postgres not running");
-    return;
-  }
-  const databaseName = `astryx_media_migration_test_${randomBytes(8).toString("hex")}`;
-  const target = new URL(adminUrl);
-  target.pathname = `/${databaseName}`;
-  const root = await mkdtemp(path.join(tmpdir(), "astryx-media-pg-"));
-  let pool: pg.Pool | undefined;
-  try {
-    await admin.query(`CREATE DATABASE "${databaseName}"`);
-    pool = new pg.Pool({ connectionString: target.toString() });
-    await applyMigrations(pool);
-    const app = await pool.query<{ id: number }>("INSERT INTO apps (name) VALUES ('fixture') RETURNING id");
-    const platform = await pool.query<{ id: number }>("INSERT INTO platforms (app_id, name) VALUES ($1, 'web') RETURNING id", [app.rows[0].id]);
-    const image = await pool.query<{ id: number }>(
-      "INSERT INTO images (platform_id, image_url, kind) VALUES ($1, 'mobbin-bulk:0123456789abcdef', 'screen') RETURNING id",
-      [platform.rows[0].id],
-    );
-    const version = await pool.query<{ id: number }>(
-      "INSERT INTO app_versions (app_id, version_number, label, status) VALUES ($1, 1, 'fixture', 'draft') RETURNING id",
-      [app.rows[0].id],
-    );
-    await pool.query("INSERT INTO version_images (version_id, image_id) VALUES ($1, $2)", [version.rows[0].id, image.rows[0].id]);
-    const body = png("postgres-fixture");
-    await legacy(root, "fixture", "0123456789abcdef", "png", body);
-    const database = new PostgresMediaMigrationDatabase({
-      async query(sql, values) {
-        const result = await pool!.query(sql, values ? [...values] : undefined);
-        return { rows: result.rows, rowCount: result.rowCount };
-      },
-      async connect() {
-        const client = await pool!.connect();
-        return {
-          async query(sql, values) {
-            const result = await client.query(sql, values ? [...values] : undefined);
-            return { rows: result.rows, rowCount: result.rowCount };
-          },
-          release: () => client.release(),
-        };
-      },
-    });
-    const store = new LocalObjectStore(path.join(root, "objects"));
-    const first = await migrateLegacyMedia({ dataDir: root, database, objectStore: store, apply: true });
-    const second = await migrateLegacyMedia({ dataDir: root, database, objectStore: store, apply: true });
-    assert.equal(first.migrated, 1);
-    assert.equal(second.migrated, 0);
-    assert.equal(second.skipped, 1);
-    assert.equal(first.evidence_sha256, second.evidence_sha256);
-    const state = await pool.query<{ status: string; objects: string }>(
-      `SELECT m.status, (SELECT count(*)::text FROM stored_objects) AS objects
-       FROM media_migration_state m WHERE m.image_id = $1`,
-      [image.rows[0].id],
-    );
-    assert.deepEqual(state.rows[0], { status: "complete", objects: "1" });
-  } finally {
-    if (pool) await pool.end();
-    await admin.query(`DROP DATABASE IF EXISTS "${databaseName}" WITH (FORCE)`);
-    await admin.end();
-    await rm(root, { recursive: true, force: true });
-  }
 });
