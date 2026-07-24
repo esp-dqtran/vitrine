@@ -86,8 +86,11 @@ export const APP_KNOWLEDGE_SYNTHESIS_INSTRUCTIONS = [
 export const APP_KNOWLEDGE_DESIGN_SYSTEM_INSTRUCTIONS = [
   "Return JSON only with componentCandidates and designLanguage.",
   "Extract a reusable design language from only the supplied screen signals.",
-  "Use canonical designLanguage categories: color, typography, spacing, radius, border, effects, layout, iconography, imagery, responsive, content, and interaction.",
-  "Each claim has id, kind, text, evidenceIds, and confidence.",
+  'Use this Claim shape: {"id": string, "kind": "observed" | "inferred" | "proposed" | "unknown", "text": string, "evidenceIds": string[], "confidence": number}.',
+  'Use exactly this result shape: {"componentCandidates":[{"id": string, "name": string, "category": string, "purpose": string, "anatomy": string[], "observedProperties": string[], "variants": string[], "states": string[], "responsiveEvidence": string[], "evidenceIds": string[], "visualRegions": string[], "designLanguageCandidateIds": string[], "claims": Claim[], "confidence": number, "status": "candidate"}],"designLanguage":{"color": Claim[], "typography": Claim[], "spacing": Claim[], "radius": Claim[], "border": Claim[], "effects": Claim[], "layout": Claim[], "iconography": Claim[], "imagery": Claim[], "responsive": Claim[], "content": Claim[], "interaction": Claim[]}}.',
+  "Every field is required. Use [] when no evidence supports an array field.",
+  "At least one designLanguage category must contain one claim.",
+  "Every component candidate must cite at least one supplied evidence ID.",
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
   "Never invent an evidence ID, exact token value, font, measurement, or interaction not supported by evidence.",
   "Full-page screenshots may produce component candidates only with status candidate.",
