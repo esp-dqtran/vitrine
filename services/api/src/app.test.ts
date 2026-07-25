@@ -2020,6 +2020,58 @@ test("keeps the catalog public and every App detail endpoint private", async (t)
   }
 });
 
+test("keeps the Sites catalog public and every Site detail endpoint private", async (t) => {
+  const sitesStore = {
+    listReadySites: async () => [{
+      siteId: 1,
+      versionId: 2,
+      name: "V7",
+      slug: "v-7",
+      sourceUrl: "https://v7labs.com/",
+      categories: [],
+      styles: [],
+      popularity: 1,
+      label: "Jul 2026",
+      isLatest: true,
+      pageCount: 1,
+      sectionCount: 1,
+      previewUrl: "/api/sites/1/versions/2/media/preview",
+      previews: [{
+        id: 10,
+        title: "Home",
+        position: 0,
+        url: "/api/sites/1/versions/2/pages/10/media",
+      }],
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    }],
+    siteMediaObject: async () => previewMetadata,
+  };
+  const { base, server } = await serve(createApiApp({
+    sitesStore,
+    objectStore: localObjectStore,
+    resolveSession: async () => undefined,
+  } as never));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/sites`)).status, 200);
+  assert.equal(
+    (await fetch(`${base}/sites/1/versions/2/catalog-media/preview`)).status,
+    200,
+  );
+
+  const privatePaths = [
+    "/sites/1/versions/2",
+    "/sites/1/versions/2/media/preview",
+    "/sites/1/versions/2/media/mobile",
+    "/sites/1/versions/2/pages/10/media",
+    "/sites/1/versions/2/sections/10/media",
+    "/sites/1/versions/2/sections/10/poster",
+  ];
+  for (const path of privatePaths) {
+    assert.equal((await fetch(`${base}${path}`)).status, 401, path);
+  }
+});
+
 test("serves only the first three public preview images", async (t) => {
   const ranks: number[] = [];
   const { base, server } = await serve(createApiApp({

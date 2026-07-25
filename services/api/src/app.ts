@@ -153,7 +153,10 @@ import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowle
 import { classifySiteImportUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
-import { mountSitesRoutes } from "./sites.ts";
+import {
+  mountPrivateSitesRoutes,
+  mountPublicSitesRoutes,
+} from "./sites.ts";
 import { PostgresSearchStore } from "../../../src/searchStore.ts";
 import {
   createSearchService,
@@ -891,6 +894,15 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     },
   });
 
+  const sitesRouteDependencies = {
+    store: deps.sitesStore,
+    sendObject: async (metadata: ObjectMetadata, res: express.Response) => {
+      if (!deps.objectStore) throw new Error("Object storage is unavailable");
+      await sendStoredObject(deps.objectStore, metadata, res);
+    },
+  };
+  mountPublicSitesRoutes(app, sitesRouteDependencies);
+
   app.use(async (req, res, next) => {
     const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
     let resolution: Awaited<ReturnType<typeof resolveSessionState>> = { status: "invalid" };
@@ -1022,13 +1034,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.status(409).json({ error: "Pro Month cannot be activated", code: result.status });
   });
 
-  mountSitesRoutes(app, {
-    store: deps.sitesStore,
-    sendObject: async (metadata, res) => {
-      if (!deps.objectStore) throw new Error("Object storage is unavailable");
-      await sendStoredObject(deps.objectStore, metadata, res);
-    },
-  });
+  mountPrivateSitesRoutes(app, sitesRouteDependencies);
 
   const listResearchCandidates = deps.listResearchCandidates ?? (async () => {
     const images = await deps.publishedImages();
