@@ -37,8 +37,9 @@ await startSearchIndexWorker({
       } catch (error) {
         console.error(JSON.stringify({
           event: "search_index_failed",
-          appId: job.appId,
-          platform: job.platform,
+          ...(job.kind === "app"
+            ? { appId: job.appId, platform: job.platform }
+            : { siteId: job.siteId }),
           error: error instanceof Error ? error.message : String(error),
         }));
       }

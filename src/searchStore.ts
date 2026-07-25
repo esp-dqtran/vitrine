@@ -34,9 +34,16 @@ interface RankedCandidate {
 interface SearchDocumentRow {
   document_id: string;
   index_version: number;
-  version_id: number;
-  app_id: number;
-  app_name: string;
+  catalog_scope: SearchResultItem["catalogScope"];
+  catalog_name: string;
+  version_id: number | null;
+  app_id: number | null;
+  app_name: string | null;
+  site_id: number | null;
+  site_version_id: number | null;
+  catalog_categories: string[];
+  site_sections: string[];
+  site_styles: string[];
   platform: string;
   entity_type: SearchResultItem["entityType"];
   source_id: string;
@@ -65,8 +72,8 @@ const FILTER_COLUMNS: Record<keyof SearchFilters, {
   array?: boolean;
 }> = {
   platform: { expression: "d.platform" },
-  app: { expression: "d.app_name" },
-  appCategory: { expression: "d.app_category" },
+  app: { expression: "d.catalog_name" },
+  appCategory: { expression: "d.catalog_categories", array: true },
   pageType: { expression: "d.page_type" },
   productArea: { expression: "d.product_area" },
   flow: { expression: "d.flow_name" },
@@ -74,6 +81,8 @@ const FILTER_COLUMNS: Record<keyof SearchFilters, {
   state: { expression: "d.states", array: true },
   theme: { expression: "d.theme" },
   layout: { expression: "d.layout_patterns", array: true },
+  siteSection: { expression: "d.site_sections", array: true },
+  siteStyle: { expression: "d.site_styles", array: true },
 };
 
 class SqlParameters {
@@ -92,16 +101,31 @@ function authorizedWhere(
   omittedFilter?: keyof SearchFilters,
 ): string {
   const clauses = [`d.index_version = ${parameters.add(1)}`];
+  if (request.scope !== "all") {
+    clauses.push(`d.catalog_scope = ${parameters.add(request.scope)}`);
+  }
   if (request.type !== "all") {
     clauses.push(`d.entity_type = ${parameters.add(request.type)}`);
   }
   if (access.publishedOnly) {
     clauses.push(
-      "EXISTS (SELECT 1 FROM app_versions av WHERE av.id = d.version_id AND av.status = 'published')",
+      `(
+        (d.catalog_scope = 'apps' AND EXISTS (
+          SELECT 1 FROM app_versions av
+          WHERE av.id = d.version_id AND av.status = 'published'
+        ))
+        OR
+        (d.catalog_scope = 'sites' AND EXISTS (
+          SELECT 1 FROM site_versions sv
+          WHERE sv.id = d.site_version_id AND sv.status = 'ready'
+        ))
+      )`,
     );
   }
   if (access.allowedAppIds) {
-    clauses.push(`d.app_id = ANY(${parameters.add(access.allowedAppIds)}::integer[])`);
+    clauses.push(
+      `(d.catalog_scope = 'sites' OR d.app_id = ANY(${parameters.add(access.allowedAppIds)}::integer[]))`,
+    );
   }
   for (const [key, config] of Object.entries(FILTER_COLUMNS) as Array<
     [keyof SearchFilters, typeof FILTER_COLUMNS[keyof SearchFilters]]
@@ -143,9 +167,16 @@ function rowToItem(row: SearchDocumentRow, query: string): SearchResultItem {
   return {
     documentId: row.document_id,
     indexVersion: 1,
-    versionId: row.version_id,
-    appId: row.app_id,
-    appName: row.app_name,
+    catalogScope: row.catalog_scope,
+    catalogName: row.catalog_name,
+    ...(row.version_id !== null ? { versionId: row.version_id } : {}),
+    ...(row.app_id !== null ? { appId: row.app_id } : {}),
+    ...(row.app_name ? { appName: row.app_name } : {}),
+    ...(row.site_id !== null ? { siteId: row.site_id } : {}),
+    ...(row.site_version_id !== null ? { siteVersionId: row.site_version_id } : {}),
+    catalogCategories: row.catalog_categories,
+    siteSections: row.site_sections,
+    siteStyles: row.site_styles,
     platform: row.platform,
     entityType: row.entity_type,
     sourceId: row.source_id,
@@ -215,7 +246,7 @@ export class PostgresSearchStore {
          ts_rank_cd(d.search_vector, websearch_to_tsquery('english', ${query})) AS text_rank,
          CASE
            WHEN lower(d.title) = lower(${query}) THEN 4
-           WHEN lower(d.app_name) = lower(${query}) THEN 4
+           WHEN lower(d.catalog_name) = lower(${query}) THEN 4
            WHEN EXISTS (
              SELECT 1 FROM unnest(d.aliases) alias WHERE lower(alias) = lower(${query})
            ) THEN 3
@@ -225,7 +256,7 @@ export class PostgresSearchStore {
        FROM search_documents d
        WHERE ${keywordWhere}
          AND (${query} = '' OR d.search_vector @@ websearch_to_tsquery('english', ${query})
-           OR d.title ILIKE ${contains} OR d.app_name ILIKE ${contains})
+           OR d.title ILIKE ${contains} OR d.catalog_name ILIKE ${contains})
        ORDER BY exact_boost DESC, text_rank DESC, d.document_id
        LIMIT 240`,
       keywordParameters.values,
@@ -278,7 +309,7 @@ export class PostgresSearchStore {
         || left.item.documentId.localeCompare(right.item.documentId));
     } else if (request.sort === "app-az") {
       ordered.sort((left, right) =>
-        left.item.appName.localeCompare(right.item.appName)
+        left.item.catalogName.localeCompare(right.item.catalogName)
         || left.item.title.localeCompare(right.item.title)
         || left.item.documentId.localeCompare(right.item.documentId));
     } else {
@@ -302,7 +333,7 @@ export class PostgresSearchStore {
         ? [last.score, last.item.documentId]
         : request.sort === "recent"
           ? [last.item.publishedAt, last.item.documentId]
-          : [last.item.appName, last.item.title, last.item.documentId]
+          : [last.item.catalogName, last.item.title, last.item.documentId]
       : [];
 
     const [facets, typeCounts] = await Promise.all([
@@ -381,6 +412,7 @@ export class PostgresSearchStore {
   ): Promise<SearchSuggestion[]> {
     const request: NormalizedSearchRequest = {
       query: "",
+      scope: "all",
       type: "all",
       filters: {
         platform: [],
@@ -393,6 +425,8 @@ export class PostgresSearchStore {
         state: [],
         theme: [],
         layout: [],
+        siteSection: [],
+        siteStyle: [],
       },
       sort: "relevance",
       limit: 1,
@@ -409,7 +443,7 @@ export class PostgresSearchStore {
       `WITH authorized AS (
          SELECT d.* FROM search_documents d WHERE ${where}
        ), suggestions AS (
-         SELECT 'app'::text AS kind, app_name AS value, document_id FROM authorized
+         SELECT 'app'::text AS kind, catalog_name AS value, document_id FROM authorized
          UNION ALL SELECT 'title', title, document_id FROM authorized
          UNION ALL SELECT 'alias', unnest(aliases), document_id FROM authorized
          UNION ALL SELECT 'pageType', page_type, document_id FROM authorized
@@ -440,10 +474,12 @@ export class PostgresSearchStore {
   ): Promise<AdvancedSearchResult> {
     const request = {
       query: "",
+      scope: "all" as const,
       type: "all" as const,
       filters: {
         platform: [], app: [], appCategory: [], pageType: [], productArea: [],
         flow: [], component: [], state: [], theme: [], layout: [],
+        siteSection: [], siteStyle: [],
       },
       sort: "relevance" as const,
       limit: Math.min(12, Math.max(1, limit + 1)),
@@ -453,13 +489,13 @@ export class PostgresSearchStore {
     const source = parameters.add(sourceId);
     const row = await this.pool.query<{
       title: string;
-      app_name: string;
+      catalog_name: string;
       product_area: string | null;
       flow_name: string | null;
       components: string[];
       layout_patterns: string[];
     }>(
-      `SELECT d.title, d.app_name, d.product_area, d.flow_name, d.components, d.layout_patterns
+      `SELECT d.title, d.catalog_name, d.product_area, d.flow_name, d.components, d.layout_patterns
        FROM search_documents d WHERE ${where} AND d.source_id = ${source} LIMIT 1`,
       parameters.values,
     );
@@ -469,7 +505,7 @@ export class PostgresSearchStore {
       ...request,
       query: [
         metadata.title,
-        metadata.app_name,
+        metadata.catalog_name,
         metadata.product_area,
         metadata.flow_name,
         ...metadata.components,

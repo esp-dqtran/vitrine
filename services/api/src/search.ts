@@ -10,9 +10,11 @@ import {
   decodeSearchCursor,
   normalizeSearchRequest,
   SEARCH_ENTITY_TYPES,
+  SEARCH_SCOPES,
   type AdvancedSearchResult,
   type NormalizedSearchRequest,
   type SearchFilters,
+  type SearchScope,
 } from "../../../src/searchTypes.ts";
 
 export class SearchRequestError extends Error {
@@ -23,6 +25,7 @@ export class SearchRequestError extends Error {
 export interface SearchTelemetryEvent {
   requestId: string;
   action: "adaptive-search";
+  scope: SearchScope;
   resultCount: number;
   zeroResult: boolean;
   filterGroupCount: number;
@@ -52,6 +55,8 @@ const FILTER_KEYS: Array<keyof SearchFilters> = [
   "state",
   "theme",
   "layout",
+  "siteSection",
+  "siteStyle",
 ];
 
 function stringValues(value: unknown, field: string): string[] {
@@ -72,6 +77,10 @@ export function searchRequestFromExpressQuery(
   const type = query.type === undefined ? "all" : String(query.type);
   if (type !== "all" && !SEARCH_ENTITY_TYPES.includes(type as never)) {
     throw new SearchRequestError("invalid search type");
+  }
+  const scope = query.scope === undefined ? "all" : String(query.scope);
+  if (!SEARCH_SCOPES.includes(scope as never)) {
+    throw new SearchRequestError("invalid search scope");
   }
   const sort = query.sort === undefined ? "relevance" : String(query.sort);
   if (!["relevance", "recent", "app-az"].includes(sort)) {
@@ -149,6 +158,7 @@ export function createSearchService(input: {
       await input.telemetry?.record({
         requestId,
         action: "adaptive-search",
+        scope: request.scope,
         resultCount: result.items.length,
         zeroResult: result.items.length === 0,
         filterGroupCount: FILTER_KEYS.filter((key) => request.filters[key].length > 0).length,
@@ -184,13 +194,20 @@ export function hydrateSearchMedia(result: AdvancedSearchResult): AdvancedSearch
       const rawImageUrl = typeof item.sourcePayload.imageUrl === "string"
         ? item.sourcePayload.imageUrl
         : undefined;
+      const siteImageUrl = item.catalogScope === "sites" && item.siteId && item.siteVersionId
+        ? `/api/sites/${item.siteId}/versions/${item.siteVersionId}/media/preview`
+        : undefined;
       return {
         ...item,
         sourcePayload: safePayload(item.sourcePayload),
-        ...(rawImageUrl ? {
-          imageUrl: `/api/media/${encodeURIComponent(item.appName)}/${bulkImageHash(rawImageUrl)}`,
-          thumbnailUrl: `/api/media/${encodeURIComponent(item.appName)}/${bulkImageHash(rawImageUrl)}?variant=thumb`,
-        } : {}),
+        ...(siteImageUrl
+          ? { imageUrl: siteImageUrl, thumbnailUrl: siteImageUrl }
+          : rawImageUrl && item.appName
+            ? {
+              imageUrl: `/api/media/${encodeURIComponent(item.appName)}/${bulkImageHash(rawImageUrl)}`,
+              thumbnailUrl: `/api/media/${encodeURIComponent(item.appName)}/${bulkImageHash(rawImageUrl)}?variant=thumb`,
+            }
+            : {}),
       };
     }),
   };
