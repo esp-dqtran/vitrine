@@ -1126,21 +1126,22 @@ export interface CatalogStats {
 
 // Real headline counts for the public marketing pages. Counts screens/elements in
 // each app's latest published version — the same set `publishedImages()` exposes.
-export async function catalogStats(): Promise<CatalogStats> {
-  const res = await query<{ apps: number; screens: number; ui_elements: number }>(
-    `WITH pub AS (
-       SELECT av.id AS version_id, av.app_id
+export async function catalogStats(
+  runQuery: typeof query = query,
+): Promise<CatalogStats> {
+  const res = await runQuery<{ apps: number; screens: number; ui_elements: number }>(
+    `WITH latest AS MATERIALIZED (
+       SELECT DISTINCT ON (av.app_id, av.platform)
+         av.id AS version_id, av.app_id
        FROM app_versions av
-       WHERE av.status = 'published' AND av.version_number = (
-         SELECT MAX(latest.version_number) FROM app_versions latest
-         WHERE latest.app_id = av.app_id AND latest.status = 'published'
-       )
+       WHERE av.status = 'published'
+       ORDER BY av.app_id, av.platform, av.version_number DESC
      )
-     SELECT COUNT(DISTINCT pub.app_id)::int AS apps,
+     SELECT COUNT(DISTINCT latest.app_id)::int AS apps,
        COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screens,
        COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_elements
-     FROM pub
-     LEFT JOIN version_images vi ON vi.version_id = pub.version_id
+     FROM latest
+     LEFT JOIN version_images vi ON vi.version_id = latest.version_id
      LEFT JOIN images i ON i.id = vi.image_id`,
   );
   const row = res.rows[0];
