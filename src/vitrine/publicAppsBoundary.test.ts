@@ -8,7 +8,7 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
   assert.match(source, /const isGuest = user === null/);
   assert.match(source, /const canUseAdvancedSearch = advancedSearchEnabled && user !== null/);
   assert.match(source, /if \(user\) await ensureCollections\(\)/);
-  assert.match(source, /mode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
+  assert.match(source, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
   assert.match(source, /canUseAdvancedSearch \? \(\s*<QuickSearch/);
   assert.match(source, /\{user && collectionsOpen && <CollectionsPanel/);
   assert.match(source, /\{canUseAdvancedSearch && advancedPreview \?/);
@@ -21,14 +21,14 @@ test('keeps Landing implementation outside the public Apps change', async () => 
   assert.doesNotMatch(home, /GuestCatalogControls|requiresAuthentication|isGuest/);
 });
 
-test('keeps guest discovery overlays reachable from an empty catalog', async () => {
+test('keeps guest discovery overlays reachable from the unified Apps route', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
   const overlays = source.indexOf('const discoveryOverlays =');
-  const emptyCatalog = source.indexOf("if (route.name === 'apps' && (appsError || !apps || apps.length === 0))");
+  const appsRoute = source.indexOf("if (route.name === 'apps')");
 
   assert.notEqual(overlays, -1, 'discovery overlays should be shared');
-  assert.notEqual(emptyCatalog, -1, 'empty catalog branch should exist');
-  assert.ok(overlays < emptyCatalog, 'overlays must be defined before the empty catalog return');
+  assert.notEqual(appsRoute, -1, 'Apps route should exist');
+  assert.ok(overlays < appsRoute, 'overlays must be defined before the Apps return');
   assert.equal(source.match(/\{discoveryOverlays\}/g)?.length, 2);
 });
 
