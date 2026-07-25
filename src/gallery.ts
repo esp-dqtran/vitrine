@@ -1,5 +1,6 @@
 import type { AdminGalleryImage, CrawledImage, PublishedPreviewImage } from "./db.ts";
 import { bulkImageHash, publicImageUrl } from "./imageSource.ts";
+import type { PublishedCatalogPageRecord } from "./publicCatalogStore.ts";
 
 const APP_META: Record<string, { label: string; cat: string; accent: string; websiteUrl: string }> = {
   linear: { label: "Linear", cat: "Productivity", accent: "#5E6AD2", websiteUrl: "https://linear.app" },
@@ -210,6 +211,31 @@ export function buildCatalogPage(
       (previewsByApp.get(name) ?? []) as PublishedPreviewImage[],
     )),
     nextCursor: start + limit < names.length ? encodeCursor(pageNames.at(-1) ?? "") : null,
+  };
+}
+
+export function buildPublishedCatalogPage(
+  page: PublishedCatalogPageRecord,
+): CatalogPage {
+  const previewsByApp = groups(page.previews);
+  return {
+    apps: page.apps.map((row) => {
+      const meta = appMeta(row.app);
+      return {
+        id: row.app,
+        app: row.display_name ?? meta.label,
+        cat: row.category ?? meta.cat,
+        accent: row.accent_color ?? meta.accent,
+        totalScreens: row.total_screens,
+        platforms: row.available_platforms,
+        previewScreens: (previewsByApp.get(row.app) ?? [])
+          .sort((left, right) => left.preview_rank - right.preview_rank)
+          .map((image) => screen(row.app, image, image.preview_rank)),
+        websiteUrl: row.website_url ?? meta.websiteUrl,
+        iconUrl: row.icon_url,
+      };
+    }),
+    nextCursor: page.nextCursor,
   };
 }
 

@@ -6,6 +6,7 @@ import {
   buildCatalogPage,
   buildEvidencePage,
   buildGalleryApps,
+  buildPublishedCatalogPage,
 } from "./gallery.ts";
 
 test("builds app metadata without section payloads", () => {
@@ -167,4 +168,44 @@ test("builds paginated public previews without source image fields", () => {
   assert.equal(second.apps.length, 6);
   assert.equal(second.nextCursor, null);
   assert.notEqual(second.apps[0].id, first.apps[0].id);
+});
+
+test("builds the existing public catalog contract from bounded app records", () => {
+  const image = {
+    id: 1,
+    app: "linear",
+    platform: "web",
+    image_url: "capture:0123456789abcdef",
+    kind: "screen" as const,
+    description: null,
+    analysis: null,
+    captured_at: "2026-07-25T00:00:00.000Z",
+  };
+  const page = buildPublishedCatalogPage({
+    apps: [{
+      app: "linear",
+      display_name: "Linear",
+      category: "Productivity",
+      website_url: "https://linear.app",
+      icon_url: "https://linear.app/icon.png",
+      accent_color: "#5E6AD2",
+      total_screens: 236,
+      available_platforms: ["web", "ios"],
+    }],
+    previews: [
+      { ...image, preview_rank: 1 },
+      { ...image, id: 2, preview_rank: 2 },
+    ],
+    nextCursor: "next",
+  });
+
+  assert.equal(page.apps[0]?.totalScreens, 236);
+  assert.deepEqual(page.apps[0]?.platforms, ["web", "ios"]);
+  assert.deepEqual(
+    page.apps[0]?.previewScreens.map(({ url }) => url),
+    ["/api/preview-media/linear/1", "/api/preview-media/linear/2"],
+  );
+  assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
+  assert.equal(page.nextCursor, "next");
+  assert.doesNotMatch(JSON.stringify(page), /image_url|object_key|capture:/);
 });
