@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FlowsPanel } from "./FlowsPanel.tsx";
-import { FlowViewer } from "./FlowViewer.tsx";
+import { FlowViewer, flowStepItems } from "./FlowViewer.tsx";
+import { FlowGallery } from "./FlowGallery.tsx";
+import { buildFlowTreeGroups } from "../flowTree.ts";
 
 const loginFlow = {
   id: "login",
@@ -60,6 +62,25 @@ test("FlowViewer does not render the auto-generated crawl description", () => {
   assert.doesNotMatch(html, /Imported from Mobbin/);
 });
 
+test("maps lightbox items back to source step numbers when some steps lack evidence", () => {
+  const items = flowStepItems({
+    ...loginFlow,
+    steps: [
+      { label: "Missing", evidence: [] },
+      loginFlow.steps[0],
+      loginFlow.steps[1],
+    ],
+  });
+  assert.deepEqual(items.map(({ stepNumber }) => stepNumber), [2, 3]);
+});
+
+test("labels the viewer return action for the persistent workspace", () => {
+  const html = renderToStaticMarkup(
+    <FlowViewer flow={loginFlow} onBack={() => undefined} />,
+  );
+  assert.match(html, /Back to all flows/);
+});
+
 test("groups flows by category, keeping uncategorized flows in their own section", () => {
   const flows = [
     { ...loginFlow, id: "a", title: "Copying a code", category: "Run detail" },
@@ -97,4 +118,26 @@ test("keeps the full category total while progressively rendering its cards", ()
   );
   const html = renderToStaticMarkup(<FlowsPanel flows={flows} />);
   assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
+});
+
+test("FlowGallery keeps card batching and complete category totals independent from tree navigation", () => {
+  const flows = Array.from(
+    { length: 30 },
+    (_, index) => ({
+      ...loginFlow,
+      id: `settings-${index}`,
+      title: `Settings ${index + 1}`,
+      category: "Settings",
+    }),
+  );
+  const html = renderToStaticMarkup(
+    <FlowGallery
+      groups={buildFlowTreeGroups(flows)}
+      onSelectFlow={() => undefined}
+    />,
+  );
+
+  assert.equal((html.match(/aria-label="Open Settings \d+ flow"/g) ?? []).length, 24);
+  assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
+  assert.doesNotMatch(html, /Open Settings 25 flow/);
 });

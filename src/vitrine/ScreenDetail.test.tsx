@@ -40,6 +40,19 @@ test('mounts App Knowledge only for the Analysis section and preserves route sel
   assert.match(source, /initialStep/);
 });
 
+test('forwards controlled Flow route state and an exact selection callback', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenDetail.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(source, /selectedFlowId=\{initialFlow\}/);
+  assert.match(source, /selectedStep=\{initialStep\}/);
+  assert.match(source, /onSelectionChange=\{\(flow, step\) => onFlowChange\?\.\(/);
+  assert.match(source, /selectedPlatform/);
+  assert.match(source, /sectionData\.resolvedVersion/);
+  assert.match(source, /section === 'flows'\s*\?\s*<FlowsWorkspaceLoading/);
+});
+
 test('does not use generic component or flow libraries', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /ELEMENT_LIBRARY|FLOW_LIBRARY/);
@@ -63,7 +76,7 @@ test('renders Screens and UI Elements through the shared gallery section and gri
   assert.match(source, /<ReferenceGallerySection/);
   assert.match(source, /<ReferenceGalleryGrid/);
   assert.match(source, /section === 'screens' \|\| section === 'elements' \|\| section === 'flows'/);
-  assert.match(source, /section === 'flows' \? <FlowsPanel flows=\{flows\}/);
+  assert.match(source, /section === 'flows'\s*\?\s*<FlowsPanel[\s\S]*flows=\{flows\}/);
 });
 
 test('renders metadata-only aggregate counts on Overview', () => {

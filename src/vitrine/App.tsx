@@ -489,6 +489,15 @@ export function App() {
             platform,
             version,
           })}
+          onFlowChange={(flow, step, platform, version) => navigate({
+            name: 'app',
+            appId: detailApp.id,
+            section: 'flows',
+            platform,
+            version,
+            ...(flow ? { flow } : {}),
+            ...(step ? { step } : {}),
+          })}
           onBack={() => navigate({ name: 'apps' })}
           collections={collections}
           onCollectionsChange={setCollections}

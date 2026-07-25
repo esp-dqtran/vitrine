@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button, Icon } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { PlaceholderImage } from './PlaceholderImage';
@@ -8,6 +8,13 @@ import { FeatureDocumentSetupDialog } from './FeatureDocumentSetupDialog.tsx';
 
 type LightboxState = { index: number } | null;
 
+export function flowStepItems(flow: DesignFlow<EvidenceView>) {
+  return flow.steps.flatMap((step, stepIndex) => {
+    const evidence = step.evidence[0];
+    return evidence ? [{ evidence, stepNumber: stepIndex + 1 }] : [];
+  });
+}
+
 export function FlowViewer({
   flow,
   app,
@@ -15,6 +22,7 @@ export function FlowViewer({
   version,
   initialStep,
   onBack,
+  onStepChange,
 }: {
   flow: DesignFlow<EvidenceView>;
   app?: string;
@@ -22,18 +30,35 @@ export function FlowViewer({
   version?: number;
   initialStep?: number;
   onBack: () => void;
+  onStepChange?: (step?: number) => void;
 }) {
-  const stepImages = flow.steps.map((step) => step.evidence[0]).filter((evidence) => evidence !== undefined);
-  const initialEvidence = initialStep ? flow.steps[initialStep - 1]?.evidence[0] : undefined;
+  const stepItems = useMemo(() => flowStepItems(flow), [flow]);
+  const initialLightboxIndex = initialStep
+    ? stepItems.findIndex(({ stepNumber }) => stepNumber === initialStep)
+    : -1;
   const [lightbox, setLightbox] = useState<LightboxState>(
-    initialEvidence ? { index: stepImages.indexOf(initialEvidence) } : null,
+    initialLightboxIndex >= 0 ? { index: initialLightboxIndex } : null,
   );
   const [featureDocumentOpen, setFeatureDocumentOpen] = useState(false);
+
+  useEffect(() => {
+    const index = initialStep
+      ? stepItems.findIndex(({ stepNumber }) => stepNumber === initialStep)
+      : -1;
+    setLightbox(index >= 0 ? { index } : null);
+  }, [flow.id, initialStep, stepItems]);
+
+  const openStep = (stepNumber: number) => {
+    const index = stepItems.findIndex((item) => item.stepNumber === stepNumber);
+    if (index < 0) return;
+    setLightbox({ index });
+    onStepChange?.(stepNumber);
+  };
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 20 }}>
-        <Button label="Back to flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} />
+        <Button label="Back to all flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} />
         {app && platform && version && <Button label="Create Feature Document" variant="primary" size="sm" clickAction={() => setFeatureDocumentOpen(true)} />}
       </div>
       {flow.category && <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{flow.category}</div>}
@@ -46,7 +71,7 @@ export function FlowViewer({
           <div key={`${step.label}-${step.evidence[0]?.imageId ?? index}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
             <div style={{ flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div
-                onClick={() => step.evidence[0] && setLightbox({ index: stepImages.indexOf(step.evidence[0]) })}
+                onClick={() => openStep(index + 1)}
                 style={{ position: 'relative', aspectRatio: '16/10', borderRadius: 'var(--radius-container)', overflow: 'hidden', background: 'var(--color-background-muted)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-low)', cursor: step.evidence[0] ? 'zoom-in' : 'default' }}
               >
                 <PlaceholderImage src={step.evidence[0]?.imageUrl} />
@@ -67,15 +92,23 @@ export function FlowViewer({
         ))}
       </div>
       {lightbox !== null && (() => {
-        const item = stepImages[lightbox.index];
+        const item = stepItems[lightbox.index]?.evidence;
         if (!item) return null;
         return (
           <Lightbox
             item={{ url: item.imageUrl, type: 'Flow step', caption: item.description ?? flow.title }}
             index={lightbox.index}
-            total={stepImages.length}
-            onClose={() => setLightbox(null)}
-            onNavigate={(i) => setLightbox({ index: ((i % stepImages.length) + stepImages.length) % stepImages.length })}
+            total={stepItems.length}
+            onClose={() => {
+              setLightbox(null);
+              onStepChange?.(undefined);
+            }}
+            onNavigate={(requestedIndex) => {
+              const index = ((requestedIndex % stepItems.length) + stepItems.length)
+                % stepItems.length;
+              setLightbox({ index });
+              onStepChange?.(stepItems[index].stepNumber);
+            }}
           />
         );
       })()}

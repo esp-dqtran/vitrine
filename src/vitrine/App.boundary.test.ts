@@ -10,6 +10,14 @@ test('keeps the Apps shell independent from job-list loading', async () => {
   assert.doesNotMatch(source, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 
+test('serializes Flow and step selection through the controlled App route', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  assert.match(source, /onFlowChange=\{\(flow, step, platform, version\) => navigate\(\{/);
+  assert.match(source, /section: 'flows'/);
+  assert.match(source, /\.\.\.\(flow \? \{ flow \} : \{\}\)/);
+  assert.match(source, /\.\.\.\(step \? \{ step \} : \{\}\)/);
+});
+
 test('keeps adaptive Search and Quick Search in dedicated state boundaries', async () => {
   const [appSource, pageSource, quickSource, apiSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
