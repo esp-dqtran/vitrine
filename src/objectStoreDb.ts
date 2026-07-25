@@ -1,6 +1,7 @@
 import type { PoolClient, QueryResult } from "pg";
 import { query as databaseQuery } from "./db.ts";
 import { validateObjectMetadata, type ObjectAccessClass, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
+import type { PublicFacetInput } from "./publicFacetPreview.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -281,6 +282,45 @@ export async function publishedPreviewObject(
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,
     [input.app, input.rank],
+  );
+  return metadataFrom(result.rows[0] as MetadataRow | undefined);
+}
+
+export async function publishedFacetPreviewObject(
+  input: PublicFacetInput & { app: string; rank: number },
+  runQuery: DatabaseQuery = query,
+): Promise<ObjectMetadata | undefined> {
+  const maxRank = input.group === "flows" ? 3 : 1;
+  if (
+    input.group === "categories"
+    || !Number.isInteger(input.rank)
+    || input.rank < 1
+    || input.rank > maxRank
+  ) {
+    throw new Error("Facet preview rank is outside its declared media bound");
+  }
+  const result = await runQuery(
+    `WITH latest AS MATERIALIZED (
+      SELECT DISTINCT ON (av.app_id)
+        av.id AS version_id, av.app_id
+      FROM app_versions av
+      WHERE av.status = 'published' AND av.platform = $1
+      ORDER BY av.app_id, av.version_number DESC
+    )
+    SELECT ${METADATA_COLUMNS}
+    FROM latest
+    JOIN apps a ON a.id = latest.app_id
+    JOIN public_facet_previews pfp
+      ON pfp.version_id = latest.version_id
+     AND pfp.facet_group = $5
+     AND pfp.facet_value = $2
+     AND pfp.rank = $4
+    JOIN images i ON i.id = pfp.image_id
+    JOIN stored_objects so ON ${imageObjectJoin("thumb")}
+    WHERE a.name = $3
+      AND so.access_class IN ('protected', 'public-preview')
+    LIMIT 1`,
+    [input.platform, input.value, input.app, input.rank, input.group],
   );
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
 }

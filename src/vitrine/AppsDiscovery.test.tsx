@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
 import type { App } from './types.ts';
-import { filterAndSortApps, previewForAppsFacet } from './appsDiscovery.ts';
+import { filterAndSortApps } from './appsDiscovery.ts';
 
 const makeApp = (overrides: Partial<App> = {}): App => ({
   id: 'base',
@@ -66,55 +66,6 @@ test('filters Apps across Mobbin taxonomy fields and platform', () => {
       sort: 'latest',
     }).map((app) => app.id),
     ['web'],
-  );
-});
-
-test('selects the first loaded matching screen for an Apps facet preview', () => {
-  const apps = [
-    makeApp({
-      id: 'wrong-platform',
-      app: 'Wrong Platform',
-      cat: 'Finance',
-      platforms: ['ios'],
-      screens: [{
-        ...makeApp().screens[0]!,
-        id: 2,
-        platform: 'ios',
-        url: '/ios-finance.png',
-      }],
-    }),
-    makeApp({
-      id: 'finance',
-      app: 'Finance Web',
-      cat: 'Finance',
-      screens: [{
-        ...makeApp().screens[0]!,
-        id: 3,
-        platform: 'web',
-        url: '/finance-full.png',
-        thumbnailUrl: '/finance-thumb.png',
-      }],
-    }),
-  ];
-
-  assert.deepEqual(
-    previewForAppsFacet(apps, { group: 'categories', value: 'Finance' }, 'web'),
-    {
-      app: 'Finance Web',
-      screenType: 'Dashboard',
-      url: '/finance-thumb.png',
-    },
-  );
-});
-
-test('returns no Apps facet preview without a matching loaded screen', () => {
-  assert.equal(
-    previewForAppsFacet(
-      [makeApp()],
-      { group: 'screens', value: 'Signup' },
-      'web',
-    ),
-    null,
   );
 });
 
@@ -195,7 +146,7 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.doesNotMatch(html, />Filter</);
   assert.match(html, /data-has-app-preview="true"/);
   assert.match(html, /class="apps-discovery__hover-preview"/);
-  assert.match(html, /<img alt="" aria-hidden="true"\/>/);
+  assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
   assert.match(html, /data-apps-discovery-grid="true"/);
   assert.match(html, /data-app-discovery-card="true"/);
   assert.match(html, /Purpose-built tool/);
@@ -230,7 +181,7 @@ test('animates the Apps platform pill between iOS and Web', async () => {
   assert.match(css, /\.apps-discovery__platform button\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*transition:\s*color/);
 });
 
-test('scopes Apps category hover motion to fine pointers with GSAP cleanup', async () => {
+test('scopes taxonomy hover motion to fine pointers with viewport clamping and GSAP cleanup', async () => {
   const source = await readFile(new URL('./useCategoryHoverPreview.ts', import.meta.url), 'utf8');
 
   assert.match(source, /gsap\.matchMedia\(\)/);
@@ -238,6 +189,9 @@ test('scopes Apps category hover motion to fine pointers with GSAP cleanup', asy
   assert.match(source, /\(prefers-reduced-motion: reduce\)/);
   assert.equal((source.match(/gsap\.quickTo\(/g) ?? []).length, 2);
   assert.equal((source.match(/\.tween\.kill\(\)/g) ?? []).length, 2);
+  assert.match(source, /window\.innerWidth - element\.offsetWidth/);
+  assert.match(source, /window\.innerHeight - element\.offsetHeight/);
+  assert.match(source, /gsap\.timeline\(\{ repeat: -1 \}\)/);
   assert.match(source, /matchMedia\.revert\(\)/);
 });
 

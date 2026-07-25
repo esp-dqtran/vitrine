@@ -1,13 +1,13 @@
-import { useMemo, useState, type ReactNode, type RefObject } from 'react';
+import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState, Spinner } from '@astryxdesign/core';
 import {
   APPS_DISCOVERY_FACETS,
   filterAndSortApps,
-  previewForAppsFacet,
   type AppsFacet,
   type AppsPlatform,
   type AppsSort,
 } from '../appsDiscovery.ts';
+import { fetchFacetPreview } from '../facetPreviewApi.ts';
 import type { App } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
@@ -38,6 +38,8 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
   const [platform, setPlatform] = useState<AppsPlatform>('web');
   const [sort, setSort] = useState<AppsSort>('latest');
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
+  const hoverRequestRef = useRef(0);
+  const hoverPointRef = useRef({ x: 0, y: 0 });
   const visibleApps = useMemo(
     () => filterAndSortApps(props.apps ?? [], {
       query: props.query,
@@ -102,7 +104,6 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
               <div>
                 {group.values.map((value) => {
                   const facet = { group: group.group, value } satisfies AppsFacet;
-                  const preview = previewForAppsFacet(props.apps ?? [], facet, platform);
                   const selected = props.facet?.group === group.group && props.facet.value === value;
                   return (
                     <Button
@@ -111,14 +112,28 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
                       variant="ghost"
                       size="sm"
                       aria-pressed={selected}
-                      data-has-app-preview={preview ? 'true' : undefined}
-                      onPointerEnter={preview
-                        ? (event) => showPreview(preview, event.clientX, event.clientY)
-                        : undefined}
-                      onPointerMove={preview
-                        ? (event) => movePreview(event.clientX, event.clientY)
-                        : undefined}
-                      onPointerLeave={preview ? hidePreview : undefined}
+                      data-has-app-preview="true"
+                      data-facet-preview={group.group}
+                      onPointerEnter={(event) => {
+                        const request = ++hoverRequestRef.current;
+                        hoverPointRef.current = { x: event.clientX, y: event.clientY };
+                        void fetchFacetPreview({ ...facet, platform })
+                          .then((preview) => {
+                            if (preview && request === hoverRequestRef.current) {
+                              const point = hoverPointRef.current;
+                              showPreview(preview, point.x, point.y);
+                            }
+                          })
+                          .catch(() => undefined);
+                      }}
+                      onPointerMove={(event) => {
+                        hoverPointRef.current = { x: event.clientX, y: event.clientY };
+                        movePreview(event.clientX, event.clientY);
+                      }}
+                      onPointerLeave={() => {
+                        hoverRequestRef.current += 1;
+                        hidePreview();
+                      }}
                       onClick={() => props.onFacetChange(selected ? null : facet)}
                     />
                   );
@@ -128,7 +143,9 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
           ))}
         </div>
         <div ref={previewRef} className="apps-discovery__hover-preview" aria-hidden="true">
-          <img alt="" aria-hidden="true" />
+          <img alt="" aria-hidden="true" data-preview-frame="1" />
+          <img alt="" aria-hidden="true" data-preview-frame="2" />
+          <img alt="" aria-hidden="true" data-preview-frame="3" />
         </div>
 
         <div className="apps-discovery__toolbar">

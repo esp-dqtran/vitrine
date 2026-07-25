@@ -73,6 +73,8 @@ import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSou
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
 import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
+import { parsePublicFacet } from "../../../src/publicFacetPreview.ts";
+import { publishedFacetPreview } from "../../../src/publicFacetPreviewStore.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -100,6 +102,7 @@ import {
   entitledImageObject,
   imageObjectById,
   legacyImageReference,
+  publishedFacetPreviewObject,
   publishedPreviewObject,
 } from "../../../src/objectStoreDb.ts";
 import { parseCrawlPlan, parseCrawlStep } from "../../../src/crawlPlan.ts";
@@ -332,6 +335,7 @@ const defaults = {
   publishedImages,
   publishedPreviewImages,
   publishedCatalogPage,
+  publishedFacetPreview,
   catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
@@ -421,6 +425,7 @@ const defaults = {
   crawlFailureObject,
   entitledImageObject,
   legacyImageReference,
+  publishedFacetPreviewObject,
   publishedPreviewObject,
   imageObjectById,
   researchProjectStore: createResearchProjectStore(),
@@ -864,6 +869,78 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog/stats", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=600");
     res.json(await deps.catalogStats());
+  });
+
+  app.get("/catalog/facet-preview", async (req, res) => {
+    const facet = parsePublicFacet({
+      group: req.query.group,
+      value: req.query.value,
+      platform: req.query.platform,
+    });
+    if (!facet) {
+      res.status(400).json({ error: "invalid facet preview" });
+      return;
+    }
+    const preview = await deps.publishedFacetPreview(facet);
+    if (!preview) {
+      res.status(404).json({ error: "facet preview not found" });
+      return;
+    }
+    const media = Array.from({ length: preview.mediaCount }, (_, index) => [
+      "/api/catalog/facet-media",
+      encodeURIComponent(preview.app),
+      encodeURIComponent(facet.group),
+      encodeURIComponent(facet.value),
+      encodeURIComponent(facet.platform),
+      index + 1,
+    ].join("/"));
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.json({
+      kind: preview.kind,
+      app: preview.app,
+      label: preview.label,
+      iconUrl: preview.iconUrl,
+      media,
+    });
+  });
+
+  app.get("/catalog/facet-media/:app/:group/:value/:platform/:rank", async (req, res) => {
+    const facet = parsePublicFacet({
+      group: req.params.group,
+      value: req.params.value,
+      platform: req.params.platform,
+    });
+    const rank = Number(req.params.rank);
+    const maxRank = facet?.group === "flows" ? 3 : 1;
+    if (
+      !facet
+      || !isAppSlug(req.params.app)
+      || !Number.isInteger(rank)
+      || rank < 1
+      || rank > maxRank
+      || facet.group === "categories"
+    ) {
+      res.status(400).json({ error: "invalid facet media reference" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "media storage unavailable" });
+      return;
+    }
+    const metadata = await deps.publishedFacetPreviewObject({
+      app: req.params.app,
+      ...facet,
+      rank,
+    });
+    if (!metadata) {
+      res.status(404).json({ error: "facet preview not found" });
+      return;
+    }
+    try {
+      await sendStoredObject(deps.objectStore, metadata, res);
+    } catch {
+      res.status(503).json({ error: "media storage unavailable" });
+    }
   });
 
   app.get("/preview-media/:app/:rank", async (req, res) => {

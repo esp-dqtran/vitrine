@@ -21,6 +21,7 @@ import type { SitesJob } from "../../../src/sitesQueue.ts";
 import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
 import type { ReferralCampaign } from "../../../src/referralStore.ts";
 import type { ProgressSnapshot } from "../../../src/progress.ts";
+import type { PublicFacetInput } from "../../../src/publicFacetPreview.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -2113,6 +2114,92 @@ test("serves only the first three public preview images", async (t) => {
   assert.equal((await fetch(`${base}/preview-media/linear/2`)).status, 404);
   assert.equal((await fetch(`${base}/preview-media/linear/4`)).status, 400);
   assert.deepEqual(ranks, [1, 2]);
+});
+
+test("serves allowlisted public taxonomy previews and protected media", async (t) => {
+  const metadataInputs: unknown[] = [];
+  const mediaInputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    publishedFacetPreview: async (input: PublicFacetInput) => {
+      metadataInputs.push(input);
+      return {
+        kind: "flow",
+        app: "linear",
+        label: "Setting Up",
+        iconUrl: null,
+        mediaCount: 3,
+      };
+    },
+    publishedFacetPreviewObject: async (
+      input: PublicFacetInput & { app: string; rank: number },
+    ) => {
+      mediaInputs.push(input);
+      return previewMetadata;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/catalog/facet-preview?group=flows&value=Setting%20Up&platform=web`,
+  );
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body, {
+    kind: "flow",
+    app: "linear",
+    label: "Setting Up",
+    iconUrl: null,
+    media: [
+      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/1",
+      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/2",
+      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/3",
+    ],
+  });
+  assert.doesNotMatch(JSON.stringify(body), /object_key|image_id|mobbin-bulk/);
+  assert.deepEqual(metadataInputs, [{
+    group: "flows",
+    value: "Setting Up",
+    platform: "web",
+  }]);
+
+  const media = await fetch(
+    `${base}/catalog/facet-media/linear/flows/Setting%20Up/web/2`,
+  );
+  assert.equal(media.status, 200);
+  assert.deepEqual(mediaInputs, [{
+    app: "linear",
+    group: "flows",
+    value: "Setting Up",
+    platform: "web",
+    rank: 2,
+  }]);
+});
+
+test("rejects unknown taxonomy preview inputs before dependencies run", async (t) => {
+  let calls = 0;
+  const { base, server } = await serve(createApiApp({
+    publishedFacetPreview: async () => {
+      calls += 1;
+      return null;
+    },
+    publishedFacetPreviewObject: async () => {
+      calls += 1;
+      return undefined;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(
+    `${base}/catalog/facet-preview?group=elements&value=Unknown&platform=web`,
+  )).status, 400);
+  assert.equal((await fetch(
+    `${base}/catalog/facet-preview?group=flows&value=Setting%20Up&platform=android`,
+  )).status, 400);
+  assert.equal((await fetch(
+    `${base}/catalog/facet-media/linear/flows/Setting%20Up/web/4`,
+  )).status, 400);
+  assert.equal(calls, 0);
 });
 
 test("redirects authorized object-backed media to a short-lived signed URL", async (t) => {

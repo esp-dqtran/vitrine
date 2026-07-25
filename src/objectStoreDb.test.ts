@@ -9,6 +9,7 @@ import {
   entitledImageObject,
   legacyImageReference,
   imageObjectById,
+  publishedFacetPreviewObject,
   publishedPreviewObject,
   type DatabaseQuery,
 } from "./objectStoreDb.ts";
@@ -301,6 +302,60 @@ test("preview lookup rejects ranks outside one to three without querying", async
   };
   await assert.rejects(publishedPreviewObject({ app: "alpha", rank: 0 }, query), /rank/i);
   await assert.rejects(publishedPreviewObject({ app: "alpha", rank: 4 }, query), /rank/i);
+  assert.equal(calls, 0);
+});
+
+test("facet preview lookup stays app-scoped in the latest published version", async () => {
+  let sql = "";
+  let values: readonly unknown[] | undefined;
+  const found = await publishedFacetPreviewObject(
+    {
+      app: "linear",
+      group: "elements",
+      value: "Dialog",
+      platform: "web",
+      rank: 1,
+    },
+    async (nextSql, nextValues) => {
+      sql = nextSql;
+      values = nextValues;
+      return result([{
+        object_key: metadata.key,
+        sha256: metadata.sha256,
+        byte_size: metadata.byteSize,
+        content_type: metadata.contentType,
+        access_class: metadata.accessClass,
+      }]);
+    },
+  );
+
+  assert.deepEqual(found, metadata);
+  assert.deepEqual(values, ["web", "Dialog", "linear", 1, "elements"]);
+  assert.match(sql, /av\.status = 'published'/);
+  assert.match(sql, /public_facet_previews/);
+  assert.match(sql, /a\.name = \$3/);
+  assert.match(sql, /so\.access_class IN \('protected', 'public-preview'\)/);
+  assert.doesNotMatch(sql, /jsonb_array_elements|app_flow_versions/);
+});
+
+test("facet preview lookup rejects ranks outside its declared media bound", async () => {
+  let calls = 0;
+  await assert.rejects(
+    publishedFacetPreviewObject(
+      {
+        app: "linear",
+        group: "flows",
+        value: "Setting Up",
+        platform: "web",
+        rank: 4,
+      },
+      async () => {
+        calls += 1;
+        return result();
+      },
+    ),
+    /rank/i,
+  );
   assert.equal(calls, 0);
 });
 

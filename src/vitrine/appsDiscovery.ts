@@ -1,4 +1,5 @@
 import type { Platform } from '../platformFromUrl.ts';
+import { PUBLIC_APP_FACETS } from '../publicFacetPreview.ts';
 import type { App, Screen } from './types.ts';
 
 export type AppsFacet = {
@@ -9,12 +10,7 @@ export type AppsFacet = {
 export type AppsSort = 'latest' | 'popular' | 'rated' | 'animations';
 export type AppsPlatform = Extract<Platform, 'ios' | 'web'>;
 
-export const APPS_DISCOVERY_FACETS = [
-  { group: 'categories', label: 'Categories', values: ['Productivity', 'Business', 'Finance', 'Health & Fitness', 'Developer Tools'] },
-  { group: 'screens', label: 'Screens', values: ['Filter & Sort', 'Chat Bot', 'Signup', 'Settings & Preferences', 'Charts'] },
-  { group: 'elements', label: 'UI Elements', values: ['Navigation Menu', 'Dialog', 'Card', 'Dropdown Menu', 'Text Field'] },
-  { group: 'flows', label: 'Flows', values: ['Setting Up', 'Searching & Finding', 'Filtering & Sorting', 'Resetting Password', 'Reporting'] },
-] as const;
+export const APPS_DISCOVERY_FACETS = PUBLIC_APP_FACETS;
 
 const searchableText = (values: Array<string | null | undefined>) =>
   values.filter(Boolean).join(' ').toLowerCase();
@@ -26,36 +22,6 @@ const screenFacetText = (screen: Screen, facet: AppsFacet['group']) => {
   }
   return searchableText([...(screen.visibleStates ?? []), screen.stateContext, screen.description]);
 };
-
-export interface AppsFacetPreview {
-  app: string;
-  screenType: string;
-  url: string;
-}
-
-const screenMatchesFacet = (screen: Screen, facet: AppsFacet): boolean =>
-  screenFacetText(screen, facet.group).includes(facet.value.toLowerCase());
-
-export function previewForAppsFacet(
-  apps: App[],
-  facet: AppsFacet,
-  platform: AppsPlatform,
-): AppsFacetPreview | null {
-  for (const app of apps) {
-    const platformScreens = app.screens.filter((screen) => screen.platform === platform);
-    if (platformScreens.length === 0) continue;
-    if (facet.group === 'categories' && app.cat.toLowerCase() !== facet.value.toLowerCase()) continue;
-
-    const screen = facet.group === 'categories'
-      ? platformScreens[0]
-      : platformScreens.find((candidate) => screenMatchesFacet(candidate, facet));
-    if (!screen) continue;
-
-    const url = screen.thumbnailUrl || screen.url;
-    if (url) return { app: app.app, screenType: screen.type, url };
-  }
-  return null;
-}
 
 const meanConfidence = (app: App) => {
   const values = app.screens.flatMap((screen) => screen.confidence == null ? [] : [screen.confidence]);
