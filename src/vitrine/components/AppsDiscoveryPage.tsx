@@ -7,7 +7,7 @@ import {
   type AppsPlatform,
   type AppsSort,
 } from '../appsDiscovery.ts';
-import { fetchFacetPreview } from '../facetPreviewApi.ts';
+import { fetchRandomFacetPreview } from '../facetPreviewApi.ts';
 import type { App } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
@@ -117,7 +117,7 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
                       onPointerEnter={(event) => {
                         const request = ++hoverRequestRef.current;
                         hoverPointRef.current = { x: event.clientX, y: event.clientY };
-                        void fetchFacetPreview({ ...facet, platform })
+                        void fetchRandomFacetPreview({ ...facet, platform })
                           .then((preview) => {
                             if (preview && request === hoverRequestRef.current) {
                               const point = hoverPointRef.current;

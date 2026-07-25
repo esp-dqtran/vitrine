@@ -202,3 +202,13 @@ test('styles the Apps category hover preview as a non-interactive floating image
   assert.match(css, /\.apps-discovery__hover-preview img\s*\{[\s\S]*object-fit:\s*cover/);
   assert.match(css, /@media \(hover:\s*none\),\s*\(pointer:\s*coarse\)[\s\S]*\.apps-discovery__hover-preview\s*\{[\s\S]*display:\s*none/);
 });
+
+test('requests a random cached taxonomy candidate on pointer entry', async () => {
+  const source = await readFile(
+    new URL('./components/AppsDiscoveryPage.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /fetchRandomFacetPreview\(\{ \.\.\.facet, platform \}\)/);
+  assert.doesNotMatch(source, /fetchFacetPreview\(\{ \.\.\.facet, platform \}\)/);
+});
