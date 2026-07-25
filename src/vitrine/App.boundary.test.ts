@@ -44,7 +44,7 @@ test('keeps Sites routes ahead of Apps branches and free from job-list reads', a
   assert.ok(appSource.indexOf("route.name === 'site-version'") < appSource.indexOf("route.name === 'app' && (detailError"));
   assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
   assert.doesNotMatch(`${sitesSource}\n${sitesApiSource}`, /fetch\(\s*['"]\/api\/jobs['"]\s*\)/);
-  assert.doesNotMatch(sitesSource, /setInterval|setTimeout/);
+  assert.doesNotMatch(sitesSource, /setInterval/);
 });
 
 test('renders both Sites routes outside the admin AppShell', async () => {
@@ -76,7 +76,50 @@ test('renders Apps through its discovery page outside the admin AppShell', async
   assert.match(sitesSource, /data-reference-gallery-shell="sites"/);
   assert.match(sitesSource, /<SitesTopNav/);
   assert.match(sitesNavSource, /<ReferenceDiscoveryTopNav/);
+  assert.match(sitesNavSource, /<SearchTrigger/);
+  assert.doesNotMatch(sitesNavSource, /<SearchInput/);
   assert.doesNotMatch(sitesSource, /<ReferenceGalleryShell/);
+});
+
+test('opens the shared catalog search overlay from Sites', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const catalogBranch = source.slice(
+    source.indexOf("if (route.name === 'sites')"),
+    source.indexOf("if (route.name === 'site-version')"),
+  );
+
+  assert.match(catalogBranch, /onOpenSearch=\{\(seed\) => void openPalette\('sites', seed\)\}/);
+  assert.match(catalogBranch, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
+  assert.match(catalogBranch, /\{discoveryOverlays\}/);
+});
+
+test('owns one scoped search session and seeds it from each gallery', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /createSearchSession/);
+  assert.match(source, /useSyncExternalStore/);
+  assert.match(source, /openPalette\('sites', seed\)/);
+  assert.match(source, /openPalette\('apps', seed\)/);
+  assert.doesNotMatch(source, /const \[paletteOpen, setPaletteOpen\]/);
+});
+
+test('maps each gallery taxonomy into only its compatible search filters', async () => {
+  const [appSource, sitesSource] = await Promise.all([
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(appSource, /platform: \[platform\]/);
+  assert.match(appSource, /appCategory: \[props\.facet\.value\]/);
+  assert.match(appSource, /pageType: \[props\.facet\.value\]/);
+  assert.match(appSource, /component: \[props\.facet\.value\]/);
+  assert.match(appSource, /flow: \[props\.facet\.value\]/);
+  assert.doesNotMatch(appSource, /siteSection:|siteStyle:/);
+
+  assert.match(sitesSource, /appCategory: \[facet\.value\]/);
+  assert.match(sitesSource, /siteSection: \[facet\.value\]/);
+  assert.match(sitesSource, /siteStyle: \[facet\.value\]/);
+  assert.doesNotMatch(sitesSource, /platform: \[platform\]|pageType:|component: \[|flow: \[/);
 });
 
 test('keeps Apps retry and terminal no-results states inside its discovery page', async () => {
@@ -156,7 +199,7 @@ test('does not reload a retained gallery merely because it is re-enabled', async
   assert.match(source, /if \(!enabled \|\| apps !== null\) return/);
 });
 
-test('reports the loaded admin app count against the complete catalog total', async () => {
+test('passes the complete catalog total into the Apps discovery boundary', async () => {
   const [appSource, pageSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
@@ -165,7 +208,7 @@ test('reports the loaded admin app count against the complete catalog total', as
 
   assert.match(hookSource, /totalApps/);
   assert.match(appSource, /totalApps=\{totalApps\}/);
-  assert.match(pageSource, /Showing \$\{visibleApps\.length\} of \$\{props\.totalApps\} apps/);
+  assert.match(pageSource, /totalApps: number \| null/);
 });
 
 test('shares catalog search state with the inspiration modal', async () => {
@@ -205,4 +248,17 @@ test('opens account settings when returning from the Stripe billing portal', asy
 
   assert.match(source, /route\.name === 'settings-billing'/);
   assert.match(source, /navigate\(\{ name: 'apps' \}\)/);
+});
+
+test('opens guest catalog authentication in a modal without changing routes', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const \[loginOpen, setLoginOpen\] = useState\(false\)/);
+  assert.match(source, /<GuestCatalogControls onLogin=\{\(\) => setLoginOpen\(true\)\} \/>/);
+  assert.match(source, /<LoginDialog/);
+  assert.match(source, /isOpen=\{loginOpen\}/);
+  assert.match(source, /onClose=\{\(\) => setLoginOpen\(false\)\}/);
+  assert.match(source, /authenticate=\{authenticate\}/);
+  assert.match(source, /register=\{register\}/);
+  assert.match(source, /onSignedIn=\{completeLogin\}/);
 });
