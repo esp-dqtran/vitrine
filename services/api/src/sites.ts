@@ -11,10 +11,34 @@ export function mountSitesRoutes(
   app: express.Express,
   dependencies: SitesRouteDependencies,
 ): void {
-  app.get("/sites", async (_req, res) => {
-    res.json(await dependencies.store.listReadySites());
-  });
+  mountReadySitesList(app, dependencies, false);
+  mountPrivateSitesRoutes(app, dependencies);
+}
 
+export function mountPublicSitesRoutes(
+  app: express.Express,
+  dependencies: SitesRouteDependencies,
+): void {
+  mountReadySitesList(app, dependencies, true);
+
+  app.get(
+    "/sites/:siteId/versions/:versionId/catalog-media/preview",
+    async (req, res) => {
+      await sendPublicCatalogMedia(req, res, dependencies, "preview");
+    },
+  );
+  app.get(
+    "/sites/:siteId/versions/:versionId/catalog-media/posters/:recordId",
+    async (req, res) => {
+      await sendPublicCatalogMedia(req, res, dependencies, "poster");
+    },
+  );
+}
+
+export function mountPrivateSitesRoutes(
+  app: express.Express,
+  dependencies: SitesRouteDependencies,
+): void {
   app.get("/sites/:siteId/versions/:versionId", async (req, res) => {
     const ids = versionIds(req.params);
     if (!ids) {
@@ -34,6 +58,68 @@ export function mountSitesRoutes(
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/pages/:recordId/media", "page");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/media", "section");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/poster", "poster");
+}
+
+function mountReadySitesList(
+  app: express.Express,
+  dependencies: SitesRouteDependencies,
+  publicCatalogMedia: boolean,
+): void {
+  app.get("/sites", async (_req, res) => {
+    const sites = await dependencies.store.listReadySites();
+    res.json(publicCatalogMedia ? sites.map(publicSiteSummary) : sites);
+  });
+}
+
+function publicSiteSummary(
+  site: Awaited<ReturnType<SitesStore["listReadySites"]>>[number],
+) {
+  const root = `/api/sites/${site.siteId}/versions/${site.versionId}/catalog-media`;
+  return {
+    ...site,
+    previewUrl: `${root}/preview`,
+    previews: site.previews.map((preview) => ({
+      ...preview,
+      url: `${root}/posters/${preview.id}`,
+    })),
+  };
+}
+
+async function sendPublicCatalogMedia(
+  req: express.Request,
+  res: express.Response,
+  dependencies: SitesRouteDependencies,
+  kind: "preview" | "poster",
+): Promise<void> {
+  const ids = versionIds(req.params);
+  const recordId = kind === "poster" ? positiveId(req.params.recordId) : undefined;
+  if (!ids || (kind === "poster" && !recordId)) {
+    res.status(400).json({ error: "invalid Site catalog media reference" });
+    return;
+  }
+
+  const site = (await dependencies.store.listReadySites()).find(
+    (entry) => entry.siteId === ids.siteId && entry.versionId === ids.versionId,
+  );
+  if (!site || (recordId !== undefined && !site.previews.some((entry) => entry.id === recordId))) {
+    res.status(404).json({ error: "Site catalog media not found" });
+    return;
+  }
+
+  const metadata = await dependencies.store.siteMediaObject({
+    ...ids,
+    kind: kind === "preview" ? "preview" : "page",
+    ...(recordId === undefined ? {} : { recordId }),
+  });
+  if (!metadata || metadata.accessClass === "internal") {
+    res.status(404).json({ error: "Site catalog media not found" });
+    return;
+  }
+  try {
+    await dependencies.sendObject(metadata, res);
+  } catch {
+    res.status(503).json({ error: "media storage unavailable" });
+  }
 }
 
 function mountMedia(
