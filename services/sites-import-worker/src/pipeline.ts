@@ -8,6 +8,7 @@ import {
   PermanentSiteImportError,
   SiteImportCancelledError,
 } from "../../../src/sitesCrawler.ts";
+import { GenericSiteImportCancelledError } from "../../../src/genericSiteCrawler.ts";
 import type { SitesAttempt, SitesJob } from "../../../src/sitesQueue.ts";
 
 export interface SitesCrawlControls {
@@ -60,7 +61,10 @@ export function createSitesPipelineHandler(
       await deps.crawl(job.url, controls);
       await deps.setJobStatus(job.jobId, "done");
     } catch (error) {
-      if (error instanceof SiteImportCancelledError) return;
+      if (
+        error instanceof SiteImportCancelledError ||
+        error instanceof GenericSiteImportCancelledError
+      ) return;
       if (error instanceof PermanentSiteImportError) {
         await deps.setJobStatus(job.jobId, "error", safePermanentMessage(error.message));
         return;

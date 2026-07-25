@@ -3,7 +3,7 @@ import amqp, {
   type ChannelModel,
   type ConsumeMessage,
 } from "amqplib";
-import { canonicalMobbinSitesUrl } from "./sites.ts";
+import { classifySiteImportUrl } from "./sites.ts";
 
 export const SITES_QUEUE_NAME = "mobbin-sites-jobs";
 export const SITES_DLQ_NAME = "mobbin-sites-jobs.dlq";
@@ -48,7 +48,7 @@ export function parseSitesJob(value: unknown): SitesJob {
   try {
     return {
       type: "import-site",
-      url: canonicalMobbinSitesUrl(input.url).canonicalUrl,
+      url: classifySiteImportUrl(input.url).canonicalUrl,
       jobId: input.jobId as number,
     };
   } catch {

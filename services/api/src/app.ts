@@ -150,7 +150,7 @@ import {
 } from "../../../src/appKnowledgeStore.ts";
 import { buildAppKnowledgeEvidenceManifest } from "../../../src/appKnowledgeEvidence.ts";
 import { appKnowledgeProviderModelFromEnvironment } from "../../../src/appKnowledgeProviderConfig.ts";
-import { canonicalMobbinSitesUrl } from "../../../src/sites.ts";
+import { classifySiteImportUrl } from "../../../src/sites.ts";
 import { publishSitesJob } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import { mountSitesRoutes } from "./sites.ts";
@@ -2478,9 +2478,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     if (type === "import-site") {
       let canonicalUrl: string;
       try {
-        canonicalUrl = canonicalMobbinSitesUrl(url).canonicalUrl;
+        canonicalUrl = classifySiteImportUrl(url).canonicalUrl;
       } catch {
-        res.status(400).json({ error: "import-site requires an exact Mobbin Sites preview URL" });
+        res.status(400).json({
+          error: "import-site requires a public HTTP(S) URL",
+        });
         return;
       }
       const existing = await deps.sitesStore.readyVersionByCanonicalUrl(canonicalUrl);

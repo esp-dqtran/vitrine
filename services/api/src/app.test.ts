@@ -979,7 +979,45 @@ test("routes an exact Mobbin Sites URL only to the isolated Sites publisher", as
   ]);
 });
 
-test("rejects an invalid Mobbin Sites URL before creating a job", async (t) => {
+test("routes an arbitrary public page to the isolated Sites publisher", async (t) => {
+  const calls: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    sitesStore: {
+      readyVersionByCanonicalUrl: async () => undefined,
+    },
+    createJob: async (type: string, payload: Record<string, unknown>) => {
+      calls.push(["create", type, payload]);
+      return 43;
+    },
+    publishSitesJob: async (job: SitesJob) => {
+      calls.push(["sites-publisher", job]);
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/jobs`, {
+    method: "POST",
+    headers: { ...adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({
+      type: "import-site",
+      url: "https://www.framer.com/#hero",
+    }),
+  });
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), { id: 43 });
+  assert.deepEqual(calls, [
+    ["create", "import-site", { url: "https://www.framer.com/" }],
+    ["sites-publisher", {
+      type: "import-site",
+      url: "https://www.framer.com/",
+      jobId: 43,
+    }],
+  ]);
+});
+
+test("rejects a private Site URL before creating a job", async (t) => {
   let created = false;
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => admin,
@@ -990,7 +1028,7 @@ test("rejects an invalid Mobbin Sites URL before creating a job", async (t) => {
   const response = await fetch(`${base}/jobs`, {
     method: "POST",
     headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "import-site", url: "https://mobbin.com/sites/not-approved" }),
+    body: JSON.stringify({ type: "import-site", url: "http://127.0.0.1/" }),
   });
   assert.equal(response.status, 400);
   assert.equal(created, false);

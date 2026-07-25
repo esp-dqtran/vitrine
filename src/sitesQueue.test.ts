@@ -12,7 +12,7 @@ import {
 const approved =
   "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview";
 
-test("Sites parser accepts only an identifier-only import-site job", () => {
+test("Sites parser accepts identifier-only jobs for Mobbin or public pages", () => {
   assert.deepEqual(parseSitesJob({ type: "import-site", url: `${approved}/`, jobId: 7 }), {
     type: "import-site",
     url: approved,
@@ -21,7 +21,6 @@ test("Sites parser accepts only an identifier-only import-site job", () => {
   for (const value of [
     { type: "import-app", url: approved, jobId: 7 },
     { type: "import-site", url: approved, jobId: 0 },
-    { type: "import-site", url: `${approved}?token=secret`, jobId: 7 },
     { type: "import-site", url: approved, jobId: 7, name: "v7" },
   ]) {
     assert.throws(() => parseSitesJob(value), /invalid Sites queue job/i);
