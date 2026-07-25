@@ -1,4 +1,4 @@
-import { Icon } from '@astryxdesign/core';
+import { Button, Icon } from '@astryxdesign/core';
 import type { FlowTreeGroup } from '../flowTree.ts';
 import { SearchInput } from './SearchInput.tsx';
 
@@ -43,32 +43,38 @@ export function FlowTree({
             const childId = `${idPrefix}-flow-group-${groupIndex}`;
             return (
               <li className="flow-tree__group" key={group.id}>
-                <button
-                  type="button"
+                <Button
+                  label={`${group.label}, ${group.flows.length} flows`}
+                  variant="ghost"
+                  size="sm"
                   className="flow-tree__group-button"
                   aria-expanded={expanded}
                   aria-controls={childId}
                   onClick={() => onToggleGroup(group.id)}
+                  icon={(
+                    <Icon
+                      icon={expanded ? 'chevronDown' : 'chevronRight'}
+                      size="sm"
+                    />
+                  )}
+                  endContent={(
+                    <span className="flow-tree__count">{group.flows.length}</span>
+                  )}
                 >
-                  <Icon
-                    icon={expanded ? 'chevronDown' : 'chevronRight'}
-                    size="sm"
-                  />
                   <span className="flow-tree__group-label">{group.label}</span>
-                  <span className="flow-tree__count">{group.flows.length}</span>
-                </button>
+                </Button>
                 {expanded && (
                   <ul className="flow-tree__flows" id={childId}>
                     {group.flows.map((flow) => (
                       <li key={flow.id}>
-                        <button
-                          type="button"
+                        <Button
+                          label={flow.title}
+                          variant="ghost"
+                          size="sm"
                           className="flow-tree__flow-button"
                           aria-current={flow.id === selectedFlowId ? 'page' : undefined}
                           onClick={() => onSelectFlow(flow.id)}
-                        >
-                          {flow.title}
-                        </button>
+                        />
                       </li>
                     ))}
                   </ul>

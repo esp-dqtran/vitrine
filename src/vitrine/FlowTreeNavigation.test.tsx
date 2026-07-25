@@ -46,7 +46,7 @@ test('renders category disclosures, counts, nested flows, and selected state', (
   assert.match(html, /Onboarding/);
   assert.match(html, />2<\/span>/);
   assert.match(html, /Inviting a team member/);
-  assert.match(html, /aria-current="page"[^>]*>Starting a trial/);
+  assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
   assert.match(html, /Standalone flows/);
   assert.match(html, /id="desktop-flow-group-/);
 });
@@ -93,7 +93,7 @@ test('keeps the tree mounted beside a selected Flow viewer', () => {
 
   assert.match(html, /data-flow-workspace="true"/);
   assert.match(html, /aria-label="Flows"/);
-  assert.match(html, /aria-current="page"[^>]*>Starting a trial/);
+  assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
   assert.match(html, /Back to all flows/);
   assert.match(html, /Choose a plan/);
   assert.match(html, /Browse flows/);
@@ -130,4 +130,13 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__rail\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__browse\s*\{[\s\S]*display:/);
+});
+
+test('uses Astryx controls for every Flow tree action', () => {
+  const source = readFileSync(
+    new URL('./components/FlowTree.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.doesNotMatch(source, /<button\b/);
+  assert.match(source, /<Button/);
 });
