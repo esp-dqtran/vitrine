@@ -33,7 +33,7 @@ export function FlowViewer({
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 20 }}>
-        <Button label="Back to flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} />
+        <Button label="Back to all flows" icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} />
         {app && platform && version && <Button label="Create Feature Document" variant="primary" size="sm" clickAction={() => setFeatureDocumentOpen(true)} />}
       </div>
       {flow.category && <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{flow.category}</div>}

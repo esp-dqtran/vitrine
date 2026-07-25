@@ -3,6 +3,8 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { DesignFlow, EvidenceView } from '../designSystem.ts';
 import { FlowTree } from './components/FlowTree.tsx';
+import { FlowsPanel } from './components/FlowsPanel.tsx';
+import { FlowsWorkspaceLoading } from './components/FlowsWorkspace.tsx';
 import { buildFlowTreeGroups } from './flowTree.ts';
 
 const flow = (
@@ -62,4 +64,60 @@ test('renders a local no-match status without replacing the workspace', () => {
   );
   assert.match(html, /role="status"/);
   assert.match(html, /No flows match your search/);
+});
+
+test('keeps the tree mounted beside a selected Flow viewer', () => {
+  const flows = [
+    flow('invite', 'Inviting a team member', 'Onboarding'),
+    {
+      ...flow('trial', 'Starting a trial', 'Onboarding'),
+      steps: [{
+        label: 'Choose a plan',
+        evidence: [{
+          imageId: 1,
+          imageUrl: '/trial.png',
+          description: 'Plan selection',
+        }],
+      }],
+    },
+  ];
+  const html = renderToStaticMarkup(
+    <FlowsPanel
+      flows={flows}
+      selectedFlowId="trial"
+      selectedStep={1}
+      onSelectionChange={() => undefined}
+    />,
+  );
+
+  assert.match(html, /data-flow-workspace="true"/);
+  assert.match(html, /aria-label="Flows"/);
+  assert.match(html, /aria-current="page"[^>]*>Starting a trial/);
+  assert.match(html, /Back to all flows/);
+  assert.match(html, /Choose a plan/);
+  assert.match(html, /Browse flows/);
+  assert.match(html, /class="[^"]*flow-tree-drawer/);
+  assert.match(html, /desktop-flow-group-/);
+  assert.match(html, /drawer-flow-group-/);
+});
+
+test('keeps invalid routed Flow recovery inside the normal gallery workspace', () => {
+  const html = renderToStaticMarkup(
+    <FlowsPanel
+      flows={[flow('invite', 'Inviting a team member', 'Onboarding')]}
+      selectedFlowId="deleted-flow"
+      onSelectionChange={() => undefined}
+    />,
+  );
+  assert.match(html, /role="status"/);
+  assert.match(html, /Flow unavailable/);
+  assert.match(html, /Open Inviting a team member flow/);
+});
+
+test('renders Flow navigation skeletons beside the existing loading state', () => {
+  const html = renderToStaticMarkup(<FlowsWorkspaceLoading />);
+  assert.match(html, /data-flow-workspace-loading="true"/);
+  assert.match(html, /aria-label="Loading flows navigation"/);
+  assert.equal((html.match(/flow-tree__skeleton/g) ?? []).length, 7);
+  assert.match(html, /aria-label="Loading flows"/);
 });
