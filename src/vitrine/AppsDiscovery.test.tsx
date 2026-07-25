@@ -193,6 +193,9 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /Top rated/);
   assert.match(html, /Animations/);
   assert.doesNotMatch(html, />Filter</);
+  assert.match(html, /data-has-app-preview="true"/);
+  assert.match(html, /class="apps-discovery__hover-preview"/);
+  assert.match(html, /<img alt="" aria-hidden="true"\/>/);
   assert.match(html, /data-apps-discovery-grid="true"/);
   assert.match(html, /data-app-discovery-card="true"/);
   assert.match(html, /Purpose-built tool/);
@@ -225,4 +228,15 @@ test('animates the Apps platform pill between iOS and Web', async () => {
   assert.match(css, /\.apps-discovery__platform::before\s*\{[\s\S]*transform:\s*translateX\(0\);[\s\S]*transition:\s*transform/);
   assert.match(css, /\.apps-discovery__platform:has\(button:nth-child\(2\)\[aria-checked='true'\]\)::before\s*\{[\s\S]*transform:\s*translateX\(calc\(100%\s*\+\s*2px\)\)/);
   assert.match(css, /\.apps-discovery__platform button\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*transition:\s*color/);
+});
+
+test('scopes Apps category hover motion to fine pointers with GSAP cleanup', async () => {
+  const source = await readFile(new URL('./useCategoryHoverPreview.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /gsap\.matchMedia\(\)/);
+  assert.match(source, /\(hover: hover\) and \(pointer: fine\)/);
+  assert.match(source, /\(prefers-reduced-motion: reduce\)/);
+  assert.equal((source.match(/gsap\.quickTo\(/g) ?? []).length, 2);
+  assert.equal((source.match(/\.tween\.kill\(\)/g) ?? []).length, 2);
+  assert.match(source, /matchMedia\.revert\(\)/);
 });

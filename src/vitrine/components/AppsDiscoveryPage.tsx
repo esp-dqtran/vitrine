@@ -3,11 +3,13 @@ import { Button, EmptyState, Spinner } from '@astryxdesign/core';
 import {
   APPS_DISCOVERY_FACETS,
   filterAndSortApps,
+  previewForAppsFacet,
   type AppsFacet,
   type AppsPlatform,
   type AppsSort,
 } from '../appsDiscovery.ts';
 import type { App } from '../types.ts';
+import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
 import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
 import { SearchTrigger } from './SearchTrigger.tsx';
@@ -35,7 +37,7 @@ interface AppsDiscoveryPageProps {
 export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
   const [platform, setPlatform] = useState<AppsPlatform>('web');
   const [sort, setSort] = useState<AppsSort>('latest');
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const visibleApps = useMemo(
     () => filterAndSortApps(props.apps ?? [], {
       query: props.query,
@@ -90,35 +92,44 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
         accountControls={props.accountControls}
       />
       <div className="apps-discovery__content">
-        {filtersOpen ? (
-          <div className="apps-discovery__taxonomy" aria-label="App discovery filters">
-            {APPS_DISCOVERY_FACETS.map((group) => (
-              <section
-                key={group.group}
-                className={`apps-discovery__facet apps-discovery__facet--${group.group}`}
-              >
-                <h2>{group.label}</h2>
-                <div>
-                  {group.values.map((value) => {
-                    const selected = props.facet?.group === group.group && props.facet.value === value;
-                    return (
-                      <Button
-                        key={value}
-                        label={value}
-                        variant="ghost"
-                        size="sm"
-                        aria-pressed={selected}
-                        onClick={() => props.onFacetChange(
-                          selected ? null : { group: group.group, value },
-                        )}
-                      />
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-        ) : null}
+        <div className="apps-discovery__taxonomy" aria-label="App discovery filters">
+          {APPS_DISCOVERY_FACETS.map((group) => (
+            <section
+              key={group.group}
+              className={`apps-discovery__facet apps-discovery__facet--${group.group}`}
+            >
+              <h2>{group.label}</h2>
+              <div>
+                {group.values.map((value) => {
+                  const facet = { group: group.group, value } satisfies AppsFacet;
+                  const preview = previewForAppsFacet(props.apps ?? [], facet, platform);
+                  const selected = props.facet?.group === group.group && props.facet.value === value;
+                  return (
+                    <Button
+                      key={value}
+                      label={value}
+                      variant="ghost"
+                      size="sm"
+                      aria-pressed={selected}
+                      data-has-app-preview={preview ? 'true' : undefined}
+                      onPointerEnter={preview
+                        ? (event) => showPreview(preview, event.clientX, event.clientY)
+                        : undefined}
+                      onPointerMove={preview
+                        ? (event) => movePreview(event.clientX, event.clientY)
+                        : undefined}
+                      onPointerLeave={preview ? hidePreview : undefined}
+                      onClick={() => props.onFacetChange(selected ? null : facet)}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+        <div ref={previewRef} className="apps-discovery__hover-preview" aria-hidden="true">
+          <img alt="" aria-hidden="true" />
+        </div>
 
         <div className="apps-discovery__toolbar">
           <div role="radiogroup" aria-label="App platform" className="apps-discovery__platform">
@@ -152,13 +163,6 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
               />
             ))}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            label="Filter"
-            aria-expanded={filtersOpen}
-            onClick={() => setFiltersOpen((value) => !value)}
-          />
         </div>
 
         {props.beforeGrid}
