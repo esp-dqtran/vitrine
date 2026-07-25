@@ -41,7 +41,7 @@ export function AdvancedSearchPreview({
       <div className="advanced-search-preview__panel">
         <button ref={close} type="button" onClick={onClose}>Close preview</button>
         <div className="advanced-search-preview__media"><PlaceholderImage src={item.imageUrl} /></div>
-        <header><span>{item.appName} · {item.platform}</span><h2>{item.title}</h2><p>{item.description}</p></header>
+        <header><span>{item.catalogName} · {item.platform}</span><h2>{item.title}</h2><p>{item.description}</p></header>
         {item.flowName ? <p>Surrounding flow: {item.flowName}{item.flowStepIndex !== undefined ? ` · Step ${item.flowStepIndex + 1}` : ""}</p> : null}
         <SearchResearchActions
           item={item}

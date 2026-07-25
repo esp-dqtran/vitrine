@@ -15,6 +15,9 @@ import type { SaveReference } from "../researchApi.ts";
 import { CollectionPicker } from "./CollectionPicker.tsx";
 
 export function searchCollectionReference(item: SearchResultItem): SaveReference {
+  if (item.entityType === "site" || !item.appName) {
+    throw new Error("Site references are not supported by App collections");
+  }
   return {
     kind: item.entityType,
     app: item.appName,
@@ -28,6 +31,9 @@ export function researchItemInput(
   project: ResearchProjectWorkspace,
   laneId: number,
 ): AddResearchItemInput {
+  if (item.catalogScope !== "apps" || !item.appName) {
+    throw new Error("This result is not App catalog evidence");
+  }
   const versionId = Number(item.sourcePayload.versionId ?? item.versionId);
   const imageId = Number(item.sourcePayload.mediaImageId ?? item.mediaImageId);
   if (!Number.isSafeInteger(versionId) || !Number.isSafeInteger(imageId)) {
@@ -70,6 +76,9 @@ export function addComparisonSelection(
   selected: SearchResultItem[],
   item: SearchResultItem,
 ): SearchResultItem[] {
+  if (item.catalogScope !== "apps" || item.appId === undefined) {
+    throw new Error("Only Apps can be compared");
+  }
   if (selected.some(({ appId }) => appId === item.appId)) return selected;
   if (selected.length >= 5) throw new Error("Compare supports up to five distinct apps");
   return [...selected, item];
@@ -97,6 +106,10 @@ export function SearchResearchActions({
   useEffect(() => {
     void listResearchProjects().then(setProjects).catch(() => setProjects([]));
   }, []);
+  if (item.catalogScope !== "apps" || item.appId === undefined || !item.appName) {
+    return null;
+  }
+  const appId = item.appId;
   const selected = comparison.some(({ appId }) => appId === item.appId);
   return (
     <div className="advanced-search-research-actions">
@@ -143,7 +156,7 @@ export function SearchResearchActions({
         aria-pressed={selected}
         onClick={() => {
           if (selected) {
-            onComparisonChange(comparison.filter(({ appId }) => appId !== item.appId));
+            onComparisonChange(comparison.filter(({ appId: selectedAppId }) => selectedAppId !== appId));
             return;
           }
           try {

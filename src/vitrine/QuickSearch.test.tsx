@@ -7,7 +7,7 @@ import {
   quickSearchHandoff,
   quickSearchKeyAction,
 } from "./components/QuickSearch.tsx";
-import { defaultSearchState } from "./searchState.ts";
+import { defaultSearchState, emptySearchFilters } from "./searchState.ts";
 
 const base: SearchResultItem = {
   documentId: "screen:1", indexVersion: 1, catalogScope: "apps", catalogName: "Linear",
@@ -54,6 +54,21 @@ test("View all hands the exact query to /search", () => {
     route: { name: "search" },
     search: "q=dark+checkout",
   });
+});
+
+test("View all preserves the complete scoped filter state", () => {
+  const handoff = quickSearchHandoff({
+    ...defaultSearchState,
+    query: "pricing",
+    scope: "sites",
+    filters: {
+      ...emptySearchFilters,
+      siteSection: ["Pricing"],
+    },
+  });
+  assert.equal(handoff.route.name, "search");
+  assert.match(handoff.search, /scope=sites/);
+  assert.match(handoff.search, /siteSection=Pricing/);
 });
 
 test("keyboard helpers preserve the modal contract", () => {

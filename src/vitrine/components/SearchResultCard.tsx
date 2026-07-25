@@ -10,6 +10,7 @@ export interface SearchResultCardProps {
 
 const labels = {
   app: "App",
+  site: "Site",
   screen: "Screen",
   flow: "Flow",
   component: "UI element",
@@ -41,7 +42,7 @@ export function SearchResultCard({
         <div className="advanced-search-card__body">
           <span className="advanced-search-card__kind">{labels[item.entityType]}</span>
           <h3>{item.title}</h3>
-          <p>{item.appName} · {item.platform}</p>
+          <p>{item.catalogName} · {item.platform}</p>
           {item.pageType ? <span>{item.pageType}</span> : null}
           {item.entityType === "flow" ? (
             <ol>{steps.slice(0, 3).map((step, index) => (
@@ -55,7 +56,7 @@ export function SearchResultCard({
           ))}
         </div>
       </button>
-      {onToggleCompare ? (
+      {onToggleCompare && item.catalogScope === "apps" && item.appId !== undefined ? (
         <button
           type="button"
           className="advanced-search-card__compare"

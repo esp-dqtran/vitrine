@@ -51,3 +51,30 @@ test("desktop filters expose authorized counts and omit zero values", () => {
   assert.match(html, /iOS.*12/);
   assert.doesNotMatch(html, /Android/);
 });
+
+test("renders Site identity without App comparison controls", () => {
+  const siteResult: SearchResultItem = {
+    ...screenResult,
+    documentId: "site:7",
+    sourceId: "site:7",
+    catalogScope: "sites",
+    catalogName: "V7",
+    entityType: "site",
+    title: "V7",
+    appId: undefined,
+    appName: undefined,
+    versionId: undefined,
+    siteId: 7,
+    siteVersionId: 11,
+  };
+  const html = renderToStaticMarkup(
+    <SearchResultCard
+      item={siteResult}
+      onPreview={() => {}}
+      onToggleCompare={() => {}}
+    />,
+  );
+  assert.match(html, />Site</);
+  assert.match(html, /V7 · web/);
+  assert.doesNotMatch(html, /Compare app/);
+});

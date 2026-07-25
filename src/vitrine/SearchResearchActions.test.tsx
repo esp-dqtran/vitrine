@@ -9,8 +9,9 @@ import {
 } from "./components/SearchResearchActions.tsx";
 
 const screenResult: SearchResultItem = {
-  documentId: "screen:101", indexVersion: 1, versionId: 7, appId: 1,
-  appName: "Linear", platform: "web", entityType: "screen", sourceId: "screen:101",
+  documentId: "screen:101", indexVersion: 1, catalogScope: "apps", catalogName: "Linear",
+  versionId: 7, appId: 1, appName: "Linear", catalogCategories: [],
+  siteSections: [], siteStyles: [], platform: "web", entityType: "screen", sourceId: "screen:101",
   title: "Checkout", description: "", aliases: [], visibleText: "", components: [],
   states: [], layoutPatterns: [], publishedAt: "2026-07-23T00:00:00.000Z",
   mediaImageId: 101, sourcePayload: { versionId: 7, mediaImageId: 101 }, matchedContext: [],
@@ -51,5 +52,24 @@ test("comparison enforces two to five distinct apps", () => {
   assert.throws(
     () => addComparisonSelection(selected, { ...screenResult, appId: 6 }),
     /five/,
+  );
+});
+
+test("comparison rejects Site results", () => {
+  assert.throws(
+    () => addComparisonSelection([], {
+      ...screenResult,
+      documentId: "site:7",
+      sourceId: "site:7",
+      catalogScope: "sites",
+      catalogName: "V7",
+      entityType: "site",
+      appId: undefined,
+      appName: undefined,
+      versionId: undefined,
+      siteId: 7,
+      siteVersionId: 11,
+    }),
+    /Only Apps/,
   );
 });

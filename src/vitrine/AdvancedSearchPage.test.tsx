@@ -20,4 +20,7 @@ test("content type navigation implements the tabs accessibility pattern", async 
   assert.match(source, /role="tablist"/);
   assert.match(source, /role="tab"/);
   assert.match(source, /aria-selected=/);
+  assert.match(source, /\["site", "Sites"\]/);
+  assert.match(source, /aria-label="Search scope"/);
+  assert.match(source, /compatibleFilterKeys\(state\.scope\)/);
 });

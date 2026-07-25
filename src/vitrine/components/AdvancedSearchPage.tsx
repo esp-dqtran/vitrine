@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SearchFilters, SearchResultItem, SearchType } from "../../searchTypes.ts";
+import { compatibleFilterKeys } from "../../searchScope.ts";
 import { useAdvancedSearch } from "../useAdvancedSearch.ts";
 import {
   parseSearchState,
@@ -12,6 +13,7 @@ import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
 import { AdvancedSearchResults } from "./AdvancedSearchResults.tsx";
 import { addComparisonSelection } from "./SearchResearchActions.tsx";
+import { switchSearchScope } from "./QuickSearchFilters.tsx";
 
 const tabs: Array<[SearchType, string]> = [
   ["all", "All"],
@@ -20,6 +22,7 @@ const tabs: Array<[SearchType, string]> = [
   ["component", "UI Elements"],
   ["pattern", "Patterns"],
   ["app", "Apps"],
+  ["site", "Sites"],
 ];
 
 function initialSearchState(): SearchPageState {
@@ -70,6 +73,20 @@ export function AdvancedSearchPage({
             aria-label="Search the research library"
           />
         </form>
+        <nav className="advanced-search-tabs" aria-label="Search scope" role="tablist">
+          {(["apps", "sites", "all"] as const).map((scope) => (
+            <button
+              key={scope}
+              type="button"
+              role="tab"
+              aria-selected={state.scope === scope}
+              tabIndex={state.scope === scope ? 0 : -1}
+              onClick={() => commit(switchSearchScope(state, scope))}
+            >
+              {scope === "apps" ? "Apps" : scope === "sites" ? "Sites" : "All"}
+            </button>
+          ))}
+        </nav>
         <nav className="advanced-search-tabs" aria-label="Result type" role="tablist">
           {tabs.map(([type, label]) => (
             <button
@@ -105,6 +122,7 @@ export function AdvancedSearchPage({
           <AdvancedSearchFilters
             filters={state.filters}
             facets={search.result.facets}
+            keys={compatibleFilterKeys(state.scope)}
             onChange={applyFilters}
           />
         ) : null}
@@ -122,8 +140,10 @@ export function AdvancedSearchPage({
               <AdvancedSearchResults
                 items={search.result.items}
                 onPreview={onPreview}
-                comparisonAppIds={comparison.map(({ appId }) => appId)}
+                comparisonAppIds={comparison.flatMap(({ appId }) =>
+                  appId === undefined ? [] : [appId])}
                 onToggleCompare={(item) => {
+                  if (item.catalogScope !== "apps" || item.appId === undefined) return;
                   if (comparison.some(({ appId }) => appId === item.appId)) {
                     onComparisonChange(comparison.filter(({ appId }) => appId !== item.appId));
                     return;
@@ -145,6 +165,7 @@ export function AdvancedSearchPage({
           open={filtersOpen}
           filters={state.filters}
           facets={search.result.facets}
+          keys={compatibleFilterKeys(state.scope)}
           onChange={applyFilters}
           onClose={() => setFiltersOpen(false)}
         />
@@ -156,7 +177,8 @@ export function AdvancedSearchPage({
             type="button"
             disabled={comparison.length < 2}
             onClick={() => window.open(
-              `/api/compare?apps=${encodeURIComponent(comparison.map(({ appName }) => appName).join(","))}`,
+              `/api/compare?apps=${encodeURIComponent(comparison.flatMap(({ appName }) =>
+                appName ? [appName] : []).join(","))}`,
               "_blank",
               "noopener,noreferrer",
             )}

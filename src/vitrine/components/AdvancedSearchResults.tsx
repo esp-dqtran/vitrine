@@ -22,8 +22,12 @@ export function AdvancedSearchResults({
           key={item.documentId}
           item={item}
           onPreview={onPreview}
-          selected={comparisonAppIds.includes(item.appId)}
-          onToggleCompare={onToggleCompare}
+          selected={item.appId !== undefined && comparisonAppIds.includes(item.appId)}
+          onToggleCompare={
+            item.catalogScope === "apps" && item.appId !== undefined
+              ? onToggleCompare
+              : undefined
+          }
         />
       ))}
     </div>
