@@ -5,7 +5,12 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import ffmpegPath from "ffmpeg-static";
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import {
+  chromium,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from "playwright";
 import sharp from "sharp";
 import {
   canonicalPublicPageUrl,
@@ -14,8 +19,15 @@ import {
   type PublicPageCapture,
   type PublicPageSection,
 } from "./publicPage.ts";
+import {
+  buildSiteAnalysis,
+  inspectSiteViewport,
+} from "./sitePageInspection.ts";
+import type { SiteAnalysis } from "./siteAnalysis.ts";
+import { createSiteResourceCollector } from "./siteResourceEvidence.ts";
 
 const VIEWPORT = { width: 1440 as const, height: 900 as const };
+const MOBILE_VIEWPORT = { width: 390 as const, height: 844 as const };
 const PREVIEW_FRAMES_PER_SECOND = 60;
 
 export interface PublicPageBrowserOptions {
@@ -29,6 +41,8 @@ export interface PublicPageBrowserOptions {
 export interface PublicPageBrowserResult {
   capture: PublicPageCapture;
   pageImage: Buffer;
+  mobilePageImage: Buffer;
+  analysis: SiteAnalysis;
   sectionImages: Array<{ position: number; body: Buffer }>;
   preview: Buffer;
   scroll: { durationMs: number; stops: 0 };
@@ -62,9 +76,92 @@ async function capturePublicPage(
 ): Promise<PublicPageBrowserResult> {
   const requestedUrl = canonicalPublicPageUrl(url).requestedUrl;
   await options.validateNavigation(requestedUrl);
+  const context = await createCaptureContext(
+    browser,
+    VIEWPORT,
+    options.validateNavigation,
+  );
+  try {
+    const page = await context.newPage();
+    page.on("popup", (popup) => void popup.close().catch(() => undefined));
+    const resources = createSiteResourceCollector({
+      validateNavigation: options.validateNavigation,
+    });
+    resources.attach(page);
+    const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    if (!response || response.status() >= 400) {
+      throw new PublicPageValidationError("Public page did not return a renderable response");
+    }
+    await options.validateNavigation(page.url());
+    await settlePage(page);
+    await primeLazyContent(page);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(100);
+
+    const desktopInspection = await inspectSiteViewport(
+      page,
+      "desktop",
+      await resources.snapshot(),
+    );
+    const raw = await analyzeRenderedPage(page, requestedUrl);
+    const capture = parsePublicPageCapture(raw);
+    const freeze = await page.addStyleTag({
+      content: `*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`,
+    });
+    const pageImage = Buffer.from(await page.screenshot({ fullPage: true, type: "png", animations: "disabled" }));
+    const sectionImages = await cropSections(pageImage, capture.sections);
+    await freeze.evaluate((node) => node.parentNode?.removeChild(node));
+
+    const recording = await recordContinuousScroll(page, {
+      pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
+      maxDurationMs: checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
+      holdMs: checkedNonNegative(options.holdMs, "scroll hold"),
+    });
+    const mobile = await captureMobileEvidence(
+      browser,
+      requestedUrl,
+      options.validateNavigation,
+    ).catch(async (error: unknown) => {
+      desktopInspection.warnings.push(
+        `Mobile Site inspection failed: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      );
+      return {
+        inspection: undefined,
+        image: await sharp({
+          create: {
+            width: MOBILE_VIEWPORT.width,
+            height: MOBILE_VIEWPORT.height,
+            channels: 4,
+            background: "#ffffff",
+          },
+        }).png().toBuffer(),
+      };
+    });
+    const analysis = buildSiteAnalysis(desktopInspection, mobile.inspection);
+    return {
+      capture,
+      pageImage,
+      mobilePageImage: mobile.image,
+      analysis,
+      sectionImages,
+      preview: recording.body,
+      scroll: { durationMs: recording.durationMs, stops: 0 },
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+async function createCaptureContext(
+  browser: Browser,
+  viewport: { width: number; height: number },
+  validateNavigation: (url: string) => Promise<void>,
+): Promise<BrowserContext> {
   const context = await browser.newContext({
-    viewport: VIEWPORT,
-    screen: VIEWPORT,
+    viewport,
+    screen: viewport,
     deviceScaleFactor: 1,
     acceptDownloads: false,
     serviceWorkers: "block",
@@ -86,7 +183,7 @@ async function capturePublicPage(
     }
     let validation = validatedHosts.get(key);
     if (!validation) {
-      validation = options.validateNavigation(requestUrl);
+      validation = validateNavigation(requestUrl);
       validatedHosts.set(key, validation);
     }
     try {
@@ -96,40 +193,52 @@ async function capturePublicPage(
       await route.abort("blockedbyclient");
     }
   });
+  return context;
+}
+
+async function captureMobileEvidence(
+  browser: Browser,
+  requestedUrl: string,
+  validateNavigation: (url: string) => Promise<void>,
+): Promise<{
+  inspection: import("./sitePageInspection.ts").SiteViewportInspection;
+  image: Buffer;
+}> {
+  const context = await createCaptureContext(
+    browser,
+    MOBILE_VIEWPORT,
+    validateNavigation,
+  );
   try {
     const page = await context.newPage();
     page.on("popup", (popup) => void popup.close().catch(() => undefined));
-    const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    const resources = createSiteResourceCollector({ validateNavigation });
+    resources.attach(page);
+    const response = await page.goto(requestedUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
     if (!response || response.status() >= 400) {
-      throw new PublicPageValidationError("Public page did not return a renderable response");
+      throw new PublicPageValidationError(
+        "Public page did not return a renderable mobile response",
+      );
     }
-    await options.validateNavigation(page.url());
+    await validateNavigation(page.url());
     await settlePage(page);
     await primeLazyContent(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
-
-    const raw = await analyzeRenderedPage(page, requestedUrl);
-    const capture = parsePublicPageCapture(raw);
-    const freeze = await page.addStyleTag({
-      content: `*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`,
-    });
-    const pageImage = Buffer.from(await page.screenshot({ fullPage: true, type: "png", animations: "disabled" }));
-    const sectionImages = await cropSections(pageImage, capture.sections);
-    await freeze.evaluate((node) => node.parentNode?.removeChild(node));
-
-    const recording = await recordContinuousScroll(page, {
-      pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
-      maxDurationMs: checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
-      holdMs: checkedNonNegative(options.holdMs, "scroll hold"),
-    });
-    return {
-      capture,
-      pageImage,
-      sectionImages,
-      preview: recording.body,
-      scroll: { durationMs: recording.durationMs, stops: 0 },
-    };
+    const inspection = await inspectSiteViewport(
+      page,
+      "mobile",
+      await resources.snapshot(),
+    );
+    const image = Buffer.from(await page.screenshot({
+      fullPage: true,
+      type: "png",
+      animations: "disabled",
+    }));
+    return { inspection, image };
   } finally {
     await context.close();
   }

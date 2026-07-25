@@ -29,6 +29,10 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
             footer { height: 360px; background: #111; color: white; }
             .cookie { position: fixed; inset: auto 20px 20px; height: 100px; z-index: 9999; background: white; }
             .sticky-copy { position: fixed; top: 0; height: 60px; z-index: 9998; background: white; }
+            #sticky { position: sticky; top: 0; height: 40px; }
+            #loop { width: 100px; height: 40px; animation: slide 1s linear infinite; }
+            @keyframes slide { to { transform: translateX(20px); } }
+            @media (max-width: 600px) { video { display: none; } }
           </style>
           <script type="application/ld+json">{"@type":"SoftwareApplication","name":"Fixture App","applicationCategory":"ProductivityApplication","description":"Structured fixture"}</script>
         </head>
@@ -36,7 +40,10 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
           <header><h2>Navigation</h2></header>
           <div class="sticky-copy">Duplicate navigation</div>
           <main>
-            <section class="hero"><h1>Hero</h1><p>Build better products.</p></section>
+            <section class="hero">
+              <h1>Hero</h1><p>Build better products.</p>
+              <div id="sticky"></div><div id="loop"></div><video></video>
+            </section>
             <div class="features"><h2>Features</h2><p>Rendered div-only section.</p></div>
             <section class="pricing"><h2>Pricing</h2><p>Choose a plan.</p></section>
             <section class="long"><h2>Long content</h2><p>Exercises encoder back-pressure.</p></section>
@@ -103,7 +110,13 @@ test("captures ordered HTML sections, crops, metadata, and a continuous WebM pre
     ["Navigation", "Hero", "Features", "Pricing", "Long content", "Footer"],
   );
   assert.equal(result.capture.sections.some((section) => /cookie|duplicate navigation/i.test(section.text)), false);
+  assert.equal(result.analysis.schemaVersion, 1);
+  assert.equal(result.analysis.status, "evidence-only");
+  assert.ok(result.analysis.structure.length > 0);
+  assert.ok(result.analysis.motion.some((item) => item.type === "continuous"));
+  assert.ok(result.analysis.technology.some((item) => item.name === "CSS Keyframes"));
   assert.deepEqual([...result.pageImage.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  assert.equal(result.mobilePageImage.subarray(1, 4).toString("ascii"), "PNG");
   assert.equal(result.sectionImages.length, result.capture.sections.length);
   assert.ok(result.sectionImages.every(({ body }) => body.subarray(0, 8).equals(result.pageImage.subarray(0, 8))));
   assert.deepEqual([...result.preview.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
