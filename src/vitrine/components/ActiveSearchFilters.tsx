@@ -12,7 +12,7 @@ export function ActiveSearchFilters({
     .flatMap((key) => filters[key].map((value) => ({ key, value })));
   if (!active.length) return null;
   return (
-    <div className="advanced-search-active-filters" aria-label="Active filters">
+    <div className="advanced-search-active-filters" aria-label="Active search filters">
       {active.map(({ key, value }) => (
         <button
           type="button"

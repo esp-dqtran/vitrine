@@ -8,8 +8,9 @@ import { SearchResultCard } from "./components/SearchResultCard.tsx";
 import { emptySearchFilters } from "./searchState.ts";
 
 const screenResult: SearchResultItem = {
-  documentId: "screen:1", indexVersion: 1, versionId: 1, appId: 1,
-  appName: "Linear", platform: "web", entityType: "screen", sourceId: "screen:1",
+  documentId: "screen:1", indexVersion: 1, catalogScope: "apps", catalogName: "Linear",
+  versionId: 1, appId: 1, appName: "Linear", catalogCategories: [],
+  siteSections: [], siteStyles: [], platform: "web", entityType: "screen", sourceId: "screen:1",
   title: "Checkout screen", description: "", aliases: [], visibleText: "Continue securely",
   components: [], states: [], layoutPatterns: [], publishedAt: "2026-07-23T00:00:00.000Z",
   sourcePayload: {}, matchedContext: [{ kind: "text", value: "Continue securely" }],

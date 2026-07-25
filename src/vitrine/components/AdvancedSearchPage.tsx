@@ -145,7 +145,7 @@ export function AdvancedSearchPage({
           open={filtersOpen}
           filters={state.filters}
           facets={search.result.facets}
-          onApply={applyFilters}
+          onChange={applyFilters}
           onClose={() => setFiltersOpen(false)}
         />
       ) : null}

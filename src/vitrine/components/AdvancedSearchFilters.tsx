@@ -11,21 +11,25 @@ const labels: Record<keyof SearchFilters, string> = {
   state: "State",
   theme: "Theme",
   layout: "Layout",
+  siteSection: "Site section",
+  siteStyle: "Site style",
 };
 
 export function AdvancedSearchFilters({
   filters,
   facets,
   onChange,
+  keys = Object.keys(labels) as Array<keyof SearchFilters>,
 }: {
   filters: SearchFilters;
   facets: SearchFacets;
   onChange(filters: SearchFilters): void;
+  keys?: Array<keyof SearchFilters>;
 }) {
   return (
     <aside className="advanced-search-filters" aria-label="Search filters">
-      {(Object.keys(labels) as Array<keyof SearchFilters>).map((key) => {
-        const options = facets[key].filter(({ count }) => count > 0);
+      {keys.map((key) => {
+        const options = (facets[key] ?? []).filter(({ count }) => count > 0);
         if (!options.length) return null;
         return (
           <fieldset key={key}>

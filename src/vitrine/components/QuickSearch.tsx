@@ -1,20 +1,65 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import type { AdvancedSearchResult, SearchEntityType, SearchResultItem } from "../../searchTypes.ts";
+import {
+  compatibleFilterKeys,
+} from "../../searchScope.ts";
+import type {
+  AdvancedSearchResult,
+  SearchEntityType,
+  SearchFacets,
+  SearchResultItem,
+} from "../../searchTypes.ts";
 import { searchAdvancedCatalog } from "../advancedSearchApi.ts";
-import { defaultSearchState } from "../searchState.ts";
+import {
+  serializeSearchState,
+  type SearchPageState,
+} from "../searchState.ts";
+import type { AdvancedSearchClient } from "../useAdvancedSearch.ts";
+import { useAdvancedSearch } from "../useAdvancedSearch.ts";
 import type { Route } from "../router.ts";
+import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
+import { QuickSearchFilters } from "./QuickSearchFilters.tsx";
 
 const labels: Record<SearchEntityType, string> = {
   app: "Apps",
+  site: "Sites",
   screen: "Screens",
   flow: "Flows",
   component: "UI Elements",
   pattern: "Patterns",
 };
 
-export function quickSearchHandoff(query: string): { route: Route; search: string } {
+const emptyFacets = (): SearchFacets => ({
+  platform: [],
+  app: [],
+  appCategory: [],
+  pageType: [],
+  productArea: [],
+  flow: [],
+  component: [],
+  state: [],
+  theme: [],
+  layout: [],
+  siteSection: [],
+  siteStyle: [],
+});
+
+const emptyTypeCounts: AdvancedSearchResult["typeCounts"] = {
+  app: 0,
+  site: 0,
+  screen: 0,
+  flow: 0,
+  component: 0,
+  pattern: 0,
+};
+
+export function quickSearchHandoff(
+  value: string | SearchPageState,
+): { route: Route; search: string } {
+  if (typeof value !== "string") {
+    return { route: { name: "search" }, search: serializeSearchState(value) };
+  }
   const params = new URLSearchParams();
-  if (query.trim()) params.set("q", query.trim());
+  if (value.trim()) params.set("q", value.trim());
   return { route: { name: "search" }, search: params.toString() };
 }
 
@@ -33,48 +78,30 @@ export function quickSearchKeyAction(
 }
 
 export function QuickSearch({
-  initialQuery = "",
+  state,
   recent = [],
   initialResult = null,
+  client = searchAdvancedCatalog,
+  onStateChange,
   onClose,
   onPreview,
   onViewAll,
 }: {
-  initialQuery?: string;
+  state: SearchPageState;
   recent?: string[];
   initialResult?: AdvancedSearchResult | null;
+  client?: AdvancedSearchClient;
+  onStateChange(state: SearchPageState): void;
   onClose(): void;
   onPreview(item: SearchResultItem): void;
-  onViewAll(query: string): void;
+  onViewAll(state: SearchPageState): void;
 }) {
-  const [query, setQuery] = useState(initialQuery);
-  const [result, setResult] = useState(initialResult);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const search = useAdvancedSearch(state, client);
   const [active, setActive] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { input.current?.focus(); }, []);
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResult(null);
-      setLoading(false);
-      return;
-    }
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      setLoading(true);
-      void searchAdvancedCatalog({
-        ...defaultSearchState,
-        query: query.trim(),
-      }, undefined, controller.signal)
-        .then((next) => { setResult(next); setError(""); })
-        .catch((cause: Error) => {
-          if (cause.name !== "AbortError") setError(cause.message);
-        })
-        .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    }, 180);
-    return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [query]);
+  const result = search.result ?? initialResult;
   const groups = useMemo(() => {
     const grouped = new Map<SearchEntityType, SearchResultItem[]>();
     for (const item of result?.items ?? []) {
@@ -99,22 +126,37 @@ export function QuickSearch({
       setActive(action);
     }
   };
+  const updateQuery = (query: string) => onStateChange({ ...state, query });
+
   return (
-    <div className="quick-search" role="dialog" aria-modal="true" aria-label="Quick Search" onKeyDown={onKeyDown}>
+    <div
+      className="quick-search"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Quick Search"
+      onKeyDown={onKeyDown}
+    >
       <div className="quick-search__panel">
         <header>
           <input
             role="combobox"
             aria-expanded={groups.length > 0}
             ref={input}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            value={state.query}
+            onChange={(event) => updateQuery(event.target.value)}
             placeholder="Search screens, flows, UI elements…"
             aria-label="Quick Search query"
           />
           <button type="button" onClick={onClose}>Close</button>
         </header>
-        {!query ? (
+        <QuickSearchFilters
+          state={state}
+          facets={result?.facets ?? emptyFacets()}
+          typeCounts={result?.typeCounts ?? emptyTypeCounts}
+          onChange={onStateChange}
+          onOpenMore={() => setFiltersOpen(true)}
+        />
+        {!state.query ? (
           <section>
             <h2>{recent.length ? "Recent searches" : "Try a research prompt"}</h2>
             {(recent.length ? recent : [
@@ -122,35 +164,58 @@ export function QuickSearch({
               "onboarding with progressive disclosure",
               "empty states for project tools",
             ]).map((value) => (
-              <button type="button" key={value} onClick={() => setQuery(value)}>{value}</button>
+              <button type="button" key={value} onClick={() => updateQuery(value)}>{value}</button>
             ))}
           </section>
         ) : null}
-        {loading ? <p>Searching…</p> : null}
-        {error ? <p role="alert">{error}</p> : null}
-        {groups.map(([type, items]) => (
-          <section key={type}>
-            <h2>{labels[type]}</h2>
-            {items.map((item) => {
-              const index = visible.indexOf(item);
-              return (
-                <button
-                  type="button"
-                  key={item.documentId}
-                  aria-selected={index === active}
-                  onMouseEnter={() => setActive(index)}
-                  onClick={() => onPreview(item)}
-                >
-                  <strong>{item.title}</strong><span>{item.appName} · {item.platform}</span>
-                </button>
-              );
-            })}
-          </section>
-        ))}
-        {query.trim() ? (
-          <footer><button type="button" onClick={() => onViewAll(query)}>View all results for “{query.trim()}”</button></footer>
+        <div
+          className="quick-search__results"
+          aria-busy={search.loading}
+          aria-live="polite"
+        >
+          {search.loading && !result ? <p>Searching…</p> : null}
+          {search.error ? (
+            <p role="alert">
+              {search.error} <button type="button" onClick={() => void search.retry()}>Retry</button>
+            </p>
+          ) : null}
+          {groups.map(([type, items]) => (
+            <section key={type}>
+              <h2>{labels[type]}</h2>
+              {items.map((item) => {
+                const index = visible.indexOf(item);
+                return (
+                  <button
+                    type="button"
+                    key={item.documentId}
+                    aria-selected={index === active}
+                    onMouseEnter={() => setActive(index)}
+                    onClick={() => onPreview(item)}
+                  >
+                    <strong>{item.title}</strong>
+                    <span>{item.catalogName} · {item.platform}</span>
+                  </button>
+                );
+              })}
+            </section>
+          ))}
+        </div>
+        {state.query.trim() ? (
+          <footer>
+            <button type="button" onClick={() => onViewAll(state)}>
+              View all results for “{state.query.trim()}”
+            </button>
+          </footer>
         ) : null}
       </div>
+      <AdvancedSearchFilterDrawer
+        open={filtersOpen}
+        filters={state.filters}
+        facets={result?.facets ?? emptyFacets()}
+        keys={compatibleFilterKeys(state.scope)}
+        onChange={(filters) => onStateChange({ ...state, filters })}
+        onClose={() => setFiltersOpen(false)}
+      />
     </div>
   );
 }

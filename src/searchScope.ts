@@ -39,6 +39,8 @@ const QUICK: Record<SearchScope, Array<keyof SearchFilters>> = {
 };
 
 export const quickFilterKeys = (scope: SearchScope) => [...QUICK[scope]];
+export const compatibleFilterKeys = (scope: SearchScope) =>
+  ALL_KEYS.filter((key) => COMPATIBLE[scope].has(key));
 
 export function compatibleSearchFilters(
   scope: SearchScope,
