@@ -7,6 +7,7 @@ import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
 import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchInput } from './SearchInput.tsx';
+import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteImportDialog } from './SiteImportDialog.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
 import {
@@ -15,10 +16,10 @@ import {
   type SiteInspectorView,
 } from './SiteSectionInspector.tsx';
 
-export type SiteDetailSection = 'preview' | 'sections';
+export type SiteDetailSection = 'preview' | 'sections' | 'analysis';
 
 function resolveSiteSection(value?: string): SiteDetailSection {
-  return value === 'sections' ? 'sections' : 'preview';
+  return value === 'sections' || value === 'analysis' ? value : 'preview';
 }
 
 interface SiteVersionViewProps {
@@ -116,6 +117,8 @@ export function SiteVersionView({
 
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
+    : activeSection === 'analysis'
+      ? <SiteAnalysisPanel detail={detail} />
     : (
       <SectionsPanel
         visibleSections={visibleSections}
@@ -158,6 +161,7 @@ export function SiteVersionView({
         tabs={[
           { id: 'preview', label: 'Preview' },
           { id: 'sections', label: 'Sections', count: sectionCount },
+          { id: 'analysis', label: 'Analysis' },
         ]}
         activeTab={activeSection}
         onTabChange={onSectionChange}

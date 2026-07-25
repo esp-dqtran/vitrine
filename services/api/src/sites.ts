@@ -30,6 +30,7 @@ export function mountSitesRoutes(
   });
 
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/mobile", "mobile");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/pages/:recordId/media", "page");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/media", "section");
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/poster", "poster");
@@ -39,12 +40,13 @@ function mountMedia(
   app: express.Express,
   dependencies: SitesRouteDependencies,
   path: string,
-  kind: "preview" | "page" | "section" | "poster",
+  kind: "preview" | "mobile" | "page" | "section" | "poster",
 ): void {
   app.get(path, async (req, res) => {
     const ids = versionIds(req.params);
-    const recordId = kind === "preview" ? undefined : positiveId(req.params.recordId);
-    if (!ids || (kind !== "preview" && !recordId)) {
+    const versionMedia = kind === "preview" || kind === "mobile";
+    const recordId = versionMedia ? undefined : positiveId(req.params.recordId);
+    if (!ids || (!versionMedia && !recordId)) {
       res.status(400).json({ error: "invalid Site media reference" });
       return;
     }

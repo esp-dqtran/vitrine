@@ -48,7 +48,7 @@ export function SitesPageView({ sites, isAdmin, error, query, onQueryChange, onR
       ? {
           title: 'No Sites imported yet',
           description: isAdmin
-            ? 'Import a Mobbin Sites preview URL to create the first website reference.'
+            ? 'Analyze one public page to create the first website reference.'
             : 'No ready website references are available yet.',
         }
       : visibleSites.length === 0

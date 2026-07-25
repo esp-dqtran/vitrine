@@ -5,6 +5,7 @@ import type {
   SiteVersionDetail,
   SiteVersionPage,
 } from './types.ts';
+import { parseSiteAnalysis } from '../siteAnalysis.ts';
 
 export async function submitSiteImport(url: string): Promise<SiteImportResult> {
   const response = await fetch('/api/jobs', {
@@ -44,6 +45,15 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
   const sourceUrl = requiredText(body.sourceUrl);
   const label = requiredText(body.label);
   const previewUrl = apiPath(body.previewUrl);
+  const analysisStatus = body.analysisStatus === undefined
+    ? 'evidence-only'
+    : body.analysisStatus;
+  if (analysisStatus !== 'ready' && analysisStatus !== 'evidence-only') {
+    throw new Error('Site version returned an invalid response');
+  }
+  const analysis = body.analysis === undefined || body.analysis === null
+    ? null
+    : parseSiteAnalysis(body.analysis);
   if (!Array.isArray(body.versions) || !Array.isArray(body.pages)) {
     throw new Error('Site version returned an invalid response');
   }
@@ -67,6 +77,14 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
     version: { id: versionId, label, isLatest: body.isLatest === true, previewUrl },
     versionOptions,
     canonicalUrl: requiredText(body.canonicalUrl),
+    analysisStatus,
+    analysis,
+    ...(body.analysisModel === undefined
+      ? {}
+      : { analysisModel: requiredText(body.analysisModel) }),
+    ...(body.mobilePageUrl === undefined
+      ? {}
+      : { mobilePageUrl: apiPath(body.mobilePageUrl) }),
     pages: body.pages.map(parsePage),
   };
 }

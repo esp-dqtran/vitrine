@@ -27,6 +27,50 @@ const detail: SiteVersionDetail = {
     { id: 1, label: 'Nov 2025', isLatest: false, updatedAt: '2025-11-20T00:00:00.000Z' },
   ],
   canonicalUrl: 'https://mobbin.com/sites/v-7/id/preview',
+  analysisStatus: 'ready',
+  analysisModel: 'fixture-model',
+  mobilePageUrl: '/api/sites/1/versions/2/media/mobile',
+  analysis: {
+    schemaVersion: 1,
+    status: 'ready',
+    evidence: [{ id: 'TECH-1', kind: 'runtime', value: 'GSAP 3.15.0' }],
+    structure: [{ id: 'STRUCTURE-1', label: 'Sticky hero' }],
+    visualTokens: [],
+    motion: [{
+      id: 'MOTION-1',
+      targetEvidenceId: 'STRUCTURE-1',
+      type: 'scroll-linked',
+      trigger: 'scroll-progress',
+      properties: ['transform'],
+      states: [],
+      viewports: ['desktop'],
+      evidenceIds: ['TECH-1'],
+      confidence: 0.9,
+    }],
+    technology: [{
+      id: 'TECHNOLOGY-1',
+      name: 'GSAP',
+      version: '3.15.0',
+      category: 'animation',
+      state: 'observed-in-use',
+      evidenceIds: ['TECH-1'],
+      confidence: 1,
+    }],
+    responsive: [],
+    synthesis: {
+      purpose: 'Marketing platform',
+      category: 'Website builder',
+      structure: ['Sticky hero'],
+      rendering: ['Webflow DOM runtime'],
+      motion: ['Scroll-linked hero'],
+      technology: ['GSAP drives visible motion'],
+      responsive: ['Mobile disables the hero ScrollTrigger'],
+      reconstructionPriorities: ['Rebuild sticky hero first'],
+      unknowns: [],
+      claims: [],
+    },
+    warnings: [],
+  },
   pages: [{
     id: 10, sourceId: 'page-1', title: 'Home', url: 'https://v7labs.com/', position: 0,
     fullPageImageUrl: '/api/sites/1/versions/2/pages/10/media',
@@ -111,8 +155,22 @@ test('keeps shared Sites chrome visible for errors and no-result searches', () =
 
 test('keeps the Site import dialog URL-only', () => {
   const html = renderToStaticMarkup(<SiteImportDialog isOpen onClose={() => undefined} onExisting={() => undefined} />);
-  assert.match(html, /Mobbin Sites URL/);
+  assert.match(html, /Analyze one public page/);
+  assert.match(html, /Public page URL/);
+  assert.doesNotMatch(html, /Import Site from Mobbin/);
   assert.doesNotMatch(html, /App name|Platform/);
+});
+
+test('renders evidence-backed Site analysis without raw evidence values', () => {
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={detail} isAdmin={false} section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+  );
+  assert.match(html, />Analysis</);
+  assert.match(html, /GSAP/);
+  assert.match(html, /Observed in use/);
+  assert.match(html, /Scroll-linked hero/);
+  assert.match(html, /Mobile disables the hero ScrollTrigger/);
+  assert.doesNotMatch(html, /GSAP 3\.15\.0<\/[^>]+>.*runtime/s);
 });
 
 test('renders images and native videos through the shared media primitives', () => {

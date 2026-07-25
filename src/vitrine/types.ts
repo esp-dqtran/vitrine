@@ -1,5 +1,6 @@
 import type { CrawlPlan, CrawlStep } from '../crawlPlan';
 import type { Platform } from '../platformFromUrl';
+import type { SiteAnalysis } from '../siteAnalysis.ts';
 
 export interface Screen {
   id: number;
@@ -113,6 +114,10 @@ export interface SiteVersionDetail {
   version: { id: number; label: string; isLatest: boolean; previewUrl: string };
   versionOptions: SiteVersionOption[];
   canonicalUrl: string;
+  analysisStatus: 'ready' | 'evidence-only';
+  analysis: SiteAnalysis | null;
+  analysisModel?: string;
+  mobilePageUrl?: string;
   pages: SiteVersionPage[];
 }
 

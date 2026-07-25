@@ -31,13 +31,13 @@ export function SiteImportDialog({ isOpen, onClose, onExisting }: SiteImportDial
   return (
     <Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) close(); }} purpose="form" width={500}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Heading level={3}>Import Site from Mobbin</Heading>
-        <Text color="secondary">Paste one Mobbin Sites preview URL. The isolated Sites crawler will preserve its pages, ordered sections, videos, and OCR geometry.</Text>
+        <Heading level={3}>Analyze one public page</Heading>
+        <Text color="secondary">Paste any public page URL. Sites will inspect that page only—its rendered structure, responsive layout, motion, and frontend technology—without clicking links.</Text>
         <TextInput
-          label="Mobbin Sites URL"
+          label="Public page URL"
           value={url}
           onChange={setUrl}
-          placeholder="https://mobbin.com/sites/…/…/preview"
+          placeholder="https://example.com/page"
           width="100%"
           hasClear
           status={error ? { type: 'error', message: error } : undefined}

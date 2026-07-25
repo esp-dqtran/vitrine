@@ -127,6 +127,7 @@ test("resolves each protected Site media route without exposing object keys", as
 
   const paths = [
     "/sites/1/versions/2/media/preview",
+    "/sites/1/versions/2/media/mobile",
     "/sites/1/versions/2/pages/3/media",
     "/sites/1/versions/2/sections/4/media",
     "/sites/1/versions/2/sections/4/poster",
@@ -138,11 +139,12 @@ test("resolves each protected Site media route without exposing object keys", as
   }
   assert.deepEqual(inputs, [
     { siteId: 1, versionId: 2, kind: "preview" },
+    { siteId: 1, versionId: 2, kind: "mobile" },
     { siteId: 1, versionId: 2, kind: "page", recordId: 3 },
     { siteId: 1, versionId: 2, kind: "section", recordId: 4 },
     { siteId: 1, versionId: 2, kind: "poster", recordId: 4 },
   ]);
-  assert.equal(sent.length, 4);
+  assert.equal(sent.length, 5);
 });
 
 test("returns 404 for missing or internal Site media", async (t) => {
