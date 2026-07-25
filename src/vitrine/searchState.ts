@@ -1,12 +1,15 @@
 import {
   SEARCH_ENTITY_TYPES,
+  SEARCH_SCOPES,
   type SearchFilters,
+  type SearchScope,
   type SearchSort,
   type SearchType,
 } from "../searchTypes.ts";
 
 export interface SearchPageState {
   query: string;
+  scope: SearchScope;
   type: SearchType;
   filters: SearchFilters;
   sort: SearchSort;
@@ -23,10 +26,13 @@ export const emptySearchFilters: SearchFilters = {
   state: [],
   theme: [],
   layout: [],
+  siteSection: [],
+  siteStyle: [],
 };
 
 export const defaultSearchState: SearchPageState = {
   query: "",
+  scope: "all",
   type: "all",
   filters: emptySearchFilters,
   sort: "relevance",
@@ -53,6 +59,9 @@ export function parseSearchState(search: string): SearchPageState {
     : "relevance";
   return {
     query: (params.get("q") ?? "").trim().slice(0, 500),
+    scope: SEARCH_SCOPES.includes(params.get("scope") as SearchScope)
+      ? params.get("scope") as SearchScope
+      : "all",
     type,
     filters: Object.fromEntries(
       filterKeys.map((key) => [key, canonical(params.getAll(key))]),
@@ -64,6 +73,7 @@ export function parseSearchState(search: string): SearchPageState {
 export function serializeSearchState(state: SearchPageState): string {
   const params = new URLSearchParams();
   if (state.query.trim()) params.set("q", state.query.trim());
+  if (state.scope !== "all") params.set("scope", state.scope);
   if (state.type !== "all") params.set("type", state.type);
   for (const key of filterKeys) {
     for (const value of canonical(state.filters[key])) params.append(key, value);

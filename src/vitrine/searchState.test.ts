@@ -3,11 +3,13 @@ import { test } from "node:test";
 import {
   clearRecentSearches,
   defaultSearchState,
+  emptySearchFilters,
   parseSearchState,
   readRecentSearches,
   recordRecentSearch,
   serializeSearchState,
 } from "./searchState.ts";
+import type { SearchPageState } from "./searchState.ts";
 
 test("round trips canonical multi-select search state", () => {
   const state = parseSearchState(
@@ -24,6 +26,22 @@ test("does not encode the pagination cursor in the URL", () => {
     serializeSearchState({ ...defaultSearchState, cursor: "secret" } as never),
     "",
   );
+});
+
+test("round-trips scope and Site filters", () => {
+  const state: SearchPageState = {
+    ...defaultSearchState,
+    query: "pricing",
+    scope: "sites",
+    type: "site",
+    filters: {
+      ...emptySearchFilters,
+      siteSection: ["FAQ", "Pricing"],
+      siteStyle: ["Minimal"],
+    },
+  };
+
+  assert.deepEqual(parseSearchState(serializeSearchState(state)), state);
 });
 
 test("keeps ten unique recent submitted searches and tolerates corrupt storage", () => {

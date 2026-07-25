@@ -51,6 +51,7 @@ export function createAdvancedSearchController(client: AdvancedSearchClient) {
       error: "",
       loading: !append,
       loadingMore: append,
+      result: view.result,
     });
     try {
       const result = await client(state, cursor, abort.signal);

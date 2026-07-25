@@ -13,6 +13,8 @@ const filterKeys: Array<keyof SearchFilters> = [
   "state",
   "theme",
   "layout",
+  "siteSection",
+  "siteStyle",
 ];
 
 async function json<T>(url: string, signal?: AbortSignal): Promise<T> {
@@ -31,6 +33,7 @@ export function searchAdvancedCatalog(
 ): Promise<AdvancedSearchResult> {
   const params = new URLSearchParams();
   if (state.query) params.set("q", state.query);
+  params.set("scope", state.scope);
   params.set("type", state.type);
   for (const key of filterKeys) {
     for (const value of [...state.filters[key]].sort()) params.append(key, value);

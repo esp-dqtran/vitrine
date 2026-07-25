@@ -10,15 +10,21 @@ import { defaultSearchState, type SearchPageState } from "./searchState.ts";
 const emptyFacets = {
   platform: [], app: [], appCategory: [], pageType: [], productArea: [],
   flow: [], component: [], state: [], theme: [], layout: [],
+  siteSection: [], siteStyle: [],
 };
 
 function item(documentId: string, title = documentId): SearchResultItem {
   return {
     documentId,
     indexVersion: 1,
+    catalogScope: "apps",
+    catalogName: "Linear",
     versionId: 1,
     appId: 1,
     appName: "Linear",
+    catalogCategories: [],
+    siteSections: [],
+    siteStyles: [],
     platform: "web",
     entityType: "screen",
     sourceId: documentId,
@@ -40,7 +46,7 @@ function resultPage(ids: string[], nextCursor: string | null): AdvancedSearchRes
     requestId: "request",
     items: ids.map((id) => item(id)),
     facets: emptyFacets,
-    typeCounts: { app: 0, screen: ids.length, flow: 0, component: 0, pattern: 0 },
+    typeCounts: { app: 0, site: 0, screen: ids.length, flow: 0, component: 0, pattern: 0 },
     nextCursor,
     hasMore: !!nextCursor,
     degraded: false,
@@ -92,4 +98,24 @@ test("retry failure preserves previously loaded items", async () => {
     ["screen:1"],
   );
   assert.equal(controller.snapshot().error, "search unavailable");
+});
+
+test("retains the previous result while a replacement search loads", async () => {
+  let resolveReplacement: ((value: AdvancedSearchResult) => void) | undefined;
+  const client: AdvancedSearchClient = async (nextState) => {
+    if (nextState.query === "first") return resultPage(["screen:1"], null);
+    return new Promise((resolve) => { resolveReplacement = resolve; });
+  };
+  const controller = createAdvancedSearchController(client);
+  await controller.search(state({ query: "first" }));
+
+  const replacement = controller.search(state({ query: "second" }));
+  assert.equal(controller.snapshot().loading, true);
+  assert.deepEqual(
+    controller.snapshot().result?.items.map(({ documentId }) => documentId),
+    ["screen:1"],
+  );
+
+  resolveReplacement?.(resultPage(["screen:2"], null));
+  await replacement;
 });

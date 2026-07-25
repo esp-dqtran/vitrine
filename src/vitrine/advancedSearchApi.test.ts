@@ -35,7 +35,32 @@ test("requests repeated filter parameters and an opaque cursor", async () => {
   }, "cursor-1");
   assert.equal(
     requested,
-    "/api/search?type=all&platform=android&platform=ios&sort=relevance&cursor=cursor-1&limit=24",
+    "/api/search?scope=all&type=all&platform=android&platform=ios&sort=relevance&cursor=cursor-1&limit=24",
+  );
+});
+
+test("sends scope and repeated Site filters", async () => {
+  let requested = "";
+  globalThis.fetch = async (url) => {
+    requested = String(url);
+    return new Response(JSON.stringify({
+      requestId: "1", items: [], facets: {}, typeCounts: {},
+      nextCursor: null, hasMore: false, degraded: false,
+    }), { status: 200 });
+  };
+
+  await searchAdvancedCatalog({
+    ...defaultSearchState,
+    scope: "sites",
+    filters: {
+      ...emptySearchFilters,
+      siteSection: ["FAQ", "Pricing"],
+    },
+  });
+
+  assert.equal(
+    requested,
+    "/api/search?scope=sites&type=all&siteSection=FAQ&siteSection=Pricing&sort=relevance&limit=24",
   );
 });
 
