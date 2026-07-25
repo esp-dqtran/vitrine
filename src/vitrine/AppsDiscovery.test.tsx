@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
 import type { App } from './types.ts';
-import { filterAndSortApps } from './appsDiscovery.ts';
+import { filterAndSortApps, previewForAppsFacet } from './appsDiscovery.ts';
 
 const makeApp = (overrides: Partial<App> = {}): App => ({
   id: 'base',
@@ -66,6 +66,55 @@ test('filters Apps across Mobbin taxonomy fields and platform', () => {
       sort: 'latest',
     }).map((app) => app.id),
     ['web'],
+  );
+});
+
+test('selects the first loaded matching screen for an Apps facet preview', () => {
+  const apps = [
+    makeApp({
+      id: 'wrong-platform',
+      app: 'Wrong Platform',
+      cat: 'Finance',
+      platforms: ['ios'],
+      screens: [{
+        ...makeApp().screens[0]!,
+        id: 2,
+        platform: 'ios',
+        url: '/ios-finance.png',
+      }],
+    }),
+    makeApp({
+      id: 'finance',
+      app: 'Finance Web',
+      cat: 'Finance',
+      screens: [{
+        ...makeApp().screens[0]!,
+        id: 3,
+        platform: 'web',
+        url: '/finance-full.png',
+        thumbnailUrl: '/finance-thumb.png',
+      }],
+    }),
+  ];
+
+  assert.deepEqual(
+    previewForAppsFacet(apps, { group: 'categories', value: 'Finance' }, 'web'),
+    {
+      app: 'Finance Web',
+      screenType: 'Dashboard',
+      url: '/finance-thumb.png',
+    },
+  );
+});
+
+test('returns no Apps facet preview without a matching loaded screen', () => {
+  assert.equal(
+    previewForAppsFacet(
+      [makeApp()],
+      { group: 'screens', value: 'Signup' },
+      'web',
+    ),
+    null,
   );
 });
 
@@ -131,6 +180,8 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   );
 
   assert.match(html, /data-apps-discovery="true"/);
+  assert.match(html, /<img src="\/favicon\.svg" alt="" aria-hidden="true" width="32" height="32"\/>/);
+  assert.doesNotMatch(html, /<span aria-hidden="true">V<\/span>/);
   assert.match(html, /Categories/);
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
@@ -141,6 +192,7 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /Most popular/);
   assert.match(html, /Top rated/);
   assert.match(html, /Animations/);
+  assert.doesNotMatch(html, />Filter</);
   assert.match(html, /data-apps-discovery-grid="true"/);
   assert.match(html, /data-app-discovery-card="true"/);
   assert.match(html, /Purpose-built tool/);
@@ -156,4 +208,21 @@ test('styles Apps as a three-column Mobbin discovery layout with responsive fall
   assert.match(css, /\.app-discovery-card\s*\{[\s\S]*border-radius:\s*28px/);
   assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*grid-template-columns:\s*1fr/);
+});
+
+test('styles Apps ordering labels gray with white hover and an animated active state', async () => {
+  const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.apps-discovery__sort button\s*\{[\s\S]*color:\s*var\(--color-text-secondary\)\s*!important;[\s\S]*transition:\s*color/);
+  assert.match(css, /\.apps-discovery__sort button:hover,[\s\S]*\.apps-discovery__sort button:focus-visible,[\s\S]*\.apps-discovery__sort button\[aria-selected='true'\]\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*color:\s*var\(--color-text-primary\)\s*!important/);
+  assert.match(css, /\.apps-discovery__sort button::after\s*\{[\s\S]*opacity:\s*0;[\s\S]*transform:\s*scaleX\([\d.]+\);[\s\S]*transition:/);
+  assert.match(css, /\.apps-discovery__sort button\[aria-selected='true'\]::after\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*scaleX\(1\)/);
+});
+
+test('animates the Apps platform pill between iOS and Web', async () => {
+  const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.apps-discovery__platform::before\s*\{[\s\S]*transform:\s*translateX\(0\);[\s\S]*transition:\s*transform/);
+  assert.match(css, /\.apps-discovery__platform:has\(button:nth-child\(2\)\[aria-checked='true'\]\)::before\s*\{[\s\S]*transform:\s*translateX\(calc\(100%\s*\+\s*2px\)\)/);
+  assert.match(css, /\.apps-discovery__platform button\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*transition:\s*color/);
 });

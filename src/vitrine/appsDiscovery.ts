@@ -27,6 +27,36 @@ const screenFacetText = (screen: Screen, facet: AppsFacet['group']) => {
   return searchableText([...(screen.visibleStates ?? []), screen.stateContext, screen.description]);
 };
 
+export interface AppsFacetPreview {
+  app: string;
+  screenType: string;
+  url: string;
+}
+
+const screenMatchesFacet = (screen: Screen, facet: AppsFacet): boolean =>
+  screenFacetText(screen, facet.group).includes(facet.value.toLowerCase());
+
+export function previewForAppsFacet(
+  apps: App[],
+  facet: AppsFacet,
+  platform: AppsPlatform,
+): AppsFacetPreview | null {
+  for (const app of apps) {
+    const platformScreens = app.screens.filter((screen) => screen.platform === platform);
+    if (platformScreens.length === 0) continue;
+    if (facet.group === 'categories' && app.cat.toLowerCase() !== facet.value.toLowerCase()) continue;
+
+    const screen = facet.group === 'categories'
+      ? platformScreens[0]
+      : platformScreens.find((candidate) => screenMatchesFacet(candidate, facet));
+    if (!screen) continue;
+
+    const url = screen.thumbnailUrl || screen.url;
+    if (url) return { app: app.app, screenType: screen.type, url };
+  }
+  return null;
+}
+
 const meanConfidence = (app: App) => {
   const values = app.screens.flatMap((screen) => screen.confidence == null ? [] : [screen.confidence]);
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
