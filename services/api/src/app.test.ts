@@ -73,6 +73,20 @@ const catalogImages = [
     description: "Toolbar",
   },
 ];
+const catalogPageRecord = {
+  apps: [{
+    app: "linear",
+    display_name: "Linear",
+    category: "Productivity",
+    website_url: "https://linear.app",
+    icon_url: null,
+    accent_color: "#5E6AD2",
+    total_screens: 1,
+    available_platforms: ["web"],
+  }],
+  previews: [{ ...catalogImages[0], preview_rank: 1 }],
+  nextCursor: null,
+};
 
 function jobRecord(overrides: Partial<JobRow> = {}): JobRow {
   return {
@@ -1982,25 +1996,34 @@ test("rejects import job acceptance when object storage is unavailable", async (
   assert.deepEqual(await response.json(), { error: "Object storage unavailable", code: "object_storage_unavailable" });
 });
 
-test("serves public catalog previews without exposing the admin gallery", async (t) => {
+test("serves the public catalog from one bounded page dependency", async (t) => {
+  let input: { cursor?: string; limit?: number } | undefined;
   const { base, server } = await serve(createApiApp({
-    allImages: async () => catalogImages,
-    publishedPreviewImages: async () => [{ ...catalogImages[0], preview_rank: 1 }],
-  }));
+    publishedCatalogPage: async (next) => {
+      input = next;
+      return catalogPageRecord;
+    },
+    publishedImages: async () => {
+      throw new Error("legacy full-catalog reader called");
+    },
+    publishedPreviewImages: async () => {
+      throw new Error("legacy full-preview reader called");
+    },
+  } as never));
   t.after(() => close(server));
-  const response = await fetch(`${base}/catalog`);
+  const response = await fetch(`${base}/catalog?cursor=bGluZWFy&limit=3`);
   assert.equal(response.status, 200);
   const body = await response.json();
+  assert.deepEqual(input, { cursor: "bGluZWFy", limit: 3 });
   assert.equal(body.apps[0].previewScreens.length, 1);
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
 });
 
 test("keeps the catalog public and every App detail endpoint private", async (t) => {
   const { base, server } = await serve(createApiApp({
-    allImages: async () => catalogImages,
-    publishedPreviewImages: async () => [{ ...catalogImages[0], preview_rank: 1 }],
+    publishedCatalogPage: async () => catalogPageRecord,
     resolveSession: async () => undefined,
-  }));
+  } as never));
   t.after(() => close(server));
 
   assert.equal((await fetch(`${base}/catalog`)).status, 200);

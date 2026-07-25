@@ -71,7 +71,8 @@ import { isPlatform, platformFromUrl, type Platform } from "../../../src/platfor
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
-import { buildAdminGalleryApps, buildAppMetadata, buildCatalogPage, buildEvidencePage, buildGalleryApps } from "../../../src/gallery.ts";
+import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
+import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -330,6 +331,7 @@ const defaults = {
   versionImages,
   publishedImages,
   publishedPreviewImages,
+  publishedCatalogPage,
   catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
@@ -854,9 +856,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const [images, previews] = await Promise.all([deps.publishedImages(), deps.publishedPreviewImages()]);
+    const page = await deps.publishedCatalogPage({ cursor, limit });
     res.setHeader("Cache-Control", "private, max-age=280");
-    res.json(buildCatalogPage(images, cursor, limit, previews));
+    res.json(buildPublishedCatalogPage(page));
   });
 
   app.get("/catalog/stats", async (_req, res) => {
