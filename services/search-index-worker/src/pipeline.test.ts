@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { PublishedSearchSource } from "../../../src/searchProjection.ts";
+import type { PublishedSiteSearchSource } from "../../../src/siteSearchProjection.ts";
 import type {
   SearchIndexJob,
   SearchIndexScope,
@@ -12,6 +13,7 @@ import {
 } from "./pipeline.ts";
 
 const job: SearchIndexJob = {
+  kind: "app",
   appId: 4,
   platform: "web",
   attempts: 1,
@@ -89,9 +91,11 @@ const sourceFixture: PublishedSearchSource = {
   }],
 };
 
-function fakeStore(source: PublishedSearchSource): SearchIndexWorkerStore & {
+function fakeStore(source: PublishedSearchSource | PublishedSiteSearchSource): SearchIndexWorkerStore & {
   completed: boolean;
   failed: boolean;
+  replacedScope?: SearchIndexScope;
+  replacedDocuments?: SearchDocument[];
   replacedEmbeddings?: number[][];
 } {
   return {
@@ -99,10 +103,12 @@ function fakeStore(source: PublishedSearchSource): SearchIndexWorkerStore & {
     failed: false,
     async loadSource() { return source; },
     async replaceDocuments(
-      _scope: SearchIndexScope,
-      _documents: SearchDocument[],
+      scope: SearchIndexScope,
+      documents: SearchDocument[],
       embeddings?: number[][],
     ) {
+      this.replacedScope = scope;
+      this.replacedDocuments = documents;
       this.replacedEmbeddings = embeddings;
     },
     async complete() { this.completed = true; },
@@ -128,6 +134,45 @@ test("indexes one claimed app-platform version", async () => {
     platform: "web",
     documents: 6,
     embedded: 6,
+  });
+});
+
+test("indexes a ready Site with a Site-scoped replacement", async () => {
+  const siteJob: SearchIndexJob = {
+    kind: "site",
+    siteId: 7,
+    attempts: 1,
+    workerId: "fixture-worker",
+  };
+  const store = fakeStore({
+    site: {
+      id: 7,
+      versionId: 11,
+      name: "V7",
+      description: "Visual data platform",
+      categories: ["Business"],
+      styles: ["Minimal"],
+      updatedAt: "2026-07-25T00:00:00.000Z",
+    },
+    pages: [{ title: "Pricing", sectionPatterns: ["Hero"] }],
+  });
+
+  const report = await processSearchIndexJob({
+    job: siteJob,
+    store,
+    embedder: null,
+  });
+
+  assert.deepEqual(store.replacedScope, {
+    kind: "site",
+    siteId: 7,
+    indexVersion: 1,
+  });
+  assert.equal(store.replacedDocuments?.[0].entityType, "site");
+  assert.deepEqual(report, {
+    siteId: 7,
+    documents: 1,
+    embedded: 0,
   });
 });
 

@@ -7,10 +7,16 @@ import type {
   SearchIndexScope,
 } from "../../../src/searchIndexStore.ts";
 import { projectSearchDocuments, type PublishedSearchSource } from "../../../src/searchProjection.ts";
+import {
+  projectSiteSearchDocuments,
+  type PublishedSiteSearchSource,
+} from "../../../src/siteSearchProjection.ts";
 import type { SearchDocument } from "../../../src/searchTypes.ts";
 
 export interface SearchIndexWorkerStore {
-  loadSource(job: SearchIndexJob): Promise<PublishedSearchSource | undefined>;
+  loadSource(
+    job: SearchIndexJob,
+  ): Promise<PublishedSearchSource | PublishedSiteSearchSource | undefined>;
   replaceDocuments(
     scope: SearchIndexScope,
     documents: SearchDocument[],
@@ -28,7 +34,11 @@ export async function processSearchIndexJob(input: {
 }) {
   try {
     const source = await input.store.loadSource(input.job);
-    const documents = source ? projectSearchDocuments(source) : [];
+    const documents = !source
+      ? []
+      : input.job.kind === "app"
+        ? projectSearchDocuments(source as PublishedSearchSource)
+        : projectSiteSearchDocuments(source as PublishedSiteSearchSource);
     let embeddings: number[][] | undefined;
     if (input.embedder && documents.length) {
       try {
@@ -41,19 +51,24 @@ export async function processSearchIndexJob(input: {
         embeddings = undefined;
       }
     }
-    await input.store.replaceDocuments(
-      {
+    const scope: SearchIndexScope = input.job.kind === "app"
+      ? {
+        kind: "app",
         appId: input.job.appId,
         platform: input.job.platform,
         indexVersion: 1,
-      },
-      documents,
-      embeddings,
-    );
+      }
+      : {
+        kind: "site",
+        siteId: input.job.siteId,
+        indexVersion: 1,
+      };
+    await input.store.replaceDocuments(scope, documents, embeddings);
     await input.store.complete(input.job);
     return {
-      appId: input.job.appId,
-      platform: input.job.platform,
+      ...(input.job.kind === "app"
+        ? { appId: input.job.appId, platform: input.job.platform }
+        : { siteId: input.job.siteId }),
       documents: documents.length,
       embedded: embeddings?.length ?? 0,
     };

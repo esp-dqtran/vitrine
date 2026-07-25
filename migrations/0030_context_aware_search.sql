@@ -1,6 +1,7 @@
 ALTER TABLE search_documents
   ALTER COLUMN version_id DROP NOT NULL,
   ALTER COLUMN app_id DROP NOT NULL,
+  ALTER COLUMN app_name DROP NOT NULL,
   ADD COLUMN catalog_scope TEXT NOT NULL DEFAULT 'apps'
     CHECK (catalog_scope IN ('apps', 'sites')),
   ADD COLUMN catalog_name TEXT,
