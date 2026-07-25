@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
 import type { App } from './types.ts';
 import { filterAndSortApps } from './appsDiscovery.ts';
 
@@ -76,4 +78,23 @@ test('orders Apps from real capture, coverage, and animation fields', () => {
   assert.equal(filterAndSortApps(apps, { ...options, sort: 'latest' })[0]?.id, 'newer');
   assert.equal(filterAndSortApps(apps, { ...options, sort: 'popular' })[0]?.id, 'older');
   assert.equal(filterAndSortApps(apps, { ...options, sort: 'animations' })[0]?.id, 'motion');
+});
+
+test('renders the shared full-width discovery navigation for Apps', () => {
+  const html = renderToStaticMarkup(
+    <ReferenceDiscoveryTopNav
+      active="apps"
+      className="apps-top-nav"
+      search={<button>Search on Web...</button>}
+      isAdmin
+      importLabel="Import App"
+      onImport={() => undefined}
+    />,
+  );
+
+  assert.match(html, /class="apps-top-nav"/);
+  assert.match(html, /aria-label="Reference type"/);
+  assert.match(html, /aria-selected="true"/);
+  assert.match(html, /Search on Web/);
+  assert.match(html, /Import App/);
 });
