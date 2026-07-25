@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { AppShell, Button, DropdownMenu, EmptyState, Skeleton, Spinner } from '@astryxdesign/core';
+import { AnimatePresence } from 'framer-motion';
+import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
-import { AppCard } from './components/AppCard';
+import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ProgressBanner } from './components/ProgressBanner';
 import { ScreenDetail } from './components/ScreenDetail';
 import { CommandPalette } from './components/CommandPalette';
-import { SearchTrigger } from './components/SearchTrigger';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { ImportDialog, appRow } from './components/ImportDialog';
+import { ImportDialog } from './components/ImportDialog';
 import { PageHeader } from './components/PageHeader';
 import { Sidebar } from './components/Sidebar';
 import { UnlockModal } from './components/UnlockModal';
@@ -25,8 +24,8 @@ import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
 import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
 import { GalleryCardSkeleton } from './components/GalleryToolbar';
 import { GuestCatalogControls } from './components/GuestCatalogControls.tsx';
-import { ReferenceGalleryShell } from './components/ReferenceGalleryShell';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
+import type { AppsFacet } from './appsDiscovery.ts';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -44,7 +43,7 @@ export function App() {
   const route = useRoute();
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
-  const [cat, setCat] = useState('All');
+  const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
   const [siteQuery, setSiteQuery] = useState('');
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
   const [q, setQ] = useState(() => {
@@ -301,18 +300,6 @@ export function App() {
     );
   }
 
-  if (route.name === 'apps' && appsLoading) {
-    return frame(
-      <ReferenceGalleryShell
-        active="apps"
-        isAdmin={isAdmin}
-        toolbar={<Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />}
-        memberControls={!isAdmin ? accountControls : undefined}
-        loading
-      />,
-    );
-  }
-
   if (route.name === 'app' && entitlementsError) {
     return frame(
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 }} role="alert">
@@ -392,7 +379,9 @@ export function App() {
             onSelectApp={(appId) => void openApp(appId)}
             onSelectScreen={(appId) => navigate({ name: 'app', appId, section: 'screens' })}
             onSelectFlow={(appId) => navigate({ name: 'app', appId, section: 'flows' })}
-            onSelectCategory={setCat}
+            onSelectCategory={(value) => setAppFacet(
+              value === 'All' ? null : { group: 'categories', value },
+            )}
           />
         )
       )}
@@ -410,36 +399,44 @@ export function App() {
     </AnimatePresence>
   );
 
-  if (route.name === 'apps' && (appsError || !apps || apps.length === 0)) {
-    return frame(
+  if (route.name === 'apps') {
+    return (
       <>
-        <ReferenceGalleryShell
-          active="apps"
+        <AppsDiscoveryPage
+          apps={appsLoading ? null : apps}
           isAdmin={isAdmin}
-          headerAction={isAdmin ? <Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} /> : undefined}
-          toolbar={
-            <SearchTrigger
-              label="Search apps, screens, UI elements, flows…"
-              activeCategory={cat}
-              onOpen={() => void openPalette()}
-              onClearCategory={() => setCat('All')}
-              mode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
-            />
-          }
-          memberControls={!isAdmin ? accountControls : undefined}
-          beforeCount={isAdmin ? <ProgressBanner /> : undefined}
-          state={{
-            title: appsError ? 'Could not load crawled screens' : 'No screens crawled yet',
-            description: appsError
-              ? `The catalog could not be loaded: ${appsError}`
-              : isAdmin
-                ? 'Import captured web screens to build the first observed design system.'
-                : 'No curated web apps have been published yet.',
-            actions: appsError
-              ? <Button variant="primary" label="Retry" clickAction={() => void refreshApps()} />
-              : undefined,
-            role: appsError ? 'alert' : undefined,
-          }}
+          query={q}
+          facet={appFacet}
+          onFacetChange={setAppFacet}
+          onOpenSearch={() => void openPalette()}
+          searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
+          onImport={() => setImportOpen(true)}
+          onOpenApp={(appId) => void openApp(appId)}
+          onRetry={() => void refreshApps()}
+          totalApps={totalApps}
+          error={appsError}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          sentinelRef={appsSentinelRef}
+          accountControls={accountControls}
+          beforeGrid={(
+            <>
+              {isAdmin ? <ProgressBanner /> : null}
+              {searchError
+                ? <div role="alert" className="apps-discovery__search-error">{searchError}</div>
+                : null}
+              {q.trim() && searchResult ? (
+                <SearchResults
+                  result={searchResult}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  onOpen={(appId) => void openApp(appId)}
+                  collections={collections}
+                  onCollectionsChange={setCollections}
+                />
+              ) : null}
+            </>
+          )}
         />
         {isAdmin && (
           <ImportDialog
@@ -449,23 +446,19 @@ export function App() {
           />
         )}
         {discoveryOverlays}
-      </>,
+        {unlockTarget && entitlements && (
+          <UnlockModal
+            appId={unlockTarget}
+            remaining={entitlements.freeUnlocksRemaining}
+            onConfirm={confirmUnlock}
+            onClose={() => setUnlockTarget(null)}
+            onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
+          />
+        )}
+      </>
     );
   }
 
-  const rows = (apps ?? []).map(appRow);
-  const query = q.trim().toLowerCase();
-  const list = rows.filter(
-    (r) =>
-      (cat === 'All' || r.cat === cat) &&
-      (!query || `${r.name} ${r.cat} ${r.app?.screens.map((s) => s.type).join(' ') ?? ''}`.toLowerCase().includes(query)),
-  );
-  const appsGalleryState = route.name === 'apps' && list.length === 0 && !hasMore && (query || cat !== 'All')
-    ? {
-        title: 'No Apps match these filters',
-        description: 'Try a different search or category.',
-      }
-    : undefined;
   const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail ?? undefined : undefined;
 
   return frame(
@@ -502,80 +495,9 @@ export function App() {
           collections={collections}
           onCollectionsChange={setCollections}
         />
-      ) : (
-        <motion.div
-          key="gallery"
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <ReferenceGalleryShell
-            active="apps"
-            isAdmin={isAdmin}
-            headerAction={isAdmin ? <Button variant="primary" label="Import from URL" clickAction={() => setImportOpen(true)} /> : undefined}
-            toolbar={
-              <SearchTrigger
-                label={q.trim() || cat !== 'All' ? `${list.length} apps · search or filter…` : 'Search apps, screens, UI elements, flows…'}
-                activeCategory={cat}
-                onOpen={() => void openPalette()}
-                onClearCategory={() => setCat('All')}
-                mode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
-              />
-            }
-            memberControls={!isAdmin ? accountControls : undefined}
-            beforeCount={
-              <>
-                {isAdmin ? <ProgressBanner /> : null}
-                {searchError ? <div role="alert" style={{ margin: '10px 0', color: 'var(--color-text-danger)' }}>{searchError}</div> : null}
-                {q.trim() && searchResult ? (
-                  <SearchResults
-                    result={searchResult}
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    onOpen={(appId) => void openApp(appId)}
-                    collections={collections}
-                    onCollectionsChange={setCollections}
-                  />
-                ) : null}
-              </>
-            }
-            countLabel={
-              isAdmin && !q.trim() && cat === 'All' && totalApps !== null
-              ? `Showing ${list.length} of ${totalApps} apps`
-              : `${list.length} apps`
-            }
-            state={appsGalleryState}
-            trailing={
-              <>
-                {hasMore && <div ref={appsSentinelRef} aria-hidden="true" style={{ height: 1 }} />}
-                {loadingMore && (
-                  <div role="status" aria-label="Loading" style={{ display: 'flex', justifyContent: 'center', padding: '0 0 40px' }}>
-                    <Spinner size="sm" aria-hidden="true" />
-                  </div>
-                )}
-              </>
-            }
-          >
-            {list.map((r) => (
-              <AppCard
-                key={r.slug}
-                app={r.app!}
-                onOpen={() => void openApp(r.slug)}
-                status={isAdmin ? r.status : undefined}
-                progressLabel={`${r.analyzed}/${r.captured} analyzed`}
-              />
-            ))}
-          </ReferenceGalleryShell>
-        </motion.div>
-      )}
+      ) : null}
     </AnimatePresence>
     {discoveryOverlays}
-    {isAdmin && (
-      <ImportDialog
-        isOpen={importOpen}
-        onClose={() => setImportOpen(false)}
-        submitImport={submitUrlImport}
-      />
-    )}
     {unlockTarget && entitlements && (
       <UnlockModal
         appId={unlockTarget}
