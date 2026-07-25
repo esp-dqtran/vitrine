@@ -8,7 +8,6 @@ const privateRoutes: Route[] = [
   { name: 'settings-billing' },
   { name: 'search' },
   { name: 'app', appId: 'linear' },
-  { name: 'sites' },
   { name: 'site-version', siteId: 1, versionId: 1 },
   { name: 'projects' },
   { name: 'project', projectId: 1 },
@@ -21,10 +20,11 @@ const publicRoutes: Route[] = [
   { name: 'build-in-public' },
   { name: 'pricing' },
   { name: 'apps' },
+  { name: 'sites' },
   { name: 'feature-document-share', token: 'public-token' },
 ];
 
-test('keeps Apps public while App details and member routes require authentication', async () => {
+test('keeps Apps and Sites catalogs public while detail and member routes require authentication', async () => {
   const policy = await import('./routeAccess.ts').catch(() => null);
   assert.ok(policy, 'route access policy must exist');
 

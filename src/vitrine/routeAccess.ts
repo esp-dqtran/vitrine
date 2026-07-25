@@ -6,7 +6,6 @@ const AUTHENTICATED_ROUTE_NAMES = new Set<Route['name']>([
   'settings-billing',
   'search',
   'app',
-  'sites',
   'site-version',
   'projects',
   'project',

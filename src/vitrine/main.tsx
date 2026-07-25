@@ -53,8 +53,8 @@ function Root() {
 
   // Logged-in users always land in the application.
   if (user) return <App />;
-  // The published catalog is the public Home. Detail and member routes remain private.
-  if (route.name === 'apps') return <App />;
+  // Published Apps and Sites catalogs are public. Detail and member routes remain private.
+  if (route.name === 'apps' || route.name === 'sites') return <App />;
   if (requiresAuthentication(route)) {
     return <SignIn authenticate={authenticate} register={register} onSignedIn={completeLogin} />;
   }
