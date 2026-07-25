@@ -1999,7 +1999,7 @@ test("rejects import job acceptance when object storage is unavailable", async (
 test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
   const { base, server } = await serve(createApiApp({
-    publishedCatalogPage: async (next) => {
+    publishedCatalogPage: async (next: { cursor?: string; limit?: number }) => {
       input = next;
       return catalogPageRecord;
     },

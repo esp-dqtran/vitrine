@@ -966,7 +966,18 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
       [versionId, JSON.stringify(candidate.flows)]
     );
     const updated = await client.query(
-      `UPDATE app_versions SET status = 'published', published_at = now(), reviewed_by = $2
+      `WITH counts AS (
+         SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
+           COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count
+         FROM version_images vi
+         JOIN images i ON i.id = vi.image_id
+         WHERE vi.version_id = $1
+       )
+       UPDATE app_versions
+       SET status = 'published', published_at = now(), reviewed_by = $2,
+         screen_count = counts.screen_count,
+         ui_element_count = counts.ui_element_count
+       FROM counts
        WHERE id = $1 AND status = 'in_review'`, [versionId, userId]
     );
     if (!updated.rowCount) throw new Error('Version changed while publishing');
@@ -1124,25 +1135,23 @@ export interface CatalogStats {
   uiElements: number;
 }
 
-// Real headline counts for the public marketing pages. Counts screens/elements in
-// each app's latest published version — the same set `publishedImages()` exposes.
+// Real headline counts for the public marketing pages. Version counters avoid
+// rescanning every published image when this public endpoint is requested.
 export async function catalogStats(
   runQuery: typeof query = query,
 ): Promise<CatalogStats> {
   const res = await runQuery<{ apps: number; screens: number; ui_elements: number }>(
     `WITH latest AS MATERIALIZED (
        SELECT DISTINCT ON (av.app_id, av.platform)
-         av.id AS version_id, av.app_id
+         av.app_id, av.screen_count, av.ui_element_count
        FROM app_versions av
        WHERE av.status = 'published'
        ORDER BY av.app_id, av.platform, av.version_number DESC
      )
      SELECT COUNT(DISTINCT latest.app_id)::int AS apps,
-       COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screens,
-       COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_elements
-     FROM latest
-     LEFT JOIN version_images vi ON vi.version_id = latest.version_id
-     LEFT JOIN images i ON i.id = vi.image_id`,
+       COALESCE(SUM(latest.screen_count), 0)::int AS screens,
+       COALESCE(SUM(latest.ui_element_count), 0)::int AS ui_elements
+     FROM latest`,
   );
   const row = res.rows[0];
   return { apps: row?.apps ?? 0, screens: row?.screens ?? 0, uiElements: row?.ui_elements ?? 0 };
