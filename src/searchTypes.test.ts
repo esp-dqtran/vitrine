@@ -21,6 +21,20 @@ test("normalizes OR values within filter groups without changing the visible que
   assert.equal(request.limit, 48);
 });
 
+test("normalizes Sites scope and Site filters", () => {
+  const request = normalizeSearchRequest({
+    scope: "sites",
+    type: "site",
+    siteSection: ["Pricing", "FAQ", "Pricing"],
+    siteStyle: "Minimal",
+  });
+
+  assert.equal(request.scope, "sites");
+  assert.equal(request.type, "site");
+  assert.deepEqual(request.filters.siteSection, ["FAQ", "Pricing"]);
+  assert.deepEqual(request.filters.siteStyle, ["Minimal"]);
+});
+
 test("cursor binds search state and final sort values", () => {
   const encoded = encodeSearchCursor({
     fingerprint: "abc",

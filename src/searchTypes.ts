@@ -1,4 +1,7 @@
-export const SEARCH_ENTITY_TYPES = ["app", "screen", "flow", "component", "pattern"] as const;
+export const SEARCH_SCOPES = ["apps", "sites", "all"] as const;
+export type SearchScope = typeof SEARCH_SCOPES[number];
+
+export const SEARCH_ENTITY_TYPES = ["app", "site", "screen", "flow", "component", "pattern"] as const;
 export type SearchEntityType = typeof SEARCH_ENTITY_TYPES[number];
 export type SearchType = SearchEntityType | "all";
 export type SearchSort = "relevance" | "recent" | "app-az";
@@ -14,10 +17,13 @@ export interface SearchFilters {
   state: string[];
   theme: string[];
   layout: string[];
+  siteSection: string[];
+  siteStyle: string[];
 }
 
 export interface NormalizedSearchRequest {
   query: string;
+  scope: SearchScope;
   type: SearchType;
   filters: SearchFilters;
   sort: SearchSort;
@@ -28,9 +34,16 @@ export interface NormalizedSearchRequest {
 export interface SearchDocument {
   documentId: string;
   indexVersion: 1;
-  versionId: number;
-  appId: number;
-  appName: string;
+  catalogScope: Exclude<SearchScope, "all">;
+  catalogName: string;
+  versionId?: number;
+  appId?: number;
+  appName?: string;
+  siteId?: number;
+  siteVersionId?: number;
+  catalogCategories: string[];
+  siteSections: string[];
+  siteStyles: string[];
   platform: string;
   entityType: SearchEntityType;
   sourceId: string;
@@ -93,6 +106,8 @@ const EMPTY_FILTERS: SearchFilters = {
   state: [],
   theme: [],
   layout: [],
+  siteSection: [],
+  siteStyle: [],
 };
 
 const values = (value: unknown): string[] =>
@@ -103,6 +118,9 @@ const values = (value: unknown): string[] =>
     .sort();
 
 export function normalizeSearchRequest(input: Record<string, unknown>): NormalizedSearchRequest {
+  const scope = SEARCH_SCOPES.includes(input.scope as SearchScope)
+    ? input.scope as SearchScope
+    : "all";
   const type = SEARCH_ENTITY_TYPES.includes(input.type as SearchEntityType)
     ? input.type as SearchEntityType
     : "all";
@@ -111,6 +129,7 @@ export function normalizeSearchRequest(input: Record<string, unknown>): Normaliz
     : "relevance";
   return {
     query: String(input.q ?? "").trim().slice(0, 500),
+    scope,
     type,
     filters: {
       ...EMPTY_FILTERS,
@@ -124,6 +143,8 @@ export function normalizeSearchRequest(input: Record<string, unknown>): Normaliz
       state: values(input.state),
       theme: values(input.theme),
       layout: values(input.layout),
+      siteSection: values(input.siteSection),
+      siteStyle: values(input.siteStyle),
     },
     sort,
     ...(input.cursor ? { cursor: String(input.cursor) } : {}),
