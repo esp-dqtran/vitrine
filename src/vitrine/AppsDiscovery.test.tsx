@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
@@ -144,4 +145,15 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /data-app-discovery-card="true"/);
   assert.match(html, /Purpose-built tool/);
   assert.match(html, /aria-label="Open Linear"/);
+});
+
+test('styles Apps as a three-column Mobbin discovery layout with responsive fallbacks', async () => {
+  const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.apps-discovery__taxonomy\s*\{[\s\S]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /\.apps-discovery__grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /\.app-discovery-card__media\s*\{[\s\S]*aspect-ratio:\s*1/);
+  assert.match(css, /\.app-discovery-card\s*\{[\s\S]*border-radius:\s*28px/);
+  assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 });

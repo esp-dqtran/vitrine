@@ -32,35 +32,34 @@ test('keeps Sites routes ahead of Apps branches and free from job-list reads', a
     readFile(new URL('./sitesApi.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.ok(appSource.indexOf("route.name === 'sites'") < appSource.indexOf("route.name === 'apps' && (appsError"));
+  assert.ok(appSource.indexOf("route.name === 'sites'") < appSource.indexOf("if (route.name === 'apps')"));
   assert.ok(appSource.indexOf("route.name === 'site-version'") < appSource.indexOf("route.name === 'app' && (detailError"));
   assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
   assert.doesNotMatch(`${sitesSource}\n${sitesApiSource}`, /fetch\(\s*['"]\/api\/jobs['"]\s*\)/);
   assert.doesNotMatch(sitesSource, /setInterval|setTimeout/);
 });
 
-test('renders Apps and Sites through the shared reference gallery shell', async () => {
-  const [appSource, sitesSource] = await Promise.all([
-    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
-  ]);
+test('renders Apps through its discovery page outside the admin AppShell', async () => {
+  const appSource = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
 
-  assert.match(appSource, /from ['"]\.\/components\/ReferenceGalleryShell['"]/);
-  assert.match(appSource, /<ReferenceGalleryShell[\s\S]*active="apps"/);
-  assert.match(sitesSource, /<ReferenceGalleryShell[\s\S]*active="sites"/);
+  assert.match(appSource, /from ['"]\.\/components\/AppsDiscoveryPage\.tsx['"]/);
+  assert.match(appSource, /if \(route\.name === 'apps'\) \{[\s\S]*?<AppsDiscoveryPage/);
+  assert.doesNotMatch(appSource, /if \(route\.name === 'apps'\) \{[\s\S]{0,160}?return frame\(/);
 });
 
-test('keeps Apps retry and terminal no-results states inside the shared shell', async () => {
-  const [appSource, hookSource] = await Promise.all([
+test('keeps Apps retry and terminal no-results states inside its discovery page', async () => {
+  const [appSource, pageSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
   ]);
 
   assert.match(hookSource, /return \{[\s\S]*refresh,[\s\S]*loadMore \}/);
   assert.match(appSource, /refresh: refreshApps/);
-  assert.match(appSource, /actions: appsError[\s\S]*label="Retry"[\s\S]*refreshApps\(\)/);
-  assert.match(appSource, /const appsGalleryState =[\s\S]*list\.length === 0[\s\S]*!hasMore/);
-  assert.match(appSource, /state=\{appsGalleryState\}/);
+  assert.match(appSource, /onRetry=\{\(\) => void refreshApps\(\)\}/);
+  assert.match(pageSource, /title: 'Could not load crawled screens'/);
+  assert.match(pageSource, /title: 'No Apps match these filters'/);
+  assert.match(pageSource, /label="Retry"/);
 });
 
 test('keeps the sticky Apps search container background transparent', async () => {
@@ -73,8 +72,9 @@ test('keeps the sticky Apps search container background transparent', async () =
 });
 
 test('loads additional app pages only when the gallery sentinel approaches the viewport', async () => {
-  const [appSource, hookSource] = await Promise.all([
+  const [appSource, pageSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
   ]);
 
@@ -83,13 +83,15 @@ test('loads additional app pages only when the gallery sentinel approaches the v
   assert.match(appSource, /IntersectionObserver/);
   assert.match(appSource, /appsSentinelRef/);
   assert.match(appSource, /void loadMore\(\)/);
-  assert.match(appSource, /<Spinner size="sm"/);
-  assert.doesNotMatch(appSource, /Loading more apps/);
+  assert.match(appSource, /sentinelRef=\{appsSentinelRef\}/);
+  assert.match(pageSource, /<Spinner size="sm"/);
+  assert.doesNotMatch(`${appSource}\n${pageSource}`, /Loading more apps/);
 });
 
 test('loads the member catalog one page at a time near the gallery viewport', async () => {
-  const [appSource, hookSource] = await Promise.all([
+  const [appSource, pageSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
   ]);
 
@@ -97,7 +99,8 @@ test('loads the member catalog one page at a time near the gallery viewport', as
   assert.match(hookSource, /role === 'admin' \? `\/api\/apps\?cursor=/);
   assert.match(hookSource, /: `\/api\/catalog\?cursor=/);
   assert.match(appSource, /if \(route\.name === 'app' \|\| !hasMore \|\| loadingMore\) return/);
-  assert.match(appSource, /\{hasMore && <div ref=\{appsSentinelRef\}/);
+  assert.match(appSource, /hasMore=\{hasMore\}/);
+  assert.match(pageSource, /props\.hasMore[\s\S]*ref=\{props\.sentinelRef\}/);
 });
 
 test('separates gallery and detail route loaders', async () => {
@@ -122,13 +125,15 @@ test('does not reload a retained gallery merely because it is re-enabled', async
 });
 
 test('reports the loaded admin app count against the complete catalog total', async () => {
-  const [appSource, hookSource] = await Promise.all([
+  const [appSource, pageSource, hookSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
   ]);
 
   assert.match(hookSource, /totalApps/);
-  assert.match(appSource, /Showing \$\{list\.length\} of \$\{totalApps\} apps/);
+  assert.match(appSource, /totalApps=\{totalApps\}/);
+  assert.match(pageSource, /Showing \$\{visibleApps\.length\} of \$\{props\.totalApps\} apps/);
 });
 
 test('shares catalog search state with the inspiration modal', async () => {
@@ -151,10 +156,14 @@ test('does not request Pro catalog research for a Free account', async () => {
 });
 
 test('keeps independent Apps and Sites search state under References', async () => {
-  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const [source, pageSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
+  ]);
 
   assert.match(source, /const \[siteQuery, setSiteQuery\] = useState\(''\)/);
-  assert.match(source, /<ReferenceTypeTabs active="apps"/);
+  assert.match(source, /const \[appFacet, setAppFacet\] = useState<AppsFacet \| null>\(null\)/);
+  assert.match(pageSource, /active="apps"/);
   assert.match(source, /query=\{siteQuery\}/);
   assert.match(source, /onQueryChange=\{setSiteQuery\}/);
 });
