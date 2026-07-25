@@ -5,7 +5,7 @@ import {
   parsePublicFacet,
   type PublicFacetInput,
 } from "./publicFacetPreview.ts";
-import { publishedFacetPreview } from "./publicFacetPreviewStore.ts";
+import { publishedFacetPreviews } from "./publicFacetPreviewStore.ts";
 
 const flowFacet: PublicFacetInput = {
   group: "flows",
@@ -23,42 +23,44 @@ test("accepts only the public Apps taxonomy and supported platforms", () => {
   assert.equal(parsePublicFacet({ group: ["flows"], value: "Setting Up", platform: "web" }), null);
 });
 
-test("maps a bounded latest-published Flow preview", async () => {
+test("maps at most six distinct latest-published Flow preview candidates", async () => {
   let capturedSql = "";
   let capturedValues: readonly unknown[] | undefined;
-  const preview = await publishedFacetPreview(flowFacet, async (sql, values) => {
+  const previews = await publishedFacetPreviews(flowFacet, async (sql, values) => {
     capturedSql = sql;
     capturedValues = values;
     return {
-      rows: [{
-        app: "linear",
+      rows: Array.from({ length: 7 }, (_, index) => ({
+        app: `app-${index}`,
         icon_url: null,
-        media_count: 7,
-      }],
-      rowCount: 1,
+        media_count: index === 0 ? 7 : 2,
+      })),
+      rowCount: 7,
       command: "SELECT",
       oid: 0,
       fields: [],
     };
   });
 
-  assert.deepEqual(preview, {
+  assert.deepEqual(previews[0], {
     kind: "flow",
-    app: "linear",
+    app: "app-0",
     label: "Setting Up",
     iconUrl: null,
     mediaCount: 3,
   });
+  assert.equal(previews.length, 6);
+  assert.equal(new Set(previews.map(({ app }) => app)).size, 6);
   assert.deepEqual(capturedValues, ["web", "Setting Up"]);
   assert.match(capturedSql, /av\.status = 'published'/);
   assert.match(capturedSql, /public_facet_previews/);
-  assert.match(capturedSql, /LIMIT 1/);
+  assert.match(capturedSql, /LIMIT 6/);
   assert.doesNotMatch(capturedSql, /JOIN images|app_flow_versions/);
   assert.doesNotMatch(capturedSql, /object_key\s+AS/);
 });
 
-test("maps an icon-only Category preview and returns null without media", async () => {
-  const category = await publishedFacetPreview(
+test("maps icon-only Category candidates and returns an empty pool without media", async () => {
+  const categories = await publishedFacetPreviews(
     { group: "categories", value: "Finance", platform: "ios" },
     async () => ({
       rows: [{ app: "Revolut", icon_url: "https://cdn.example/revolut.png", media_count: 0 }],
@@ -68,16 +70,16 @@ test("maps an icon-only Category preview and returns null without media", async 
       fields: [],
     }),
   );
-  assert.deepEqual(category, {
+  assert.deepEqual(categories, [{
     kind: "icon",
     app: "Revolut",
     label: "Finance",
     iconUrl: "https://cdn.example/revolut.png",
     mediaCount: 0,
-  });
+  }]);
 
-  assert.equal(
-    await publishedFacetPreview(
+  assert.deepEqual(
+    await publishedFacetPreviews(
       { group: "elements", value: "Dialog", platform: "web" },
       async () => ({
         rows: [],
@@ -87,7 +89,7 @@ test("maps an icon-only Category preview and returns null without media", async 
         fields: [],
       }),
     ),
-    null,
+    [],
   );
 });
 

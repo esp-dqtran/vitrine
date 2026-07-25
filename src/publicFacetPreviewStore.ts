@@ -38,13 +38,13 @@ function cachedMediaSql(group: Exclude<PublicFacetInput["group"], "categories">)
      AND pfp.facet_value = $2
     GROUP BY a.id, a.name, a.icon_url
     ORDER BY a.name
-    LIMIT 1`;
+    LIMIT 6`;
 }
 
-export async function publishedFacetPreview(
+export async function publishedFacetPreviews(
   input: PublicFacetInput,
   runQuery: FacetDatabaseQuery = query,
-): Promise<PublicFacetPreview | null> {
+): Promise<PublicFacetPreview[]> {
   const kind = input.group === "categories"
     ? "icon"
     : input.group === "screens"
@@ -59,21 +59,28 @@ export async function publishedFacetPreview(
        JOIN apps a ON a.id = latest.app_id
        WHERE lower(a.category) = lower($2) AND a.icon_url IS NOT NULL
        ORDER BY a.name
-       LIMIT 1`
+       LIMIT 6`
     : cachedMediaSql(input.group);
   const result = await runQuery(sql, [input.platform, input.value]);
-  const row = result.rows[0] as FacetPreviewRow | undefined;
-  if (!row) return null;
-  const mediaCount = kind === "flow"
-    ? Math.min(Math.max(Number(row.media_count) || 0, 0), 3)
-    : kind === "icon" ? 0 : 1;
-  if (kind === "icon" && !row.icon_url) return null;
-  if (kind !== "icon" && mediaCount === 0) return null;
-  return {
-    kind,
-    app: row.app,
-    label: input.value,
-    iconUrl: row.icon_url,
-    mediaCount,
-  };
+  return result.rows.slice(0, 6).flatMap((raw) => {
+    const row = raw as FacetPreviewRow;
+    const mediaCount = kind === "flow"
+      ? Math.min(Math.max(Number(row.media_count) || 0, 0), 3)
+      : kind === "icon" ? 0 : 1;
+    if (kind === "icon" ? !row.icon_url : mediaCount === 0) return [];
+    return [{
+      kind,
+      app: row.app,
+      label: input.value,
+      iconUrl: row.icon_url,
+      mediaCount,
+    }];
+  });
+}
+
+export async function publishedFacetPreview(
+  input: PublicFacetInput,
+  runQuery: FacetDatabaseQuery = query,
+): Promise<PublicFacetPreview | null> {
+  return (await publishedFacetPreviews(input, runQuery))[0] ?? null;
 }
