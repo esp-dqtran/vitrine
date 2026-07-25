@@ -1618,3 +1618,220 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .advanced-search-page *, .advanced-search-drawer * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+.flow-workspace {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.flow-workspace__rail {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.flow-workspace__rail--loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flow-workspace__content {
+  min-width: 0;
+}
+
+.flow-workspace__content--loading {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+}
+
+.flow-workspace__browse {
+  display: none;
+  margin-bottom: 16px;
+}
+
+.flow-workspace__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-muted);
+}
+
+.flow-tree {
+  min-width: 0;
+}
+
+.flow-tree__search {
+  margin-bottom: 12px;
+}
+
+.flow-tree__groups,
+.flow-tree__flows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-tree__group + .flow-tree__group {
+  margin-top: 4px;
+}
+
+.flow-tree__group-button,
+.flow-tree__flow-button {
+  width: 100%;
+  border: 0;
+  color: var(--color-text-secondary);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.flow-tree__group-button {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.flow-tree__group-label,
+.flow-tree__flow-button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-tree__count {
+  color: var(--color-text-disabled);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-tree__flows {
+  padding-left: 24px;
+}
+
+.flow-tree__flow-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.flow-tree__group-button:hover,
+.flow-tree__flow-button:hover {
+  color: var(--color-text-primary);
+  background: var(--color-background-muted);
+}
+
+.flow-tree__group-button:focus-visible,
+.flow-tree__flow-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.flow-tree__flow-button[aria-current='page'] {
+  color: var(--color-text-primary);
+  background: var(--color-background-selected, var(--color-background-muted));
+  font-weight: 700;
+}
+
+.flow-tree__empty {
+  margin: 16px 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.flow-tree__skeleton {
+  display: block;
+  width: calc(100% - 16px);
+  height: 34px;
+  margin-inline: 8px;
+  border-radius: 8px;
+  background: var(--color-background-muted);
+  animation: flow-tree-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes flow-tree-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+.flow-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.flow-gallery__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flow-gallery__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flow-gallery__heading span:last-child {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.flow-tree-drawer {
+  border-radius: 0 var(--radius-container) var(--radius-container) 0;
+}
+
+.flow-tree-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.flow-tree-drawer .flow-tree {
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+@media (max-width: 980px) {
+  .flow-workspace {
+    display: block;
+  }
+
+  .flow-workspace__rail {
+    display: none;
+  }
+
+  .flow-workspace__browse {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-tree__skeleton {
+    animation: none;
+  }
+}

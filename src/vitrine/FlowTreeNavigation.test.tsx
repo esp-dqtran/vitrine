@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { DesignFlow, EvidenceView } from '../designSystem.ts';
@@ -120,4 +121,13 @@ test('renders Flow navigation skeletons beside the existing loading state', () =
   assert.match(html, /aria-label="Loading flows navigation"/);
   assert.equal((html.match(/flow-tree__skeleton/g) ?? []).length, 7);
   assert.match(html, /aria-label="Loading flows"/);
+});
+
+test('defines the desktop rail and 980px drawer transition', () => {
+  const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.flow-workspace\s*\{[\s\S]*grid-template-columns:\s*280px minmax\(0,\s*1fr\)/);
+  assert.match(css, /\.flow-workspace__rail\s*\{[\s\S]*position:\s*sticky/);
+  assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]/);
+  assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__rail\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__browse\s*\{[\s\S]*display:/);
 });
