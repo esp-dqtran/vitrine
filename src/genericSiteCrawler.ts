@@ -1,0 +1,471 @@
+import { createHash } from "node:crypto";
+import sharp from "sharp";
+import type {
+  ObjectMetadata,
+  ObjectStore,
+  StoredContentType,
+} from "./objectStore.ts";
+import type {
+  PublicPageBrowser,
+  PublicPageBrowserResult,
+} from "./publicPageBrowser.ts";
+import {
+  parseSiteAnalysis,
+  type SiteAnalysis,
+} from "./siteAnalysis.ts";
+import {
+  analyzeSiteEvidence,
+  type SiteAnalysisProvider,
+} from "./siteAnalysisProvider.ts";
+import { classifySiteImportUrl } from "./sites.ts";
+import type {
+  GenericSiteCompleteInput,
+  GenericSitesStoreMethods,
+} from "./sitesGenericStore.ts";
+
+const MAXIMUM_OBJECT_BYTES = 64 * 1_024 * 1_024;
+const ANALYSIS_TIMEOUT_MS = 60_000;
+
+export class GenericSiteImportCancelledError extends Error {
+  constructor() {
+    super("Generic Site import cancelled");
+    this.name = "GenericSiteImportCancelledError";
+  }
+}
+
+export class PermanentGenericSiteImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PermanentGenericSiteImportError";
+  }
+}
+
+export interface GenericSiteCrawlerDependencies {
+  browser: Pick<PublicPageBrowser, "capture">;
+  objectStore: ObjectStore;
+  sitesStore: Required<Pick<
+    GenericSitesStoreMethods,
+    "beginGenericImport" | "completeGenericImport" | "failGenericImport"
+  >>;
+  analysisProvider?: SiteAnalysisProvider;
+  isCancelled(): Promise<boolean>;
+  report?(message: string): Promise<void>;
+}
+
+export interface GenericSiteCrawlResult {
+  siteId: number;
+  versionId: number;
+  pageCount: 1;
+  sectionCount: number;
+}
+
+export async function crawlGenericSite(
+  url: string,
+  deps: GenericSiteCrawlerDependencies,
+): Promise<GenericSiteCrawlResult> {
+  const requestedIdentity = classifySiteImportUrl(url);
+  if (requestedIdentity.kind !== "public-page") {
+    throw new PermanentGenericSiteImportError(
+      "Generic Site crawler requires a public page URL",
+    );
+  }
+  await assertNotCancelled(deps);
+  await deps.report?.("Rendering page");
+  const capture = await deps.browser.capture(requestedIdentity.canonicalUrl);
+  await assertNotCancelled(deps);
+
+  const identity = classifySiteImportUrl(capture.capture.canonicalUrl);
+  if (identity.kind !== "public-page") {
+    throw new PermanentGenericSiteImportError(
+      "Generic Site redirected to an unsupported source",
+    );
+  }
+  await deps.report?.("Analyzing structure and motion");
+  const { analysis, model } = await synthesizeAnalysis(
+    capture,
+    deps.analysisProvider,
+  );
+  const contentHash = captureHash(capture);
+  await assertNotCancelled(deps);
+  const categories = unique([
+    capture.capture.metadata.category,
+    ...(analysis.synthesis?.category ? [analysis.synthesis.category] : []),
+  ]).slice(0, 20);
+  const begin = await deps.sitesStore.beginGenericImport({
+    identity,
+    name: capture.capture.metadata.name,
+    description: capture.capture.metadata.description,
+    ...(capture.capture.metadata.iconUrl
+      ? { iconUrl: capture.capture.metadata.iconUrl }
+      : {}),
+    categories,
+    styles: [],
+    contentHash,
+    analysis,
+  });
+  if (begin.reused) {
+    return {
+      siteId: begin.siteId,
+      versionId: begin.versionId,
+      pageCount: 1,
+      sectionCount: capture.capture.sections.length,
+    };
+  }
+
+  try {
+    return await completeCapture(capture, {
+      identity,
+      siteId: begin.siteId,
+      versionId: begin.versionId,
+      contentHash,
+      analysis,
+      ...(model ? { analysisModel: model } : {}),
+    }, deps);
+  } catch (error) {
+    await deps.sitesStore
+      .failGenericImport(identity.canonicalUrl, safeFailure(error))
+      .catch(() => undefined);
+    throw error;
+  }
+}
+
+async function synthesizeAnalysis(
+  result: PublicPageBrowserResult,
+  provider: SiteAnalysisProvider | undefined,
+): Promise<{ analysis: SiteAnalysis; model?: string }> {
+  if (!provider) return { analysis: result.analysis };
+  try {
+    const overview = await sharp(result.pageImage)
+      .resize({ width: 768, height: 4_096, fit: "inside", withoutEnlargement: true })
+      .png()
+      .toBuffer();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ANALYSIS_TIMEOUT_MS);
+    timer.unref?.();
+    try {
+      const synthesis = await analyzeSiteEvidence(provider, {
+        evidenceIds: result.analysis.evidence.map((item) => item.id),
+        evidence: {
+          structure: result.analysis.structure,
+          visualTokens: result.analysis.visualTokens,
+          motion: result.analysis.motion,
+          technology: result.analysis.technology,
+          responsive: result.analysis.responsive,
+          warnings: result.analysis.warnings,
+        },
+        image: { bytes: overview, contentType: "image/png" },
+        signal: controller.signal,
+      });
+      return {
+        analysis: parseSiteAnalysis({
+          ...result.analysis,
+          status: "ready",
+          synthesis,
+        }),
+        model: provider.model,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return {
+      analysis: parseSiteAnalysis({
+        ...result.analysis,
+        status: "evidence-only",
+        synthesis: null,
+        warnings: unique([
+          ...result.analysis.warnings,
+          "AI Site synthesis was unavailable; deterministic evidence was retained.",
+        ]),
+      }),
+    };
+  }
+}
+
+async function completeCapture(
+  result: PublicPageBrowserResult,
+  capture: {
+    identity: Extract<ReturnType<typeof classifySiteImportUrl>, { kind: "public-page" }>;
+    siteId: number;
+    versionId: number;
+    contentHash: string;
+    analysis: SiteAnalysis;
+    analysisModel?: string;
+  },
+  deps: GenericSiteCrawlerDependencies,
+): Promise<GenericSiteCrawlResult> {
+  await assertNotCancelled(deps);
+  verifiedPng(result.pageImage);
+  verifiedPng(result.mobilePageImage);
+  verifiedWebm(result.preview);
+  if (result.sectionImages.length !== result.capture.sections.length) {
+    throw new PermanentGenericSiteImportError(
+      "Generic Site section image count changed",
+    );
+  }
+  for (let index = 0; index < result.sectionImages.length; index += 1) {
+    const section = result.sectionImages[index]!;
+    if (section.position !== index) {
+      throw new PermanentGenericSiteImportError(
+        "Generic Site section image order changed",
+      );
+    }
+    verifiedPng(section.body);
+  }
+
+  await deps.report?.("Saving Site evidence");
+  const sourceBody = Buffer.from(JSON.stringify(result.capture));
+  const analysisBody = Buffer.from(JSON.stringify(capture.analysis));
+  const objects: ObjectMetadata[] = [];
+  const put = async (
+    kind: string,
+    identity: string,
+    body: Buffer,
+    extension: "json" | "png" | "webm",
+    contentType: StoredContentType,
+    accessClass: ObjectMetadata["accessClass"],
+  ) => {
+    const object = await putVerified(deps.objectStore, {
+      key: genericSiteObjectKey(
+        capture.identity.sourceSiteId,
+        capture.contentHash,
+        kind,
+        identity,
+        sha256(body),
+        extension,
+      ),
+      body,
+      contentType,
+      accessClass,
+    });
+    objects.push(object);
+    return object;
+  };
+  const sourceObject = await put(
+    "source",
+    "capture",
+    sourceBody,
+    "json",
+    "application/json",
+    "internal",
+  );
+  const analysisObject = await put(
+    "analysis",
+    "evidence",
+    analysisBody,
+    "json",
+    "application/json",
+    "internal",
+  );
+  const pageObject = await put(
+    "page",
+    "desktop",
+    result.pageImage,
+    "png",
+    "image/png",
+    "protected",
+  );
+  const mobileObject = await put(
+    "mobile",
+    "page",
+    result.mobilePageImage,
+    "png",
+    "image/png",
+    "protected",
+  );
+  const previewObject = await put(
+    "preview",
+    "scroll",
+    result.preview,
+    "webm",
+    "video/webm",
+    "protected",
+  );
+  const sectionKeys: Record<string, string> = {};
+  for (const section of result.sectionImages) {
+    await assertNotCancelled(deps);
+    const sourceId = `section-${section.position}`;
+    const object = await put(
+      "section",
+      String(section.position),
+      section.body,
+      "png",
+      "image/png",
+      "protected",
+    );
+    sectionKeys[sourceId] = object.key;
+  }
+
+  await assertNotCancelled(deps);
+  await deps.report?.("Finalizing Site analysis");
+  const completion: GenericSiteCompleteInput = {
+    identity: capture.identity,
+    siteId: capture.siteId,
+    versionId: capture.versionId,
+    contentHash: capture.contentHash,
+    page: {
+      sourceId: "page",
+      title: result.capture.metadata.name,
+      url: result.capture.canonicalUrl,
+    },
+    sections: result.capture.sections.map((section) => ({
+      sourceId: `section-${section.position}`,
+      position: section.position,
+      cropTop: section.bounds.y,
+      cropBottom: section.bounds.y + section.bounds.height,
+      sourceMetadata: {
+        selector: section.selector,
+        tagName: section.tagName,
+        ...(section.role ? { role: section.role } : {}),
+        ...(section.heading ? { heading: section.heading } : {}),
+      },
+    })),
+    analysis: capture.analysis,
+    ...(capture.analysisModel ? { analysisModel: capture.analysisModel } : {}),
+    objectKeys: {
+      source: sourceObject.key,
+      analysis: analysisObject.key,
+      preview: previewObject.key,
+      mobile: mobileObject.key,
+      page: pageObject.key,
+      sections: sectionKeys,
+    },
+  };
+  const completed = await deps.sitesStore.completeGenericImport(
+    completion,
+    objects,
+  );
+  return {
+    siteId: completed.siteId,
+    versionId: completed.versionId,
+    pageCount: 1,
+    sectionCount: completion.sections.length,
+  };
+}
+
+async function putVerified(
+  store: ObjectStore,
+  input: {
+    key: string;
+    body: Buffer;
+    contentType: StoredContentType;
+    accessClass: ObjectMetadata["accessClass"];
+  },
+): Promise<ObjectMetadata> {
+  verifiedBytes(input.body, "object");
+  const expected: ObjectMetadata = {
+    key: input.key,
+    sha256: sha256(input.body),
+    byteSize: input.body.byteLength,
+    contentType: input.contentType,
+    accessClass: input.accessClass,
+  };
+  const stored = await store.put({ ...expected, body: input.body });
+  if (
+    stored.metadata.key !== expected.key ||
+    stored.metadata.sha256 !== expected.sha256 ||
+    stored.metadata.byteSize !== expected.byteSize ||
+    stored.metadata.contentType !== expected.contentType ||
+    stored.metadata.accessClass !== expected.accessClass
+  ) {
+    throw new Error("Object store returned different Generic Site metadata");
+  }
+  return stored.metadata;
+}
+
+function genericSiteObjectKey(
+  siteId: string,
+  versionId: string,
+  kind: string,
+  identity: string,
+  hash: string,
+  extension: string,
+): string {
+  if (
+    !/^[0-9a-f]{64}$/.test(hash) ||
+    !/^[0-9a-f]{64}$/.test(versionId) ||
+    !/^[a-z][a-z0-9-]{0,30}$/.test(kind) ||
+    !["json", "png", "webm"].includes(extension)
+  ) {
+    throw new Error("Invalid Generic Site object identity");
+  }
+  return `sites/${encoded(siteId)}/versions/${encoded(versionId)}/${kind}/${
+    encoded(identity)
+  }/${hash}.${extension}`;
+}
+
+function encoded(value: string): string {
+  const bytes = Buffer.from(value, "utf8");
+  if (bytes.byteLength < 1 || bytes.byteLength > 120) {
+    throw new Error("Invalid Generic Site object key part");
+  }
+  return bytes.toString("hex");
+}
+
+function captureHash(result: PublicPageBrowserResult): string {
+  return createHash("sha256")
+    .update(result.capture.canonicalUrl)
+    .update("\0")
+    .update(result.capture.html)
+    .update("\0")
+    .update(result.pageImage)
+    .update("\0")
+    .update(result.mobilePageImage)
+    .digest("hex");
+}
+
+function verifiedPng(body: Buffer): void {
+  verifiedBytes(body, "PNG");
+  if (
+    !body.subarray(0, 8).equals(
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    )
+  ) {
+    throw new PermanentGenericSiteImportError(
+      "Generic Site PNG signature is invalid",
+    );
+  }
+}
+
+function verifiedWebm(body: Buffer): void {
+  verifiedBytes(body, "WebM");
+  if (
+    !body.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))
+  ) {
+    throw new PermanentGenericSiteImportError(
+      "Generic Site WebM signature is invalid",
+    );
+  }
+}
+
+function verifiedBytes(body: Buffer, label: string): void {
+  if (body.byteLength < 1 || body.byteLength > MAXIMUM_OBJECT_BYTES) {
+    throw new PermanentGenericSiteImportError(
+      `Generic Site ${label} exceeds the 64 MiB media ceiling`,
+    );
+  }
+}
+
+async function assertNotCancelled(
+  deps: GenericSiteCrawlerDependencies,
+): Promise<void> {
+  if (await deps.isCancelled()) throw new GenericSiteImportCancelledError();
+}
+
+function safeFailure(error: unknown): string {
+  if (error instanceof GenericSiteImportCancelledError) {
+    return "Generic Site import cancelled";
+  }
+  if (error instanceof PermanentGenericSiteImportError) {
+    return error.message.slice(0, 500);
+  }
+  return "Generic Site import failed";
+}
+
+function sha256(body: Uint8Array): string {
+  return createHash("sha256").update(body).digest("hex");
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
