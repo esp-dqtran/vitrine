@@ -3,6 +3,7 @@ import { databasePoolOptions } from "./dbPoolConfig.ts";
 import type { DesignFlow, DesignSystemSnapshot } from "./designSystem.ts";
 import type { ObjectMetadata } from "./objectStore.ts";
 import type { PublishedSearchSource } from "./searchProjection.ts";
+import type { PublishedSiteSearchSource } from "./siteSearchProjection.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
 import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
 
@@ -630,12 +631,22 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
          SELECT DISTINCT app_id, platform FROM page_image_facts
        ) distinct_platforms
        GROUP BY app_id
+     ), platform_ranked_preview_ids AS (
+       SELECT app_id, platform, image_id,
+              ROW_NUMBER() OVER (
+                PARTITION BY app_id, platform
+                ORDER BY created_at ASC, image_id ASC
+              ) AS platform_preview_rank
+       FROM page_image_facts
      ), ranked_preview_ids AS (
        SELECT app_id, platform, image_id,
               ROW_NUMBER() OVER (
-                PARTITION BY app_id ORDER BY created_at ASC, image_id ASC
+                PARTITION BY app_id
+                ORDER BY platform_preview_rank,
+                  CASE platform WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END,
+                  platform
               ) AS preview_rank
-       FROM page_image_facts
+       FROM platform_ranked_preview_ids
      ), preview_ids AS (
        SELECT app_id, platform, image_id, preview_rank
        FROM ranked_preview_ids
@@ -745,6 +756,7 @@ export interface AppVersion {
   submitted_at: string | null;
   published_at: string | null;
   screen_count: number;
+  ui_element_count: number;
   analyzed_count: number;
   component_count: number;
   token_count: number;
@@ -755,6 +767,7 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
   a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
   COALESCE(image_counts.screen_count, 0)::int AS screen_count,
+  COALESCE(image_counts.ui_element_count, 0)::int AS ui_element_count,
   COALESCE(image_counts.analyzed_count, 0)::int AS analyzed_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'components'), 0)::int AS component_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'tokens'), 0)::int AS token_count,
@@ -764,6 +777,7 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
     AND platform_identity.name = av.platform
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
+      COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
     FROM version_images vi JOIN images i ON i.id = vi.image_id
     WHERE vi.version_id = av.id
@@ -1088,6 +1102,73 @@ export async function publishedSearchSource(
     })),
     ...(system.rows[0] ? { system: system.rows[0].snapshot } : {}),
     flows: flows.rows[0]?.flows ?? [],
+  };
+}
+
+const stringList = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+
+export async function publishedSiteSearchSource(
+  siteId: number,
+): Promise<PublishedSiteSearchSource | undefined> {
+  const version = await query<{
+    site_id: number;
+    version_id: number;
+    name: string;
+    description: string | null;
+    categories: unknown;
+    styles: unknown;
+    updated_at: string;
+  }>(
+    `SELECT s.id AS site_id, sv.id AS version_id, s.name, s.description,
+       s.categories, s.styles, GREATEST(s.updated_at, sv.updated_at) AS updated_at
+     FROM sites s
+     JOIN site_versions sv ON sv.site_id = s.id
+     WHERE s.id = $1 AND sv.status = 'ready'
+     ORDER BY sv.updated_at DESC, sv.id DESC
+     LIMIT 1`,
+    [siteId],
+  );
+  const selected = version.rows[0];
+  if (!selected) return undefined;
+
+  const pages = await query<{
+    id: number;
+    title: string;
+    patterns: unknown;
+  }>(
+    `SELECT sp.id, sp.title,
+       COALESCE(
+         jsonb_agg(ss.source_metadata->'patterns' ORDER BY ss.position)
+           FILTER (WHERE ss.id IS NOT NULL),
+         '[]'::jsonb
+       ) AS patterns
+     FROM site_pages sp
+     LEFT JOIN site_sections ss ON ss.page_id = sp.id
+     WHERE sp.version_id = $1
+     GROUP BY sp.id, sp.title, sp.position
+     ORDER BY sp.position`,
+    [selected.version_id],
+  );
+
+  return {
+    site: {
+      id: Number(selected.site_id),
+      versionId: Number(selected.version_id),
+      name: selected.name,
+      description: selected.description ?? "",
+      categories: stringList(selected.categories),
+      styles: stringList(selected.styles),
+      updatedAt: new Date(selected.updated_at).toISOString(),
+    },
+    pages: pages.rows.map((page) => ({
+      title: page.title,
+      sectionPatterns: Array.isArray(page.patterns)
+        ? page.patterns.flatMap(stringList)
+        : [],
+    })),
   };
 }
 

@@ -72,6 +72,16 @@ const migrationDefinitions = [
       /DROP TABLE IF EXISTS flow_documents/,
     ],
   },
+  {
+    file: "0030_context_aware_search.sql",
+    patterns: [
+      /ADD COLUMN catalog_scope TEXT NOT NULL DEFAULT 'apps'/,
+      /entity_type IN \('app', 'site', 'screen', 'flow', 'component', 'pattern'\)/,
+      /CREATE TABLE site_search_index_queue/,
+      /CREATE TRIGGER site_versions_search_queue/,
+      /CREATE TRIGGER site_sections_search_queue/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {

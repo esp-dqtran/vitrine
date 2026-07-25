@@ -80,6 +80,9 @@ const sourceFixture: PublishedSearchSource = {
 
 test("projects every v1 entity type with stable source identity", () => {
   const documents = projectSearchDocuments(sourceFixture);
+  const appDocument = documents[0];
+  assert.equal(appDocument.catalogScope, "apps");
+  assert.equal(appDocument.catalogName, sourceFixture.version.app);
   assert.deepEqual(
     documents.map(({ entityType, sourceId }) => [entityType, sourceId]),
     [

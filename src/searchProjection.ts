@@ -25,14 +25,14 @@ const ENTITY_ORDER = new Map([
   ["flow", 4],
 ]);
 
-const text = (...parts: unknown[]) =>
+export const searchDocumentText = (...parts: unknown[]) =>
   parts
     .flat(Infinity)
     .filter((value) => typeof value === "string" && value.trim())
     .map((value) => (value as string).trim())
     .join(" ");
 
-const unique = (values: Array<string | undefined | null>): string[] =>
+export const uniqueSearchValues = (values: Array<string | undefined | null>): string[] =>
   [...new Set(values.filter((value): value is string => !!value?.trim()).map((value) => value.trim()))]
     .sort((a, b) => a.localeCompare(b));
 
@@ -49,7 +49,7 @@ function canonical(value: unknown): unknown {
   );
 }
 
-function revision(value: unknown): string {
+export function searchDocumentRevision(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
 }
 
@@ -83,21 +83,27 @@ function baseDocument(
   source: PublishedSearchSource,
   value: Omit<
     SearchDocument,
-    "indexVersion" | "versionId" | "appId" | "appName" | "platform"
-    | "appCategory" | "publishedAt" | "sourceRevision"
+    "indexVersion" | "catalogScope" | "catalogName" | "versionId" | "appId"
+    | "appName" | "catalogCategories" | "siteSections" | "siteStyles"
+    | "platform" | "appCategory" | "publishedAt" | "sourceRevision"
   >,
 ): SearchDocument {
   const document = {
     ...value,
     indexVersion: 1 as const,
+    catalogScope: "apps" as const,
+    catalogName: source.version.app,
     versionId: source.version.id,
     appId: source.version.appId,
     appName: source.version.app,
+    catalogCategories: source.version.category ? [source.version.category] : [],
+    siteSections: [],
+    siteStyles: [],
     platform: source.version.platform,
     ...(source.version.category ? { appCategory: source.version.category } : {}),
     publishedAt: source.version.publishedAt,
   };
-  return { ...document, sourceRevision: revision(document) };
+  return { ...document, sourceRevision: searchDocumentRevision(document) };
 }
 
 function projectImage(
@@ -108,13 +114,13 @@ function projectImage(
   const analysis = image.analysis;
   const isScreen = image.kind === "screen";
   const flow = membership.get(image.id);
-  const components = unique(analysis?.componentNames ?? []);
-  const states = unique([
+  const components = uniqueSearchValues(analysis?.componentNames ?? []);
+  const states = uniqueSearchValues([
     ...(analysis?.visibleStates ?? []),
     ...(image.state_context ? image.state_context.split(",") : []),
   ]);
-  const layouts = unique(analysis?.layoutPatterns ?? []);
-  const visibleText = unique(analysis?.visibleText ?? []);
+  const layouts = uniqueSearchValues(analysis?.layoutPatterns ?? []);
+  const visibleText = uniqueSearchValues(analysis?.visibleText ?? []);
   const sourceId = isScreen ? `screen:${image.id}` : `ui-element:${image.id}`;
   const title = isScreen
     ? analysis?.purpose || image.description || `Screen ${image.id}`
@@ -138,7 +144,7 @@ function projectImage(
     title,
     description,
     aliases: isScreen ? [] : components,
-    visibleText: text(visibleText),
+    visibleText: searchDocumentText(visibleText),
     ...(analysis?.pageType ? { pageType: analysis.pageType } : {}),
     ...(analysis?.productArea ? { productArea: analysis.productArea } : {}),
     ...(flow ? flow : {}),
@@ -149,7 +155,7 @@ function projectImage(
     ...(image.captured_at ? { capturedAt: image.captured_at } : {}),
     mediaImageId: image.id,
     sourcePayload,
-    searchText: text(
+    searchText: searchDocumentText(
       title,
       description,
       source.version.app,
@@ -186,7 +192,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
     states: [],
     layoutPatterns: [],
     sourcePayload: { versionId: source.version.id },
-    searchText: text(
+    searchText: searchDocumentText(
       source.version.app,
       appDescription,
       source.version.category,
@@ -202,16 +208,16 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
 
   for (const component of source.system?.components ?? []) {
     const sourceId = `design-component:${appKey}:${identityPart(component.id)}`;
-    const aliases = unique([
+    const aliases = uniqueSearchValues([
       component.category,
       ...component.variants.flatMap((variant) => [variant.name]),
     ]);
-    const visibleText = unique(component.variants.flatMap((variant) =>
+    const visibleText = uniqueSearchValues(component.variants.flatMap((variant) =>
       variant.reconstruction?.visibleText ? [variant.reconstruction.visibleText] : []));
     const sourcePayload = {
       versionId: source.version.id,
       componentId: component.id,
-      evidence: unique(component.variants.flatMap((variant) =>
+      evidence: uniqueSearchValues(component.variants.flatMap((variant) =>
         variant.evidence.map(String))).map(Number),
     };
     documents.push(baseDocument(source, {
@@ -221,12 +227,12 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
       title: component.name,
       description: component.description,
       aliases,
-      visibleText: text(visibleText),
+      visibleText: searchDocumentText(visibleText),
       components: [component.name],
-      states: unique(component.variants.map(({ name }) => name)),
-      layoutPatterns: unique(component.responsiveBehavior ?? []),
+      states: uniqueSearchValues(component.variants.map(({ name }) => name)),
+      layoutPatterns: uniqueSearchValues(component.responsiveBehavior ?? []),
       sourcePayload,
-      searchText: text(
+      searchText: searchDocumentText(
         component.name,
         aliases,
         component.description,
@@ -268,7 +274,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
         mediaImageId: pattern.imageIds[0],
         evidence: [...new Set(pattern.imageIds)].sort((a, b) => a - b),
       },
-      searchText: text(
+      searchText: searchDocumentText(
         pattern.name,
         source.version.app,
         source.version.category,
@@ -286,8 +292,8 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
       sourceId,
       title: flow.title,
       description: flow.description,
-      aliases: unique([flow.category, ...flow.tags]),
-      visibleText: text(flow.steps.map(({ label }) => label)),
+      aliases: uniqueSearchValues([flow.category, ...flow.tags]),
+      visibleText: searchDocumentText(flow.steps.map(({ label }) => label)),
       flowId: flow.id,
       flowName: flow.title,
       components: [],
@@ -300,7 +306,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
         evidence,
         steps: flow.steps,
       },
-      searchText: text(
+      searchText: searchDocumentText(
         flow.title,
         flow.category,
         flow.description,
