@@ -53,22 +53,13 @@ export async function publishedCatalogPage(
   const limit = pageLimit(input.limit);
   const after = decodeCursor(input.cursor) ?? null;
   const namesResult = await runQuery(
-    `WITH latest AS MATERIALIZED (
-       SELECT DISTINCT ON (av.app_id, av.platform)
-         av.id AS version_id, av.app_id, av.platform
-       FROM app_versions av
-       WHERE av.status = 'published'
-       ORDER BY av.app_id, av.platform, av.version_number DESC
-     )
-     SELECT a.name AS app
+    `SELECT a.name AS app
      FROM apps a
      WHERE ($1::text IS NULL OR a.name > $1)
        AND EXISTS (
          SELECT 1
-         FROM latest
-         JOIN version_images vi ON vi.version_id = latest.version_id
-         JOIN images i ON i.id = vi.image_id
-         WHERE latest.app_id = a.id AND i.kind = 'screen'
+         FROM app_versions av
+         WHERE av.app_id = a.id AND av.status = 'published'
        )
      ORDER BY a.name
      LIMIT $2`,

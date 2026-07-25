@@ -61,6 +61,8 @@ test("selects one extra app name before reading bounded catalog metadata", async
   assert.equal(decode(page.nextCursor!), "app-24");
   assert.deepEqual(calls[0]?.values, [null, 25]);
   assert.match(calls[0]?.sql ?? "", /LIMIT \$2/);
+  assert.match(calls[0]?.sql ?? "", /EXISTS \([\s\S]*FROM app_versions/);
+  assert.doesNotMatch(calls[0]?.sql ?? "", /version_images|JOIN images/);
   assert.match(calls[1]?.sql ?? "", /ANY\(\$1::text\[\]\)/);
   assert.match(calls[2]?.sql ?? "", /preview_rank <= 3/);
 });
