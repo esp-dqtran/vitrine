@@ -15,6 +15,7 @@ import { AppOverviewPanel } from './AppOverviewPanel';
 import { CuratorReviewPanel } from './CuratorReviewPanel';
 import { ExportPanel } from './ExportPanel';
 import { FlowsPanel } from './FlowsPanel';
+import { FlowsWorkspaceLoading } from './FlowsWorkspace.tsx';
 import { HeroButton } from './HeroButton';
 import { Lightbox } from './Lightbox';
 import { ScreenGridCard } from './ScreenGridCard';
@@ -48,6 +49,12 @@ interface ScreenDetailProps {
   initialFlow?: string;
   initialStep?: number;
   onSectionChange?: (section: DetailSection, platform: Platform, version?: number) => void;
+  onFlowChange?: (
+    flow: string | undefined,
+    step: number | undefined,
+    platform: Platform,
+    version?: number,
+  ) => void;
 }
 
 export function ScreenDetail({
@@ -61,6 +68,7 @@ export function ScreenDetail({
   initialFlow,
   initialStep,
   onSectionChange,
+  onFlowChange,
 }: ScreenDetailProps) {
   const appPlatforms = (app.platforms ?? []).filter(
     (platform): platform is Platform => platform === 'ios' || platform === 'android' || platform === 'web',
@@ -316,12 +324,28 @@ export function ScreenDetail({
           )}
           {section === 'overview' ? <AppOverviewPanel app={app} />
             : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
-              : sectionLoading ? <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
+              : sectionLoading
+                ? section === 'flows'
+                  ? <FlowsWorkspaceLoading />
+                  : <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} snapshot={snapshot} />
                   : section === 'analysis' ? <AppKnowledgePanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} userRole={role} />
                     : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-                      : section === 'flows' ? <FlowsPanel flows={flows} app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} initialFlowId={initialFlow} initialStep={initialStep} />
+                      : section === 'flows' ? <FlowsPanel
+                          flows={flows}
+                          app={app.id}
+                          platform={selectedPlatform}
+                          version={sectionData.resolvedVersion}
+                          selectedFlowId={initialFlow}
+                          selectedStep={initialStep}
+                          onSelectionChange={(flow, step) => onFlowChange?.(
+                            flow,
+                            step,
+                            selectedPlatform,
+                            sectionData.resolvedVersion,
+                          )}
+                        />
                         : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
         </div>
       </ReferenceDetailShell>

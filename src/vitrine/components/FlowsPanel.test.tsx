@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FlowsPanel } from "./FlowsPanel.tsx";
-import { FlowViewer } from "./FlowViewer.tsx";
+import { FlowViewer, flowStepItems } from "./FlowViewer.tsx";
 import { FlowGallery } from "./FlowGallery.tsx";
 import { buildFlowTreeGroups } from "../flowTree.ts";
 
@@ -60,6 +60,25 @@ test("FlowViewer does not render the auto-generated crawl description", () => {
     <FlowViewer flow={{ ...loginFlow, description: "Imported from Mobbin: https://mobbin.com/flows/abc" }} onBack={() => {}} />
   );
   assert.doesNotMatch(html, /Imported from Mobbin/);
+});
+
+test("maps lightbox items back to source step numbers when some steps lack evidence", () => {
+  const items = flowStepItems({
+    ...loginFlow,
+    steps: [
+      { label: "Missing", evidence: [] },
+      loginFlow.steps[0],
+      loginFlow.steps[1],
+    ],
+  });
+  assert.deepEqual(items.map(({ stepNumber }) => stepNumber), [2, 3]);
+});
+
+test("labels the viewer return action for the persistent workspace", () => {
+  const html = renderToStaticMarkup(
+    <FlowViewer flow={loginFlow} onBack={() => undefined} />,
+  );
+  assert.match(html, /Back to all flows/);
 });
 
 test("groups flows by category, keeping uncategorized flows in their own section", () => {

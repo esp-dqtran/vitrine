@@ -130,6 +130,7 @@ export function FlowsWorkspace({
             version={version}
             initialStep={selectedStep}
             onBack={() => onSelectionChange(undefined, undefined)}
+            onStepChange={(step) => onSelectionChange(selectedFlow.id, step)}
           />
         ) : visibleGroups.length ? (
           <FlowGallery groups={visibleGroups} onSelectFlow={selectFlow} />

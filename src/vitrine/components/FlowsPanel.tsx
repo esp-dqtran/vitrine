@@ -13,8 +13,6 @@ export function FlowsPanel({
   version,
   selectedFlowId,
   selectedStep,
-  initialFlowId,
-  initialStep,
   onSelectionChange = () => undefined,
 }: {
   flows: DesignFlow<EvidenceView>[];
@@ -23,18 +21,14 @@ export function FlowsPanel({
   version?: number;
   selectedFlowId?: string;
   selectedStep?: number;
-  initialFlowId?: string;
-  initialStep?: number;
   onSelectionChange?(flowId?: string, step?: number): void;
 }) {
   const groups = useMemo(() => buildFlowTreeGroups(flows), [flows]);
-  const activeFlowId = selectedFlowId ?? initialFlowId;
-  const activeStep = selectedStep ?? initialStep;
-  const selectedFlow = activeFlowId
-    ? flows.find(({ id }) => id === activeFlowId)
+  const selectedFlow = selectedFlowId
+    ? flows.find(({ id }) => id === selectedFlowId)
     : undefined;
-  const invalidFlowId = activeFlowId && !selectedFlow
-    ? activeFlowId
+  const invalidFlowId = selectedFlowId && !selectedFlow
+    ? selectedFlowId
     : undefined;
 
   if (flows.length === 0) {
@@ -49,8 +43,8 @@ export function FlowsPanel({
     <FlowsWorkspace
       groups={groups}
       selectedFlow={selectedFlow}
-      selectedFlowId={activeFlowId}
-      selectedStep={activeStep}
+      selectedFlowId={selectedFlowId}
+      selectedStep={selectedStep}
       invalidFlowId={invalidFlowId}
       app={app}
       platform={platform}
