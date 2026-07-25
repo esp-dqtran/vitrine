@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FlowsPanel } from "./FlowsPanel.tsx";
 import { FlowViewer } from "./FlowViewer.tsx";
+import { FlowGallery } from "./FlowGallery.tsx";
+import { buildFlowTreeGroups } from "../flowTree.ts";
 
 const loginFlow = {
   id: "login",
@@ -97,4 +99,26 @@ test("keeps the full category total while progressively rendering its cards", ()
   );
   const html = renderToStaticMarkup(<FlowsPanel flows={flows} />);
   assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
+});
+
+test("FlowGallery keeps card batching and complete category totals independent from tree navigation", () => {
+  const flows = Array.from(
+    { length: 30 },
+    (_, index) => ({
+      ...loginFlow,
+      id: `settings-${index}`,
+      title: `Settings ${index + 1}`,
+      category: "Settings",
+    }),
+  );
+  const html = renderToStaticMarkup(
+    <FlowGallery
+      groups={buildFlowTreeGroups(flows)}
+      onSelectFlow={() => undefined}
+    />,
+  );
+
+  assert.equal((html.match(/aria-label="Open Settings \d+ flow"/g) ?? []).length, 24);
+  assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
+  assert.doesNotMatch(html, /Open Settings 25 flow/);
 });
