@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
 import type { App } from './types.ts';
 import { filterAndSortApps } from './appsDiscovery.ts';
@@ -97,4 +98,50 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /Search on Web/);
   assert.match(html, /Import App/);
+});
+
+test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', () => {
+  const app = makeApp({
+    id: 'linear-web',
+    app: 'Linear',
+    description: 'Purpose-built tool for planning and building products',
+    iconUrl: '/linear.svg',
+    screens: [
+      makeApp().screens[0]!,
+      { ...makeApp().screens[0]!, id: 2, url: '/linear-2.png' },
+    ],
+  });
+  const html = renderToStaticMarkup(
+    <AppsDiscoveryPage
+      apps={[app]}
+      isAdmin
+      query=""
+      facet={null}
+      onFacetChange={() => undefined}
+      onOpenSearch={() => undefined}
+      searchMode="legacy"
+      onImport={() => undefined}
+      onOpenApp={() => undefined}
+      onRetry={() => undefined}
+      totalApps={1}
+      hasMore={false}
+      loadingMore={false}
+    />,
+  );
+
+  assert.match(html, /data-apps-discovery="true"/);
+  assert.match(html, /Categories/);
+  assert.match(html, /Screens/);
+  assert.match(html, /UI Elements/);
+  assert.match(html, /Flows/);
+  assert.match(html, /iOS/);
+  assert.match(html, /Web/);
+  assert.match(html, /Latest/);
+  assert.match(html, /Most popular/);
+  assert.match(html, /Top rated/);
+  assert.match(html, /Animations/);
+  assert.match(html, /data-apps-discovery-grid="true"/);
+  assert.match(html, /data-app-discovery-card="true"/);
+  assert.match(html, /Purpose-built tool/);
+  assert.match(html, /aria-label="Open Linear"/);
 });
