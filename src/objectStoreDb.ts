@@ -244,18 +244,40 @@ export async function publishedPreviewObject(
     throw new Error("Preview rank must be an integer from 1 to 3");
   }
   const result = await runQuery(
-    `SELECT ${METADATA_COLUMNS}
-     FROM apps a
-     JOIN LATERAL (
-       SELECT av.id FROM app_versions av
-       WHERE av.app_id = a.id AND av.status = 'published'
-       ORDER BY av.version_number DESC LIMIT 1
-     ) published ON true
-     JOIN app_preview_images api ON api.version_id = published.id
-     JOIN images i ON i.id = api.image_id
-     JOIN platforms p ON p.id = i.platform_id AND p.app_id = a.id
+    `WITH latest AS MATERIALIZED (
+       SELECT DISTINCT ON (av.app_id, av.platform)
+         av.id AS version_id, av.app_id
+       FROM app_versions av
+       WHERE av.status = 'published'
+       ORDER BY av.app_id, av.platform, av.version_number DESC
+     ),
+     candidates AS (
+       SELECT DISTINCT ON (a.id, i.id)
+         a.name AS app, i.id AS image_id, vi.captured_at,
+         api.rank::int AS curated_rank, (api.rank IS NULL) AS fallback
+       FROM apps a
+       JOIN latest ON latest.app_id = a.id
+       JOIN version_images vi ON vi.version_id = latest.version_id
+       JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
+       LEFT JOIN app_preview_images api
+         ON api.version_id = latest.version_id AND api.image_id = i.id
+       WHERE a.name = $1
+       ORDER BY a.id, i.id, api.rank NULLS LAST, vi.captured_at DESC NULLS LAST
+     ),
+     ranked AS (
+       SELECT candidates.*,
+         ROW_NUMBER() OVER (
+           PARTITION BY app
+           ORDER BY fallback, curated_rank NULLS LAST,
+             captured_at DESC NULLS LAST, image_id DESC
+         ) AS preview_rank
+       FROM candidates
+     )
+     SELECT ${METADATA_COLUMNS}
+     FROM ranked
+     JOIN images i ON i.id = ranked.image_id
      JOIN stored_objects so ON ${imageObjectJoin("thumb")}
-     WHERE a.name = $1 AND api.rank = $2
+     WHERE ranked.app = $1 AND ranked.preview_rank = $2
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,
     [input.app, input.rank],

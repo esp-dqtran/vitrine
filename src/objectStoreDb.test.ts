@@ -286,8 +286,10 @@ test("preview lookup uses explicit ranks one to three on the latest published ve
 
   assert.equal((await publishedPreviewObject({ app: "alpha", rank: 3 }, query))?.key, metadata.key);
   assert.deepEqual(captured?.values, ["alpha", 3]);
-  assert.match(captured!.sql, /JOIN app_preview_images api ON api\.version_id = published\.id/);
-  assert.match(captured!.sql, /ORDER BY av\.version_number DESC/);
+  assert.match(captured!.sql, /DISTINCT ON \(a\.id, i\.id\)/);
+  assert.match(captured!.sql, /api\.rank IS NULL/);
+  assert.match(captured!.sql, /ROW_NUMBER\(\) OVER/);
+  assert.match(captured!.sql, /preview_rank = \$2/);
   assert.match(captured!.sql, /'protected', 'public-preview'/);
 });
 
