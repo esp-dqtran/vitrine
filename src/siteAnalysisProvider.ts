@@ -21,6 +21,8 @@ const SITE_ANALYSIS_SYSTEM_PROMPT = [
   "Each claim must contain kind, text, evidenceIds, and confidence.",
   "Claim kind must be observed, inferred, or unknown; keep these categories separate.",
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
+  "Every non-empty purpose, category, structure, rendering, motion, technology, responsive, or reconstruction-priority string must exactly match an observed or inferred claim.",
+  "Every unknowns string must exactly match an unknown claim.",
   "Never invent an evidence ID.",
   "Unknown claims may use an empty evidenceIds array.",
   "Do not claim access to original source code, private implementation details, or exact original design tokens without supplied evidence.",
@@ -110,19 +112,56 @@ function parseSynthesis(
     "unknowns",
     "claims",
   ]);
+  const claims = checkedArray(input.claims, "Site analysis claims")
+    .map((claim) => parseClaim(claim, allowedEvidenceIds));
+  const cited = new Set(claims
+    .filter((claim) => claim.kind !== "unknown" && claim.evidenceIds.length > 0)
+    .map((claim) => claim.text));
+  const unknown = new Set(claims
+    .filter((claim) => claim.kind === "unknown")
+    .map((claim) => claim.text));
+  const purpose = checkedText(input.purpose, MAXIMUM_TEXT, false);
+  const category = checkedText(input.category, 200, false);
+  const structure = textArray(input.structure);
+  const rendering = textArray(input.rendering);
+  const motion = textArray(input.motion);
+  const technology = textArray(input.technology);
+  const responsive = textArray(input.responsive);
+  const reconstructionPriorities = textArray(input.reconstructionPriorities);
+  const unknowns = textArray(input.unknowns);
+  requireClaimCoverage([
+    ...(purpose ? [purpose] : []),
+    ...(category ? [category] : []),
+    ...structure,
+    ...rendering,
+    ...motion,
+    ...technology,
+    ...responsive,
+    ...reconstructionPriorities,
+  ], cited, "cited");
+  requireClaimCoverage(unknowns, unknown, "unknown");
   return {
-    purpose: checkedText(input.purpose, MAXIMUM_TEXT, false),
-    category: checkedText(input.category, 200, false),
-    structure: textArray(input.structure),
-    rendering: textArray(input.rendering),
-    motion: textArray(input.motion),
-    technology: textArray(input.technology),
-    responsive: textArray(input.responsive),
-    reconstructionPriorities: textArray(input.reconstructionPriorities),
-    unknowns: textArray(input.unknowns),
-    claims: checkedArray(input.claims, "Site analysis claims")
-      .map((claim) => parseClaim(claim, allowedEvidenceIds)),
+    purpose,
+    category,
+    structure,
+    rendering,
+    motion,
+    technology,
+    responsive,
+    reconstructionPriorities,
+    unknowns,
+    claims,
   };
+}
+
+function requireClaimCoverage(
+  values: string[],
+  claims: Set<string>,
+  kind: "cited" | "unknown",
+): void {
+  if (values.some((value) => !claims.has(value))) {
+    throw new Error(`Site analysis summary requires a matching ${kind} claim citation`);
+  }
 }
 
 function parseClaim(

@@ -4,10 +4,21 @@ import { createServer, type Server } from "node:http";
 import { once } from "node:events";
 import { spawnSync } from "node:child_process";
 import ffmpegPath from "ffmpeg-static";
-import { createFrameWriteQueue, createPublicPageBrowser, publicPageScrollDurationMs } from "./publicPageBrowser.ts";
+import * as publicPageBrowserModule from "./publicPageBrowser.ts";
+
+const {
+  createFrameWriteQueue,
+  createPublicPageBrowser,
+  publicPageScrollDurationMs,
+} = publicPageBrowserModule;
 
 async function fixtureServer(): Promise<{ server: Server; url: string }> {
-  const server = createServer((_request, response) => {
+  const server = createServer((request, response) => {
+    if (request.url === "/drift") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end("<!doctype html><title>Wrong page</title><main><h1>Navigation drift</h1></main>");
+      return;
+    }
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(`<!doctype html>
       <html>
@@ -15,7 +26,7 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
           <title>Fixture App | Design platform</title>
           <meta name="description" content="A deterministic browser fixture">
           <meta name="theme-color" content="#123456">
-          <link rel="canonical" href="/pricing">
+          <link rel="canonical" href="/publisher-canonical-lie">
           <style>
             * { box-sizing: border-box; }
             body { margin: 0; font: 18px sans-serif; }
@@ -35,6 +46,7 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
             @media (max-width: 600px) { video { display: none; } }
           </style>
           <script type="application/ld+json">{"@type":"SoftwareApplication","name":"Fixture App","applicationCategory":"ProductivityApplication","description":"Structured fixture"}</script>
+          <script>setTimeout(() => { location.href = "/drift"; }, 50)</script>
         </head>
         <body>
           <header><h2>Navigation</h2></header>
@@ -80,6 +92,47 @@ test("serializes preview-frame writes when the encoder applies back-pressure", a
   await queue.flush();
 
   assert.equal(maximumConcurrentWrites, 1);
+});
+
+test("revalidates DNS for every request instead of caching a public answer", async () => {
+  const createValidator = (
+    publicPageBrowserModule as typeof publicPageBrowserModule & {
+      createPublicNetworkValidator?: (
+        resolve: (hostname: string) => Promise<Array<{ address: string; family: number }>>,
+      ) => (url: string) => Promise<void>;
+    }
+  ).createPublicNetworkValidator;
+  assert.equal(typeof createValidator, "function");
+  let calls = 0;
+  const validate = createValidator!(async () => {
+    calls += 1;
+    return calls === 1
+      ? [{ address: "203.0.114.10", family: 4 }]
+      : [{ address: "127.0.0.1", family: 4 }];
+  });
+
+  await validate("https://example.com/");
+  await assert.rejects(
+    () => validate("https://example.com/app.js"),
+    /public/i,
+  );
+  assert.equal(calls, 2);
+});
+
+test("caps screenshot dimensions before rendering page bytes", () => {
+  const captureClip = (
+    publicPageBrowserModule as typeof publicPageBrowserModule & {
+      publicPageCaptureClip?: (
+        document: { width: number; height: number },
+        viewport: { width: number; height: number },
+      ) => { x: 0; y: 0; width: number; height: number };
+    }
+  ).publicPageCaptureClip;
+  assert.equal(typeof captureClip, "function");
+  assert.deepEqual(
+    captureClip!({ width: 100_000, height: 100_000 }, { width: 1_440, height: 900 }),
+    { x: 0, y: 0, width: 1_440, height: 30_000 },
+  );
 });
 
 test("captures ordered HTML sections, crops, metadata, and a continuous WebM preview", { timeout: 45_000 }, async (t) => {

@@ -240,7 +240,11 @@ function fixtureCapture(): PublicPageBrowserResult {
     analysis: {
       schemaVersion: 1,
       status: "evidence-only",
-      evidence: [],
+      evidence: [{
+        id: "META-1",
+        kind: "metadata",
+        value: "Pricing page for a business product",
+      }],
       structure: [],
       visualTokens: [],
       motion: [],
@@ -266,10 +270,15 @@ function synthesisProvider(): SiteAnalysisProvider {
       reconstructionPriorities: [],
       unknowns: [],
       claims: [{
-        kind: "unknown",
-        text: "Hover behavior was not activated",
-        evidenceIds: [],
-        confidence: 0,
+        kind: "inferred",
+        text: "Explain pricing",
+        evidenceIds: ["META-1"],
+        confidence: 0.8,
+      }, {
+        kind: "inferred",
+        text: "Business",
+        evidenceIds: ["META-1"],
+        confidence: 0.8,
       }],
     }),
   };

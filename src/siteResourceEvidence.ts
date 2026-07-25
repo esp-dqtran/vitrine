@@ -1,4 +1,5 @@
 import type { Page, Response } from "playwright";
+import { requestPinnedPublicUrl } from "./publicNetworkProxy.ts";
 
 const DEFAULT_MAXIMUM_RESOURCES = 128;
 const DEFAULT_MAXIMUM_RESOURCE_BYTES = 512 * 1_024;
@@ -45,7 +46,7 @@ export function createSiteResourceCollector(input: {
     "maximum Site resource aggregate bytes",
   );
   const requestText = input.requestText ??
-    ((url: string) => requestResource(url, maximumResourceBytes));
+    ((url: string) => requestPinnedPublicUrl(url, maximumResourceBytes));
   const retained: Array<SiteResourceEvidence & { byteLength: number }> = [];
   let totalBytes = 0;
   let queue = Promise.resolve();
@@ -192,61 +193,6 @@ async function requestValidatedResource(
     currentUrl = new URL(location, currentUrl).toString();
   }
   throw new Error("Site source map redirected too many times");
-}
-
-async function requestResource(
-  url: string,
-  maximumBytes: number,
-): Promise<SiteResourceRequestResult> {
-  const response = await fetch(url, {
-    redirect: "manual",
-    signal: AbortSignal.timeout(5_000),
-    headers: { accept: "application/json,text/plain,*/*" },
-  });
-  const headers = Object.fromEntries(response.headers.entries());
-  const declaredLength = contentLength(headers);
-  if (declaredLength !== undefined && declaredLength > maximumBytes) {
-    await response.body?.cancel();
-    return {
-      url: response.url || url,
-      status: response.status,
-      headers,
-      body: Buffer.alloc(0),
-    };
-  }
-  const body = await readBoundedBody(response.body, maximumBytes);
-  return {
-    url: response.url || url,
-    status: response.status,
-    headers,
-    body,
-  };
-}
-
-async function readBoundedBody(
-  stream: ReadableStream<Uint8Array> | null,
-  maximumBytes: number,
-): Promise<Buffer> {
-  if (!stream) return Buffer.alloc(0);
-  const reader = stream.getReader();
-  const chunks: Buffer[] = [];
-  let total = 0;
-  try {
-    while (true) {
-      const next = await reader.read();
-      if (next.done) break;
-      const chunk = Buffer.from(next.value);
-      total += chunk.byteLength;
-      if (total > maximumBytes) {
-        await reader.cancel();
-        return Buffer.alloc(0);
-      }
-      chunks.push(chunk);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  return Buffer.concat(chunks, total);
 }
 
 function contentLength(headers: Record<string, string>): number | undefined {

@@ -62,6 +62,28 @@ test("requires citations for observed and inferred claims", async () => {
   }), /requires evidence/i);
 });
 
+test("rejects uncited summary prose even when an unrelated claim is cited", async () => {
+  const provider: SiteAnalysisProvider = {
+    model: "fixture",
+    analyze: async () => ({
+      ...synthesis({
+        kind: "observed",
+        text: "Uses motion",
+        evidenceIds: ["TECH-1"],
+        confidence: 1,
+      }),
+      purpose: "Uncited product purpose",
+      motion: ["Uncited motion description"],
+    }),
+  };
+  await assert.rejects(() => analyzeSiteEvidence(provider, {
+    evidenceIds: ["TECH-1"],
+    evidence: {},
+    image: { bytes: Buffer.from("png"), contentType: "image/png" },
+    signal: new AbortController().signal,
+  }), /summary.*claim|citation/i);
+});
+
 test("multimodal adapter sends bounded evidence and strict synthesis instructions", async () => {
   let request: Parameters<MultimodalJsonProvider["completeJson"]>[0] | undefined;
   const multimodal: MultimodalJsonProvider = {
@@ -101,8 +123,8 @@ function synthesis(claim: {
   confidence: number;
 }) {
   return {
-    purpose: "Website builder",
-    category: "Design tool",
+    purpose: "",
+    category: "",
     structure: [],
     rendering: [],
     motion: [],

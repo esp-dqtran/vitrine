@@ -67,7 +67,37 @@ const detail: SiteVersionDetail = {
       responsive: ['Mobile disables the hero ScrollTrigger'],
       reconstructionPriorities: ['Rebuild sticky hero first'],
       unknowns: [],
-      claims: [],
+      claims: [{
+        kind: 'observed',
+        text: 'Marketing platform',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.9,
+      }, {
+        kind: 'inferred',
+        text: 'Website builder',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.8,
+      }, {
+        kind: 'observed',
+        text: 'Sticky hero',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.9,
+      }, {
+        kind: 'observed',
+        text: 'Scroll-linked hero',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.9,
+      }, {
+        kind: 'inferred',
+        text: 'Mobile disables the hero ScrollTrigger',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.8,
+      }, {
+        kind: 'inferred',
+        text: 'Rebuild sticky hero first',
+        evidenceIds: ['TECH-1'],
+        confidence: 0.8,
+      }],
     },
     warnings: [],
   },
@@ -168,6 +198,8 @@ test('renders evidence-backed Site analysis without raw evidence values', () => 
   assert.match(html, />Analysis</);
   assert.match(html, /GSAP/);
   assert.match(html, /Observed in use/);
+  assert.match(html, /Evidence-backed claims/);
+  assert.match(html, /TECH-1/);
   assert.match(html, /Scroll-linked hero/);
   assert.match(html, /Mobile disables the hero ScrollTrigger/);
   assert.doesNotMatch(html, /GSAP 3\.15\.0<\/[^>]+>.*runtime/s);

@@ -119,6 +119,24 @@
   list-style: none;
 }
 
+.site-analysis__claims ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-analysis__claims li {
+  display: grid;
+  gap: 4px;
+}
+
+.site-analysis__claims span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
 .site-analysis__technology li {
   display: flex;
   justify-content: space-between;

@@ -25,10 +25,16 @@ import {
 } from "./sitePageInspection.ts";
 import type { SiteAnalysis } from "./siteAnalysis.ts";
 import { createSiteResourceCollector } from "./siteResourceEvidence.ts";
+import {
+  createPinnedPublicProxy,
+  type PinnedPublicProxy,
+} from "./publicNetworkProxy.ts";
 
 const VIEWPORT = { width: 1440 as const, height: 900 as const };
 const MOBILE_VIEWPORT = { width: 390 as const, height: 844 as const };
 const PREVIEW_FRAMES_PER_SECOND = 60;
+const MAXIMUM_CAPTURE_HEIGHT = 30_000;
+const MAXIMUM_CAPTURE_BYTES = 64 * 1_024 * 1_024;
 
 export interface PublicPageBrowserOptions {
   headless?: boolean;
@@ -56,23 +62,39 @@ export interface PublicPageBrowser {
 export async function createPublicPageBrowser(
   options: PublicPageBrowserOptions = {},
 ): Promise<PublicPageBrowser> {
-  const browser = await chromium.launch({ headless: options.headless ?? true });
+  let proxy: PinnedPublicProxy | undefined;
+  let browser: Browser;
+  try {
+    proxy = options.validateNavigation
+      ? undefined
+      : await createPinnedPublicProxy();
+    browser = await chromium.launch({ headless: options.headless ?? true });
+  } catch (error) {
+    await proxy?.close().catch(() => undefined);
+    throw error;
+  }
   const validateNavigation = options.validateNavigation ?? createPublicNetworkValidator();
   return {
     capture: (url) => capturePublicPage(browser, url, {
       validateNavigation,
+      ...(proxy ? { proxyServer: proxy.server } : {}),
       scrollPixelsPerSecond: options.scrollPixelsPerSecond ?? 200,
       maxScrollDurationMs: options.maxScrollDurationMs ?? 20_000,
       holdMs: options.holdMs ?? 500,
     }),
-    close: () => browser.close(),
+    close: async () => {
+      await browser.close();
+      await proxy?.close();
+    },
   };
 }
 
 async function capturePublicPage(
   browser: Browser,
   url: string,
-  options: Required<Pick<PublicPageBrowserOptions, "validateNavigation" | "scrollPixelsPerSecond" | "maxScrollDurationMs" | "holdMs">>,
+  options: Required<Pick<PublicPageBrowserOptions, "validateNavigation" | "scrollPixelsPerSecond" | "maxScrollDurationMs" | "holdMs">> & {
+    proxyServer?: string;
+  },
 ): Promise<PublicPageBrowserResult> {
   const requestedUrl = canonicalPublicPageUrl(url).requestedUrl;
   await options.validateNavigation(requestedUrl);
@@ -80,6 +102,7 @@ async function capturePublicPage(
     browser,
     VIEWPORT,
     options.validateNavigation,
+    options.proxyServer,
   );
   try {
     const page = await context.newPage();
@@ -92,9 +115,12 @@ async function capturePublicPage(
     if (!response || response.status() >= 400) {
       throw new PublicPageValidationError("Public page did not return a renderable response");
     }
-    await options.validateNavigation(page.url());
+    const finalUrl = canonicalPublicPageUrl(page.url()).requestedUrl;
+    await options.validateNavigation(finalUrl);
+    await lockMainFrameNavigation(page);
     await settlePage(page);
     await primeLazyContent(page);
+    assertPageUrl(page, finalUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
 
@@ -103,12 +129,17 @@ async function capturePublicPage(
       "desktop",
       await resources.snapshot(),
     );
-    const raw = await analyzeRenderedPage(page, requestedUrl);
+    const raw = await analyzeRenderedPage(page, requestedUrl, finalUrl);
     const capture = parsePublicPageCapture(raw);
     const freeze = await page.addStyleTag({
       content: `*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`,
     });
-    const pageImage = Buffer.from(await page.screenshot({ fullPage: true, type: "png", animations: "disabled" }));
+    const pageImage = Buffer.from(await page.screenshot({
+      clip: publicPageCaptureClip(capture.document, VIEWPORT),
+      type: "png",
+      animations: "disabled",
+    }));
+    assertCaptureBytes(pageImage);
     const sectionImages = await cropSections(pageImage, capture.sections);
     await freeze.evaluate((node) => node.parentNode?.removeChild(node));
 
@@ -119,8 +150,9 @@ async function capturePublicPage(
     });
     const mobile = await captureMobileEvidence(
       browser,
-      requestedUrl,
+      finalUrl,
       options.validateNavigation,
+      options.proxyServer,
     ).catch(async (error: unknown) => {
       desktopInspection.warnings.push(
         `Mobile Site inspection failed: ${
@@ -158,6 +190,7 @@ async function createCaptureContext(
   browser: Browser,
   viewport: { width: number; height: number },
   validateNavigation: (url: string) => Promise<void>,
+  proxyServer?: string,
 ): Promise<BrowserContext> {
   const context = await browser.newContext({
     viewport,
@@ -165,29 +198,22 @@ async function createCaptureContext(
     deviceScaleFactor: 1,
     acceptDownloads: false,
     serviceWorkers: "block",
+    ...(proxyServer ? { proxy: { server: proxyServer } } : {}),
   });
-  const validatedHosts = new Map<string, Promise<void>>();
   await context.route("**/*", async (route) => {
     const requestUrl = route.request().url();
     if (!/^https?:/i.test(requestUrl)) {
       await route.continue();
       return;
     }
-    let key: string;
     try {
-      const parsed = new URL(requestUrl);
-      key = `${parsed.protocol}//${parsed.host}`;
+      new URL(requestUrl);
     } catch {
       await route.abort("blockedbyclient");
       return;
     }
-    let validation = validatedHosts.get(key);
-    if (!validation) {
-      validation = validateNavigation(requestUrl);
-      validatedHosts.set(key, validation);
-    }
     try {
-      await validation;
+      await validateNavigation(requestUrl);
       await route.continue();
     } catch {
       await route.abort("blockedbyclient");
@@ -200,6 +226,7 @@ async function captureMobileEvidence(
   browser: Browser,
   requestedUrl: string,
   validateNavigation: (url: string) => Promise<void>,
+  proxyServer?: string,
 ): Promise<{
   inspection: import("./sitePageInspection.ts").SiteViewportInspection;
   image: Buffer;
@@ -208,6 +235,7 @@ async function captureMobileEvidence(
     browser,
     MOBILE_VIEWPORT,
     validateNavigation,
+    proxyServer,
   );
   try {
     const page = await context.newPage();
@@ -223,9 +251,12 @@ async function captureMobileEvidence(
         "Public page did not return a renderable mobile response",
       );
     }
-    await validateNavigation(page.url());
+    const finalUrl = canonicalPublicPageUrl(page.url()).requestedUrl;
+    await validateNavigation(finalUrl);
+    await lockMainFrameNavigation(page);
     await settlePage(page);
     await primeLazyContent(page);
+    assertPageUrl(page, requestedUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
     const inspection = await inspectSiteViewport(
@@ -233,11 +264,16 @@ async function captureMobileEvidence(
       "mobile",
       await resources.snapshot(),
     );
+    const dimensions = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+    }));
     const image = Buffer.from(await page.screenshot({
-      fullPage: true,
+      clip: publicPageCaptureClip(dimensions, MOBILE_VIEWPORT),
       type: "png",
       animations: "disabled",
     }));
+    assertCaptureBytes(image);
     return { inspection, image };
   } finally {
     await context.close();
@@ -262,7 +298,7 @@ async function settlePage(page: Page): Promise<void> {
 
 async function primeLazyContent(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const maximum = Math.min(document.documentElement.scrollHeight, 100_000);
+    const maximum = Math.min(document.documentElement.scrollHeight, 30_000);
     for (let y = 0; y < maximum; y += Math.max(600, window.innerHeight * 0.8)) {
       window.scrollTo(0, y);
       await new Promise((resolve) => setTimeout(resolve, 20));
@@ -272,8 +308,12 @@ async function primeLazyContent(page: Page): Promise<void> {
   });
 }
 
-async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<unknown> {
-  return page.evaluate(({ requested, viewport }) => {
+async function analyzeRenderedPage(
+  page: Page,
+  requestedUrl: string,
+  finalUrl: string,
+): Promise<unknown> {
+  return page.evaluate(({ requested, canonical, viewport, maximumHeight }) => {
     type AnyRecord = Record<string, unknown>;
     const [clean] = [(value: unknown, maximum: number) => typeof value === "string"
       ? value.replace(/\s+/g, " ").trim().slice(0, maximum)
@@ -303,7 +343,6 @@ async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<un
     const rawAccent = meta('meta[name="theme-color"]');
     const accent = /^#[0-9a-f]{6}$/i.test(rawAccent) ? rawAccent.toLowerCase() : "#3b6ef6";
     const iconUrl = document.querySelector<HTMLLinkElement>('link[rel~="icon"],link[rel="apple-touch-icon"]')?.href;
-    const canonicalUrl = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href || location.href;
 
     const [selectorFor] = [(element: Element): string => {
       if (element.id && /^[A-Za-z][\w-]{0,80}$/.test(element.id)) return `#${CSS.escape(element.id)}`;
@@ -367,17 +406,32 @@ async function analyzeRenderedPage(page: Page, requestedUrl: string): Promise<un
     }
     return {
       requestedUrl: requested,
-      canonicalUrl,
+      canonicalUrl: canonical,
       metadata: { name, description, category, accent, ...(iconUrl ? { iconUrl } : {}) },
       viewport,
       document: {
         width: Math.min(100_000, Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0)),
-        height: Math.min(100_000, Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0)),
+        height: Math.min(maximumHeight, Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0)),
       },
       html: document.documentElement.outerHTML,
-      sections: sections.slice(0, 200).map((section, position) => ({ position, ...section })),
+      sections: sections
+        .filter((section) => section.bounds.y < maximumHeight)
+        .slice(0, 200)
+        .map((section, position) => ({
+          position,
+          ...section,
+          bounds: {
+            ...section.bounds,
+            height: Math.min(section.bounds.height, maximumHeight - section.bounds.y),
+          },
+        })),
     };
-  }, { requested: requestedUrl, viewport: VIEWPORT });
+  }, {
+    requested: requestedUrl,
+    canonical: finalUrl,
+    viewport: VIEWPORT,
+    maximumHeight: MAXIMUM_CAPTURE_HEIGHT,
+  });
 }
 
 async function cropSections(
@@ -388,14 +442,22 @@ async function cropSections(
   const imageWidth = metadata.width ?? 0;
   const imageHeight = metadata.height ?? 0;
   if (imageWidth < 1 || imageHeight < 1) throw new Error("Public page screenshot dimensions are invalid");
-  return Promise.all(sections.map(async (section) => {
+  const result: Array<{ position: number; body: Buffer }> = [];
+  let totalBytes = 0;
+  for (const section of sections) {
     const left = Math.max(0, Math.min(imageWidth - 1, Math.floor(section.bounds.x)));
     const top = Math.max(0, Math.min(imageHeight - 1, Math.floor(section.bounds.y)));
     const width = Math.max(1, Math.min(imageWidth - left, Math.ceil(section.bounds.width)));
     const height = Math.max(1, Math.min(imageHeight - top, Math.ceil(section.bounds.height)));
     const body = await sharp(pageImage).extract({ left, top, width, height }).png().toBuffer();
-    return { position: section.position, body };
-  }));
+    assertCaptureBytes(body);
+    totalBytes += body.byteLength;
+    if (totalBytes > MAXIMUM_CAPTURE_BYTES) {
+      throw new PublicPageValidationError("Public page section captures are too large");
+    }
+    result.push({ position: section.position, body });
+  }
+  return result;
 }
 
 async function recordContinuousScroll(
@@ -522,25 +584,61 @@ export function publicPageScrollDurationMs(
   return Math.min(maximum, Math.round(safeDistance / speed * 1_000));
 }
 
-function createPublicNetworkValidator(): (url: string) => Promise<void> {
-  const cache = new Map<string, Promise<void>>();
+export function createPublicNetworkValidator(
+  resolve: (hostname: string) => Promise<Array<{ address: string; family: number }>> =
+    async (hostname) => lookup(hostname, { all: true, verbatim: true }),
+): (url: string) => Promise<void> {
   return async (value) => {
     const identity = canonicalPublicPageUrl(value);
     const parsed = new URL(identity.requestedUrl);
-    const key = parsed.hostname;
-    let check = cache.get(key);
-    if (!check) {
-      check = lookup(key, { all: true, verbatim: true }).then((addresses) => {
-        if (addresses.length === 0) throw new PublicPageValidationError("Public page host did not resolve");
-        for (const { address, family } of addresses) {
-          const host = family === 6 ? `[${address}]` : address;
-          canonicalPublicPageUrl(`${parsed.protocol}//${host}/`);
-        }
-      });
-      cache.set(key, check);
+    const addresses = await resolve(parsed.hostname);
+    if (addresses.length === 0) {
+      throw new PublicPageValidationError("Public page host did not resolve");
     }
-    await check;
+    for (const { address, family } of addresses) {
+      const host = family === 6 ? `[${address}]` : address;
+      canonicalPublicPageUrl(`${parsed.protocol}//${host}/`);
+    }
   };
+}
+
+export function publicPageCaptureClip(
+  document: { width: number; height: number },
+  viewport: { width: number; height: number },
+): { x: 0; y: 0; width: number; height: number } {
+  const width = Math.max(1, Math.min(
+    checkedPositive(document.width, "document width"),
+    checkedPositive(viewport.width, "viewport width"),
+  ));
+  const height = Math.max(1, Math.min(
+    checkedPositive(document.height, "document height"),
+    MAXIMUM_CAPTURE_HEIGHT,
+  ));
+  return { x: 0, y: 0, width, height };
+}
+
+async function lockMainFrameNavigation(page: Page): Promise<void> {
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) {
+      await route.abort("aborted");
+      return;
+    }
+    await route.fallback();
+  });
+}
+
+function assertPageUrl(page: Page, expectedUrl: string): void {
+  const actual = canonicalPublicPageUrl(page.url()).requestedUrl;
+  if (actual !== expectedUrl) {
+    throw new PublicPageValidationError("Public page navigated after initial render");
+  }
+}
+
+function assertCaptureBytes(body: Buffer): void {
+  if (body.byteLength < 1 || body.byteLength > MAXIMUM_CAPTURE_BYTES) {
+    throw new PublicPageValidationError("Public page capture is too large");
+  }
 }
 
 function checkedPositive(value: number | undefined, label: string): number {

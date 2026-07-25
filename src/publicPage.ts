@@ -223,6 +223,16 @@ function nonPublicIpv6(value: string): boolean {
   const normalized = value.toLowerCase();
   if (normalized === "::" || normalized === "::1") return true;
   if (/^(?:fc|fd|fe[89ab]|ff)/.test(normalized) || normalized.startsWith("2001:db8:")) return true;
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(normalized)?.[1];
+  const mapped = mappedIpv4(normalized);
   return mapped ? nonPublicIpv4(mapped) : false;
+}
+
+function mappedIpv4(value: string): string | undefined {
+  const dotted = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(value)?.[1];
+  if (dotted) return dotted;
+  const hexadecimal = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(value);
+  if (!hexadecimal) return undefined;
+  const high = Number.parseInt(hexadecimal[1], 16);
+  const low = Number.parseInt(hexadecimal[2], 16);
+  return `${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`;
 }

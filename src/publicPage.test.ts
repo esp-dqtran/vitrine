@@ -35,6 +35,12 @@ test("rejects credentials, localhost, and literal private addresses", () => {
     "http://172.16.0.1/",
     "http://192.168.0.1/",
     "http://[::1]/",
+    "http://[::ffff:7f00:1]/",
+    "http://[::ffff:a00:1]/",
+    "http://[::ffff:a9fe:1]/",
+    "http://[::ffff:ac10:1]/",
+    "http://[::ffff:c0a8:1]/",
+    "http://[::ffff:6440:1]/",
     "http://169.254.169.254/latest/meta-data/",
   ]) {
     assert.throws(() => canonicalPublicPageUrl(url), PublicPageValidationError, url);

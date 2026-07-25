@@ -12,6 +12,12 @@ const TECHNOLOGY_STATES = [
 export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
   const analysis = detail.analysis;
   const synthesis = analysis?.synthesis;
+  const supportedClaims = synthesis?.claims.filter((claim) =>
+    claim.kind === 'unknown' || claim.evidenceIds.length > 0
+  ) ?? [];
+  const supportedText = new Set(supportedClaims.map((claim) => claim.text));
+  const cited = (values: string[] | undefined) =>
+    (values ?? []).filter((value) => supportedText.has(value));
   return (
     <section className="site-analysis" aria-labelledby="site-analysis-title">
       <header className="site-analysis__header">
@@ -36,8 +42,14 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
         <>
           {synthesis ? (
             <div className="site-analysis__summary">
-              <SummaryValue label="Purpose" value={synthesis.purpose || 'Unknown'} />
-              <SummaryValue label="Category" value={synthesis.category || 'Unknown'} />
+              <SummaryValue
+                label="Purpose"
+                value={supportedText.has(synthesis.purpose) ? synthesis.purpose : 'Unknown'}
+              />
+              <SummaryValue
+                label="Category"
+                value={supportedText.has(synthesis.category) ? synthesis.category : 'Unknown'}
+              />
               {detail.analysisModel
                 ? <SummaryValue label="Model" value={detail.analysisModel} />
                 : null}
@@ -47,21 +59,23 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
           <div className="site-analysis__grid">
             <AnalysisList
               title="Structure"
-              items={synthesis?.structure ?? analysis.structure.map((item) =>
-                typeof item.label === 'string'
-                  ? item.label
-                  : typeof item.key === 'string'
-                  ? item.key
-                  : item.id
-              )}
+              items={cited(synthesis?.structure).length
+                ? cited(synthesis?.structure)
+                : analysis.structure.map((item) =>
+                  typeof item.label === 'string'
+                    ? item.label
+                    : typeof item.key === 'string'
+                    ? item.key
+                    : item.id
+                )}
             />
             <AnalysisList
               title="Reconstruction priorities"
-              items={synthesis?.reconstructionPriorities ?? []}
+              items={cited(synthesis?.reconstructionPriorities)}
             />
-            <AnalysisList title="Motion summary" items={synthesis?.motion ?? []} />
+            <AnalysisList title="Motion summary" items={cited(synthesis?.motion)} />
             <AnalysisList title="Responsive behavior" items={[
-              ...(synthesis?.responsive ?? []),
+              ...cited(synthesis?.responsive),
               ...analysis.responsive.map((item) =>
                 typeof item.change === 'string' && typeof item.key === 'string'
                   ? `${item.key}: ${item.change}`
@@ -111,6 +125,25 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
               })}
             </div>
           </section>
+
+          {supportedClaims.length ? (
+            <section className="site-analysis__section site-analysis__claims">
+              <h3>Evidence-backed claims</h3>
+              <ul>
+                {supportedClaims.map((claim, index) => (
+                  <li key={`${claim.kind}:${claim.text}:${index}`}>
+                    <strong>{claim.text}</strong>
+                    <span>
+                      {titleCase(claim.kind)} · {Math.round(claim.confidence * 100)}%
+                      {claim.evidenceIds.length
+                        ? ` · ${claim.evidenceIds.join(', ')}`
+                        : ' · No captured evidence'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           {detail.mobilePageUrl ? (
             <section className="site-analysis__section">
