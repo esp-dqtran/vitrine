@@ -35,6 +35,31 @@ export class PermanentSiteImportError extends Error {
   }
 }
 
+type SiteCaptureOutcome<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: Error };
+
+export function createSiteCaptureLatch<T = SiteImport>() {
+  let settle!: (outcome: SiteCaptureOutcome<T>) => void;
+  const outcome = new Promise<SiteCaptureOutcome<T>>((resolve) => {
+    settle = resolve;
+  });
+
+  return {
+    succeed(value: T) {
+      settle({ ok: true, value });
+    },
+    fail(error: Error) {
+      settle({ ok: false, error });
+    },
+    async read(): Promise<T> {
+      const result = await outcome;
+      if (result.ok === false) throw result.error;
+      return result.value;
+    },
+  };
+}
+
 export interface DownloadedSiteAsset {
   body: Buffer;
   contentType: string;
@@ -59,7 +84,10 @@ export interface MobbinSitesBrowserPorts {
 
 export interface MobbinSitesLiveMediaSnapshot {
   previewVideoUrl: string;
+  previewMediaKind: "image" | "video";
   sectionMediaUrls: Record<string, string>;
+  sectionPosterUrls: Record<string, string>;
+  pageImageUrls: Record<string, string>;
 }
 
 export function classifyMobbinSitesNavigation(input: {
@@ -79,10 +107,13 @@ export function resolveMobbinSitesLiveMedia(
     version: {
       ...graph.version,
       previewVideoUrl: snapshot.previewVideoUrl,
+      previewMediaKind: snapshot.previewMediaKind,
     },
     pages: graph.pages.map((page) => ({
       ...page,
-      fullPageImageUrl: mobbinBytescaleImageUrl(page.fullPageImageUrl),
+      fullPageImageUrl:
+        snapshot.pageImageUrls[page.sourceId] ??
+        mobbinBytescaleImageUrl(page.fullPageImageUrl),
       sections: page.sections.map((section) => {
         const mediaUrl = snapshot.sectionMediaUrls[section.sourceId];
         if (!mediaUrl) {
@@ -91,12 +122,45 @@ export function resolveMobbinSitesLiveMedia(
         return {
           ...section,
           mediaUrl,
-          ...(section.posterUrl
+          ...(section.mediaKind === "video" &&
+          snapshot.sectionPosterUrls[section.sourceId]
+            ? { posterUrl: snapshot.sectionPosterUrls[section.sourceId] }
+            : section.posterUrl
             ? { posterUrl: mobbinBytescaleImageUrl(section.posterUrl) }
             : {}),
         };
       }),
     })),
+  });
+}
+
+export function mobbinSiteCategoriesFromHrefs(hrefs: string[]): string[] {
+  const categories = new Set<string>();
+  for (const href of hrefs) {
+    try {
+      const parsed = new URL(href, "https://mobbin.com");
+      if (parsed.origin !== "https://mobbin.com" || parsed.pathname !== "/search/sites") continue;
+      const filter = parsed.searchParams.get("filter");
+      if (!filter?.startsWith("categories.")) continue;
+      const category = filter.slice("categories.".length).trim();
+      if (category) categories.add(category);
+    } catch {
+      continue;
+    }
+  }
+  return [...categories];
+}
+
+export function mergeMobbinSitesPreviewMetadata(
+  graph: SiteImport,
+  metadata: { categories: string[] },
+): SiteImport {
+  return parseSiteImport({
+    ...graph,
+    site: {
+      ...graph.site,
+      categories: metadata.categories,
+    },
   });
 }
 
@@ -153,7 +217,7 @@ export async function crawlMobbinSite(
       "preview",
       "preview",
       graph.version.previewVideoUrl,
-      "video",
+      graph.version.previewMediaKind ?? "video",
     );
     objectKeys.preview = preview.key;
     objects.set(preview.key, preview);
@@ -452,12 +516,7 @@ async function captureSitesSource(page: Page, url: string): Promise<SiteImport> 
   const sectionsPath = `/sites/${identity.sourceSiteId}/${identity.sourceVersionId}/sections`;
   let timer: NodeJS.Timeout | undefined;
   let settled = false;
-  let resolveCapture!: (graph: SiteImport) => void;
-  let rejectCapture!: (error: Error) => void;
-  const captured = new Promise<SiteImport>((resolve, reject) => {
-    resolveCapture = resolve;
-    rejectCapture = reject;
-  });
+  const capture = createSiteCaptureLatch<string>();
   const finish = (work: () => void) => {
     if (settled) return;
     settled = true;
@@ -469,22 +528,22 @@ async function captureSitesSource(page: Page, url: string): Promise<SiteImport> 
       const responseUrl = new URL(response.url());
       if (responseUrl.origin !== "https://mobbin.com" || responseUrl.pathname !== sectionsPath) return;
       if (response.status() === 401 || response.status() === 403) {
-        finish(() => rejectCapture(new PermanentSiteImportError("Mobbin authentication required")));
+        finish(() => capture.fail(new PermanentSiteImportError("Mobbin authentication required")));
         return;
       }
       if (
         response.status() !== 200 ||
         !response.headers()["content-type"]?.toLowerCase().startsWith("text/x-component")
       ) return;
-      const graph = decodeMobbinSitesSource(await response.text());
-      finish(() => resolveCapture(graph));
+      const raw = await response.text();
+      finish(() => capture.succeed(raw));
     } catch {
-      finish(() => rejectCapture(new PermanentSiteImportError("Mobbin Sites source changed")));
+      finish(() => capture.fail(new PermanentSiteImportError("Mobbin Sites source changed")));
     }
   };
   page.on("response", onResponse);
   timer = setTimeout(() => {
-    finish(() => rejectCapture(new Error("Mobbin Sites source response timed out")));
+    finish(() => capture.fail(new Error("Mobbin Sites source response timed out")));
   }, SOURCE_TIMEOUT_MS);
   try {
     const navigation = await page.goto(identity.canonicalUrl, {
@@ -498,37 +557,65 @@ async function captureSitesSource(page: Page, url: string): Promise<SiteImport> 
     if (finalUrl.origin !== "https://mobbin.com" || /\/(?:login|sign-in)(?:\/|$)/.test(finalUrl.pathname)) {
       throw new PermanentSiteImportError("Mobbin authentication required");
     }
-    if (!settled) {
-      const link = page.getByRole("link", { name: "Sections", exact: true });
-      const state = classifyMobbinSitesNavigation({
-        loginLinks: await page.locator('a[href="/login"]').count(),
-        sectionLinks: await link.count(),
-      });
-      if (state === "authentication") {
-        throw new PermanentSiteImportError("Mobbin authentication required");
-      }
-      if (state === "navigation-changed") {
-        throw new PermanentSiteImportError("Mobbin Sites navigation changed");
-      }
-      const previewVideoUrl = await liveMediaUrl(page.locator("main video").first());
-      await link.click();
-      await waitForSectionsPage(page, sectionsPath);
-      const graph = await captured;
-      const sectionMediaUrls = await collectLiveSectionMedia(page, graph);
-      return resolveMobbinSitesLiveMedia(graph, { previewVideoUrl, sectionMediaUrls });
+    const link = page.getByRole("link", { name: "Sections", exact: true });
+    const state = classifyMobbinSitesNavigation({
+      loginLinks: await page.locator('a[href="/login"]').count(),
+      sectionLinks: await link.count(),
+    });
+    if (state === "authentication") {
+      throw new PermanentSiteImportError("Mobbin authentication required");
     }
-    const graph = await captured;
-    const previewLink = page.getByRole("link", { name: "Preview", exact: true });
-    await previewLink.click();
-    const previewVideoUrl = await liveMediaUrl(page.locator("main video").first());
-    await page.getByRole("link", { name: "Sections", exact: true }).click();
+    if (state === "navigation-changed") {
+      throw new PermanentSiteImportError("Mobbin Sites navigation changed");
+    }
+    const categories = await collectPreviewCategories(page);
+    const sourceUrl = await collectPreviewSourceUrl(page);
+    const previewMedia = await collectPreviewMedia(page);
+    await link.click();
     await waitForSectionsPage(page, sectionsPath);
-    const sectionMediaUrls = await collectLiveSectionMedia(page, graph);
-    return resolveMobbinSitesLiveMedia(graph, { previewVideoUrl, sectionMediaUrls });
+    const graph = mergeMobbinSitesPreviewMetadata(
+      decodeMobbinSitesSource(await capture.read(), { sourceUrl }),
+      { categories },
+    );
+    const renderedMedia = await collectMobbinSitesSectionMedia(page, graph);
+    return resolveMobbinSitesLiveMedia(graph, { ...previewMedia, ...renderedMedia });
   } finally {
     if (timer) clearTimeout(timer);
     page.off("response", onResponse);
   }
+}
+
+async function collectPreviewSourceUrl(page: Page): Promise<string> {
+  const href = await page
+    .getByRole("link", { name: "Visit site", exact: true })
+    .first()
+    .getAttribute("href");
+  if (!href) throw new PermanentSiteImportError("Mobbin Sites source link changed");
+  const parsed = new URL(href);
+  if (parsed.origin === "https://mobbin.com") {
+    throw new PermanentSiteImportError("Mobbin Sites source link changed");
+  }
+  return parsed.toString();
+}
+
+async function collectPreviewMedia(page: Page): Promise<{
+  previewVideoUrl: string;
+  previewMediaKind: "image" | "video";
+}> {
+  const media = page.locator('main video, main img[alt="Site preview"]').first();
+  const previewVideoUrl = await liveMediaUrl(media);
+  const previewMediaKind = await media.evaluate((element) =>
+    element.tagName.toLowerCase() === "video" ? "video" : "image"
+  );
+  return { previewVideoUrl, previewMediaKind };
+}
+
+async function collectPreviewCategories(page: Page): Promise<string[]> {
+  const hrefs = await page
+    .locator('main a[href^="/search/sites?"][href*="filter=categories."]')
+    .evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href") ?? ""));
+  return mobbinSiteCategoriesFromHrefs(hrefs);
 }
 
 async function waitForSectionsPage(page: Page, sectionsPath: string): Promise<void> {
@@ -556,10 +643,14 @@ async function liveMediaUrl(locator: ReturnType<Page["locator"]>): Promise<strin
   throw new PermanentSiteImportError("Mobbin Sites media changed");
 }
 
-async function collectLiveSectionMedia(
+export async function collectMobbinSitesSectionMedia(
   page: Page,
   graph: SiteImport,
-): Promise<Record<string, string>> {
+): Promise<{
+  sectionMediaUrls: Record<string, string>;
+  sectionPosterUrls: Record<string, string>;
+  pageImageUrls: Record<string, string>;
+}> {
   const expected = new Set(
     graph.pages.flatMap((sitePage) => sitePage.sections.map((section) => section.sourceId)),
   );
@@ -567,42 +658,72 @@ async function collectLiveSectionMedia(
     graph.pages.flatMap((sitePage) =>
       sitePage.sections.map((section) => [section.sourceId, section.mediaKind] as const)),
   );
+  const sectionPages = new Map(
+    graph.pages.flatMap((sitePage) =>
+      sitePage.sections.map((section) => [section.sourceId, sitePage.sourceId] as const)),
+  );
   const found = new Map<string, string>();
-  let stableAtBottom = 0;
-  for (let attempt = 0; attempt < 200 && found.size < expected.size; attempt++) {
-    const batch = await page.$$eval('a[href^="/sites/sections/"]', (anchors) =>
-      anchors.map((anchor) => {
-        const image = anchor.querySelector("img") as HTMLImageElement | null;
-        const video = anchor.querySelector("video") as HTMLVideoElement | null;
-        return {
-          sourceId: anchor.getAttribute("href")?.split("/").filter(Boolean).pop() ?? "",
-          imageUrl: image?.currentSrc || image?.src || image?.getAttribute("src") || "",
-          videoUrl: video?.currentSrc || video?.src || video?.getAttribute("src") || "",
-        };
-      }),
-    );
-    for (const item of batch) {
-      const url = expectedKinds.get(item.sourceId) === "video"
-        ? item.videoUrl
-        : item.imageUrl;
-      if (expected.has(item.sourceId) && url.startsWith("https://")) {
-        found.set(item.sourceId, url);
+  const posters = new Map<string, string>();
+  const pageImages = new Map<string, string>();
+  const allRenderedMediaFound = () =>
+    found.size === expected.size && pageImages.size === graph.pages.length;
+  for (let pass = 0; pass < 3 && !allRenderedMediaFound(); pass++) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    let stableAtBottom = 0;
+    for (let attempt = 0; attempt < 200 && !allRenderedMediaFound(); attempt++) {
+      const batch = await page.$$eval('a[href^="/sites/sections/"]', (anchors) =>
+        anchors.map((anchor) => {
+          const image = anchor.querySelector("img") as HTMLImageElement | null;
+          const video = anchor.querySelector("video") as HTMLVideoElement | null;
+          return {
+            sourceId: anchor.getAttribute("href")?.split("/").filter(Boolean).pop() ?? "",
+            imageUrl: image?.currentSrc || image?.src || image?.getAttribute("src") || "",
+            videoUrl: video?.currentSrc || video?.src || video?.getAttribute("src") || "",
+            posterUrl: video?.poster || video?.getAttribute("poster") || "",
+          };
+        }),
+      );
+      for (const item of batch) {
+        const kind = expectedKinds.get(item.sourceId);
+        const url = kind === "video"
+          ? item.videoUrl
+          : item.imageUrl;
+        if (expected.has(item.sourceId) && url.startsWith("https://")) {
+          found.set(item.sourceId, url);
+        }
+        if (
+          expected.has(item.sourceId) &&
+          kind === "video" &&
+          item.posterUrl.startsWith("https://")
+        ) {
+          posters.set(item.sourceId, item.posterUrl);
+        }
+        const pageId = sectionPages.get(item.sourceId);
+        const pageImageUrl = kind === "video" ? item.posterUrl : item.imageUrl;
+        if (pageId && pageImageUrl.startsWith("https://") && !pageImages.has(pageId)) {
+          pageImages.set(pageId, pageImageUrl);
+        }
       }
+      if (allRenderedMediaFound()) break;
+      const atBottom = await page.evaluate(() => {
+        const bottom = window.scrollY + window.innerHeight >= document.body.scrollHeight - 2;
+        window.scrollBy(0, Math.round(window.innerHeight * 0.8));
+        return bottom;
+      });
+      stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
+      if (stableAtBottom >= 5) break;
+      await page.waitForTimeout(200);
     }
-    if (found.size === expected.size) break;
-    const atBottom = await page.evaluate(() => {
-      const bottom = window.scrollY + window.innerHeight >= document.body.scrollHeight - 2;
-      window.scrollBy(0, Math.round(window.innerHeight * 0.8));
-      return bottom;
-    });
-    stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
-    if (stableAtBottom >= 5) break;
-    await new Promise((resolve) => setTimeout(resolve, 200));
   }
-  if (found.size !== expected.size) {
+  if (!allRenderedMediaFound()) {
     throw new PermanentSiteImportError("Mobbin Sites section media changed");
   }
-  return Object.fromEntries(found);
+  return {
+    sectionMediaUrls: Object.fromEntries(found),
+    sectionPosterUrls: Object.fromEntries(posters),
+    pageImageUrls: Object.fromEntries(pageImages),
+  };
 }
 
 function mobbinBytescaleImageUrl(value: string): string {

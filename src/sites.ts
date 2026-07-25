@@ -53,12 +53,18 @@ export interface SiteImport {
     name: string;
     slug: string;
     sourceUrl: string;
+    description?: string;
+    logoUrl?: string;
+    categories?: string[];
+    styles?: string[];
+    popularity?: number;
   };
   version: {
     sourceId: string;
     label: string;
     isLatest: boolean;
     previewVideoUrl: string;
+    previewMediaKind?: "image" | "video";
   };
   pages: SitePage[];
 }
@@ -129,13 +135,16 @@ export function classifySiteImportUrl(value: string): SiteImportIdentity {
 export function parseSiteImport(value: unknown): SiteImport {
   try {
     const root = exactObject(value, ["site", "version", "pages"]);
-    const site = exactObject(root.site, ["sourceId", "name", "slug", "sourceUrl"]);
-    const version = exactObject(root.version, [
-      "sourceId",
-      "label",
-      "isLatest",
-      "previewVideoUrl",
-    ]);
+    const site = exactObject(
+      root.site,
+      ["sourceId", "name", "slug", "sourceUrl"],
+      ["description", "logoUrl", "categories", "styles", "popularity"],
+    );
+    const version = exactObject(
+      root.version,
+      ["sourceId", "label", "isLatest", "previewVideoUrl"],
+      ["previewMediaKind"],
+    );
     const pagesValue = array(root.pages);
     if (pagesValue.length === 0) throw new Error();
 
@@ -195,17 +204,20 @@ export function parseSiteImport(value: unknown): SiteImport {
             if (result.cropBottom <= result.cropTop) throw new Error();
           }
         } else {
+          const hasVideoStart = section.videoStartSeconds !== undefined;
+          const hasVideoEnd = section.videoEndSeconds !== undefined;
           if (
             section.cropTop !== undefined ||
             section.cropBottom !== undefined ||
-            section.videoStartSeconds === undefined ||
-            section.videoEndSeconds === undefined
+            hasVideoStart !== hasVideoEnd
           ) {
             throw new Error();
           }
-          result.videoStartSeconds = nonNegativeNumber(section.videoStartSeconds);
-          result.videoEndSeconds = nonNegativeNumber(section.videoEndSeconds);
-          if (result.videoEndSeconds <= result.videoStartSeconds) throw new Error();
+          if (hasVideoStart && hasVideoEnd) {
+            result.videoStartSeconds = nonNegativeNumber(section.videoStartSeconds);
+            result.videoEndSeconds = nonNegativeNumber(section.videoEndSeconds);
+            if (result.videoEndSeconds <= result.videoStartSeconds) throw new Error();
+          }
           if (section.posterUrl !== undefined) {
             result.posterUrl = publicHttpsUrl(section.posterUrl);
           }
@@ -230,12 +242,30 @@ export function parseSiteImport(value: unknown): SiteImport {
         name: nonEmptyString(site.name),
         slug: nonEmptyString(site.slug),
         sourceUrl: publicHttpsUrl(site.sourceUrl),
+        ...(site.description === undefined
+          ? {}
+          : { description: nonEmptyString(site.description) }),
+        ...(site.logoUrl === undefined
+          ? {}
+          : { logoUrl: publicHttpsUrl(site.logoUrl) }),
+        ...(site.categories === undefined
+          ? {}
+          : { categories: uniqueStrings(site.categories) }),
+        ...(site.styles === undefined
+          ? {}
+          : { styles: uniqueStrings(site.styles) }),
+        ...(site.popularity === undefined
+          ? {}
+          : { popularity: nonNegativeNumber(site.popularity) }),
       },
       version: {
         sourceId: nonEmptyString(version.sourceId),
         label: nonEmptyString(version.label),
         isLatest: version.isLatest,
         previewVideoUrl: publicHttpsUrl(version.previewVideoUrl),
+        previewMediaKind: version.previewMediaKind === undefined
+          ? "video"
+          : enumValue(version.previewMediaKind, ["image", "video"] as const),
       },
       pages,
     };
@@ -302,6 +332,10 @@ function nonNegativeNumber(value: unknown): number {
   return value;
 }
 
+function uniqueStrings(value: unknown): string[] {
+  return [...new Set(array(value).map(nonEmptyString))];
+}
+
 function enumValue<const T extends readonly string[]>(value: unknown, allowed: T): T[number] {
   if (typeof value !== "string" || !allowed.includes(value)) throw new Error();
   return value as T[number];
@@ -329,7 +363,12 @@ function sourcePageUrl(value: unknown): string {
     if (raw.startsWith("//") || raw.includes("#")) throw new Error();
     return raw;
   }
-  return publicHttpsUrl(raw);
+  const parsed = new URL(raw);
+  const hash = parsed.hash;
+  parsed.hash = "";
+  publicHttpsUrl(parsed.toString());
+  parsed.hash = hash;
+  return parsed.toString();
 }
 
 function isPublicHostname(hostname: string): boolean {

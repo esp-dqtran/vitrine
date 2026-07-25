@@ -63,6 +63,41 @@ test("flow navigation accepts a delayed client-side redirect before the grid tim
   assert.equal(result, "redirect");
 });
 
+test("flow lane setup rejects when any lane never becomes ready", async () => {
+  const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
+  assert.equal(typeof bulk.openReadyFlowLanePages, "function");
+  const openReadyFlowLanePages = bulk.openReadyFlowLanePages as <T>(
+    count: number,
+    openPage: (laneIndex: number) => Promise<T>,
+  ) => Promise<T[]>;
+
+  await assert.rejects(
+    openReadyFlowLanePages(2, async (laneIndex) => {
+      if (laneIndex === 1) throw new Error("flows grid did not become ready");
+      return `page-${laneIndex}`;
+    }),
+    /did not become ready/,
+  );
+});
+
+test("flow download falls back to the detail page when the row export is empty", async () => {
+  const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
+  assert.equal(typeof bulk.downloadWithFallback, "function");
+  const downloadWithFallback = bulk.downloadWithFallback as <T>(
+    primary: () => Promise<T[]>,
+    fallback: () => Promise<T[]>,
+  ) => Promise<T[]>;
+  let fallbackCalls = 0;
+
+  const result = await downloadWithFallback(
+    async () => [],
+    async () => { fallbackCalls++; return ["analytics.zip"]; },
+  );
+
+  assert.deepEqual(result, ["analytics.zip"]);
+  assert.equal(fallbackCalls, 1);
+});
+
 test("flow coverage fails when the crawl sees fewer rows than Mobbin shows", () => {
   const flow = (id: string): DesignFlow => ({ id, title: id, description: "", tags: [], steps: [] });
   assert.deepEqual(flowStageCoverage(4, ["a", "b", "c"], [flow("mobbin-flow-a")], [

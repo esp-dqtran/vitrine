@@ -56,7 +56,7 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 |---|---|---|---|
 | Stripe-authoritative entitlement | Complete | Signed webhook construction and subscription-event synchronization; 2026-07-21 Stripe test-mode smoke proved webhook-confirmed paid Pro and cancellation fallback | Repeat through the hosted Checkout UI after staging deploy |
 | Checkout and Portal backend | Complete | Real test-mode Checkout Sessions used $8.99 monthly and $79.99 yearly Price IDs; Customer Portal Session creation passed | Repeat in the deployed-staging browser |
-| Duplicate webhook idempotency | Complete | `stripe_events` store and idempotent service path | Concurrent duplicate integration test |
+| Duplicate webhook idempotency | Complete | `stripe_events` store and idempotent service path | Concurrent duplicate-request coverage |
 | Out-of-order/delayed lifecycle | Partial | Past-due grace and ignored invoice behavior tested | Renewal, cancellation, unpaid fallback, delayed webhook reconciliation |
 | Account billing UI | Complete | Pricing Checkout action, webhook-authoritative Billing Success, Settings plan/interval/dates/grace/usage, and Portal action have focused tests | Deployed-staging responsive/browser acceptance |
 | Free unlock and export usage | Complete | Server enforcement, subscription JSON, Pricing/Settings state, and frontend plan-aware controls are implemented and tested | Deployed-staging browser acceptance |

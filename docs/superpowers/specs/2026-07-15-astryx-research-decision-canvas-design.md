@@ -422,7 +422,7 @@ A stale mutation receives the latest project state and a clear conflict message.
 - Stale-synthesis detection
 - Markdown escaping and stable export output
 
-### API integration tests
+### API contract tests
 
 - Authentication and ownership on every route
 - Catalog entitlement checks when adding, reading, and exporting evidence

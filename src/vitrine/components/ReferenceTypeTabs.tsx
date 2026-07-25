@@ -6,17 +6,20 @@ export type ReferenceType = 'apps' | 'sites';
 interface ReferenceTypeTabsProps {
   active: ReferenceType;
   onChange?: (value: ReferenceType) => void;
+  className?: string;
 }
 
 export function ReferenceTypeTabs({
   active,
   onChange = (value) => navigate(value === 'apps' ? { name: 'apps' } : { name: 'sites' }),
+  className,
 }: ReferenceTypeTabsProps) {
   return (
     <div
       role="tablist"
       aria-label="Reference type"
-      style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 0 14px' }}
+      className={className}
+      style={className ? undefined : { display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 0 14px' }}
     >
       {(['apps', 'sites'] as const).map((value) => (
         <ToggleButton

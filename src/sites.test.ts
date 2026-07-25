@@ -73,6 +73,34 @@ test("validates ordered media-specific sections", () => {
   assert.equal(result.pages[0].sections[0].mediaKind, "image");
 });
 
+test("preserves safe source-page fragments without treating them as media credentials", () => {
+  const anchoredPage = structuredClone(validImport);
+  anchoredPage.pages[0].url = "https://example.com/pricing/#api";
+
+  assert.equal(
+    parseSiteImport(anchoredPage).pages[0].url,
+    "https://example.com/pricing/#api",
+  );
+});
+
+test("accepts a video section when Mobbin omits optional poster and timestamps", () => {
+  const videoWithoutOptionalMetadata = structuredClone(validImport);
+  videoWithoutOptionalMetadata.pages[0].sections[0] = {
+    sourceId: "section-1",
+    position: 0,
+    mediaKind: "video",
+    mediaUrl: "https://cdn.fixture/hero.mp4",
+    ocrBoxes: [],
+  };
+
+  const section = parseSiteImport(videoWithoutOptionalMetadata).pages[0].sections[0];
+
+  assert.equal(section.mediaKind, "video");
+  assert.equal(section.posterUrl, undefined);
+  assert.equal(section.videoStartSeconds, undefined);
+  assert.equal(section.videoEndSeconds, undefined);
+});
+
 test("rejects duplicate positions and media-field drift", () => {
   const duplicatePage = structuredClone(validImport);
   duplicatePage.pages.push({

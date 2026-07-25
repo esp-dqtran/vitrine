@@ -175,7 +175,7 @@ git commit -m "feat: add launch referral schema"
 - Create: `src/referralStore.ts`
 - Create: `src/referralStore.test.ts`
 
-- [ ] **Step 1: Write failing PostgreSQL integration tests**
+- [ ] **Step 1: Write failing PostgreSQL store tests**
 
 Follow the disposable Postgres setup in `src/pricingStore.test.ts`. Cover these exact cases with fixed UTC timestamps:
 

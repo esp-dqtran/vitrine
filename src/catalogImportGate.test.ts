@@ -149,3 +149,23 @@ test("catalog identity keeps distinct Mobbin apps separate when name and platfor
   assert.equal(new Set(result.map((job) => `${job.slug}\u0000${job.platform}`)).size, result.length);
   assert.deepEqual(jobs.map((job) => job.slug), ["threads", "threads", "threads", "bloom", "bloom"]);
 });
+
+test("catalog identity builds Mobbin URLs from the canonical slug, not the local disambiguated slug", async () => {
+  const identity = await import("./catalogIdentity.ts") as Record<string, unknown>;
+  assert.equal(typeof identity.mobbinCatalogAppUrl, "function");
+  const appUrl = identity.mobbinCatalogAppUrl as (job: {
+    mobbinId: string;
+    slug: string;
+    platform: string;
+  }) => string;
+  const mobbinId = "ea683077-aadb-47c5-a771-d21fd9676510";
+
+  assert.equal(
+    appUrl({ mobbinId, slug: `aboard-${mobbinId}`, platform: "web" }),
+    `https://mobbin.com/apps/aboard-web-${mobbinId}/latest/screens`,
+  );
+  assert.equal(
+    appUrl({ mobbinId, slug: "mercor", platform: "web" }),
+    `https://mobbin.com/apps/mercor-web-${mobbinId}/latest/screens`,
+  );
+});

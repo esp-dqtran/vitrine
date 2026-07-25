@@ -55,6 +55,21 @@ export async function waitForGridOrRedirect(
   ]);
 }
 
+export async function openReadyFlowLanePages<T>(
+  count: number,
+  openPage: (laneIndex: number) => Promise<T>,
+): Promise<T[]> {
+  return Promise.all(Array.from({ length: count }, (_, laneIndex) => openPage(laneIndex)));
+}
+
+export async function downloadWithFallback<T>(
+  primary: () => Promise<T[]>,
+  fallback: () => Promise<T[]>,
+): Promise<T[]> {
+  const result = await primary();
+  return result.length > 0 ? result : fallback();
+}
+
 async function newPageAndGoto(
   context: BrowserContext,
   appName: string,
@@ -275,11 +290,12 @@ async function clickDownloadAllMenu(page: Page, more: Locator = page.locator('bu
   // Wait for a genuinely NEW menu to mount before reading "the last one" — otherwise
   // a race can resolve to the still-open outer menu and click its first item
   // ("Visit ...") instead of the version submenu that hasn't rendered yet.
-  await page.waitForFunction(
+  const submenuOpened = await page.waitForFunction(
     (expected) => document.querySelectorAll('[role="menu"]').length > expected,
     menusBeforeHover,
     { timeout: 8000 },
-  ).catch(() => {});
+  ).then(() => true).catch(() => false);
+  if (!submenuOpened) return false;
   const submenu = page.getByRole("menu").last();
   const latestVersion = submenu.getByRole("menuitem").first();
   // The submenu container can mount before its own content (Mobbin fetches the
@@ -679,6 +695,18 @@ async function downloadFlowRow(page: Page, cell: Locator): Promise<boolean> {
   return clickDownloadAllMenu(page, more);
 }
 
+async function downloadFlowDetail(page: Page): Promise<boolean> {
+  await page.bringToFront();
+  const more = page.locator('button[aria-label="More actions"]').last();
+  if ((await more.count()) === 0) return false;
+  await more.click();
+  const item = page.getByRole("menuitem", { name: /download all screens/i });
+  await item.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+  if ((await item.count()) === 0) return false;
+  await item.first().click();
+  return true;
+}
+
 export function flowMoreActionsLocator(cell: Locator): Locator {
   return cell.locator('button[aria-label="More actions"]').first();
 }
@@ -784,7 +812,25 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
         try {
           const cell = flowCellLocator(page, row.id);
           await cell.scrollIntoViewIfNeeded().catch(() => {});
-          savedPaths = await triggerAndSaveDownloads(page, `${downloadRoot}/${row.id}`, () => downloadFlowRow(page, cell));
+          const dir = `${downloadRoot}/${row.id}`;
+          savedPaths = await downloadWithFallback(
+            () => triggerAndSaveDownloads(page, dir, () => downloadFlowRow(page, cell)),
+            async () => {
+              const detail = await newPageAndGoto(
+                context,
+                appName,
+                flowUrl,
+                'button[aria-label="More actions"]',
+                15_000,
+                "the flow detail",
+              );
+              try {
+                return await triggerAndSaveDownloads(detail, dir, () => downloadFlowDetail(detail));
+              } finally {
+                await detail.close().catch(() => {});
+              }
+            },
+          );
         } catch (error) {
           console.warn(`[${appName}] Error on flow ${row.id}: ${error}. Skipping.`);
           done++;
@@ -844,11 +890,14 @@ export async function crawlFlowsDownload(appUrl: string, appName: string, gridWa
     }
   }
 
-  const extraPages = await Promise.all(Array.from({ length: FLOW_LANES - 1 }, () => context.newPage()));
-  await Promise.all(extraPages.map(async (page) => {
-    await page.goto(tabUrl(appUrl, "flows"), { waitUntil: "domcontentloaded" });
-    await waitUntilVisible(page, 'a[href*="/flows/"]', 15_000, "the flows grid").catch(() => {});
-  }));
+  const extraPages = await openReadyFlowLanePages(FLOW_LANES - 1, () => newPageAndGoto(
+    context,
+    appName,
+    requestedFlowUrl,
+    'a[href*="/flows/"]',
+    15_000,
+    "the flows grid",
+  ));
   await Promise.all([probe, ...extraPages].map((page, laneIndex) => runLane(page, laneIndex)));
 
   rmSync(downloadRoot, { recursive: true, force: true });

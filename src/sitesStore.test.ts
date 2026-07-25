@@ -17,6 +17,11 @@ const graph = {
     name: "V7",
     slug: identity.sourceSiteId,
     sourceUrl: "https://v7labs.com/",
+    description: "AI for private equity and finance",
+    logoUrl: "https://cdn.fixture/logo.webp",
+    categories: [],
+    styles: ["Minimal"],
+    popularity: 154,
   },
   version: {
     sourceId: identity.sourceVersionId,
@@ -74,16 +79,28 @@ test("maps PostgreSQL timestamptz Date values in ready Site summaries", async ()
     name: "V7",
     slug: graph.site.slug,
     source_url: graph.site.sourceUrl,
+    description: graph.site.description,
+    logo_url: graph.site.logoUrl,
+    categories: graph.site.categories,
+    styles: graph.site.styles,
+    popularity: graph.site.popularity,
     label: graph.version.label,
     is_latest: true,
     updated_at: updatedAt,
     page_count: 16,
     section_count: 46,
+    preview_content_type: "image/png",
   }]));
 
   const sites = await store.listReadySites();
 
   assert.equal(sites[0].updatedAt, updatedAt.toISOString());
+  assert.equal(sites[0].description, graph.site.description);
+  assert.equal(sites[0].logoUrl, graph.site.logoUrl);
+  assert.deepEqual(sites[0].categories, []);
+  assert.deepEqual(sites[0].styles, ["Minimal"]);
+  assert.equal(sites[0].popularity, 154);
+  assert.equal(sites[0].previewMediaKind, "image");
 });
 
 test("returns the first five ordered page previews in ready Site summaries", async () => {
@@ -158,6 +175,48 @@ test("returns only authenticated API media paths in ready Site views", async () 
   assert.deepEqual(view?.pages[0].sections[0].sourceMetadata, { patterns: ["Hero Section"] });
 });
 
+test("maps image Site sections without optional crop bounds", async () => {
+  const fakeQuery: DatabaseQuery = async (sql) => {
+    if (/SELECT s\.id AS site_id, sv\.id AS version_id, s\.name/.test(sql)) {
+      return result([{
+        site_id: 1,
+        version_id: 2,
+        name: "V7",
+        slug: graph.site.slug,
+        source_url: graph.site.sourceUrl,
+        canonical_url: identity.canonicalUrl,
+        label: graph.version.label,
+        is_latest: true,
+      }]);
+    }
+    if (/SELECT sp\.id, sp\.source_page_id/.test(sql)) {
+      return result([{ id: 3, source_page_id: "page-1", title: "Home", page_url: graph.pages[0].url, position: 0 }]);
+    }
+    if (/SELECT ss\.id, ss\.page_id/.test(sql)) {
+      return result([{
+        id: 4,
+        page_id: 3,
+        source_section_id: "section-1",
+        position: 0,
+        media_kind: "image",
+        poster_object_key: null,
+        crop_top: null,
+        crop_bottom: null,
+        video_start_seconds: null,
+        video_end_seconds: null,
+        ocr_boxes: [],
+        source_metadata: {},
+      }]);
+    }
+    return result();
+  };
+
+  const view = await createSitesStore(fakeQuery).readyVersionDetail(1, 2);
+
+  assert.equal(view?.pages[0].sections[0].cropTop, undefined);
+  assert.equal(view?.pages[0].sections[0].cropBottom, undefined);
+});
+
 test("returns ready Site versions newest-first in version detail", async () => {
   const store = createSitesStore(async (sql) => {
     if (/SELECT s\.id AS site_id, sv\.id AS version_id/.test(sql)) {
@@ -226,6 +285,15 @@ test("beginImport resets only a non-ready version to importing", async () => {
   const versionUpsert = calls.find((call) => /INSERT INTO site_versions/.test(call.sql));
   assert.match(versionUpsert!.sql, /status = CASE[\s\S]+status = 'ready'/);
   assert.match(versionUpsert!.sql, /ELSE 'importing'/);
+  const siteUpsert = calls.find((call) => /INSERT INTO sites/.test(call.sql));
+  assert.match(siteUpsert!.sql, /description/);
+  assert.deepEqual(siteUpsert!.values?.slice(4), [
+    graph.site.description,
+    graph.site.logoUrl,
+    JSON.stringify(graph.site.categories),
+    JSON.stringify(graph.site.styles),
+    graph.site.popularity,
+  ]);
 });
 
 test("completeImport writes object metadata and graph before the final ready transition", async () => {
@@ -271,6 +339,61 @@ test("completeImport writes object metadata and graph before the final ready tra
   const readyIndex = calls.findIndex((call) => /status = 'ready'/.test(call.sql));
   const sectionIndex = calls.findIndex((call) => /INSERT INTO site_sections/.test(call.sql));
   assert.ok(readyIndex > sectionIndex);
+});
+
+test("completeImport persists image Site sections without optional crop bounds", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const fakeQuery: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    if (/FOR UPDATE/.test(sql)) {
+      return result([{ site_id: 1, version_id: 2, status: "importing" }]);
+    }
+    if (/INSERT INTO stored_objects/.test(sql)) return result([{ object_key: values?.[0] }]);
+    if (/INSERT INTO site_pages/.test(sql)) return result([{ id: 10 }]);
+    if (/INSERT INTO site_sections/.test(sql)) return result([{ id: 20 }]);
+    if (/page_count/.test(sql) && /section_count/.test(sql)) {
+      return result([{ page_count: 1, section_count: 1 }]);
+    }
+    if (/UPDATE site_versions/.test(sql) && /status = 'ready'/.test(sql)) {
+      return result([{ id: 2 }]);
+    }
+    return result();
+  };
+  const section = graph.pages[0].sections[0];
+  const graphWithoutCrop = {
+    ...graph,
+    pages: [{
+      ...graph.pages[0],
+      sections: [{
+        sourceId: section.sourceId,
+        position: section.position,
+        mediaKind: section.mediaKind,
+        mediaUrl: section.mediaUrl,
+        ocrBoxes: section.ocrBoxes,
+      }],
+    }],
+  };
+  const objects: ObjectMetadata[] = [
+    metadata("sites/source.json", "application/json"),
+    metadata("sites/preview.png", "image/png"),
+    metadata("sites/page.png", "image/png"),
+    metadata("sites/section.png", "image/png"),
+  ];
+
+  await createSitesStore(fakeQuery).completeImport({
+    identity,
+    graph: graphWithoutCrop,
+    objectKeys: {
+      source: "sites/source.json",
+      preview: "sites/preview.png",
+      pages: { "page-1": "sites/page.png" },
+      sections: { "section-1": { media: "sites/section.png" } },
+    },
+  }, objects);
+
+  const sectionInsert = calls.find((call) => /INSERT INTO site_sections/.test(call.sql));
+  assert.equal(sectionInsert?.values?.[6], null);
+  assert.equal(sectionInsert?.values?.[7], null);
 });
 
 test("completeImport rolls back when persisted counts do not match", async () => {

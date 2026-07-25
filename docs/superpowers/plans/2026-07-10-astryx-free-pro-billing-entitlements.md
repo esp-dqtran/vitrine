@@ -43,7 +43,7 @@ moving it there before making code changes.
 - `src/pricing.ts` — shared plan/subscription types and pure entitlement/window helpers.
 - `src/pricing.test.ts` — active, grace, and yearly export-window unit tests.
 - `src/pricingStore.ts` — Postgres persistence for subscriptions, Free unlocks, export usage, Stripe event receipts, and access events.
-- `src/pricingStore.test.ts` — transaction, entitlement, downgrade, and export-window integration tests.
+- `src/pricingStore.test.ts` — transaction, entitlement, downgrade, and export-window store tests.
 - `src/mediaToken.ts` — HMAC creation and verification for account-bound media URLs.
 - `src/mediaToken.test.ts` — expiry, tamper, user, app, and hash binding tests.
 - `services/api/src/billing.ts` — Stripe Checkout, Customer Portal, webhook verification, and subscription synchronization.
@@ -485,7 +485,7 @@ Expected: full test suite passes; commit succeeds.
 - Create: `src/pricingStore.ts`
 - Create: `src/pricingStore.test.ts`
 
-- [ ] **Step 1: Write failing integration tests**
+- [ ] **Step 1: Write failing store tests**
 
 Create `src/pricingStore.test.ts` using the same `astryx_test` setup pattern as
 `src/authStore.test.ts`. The test body must provision one normal user and four
@@ -605,7 +605,7 @@ export async function reserveExportOperation(userId: number, now?: Date): Promis
 incrementing usage, clamp `freeUnlocksRemaining` to `0..3`, and return ISO
 timestamps so the API can map the result directly to `SubscriptionView`.
 
-- [ ] **Step 4: Run integration tests**
+- [ ] **Step 4: Run store tests**
 
 Run:
 

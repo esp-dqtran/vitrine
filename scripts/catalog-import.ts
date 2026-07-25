@@ -23,7 +23,6 @@ process.env.MOBBIN_PROFILE_DIR = WORKER_ID && WORKER_ID !== "1"
   : "data/browser-profile-mobbin";
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { chromium } from "playwright";
 import {
   appKnowledgeEvidenceSource,
   createJob,
@@ -37,7 +36,7 @@ import {
 import { attachImageObject, attachThumbnailObject } from "../src/objectStoreDb.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { crawlBulkDownload, crawlFlowsDownload, type BulkObjectDependencies } from "../src/bulkDownload.ts";
-import { disambiguateCatalogSlugs } from "../src/catalogIdentity.ts";
+import { disambiguateCatalogSlugs, mobbinCatalogAppUrl } from "../src/catalogIdentity.ts";
 import {
   assertCatalogPersistenceComplete,
   CatalogPersistenceError,
@@ -103,7 +102,7 @@ function saveState(state: State): void {
 }
 
 async function fetchCatalog(): Promise<Job[]> {
-  const context = await chromium.launchPersistentContext(process.env.MOBBIN_PROFILE_DIR!, { headless: false });
+  const context = await launchMobbinContext();
   const page = context.pages()[0] ?? (await context.newPage());
   await page.goto("https://mobbin.com/discover/apps/web/latest", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(3000);
@@ -238,7 +237,7 @@ for (const job of state.jobs) {
     break;
   }
 
-  const url = `https://mobbin.com/apps/${job.slug}-${job.platform}-${job.mobbinId}/latest/screens`;
+  const url = mobbinCatalogAppUrl(job);
   log(`Importing "${job.appName}" (${job.platform}) -> ${job.slug}`);
   // One browser context reused across all 3 phases instead of a fresh Chromium launch
   // per phase — same session, just skips paying cold-start cost 3x per app.

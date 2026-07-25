@@ -56,6 +56,50 @@ test("Sites queue owns durable declarations and persistent publishing", async ()
   assert.deepEqual(fake.events.slice(-2), [["channel.close"], ["connection.close"]]);
 });
 
+test("repair scope declares and publishes only to the isolated repair queue", async () => {
+  const queueModule = await import("./sitesQueue.ts") as typeof import("./sitesQueue.ts") & {
+    SITES_REPAIR_DLQ_NAME?: string;
+    SITES_REPAIR_QUEUE_NAME?: string;
+  };
+  assert.equal(queueModule.SITES_REPAIR_QUEUE_NAME, "mobbin-sites-repair-jobs");
+  assert.equal(queueModule.SITES_REPAIR_DLQ_NAME, "mobbin-sites-repair-jobs.dlq");
+  const fake = fakeBroker();
+  const queue = createSitesQueue(fake.connect, "amqp://fixture", "repair");
+
+  await queue.publish({ type: "import-site", url: approved, jobId: 10 });
+
+  assert.deepEqual(fake.events.slice(0, 3), [
+    ["connect", "amqp://fixture"],
+    ["assertQueue", queueModule.SITES_REPAIR_DLQ_NAME, { durable: true }],
+    ["assertQueue", queueModule.SITES_REPAIR_QUEUE_NAME, {
+      durable: true,
+      arguments: {
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": queueModule.SITES_REPAIR_DLQ_NAME,
+      },
+    }],
+  ]);
+  const publish = fake.events.find((event) => event[0] === "sendToQueue");
+  assert.equal(publish?.[1], queueModule.SITES_REPAIR_QUEUE_NAME);
+  assert.equal(fake.events.some((event) => event.includes(SITES_QUEUE_NAME)), false);
+  await queue.close();
+});
+
+test("accepts only fixed catalog and repair queue scopes", async () => {
+  const queueModule = await import("./sitesQueue.ts") as typeof import("./sitesQueue.ts") & {
+    parseSitesQueueScope?: (value: unknown) => "catalog" | "repair";
+  };
+  assert.equal(typeof queueModule.parseSitesQueueScope, "function");
+  const parseSitesQueueScope = queueModule.parseSitesQueueScope!;
+  assert.equal(parseSitesQueueScope(undefined), "catalog");
+  assert.equal(parseSitesQueueScope("catalog"), "catalog");
+  assert.equal(parseSitesQueueScope("repair"), "repair");
+  assert.throws(
+    () => parseSitesQueueScope("attacker-controlled-queue"),
+    /invalid Sites queue scope/i,
+  );
+});
+
 test("Sites queue retries 1 to 2 to 3, then dead-letters", async () => {
   const fake = fakeBroker();
   const queue = createSitesQueue(fake.connect);

@@ -44,6 +44,7 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     if (url === '/api/sites') return Response.json([{
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
       label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
+      previewMediaKind: 'image',
       previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
       previews: [
         { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
@@ -53,6 +54,7 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     return Response.json({
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
       canonicalUrl: approvedUrl, label: 'Jul 2026', isLatest: true,
+      previewMediaKind: 'image',
       previewUrl: '/api/sites/1/versions/2/media/preview',
       analysisStatus: 'ready',
       analysisModel: 'fixture-model',
@@ -127,11 +129,13 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
   const sites = await listSites();
   const detail = await getSiteVersion(1, 2);
   assert.equal(sites[0].id, 1);
+  assert.equal(sites[0].previewMediaKind, 'image');
   assert.deepEqual(sites[0].previews, [
     { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
     { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
   ]);
   assert.deepEqual(detail.site, { id: 1, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/' });
+  assert.equal(detail.version.previewMediaKind, 'image');
   assert.deepEqual(detail.versionOptions.map((version) => version.label), ['Jul 2026', 'Nov 2025']);
   assert.deepEqual(detail.pages[0].sections[0].patterns, ['Hero Section', 'Features']);
   assert.equal(detail.analysisStatus, 'ready');

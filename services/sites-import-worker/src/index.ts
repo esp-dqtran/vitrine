@@ -11,7 +11,10 @@ import {
   crawlMobbinSite,
   createMobbinSitesBrowserPorts,
 } from "../../../src/sitesCrawler.ts";
-import { consumeSitesJobs } from "../../../src/sitesQueue.ts";
+import {
+  consumeSitesJobs,
+  parseSitesQueueScope,
+} from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import { createSitesPipelineHandler } from "./pipeline.ts";
 import { startSitesImportWorker } from "./start.ts";
@@ -34,6 +37,7 @@ const multimodalProvider = createMultimodalJsonProvider();
 const siteAnalysisProvider = multimodalProvider
   ? siteAnalysisProviderFromMultimodal(multimodalProvider)
   : undefined;
+const queueScope = parseSitesQueueScope(process.env.MOBBIN_SITES_QUEUE_SCOPE);
 const handler = createSitesPipelineHandler({
   crawl: async (url, controls) => {
     const identity = classifySiteImportUrl(url);
@@ -78,7 +82,7 @@ await startSitesImportWorker({
   assertMigrations: () => assertMigrationsCurrent(pool),
   assertObjectStorage: () => verifyObjectStoreReady(objectStore),
   consume: async () => {
-    console.log("[sites-import-worker] Waiting for Sites jobs...");
-    await consumeSitesJobs(handler);
+    console.log(`[sites-import-worker] Waiting for ${queueScope} Sites jobs...`);
+    await consumeSitesJobs(handler, queueScope);
   },
 });

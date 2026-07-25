@@ -1,15 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, DropdownMenu, EmptyState, Selector, Skeleton } from '@astryxdesign/core';
 import { navigate } from '../router.ts';
-import { getSiteVersion } from '../sitesApi.ts';
-import type { SiteSectionView, SiteVersionDetail, SiteVersionPage as SitePage } from '../types.ts';
+import { getSiteVersion, listSites } from '../sitesApi.ts';
+import type {
+  SiteSectionView,
+  SiteSummary,
+  SiteVersionDetail,
+  SiteVersionPage as SitePage,
+} from '../types.ts';
 import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
-import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
+import { SiteCard } from './SiteCard.tsx';
 import { SiteImportDialog } from './SiteImportDialog.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
+import { SitesTopNav } from './SitesTopNav.tsx';
 import {
   SiteSectionInspector,
   type SiteInspectorItem,
@@ -27,10 +33,12 @@ interface SiteVersionViewProps {
   isAdmin: boolean;
   section?: string;
   initialSectionQuery?: string;
+  relatedSites?: SiteSummary[];
   onSectionChange: (section: SiteDetailSection) => void;
   onVersionChange: (versionId: number) => void;
   onBack: () => void;
   onImport: () => void;
+  onRelatedOpen?: (site: SiteSummary) => void;
 }
 
 interface SectionItem {
@@ -51,11 +59,16 @@ export function SiteVersionView({
   isAdmin,
   section,
   initialSectionQuery,
+  relatedSites = [],
   onSectionChange,
   onVersionChange,
   onBack,
   onImport,
+  onRelatedOpen = (site) => navigate({ name: 'site-version', siteId: site.id, versionId: site.versionId }),
 }: SiteVersionViewProps) {
+  void isAdmin;
+  void onBack;
+  void onImport;
   const pages = useMemo(() => [...detail.pages]
     .sort((a, b) => a.position - b.position)
     .map((page) => ({ ...page, sections: [...page.sections].sort((a, b) => a.position - b.position) })), [detail.pages]);
@@ -65,12 +78,15 @@ export function SiteVersionView({
   const [patternFilter, setPatternFilter] = useState('All patterns');
   const [mediaFilter, setMediaFilter] = useState('All media');
   const [inspector, setInspector] = useState<SiteInspectorState>(null);
+  const [saved, setSaved] = useState(false);
+  const [selectedSectionIds, setSelectedSectionIds] = useState<Set<number>>(() => new Set());
+  const [savedSectionIds, setSavedSectionIds] = useState<Set<number>>(() => new Set());
 
   const sectionItems: SectionItem[] = pages.flatMap((page) => page.sections.map((item, index) => ({
     page,
     item,
     index,
-    patterns: item.patterns.length ? item.patterns : ['Unclassified'],
+    patterns: item.patterns.length ? item.patterns : [page.title],
   })));
   const patternOptions = ['All patterns', ...new Set(sectionItems.flatMap((entry) => entry.patterns).sort())];
   const needle = sectionQuery.trim().toLowerCase();
@@ -115,10 +131,26 @@ export function SiteVersionView({
     return () => window.removeEventListener('keydown', onKey);
   }, [inspector]);
 
+  const toggleSection = (id: number) => {
+    setSelectedSectionIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const saveSelected = () => {
+    setSavedSectionIds((current) => new Set([...current, ...selectedSectionIds]));
+    setSelectedSectionIds(new Set());
+  };
+  const categories = detail.site.categories ?? [];
+  const styles = detail.site.styles ?? [];
+  const description = detail.site.description || `A captured website reference from ${safeHostname(detail.site.sourceUrl)}.`;
+
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
     : activeSection === 'analysis'
-      ? <SiteAnalysisPanel detail={detail} />
+    ? <SiteAnalysisPanel detail={detail} />
     : (
       <SectionsPanel
         visibleSections={visibleSections}
@@ -126,52 +158,113 @@ export function SiteVersionView({
         patternOptions={patternOptions}
         patternFilter={patternFilter}
         mediaFilter={mediaFilter}
+        selectedSectionIds={selectedSectionIds}
+        savedSectionIds={savedSectionIds}
         onSectionQueryChange={setSectionQuery}
         onPatternFilterChange={setPatternFilter}
         onMediaFilterChange={setMediaFilter}
+        onToggleSelect={toggleSection}
+        onClearSelection={() => setSelectedSectionIds(new Set())}
+        onSaveSelected={saveSelected}
         onOpen={(index) => setInspector({ items: inspectorItems, index, view: 'section' })}
       />
     );
 
   return (
     <>
-      <ReferenceDetailShell
-        title={detail.site.name}
-        identityKey={`site-icon-${detail.site.id}`}
-        identityLabel={detail.site.name[0] ?? 'S'}
-        backLabel="Back to Sites"
-        onBack={onBack}
-        heroControls={(
-          <DropdownMenu
-            button={{ label: `${detail.version.label}${detail.version.isLatest ? ' · Latest' : ''}`, size: 'sm', variant: 'ghost' }}
-            hasChevron
-            items={detail.versionOptions.map((version) => ({
-              label: `${version.label}${version.isLatest ? ' · Latest' : ''}`,
-              onClick: () => onVersionChange(version.id),
-            }))}
-          />
-        )}
-        metadata={[{ label: 'Sections', value: String(sectionCount) }]}
-        actions={(
-          <>
-            <HeroButton onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>
-            {isAdmin && <HeroButton primary onClick={onImport}>Import Site</HeroButton>}
-          </>
-        )}
-        tabs={[
-          { id: 'preview', label: 'Preview' },
-          { id: 'sections', label: 'Sections', count: sectionCount },
-          { id: 'analysis', label: 'Analysis' },
-        ]}
-        activeTab={activeSection}
-        onTabChange={onSectionChange}
-        tabTrailing={activeSection === 'sections'
-          ? <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{visibleSections.length} sections</span>
-          : undefined}
-        bodyPadding={activeSection === 'preview' ? '24px 40px 80px' : '32px 40px 72px'}
-      >
-        {body}
-      </ReferenceDetailShell>
+      <main data-site-detail="true" className="site-detail">
+        <header data-site-detail-hero="true" className="site-detail__hero">
+          <div className="site-detail__hero-inner">
+            <div className="site-detail__identity">
+              <div className="site-detail__logo">
+                {detail.site.logoUrl
+                  ? <img src={detail.site.logoUrl} alt="" />
+                  : <span>{detail.site.name.slice(0, 1).toUpperCase()}</span>}
+              </div>
+              <div className="site-detail__heading">
+                <h1>
+                  <span>{detail.site.name} —</span>
+                  <span>{description}</span>
+                </h1>
+              </div>
+            </div>
+            {categories.length || styles.length ? (
+              <div className="site-detail__meta">
+                {categories.length ? (
+                  <div className="site-detail__meta-group">
+                    <span>Category</span>
+                    <div>
+                      {categories.map((category, index) => (
+                        <a key={`category:${category}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
+                          {category}{index < categories.length - 1 ? ',' : ''}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {styles.length ? (
+                  <div className="site-detail__meta-group">
+                    <span>Style</span>
+                    <div>
+                      {styles.map((style, index) => (
+                        <a key={`style:${style}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
+                          {style}{index < styles.length - 1 ? ',' : ''}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="site-detail__actions">
+              <HeroButton primary onClick={() => setSaved((value) => !value)}>{saved ? 'Saved' : 'Save'}</HeroButton>
+              <HeroButton onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>
+            </div>
+          </div>
+          <div className="site-detail__navigation">
+            <div className="site-detail__version">
+              <DropdownMenu
+                button={{ label: detail.version.isLatest ? 'Latest' : detail.version.label, size: 'sm', variant: 'ghost' }}
+                hasChevron
+                items={detail.versionOptions.map((version) => ({
+                  label: version.isLatest ? 'Latest' : version.label,
+                  onClick: () => onVersionChange(version.id),
+                }))}
+              />
+            </div>
+            <div className="site-detail__tabs" role="tablist" aria-label={`${detail.site.name} sections`}>
+              {(['preview', 'sections', 'analysis'] as const).map((tab) => (
+                <Button
+                  key={tab}
+                  label={tab === 'preview' ? 'Preview' : tab === 'sections' ? 'Sections' : 'Analysis'}
+                  variant="ghost"
+                  size="sm"
+                  role="tab"
+                  aria-selected={activeSection === tab}
+                  onClick={() => onSectionChange(tab)}
+                />
+              ))}
+            </div>
+          </div>
+        </header>
+
+        <div className={`site-detail__body site-detail__body--${activeSection}`}>
+          {body}
+          {relatedSites.length ? (
+            <section className="site-detail__related" aria-labelledby="related-sites-title">
+              <div>
+                <p>Continue exploring</p>
+                <h2 id="related-sites-title">More website references</h2>
+              </div>
+              <div className="site-detail__related-grid">
+                {relatedSites.slice(0, 3).map((site) => (
+                  <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onRelatedOpen(site)} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+      </main>
       {inspector && inspector.items[inspector.index] && (
         <SiteSectionInspector
           item={inspector.items[inspector.index]}
@@ -188,15 +281,23 @@ export function SiteVersionView({
 }
 
 function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sectionCount: number }) {
+  void sectionCount;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.5fr) minmax(240px,.5fr)', gap: 28, alignItems: 'start' }}>
-      <video src={detail.version.previewUrl} controls muted playsInline preload="metadata" style={{ display: 'block', width: '100%', borderRadius: 16, background: '#111', boxShadow: 'var(--shadow-low)' }} />
-      <div style={{ display: 'grid', gap: 16, padding: 20, border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-background-surface)' }}>
-        <div><div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Website</div><div style={{ marginTop: 4, fontWeight: 650, overflowWrap: 'anywhere' }}>{detail.site.sourceUrl}</div></div>
-        <div><div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Version</div><div style={{ marginTop: 4, fontWeight: 650 }}>{detail.version.label}</div></div>
-        <div><div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Captured reference</div><div style={{ marginTop: 4, fontWeight: 650 }}>{sectionCount} reusable sections</div></div>
+    <section className="site-preview">
+      <div data-site-preview-stage="true" className="site-preview__stage">
+        {detail.version.previewMediaKind === 'image'
+          ? <img src={detail.version.previewUrl} alt={`${detail.site.name} website preview`} />
+          : (
+              <video
+                src={detail.version.previewUrl}
+                controls
+                muted
+                playsInline
+                preload="metadata"
+              />
+            )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -206,9 +307,14 @@ function SectionsPanel({
   patternOptions,
   patternFilter,
   mediaFilter,
+  selectedSectionIds,
+  savedSectionIds,
   onSectionQueryChange,
   onPatternFilterChange,
   onMediaFilterChange,
+  onToggleSelect,
+  onClearSelection,
+  onSaveSelected,
   onOpen,
 }: {
   visibleSections: SectionItem[];
@@ -216,51 +322,80 @@ function SectionsPanel({
   patternOptions: string[];
   patternFilter: string;
   mediaFilter: string;
+  selectedSectionIds: Set<number>;
+  savedSectionIds: Set<number>;
   onSectionQueryChange: (value: string) => void;
   onPatternFilterChange: (value: string) => void;
   onMediaFilterChange: (value: string) => void;
+  onToggleSelect: (id: number) => void;
+  onClearSelection: () => void;
+  onSaveSelected: () => void;
   onOpen: (index: number) => void;
 }) {
   return (
-    <>
-      <div style={{ display: 'flex', alignItems: 'end', gap: 8, paddingBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 280px', maxWidth: 420 }}>
+    <section className="site-sections">
+      <div className="site-sections__toolbar">
+        <div className="site-sections__search">
           <SearchInput value={sectionQuery} onChange={onSectionQueryChange} placeholder="Search sections…" />
         </div>
         <Selector label="Pattern" size="sm" value={patternFilter} onChange={onPatternFilterChange} options={patternOptions} />
         <Selector label="Media" size="sm" value={mediaFilter} onChange={onMediaFilterChange} options={['All media', 'Images', 'Videos']} />
+        <span>{visibleSections.length} sections</span>
       </div>
       {visibleSections.length ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
+        <div data-site-sections-grid="true" className="site-sections__grid">
           {visibleSections.map(({ page, item, patterns }, visibleIndex) => {
             const label = `Open ${patterns[0]} from ${page.title}`;
-            const badges = [...patterns.slice(0, 2), item.mediaKind === 'image' ? 'Image' : 'Video'];
+            const selected = selectedSectionIds.has(item.id);
+            const saved = savedSectionIds.has(item.id);
             const delay = Math.min(visibleIndex * 0.04, 0.32);
-            return item.mediaKind === 'video' ? (
-              <SiteSectionVideoCard
-                key={item.id}
-                label={label}
-                url={item.mediaUrl}
-                posterUrl={item.posterUrl}
-                badges={badges}
-                delay={delay}
-                onOpen={() => onOpen(visibleIndex)}
-              />
-            ) : (
-              <MediaGridCard
-                key={item.id}
-                label={label}
-                kind="image"
-                url={item.mediaUrl}
-                badges={badges}
-                delay={delay}
-                onOpen={() => onOpen(visibleIndex)}
-              />
+            return (
+              <article key={item.id} className="site-section-tile">
+                <div className="site-section-tile__media">
+                  {item.mediaKind === 'video' ? (
+                    <SiteSectionVideoCard
+                      label={label}
+                      url={item.mediaUrl}
+                      posterUrl={item.posterUrl}
+                      delay={delay}
+                      onOpen={() => onOpen(visibleIndex)}
+                    />
+                  ) : (
+                    <MediaGridCard
+                      label={label}
+                      kind="image"
+                      url={item.mediaUrl}
+                      delay={delay}
+                      onOpen={() => onOpen(visibleIndex)}
+                    />
+                  )}
+                  <Button
+                    label={selected ? 'Selected' : 'Select'}
+                    variant="ghost"
+                    size="sm"
+                    className="site-section-tile__select"
+                    aria-label={`${selected ? 'Deselect' : 'Select'} ${patterns[0]} from ${page.title}`}
+                    aria-pressed={selected}
+                    onClick={() => onToggleSelect(item.id)}
+                  />
+                </div>
+                <div className="site-section-tile__caption">
+                  <strong>{patterns[0]}</strong>
+                  <span>{page.title} · {item.mediaKind === 'image' ? 'Image' : 'Video'}{saved ? ' · Saved' : ''}</span>
+                </div>
+              </article>
             );
           })}
         </div>
       ) : <EmptyState title="No sections match these filters" description="Try another keyword, pattern, or media type." isCompact />}
-    </>
+      <div className="site-sections__selection" aria-live="polite">
+        <strong>{selectedSectionIds.size} selected</strong>
+        <div>
+          {selectedSectionIds.size ? <Button label="Clear" variant="ghost" size="sm" onClick={onClearSelection} /> : null}
+          <Button label="Save selected" size="sm" isDisabled={!selectedSectionIds.size} onClick={onSaveSelected} />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -270,10 +405,23 @@ interface SiteVersionPageProps {
   isAdmin: boolean;
   initialSection?: string;
   onSectionChange?: (section: SiteDetailSection) => void;
+  query?: string;
+  onQueryChange?: (value: string) => void;
+  accountControls?: ReactNode;
 }
 
-export function SiteVersionPage({ siteId, versionId, isAdmin, initialSection, onSectionChange }: SiteVersionPageProps) {
+export function SiteVersionPage({
+  siteId,
+  versionId,
+  isAdmin,
+  initialSection,
+  onSectionChange,
+  query = '',
+  onQueryChange = () => undefined,
+  accountControls,
+}: SiteVersionPageProps) {
   const [detail, setDetail] = useState<SiteVersionDetail | null>(null);
+  const [relatedSites, setRelatedSites] = useState<SiteSummary[]>([]);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
@@ -281,19 +429,37 @@ export function SiteVersionPage({ siteId, versionId, isAdmin, initialSection, on
     let active = true;
     setDetail(null);
     setError('');
-    getSiteVersion(siteId, versionId)
-      .then((value) => { if (active) setDetail(value); })
+    void Promise.all([
+      getSiteVersion(siteId, versionId),
+      listSites().catch(() => []),
+    ])
+      .then(([value, sites]) => {
+        if (!active) return;
+        setDetail(value);
+        setRelatedSites(sites.filter((site) => site.id !== siteId));
+      })
       .catch((cause: Error) => { if (active) setError(cause.message); });
     return () => { active = false; };
   }, [siteId, versionId, revision]);
 
   const onBack = () => navigate({ name: 'sites' });
-  if (error && !detail) return <SiteVersionFailure message={error} onBack={onBack} onRetry={() => setRevision((value) => value + 1)} />;
-  if (!detail) return <SiteVersionLoading onBack={onBack} />;
+  const topNav = (
+    <SitesTopNav
+      query={query}
+      onQueryChange={onQueryChange}
+      isAdmin={isAdmin}
+      onImport={() => setImportOpen(true)}
+      accountControls={accountControls}
+    />
+  );
+  if (error && !detail) return <>{topNav}<SiteVersionFailure message={error} onBack={onBack} onRetry={() => setRevision((value) => value + 1)} /></>;
+  if (!detail) return <>{topNav}<SiteVersionLoading onBack={onBack} /></>;
   return (
     <>
+      {topNav}
       <SiteVersionView
         detail={detail}
+        relatedSites={relatedSites}
         isAdmin={isAdmin}
         section={initialSection}
         onSectionChange={onSectionChange ?? (() => undefined)}
@@ -301,23 +467,25 @@ export function SiteVersionPage({ siteId, versionId, isAdmin, initialSection, on
         onBack={onBack}
         onImport={() => setImportOpen(true)}
       />
-      {isAdmin && <SiteImportDialog isOpen={importOpen} onClose={() => setImportOpen(false)} onExisting={(nextSiteId, nextVersionId) => navigate({ name: 'site-version', siteId: nextSiteId, versionId: nextVersionId })} />}
+      {isAdmin && (
+        <SiteImportDialog
+          isOpen={importOpen}
+          onClose={() => setImportOpen(false)}
+          onExisting={(nextSiteId, nextVersionId) => navigate({ name: 'site-version', siteId: nextSiteId, versionId: nextVersionId })}
+        />
+      )}
     </>
   );
 }
 
 function SiteVersionLoading({ onBack }: { onBack: () => void }) {
   return (
-    <main role="status" aria-label="Loading Site version" style={{ maxWidth: 1360, margin: '0 auto', padding: '22px 40px 72px' }}>
+    <main role="status" aria-label="Loading Site version" className="site-detail site-detail--loading">
       <Button variant="ghost" label="Back to Sites" clickAction={onBack} />
-      <div style={{ display: 'grid', gap: 20, paddingTop: 28 }}>
+      <div>
         <Skeleton width={88} height={88} radius="rounded" />
         <Skeleton width={260} height={44} radius="none" />
-        <div style={{ display: 'flex', gap: 18 }}><Skeleton width={120} height={42} radius="rounded" /><Skeleton width={120} height={42} radius="rounded" /></div>
-        <Skeleton width="100%" height={2} radius="none" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
-          {Array.from({ length: 3 }, (_, index) => <Skeleton key={index} width="100%" height={220} radius="rounded" index={index} />)}
-        </div>
+        <Skeleton width="100%" height={540} radius="rounded" />
       </div>
     </main>
   );
@@ -325,11 +493,19 @@ function SiteVersionLoading({ onBack }: { onBack: () => void }) {
 
 function SiteVersionFailure({ message, onBack, onRetry }: { message: string; onBack: () => void; onRetry: () => void }) {
   return (
-    <main style={{ maxWidth: 1360, minHeight: '60vh', margin: '0 auto', padding: '22px 40px 72px' }}>
+    <main className="site-detail site-detail--failure">
       <Button variant="ghost" label="Back to Sites" clickAction={onBack} />
-      <div role="alert" style={{ paddingTop: 48 }}>
+      <div role="alert">
         <EmptyState title="Could not load Site version" description={message} actions={<Button variant="secondary" label="Retry" clickAction={onRetry} />} />
       </div>
     </main>
   );
+}
+
+function safeHostname(value: string): string {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '');
+  } catch {
+    return value;
+  }
 }

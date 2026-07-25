@@ -47,12 +47,36 @@ test('keeps Sites routes ahead of Apps branches and free from job-list reads', a
   assert.doesNotMatch(sitesSource, /setInterval|setTimeout/);
 });
 
+test('renders both Sites routes outside the admin AppShell', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const catalogBranch = source.slice(
+    source.indexOf("if (route.name === 'sites')"),
+    source.indexOf("if (route.name === 'site-version')"),
+  );
+  const detailBranch = source.slice(
+    source.indexOf("if (route.name === 'site-version')"),
+    source.indexOf("if (researchProjectsEnabled"),
+  );
+
+  assert.doesNotMatch(catalogBranch, /return frame\(/);
+  assert.doesNotMatch(detailBranch, /return frame\(/);
+});
+
 test('renders Apps through its discovery page outside the admin AppShell', async () => {
-  const appSource = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const [appSource, sitesSource, sitesNavSource] = await Promise.all([
+    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/SitesTopNav.tsx', import.meta.url), 'utf8'),
+  ]);
 
   assert.match(appSource, /from ['"]\.\/components\/AppsDiscoveryPage\.tsx['"]/);
   assert.match(appSource, /if \(route\.name === 'apps'\) \{[\s\S]*?<AppsDiscoveryPage/);
   assert.doesNotMatch(appSource, /if \(route\.name === 'apps'\) \{[\s\S]{0,160}?return frame\(/);
+  assert.match(sitesSource, /data-sites-discovery="true"/);
+  assert.match(sitesSource, /data-reference-gallery-shell="sites"/);
+  assert.match(sitesSource, /<SitesTopNav/);
+  assert.match(sitesNavSource, /<ReferenceDiscoveryTopNav/);
+  assert.doesNotMatch(sitesSource, /<ReferenceGalleryShell/);
 });
 
 test('keeps Apps retry and terminal no-results states inside its discovery page', async () => {

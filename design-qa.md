@@ -1,43 +1,64 @@
-# Design QA: GetDesign-Style Design System Preview
+# Astryx Sites UI Design QA
 
-**Source visual truth:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/binance-source-preview.png`
+## Visual truth
 
-**Implementation screenshot:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/astryx-binance-final-dark.png`
+- Mobbin catalog reference: `artifacts/design-audit/2026-07-24-sites-comparison/02-mobbin-sites.png`
+- Mobbin V7 detail reference: `artifacts/design-audit/2026-07-24-sites-comparison/04-mobbin-v7-detail.png`
+- Astryx catalog: `design-qa-sites-catalog-final.png`
+- Astryx V7 detail: `design-qa-site-detail-preview.png`
+- Astryx compact catalog: `design-qa-sites-catalog-mobile.png`
+- Catalog side-by-side: `design-qa-catalog-comparison-final.png`
+- Detail side-by-side: `design-qa-detail-comparison-final.png`
 
-**Combined comparison:** `/Users/kai/.codex/visualizations/2026/07/22/019f8764-a3d8-7bb1-b24d-01aabb6db477/getdesign-research/binance-final-dark-side-by-side.png`
+Every source and implementation capture uses the same 1512 × 782 viewport and
+the same loaded catalog/detail state.
 
-**Viewport and normalization:** Both browser captures are 1280 x 720 pixels at the same desktop viewport and browser density. The comparison uses the dark Preview state and aligns each styleguide canvas at its top edge.
+## Rebuilt surfaces
 
-**Primary interactions tested:** Preview to Light, Light to DESIGN.md, DESIGN.md back to Preview, and Preview back to Dark. The theme changed the complete canvas and the document view rendered a selectable `# Binance Design System` document.
+- Full-width Sites navigation with centered 512 px search, Apps/Sites switcher,
+  import action, and account controls.
+- Mobbin-measured discovery taxonomy, ordering row, filter action, three-column
+  grid, large media cards, logo, description, version, and section count.
+- Site detail with vertical identity, display heading, Category and Style
+  groups, Save/Visit actions, Latest selector, Preview/Sections tabs, and a wide
+  real-media stage.
+- Responsive two-column, one-column, and compact navigation breakpoints.
+- Search, taxonomy filters, sorting, filter toggle, full-card navigation,
+  version selection, Save, Visit site, and Preview/Sections remain interactive.
 
-**Browser diagnostics:** No error-level browser logs were recorded while loading or exercising the final preview. Existing development-only Vite messages and the repository's pre-existing runtime-theme performance warning remain non-blocking.
+## Findings fixed
 
-## Full-view comparison
+- [P1] Sites still inherited the Apps/admin shell instead of Mobbin's full-width
+  surface.
+  - Fixed by routing both Sites views through their own shared top navigation.
+- [P1] The discovery taxonomy order, column positions, vertical rhythm, and
+  card start position did not match the source.
+  - Fixed with source-measured 32 px gutters, column tracks, column-flow
+    ordering, 24 px labels, and the 432 px card baseline.
+- [P1] Site detail used a horizontal product header and compact preview frame.
+  - Fixed with the vertical 96 px identity, split display heading, source-style
+    metadata/actions/navigation, and 1048 px preview media.
+- [P2] Search width and height, action styling, filter treatment, and card
+  semantics diverged from the source.
+  - Fixed with the 512 × 48 search field, white primary Save action, quiet
+    Filter action, and one semantic link for the complete card.
+- [P2] Existing imports did not expose Mobbin tagline, logo, styles, or
+  popularity.
+  - Fixed in the crawler/store contract and migration `0022`; existing records
+    need the migration plus re-import/backfill before those authoritative values
+    appear. The UI does not fabricate missing metadata.
 
-The reference and implementation now share the same specimen-first composition: dark canvas, large analysis title, a contextual market-table specimen, a numbered color section, and a broad swatch grid. Astryx intentionally retains its own surrounding app-detail shell and concise living-styleguide copy rather than reproducing GetDesign's site navigation or installation controls.
+## Verification
 
-## Focused comparison
-
-The above-the-fold styleguide region was compared at readable scale in the combined artifact. The market specimen exposes tabs, pairs, prices, and positive/negative change states. The color section pairs swatches with token metadata immediately below the fold. No additional crop was required because both priority regions are legible in the normalized full-view comparison.
-
-## Required fidelity surfaces
-
-- **Fonts and typography:** Hierarchy, weight contrast, line length, and display scale match the reference's intent. Astryx uses its existing application typeface because imported font-family names are not bundled web fonts; this is acceptable product integration rather than missing content.
-- **Spacing and layout rhythm:** The split hero, generous section padding, numbered section gutter, divider rhythm, and swatch density align with the reference. Responsive CSS collapses the hero and specimen rows below 760px.
-- **Colors and tokens:** The preview canvas uses neutral dark/light stage tokens while swatches and component specimens use imported Binance values. Light/Dark controls change the whole canvas.
-- **Image quality and asset fidelity:** Neither implementation nor required design-system data depends on raster imagery, logos, or illustrative assets. No placeholder or simulated image assets are present.
-- **Copy and content:** Astryx labels the source accurately as a reconstructed living styleguide, preserves the imported summary and raw values, and makes DESIGN.md explicitly generated from the loaded snapshot.
-
-## Comparison history
-
-1. Initial implementation showed the correct specimen canvas but its hero contained only text, unlike the reference's contextual market-table preview. Classified P2 because the first visual did not immediately demonstrate real UI.
-2. Added a reusable market-table specimen and selected market/table components ahead of generic navigation components for the hero.
-3. A light implementation capture was initially paired with the dark reference. This was a state-normalization issue, not a design defect; the final comparison uses Dark on both sides.
-4. Final comparison has no actionable P0, P1, or P2 differences.
-
-## Follow-up polish
-
-- P3: Bundle extracted product fonts in a future importer extension when licensing and source files are available.
-- P3: Group very large color palettes by semantic role if the imported document gains explicit group metadata.
+- Catalog comparison: no remaining P0/P1/P2 layout defect.
+- Detail comparison: the layout contract is matched; the local legacy V7 row
+  intentionally shows the explicit captured-source fallback until migration and
+  re-import/backfill provide its Mobbin metadata.
+- Compact catalog: 390 px client width and 390 px scroll width, with no
+  horizontal overflow and no navigation collisions.
+- Focused Sites component tests: 16 passed.
+- Sites route-boundary tests: 16 passed.
+- Production build: passed.
+- Vite reports only its existing large-chunk optimization warning.
 
 final result: passed

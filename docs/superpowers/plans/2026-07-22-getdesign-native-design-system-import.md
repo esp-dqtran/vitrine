@@ -16,7 +16,7 @@
 - Create `src/getdesignParser.ts` — pure frontmatter/body parsing, normalization, deterministic IDs, and imported-snapshot validation.
 - Create `src/getdesignParser.test.ts` — parser and mapping unit tests using focused fixtures.
 - Create `src/getdesignImportStore.ts` — preflight, transactional replace, imported-current lookup, and rollback.
-- Create `src/getdesignImportStore.test.ts` — integration tests against the repository test database.
+- Create `src/getdesignImportStore.test.ts` — store tests against the repository test database.
 - Create `src/getdesignImportRunner.ts` — dry-run/apply/rollback orchestration and structured reporting with dependency injection.
 - Create `src/getdesignImportRunner.test.ts` — runner behavior, all-or-nothing per app, and redaction tests.
 - Create `scripts/import-getdesign-design-systems.ts` — thin CLI that reads pinned package templates and calls the runner.

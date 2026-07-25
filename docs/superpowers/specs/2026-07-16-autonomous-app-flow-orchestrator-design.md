@@ -327,7 +327,7 @@ Normal customers see only published flows through the existing product surfaces.
 - object existence and checksum requirements;
 - automatic publication threshold and curator-draft fallback.
 
-### Integration tests
+### End-to-end acceptance
 
 Use a deterministic local test application containing authentication, onboarding, navigation, CRUD, search, sharing, settings, billing-like confirmation, popups, redirects, session expiry, and destructive actions. Verify that multiple agents:
 

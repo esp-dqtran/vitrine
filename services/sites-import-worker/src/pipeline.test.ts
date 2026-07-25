@@ -62,27 +62,20 @@ test("permanent authentication failure becomes terminal without queue retry", as
   ]);
 });
 
-test("transient failures rethrow and become terminal only on the final attempt", async () => {
-  for (const attempt of [1, 2, 3]) {
-    const statuses: Array<[number, string, string | undefined]> = [];
-    const handler = createSitesPipelineHandler({
-      getJob: async () => ({ id: 42, type: "import-site", status: "queued" }) as never,
-      setJobStatus: async (id, status, message) => { statuses.push([id, status, message]); },
-      crawl: async () => { throw new Error("upstream included https://secret.example/token"); },
-    });
+test("every crawl failure becomes terminal without queue retry", async () => {
+  const statuses: Array<[number, string, string | undefined]> = [];
+  const handler = createSitesPipelineHandler({
+    getJob: async () => ({ id: 42, type: "import-site", status: "queued" }) as never,
+    setJobStatus: async (id, status, message) => { statuses.push([id, status, message]); },
+    crawl: async () => { throw new Error("upstream included https://secret.example/token"); },
+  });
 
-    await assert.rejects(
-      handler(job, { attempt, maxAttempts: 3 }),
-      /upstream included/,
-    );
+  await handler(job, { attempt: 1, maxAttempts: 3 });
 
-    assert.deepEqual(statuses, attempt < 3
-      ? [[42, "running", "Inspecting Site"]]
-      : [
-          [42, "running", "Inspecting Site"],
-          [42, "error", "Site import failed after 3 attempts"],
-        ]);
-  }
+  assert.deepEqual(statuses, [
+    [42, "running", "Inspecting Site"],
+    [42, "error", "upstream included [redacted-url]"],
+  ]);
 });
 
 test("crawler cancellation never becomes a worker error", async () => {

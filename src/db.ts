@@ -34,7 +34,7 @@ export async function withTransaction<T>(work: (client: pg.PoolClient) => Promis
 }
 
 // Narrow migration seam: the caller owns the surrounding transaction so startup and
-// integration tests can use the exact same consolidation without nesting BEGIN/COMMIT.
+// migration orchestration can use the same consolidation without nesting BEGIN/COMMIT.
 export async function closePool(): Promise<void> {
   await pool.end();
 }

@@ -180,10 +180,33 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
       HEADLESS: "true"
       MOBBIN_SITES_PROFILE_DIR: /app/browser-profile
-      MOBBIN_SITES_STORAGE_STATE_PATH: /app/secrets/mobbin-storage-state.json
+      MOBBIN_SITES_STORAGE_STATE_PATH: /app/secrets/mobbin-auth-state.json
     volumes:
       - sites-import-worker-profile:/app/browser-profile
-      - ./data/mobbin-storage-state.json:/app/secrets/mobbin-storage-state.json:ro
+      - ./data/mobbin-auth-state.json:/app/secrets/mobbin-auth-state.json:ro
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
+
+  sites-repair-worker:
+    build:
+      context: .
+      dockerfile: services/sites-import-worker/Dockerfile
+    environment:
+      <<: *object-store-env
+      RABBITMQ_URL: amqp://rabbitmq
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      HEADLESS: "true"
+      MOBBIN_SITES_QUEUE_SCOPE: repair
+      MOBBIN_SITES_PROFILE_DIR: /app/browser-profile
+      MOBBIN_SITES_STORAGE_STATE_PATH: /app/secrets/mobbin-auth-state.json
+    volumes:
+      - sites-repair-worker-profile:/app/browser-profile
+      - ./data/mobbin-auth-state.json:/app/secrets/mobbin-auth-state.json:ro
       - ~/.aws:/root/.aws:ro
     depends_on:
       rabbitmq:
@@ -248,4 +271,5 @@ volumes:
   import-worker-profile:
   import-worker-chat-profile:
   sites-import-worker-profile:
+  sites-repair-worker-profile:
   import-worker-downloads:

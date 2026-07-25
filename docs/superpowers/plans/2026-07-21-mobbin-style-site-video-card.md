@@ -25,7 +25,7 @@
 - Create: `src/vitrine/components/SiteSectionVideoCard.tsx`
 - Modify: `src/vitrine/components/SiteVersionPage.tsx:1-245`
 
-- [ ] **Step 1: Write the failing integration test**
+- [ ] **Step 1: Write the failing component test**
 
 Render `SiteVersionView` with `section="sections"` and assert that the video section has Mobbin-style static behavior while the image remains on the shared path:
 

@@ -615,7 +615,7 @@ git commit -m "feat: build strict app knowledge evidence manifests"
 - Create: `src/appKnowledgeStore.test.ts`
 - Modify: `src/migrations.test.ts`
 
-- [ ] **Step 1: Write a failing store integration test**
+- [ ] **Step 1: Write a failing store test**
 
 Cover:
 

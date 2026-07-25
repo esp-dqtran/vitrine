@@ -59,11 +59,17 @@ export interface SiteSummary {
   name: string;
   slug: string;
   sourceUrl: string;
+  description?: string;
+  logoUrl?: string | null;
+  categories?: string[];
+  styles?: string[];
+  popularity?: number;
   label: string;
   isLatest: boolean;
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  previewMediaKind?: 'image' | 'video';
   previews: SitePagePreview[];
   updatedAt: string;
 }
@@ -110,8 +116,24 @@ export interface SiteVersionPage {
 }
 
 export interface SiteVersionDetail {
-  site: { id: number; name: string; slug: string; sourceUrl: string };
-  version: { id: number; label: string; isLatest: boolean; previewUrl: string };
+  site: {
+    id: number;
+    name: string;
+    slug: string;
+    sourceUrl: string;
+    description?: string;
+    logoUrl?: string | null;
+    categories?: string[];
+    styles?: string[];
+    popularity?: number;
+  };
+  version: {
+    id: number;
+    label: string;
+    isLatest: boolean;
+    previewUrl: string;
+    previewMediaKind?: 'image' | 'video';
+  };
   versionOptions: SiteVersionOption[];
   canonicalUrl: string;
   analysisStatus: 'ready' | 'evidence-only';

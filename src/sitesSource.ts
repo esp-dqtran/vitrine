@@ -9,15 +9,19 @@ export class MobbinSitesSourceError extends Error {
 
 type RscRows = Map<string, unknown>;
 type SourceObject = Record<string, unknown>;
+const RENDERED_MEDIA_PLACEHOLDER = "https://mobbin.com/";
 
-export function decodeMobbinSitesSource(raw: string): SiteImport {
+export function decodeMobbinSitesSource(
+  raw: string,
+  options: { sourceUrl?: string } = {},
+): SiteImport {
   if (!raw.trim() || raw.length > 2 * 1024 * 1024) {
     throw new MobbinSitesSourceError();
   }
   try {
     const rows = decodeRscRows(raw);
     const root = resolveCapturedSitesRoot(rows);
-    return parseSiteImport(mapCapturedSitesRoot(root));
+    return parseSiteImport(mapCapturedSitesRoot(root, options));
   } catch (cause) {
     if (cause instanceof MobbinSitesSourceError) throw cause;
     throw new MobbinSitesSourceError("Mobbin Sites source changed");
@@ -66,7 +70,10 @@ function hasExactReference(value: unknown, reference: string): boolean {
   return false;
 }
 
-function mapCapturedSitesRoot(value: unknown): SiteImport {
+function mapCapturedSitesRoot(
+  value: unknown,
+  options: { sourceUrl?: string },
+): SiteImport {
   if (!Array.isArray(value) || value.length !== 4 || value[0] !== "$" || value[2] !== null) {
     throw new MobbinSitesSourceError();
   }
@@ -81,6 +88,11 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
   const sourceSite = object(sourceVersion.site);
   const sourceSiteId = string(sourceSite.id);
   const siteName = string(sourceSite.name);
+  const description = optionalString(sourceSite.tagline);
+  const logoUrl = sourceSite.logoCdnImgSources === undefined
+    ? undefined
+    : string(object(sourceSite.logoCdnImgSources).src);
+  const styles = sourceSite.styles === undefined ? [] : array(sourceSite.styles).map(string);
   const publishedAt = string(sourceVersion.published_at);
   if (
     string(sourceVersion.id) !== siteVersionId ||
@@ -91,8 +103,10 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
 
   const groupedPages: Array<{
     sourceId: string;
+    title: string;
     url: string;
     fullPageImageUrl: string;
+    sourcePageImageUrl?: string;
     sections: SiteSection[];
   }> = [];
   const pageIndexes = new Map<string, number>();
@@ -106,14 +120,26 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
       publishedAt,
     });
     const pageId = string(sourceSection.site_page_id);
+    const sourcePageImageUrl = optionalString(sourceSection.page_image_url);
+    const capturedPageUrl = normalizeCapturedPageUrl(
+      optionalString(sourceSection.page_url),
+      options.sourceUrl,
+    );
+    const pageUrl = capturedPageUrl ?? options.sourceUrl;
+    if (!pageUrl) throw new MobbinSitesSourceError();
     let pageIndex = pageIndexes.get(pageId);
     if (pageIndex === undefined) {
       pageIndex = groupedPages.length;
       pageIndexes.set(pageId, pageIndex);
       groupedPages.push({
         sourceId: pageId,
-        url: string(sourceSection.page_url),
-        fullPageImageUrl: string(sourceSection.page_image_url),
+        title: capturedPageUrl ? pageTitle(pageUrl, pageIndex) : `Page ${pageIndex + 1}`,
+        url: pageUrl,
+        fullPageImageUrl:
+          sourcePageImageUrl ??
+          optionalString(sourceSection.page_video_url) ??
+          RENDERED_MEDIA_PLACEHOLDER,
+        ...(sourcePageImageUrl ? { sourcePageImageUrl } : {}),
         sections: [],
       });
     } else if (activePageId !== pageId) {
@@ -122,9 +148,15 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
     activePageId = pageId;
 
     const page = groupedPages[pageIndex];
+    if (sourcePageImageUrl) {
+      if (page.sourcePageImageUrl && sourcePageImageUrl !== page.sourcePageImageUrl) {
+        throw new MobbinSitesSourceError();
+      }
+      page.sourcePageImageUrl = sourcePageImageUrl;
+      page.fullPageImageUrl = sourcePageImageUrl;
+    }
     if (
-      string(sourceSection.page_url) !== page.url ||
-      string(sourceSection.page_image_url) !== page.fullPageImageUrl ||
+      pageUrl !== page.url ||
       integer(sourceSection.display_order) !== page.sections.length
     ) {
       throw new MobbinSitesSourceError();
@@ -132,9 +164,25 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
     page.sections.push(mapSection(sourceSection));
   }
 
-  const firstVideo = sourceSections.find((section) => section.type === "page_video");
-  if (!firstVideo) throw new MobbinSitesSourceError();
-  const sourceUrl = new URL(groupedPages[0].url).origin;
+  const firstVideo = sourceSections.find(
+    (section) =>
+      section.type === "page_video" &&
+      optionalString(section.page_video_url) !== undefined,
+  );
+  const firstImage = sourceSections.find(
+    (section) =>
+      optionalString(section.custom_image_url) !== undefined ||
+      optionalString(section.page_image_url) !== undefined,
+  );
+  const preview = firstVideo ?? firstImage;
+  if (!preview) throw new MobbinSitesSourceError();
+  const previewMediaKind = firstVideo ? "video" : "image";
+  const previewMediaUrl = firstVideo
+    ? string(firstVideo.page_video_url)
+    : optionalString(preview.custom_image_url) ??
+      optionalString(preview.page_image_url);
+  if (!previewMediaUrl) throw new MobbinSitesSourceError();
+  const sourceUrl = options.sourceUrl ?? new URL(groupedPages[0].url).origin;
 
   return {
     site: {
@@ -142,16 +190,25 @@ function mapCapturedSitesRoot(value: unknown): SiteImport {
       name: siteName,
       slug: siteSlug,
       sourceUrl,
+      ...(description ? { description } : {}),
+      ...(logoUrl ? { logoUrl } : {}),
+      categories: [],
+      styles,
+      popularity: sourceSections.reduce(
+        (total, section) => total + optionalNonNegativeNumber(section.popularity_metric),
+        0,
+      ),
     },
     version: {
       sourceId: siteVersionId,
       label: versionLabel(publishedAt),
       isLatest: true,
-      previewVideoUrl: string(firstVideo.page_video_url),
+      previewVideoUrl: previewMediaUrl,
+      previewMediaKind,
     },
     pages: groupedPages.map((page, position) => ({
       sourceId: page.sourceId,
-      title: pageTitle(page.url, position),
+      title: page.title,
       url: page.url,
       position,
       fullPageImageUrl: page.fullPageImageUrl,
@@ -165,35 +222,64 @@ function mapSection(source: SourceObject): SiteSection {
   const sourceId = string(source.id);
   const position = integer(source.display_order);
   const patterns = sectionPatterns(source);
-  if (type === "page_image") {
-    const metadata = object(source.metadata);
-    const width = positiveNumber(metadata.width);
-    const height = positiveNumber(metadata.height);
+  if (type === "page_image" || type === "custom_image") {
+    const metadata =
+      source.metadata === undefined ||
+      source.metadata === null ||
+      source.metadata === "$undefined"
+      ? undefined
+      : object(source.metadata);
+    const width = metadata === undefined ? undefined : optionalPositiveNumber(metadata.width);
+    const height = metadata === undefined ? undefined : optionalPositiveNumber(metadata.height);
+    const cropTop = optionalNonNegativeNumberValue(source.image_position_y_start);
+    const cropBottom = optionalPositiveNumber(source.image_position_y_end);
     return {
       sourceId,
       position,
       mediaKind: "image",
-      mediaUrl: string(source.page_image_url),
-      cropTop: nonNegativeNumber(source.image_position_y_start),
-      cropBottom: positiveNumber(source.image_position_y_end),
-      ocrBoxes: array(metadata.boundingBoxes).map(mapOcrBox),
+      mediaUrl:
+        optionalString(source.custom_image_url) ??
+        optionalString(source.page_image_url) ??
+        RENDERED_MEDIA_PLACEHOLDER,
+      ...(cropTop !== undefined && cropBottom !== undefined && cropBottom > cropTop
+        ? { cropTop, cropBottom }
+        : {}),
+      ocrBoxes: metadata?.boundingBoxes === undefined
+        ? []
+        : array(metadata.boundingBoxes).map(mapOcrBox),
       sourceMetadata: {
         sourceType: type,
-        sourceWidth: width,
-        sourceHeight: height,
+        ...(width === undefined ? {} : { sourceWidth: width }),
+        ...(height === undefined ? {} : { sourceHeight: height }),
         patterns,
       },
     };
   }
   if (type === "page_video") {
+    const posterUrl = optionalString(source.page_image_url);
+    const videoStartMilliseconds = optionalNonNegativeNumberValue(
+      source.video_timestamp_start_ms,
+    );
+    const videoEndMilliseconds = optionalPositiveNumber(
+      source.video_timestamp_end_ms,
+    );
     return {
       sourceId,
       position,
       mediaKind: "video",
-      mediaUrl: string(source.page_video_url),
-      posterUrl: string(source.page_image_url),
-      videoStartSeconds: nonNegativeNumber(source.video_timestamp_start_ms) / 1_000,
-      videoEndSeconds: positiveNumber(source.video_timestamp_end_ms) / 1_000,
+      mediaUrl:
+        optionalString(source.page_video_url) ??
+        posterUrl ??
+        RENDERED_MEDIA_PLACEHOLDER,
+      ...(posterUrl ? { posterUrl } : {}),
+      ...(videoStartMilliseconds !== undefined &&
+      videoEndMilliseconds !== undefined &&
+      videoEndMilliseconds > videoStartMilliseconds
+        ? {
+            videoStartSeconds: videoStartMilliseconds / 1_000,
+            videoEndSeconds: videoEndMilliseconds / 1_000,
+          }
+        : {}),
       ocrBoxes: [],
       sourceMetadata: { sourceType: type, patterns },
     };
@@ -204,6 +290,22 @@ function mapSection(source: SourceObject): SiteSection {
 function sectionPatterns(source: SourceObject): string[] {
   if (source.patterns === undefined) return [];
   return array(source.patterns).map(string);
+}
+
+function optionalString(value: unknown): string | undefined {
+  return value === undefined || value === null ? undefined : string(value);
+}
+
+function optionalNonNegativeNumber(value: unknown): number {
+  return value === undefined || value === null ? 0 : nonNegativeNumber(value);
+}
+
+function optionalNonNegativeNumberValue(value: unknown): number | undefined {
+  return value === undefined || value === null ? undefined : nonNegativeNumber(value);
+}
+
+function optionalPositiveNumber(value: unknown): number | undefined {
+  return value === undefined || value === null ? undefined : positiveNumber(value);
 }
 
 function mapOcrBox(value: unknown): SiteOcrBox {
@@ -252,6 +354,28 @@ function pageTitle(value: string, position: number): string {
     .trim();
   if (!raw) return position === 0 ? "Home" : `Page ${position + 1}`;
   return raw.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeCapturedPageUrl(
+  value: string | undefined,
+  renderedSourceUrl: string | undefined,
+): string | undefined {
+  if (!value || !renderedSourceUrl) return value;
+  const captured = new URL(value);
+  const rendered = new URL(renderedSourceUrl);
+  if (
+    captured.protocol === "http:" &&
+    rendered.protocol === "https:" &&
+    normalizedHostname(captured.hostname) === normalizedHostname(rendered.hostname)
+  ) {
+    captured.protocol = "https:";
+    return captured.toString();
+  }
+  return value;
+}
+
+function normalizedHostname(value: string): string {
+  return value.toLowerCase().replace(/^www\./, "");
 }
 
 function versionLabel(value: string): string {

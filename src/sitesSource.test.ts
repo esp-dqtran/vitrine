@@ -8,12 +8,36 @@ const fixtureUrl = new URL(
   import.meta.url,
 );
 
+type FixtureSection = Record<string, unknown>;
+
+function mutateCapturedSections(
+  raw: string,
+  mutate: (sections: FixtureSection[]) => void,
+): string {
+  const lines = raw.trimEnd().split("\n");
+  const rootIndex = lines.findIndex((line) => line.startsWith("4:"));
+  assert.notEqual(rootIndex, -1);
+  const root = JSON.parse(lines[rootIndex].slice(2)) as [
+    string,
+    unknown,
+    null,
+    { sections: FixtureSection[] },
+  ];
+  mutate(root[3].sections);
+  lines[rootIndex] = `4:${JSON.stringify(root)}`;
+  return `${lines.join("\n")}\n`;
+}
+
 test("decodes the inspected V7 graph exactly", async () => {
   const raw = await readFile(fixtureUrl, "utf8");
   const result = decodeMobbinSitesSource(raw);
   const sections = result.pages.flatMap((page) => page.sections);
 
   assert.equal(result.site.name, "V7");
+  assert.equal(result.site.description, "AI for private equity and finance");
+  assert.equal(result.site.logoUrl, "https://cdn.fixture/asset-0039.webp");
+  assert.deepEqual(result.site.styles, ["Minimal"]);
+  assert.equal(result.site.popularity, 193);
   assert.equal(result.version.sourceId, "f4e176f7-aeb6-4f9a-9689-e4379fc357b1");
   assert.equal(result.pages.length, 16);
   assert.equal(sections.length, 46);
@@ -25,6 +49,139 @@ test("decodes the inspected V7 graph exactly", async () => {
   assert.deepEqual(result.pages.map((page) => page.position), [
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
   ]);
+});
+
+test("decodes Mobbin custom images without OCR or crop metadata", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const image = sections.find((section) => section.type === "page_image");
+    assert.ok(image);
+    image.type = "custom_image";
+    delete image.metadata;
+    delete image.image_position_y_start;
+    delete image.image_position_y_end;
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+  const customImage = result.pages
+    .flatMap((page) => page.sections)
+    .find((section) => section.sourceMetadata?.sourceType === "custom_image");
+
+  assert.ok(customImage);
+  assert.equal(customImage.mediaKind, "image");
+  assert.deepEqual(customImage.ocrBoxes, []);
+  assert.equal(customImage.cropTop, undefined);
+  assert.equal(customImage.cropBottom, undefined);
+});
+
+test("treats the React Server Components undefined sentinel as missing metadata", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const image = sections.find((section) => section.type === "page_image");
+    assert.ok(image);
+    image.metadata = "$undefined";
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+  const image = result.pages
+    .flatMap((page) => page.sections)
+    .find((section) => section.mediaKind === "image");
+
+  assert.ok(image);
+  assert.deepEqual(image.ocrBoxes, []);
+  assert.equal(image.sourceMetadata?.sourceWidth, undefined);
+  assert.equal(image.sourceMetadata?.sourceHeight, undefined);
+});
+
+test("decodes legacy image-only Sites using the rendered source URL", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    for (const section of sections) {
+      section.page_url = null;
+      section.type = "custom_image";
+      section.custom_image_url = section.page_image_url;
+      delete section.page_video_url;
+      delete section.video_timestamp_start_ms;
+      delete section.video_timestamp_end_ms;
+      delete section.metadata;
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed, {
+    sourceUrl: "https://legacy.example/",
+  });
+
+  assert.equal(result.site.sourceUrl, "https://legacy.example/");
+  assert.equal(result.version.previewMediaKind, "image");
+  assert.match(result.version.previewVideoUrl, /^https:\/\//);
+  assert.equal(result.pages.every((page) => page.url === "https://legacy.example/"), true);
+  assert.deepEqual(result.pages.slice(0, 2).map((page) => page.title), ["Page 1", "Page 2"]);
+  assert.equal(
+    result.pages.flatMap((page) => page.sections)
+      .every((section) => section.mediaKind === "image"),
+    true,
+  );
+});
+
+test("preserves anchored Mobbin source-page URLs", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const pageId = sections[0].site_page_id;
+    for (const section of sections) {
+      if (section.site_page_id === pageId) {
+        section.page_url = "https://v7labs.com/pricing/#api";
+      }
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+
+  assert.equal(result.pages[0].url, "https://v7labs.com/pricing/#api");
+});
+
+test("upgrades legacy HTTP page URLs when Mobbin links to the same HTTPS Site", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const pageId = sections[0].site_page_id;
+    for (const section of sections) {
+      if (section.site_page_id === pageId) {
+        section.page_url = "http://v7labs.com/faqs";
+      }
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed, {
+    sourceUrl: "https://www.v7labs.com/",
+  });
+
+  assert.equal(result.pages[0].url, "https://v7labs.com/faqs");
+});
+
+test("decodes videos when source media, page image, and timestamps are incomplete", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const video = sections.find((section) => section.type === "page_video");
+    assert.ok(video);
+    const pageId = video.site_page_id;
+    for (const section of sections) {
+      if (section.site_page_id === pageId) delete section.page_image_url;
+    }
+    delete video.page_video_url;
+    delete video.video_timestamp_start_ms;
+    delete video.video_timestamp_end_ms;
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+  const video = result.pages
+    .flatMap((page) => page.sections)
+    .find((section) => section.mediaKind === "video");
+
+  assert.ok(video);
+  assert.equal(video.posterUrl, undefined);
+  assert.equal(video.videoStartSeconds, undefined);
+  assert.equal(video.videoEndSeconds, undefined);
+  assert.match(video.mediaUrl, /^https:\/\//);
+  assert.match(result.pages[0].fullPageImageUrl, /^https:\/\//);
 });
 
 test("maps exact image crops, video boundaries, and OCR geometry", async () => {

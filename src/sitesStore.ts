@@ -45,11 +45,17 @@ export interface SiteSummary {
   name: string;
   slug: string;
   sourceUrl: string;
+  description?: string;
+  logoUrl?: string;
+  categories: string[];
+  styles: string[];
+  popularity: number;
   label: string;
   isLatest: boolean;
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  previewMediaKind: "image" | "video";
   previews: Array<{
     id: number;
     title: string;
@@ -72,6 +78,11 @@ export interface SiteVersionDetail {
   name: string;
   slug: string;
   sourceUrl: string;
+  description?: string;
+  logoUrl?: string;
+  categories: string[];
+  styles: string[];
+  popularity: number;
   canonicalUrl: string;
   label: string;
   isLatest: boolean;
@@ -80,6 +91,7 @@ export interface SiteVersionDetail {
   analysisModel?: string;
   mobilePageUrl?: string;
   previewUrl: string;
+  previewMediaKind: "image" | "video";
   versions: SiteVersionOption[];
   pages: Array<{
     id: number;
@@ -179,7 +191,13 @@ export function createSitesStore(
       const result = await runQuery(
         `SELECT DISTINCT ON (s.id)
                 s.id AS site_id, sv.id AS version_id, s.name, s.slug, s.source_url,
+                to_jsonb(s)->>'description' AS description,
+                to_jsonb(s)->>'logo_url' AS logo_url,
+                to_jsonb(s)->'categories' AS categories,
+                to_jsonb(s)->'styles' AS styles,
+                (to_jsonb(s)->>'popularity')::integer AS popularity,
                 sv.label, sv.is_latest, sv.updated_at,
+                preview_object.content_type AS preview_content_type,
                 (SELECT count(*)::integer FROM site_pages sp WHERE sp.version_id = sv.id) AS page_count,
                 (SELECT count(*)::integer FROM site_sections ss
                  JOIN site_pages sp ON sp.id = ss.page_id WHERE sp.version_id = sv.id) AS section_count,
@@ -199,6 +217,8 @@ export function createSitesStore(
                 ), '[]'::jsonb) AS page_previews
          FROM sites s
          JOIN site_versions sv ON sv.site_id = s.id
+         LEFT JOIN stored_objects preview_object
+           ON preview_object.object_key = sv.preview_object_key
          WHERE sv.status = 'ready'
          ORDER BY s.id, sv.is_latest DESC, sv.updated_at DESC`,
       );
@@ -221,11 +241,17 @@ export function createSitesStore(
           name: text(row.name),
           slug: text(row.slug),
           sourceUrl: text(row.source_url),
+          ...optionalTextProperty("description", row.description),
+          ...optionalTextProperty("logoUrl", row.logo_url),
+          categories: jsonStringArray(row.categories),
+          styles: jsonStringArray(row.styles),
+          popularity: optionalNonNegativeInteger(row.popularity),
           label: text(row.label),
           isLatest: row.is_latest === true,
           pageCount: nonNegativeInteger(row.page_count),
           sectionCount: nonNegativeInteger(row.section_count),
           previewUrl: mediaPath(siteId, versionId, "preview"),
+          previewMediaKind: previewMediaKind(row.preview_content_type),
           previews,
           updatedAt: isoDate(row.updated_at),
         };
@@ -237,9 +263,17 @@ export function createSitesStore(
       assertPositiveId(versionId);
       const header = await runQuery(
         `SELECT s.id AS site_id, sv.id AS version_id, s.name, s.slug, s.source_url,
-                sv.canonical_url, sv.label, sv.is_latest
+                to_jsonb(s)->>'description' AS description,
+                to_jsonb(s)->>'logo_url' AS logo_url,
+                to_jsonb(s)->'categories' AS categories,
+                to_jsonb(s)->'styles' AS styles,
+                (to_jsonb(s)->>'popularity')::integer AS popularity,
+                sv.canonical_url, sv.label, sv.is_latest,
+                preview_object.content_type AS preview_content_type
          FROM sites s
          JOIN site_versions sv ON sv.site_id = s.id
+         LEFT JOIN stored_objects preview_object
+           ON preview_object.object_key = sv.preview_object_key
          WHERE s.id = $1 AND sv.id = $2 AND sv.status = 'ready'
          LIMIT 1`,
         [siteId, versionId],
@@ -297,11 +331,20 @@ export function createSitesStore(
           sourceMetadata: jsonObject(row.source_metadata),
         };
         if (mediaKind === "image") {
-          section.cropTop = finiteNumber(row.crop_top);
-          section.cropBottom = finiteNumber(row.crop_bottom);
+          const crop = optionalOrderedBounds(row.crop_top, row.crop_bottom);
+          if (crop) {
+            section.cropTop = crop[0];
+            section.cropBottom = crop[1];
+          }
         } else {
-          section.videoStartSeconds = finiteNumber(row.video_start_seconds);
-          section.videoEndSeconds = finiteNumber(row.video_end_seconds);
+          const interval = optionalOrderedBounds(
+            row.video_start_seconds,
+            row.video_end_seconds,
+          );
+          if (interval) {
+            section.videoStartSeconds = interval[0];
+            section.videoEndSeconds = interval[1];
+          }
           if (row.poster_object_key != null) {
             section.posterUrl = mediaPath(siteId, versionId, "poster", sectionId);
           }
@@ -317,6 +360,11 @@ export function createSitesStore(
         name: text(headerRow.name),
         slug: text(headerRow.slug),
         sourceUrl: text(headerRow.source_url),
+        ...optionalTextProperty("description", headerRow.description),
+        ...optionalTextProperty("logoUrl", headerRow.logo_url),
+        categories: jsonStringArray(headerRow.categories),
+        styles: jsonStringArray(headerRow.styles),
+        popularity: optionalNonNegativeInteger(headerRow.popularity),
         canonicalUrl: text(headerRow.canonical_url),
         label: text(headerRow.label),
         isLatest: headerRow.is_latest === true,
@@ -330,6 +378,7 @@ export function createSitesStore(
           ? { mobilePageUrl: mediaPath(siteId, versionId, "mobile") }
           : {}),
         previewUrl: mediaPath(siteId, versionId, "preview"),
+        previewMediaKind: previewMediaKind(headerRow.preview_content_type),
         versions: versionResult.rows.map((row) => ({
           id: positiveId(row.id),
           label: text(row.label),
@@ -355,15 +404,32 @@ export function createSitesStore(
       const { checkedIdentity, graph } = checkedImport(identity, graphValue);
       return runTransaction(async (tx) => {
         const site = await tx(
-          `INSERT INTO sites (source_site_id, slug, name, source_url)
-           VALUES ($1, $2, $3, $4)
+          `INSERT INTO sites
+             (source_site_id, slug, name, source_url, description, logo_url,
+              categories, styles, popularity)
+           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9)
            ON CONFLICT (source_site_id) DO UPDATE SET
              slug = EXCLUDED.slug,
              name = EXCLUDED.name,
              source_url = EXCLUDED.source_url,
+             description = EXCLUDED.description,
+             logo_url = EXCLUDED.logo_url,
+             categories = EXCLUDED.categories,
+             styles = EXCLUDED.styles,
+             popularity = EXCLUDED.popularity,
              updated_at = now()
            RETURNING id`,
-          [checkedIdentity.sourceSiteId, graph.site.slug, graph.site.name, graph.site.sourceUrl],
+          [
+            checkedIdentity.sourceSiteId,
+            graph.site.slug,
+            graph.site.name,
+            graph.site.sourceUrl,
+            graph.site.description ?? null,
+            graph.site.logoUrl ?? null,
+            JSON.stringify(graph.site.categories ?? []),
+            JSON.stringify(graph.site.styles ?? []),
+            graph.site.popularity ?? 0,
+          ],
         );
         const siteId = positiveId(site.rows[0]?.id);
         const version = await tx(
@@ -460,9 +526,6 @@ export function createSitesStore(
           const pageId = positiveId(insertedPage.rows[0]?.id);
           for (const section of page.sections) {
             const keys = input.objectKeys.sections[section.sourceId];
-            if (section.mediaKind === "image" && (section.cropTop == null || section.cropBottom == null)) {
-              throw new Error("Image Site section is missing crop bounds");
-            }
             await tx(
               `INSERT INTO site_sections
                  (page_id, source_section_id, position, media_kind,
@@ -737,6 +800,20 @@ function finiteNumber(value: unknown): number {
   return result;
 }
 
+function optionalOrderedBounds(
+  startValue: unknown,
+  endValue: unknown,
+): readonly [number, number] | undefined {
+  const hasStart = startValue !== undefined && startValue !== null;
+  const hasEnd = endValue !== undefined && endValue !== null;
+  if (!hasStart && !hasEnd) return undefined;
+  if (hasStart !== hasEnd) throw new Error("Invalid Sites database row");
+  const start = finiteNumber(startValue);
+  const end = finiteNumber(endValue);
+  if (end <= start) throw new Error("Invalid Sites database row");
+  return [start, end];
+}
+
 function isoDate(value: unknown): string {
   const date = value instanceof Date ? value : new Date(text(value));
   if (Number.isNaN(date.valueOf())) throw new Error("Invalid Sites database row");
@@ -746,6 +823,14 @@ function isoDate(value: unknown): string {
 function enumMediaKind(value: unknown): "image" | "video" {
   if (value !== "image" && value !== "video") throw new Error("Invalid Sites database row");
   return value;
+}
+
+function previewMediaKind(value: unknown): "image" | "video" {
+  if (value === undefined || value === null) return "video";
+  const contentType = text(value).toLowerCase();
+  if (contentType.startsWith("image/")) return "image";
+  if (contentType.startsWith("video/")) return "video";
+  throw new Error("Invalid Sites database row");
 }
 
 function jsonArray(value: unknown): unknown[] {
@@ -760,4 +845,25 @@ function jsonObject(value: unknown): Record<string, unknown> {
     throw new Error("Invalid Sites database row");
   }
   return parsed as Record<string, unknown>;
+}
+
+function jsonStringArray(value: unknown): string[] {
+  if (value === undefined || value === null) return [];
+  const values = jsonArray(value);
+  if (values.some((item) => typeof item !== "string" || !item)) {
+    throw new Error("Invalid Sites database row");
+  }
+  return [...new Set(values as string[])];
+}
+
+function optionalTextProperty<Key extends string>(
+  key: Key,
+  value: unknown,
+): Partial<Record<Key, string>> {
+  if (value === undefined || value === null) return {};
+  return { [key]: text(value) } as Record<Key, string>;
+}
+
+function optionalNonNegativeInteger(value: unknown): number {
+  return value === undefined || value === null ? 0 : nonNegativeInteger(value);
 }

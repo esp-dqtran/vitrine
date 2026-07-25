@@ -232,24 +232,27 @@ export function App() {
   }
 
   if (route.name === 'sites') {
-    return frame(
+    return (
       <SitesPage
         isAdmin={isAdmin}
         query={siteQuery}
         onQueryChange={setSiteQuery}
-        memberControls={!isAdmin ? accountControls : undefined}
-      />,
+        memberControls={accountControls}
+      />
     );
   }
   if (route.name === 'site-version') {
-    return frame(
+    return (
       <SiteVersionPage
         siteId={route.siteId}
         versionId={route.versionId}
         isAdmin={isAdmin}
+        query={siteQuery}
+        onQueryChange={setSiteQuery}
+        accountControls={accountControls}
         initialSection={route.section}
         onSectionChange={(section) => navigate({ name: 'site-version', siteId: route.siteId, versionId: route.versionId, section })}
-      />,
+      />
     );
   }
 

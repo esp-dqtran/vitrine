@@ -33,7 +33,7 @@ test("keeps worker consumers, progress, and cancellation isolated", async () => 
   assert.doesNotMatch(`${sitesWorker}\n${sitesPipeline}`, /\bconsumeJobs\b|\brequestCancel\b|progress\.ts|cancel-requested/);
 });
 
-test("launches both workers against one RabbitMQ with distinct browser state", async () => {
+test("launches catalog and repair Sites workers with isolated queues and browser state", async () => {
   const [compose, appsDockerfile, sitesDockerfile, packageSource] = await Promise.all([
     readFile(new URL("docker-compose.yml", root), "utf8"),
     readFile(new URL("services/import-worker/Dockerfile", root), "utf8"),
@@ -42,24 +42,35 @@ test("launches both workers against one RabbitMQ with distinct browser state", a
   ]);
   const apps = serviceBlock(compose, "import-worker");
   const sites = serviceBlock(compose, "sites-import-worker");
+  const repairs = serviceBlock(compose, "sites-repair-worker");
   const parsedPackage = JSON.parse(packageSource) as { scripts: Record<string, string> };
 
   assert.match(apps, /dockerfile: services\/import-worker\/Dockerfile/);
   assert.match(sites, /dockerfile: services\/sites-import-worker\/Dockerfile/);
+  assert.match(repairs, /dockerfile: services\/sites-import-worker\/Dockerfile/);
   assert.match(apps, /RABBITMQ_URL: amqp:\/\/rabbitmq/);
   assert.match(sites, /RABBITMQ_URL: amqp:\/\/rabbitmq/);
+  assert.match(repairs, /RABBITMQ_URL: amqp:\/\/rabbitmq/);
   assert.match(apps, /rabbitmq:\s*\n\s+condition: service_healthy/);
   assert.match(sites, /rabbitmq:\s*\n\s+condition: service_healthy/);
   assert.match(apps, /import-worker-profile:\/app\/browser-profile/);
   assert.doesNotMatch(apps, /sites-import-worker-profile|MOBBIN_SITES_/);
   assert.match(sites, /sites-import-worker-profile:\/app\/browser-profile/);
+  assert.match(repairs, /sites-repair-worker-profile:\/app\/browser-profile/);
+  assert.match(repairs, /MOBBIN_SITES_QUEUE_SCOPE: repair/);
+  assert.doesNotMatch(repairs, /sites-import-worker-profile:\/app\/browser-profile/);
   assert.doesNotMatch(sites, /\n\s+- import-worker-profile:|MOBBIN_PROFILE_DIR:/);
-  assert.match(sites, /MOBBIN_SITES_STORAGE_STATE_PATH: \/app\/secrets\/mobbin-storage-state\.json/);
+  assert.match(sites, /MOBBIN_SITES_STORAGE_STATE_PATH: \/app\/secrets\/mobbin-auth-state\.json/);
+  assert.match(sites, /\.\/data\/mobbin-auth-state\.json:\/app\/secrets\/mobbin-auth-state\.json:ro/);
   assert.match(appsDockerfile, /services\/import-worker\/src\/index\.ts/);
   assert.doesNotMatch(appsDockerfile, /sites-import-worker/);
   assert.match(sitesDockerfile, /services\/sites-import-worker\/src\/index\.ts/);
   assert.doesNotMatch(sitesDockerfile, /services\/import-worker\/src\/index\.ts/);
   assert.equal(parsedPackage.scripts["service:sites-import-worker"], "tsx services/sites-import-worker/src/index.ts");
+  assert.equal(
+    parsedPackage.scripts["sites:queue-failed"],
+    "node --env-file=.env --import tsx scripts/queue-failed-mobbin-sites.ts",
+  );
   assert.match(parsedPackage.scripts.test, /services\/sites-import-worker\/src\/\*\.test\.ts/);
 });
 

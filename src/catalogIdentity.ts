@@ -8,6 +8,16 @@ export interface CatalogIdentityJob {
 
 const key = (slug: string, platform: string) => `${slug}\u0000${platform}`;
 
+export function mobbinCatalogAppUrl(job: Pick<CatalogIdentityJob, "mobbinId" | "slug" | "platform">): string {
+  const disambiguationMarker = `-${job.mobbinId}`;
+  const markerIndex = job.slug.lastIndexOf(disambiguationMarker);
+  const markerSuffix = markerIndex < 0 ? "" : job.slug.slice(markerIndex + disambiguationMarker.length);
+  const canonicalSlug = markerIndex > 0 && (markerSuffix === "" || /^-\d+$/.test(markerSuffix))
+    ? job.slug.slice(0, markerIndex)
+    : job.slug;
+  return `https://mobbin.com/apps/${canonicalSlug}-${job.platform}-${job.mobbinId}/latest/screens`;
+}
+
 export function disambiguateCatalogSlugs<T extends CatalogIdentityJob>(jobs: readonly T[]): T[] {
   const result = jobs.map((job) => ({ ...job }));
   const groups = new Map<string, T[]>();

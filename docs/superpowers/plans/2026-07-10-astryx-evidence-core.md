@@ -982,7 +982,7 @@ Record the structured foundations panel and ScreenDetail wiring as the UI comple
 **Files:**
 - Verify all files listed in this plan
 
-- [ ] **Step 1: Start the existing infrastructure required by integration tests**
+- [ ] **Step 1: Start the existing infrastructure required by database tests**
 
 Run:
 

@@ -43,6 +43,8 @@
     "service:antigravity-worker:uninstall": "node scripts/antigravity-worker-launch-agent.mjs uninstall",
     "service:search-index-worker": "tsx services/search-index-worker/src/index.ts",
     "service:sites-import-worker": "tsx services/sites-import-worker/src/index.ts",
+    "sites:queue-catalog": "node --env-file=.env --import tsx scripts/queue-mobbin-sites-catalog.ts",
+    "sites:queue-failed": "node --env-file=.env --import tsx scripts/queue-failed-mobbin-sites.ts",
     "service:public-page-import-worker": "tsx services/public-page-import-worker/src/index.ts",
     "search:index:backfill": "node --env-file=.env --import tsx scripts/search-index-backfill.ts",
     "search:verify-relevance": "node --env-file-if-exists=.env --import tsx scripts/verify-search-relevance.ts",

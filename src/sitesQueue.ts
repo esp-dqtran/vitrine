@@ -7,7 +7,10 @@ import { classifySiteImportUrl } from "./sites.ts";
 
 export const SITES_QUEUE_NAME = "mobbin-sites-jobs";
 export const SITES_DLQ_NAME = "mobbin-sites-jobs.dlq";
+export const SITES_REPAIR_QUEUE_NAME = "mobbin-sites-repair-jobs";
+export const SITES_REPAIR_DLQ_NAME = "mobbin-sites-repair-jobs.dlq";
 export const SITES_MAX_ATTEMPTS = 3;
+export type SitesQueueScope = "catalog" | "repair";
 
 export type SitesJob = {
   type: "import-site";
@@ -30,6 +33,24 @@ export interface SitesQueue {
 
 function invalidSitesJob(): never {
   throw new Error("Invalid Sites queue job");
+}
+
+export function parseSitesQueueScope(value: unknown): SitesQueueScope {
+  if (value === undefined || value === "" || value === "catalog") return "catalog";
+  if (value === "repair") return "repair";
+  throw new Error("Invalid Sites queue scope");
+}
+
+function queueNames(scope: SitesQueueScope): {
+  queueName: string;
+  dlqName: string;
+} {
+  return scope === "repair"
+    ? {
+        queueName: SITES_REPAIR_QUEUE_NAME,
+        dlqName: SITES_REPAIR_DLQ_NAME,
+      }
+    : { queueName: SITES_QUEUE_NAME, dlqName: SITES_DLQ_NAME };
 }
 
 export function parseSitesJob(value: unknown): SitesJob {
@@ -59,7 +80,9 @@ export function parseSitesJob(value: unknown): SitesJob {
 export function createSitesQueue(
   connect: typeof amqp.connect,
   url = process.env.RABBITMQ_URL ?? "amqp://localhost",
+  scope: SitesQueueScope = "catalog",
 ): SitesQueue {
+  const { queueName, dlqName } = queueNames(scope);
   let connection: ChannelModel | undefined;
   let channelPromise: Promise<Channel> | undefined;
 
@@ -68,12 +91,12 @@ export function createSitesQueue(
       channelPromise = (async () => {
         connection = await connect(url);
         const channel = await connection.createChannel();
-        await channel.assertQueue(SITES_DLQ_NAME, { durable: true });
-        await channel.assertQueue(SITES_QUEUE_NAME, {
+        await channel.assertQueue(dlqName, { durable: true });
+        await channel.assertQueue(queueName, {
           durable: true,
           arguments: {
             "x-dead-letter-exchange": "",
-            "x-dead-letter-routing-key": SITES_DLQ_NAME,
+            "x-dead-letter-routing-key": dlqName,
           },
         });
         return channel;
@@ -91,7 +114,7 @@ export function createSitesQueue(
       const parsed = parseSitesJob(job);
       const channel = await getChannel();
       channel.sendToQueue(
-        SITES_QUEUE_NAME,
+        queueName,
         Buffer.from(JSON.stringify(parsed)),
         { persistent: true, headers: { "x-attempt": 1 } },
       );
@@ -100,7 +123,7 @@ export function createSitesQueue(
     async consume(handler) {
       const channel = await getChannel();
       await channel.prefetch(1);
-      await channel.consume(SITES_QUEUE_NAME, async (message) => {
+      await channel.consume(queueName, async (message) => {
         if (!message) return;
         const attempt = attemptFrom(message);
         let job: SitesJob | undefined;
@@ -115,7 +138,7 @@ export function createSitesQueue(
           if (attempt >= SITES_MAX_ATTEMPTS) {
             channel.nack(message, false, false);
           } else {
-            channel.sendToQueue(SITES_QUEUE_NAME, message.content, {
+            channel.sendToQueue(queueName, message.content, {
               persistent: true,
               headers: { "x-attempt": attempt + 1 },
             });
@@ -140,25 +163,39 @@ function attemptFrom(message: ConsumeMessage): number {
   return Number.isSafeInteger(value) && (value as number) > 0 ? value as number : 1;
 }
 
-let productionQueue: SitesQueue | undefined;
+const productionQueues = new Map<SitesQueueScope, SitesQueue>();
 
-function liveSitesQueue(): SitesQueue {
-  productionQueue ??= createSitesQueue(amqp.connect);
-  return productionQueue;
+function liveSitesQueue(scope: SitesQueueScope): SitesQueue {
+  let queue = productionQueues.get(scope);
+  if (!queue) {
+    queue = createSitesQueue(amqp.connect, undefined, scope);
+    productionQueues.set(scope, queue);
+  }
+  return queue;
 }
 
-export function publishSitesJob(job: SitesJob): Promise<void> {
-  return liveSitesQueue().publish(job);
+export function publishSitesJob(
+  job: SitesJob,
+  scope: SitesQueueScope = "catalog",
+): Promise<void> {
+  return liveSitesQueue(scope).publish(job);
 }
 
 export function consumeSitesJobs(
   handler: (job: SitesJob, context: SitesAttempt) => Promise<void>,
+  scope: SitesQueueScope = "catalog",
 ): Promise<void> {
-  return liveSitesQueue().consume(handler);
+  return liveSitesQueue(scope).consume(handler);
 }
 
-export async function closeSitesQueue(): Promise<void> {
-  const queue = productionQueue;
-  productionQueue = undefined;
-  await queue?.close();
+export async function closeSitesQueue(scope?: SitesQueueScope): Promise<void> {
+  if (scope) {
+    const queue = productionQueues.get(scope);
+    productionQueues.delete(scope);
+    await queue?.close();
+    return;
+  }
+  const queues = [...productionQueues.values()];
+  productionQueues.clear();
+  await Promise.all(queues.map((queue) => queue.close()));
 }

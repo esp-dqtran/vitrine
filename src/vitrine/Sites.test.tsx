@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SiteImportDialog } from './components/SiteImportDialog.tsx';
-import { SitesPageView } from './components/SitesPage.tsx';
+import { filterAndSortSites, SitesPageView } from './components/SitesPage.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
 import { Lightbox } from './components/Lightbox.tsx';
 import { MediaGridCard } from './components/MediaGridCard.tsx';
@@ -13,6 +13,10 @@ const site: SiteSummary = {
   id: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
   label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
   previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
+  description: 'AI-powered visual data platform.',
+  categories: ['Technology', 'Business'],
+  styles: ['Minimal', 'Motion'],
+  popularity: 91,
   previews: [
     { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
     { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
@@ -20,7 +24,15 @@ const site: SiteSummary = {
 };
 
 const detail: SiteVersionDetail = {
-  site: { id: 1, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/' },
+  site: {
+    id: 1,
+    name: 'V7',
+    slug: 'v-7',
+    sourceUrl: 'https://v7labs.com/',
+    description: 'AI-powered visual data platform.',
+    categories: ['Technology', 'Business'],
+    styles: ['Minimal', 'Motion'],
+  },
   version: { id: 2, label: 'Jul 2026', isLatest: true, previewUrl: site.previewUrl },
   versionOptions: [
     { id: 2, label: 'Jul 2026', isLatest: true, updatedAt: '2026-07-20T00:00:00.000Z' },
@@ -111,25 +123,79 @@ const detail: SiteVersionDetail = {
   }],
 };
 
-test('renders Sites with Apps gallery cards instead of preview-video cards', () => {
+test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
   const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
-  assert.match(html, /References/);
+  assert.match(html, /data-sites-discovery="true"/);
+  assert.match(html, /Categories/);
+  assert.match(html, /Sections/);
+  assert.match(html, /Styles/);
+  assert.match(html, /Portfolio/);
+  assert.match(html, /Lifestyle/);
+  assert.match(html, /How It Works/);
+  assert.match(html, /Social Proof/);
+  assert.match(html, /Photography/);
+  assert.match(html, /Colorful/);
+  assert.match(html, /Latest/);
+  assert.match(html, /Most popular/);
   assert.match(html, /V7/);
-  assert.match(html, /Search sites, versions, and sections/);
-  assert.match(html, /View site/);
-  assert.match(html, /Home/);
+  assert.match(html, /Search Sites/);
+  assert.match(html, /data-site-discovery-card="true"/);
   assert.match(html, /46 sections/);
-  assert.doesNotMatch(html, /16 pages/);
-  assert.doesNotMatch(html, /View pages/);
-  assert.doesNotMatch(html, /page by page/);
-  assert.match(html, /Refresh/);
+  assert.match(html, /AI-powered visual data platform/);
+  assert.match(html, /<video/);
+  assert.match(html, /<a[^>]+href="\/sites\/1\/versions\/2"[^>]+class="site-discovery-card__link"/);
+  assert.doesNotMatch(html, /Refresh/);
+  assert.doesNotMatch(html, /Showing 1 of 1 sites/);
   assert.match(html, /Import Site/);
-  assert.doesNotMatch(html, /<video/);
+  assert.equal((html.match(/>Import Site</g) ?? []).length, 1);
+});
+
+test('renders image-only Mobbin Site previews without a broken video element', () => {
+  const imageSite: SiteSummary = { ...site, previewMediaKind: 'image' };
+  const imageDetail: SiteVersionDetail = {
+    ...detail,
+    version: { ...detail.version, previewMediaKind: 'image' },
+  };
+  const catalog = renderToStaticMarkup(
+    <SitesPageView sites={[imageSite]} isAdmin={false} query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />,
+  );
+  const version = renderToStaticMarkup(
+    <SiteVersionView detail={imageDetail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+  );
+
+  assert.match(catalog, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
+  assert.doesNotMatch(catalog, /<video/);
+  assert.match(version, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
+  assert.doesNotMatch(version, /<video/);
 });
 
 test('filters Sites by name, version, and source page title', () => {
   const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
-  assert.match(html, /Showing 1 of 1 sites/);
+  assert.match(html, /data-site-discovery-card="true"/);
+  assert.doesNotMatch(html, /Showing 1 of 1 sites/);
+});
+
+test('filters Sites by taxonomy and ranks popular references by captured depth', () => {
+  const finance: SiteSummary = {
+    ...site,
+    id: 2,
+    versionId: 3,
+    name: 'Ledger',
+    sourceUrl: 'https://ledger.example/',
+    categories: ['Finance'],
+    styles: ['Photography'],
+    popularity: 30,
+    sectionCount: 70,
+    updatedAt: '2026-07-18T00:00:00.000Z',
+    previews: [{ id: 20, title: 'Pricing', position: 0, url: '/api/sites/2/versions/3/pages/20/media' }],
+  };
+  const newest = filterAndSortSites([finance, site], '', { group: 'styles', value: 'Minimal' }, 'latest');
+  const popular = filterAndSortSites([finance, site], '', null, 'popular');
+  const pricing = filterAndSortSites([finance, site], '', { group: 'sections', value: 'Pricing' }, 'latest');
+
+  assert.deepEqual(newest.map((item) => item.name), ['V7']);
+  assert.deepEqual(popular.map((item) => item.name), ['V7', 'Ledger']);
+  assert.deepEqual(pricing.map((item) => item.name), ['V7', 'Ledger']);
 });
 
 test('renders member Sites with the Apps gallery identity and account-control slots', () => {
@@ -250,13 +316,25 @@ test('renders native video in the shared lightbox', () => {
   assert.match(html, /Home hero — 1 of 1/);
 });
 
-test('renders Preview and Sections without exposing Pages as a primary object', () => {
+test('renders the Mobbin Site-version hierarchy without Back or tab counts', () => {
   const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
-  assert.match(html, /Back to Sites/);
+  assert.match(html, /data-site-detail="true"/);
+  assert.match(html, /data-site-detail-hero="true"/);
+  assert.doesNotMatch(html, /Back to Sites/);
+  assert.match(html, /<h1><span>V7 —<\/span><span>AI-powered visual data platform\.<\/span><\/h1>/);
+  assert.match(html, /<span>Category<\/span>/);
+  assert.match(html, /<span>Style<\/span>/);
+  assert.match(html, />Latest</);
   assert.match(html, /Preview/);
-  assert.match(html, /Sections/);
-  assert.match(html, /Import Site/);
+  assert.match(html, />Sections</);
+  assert.doesNotMatch(html, />Sections 2</);
+  assert.match(html, /Save/);
+  assert.match(html, /Technology/);
+  assert.match(html, /Minimal/);
+  assert.match(html, /AI-powered visual data platform/);
+  assert.doesNotMatch(html, /Import Site/);
   assert.match(html, /Visit site/);
+  assert.match(html, /data-site-preview-stage="true"/);
   assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+controls=""[^>]+preload="metadata"/);
   assert.doesNotMatch(html, />Overview</);
   assert.doesNotMatch(html, />Pages</);
@@ -274,6 +352,23 @@ test('filters Sections by keyword and renders patterns without dumping OCR text'
   assert.doesNotMatch(html, /Secret visible copy/);
   assert.match(html, /\/image/);
   assert.doesNotMatch(html, /\/video/);
+  assert.match(html, /data-site-sections-grid="true"/);
+  assert.match(html, /0 selected/);
+});
+
+test('uses the captured page title when a section has no extracted pattern', () => {
+  const withoutPatterns: SiteVersionDetail = {
+    ...detail,
+    pages: detail.pages.map((page) => ({
+      ...page,
+      sections: page.sections.map((item) => ({ ...item, patterns: [] })),
+    })),
+  };
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={withoutPatterns} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+  );
+  assert.match(html, /<strong>Home<\/strong>/);
+  assert.doesNotMatch(html, /Unclassified/);
 });
 
 test('falls back legacy and unknown Site detail sections to Preview', () => {
@@ -293,6 +388,5 @@ test('maps ready versions and sections into their dedicated controls', () => {
 test('keeps Site loading and failures inside the detail frame', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
   assert.match(source, /function SiteVersionLoading/);
-  assert.match(source, /Back to Sites/);
   assert.match(source, /Retry/);
 });

@@ -7,7 +7,11 @@ import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 import { decodeMobbinSitesSource } from "./sitesSource.ts";
 import {
   classifyMobbinSitesNavigation,
+  collectMobbinSitesSectionMedia,
+  createSiteCaptureLatch,
   crawlMobbinSite,
+  mergeMobbinSitesPreviewMetadata,
+  mobbinSiteCategoriesFromHrefs,
   PermanentSiteImportError,
   resolveMobbinSitesLiveMedia,
   SiteImportCancelledError,
@@ -20,7 +24,18 @@ test("classifies Mobbin's logged-out shell as authentication, not navigation dri
   assert.equal(classifyMobbinSitesNavigation({ loginLinks: 0, sectionLinks: 1 }), "ready");
 });
 
+test("defers a source-capture failure until the crawler reads it", async () => {
+  const latch = createSiteCaptureLatch();
+  const error = new PermanentSiteImportError("Mobbin Sites source changed");
+
+  latch.fail(error);
+  await new Promise<void>((resolve) => setImmediate(resolve));
+
+  await assert.rejects(latch.read(), error);
+});
+
 import type { CompletedSiteImport } from "./sitesStore.ts";
+import type { SiteImport } from "./sites.ts";
 
 const approved =
   "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview";
@@ -30,6 +45,92 @@ const rawFixture = await readFile(
   "utf8",
 );
 const fixtureImport = decodeMobbinSitesSource(rawFixture);
+
+test("extracts and stores the exact Mobbin Site preview categories", () => {
+  const categories = mobbinSiteCategoriesFromHrefs([
+    "/search/sites?content_type=sites&sort=publishedAt&filter=categories.Technology",
+    "/search/sites?content_type=sites&sort=publishedAt&filter=categories.Finance",
+    "/search/sites?content_type=sites&sort=publishedAt&filter=styles.Minimal",
+    "/search/sites?content_type=sites&sort=publishedAt&filter=categories.Technology",
+  ]);
+
+  assert.deepEqual(categories, ["Technology", "Finance"]);
+  assert.deepEqual(
+    mergeMobbinSitesPreviewMetadata(fixtureImport, { categories }).site.categories,
+    ["Technology", "Finance"],
+  );
+  assert.equal(
+    mergeMobbinSitesPreviewMetadata(fixtureImport, { categories }).site.logoUrl,
+    "https://cdn.fixture/asset-0039.webp",
+  );
+});
+
+test("revisits Mobbin's virtualized Sections grid when lazy media is missing", async () => {
+  let pass = 0;
+  const fakePage = {
+    async $$eval() {
+      return pass < 2
+        ? [{
+            sourceId: "section-a",
+            imageUrl: "https://cdn.example/a.webp",
+            videoUrl: "",
+            posterUrl: "",
+          }]
+        : [
+            {
+              sourceId: "section-a",
+              imageUrl: "https://cdn.example/a.webp",
+              videoUrl: "",
+              posterUrl: "",
+            },
+            {
+              sourceId: "section-b",
+              imageUrl: "",
+              videoUrl: "https://cdn.example/b.mp4",
+              posterUrl: "https://cdn.example/b-poster.webp",
+            },
+          ];
+    },
+    async evaluate(callback: () => unknown) {
+      if (String(callback).includes("scrollTo")) {
+        pass++;
+        return undefined;
+      }
+      return true;
+    },
+    async waitForTimeout() {},
+  };
+  const graph = {
+    pages: [
+      {
+        sourceId: "page-a",
+        sections: [{ sourceId: "section-a", mediaKind: "image" }],
+      },
+      {
+        sourceId: "page-b",
+        sections: [{ sourceId: "section-b", mediaKind: "video" }],
+      },
+    ],
+  } as SiteImport;
+
+  assert.deepEqual(
+    await collectMobbinSitesSectionMedia(fakePage as never, graph),
+    {
+      sectionMediaUrls: {
+        "section-a": "https://cdn.example/a.webp",
+        "section-b": "https://cdn.example/b.mp4",
+      },
+      sectionPosterUrls: {
+        "section-b": "https://cdn.example/b-poster.webp",
+      },
+      pageImageUrls: {
+        "page-a": "https://cdn.example/a.webp",
+        "page-b": "https://cdn.example/b-poster.webp",
+      },
+    },
+  );
+  assert.equal(pass, 2);
+});
 
 test("replaces retired Supabase media with the live Mobbin CDN snapshot", () => {
   const retired = structuredClone(fixtureImport);
@@ -51,27 +152,56 @@ test("replaces retired Supabase media with the live Mobbin CDN snapshot", () => 
         : `https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/sites/${section.sourceId}.png`,
     ]),
   );
+  const livePosters = Object.fromEntries(
+    retired.pages.flatMap((page) => page.sections)
+      .filter((section) => section.mediaKind === "video")
+      .map((section) => [
+        section.sourceId,
+        `https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/sites/${section.sourceId}-poster.webp`,
+      ]),
+  );
+  const livePages = Object.fromEntries(
+    retired.pages.map((page) => [
+      page.sourceId,
+      `https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/sites/${page.sourceId}-page.webp`,
+    ]),
+  );
 
   const resolved = resolveMobbinSitesLiveMedia(retired, {
     previewVideoUrl:
       "https://bytescale.mobbin.com/FW25bBB/video/mobbin.com/prod/file.mp4?enc=preview",
+    previewMediaKind: "video",
     sectionMediaUrls: liveSections,
+    sectionPosterUrls: livePosters,
+    pageImageUrls: livePages,
   });
 
   assert.equal(resolved.version.previewVideoUrl.includes("?enc=preview"), true);
   assert.equal(
-    resolved.pages.every((page) =>
-      page.fullPageImageUrl.startsWith(
-        "https://bytescale.mobbin.com/FW25bBB/image/mobbin.com/prod/content/sites/",
-      )),
+    resolved.pages.every((page) => page.fullPageImageUrl === livePages[page.sourceId]),
     true,
   );
   assert.equal(
     resolved.pages.flatMap((page) => page.sections).every((section) =>
       section.mediaUrl === liveSections[section.sourceId] &&
-      (!section.posterUrl || section.posterUrl.startsWith("https://bytescale.mobbin.com/"))),
+      (section.mediaKind !== "video" ||
+        section.posterUrl === livePosters[section.sourceId])),
     true,
   );
+});
+
+test("stores an image-only Site preview using the image media contract", async () => {
+  const imageOnly = structuredClone(fixtureImport);
+  imageOnly.version.previewMediaKind = "image";
+  imageOnly.version.previewVideoUrl = "https://cdn.fixture/preview.png";
+  const harness = crawlerHarness({ captureSource: async () => imageOnly });
+
+  await crawlMobbinSite(approved, harness.dependencies);
+
+  const preview = harness.putCalls.find((call) => call.key.includes("/preview/"));
+  assert.ok(preview);
+  assert.equal(preview.contentType, "image/png");
+  assert.match(preview.key, /\.png$/);
 });
 
 test("stores normalized source and every required V7 media object before one commit", async () => {

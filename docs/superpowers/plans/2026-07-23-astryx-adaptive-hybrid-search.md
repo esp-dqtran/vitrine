@@ -35,7 +35,7 @@
 - Create `src/searchConfig.ts`: validated shared Advanced Search and embedding configuration.
 - Create `src/searchConfig.test.ts`: feature-flag, URL, key, and model configuration tests.
 - Create `src/searchIndexStore.ts`: queue claiming, published-source loading, document replacement, retry, and backfill.
-- Create `src/searchIndexStore.test.ts`: PostgreSQL integration tests for index lifecycle and queue safety.
+- Create `src/searchIndexStore.test.ts`: PostgreSQL store tests for index lifecycle and queue safety.
 - Create `services/search-index-worker/src/pipeline.ts`: one-job indexing pipeline.
 - Create `services/search-index-worker/src/pipeline.test.ts`: success, stale version, embedding failure, and retry tests.
 - Create `services/search-index-worker/src/start.ts`: worker lifecycle.
@@ -47,7 +47,7 @@
 ### Retrieval and API
 
 - Create `src/searchStore.ts`: exact/full-text/vector retrieval, authorized facets, suggestions, cursor pagination, and index health.
-- Create `src/searchStore.test.ts`: PostgreSQL integration tests for ranking, filters, facets, cursor stability, and authorization.
+- Create `src/searchStore.test.ts`: PostgreSQL store tests for ranking, filters, facets, cursor stability, and authorization.
 - Create `services/api/src/search.ts`: request parsing, feature switch, fallback orchestration, and safe telemetry.
 - Create `services/api/src/search.test.ts`: service-level hybrid/fallback tests.
 - Modify `services/api/src/index.ts`: construct search dependencies.
@@ -101,7 +101,7 @@
 - Modify: `docker-compose.yml`
 - Modify: `src/migrations.test.ts`
 
-- [ ] **Step 1: Write the failing migration integration test**
+- [ ] **Step 1: Write the failing migration test**
 
 Add this test after the existing current-schema assertions in `src/migrations.test.ts`:
 

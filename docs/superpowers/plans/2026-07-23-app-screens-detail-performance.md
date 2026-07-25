@@ -41,7 +41,7 @@
 **Files:**
 - Modify only relevant files if verification exposes a regression.
 
-- [ ] Run all unit/integration tests and the production build.
+- [ ] Run all automated tests and the production build.
 - [ ] Rebuild the local API and record `/versions`, first 48 Screens, and next 48 Screens timings.
 - [ ] Run authenticated browser E2E: app detail, Screens, 48 cards, scroll to 96.
 - [ ] Confirm one `/versions`, two paged `/screens`, and zero `/api/jobs` requests.

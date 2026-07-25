@@ -5,7 +5,6 @@ import {
   type JobStatus,
 } from "../../../src/db.ts";
 import {
-  PermanentSiteImportError,
   SiteImportCancelledError,
 } from "../../../src/sitesCrawler.ts";
 import { GenericSiteImportCancelledError } from "../../../src/genericSiteCrawler.ts";
@@ -41,7 +40,7 @@ export function createSitesPipelineHandler(
   const deps = { ...defaults, ...overrides };
   return async function handleSitesJob(
     job: SitesJob,
-    attempt: SitesAttempt,
+    _attempt: SitesAttempt,
   ): Promise<void> {
     const record = await deps.getJob(job.jobId);
     if (!record || record.status === "cancelled") return;
@@ -65,18 +64,11 @@ export function createSitesPipelineHandler(
         error instanceof SiteImportCancelledError ||
         error instanceof GenericSiteImportCancelledError
       ) return;
-      if (error instanceof PermanentSiteImportError) {
-        await deps.setJobStatus(job.jobId, "error", safePermanentMessage(error.message));
-        return;
-      }
-      if (attempt.attempt >= attempt.maxAttempts) {
-        await deps.setJobStatus(
-          job.jobId,
-          "error",
-          `Site import failed after ${attempt.maxAttempts} attempts`,
-        );
-      }
-      throw error;
+      await deps.setJobStatus(
+        job.jobId,
+        "error",
+        safeFailureMessage(error instanceof Error ? error.message : ""),
+      );
     }
   };
 }
@@ -87,7 +79,7 @@ function safeProgressMessage(value: string): string {
   return message;
 }
 
-function safePermanentMessage(value: string): string {
+function safeFailureMessage(value: string): string {
   const message = typeof value === "string"
     ? value.replace(/https?:\/\/\S+/gi, "[redacted-url]").trim().slice(0, 500)
     : "";

@@ -73,8 +73,24 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
     };
   });
   return {
-    site: { id: siteId, name, slug, sourceUrl },
-    version: { id: versionId, label, isLatest: body.isLatest === true, previewUrl },
+    site: {
+      id: siteId,
+      name,
+      slug,
+      sourceUrl,
+      ...optionalTextField(body, 'description'),
+      ...optionalNullableTextField(body, 'logoUrl'),
+      ...optionalStringArrayField(body, 'categories'),
+      ...optionalStringArrayField(body, 'styles'),
+      ...(body.popularity === undefined ? {} : { popularity: nonNegativeNumber(body.popularity) }),
+    },
+    version: {
+      id: versionId,
+      label,
+      isLatest: body.isLatest === true,
+      previewUrl,
+      previewMediaKind: parsePreviewMediaKind(body.previewMediaKind),
+    },
     versionOptions,
     canonicalUrl: requiredText(body.canonicalUrl),
     analysisStatus,
@@ -114,11 +130,17 @@ function parseSummary(value: unknown): SiteSummary {
     name: requiredText(value.name),
     slug: requiredText(value.slug),
     sourceUrl: requiredText(value.sourceUrl),
+    ...optionalTextField(value, 'description'),
+    ...optionalNullableTextField(value, 'logoUrl'),
+    ...optionalStringArrayField(value, 'categories'),
+    ...optionalStringArrayField(value, 'styles'),
+    ...(value.popularity === undefined ? {} : { popularity: nonNegativeNumber(value.popularity) }),
     label: requiredText(value.label),
     isLatest: value.isLatest === true,
     pageCount,
     sectionCount,
     previewUrl: apiPath(value.previewUrl),
+    previewMediaKind: parsePreviewMediaKind(value.previewMediaKind),
     previews,
     updatedAt,
   };
@@ -137,6 +159,12 @@ function parsePage(value: unknown): SiteVersionPage {
     fullPageImageUrl: apiPath(value.fullPageImageUrl),
     sections: value.sections.map(parseSection),
   };
+}
+
+function parsePreviewMediaKind(value: unknown): 'image' | 'video' {
+  if (value === undefined) return 'video';
+  if (value === 'image' || value === 'video') return value;
+  throw new Error('Sites returned an invalid response');
 }
 
 function parseSection(value: unknown): SiteSectionView {
@@ -179,6 +207,11 @@ function optionalStringArray(value: unknown): string[] {
   return [...new Set(value)];
 }
 
+function optionalStringArrayField(value: Record<string, any>, key: string): Record<string, string[]> {
+  if (value[key] === undefined) return {};
+  return { [key]: optionalStringArray(value[key]) };
+}
+
 async function responseBody(response: Response): Promise<unknown> {
   try { return await response.json(); } catch { return undefined; }
 }
@@ -203,6 +236,28 @@ function nonNegativeInteger(value: unknown): number {
 function finiteNumber(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) throw new Error('Site version returned an invalid response');
   return value;
+}
+
+function nonNegativeNumber(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new Error('Sites returned an invalid response');
+  }
+  return value;
+}
+
+function optionalTextField(value: Record<string, any>, key: string): Record<string, string> {
+  const field = value[key];
+  if (field === undefined) return {};
+  if (typeof field !== 'string' || !field.trim()) throw new Error('Sites returned an invalid response');
+  return { [key]: field.trim() };
+}
+
+function optionalNullableTextField(value: Record<string, any>, key: string): Record<string, string | null> {
+  const field = value[key];
+  if (field === undefined) return {};
+  if (field === null) return { [key]: null };
+  if (typeof field !== 'string' || !field.trim()) throw new Error('Sites returned an invalid response');
+  return { [key]: field.trim() };
 }
 
 function requiredText(value: unknown): string {
