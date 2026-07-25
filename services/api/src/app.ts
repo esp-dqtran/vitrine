@@ -74,7 +74,7 @@ import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
 import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import { parsePublicFacet } from "../../../src/publicFacetPreview.ts";
-import { publishedFacetPreview } from "../../../src/publicFacetPreviewStore.ts";
+import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -335,7 +335,7 @@ const defaults = {
   publishedImages,
   publishedPreviewImages,
   publishedCatalogPage,
-  publishedFacetPreview,
+  publishedFacetPreviews,
   catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
@@ -881,26 +881,27 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(400).json({ error: "invalid facet preview" });
       return;
     }
-    const preview = await deps.publishedFacetPreview(facet);
-    if (!preview) {
+    const previews = await deps.publishedFacetPreviews(facet);
+    if (previews.length === 0) {
       res.status(404).json({ error: "facet preview not found" });
       return;
     }
-    const media = Array.from({ length: preview.mediaCount }, (_, index) => [
-      "/api/catalog/facet-media",
-      encodeURIComponent(preview.app),
-      encodeURIComponent(facet.group),
-      encodeURIComponent(facet.value),
-      encodeURIComponent(facet.platform),
-      index + 1,
-    ].join("/"));
     res.setHeader("Cache-Control", "public, max-age=300");
     res.json({
-      kind: preview.kind,
-      app: preview.app,
-      label: preview.label,
-      iconUrl: preview.iconUrl,
-      media,
+      previews: previews.slice(0, 6).map((preview) => ({
+        kind: preview.kind,
+        app: preview.app,
+        label: preview.label,
+        iconUrl: preview.iconUrl,
+        media: Array.from({ length: preview.mediaCount }, (_, index) => [
+          "/api/catalog/facet-media",
+          encodeURIComponent(preview.app),
+          encodeURIComponent(facet.group),
+          encodeURIComponent(facet.value),
+          encodeURIComponent(facet.platform),
+          index + 1,
+        ].join("/")),
+      })),
     });
   });
 

@@ -2121,15 +2121,24 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
   const mediaInputs: unknown[] = [];
   const { base, server } = await serve(createApiApp({
     objectStore: localObjectStore,
-    publishedFacetPreview: async (input: PublicFacetInput) => {
+    publishedFacetPreviews: async (input: PublicFacetInput) => {
       metadataInputs.push(input);
-      return {
-        kind: "flow",
-        app: "linear",
-        label: "Setting Up",
-        iconUrl: null,
-        mediaCount: 3,
-      };
+      return [
+        {
+          kind: "flow",
+          app: "linear",
+          label: "Setting Up",
+          iconUrl: null,
+          mediaCount: 3,
+        },
+        {
+          kind: "flow",
+          app: "notion",
+          label: "Setting Up",
+          iconUrl: null,
+          mediaCount: 2,
+        },
+      ];
     },
     publishedFacetPreviewObject: async (
       input: PublicFacetInput & { app: string; rank: number },
@@ -2146,14 +2155,28 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.deepEqual(body, {
-    kind: "flow",
-    app: "linear",
-    label: "Setting Up",
-    iconUrl: null,
-    media: [
-      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/1",
-      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/2",
-      "/api/catalog/facet-media/linear/flows/Setting%20Up/web/3",
+    previews: [
+      {
+        kind: "flow",
+        app: "linear",
+        label: "Setting Up",
+        iconUrl: null,
+        media: [
+          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/1",
+          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/2",
+          "/api/catalog/facet-media/linear/flows/Setting%20Up/web/3",
+        ],
+      },
+      {
+        kind: "flow",
+        app: "notion",
+        label: "Setting Up",
+        iconUrl: null,
+        media: [
+          "/api/catalog/facet-media/notion/flows/Setting%20Up/web/1",
+          "/api/catalog/facet-media/notion/flows/Setting%20Up/web/2",
+        ],
+      },
     ],
   });
   assert.doesNotMatch(JSON.stringify(body), /object_key|image_id|mobbin-bulk/);
@@ -2179,9 +2202,9 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
 test("rejects unknown taxonomy preview inputs before dependencies run", async (t) => {
   let calls = 0;
   const { base, server } = await serve(createApiApp({
-    publishedFacetPreview: async () => {
+    publishedFacetPreviews: async () => {
       calls += 1;
-      return null;
+      return [];
     },
     publishedFacetPreviewObject: async () => {
       calls += 1;
