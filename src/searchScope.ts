@@ -51,3 +51,19 @@ export function compatibleSearchFilters(
 
 export const activeFilterCount = (filters: SearchFilters) =>
   ALL_KEYS.reduce((total, key) => total + filters[key].length, 0);
+
+export function canonicalSearchFilterSeed(
+  seed: Partial<SearchFilters>,
+): Partial<SearchFilters> {
+  return Object.fromEntries(
+    ALL_KEYS
+      .filter((key) => key in seed)
+      .map((key) => [
+        key,
+        [...new Set((seed[key] ?? [])
+          .map((value) => value.trim())
+          .filter(Boolean))]
+          .sort((left, right) => left.localeCompare(right)),
+      ]),
+  ) as Partial<SearchFilters>;
+}
