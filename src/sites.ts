@@ -1,10 +1,20 @@
+import { createHash } from "node:crypto";
 import { isIP } from "node:net";
+import { canonicalPublicPageUrl } from "./publicPage.ts";
 
 export interface MobbinSitesIdentity {
   canonicalUrl: string;
   sourceSiteId: string;
   sourceVersionId: string;
 }
+
+export type SiteImportIdentity =
+  | ({ kind: "mobbin" } & MobbinSitesIdentity)
+  | {
+      kind: "public-page";
+      canonicalUrl: string;
+      sourceSiteId: string;
+    };
 
 export interface SiteOcrBox {
   x: number;
@@ -98,6 +108,21 @@ export function canonicalMobbinSitesUrl(value: string): MobbinSitesIdentity {
     };
   } catch {
     throw new Error("Invalid Mobbin Sites URL");
+  }
+}
+
+export function classifySiteImportUrl(value: string): SiteImportIdentity {
+  try {
+    return { kind: "mobbin", ...canonicalMobbinSitesUrl(value) };
+  } catch {
+    const canonicalUrl = canonicalPublicPageUrl(value).requestedUrl;
+    return {
+      kind: "public-page",
+      canonicalUrl,
+      sourceSiteId: `url:${
+        createHash("sha256").update(canonicalUrl).digest("hex")
+      }`,
+    };
   }
 }
 

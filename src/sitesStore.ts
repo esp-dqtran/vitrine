@@ -5,12 +5,21 @@ import {
   type ObjectMetadata,
 } from "./objectStore.ts";
 import {
+  parseSiteAnalysis,
+  type SiteAnalysis,
+} from "./siteAnalysis.ts";
+import {
   canonicalMobbinSitesUrl,
+  classifySiteImportUrl,
   parseSiteImport,
   type MobbinSitesIdentity,
   type SiteImport,
   type SiteOcrBox,
 } from "./sites.ts";
+import {
+  createGenericSitesStoreMethods,
+  type GenericSitesStoreMethods,
+} from "./sitesGenericStore.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -66,6 +75,10 @@ export interface SiteVersionDetail {
   canonicalUrl: string;
   label: string;
   isLatest: boolean;
+  analysisStatus?: "ready" | "evidence-only";
+  analysis?: SiteAnalysis | null;
+  analysisModel?: string;
+  mobilePageUrl?: string;
   previewUrl: string;
   versions: SiteVersionOption[];
   pages: Array<{
@@ -92,7 +105,7 @@ export interface SiteVersionDetail {
   }>;
 }
 
-export interface SitesStore {
+export interface SitesStore extends Partial<GenericSitesStoreMethods> {
   readyVersionByCanonicalUrl(
     url: string,
   ): Promise<{ siteId: number; versionId: number } | undefined>;
@@ -113,7 +126,7 @@ export interface SitesStore {
   siteMediaObject(input: {
     siteId: number;
     versionId: number;
-    kind: "preview" | "page" | "section" | "poster";
+    kind: "preview" | "mobile" | "page" | "section" | "poster";
     recordId?: number;
   }): Promise<ObjectMetadata | undefined>;
 }
@@ -145,8 +158,9 @@ export function createSitesStore(
   runTransaction: TransactionRunner = defaultTransaction(runQuery),
 ): SitesStore {
   return {
+    ...createGenericSitesStoreMethods(runQuery, runTransaction),
     async readyVersionByCanonicalUrl(url) {
-      const canonical = canonicalMobbinSitesUrl(url).canonicalUrl;
+      const canonical = classifySiteImportUrl(url).canonicalUrl;
       const result = await runQuery(
         `SELECT s.id AS site_id, sv.id AS version_id
          FROM sites s
@@ -232,6 +246,14 @@ export function createSitesStore(
       );
       const headerRow = header.rows[0];
       if (!headerRow) return undefined;
+      const analysisResult = await runQuery(
+        `SELECT analysis_status, analysis, analysis_model, mobile_page_object_key
+         FROM site_versions
+         WHERE id = $1 AND site_id = $2 AND status = 'ready'
+         LIMIT 1`,
+        [versionId, siteId],
+      );
+      const analysisRow = analysisResult.rows[0] ?? {};
 
       const [pageResult, sectionResult, versionResult] = await Promise.all([
         runQuery(
@@ -298,6 +320,15 @@ export function createSitesStore(
         canonicalUrl: text(headerRow.canonical_url),
         label: text(headerRow.label),
         isLatest: headerRow.is_latest === true,
+        analysisStatus: analysisStatus(analysisRow.analysis_status),
+        analysis: analysisFromRow(analysisRow.analysis),
+        ...(typeof analysisRow.analysis_model === "string" &&
+            analysisRow.analysis_model
+          ? { analysisModel: analysisRow.analysis_model }
+          : {}),
+        ...(analysisRow.mobile_page_object_key
+          ? { mobilePageUrl: mediaPath(siteId, versionId, "mobile") }
+          : {}),
         previewUrl: mediaPath(siteId, versionId, "preview"),
         versions: versionResult.rows.map((row) => ({
           id: positiveId(row.id),
@@ -339,7 +370,8 @@ export function createSitesStore(
           `INSERT INTO site_versions
              (site_id, source_version_id, canonical_url, label, is_latest, status)
            VALUES ($1, $2, $3, $4, $5, 'importing')
-           ON CONFLICT (canonical_url) DO UPDATE SET
+           ON CONFLICT (site_id, source_version_id) DO UPDATE SET
+             canonical_url = EXCLUDED.canonical_url,
              label = EXCLUDED.label,
              is_latest = EXCLUDED.is_latest,
              status = CASE
@@ -504,9 +536,11 @@ export function createSitesStore(
     async siteMediaObject(input) {
       assertPositiveId(input.siteId);
       assertPositiveId(input.versionId);
-      const needsRecord = input.kind !== "preview";
+      const needsRecord = input.kind !== "preview" && input.kind !== "mobile";
       if (needsRecord) assertPositiveId(input.recordId);
-      if (!needsRecord && input.recordId !== undefined) throw new Error("Preview media has no record ID");
+      if (!needsRecord && input.recordId !== undefined) {
+        throw new Error("Version media has no record ID");
+      }
 
       const selection = mediaSelection(input.kind);
       const values = needsRecord
@@ -589,9 +623,18 @@ function assertObjectKeyCoverage(
   }
 }
 
-function mediaSelection(kind: "preview" | "page" | "section" | "poster") {
+function mediaSelection(
+  kind: "preview" | "mobile" | "page" | "section" | "poster",
+) {
   if (kind === "preview") {
     return { joins: "", objectKey: "sv.preview_object_key", recordPredicate: "" };
+  }
+  if (kind === "mobile") {
+    return {
+      joins: "",
+      objectKey: "sv.mobile_page_object_key",
+      recordPredicate: "",
+    };
   }
   if (kind === "page") {
     return {
@@ -611,14 +654,36 @@ function mediaSelection(kind: "preview" | "page" | "section" | "poster") {
 function mediaPath(
   siteId: number,
   versionId: number,
-  kind: "preview" | "page" | "section" | "poster",
+  kind: "preview" | "mobile" | "page" | "section" | "poster",
   recordId?: number,
 ): string {
   const base = `/api/sites/${siteId}/versions/${versionId}`;
   if (kind === "preview") return `${base}/media/preview`;
+  if (kind === "mobile") return `${base}/media/mobile`;
   if (kind === "page") return `${base}/pages/${recordId}/media`;
   if (kind === "section") return `${base}/sections/${recordId}/media`;
   return `${base}/sections/${recordId}/poster`;
+}
+
+function analysisStatus(value: unknown): "ready" | "evidence-only" {
+  if (value === undefined || value === null || value === "evidence-only") {
+    return "evidence-only";
+  }
+  if (value === "ready") return "ready";
+  throw new Error("Invalid Sites analysis status");
+}
+
+function analysisFromRow(value: unknown): SiteAnalysis | null {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === "object" &&
+      !Array.isArray(value) &&
+      Object.keys(value as Record<string, unknown>).length === 0)
+  ) {
+    return null;
+  }
+  return parseSiteAnalysis(value);
 }
 
 function metadataFrom(row: Record<string, unknown> | undefined): ObjectMetadata | undefined {
