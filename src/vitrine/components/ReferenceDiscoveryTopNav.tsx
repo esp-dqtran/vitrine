@@ -34,7 +34,7 @@ export function ReferenceDiscoveryTopNav({
             navigate(active === 'apps' ? { name: 'apps' } : { name: 'sites' });
           }}
         >
-          <span aria-hidden="true">V</span>
+          <img src="/favicon.svg" alt="" aria-hidden="true" width="32" height="32" />
           <strong>Vitrine</strong>
         </a>
         <ReferenceTypeTabs active={active} className={`${className}__types`} />

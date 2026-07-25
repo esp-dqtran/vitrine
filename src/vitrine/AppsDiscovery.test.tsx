@@ -240,3 +240,11 @@ test('scopes Apps category hover motion to fine pointers with GSAP cleanup', asy
   assert.equal((source.match(/\.tween\.kill\(\)/g) ?? []).length, 2);
   assert.match(source, /matchMedia\.revert\(\)/);
 });
+
+test('styles the Apps category hover preview as a non-interactive floating image', async () => {
+  const css = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.apps-discovery__hover-preview\s*\{[\s\S]*position:\s*fixed;[\s\S]*pointer-events:\s*none;[\s\S]*visibility:\s*hidden;[\s\S]*will-change:\s*transform,\s*opacity/);
+  assert.match(css, /\.apps-discovery__hover-preview img\s*\{[\s\S]*object-fit:\s*cover/);
+  assert.match(css, /@media \(hover:\s*none\),\s*\(pointer:\s*coarse\)[\s\S]*\.apps-discovery__hover-preview\s*\{[\s\S]*display:\s*none/);
+});
