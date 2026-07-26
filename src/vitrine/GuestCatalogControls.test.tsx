@@ -7,11 +7,13 @@ test('renders labelled public catalog authentication actions', async () => {
   assert.ok(controls, 'guest catalog controls must exist');
 
   const html = renderToStaticMarkup(
-    <controls.GuestCatalogControls onSignIn={() => undefined} />,
+    <controls.GuestCatalogControls onLogin={() => undefined} />,
   );
 
   assert.match(html, /data-guest-catalog-controls="true"/);
-  assert.match(html, />Log in</);
-  assert.match(html, />Get started</);
+  assert.equal((html.match(/<button /g) ?? []).length, 1);
+  assert.match(html, />Login</);
+  assert.match(html, /data-variant="primary"/);
+  assert.doesNotMatch(html, /Log in|Get started/);
   assert.doesNotMatch(html, /Account|Collections|Settings|Log out/);
 });

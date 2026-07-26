@@ -37,6 +37,7 @@ export interface CatalogApp {
   accent: string;
   totalScreens: number;
   platforms: string[];
+  lastCapturedAt?: string | null;
   previewScreens: CatalogScreen[];
   websiteUrl: string | null;
   iconUrl: string | null;
@@ -228,6 +229,7 @@ export function buildPublishedCatalogPage(
         accent: row.accent_color ?? meta.accent,
         totalScreens: row.total_screens,
         platforms: row.available_platforms,
+        lastCapturedAt: row.last_captured_at,
         previewScreens: (previewsByApp.get(row.app) ?? [])
           .sort((left, right) => left.preview_rank - right.preview_rank)
           .map((image) => screen(row.app, image, image.preview_rank)),

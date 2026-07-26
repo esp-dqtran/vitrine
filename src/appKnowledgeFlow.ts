@@ -4,6 +4,7 @@ import type {
 } from "./appKnowledge.ts";
 import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts";
 import type { AppKnowledgeEvidenceAnalysis } from "./appKnowledgeService.ts";
+import type { DesignFlow } from "./designSystem.ts";
 
 export interface AppKnowledgeOrderedFlowStep {
   id: string;
@@ -305,6 +306,49 @@ export function enrichOrderedFlows(
         confidence: enrichment.confidence,
       })),
       insights,
+    };
+  });
+}
+
+export function projectFlowSynthesis(
+  sourceFlows: readonly DesignFlow[],
+  planned: readonly AppKnowledgeOrderedFlow[],
+  result: AppKnowledgeFlowSynthesisResult,
+): DesignFlow[] {
+  const plannedById = new Map(planned.map((flow) => [flow.id, flow]));
+  const synthesisById = new Map(result.flows.map((flow) => [flow.flowId, flow]));
+
+  return sourceFlows.map((source) => {
+    const ordered = plannedById.get(source.id);
+    const synthesis = synthesisById.get(source.id);
+    if (!ordered || !synthesis) {
+      throw new Error(`Flow synthesis is missing Flow: ${source.id}`);
+    }
+    if (source.steps.length !== ordered.steps.length || source.steps.length !== synthesis.steps.length) {
+      throw new Error(`Flow ${source.id} step count changed`);
+    }
+    return {
+      ...structuredClone(source),
+      description: synthesis.purpose,
+      tags: [...new Set([...source.tags, ...synthesis.tags])],
+      steps: source.steps.map((step, index) => ({
+        ...structuredClone(step),
+        analysis: {
+          interaction: synthesis.steps[index].interaction,
+          visibleStates: [...synthesis.steps[index].visibleStates],
+          systemFeedback: [...synthesis.steps[index].systemFeedback],
+          source: "llm_inferred",
+        },
+      })),
+      insights: {
+        purpose: synthesis.purpose,
+        feedback: [...synthesis.feedback],
+        openQuestions: [...synthesis.openQuestions],
+        confidence: synthesis.confidence,
+        reviewStatus: "needs_review",
+        source: "llm_inferred",
+        evidence: source.steps.flatMap((step) => [...step.evidence]),
+      },
     };
   });
 }

@@ -52,12 +52,12 @@ test('renders a URL-only import dialog for Mobbin Apps or public websites', () =
   assert.doesNotMatch(html, /App name \(slug\)|Platform/);
 });
 
-test('app cards expose a keyboard action separately from carousel controls', () => {
+test('app cards keep the whole card keyboard accessible without carousel arrows', () => {
   const html = renderToStaticMarkup(<AppCard app={apps[0]} onOpen={() => undefined} status="In progress" progressLabel="1/2 analyzed" />);
   assert.match(html, /aria-label="Open DoneApp"/);
-  assert.match(html, /aria-label="Previous screen"/);
-  assert.match(html, /aria-label="Next screen"/);
-  assert.match(html, /View screens/);
+  assert.doesNotMatch(html, /aria-label="Previous screen"/);
+  assert.doesNotMatch(html, /aria-label="Next screen"/);
+  assert.doesNotMatch(html, /View screens/);
   assert.match(html, /DoneApp/);
   assert.match(html, /In progress/);
   assert.match(html, /1\/2 analyzed/);

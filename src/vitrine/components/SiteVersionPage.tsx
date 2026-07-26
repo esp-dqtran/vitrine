@@ -10,6 +10,7 @@ import type {
 } from '../types.ts';
 import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
+import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteCard } from './SiteCard.tsx';
@@ -24,8 +25,10 @@ import {
 
 export type SiteDetailSection = 'preview' | 'sections' | 'analysis';
 
-function resolveSiteSection(value?: string): SiteDetailSection {
-  return value === 'sections' || value === 'analysis' ? value : 'preview';
+function resolveSiteSection(value: string | undefined, isAdmin: boolean): SiteDetailSection {
+  if (value === 'sections') return 'sections';
+  if (value === 'analysis' && isAdmin) return 'analysis';
+  return 'preview';
 }
 
 interface SiteVersionViewProps {
@@ -66,13 +69,11 @@ export function SiteVersionView({
   onImport,
   onRelatedOpen = (site) => navigate({ name: 'site-version', siteId: site.id, versionId: site.versionId }),
 }: SiteVersionViewProps) {
-  void isAdmin;
-  void onBack;
   void onImport;
   const pages = useMemo(() => [...detail.pages]
     .sort((a, b) => a.position - b.position)
     .map((page) => ({ ...page, sections: [...page.sections].sort((a, b) => a.position - b.position) })), [detail.pages]);
-  const activeSection = resolveSiteSection(section);
+  const activeSection = resolveSiteSection(section, isAdmin);
   const sectionCount = pages.reduce((total, page) => total + page.sections.length, 0);
   const [sectionQuery, setSectionQuery] = useState(initialSectionQuery ?? '');
   const [patternFilter, setPatternFilter] = useState('All patterns');
@@ -146,6 +147,12 @@ export function SiteVersionView({
   const categories = detail.site.categories ?? [];
   const styles = detail.site.styles ?? [];
   const description = detail.site.description || `A captured website reference from ${safeHostname(detail.site.sourceUrl)}.`;
+  const updatedAt = detail.versionOptions.find(({ id }) => id === detail.version.id)?.updatedAt;
+  const formatUpdatedAt = (value: string) => new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
 
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
@@ -169,86 +176,78 @@ export function SiteVersionView({
         onOpen={(index) => setInspector({ items: inspectorItems, index, view: 'section' })}
       />
     );
+  const tabs = [
+    { id: 'preview' as const, label: 'Preview' },
+    { id: 'sections' as const, label: 'Sections' },
+    ...(isAdmin ? [{ id: 'analysis' as const, label: 'Analysis' }] : []),
+  ];
+  const metadata = [
+    ...(categories.length ? [{
+      label: 'Category',
+      value: categories.join(', '),
+      content: (
+        <div className="site-detail__meta-links">
+          {categories.map((category, index) => (
+            <a key={`category:${category}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
+              {category}{index < categories.length - 1 ? ',' : ''}
+            </a>
+          ))}
+        </div>
+      ),
+    }] : []),
+    ...(styles.length ? [{
+      label: 'Style',
+      value: styles.join(', '),
+      content: (
+        <div className="site-detail__meta-links">
+          {styles.map((style, index) => (
+            <a key={`style:${style}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
+              {style}{index < styles.length - 1 ? ',' : ''}
+            </a>
+          ))}
+        </div>
+      ),
+    }] : []),
+    { label: 'Pages', value: String(pages.length) },
+    { label: 'Sections', value: String(sectionCount) },
+    ...(updatedAt ? [{ label: 'Last updated', value: formatUpdatedAt(updatedAt) }] : []),
+  ];
+  const versionMenu = (
+    <DropdownMenu
+      button={{ label: detail.version.isLatest ? 'Latest' : detail.version.label, size: 'sm', variant: 'ghost' }}
+      hasChevron
+      items={detail.versionOptions.map((version) => ({
+        label: version.isLatest ? 'Latest' : version.label,
+        onClick: () => onVersionChange(version.id),
+      }))}
+    />
+  );
 
   return (
     <>
-      <main data-site-detail="true" className="site-detail">
-        <header data-site-detail-hero="true" className="site-detail__hero">
-          <div className="site-detail__hero-inner">
-            <div className="site-detail__identity">
-              <div className="site-detail__logo">
-                {detail.site.logoUrl
-                  ? <img src={detail.site.logoUrl} alt="" />
-                  : <span>{detail.site.name.slice(0, 1).toUpperCase()}</span>}
-              </div>
-              <div className="site-detail__heading">
-                <h1>
-                  <span>{detail.site.name} —</span>
-                  <span>{description}</span>
-                </h1>
-              </div>
-            </div>
-            {categories.length || styles.length ? (
-              <div className="site-detail__meta">
-                {categories.length ? (
-                  <div className="site-detail__meta-group">
-                    <span>Category</span>
-                    <div>
-                      {categories.map((category, index) => (
-                        <a key={`category:${category}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
-                          {category}{index < categories.length - 1 ? ',' : ''}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {styles.length ? (
-                  <div className="site-detail__meta-group">
-                    <span>Style</span>
-                    <div>
-                      {styles.map((style, index) => (
-                        <a key={`style:${style}`} href="/sites" onClick={(event) => { event.preventDefault(); navigate({ name: 'sites' }); }}>
-                          {style}{index < styles.length - 1 ? ',' : ''}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="site-detail__actions">
-              <HeroButton primary onClick={() => setSaved((value) => !value)}>{saved ? 'Saved' : 'Save'}</HeroButton>
-              <HeroButton onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>
-            </div>
-          </div>
-          <div className="site-detail__navigation">
-            <div className="site-detail__version">
-              <DropdownMenu
-                button={{ label: detail.version.isLatest ? 'Latest' : detail.version.label, size: 'sm', variant: 'ghost' }}
-                hasChevron
-                items={detail.versionOptions.map((version) => ({
-                  label: version.isLatest ? 'Latest' : version.label,
-                  onClick: () => onVersionChange(version.id),
-                }))}
-              />
-            </div>
-            <div className="site-detail__tabs" role="tablist" aria-label={`${detail.site.name} sections`}>
-              {(['preview', 'sections', 'analysis'] as const).map((tab) => (
-                <Button
-                  key={tab}
-                  label={tab === 'preview' ? 'Preview' : tab === 'sections' ? 'Sections' : 'Analysis'}
-                  variant="ghost"
-                  size="sm"
-                  role="tab"
-                  aria-selected={activeSection === tab}
-                  onClick={() => onSectionChange(tab)}
-                />
-              ))}
-            </div>
-          </div>
-        </header>
-
-        <div className={`site-detail__body site-detail__body--${activeSection}`}>
+      <ReferenceDetailShell
+        dataDetailKind="site"
+        className="site-detail"
+        title={detail.site.name}
+        description={description}
+        identityKey={`site-icon-${detail.site.id}`}
+        identityLabel={detail.site.name.slice(0, 1).toUpperCase()}
+        identityImageUrl={detail.site.logoUrl}
+        onBack={onBack}
+        metadata={metadata}
+        actions={(
+          <>
+            <HeroButton primary onClick={() => setSaved((value) => !value)}>{saved ? 'Saved' : 'Save'}</HeroButton>
+            <HeroButton onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>
+          </>
+        )}
+        tabLeading={versionMenu}
+        tabs={tabs}
+        activeTab={activeSection}
+        onTabChange={onSectionChange}
+        bodyPadding={activeSection === 'sections' ? '32px 32px 120px' : '0 32px 120px'}
+      >
+        <div className={`site-detail__content site-detail__content--${activeSection}`}>
           {body}
           {relatedSites.length ? (
             <section className="site-detail__related" aria-labelledby="related-sites-title">
@@ -264,7 +263,7 @@ export function SiteVersionView({
             </section>
           ) : null}
         </div>
-      </main>
+      </ReferenceDetailShell>
       {inspector && inspector.items[inspector.index] && (
         <SiteSectionInspector
           item={inspector.items[inspector.index]}
@@ -480,7 +479,7 @@ export function SiteVersionPage({
 
 function SiteVersionLoading({ onBack }: { onBack: () => void }) {
   return (
-    <main role="status" aria-label="Loading Site version" className="site-detail site-detail--loading">
+    <main role="status" aria-label="Loading Site version" className="vitrine-page site-detail site-detail--loading">
       <Button variant="ghost" label="Back to Sites" clickAction={onBack} />
       <div>
         <Skeleton width={88} height={88} radius="rounded" />
@@ -493,7 +492,7 @@ function SiteVersionLoading({ onBack }: { onBack: () => void }) {
 
 function SiteVersionFailure({ message, onBack, onRetry }: { message: string; onBack: () => void; onRetry: () => void }) {
   return (
-    <main className="site-detail site-detail--failure">
+    <main className="vitrine-page site-detail site-detail--failure">
       <Button variant="ghost" label="Back to Sites" clickAction={onBack} />
       <div role="alert">
         <EmptyState title="Could not load Site version" description={message} actions={<Button variant="secondary" label="Retry" clickAction={onRetry} />} />

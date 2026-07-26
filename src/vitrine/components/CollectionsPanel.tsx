@@ -32,7 +32,7 @@ export function CollectionsPanel({ collections, plan, onUpgrade, onChange, onClo
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
   return (
-    <div ref={overlayRef} onMouseDown={onClose} style={{ position: 'fixed', inset: 0, zIndex: 44, background: 'var(--color-background-overlay, rgba(0,0,0,0.3))' }}>
+    <div ref={overlayRef} onMouseDown={onClose} style={{ position: 'fixed', inset: 0, zIndex: 44, background: 'var(--color-background-overlay)' }}>
     <aside ref={panelRef} role="dialog" aria-label="Research collections" onMouseDown={(event) => event.stopPropagation()} style={{ position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 45, width: 'min(460px, 100vw)', overflowY: 'auto', background: 'var(--color-background-surface)', borderLeft: '1px solid var(--color-border)', boxShadow: 'var(--shadow-high)', padding: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}><h2 style={{ margin: 0 }}>Research collections</h2><div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Save evidence and keep product-design notes together.</div></div>

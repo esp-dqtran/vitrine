@@ -46,6 +46,29 @@ const store = {
       ? { id: 12, title: "Checkout", reviewStatus: "draft", sourceChanged: false, revisions: [], shares: [], currentJob: job, currentRevision: { id: 5, source: { app: "linear", platform: "web", versionId: 5, flowId: "checkout", title: "Checkout", description: "", tags: [] }, focusInstruction: "" } }
       : undefined;
   },
+  async getDocumentBySource(userId: number, source: {
+    app: string;
+    platform: string;
+    sourceVersionId: number;
+    flowId: string;
+  }) {
+    return userId === 7
+      && source.app === "linear"
+      && source.platform === "web"
+      && source.sourceVersionId === 5
+      && source.flowId === "checkout"
+      ? {
+          id: 12,
+          title: "Checkout",
+          visibility: "catalog" as const,
+          reviewStatus: "draft" as const,
+          sourceChanged: false,
+          revisions: [],
+          shares: [],
+          currentJob: job,
+        }
+      : undefined;
+  },
   async getJob(userId: number, jobId: number) { sseOrder.push("snapshot"); return userId === 7 ? { ...job, id: jobId, status: ownedJobStatus } : undefined; },
   async workerJob() { return { ...job, transportJobId: 72, requestedBy: 7, source: { app: "linear", platform: "web", flowId: "checkout", title: "Checkout", description: "", tags: [] }, evidenceManifest: [], evidenceManifestSha256: "a".repeat(64), focusInstruction: "", promptVersion: 1, providerModel: "research-model", cancelRequested: false }; },
   async retryJob(userId: number) { return userId === 7 ? { ...job, status: "queued" as const } : undefined; },
@@ -145,6 +168,29 @@ test("creates a durable generation only after every Flow image is object-backed"
   assert.deepEqual(published[0], { type: "generate-feature-document", runId: "31", jobId: 72 });
   assert.equal((created[0].input.evidenceManifest as unknown[]).length, 3);
   assert.equal(created[0].input.transportJobId, 72);
+});
+
+test("loads a pending Document Flow by exact app platform version and Flow identity", async () => {
+  const response = await fetch(
+    `${base}/feature-documents/source?app=linear&platform=web&version=3&flowId=checkout`,
+  );
+  assert.equal(response.status, 200);
+  const body = await response.json() as { id: number; currentJob: { id: number } };
+  assert.equal(body.id, 12);
+  assert.equal(body.currentJob.id, 31);
+});
+
+test("validates and authorizes Document Flow source lookup", async () => {
+  assert.equal(
+    (await fetch(`${base}/feature-documents/source?app=linear&platform=windows&version=3&flowId=checkout`)).status,
+    400,
+  );
+  allowApp = false;
+  const denied = await fetch(
+    `${base}/feature-documents/source?app=linear&platform=web&version=3&flowId=checkout`,
+  );
+  allowApp = true;
+  assert.equal(denied.status, 403);
 });
 
 test("rejects incomplete Flow evidence without publishing", async () => {

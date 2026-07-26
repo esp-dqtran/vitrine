@@ -245,16 +245,16 @@ export async function publishedPreviewObject(
     throw new Error("Preview rank must be an integer from 1 to 3");
   }
   const result = await runQuery(
-    `WITH latest AS MATERIALIZED (
+     `WITH latest AS MATERIALIZED (
        SELECT DISTINCT ON (av.app_id, av.platform)
-         av.id AS version_id, av.app_id
+         av.id AS version_id, av.app_id, av.platform
        FROM app_versions av
        WHERE av.status = 'published'
        ORDER BY av.app_id, av.platform, av.version_number DESC
      ),
      candidates AS (
-       SELECT DISTINCT ON (a.id, i.id)
-         a.name AS app, i.id AS image_id, vi.captured_at,
+       SELECT DISTINCT ON (a.id, latest.platform, i.id)
+         a.name AS app, latest.platform, i.id AS image_id, vi.captured_at,
          api.rank::int AS curated_rank, (api.rank IS NULL) AS fallback
        FROM apps a
        JOIN latest ON latest.app_id = a.id
@@ -263,16 +263,25 @@ export async function publishedPreviewObject(
        LEFT JOIN app_preview_images api
          ON api.version_id = latest.version_id AND api.image_id = i.id
        WHERE a.name = $1
-       ORDER BY a.id, i.id, api.rank NULLS LAST, vi.captured_at DESC NULLS LAST
+       ORDER BY a.id, latest.platform, i.id, api.rank NULLS LAST,
+         vi.captured_at DESC NULLS LAST
      ),
-     ranked AS (
+     platform_ranked AS (
        SELECT candidates.*,
          ROW_NUMBER() OVER (
-           PARTITION BY app
+           PARTITION BY app, platform
            ORDER BY fallback, curated_rank NULLS LAST,
              captured_at DESC NULLS LAST, image_id DESC
-         ) AS preview_rank
+         ) AS platform_rank
        FROM candidates
+     ),
+     ranked AS (
+       SELECT platform_ranked.*,
+         ROW_NUMBER() OVER (
+           PARTITION BY app
+           ORDER BY platform_rank, platform
+         ) AS preview_rank
+       FROM platform_ranked
      )
      SELECT ${METADATA_COLUMNS}
      FROM ranked
@@ -299,6 +308,7 @@ export async function publishedFacetPreviewObject(
   ) {
     throw new Error("Facet preview rank is outside its declared media bound");
   }
+  const variant = input.group === "screens" ? "full" : "thumb";
   const result = await runQuery(
     `WITH latest AS MATERIALIZED (
       SELECT DISTINCT ON (av.app_id)
@@ -316,7 +326,7 @@ export async function publishedFacetPreviewObject(
      AND pfp.facet_value = $2
      AND pfp.rank = $4
     JOIN images i ON i.id = pfp.image_id
-    JOIN stored_objects so ON ${imageObjectJoin("thumb")}
+    JOIN stored_objects so ON ${imageObjectJoin(variant)}
     WHERE a.name = $3
       AND so.access_class IN ('protected', 'public-preview')
     LIMIT 1`,

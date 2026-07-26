@@ -7,8 +7,8 @@ export type AppsFacet = {
   value: string;
 };
 
-export type AppsSort = 'latest' | 'popular' | 'rated' | 'animations';
-export type AppsPlatform = Extract<Platform, 'ios' | 'web'>;
+export type AppsSort = 'latest' | 'popular';
+export type AppsPlatform = Platform;
 
 export const APPS_DISCOVERY_FACETS = PUBLIC_APP_FACETS;
 
@@ -23,19 +23,12 @@ const screenFacetText = (screen: Screen, facet: AppsFacet['group']) => {
   return searchableText([...(screen.visibleStates ?? []), screen.stateContext, screen.description]);
 };
 
-const meanConfidence = (app: App) => {
-  const values = app.screens.flatMap((screen) => screen.confidence == null ? [] : [screen.confidence]);
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-};
-
-const capturedAt = (app: App) => Date.parse(app.lastCapturedAt ?? '') || 0;
-
 export function filterAndSortApps(
   apps: App[],
   options: { query: string; facet: AppsFacet | null; platform: AppsPlatform; sort: AppsSort },
 ): App[] {
   const query = options.query.trim().toLowerCase();
-  return apps
+  const filtered = apps
     .map((app, index) => ({ app, index }))
     .filter(({ app }) => {
       const platforms = app.platforms ?? app.screens.map((screen) => screen.platform as Platform);
@@ -57,17 +50,9 @@ export function filterAndSortApps(
       const needle = options.facet.value.toLowerCase();
       if (options.facet.group === 'categories') return app.cat.toLowerCase() === needle;
       return app.screens.some((screen) => screenFacetText(screen, options.facet!.group).includes(needle));
-    })
-    .sort((a, b) => {
-      if (options.sort === 'latest') return capturedAt(b.app) - capturedAt(a.app) || a.index - b.index;
-      if (options.sort === 'popular') return b.app.totalScreens - a.app.totalScreens || a.index - b.index;
-      if (options.sort === 'rated') {
-        return meanConfidence(b.app) - meanConfidence(a.app)
-          || (b.app.analyzedScreens ?? 0) - (a.app.analyzedScreens ?? 0)
-          || a.index - b.index;
-      }
-      return Number(Boolean(b.app.previewVideoUrl)) - Number(Boolean(a.app.previewVideoUrl))
-        || a.index - b.index;
-    })
+    });
+  if (options.sort === 'latest') return filtered.map(({ app }) => app);
+  return filtered
+    .sort((a, b) => b.app.totalScreens - a.app.totalScreens || a.index - b.index)
     .map(({ app }) => app);
 }

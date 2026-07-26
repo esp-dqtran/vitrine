@@ -22,6 +22,10 @@ import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
 import type { ReferralCampaign } from "../../../src/referralStore.ts";
 import type { ProgressSnapshot } from "../../../src/progress.ts";
 import type { PublicFacetInput } from "../../../src/publicFacetPreview.ts";
+import {
+  CatalogCursorError,
+  encodeUpdatedCatalogCursor,
+} from "../../../src/catalogCursor.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -76,6 +80,7 @@ const catalogImages = [
 ];
 const catalogPageRecord = {
   apps: [{
+    app_id: 1,
     app: "linear",
     display_name: "Linear",
     category: "Productivity",
@@ -84,6 +89,7 @@ const catalogPageRecord = {
     accent_color: "#5E6AD2",
     total_screens: 1,
     available_platforms: ["web"],
+    last_captured_at: "2026-07-25T00:00:00.000Z",
   }],
   previews: [{ ...catalogImages[0], preview_rank: 1 }],
   nextCursor: null,
@@ -724,7 +730,7 @@ test("persists crawl runs before transport, returns durable details, and control
       environment: { headless: true, browserName: "chromium", viewport: { width: 1440, height: 900 } },
     }),
   });
-  assert.equal(started.status, 202);
+  assert.equal(started.status, 202, await started.clone().text());
   assert.deepEqual(createdInputs, [{
     app: "atlassian",
     planId: "11",
@@ -773,7 +779,7 @@ test("marks a persisted run interrupted and returns only safe IDs when publishin
     headers: { ...adminCookie, "content-type": "application/json" },
     body: JSON.stringify({ planId: "11", mode: "full" }),
   });
-  assert.equal(response.status, 503);
+  assert.equal(response.status, 503, await response.clone().text());
   const body = await response.json();
   assert.deepEqual(body, {
     error: "crawl transport unavailable",
@@ -1355,8 +1361,8 @@ test("does not mount the retired flow-doc endpoints", async (t) => {
   const put = await fetch(`${base}/design-systems/linear/flow-doc`, {
     method: "PUT", headers, body: JSON.stringify({ platform: "web", body: "# Edited flow doc" }),
   });
-  assert.equal(get.status, 404);
-  assert.equal(put.status, 404);
+  assert.equal(get.status, 404, await get.clone().text());
+  assert.equal(put.status, 404, await put.clone().text());
 });
 
 test("does not fall back to legacy media when an associated object fails verification", async (t) => {
@@ -1575,7 +1581,7 @@ test("feature-flagged search bypasses legacy catalog assembly and protects media
   const response = await fetch(`${base}/search?q=checkout&type=screen`, {
     headers: { cookie: "astryx_session=user" },
   });
-  assert.equal(response.status, 200);
+  assert.equal(response.status, 200, await response.clone().text());
   const body = await response.json();
   assert.equal(legacyReads, 0);
   assert.match(body.items[0].imageUrl, /^\/api\/media\/linear\//);
@@ -1999,6 +2005,13 @@ test("rejects import job acceptance when object storage is unavailable", async (
 
 test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
+  const validCursor = encodeUpdatedCatalogCursor({
+    v: 1,
+    sort: "updated",
+    snapshotAt: "2026-07-26T04:00:00.000Z",
+    updatedAt: "2026-07-26T03:03:57.624Z",
+    appId: 42,
+  });
   const { base, server } = await serve(createApiApp({
     publishedCatalogPage: async (next: { cursor?: string; limit?: number }) => {
       input = next;
@@ -2012,12 +2025,23 @@ test("serves the public catalog from one bounded page dependency", async (t) => 
     },
   } as never));
   t.after(() => close(server));
-  const response = await fetch(`${base}/catalog?cursor=bGluZWFy&limit=3`);
+  const response = await fetch(`${base}/catalog?cursor=${validCursor}&limit=3`);
   assert.equal(response.status, 200);
   const body = await response.json();
-  assert.deepEqual(input, { cursor: "bGluZWFy", limit: 3 });
+  assert.deepEqual(input, { cursor: validCursor, limit: 3 });
   assert.equal(body.apps[0].previewScreens.length, 1);
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
+});
+
+test("returns 400 for an invalid public catalog cursor", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => { throw new CatalogCursorError(); },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog?cursor=***`);
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
 });
 
 test("keeps the catalog public and every App detail endpoint private", async (t) => {
@@ -2504,11 +2528,18 @@ test("keeps the old gallery and pipeline state admin-only", async (t) => {
 
 test("paginates the admin app gallery without loading every image", async (t) => {
   let requested: { cursor?: string; limit?: number } | undefined;
+  const validCursor = encodeUpdatedCatalogCursor({
+    v: 1,
+    sort: "updated",
+    snapshotAt: "2026-07-26T04:00:00.000Z",
+    updatedAt: "2026-07-26T03:03:57.624Z",
+    appId: 42,
+  });
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => admin,
     allImages: async () => { throw new Error("legacy full-gallery query must not run"); },
-    adminAppPage: async (cursor, limit) => {
-      requested = { cursor, limit };
+    adminAppPage: async (input) => {
+      requested = input;
       return {
         images: [{
           ...catalogImages[0],
@@ -2517,23 +2548,35 @@ test("paginates the admin app gallery without loading every image", async (t) =>
           last_captured_at: "2026-07-19T01:00:00.000Z",
           available_platforms: ["ios"],
         }],
-        nextCursor: "linear",
+        nextCursor: validCursor,
         total: 562,
       };
     },
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps?cursor=airbnb&limit=1`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=1`, { headers: adminCookie });
   assert.equal(response.status, 200);
-  assert.deepEqual(requested, { cursor: "airbnb", limit: 1 });
+  assert.deepEqual(requested, { cursor: validCursor, limit: 1 });
   const body = await response.json();
   assert.equal(body.apps.length, 1);
   assert.equal(body.apps[0].totalScreens, 236);
   assert.equal(body.apps[0].analyzedScreens, 17);
   assert.equal(body.apps[0].screens.length, 1);
-  assert.equal(body.nextCursor, "linear");
+  assert.equal(body.nextCursor, validCursor);
   assert.equal(body.total, 562);
+});
+
+test("returns 400 for an invalid admin Apps cursor", async (t) => {
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    adminAppPage: async () => { throw new CatalogCursorError(); },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/apps?cursor=***`, { headers: adminCookie });
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
 });
 
 test("returns a paginated user directory and growth stats for an admin", async (t) => {

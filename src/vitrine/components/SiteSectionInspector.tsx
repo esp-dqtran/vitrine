@@ -43,13 +43,13 @@ export function SiteSectionInspector({
 
   return (
     <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
-      <div style={{ position: 'relative', width: '100%', height: '100%', background: 'rgba(10,10,11,0.96)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 40px 28px', boxSizing: 'border-box', overflow: 'auto' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', background: 'color-mix(in srgb, var(--color-background-body) 96%, transparent)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 40px 28px', boxSizing: 'border-box', overflow: 'auto' }}>
         <IconButton
           label="Close"
           icon={<Icon icon="close" size="sm" />}
           variant="ghost"
           onClick={(event) => { event.stopPropagation(); onClose(); }}
-          style={{ position: 'absolute', top: 20, right: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', zIndex: 3 }}
+          style={{ position: 'absolute', top: 20, right: 24, borderRadius: '50%', background: 'var(--color-background-muted)', color: 'var(--color-text-primary)', zIndex: 3 }}
         />
 
         <div style={{ width: 'min(1100px, 92vw)', paddingRight: 52, boxSizing: 'border-box', flex: '0 0 auto' }}>
@@ -60,7 +60,7 @@ export function SiteSectionInspector({
           />
         </div>
 
-        <div style={{ position: 'relative', width: 'min(1100px, 92vw)', height: 'min(72vh, 820px)', minHeight: 320, borderRadius: 14, overflow: 'hidden', background: 'var(--color-background-muted)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', animation: 'vtScaleIn .3s cubic-bezier(.16,1,.3,1) both', flex: '1 1 auto' }}>
+        <div style={{ position: 'relative', width: 'min(1100px, 92vw)', height: 'min(72vh, 820px)', minHeight: 320, borderRadius: 14, overflow: 'hidden', background: 'var(--color-background-muted)', boxShadow: 'var(--shadow-high)', animation: 'vtScaleIn .3s cubic-bezier(.16,1,.3,1) both', flex: '1 1 auto' }}>
           {mediaKind === 'video'
             ? <video src={mediaUrl} poster={item.posterUrl} controls muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             : <PlaceholderImage src={mediaUrl} style={{ objectFit: 'contain' }} />}
@@ -68,14 +68,14 @@ export function SiteSectionInspector({
           {total > 1 && <ArrowButton direction="right" visible onClick={() => onNavigate(index + 1)} />}
         </div>
 
-        <div style={{ width: 'min(1100px, 92vw)', display: 'grid', gap: 8, marginTop: 16, color: '#d4d4d8', fontSize: 13.5 }}>
+        <div style={{ width: 'min(1100px, 92vw)', display: 'grid', gap: 8, marginTop: 16, color: 'var(--color-text-secondary)', fontSize: 13.5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {(item.patterns.length ? item.patterns : ['Unclassified']).map((pattern) => <Badge key={pattern} label={pattern} variant="neutral" />)}
             <span>{item.caption} — {index + 1} of {total}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <a href={item.pageUrl} target="_blank" rel="noreferrer" style={{ color: '#d4d4d8', overflowWrap: 'anywhere' }}>{item.pageTitle} · {item.pageUrl}</a>
-            <a href={mediaUrl} download style={{ color: '#fff', fontWeight: 600 }}>Download</a>
+            <a href={item.pageUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--color-text-secondary)', overflowWrap: 'anywhere' }}>{item.pageTitle} · {item.pageUrl}</a>
+            <a href={mediaUrl} download style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>Download</a>
           </div>
         </div>
       </div>

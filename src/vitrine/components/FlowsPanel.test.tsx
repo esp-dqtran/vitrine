@@ -2,8 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FlowsPanel } from "./FlowsPanel.tsx";
-import { FlowViewer, flowStepItems } from "./FlowViewer.tsx";
+import { VisualFlowPanel, flowStepItems } from "./VisualFlowPanel.tsx";
 import { FlowGallery } from "./FlowGallery.tsx";
+import { FlowAnalysisControlsView } from "./FlowAnalysisControls.tsx";
 import { buildFlowTreeGroups } from "../flowTree.ts";
 
 const loginFlow = {
@@ -17,14 +18,20 @@ const loginFlow = {
   ],
 };
 
-test("renders each flow as a compact card with its title, step count, and lead image", () => {
+test("renders each flow as a Mobbin-style horizontal screen strip", () => {
   const html = renderToStaticMarkup(<FlowsPanel flows={[loginFlow]} />);
   assert.match(html, /data-reference-gallery="section"/);
-  assert.match(html, /data-reference-gallery="grid"/);
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /class="flow-strip-card__track"/);
+  assert.doesNotMatch(html, /flow-strip-card__step-label/);
   assert.match(html, /Login/);
-  assert.match(html, /2 steps/);
+  assert.match(html, /2 screens/);
   assert.match(html, /\/api\/media\/linear\/0123456789abcdef/);
+  assert.match(html, /\/api\/media\/linear\/fedcba9876543210/);
   assert.match(html, /aria-label="Open Login flow"/);
+  assert.match(html, /Save/);
+  assert.match(html, /Copy/);
+  assert.match(html, /aria-label="More flow actions"/);
 });
 
 test("keeps the empty flows state inside the shared gallery section", () => {
@@ -38,8 +45,8 @@ test("does not offer the retired FLOW.md editor", () => {
   assert.doesNotMatch(html, /FLOW\.md/);
 });
 
-test("FlowViewer renders curator-ordered flow steps with real evidence images", () => {
-  const html = renderToStaticMarkup(<FlowViewer flow={loginFlow} onBack={() => {}} />);
+test("VisualFlowPanel renders curator-ordered flow steps with real evidence images", () => {
+  const html = renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} />);
   assert.match(html, /Login/);
   assert.match(html, /Enter email/);
   assert.match(html, /Enter password/);
@@ -47,17 +54,109 @@ test("FlowViewer renders curator-ordered flow steps with real evidence images", 
   assert.match(html, /\/api\/media\/linear\/fedcba9876543210/);
 });
 
-test("FlowViewer offers Feature Document creation only with exact source context", () => {
-  assert.doesNotMatch(renderToStaticMarkup(<FlowViewer flow={loginFlow} onBack={() => {}} />), /Create Feature Document/);
+test("VisualFlowPanel renders persisted Flow and step analysis beside the captured evidence", () => {
   const html = renderToStaticMarkup(
-    <FlowViewer flow={loginFlow} app="linear" platform="web" version={3} onBack={() => {}} />,
+    <VisualFlowPanel
+      flow={{
+        ...loginFlow,
+        insights: {
+          purpose: "Authenticate securely",
+          feedback: ["Invalid credentials show an inline error"],
+          openQuestions: ["Is password recovery available?"],
+          confidence: 0.87,
+          reviewStatus: "needs_review",
+          source: "llm_inferred",
+          evidence: loginFlow.steps.flatMap(({ evidence }) => evidence),
+        },
+        steps: loginFlow.steps.map((step, index) => ({
+          ...step,
+          analysis: {
+            interaction: index === 0 ? "Enter an email address" : "Submit credentials",
+            visibleStates: [index === 0 ? "Email field ready" : "Password field ready"],
+            systemFeedback: index === 0 ? [] : ["Inline validation"],
+            source: "llm_inferred",
+          },
+        })),
+      }}
+    />,
   );
-  assert.match(html, /Create Feature Document/);
+
+  assert.match(html, /aria-label="Flow analysis"/);
+  assert.match(html, /Authenticate securely/);
+  assert.match(html, /87% confidence/);
+  assert.match(html, /Enter an email address/);
+  assert.match(html, /Password field ready/);
+  assert.match(html, /Inline validation/);
+  assert.match(html, /Is password recovery available/);
 });
 
-test("FlowViewer does not render the auto-generated crawl description", () => {
+test("offers admins a Flow-specific analysis action without reviving screen analysis", () => {
   const html = renderToStaticMarkup(
-    <FlowViewer flow={{ ...loginFlow, description: "Imported from Mobbin: https://mobbin.com/flows/abc" }} onBack={() => {}} />
+    <FlowAnalysisControlsView
+      userRole="admin"
+      version={3}
+      status="missing"
+      currentJob={null}
+      snapshotId={undefined}
+      actions={{ start: async () => undefined }}
+    />,
+  );
+
+  assert.match(html, /aria-label="Flow analysis controls"/);
+  assert.match(html, />Analyze flows</);
+  assert.doesNotMatch(html, /Start analysis|Analyze screens|Design System/i);
+  assert.equal(
+    renderToStaticMarkup(
+      <FlowAnalysisControlsView
+        userRole="user"
+        version={3}
+        status="missing"
+        currentJob={null}
+        snapshotId={undefined}
+        actions={null}
+      />,
+    ),
+    "",
+  );
+});
+
+test("VisualFlowPanel renders a Mobbin-style horizontal flow stage", () => {
+  const html = renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} />);
+  assert.match(html, /aria-label="Login Visual Flow"/);
+  assert.doesNotMatch(html, /role="dialog"/);
+  assert.doesNotMatch(html, /aria-modal="true"/);
+  assert.match(html, /class="visual-flow-panel"/);
+  assert.match(html, /Screens/);
+  assert.match(html, /Prototype/);
+  assert.match(html, /class="visual-flow-panel__stage"/);
+  assert.match(html, /class="visual-flow-panel__track"/);
+  assert.equal((html.match(/class="visual-flow-panel__screen-card"/g) ?? []).length, 2);
+  assert.match(html, /object-fit:contain/);
+  assert.match(html, /aria-label="Previous flow screens"/);
+  assert.match(html, /aria-label="Next flow screens"/);
+  assert.match(html, /Login/);
+  assert.match(html, /2 screens/);
+  assert.match(html, /Save/);
+  assert.match(html, /Copy/);
+});
+
+test("VisualFlowPanel renders web flow screenshots as large full-image cards", () => {
+  const html = renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} platform="web" />);
+  assert.match(html, /class="visual-flow-panel visual-flow-panel--web"/);
+  assert.equal((html.match(/visual-flow-panel__screen-card--web/g) ?? []).length, 2);
+  assert.match(html, /background:transparent/);
+});
+
+test("VisualFlowPanel keeps Document Flow creation out of the visual representation", () => {
+  assert.doesNotMatch(
+    renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} platform="web" />),
+    /Create Feature Document/,
+  );
+});
+
+test("VisualFlowPanel does not render the auto-generated crawl description", () => {
+  const html = renderToStaticMarkup(
+    <VisualFlowPanel flow={{ ...loginFlow, description: "Imported from Mobbin: https://mobbin.com/flows/abc" }} />
   );
   assert.doesNotMatch(html, /Imported from Mobbin/);
 });
@@ -74,11 +173,12 @@ test("maps lightbox items back to source step numbers when some steps lack evide
   assert.deepEqual(items.map(({ stepNumber }) => stepNumber), [2, 3]);
 });
 
-test("labels the viewer return action for the persistent workspace", () => {
+test("provides separate source-step controls for the focused flow stage", () => {
   const html = renderToStaticMarkup(
-    <FlowViewer flow={loginFlow} onBack={() => undefined} />,
+    <VisualFlowPanel flow={loginFlow} />,
   );
-  assert.match(html, /Back to all flows/);
+  assert.match(html, /aria-label="Select visual step 1: Enter email"/);
+  assert.match(html, /aria-label="Select visual step 2: Enter password"/);
 });
 
 test("groups flows by category, keeping uncategorized flows in their own section", () => {
@@ -138,6 +238,7 @@ test("FlowGallery keeps card batching and complete category totals independent f
   );
 
   assert.equal((html.match(/aria-label="Open Settings \d+ flow"/g) ?? []).length, 24);
+  assert.equal((html.match(/data-flow-strip-card="true"/g) ?? []).length, 24);
   assert.match(html, />Settings<\/span><span[^>]*>30<\/span>/);
   assert.doesNotMatch(html, /Open Settings 25 flow/);
 });

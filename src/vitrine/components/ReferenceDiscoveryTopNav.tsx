@@ -23,11 +23,14 @@ export function ReferenceDiscoveryTopNav({
   accountControls,
 }: ReferenceDiscoveryTopNavProps) {
   return (
-    <header className={className}>
-      <div className={`${className}__left`}>
+    <header
+      data-reference-component="top-nav"
+      className={`reference-discovery-nav ${className}`}
+    >
+      <div className={`reference-discovery-nav__left ${className}__left`}>
         <a
           href={active === 'apps' ? '/apps' : '/sites'}
-          className={`${className}__brand`}
+          className={`reference-discovery-nav__brand ${className}__brand`}
           data-reference-gallery-identity="true"
           onClick={(event) => {
             event.preventDefault();
@@ -37,10 +40,13 @@ export function ReferenceDiscoveryTopNav({
           <img src="/favicon.svg" alt="" aria-hidden="true" width="32" height="32" />
           <strong>Vitrine</strong>
         </a>
-        <ReferenceTypeTabs active={active} className={`${className}__types`} />
+        <ReferenceTypeTabs
+          active={active}
+          className={`reference-discovery-nav__types ${className}__types`}
+        />
       </div>
-      <div className={`${className}__search`}>{search}</div>
-      <div className={`${className}__actions`}>
+      <div className={`reference-discovery-nav__search ${className}__search`}>{search}</div>
+      <div className={`reference-discovery-nav__actions ${className}__actions`}>
         {isAdmin ? <Button variant="ghost" size="sm" label={importLabel} onClick={onImport} /> : null}
         {accountControls}
       </div>

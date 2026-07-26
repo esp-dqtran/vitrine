@@ -156,6 +156,47 @@ test("parses an automatic job without a requesting user", async () => {
   assert.equal(job?.synthesisTotalCount, 2);
 });
 
+test("completes a Flow-only job without creating an App Knowledge revision", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result([{
+      id: 9,
+      snapshot_id: 3,
+      transport_job_id: 7,
+      requested_by: 1,
+      request_origin: "manual",
+      status: "done",
+      stage: "complete",
+      done_count: 2,
+      total_count: 2,
+      synthesis_done_count: 1,
+      synthesis_total_count: 1,
+      cache_hit_count: 0,
+      failed_count: 0,
+      evidence_manifest: manifest,
+      source_sha256: "a".repeat(64),
+      provider_model: "test-model",
+      prompt_version: 1,
+      cancel_requested: false,
+      retry_failed_only: false,
+      design_system_seed_outcome: null,
+      error_code: null,
+      error_message: null,
+      updated_at: "2026-07-24T00:00:00.000Z",
+    }]);
+  };
+
+  const completed = await createAppKnowledgeStore(query).completeFlowAnalysis(9);
+
+  assert.equal(completed.status, "done");
+  assert.equal(completed.stage, "complete");
+  assert.match(calls[0].sql, /status = 'done'/);
+  assert.match(calls[0].sql, /j\.status = 'running'/);
+  assert.doesNotMatch(calls[0].sql, /app_knowledge_revisions/);
+  assert.deepEqual(calls[0].values, [9]);
+});
+
 test("parses a generated revision without a creating user", async () => {
   const content = snapshot();
   const query: DatabaseQuery = async (sql) => {

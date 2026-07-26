@@ -17,3 +17,13 @@ test('renders the shared gallery section, toolbar, grid, and sentinel slots', as
   assert.match(html, /minmax\(220px,1fr\)/);
   assert.match(html, /data-reference-gallery="sentinel"/);
 });
+
+test('can render a fixed column gallery for larger curated cards', async () => {
+  const { ReferenceGalleryGrid } = await import('./components/ReferenceGallerySection.tsx');
+  const html = renderToStaticMarkup(
+    <ReferenceGalleryGrid minCardWidth={360} columns={2}><article>Screen</article></ReferenceGalleryGrid>,
+  );
+
+  assert.match(html, /data-reference-gallery-columns="2"/);
+  assert.match(html, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});

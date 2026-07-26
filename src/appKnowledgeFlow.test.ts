@@ -5,9 +5,11 @@ import {
   parseAppKnowledgeFlowSynthesisResult,
   planFlowSynthesisChunks,
   planOrderedFlows,
+  projectFlowSynthesis,
 } from "./appKnowledgeFlow.ts";
 import type { AppKnowledgeEvidenceManifestItem } from "./appKnowledgeEvidence.ts";
 import type { AppKnowledgeEvidenceAnalysis } from "./appKnowledgeService.ts";
+import type { DesignFlow } from "./designSystem.ts";
 
 function analysis(evidenceId: string): AppKnowledgeEvidenceAnalysis {
   return {
@@ -186,6 +188,43 @@ test("keeps crawled interactions authoritative while adding Flow insights", () =
   ]);
   assert.equal(enriched.insights?.source, "llm_inferred");
   assert.equal(enriched.insights?.reviewStatus, "needs_review");
+});
+
+test("projects synthesis onto curated Flows without changing identity, order, or evidence", () => {
+  const source: DesignFlow[] = [{
+    id: "weekly-check-in",
+    title: "Submit a weekly check-in",
+    category: "Check-ins",
+    description: "Original description",
+    tags: ["Existing"],
+    steps: [{
+      label: "Answer questions",
+      interaction: "Curated interaction",
+      evidence: [9],
+    }, {
+      label: "Review answers",
+      evidence: [9],
+    }, {
+      label: "Submit",
+      evidence: [10],
+    }],
+  }];
+  const flows = planned();
+  const parsed = parseAppKnowledgeFlowSynthesisResult(providerResult(), flows);
+  const [projected] = projectFlowSynthesis(source, flows, parsed);
+
+  assert.equal(projected.id, source[0].id);
+  assert.equal(projected.category, source[0].category);
+  assert.equal(projected.description, "Complete and submit a weekly check-in");
+  assert.deepEqual(projected.tags, ["Existing", "Check-ins", "Submission"]);
+  assert.deepEqual(
+    projected.steps.map(({ label, evidence }) => ({ label, evidence })),
+    source[0].steps.map(({ label, evidence }) => ({ label, evidence })),
+  );
+  assert.equal(projected.steps[0].interaction, "Curated interaction");
+  assert.equal(projected.steps[0].analysis?.interaction, "Enter responses");
+  assert.deepEqual(projected.steps[2].analysis?.systemFeedback, ["Submission confirmation"]);
+  assert.deepEqual(projected.insights?.evidence, [9, 9, 10]);
 });
 
 test("plans deterministic byte-bounded Flow synthesis chunks", () => {

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Button, Icon, ToggleButton } from '@astryxdesign/core';
+import { Button, Icon, Skeleton, ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator';
 
 export interface DetailTab<T extends string> {
@@ -9,31 +9,49 @@ export interface DetailTab<T extends string> {
   count?: number;
 }
 
+export function resetReferenceDetailScroll(
+  scrollTo: (options: ScrollToOptions) => void = (options) => window.scrollTo(options),
+) {
+  scrollTo({ top: 0, left: 0, behavior: 'auto' });
+}
+
 interface ReferenceDetailShellProps<T extends string> {
-  title: string;
+  title: ReactNode;
+  ariaLabel?: string;
+  description?: ReactNode;
+  className?: string;
+  dataDetailKind?: 'app' | 'site';
   identityKey: string;
   identityLabel: string;
   identityImageUrl?: string | null;
+  identityContent?: ReactNode;
   accent?: string;
-  backLabel: string;
-  onBack: () => void;
+  backLabel?: string;
+  onBack?: () => void;
   metadata: Array<{ label: string; value: string; content?: ReactNode }>;
   actions?: ReactNode;
   heroControls?: ReactNode;
   tabs: Array<DetailTab<T>>;
   activeTab: T;
   onTabChange: (tab: T) => void;
+  tabLeading?: ReactNode;
   tabControls?: ReactNode;
   tabTrailing?: ReactNode;
   bodyPadding?: string;
+  loading?: boolean;
   children: ReactNode;
 }
 
 export function ReferenceDetailShell<T extends string>({
   title,
+  ariaLabel,
+  description,
+  className,
+  dataDetailKind,
   identityKey,
   identityLabel,
   identityImageUrl,
+  identityContent,
   accent = 'var(--color-accent)',
   backLabel,
   onBack,
@@ -43,40 +61,75 @@ export function ReferenceDetailShell<T extends string>({
   tabs,
   activeTab,
   onTabChange,
+  tabLeading,
   tabControls,
   tabTrailing,
   bodyPadding = '8px 40px 80px',
+  loading = false,
   children,
 }: ReferenceDetailShellProps<T>) {
   const { indicatorRef, registerItem } = useSlidingIndicator<T>(activeTab);
+  useEffect(() => resetReferenceDetailScroll(), [identityKey]);
+  const accessibleTitle = ariaLabel ?? (typeof title === 'string' ? title : 'Reference');
 
   return (
-    <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 18 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
-      <div style={{ background: 'var(--color-background-surface)' }}>
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: '22px 40px 0' }}>
-          <Button label={backLabel} icon={<Icon icon="chevronLeft" size="sm" />} variant="ghost" size="sm" onClick={onBack} style={{ borderRadius: 8, marginBottom: 28 }} />
+    <motion.main
+      data-reference-detail={dataDetailKind}
+      className={`vitrine-page reference-detail${className ? ` ${className}` : ''}`}
+      aria-busy={loading || undefined}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 18 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <header className="reference-detail__hero">
+        <div className="reference-detail__hero-inner">
+          {backLabel && onBack ? (
+            <Button
+              label={backLabel}
+              icon={<Icon icon="chevronLeft" size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="reference-detail__back"
+            />
+          ) : null}
           <motion.div
             layoutId={identityKey}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-            style={{ width: 88, height: 88, borderRadius: 22, background: identityImageUrl ? 'transparent' : accent, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', overflow: 'hidden', position: 'relative' }}
+            className={`reference-detail__logo${loading ? ' app-detail-loading__logo' : ''}`}
+            style={{ background: identityImageUrl ? 'transparent' : accent }}
           >
-            {identityImageUrl
-              ? <img src={identityImageUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
-              : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{identityLabel}</span>}
+            {identityContent ?? (identityImageUrl
+              ? <img src={identityImageUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+              : <span>{identityLabel}</span>)}
           </motion.div>
-          <h1 style={{ fontSize: 42, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', margin: '0 0 24px', lineHeight: 1.05 }}>{title}</h1>
-          <div style={{ display: 'flex', gap: 40, marginBottom: 28, flexWrap: 'wrap' }}>
+          <div className={`reference-detail__heading${loading ? ' app-detail-loading__heading' : ''}`}>
+            <h1>{title}</h1>
+            {description ? <p>{description}</p> : null}
+          </div>
+          <div className={`reference-detail__metadata${loading ? ' app-detail-loading__metadata' : ''}`}>
             {heroControls}
             {metadata.map(({ label, value, content }) => (
-              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>{label}</span>
-                {content ?? <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)' }}>{value}</span>}
+              <div key={label} className={`reference-detail__metadata-item${loading ? ' app-detail-loading__metadata-item' : ''}`}>
+                <span>{label}</span>
+                {content ?? <strong>{value}</strong>}
               </div>
             ))}
           </div>
-          {actions && <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>{actions}</div>}
-          <div role="tablist" aria-label={`${title} sections`} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 28, borderBottom: '1px solid var(--color-border)', overflowX: 'auto' }}>
-            {tabs.map((tab) => (
+          {actions && <div className={`reference-detail__actions${loading ? ' app-detail-loading__actions' : ''}`}>{actions}</div>}
+        </div>
+        <div className="reference-detail__navigation">
+          {tabLeading ? <div className="reference-detail__tab-leading">{tabLeading}</div> : null}
+          <div role="tablist" aria-label={`${accessibleTitle} sections`} className={`reference-detail__tabs${loading ? ' app-detail-loading__tabs' : ''}`}>
+            {tabs.map((tab, index) => loading ? (
+              <Skeleton
+                key={tab.id}
+                width={index === 2 || index === 5 ? 112 : 78}
+                height={20}
+                radius={2}
+              />
+            ) : (
               <ToggleButton
                 key={tab.id}
                 ref={registerItem(tab.id)}
@@ -87,21 +140,22 @@ export function ReferenceDetailShell<T extends string>({
                 aria-pressed={undefined}
                 aria-selected={activeTab === tab.id}
                 size="sm"
-                style={{ background: 'none', border: 'none', color: activeTab === tab.id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', padding: '0 0 14px', flexShrink: 0, whiteSpace: 'nowrap' }}
+                className="reference-detail__tab"
+                style={{ color: activeTab === tab.id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
               />
             ))}
-            <div ref={indicatorRef} style={{ position: 'absolute', bottom: -1, left: 0, height: 2, background: 'var(--color-text-primary)', borderRadius: 1, pointerEvents: 'none' }} />
+            {!loading ? <div ref={indicatorRef} className="reference-detail__tab-indicator" /> : null}
             <div style={{ flex: 1 }} />
-            {tabTrailing && <div style={{ flexShrink: 0, paddingBottom: 14 }}>{tabTrailing}</div>}
+            {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
           </div>
-          {tabControls}
         </div>
-      </div>
+        {tabControls}
+      </header>
       <div style={{ minHeight: 400 }}>
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: bodyPadding }}>
+        <div className="reference-detail__body-inner" style={{ paddingTop: bodyPadding.split(' ')[0], paddingBottom: bodyPadding.split(' ')[2] ?? bodyPadding.split(' ')[0] }}>
           {children}
         </div>
       </div>
-    </motion.div>
+    </motion.main>
   );
 }

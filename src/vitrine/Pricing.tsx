@@ -141,8 +141,8 @@ function PlanCard({
         padding: '26px 28px 28px',
         borderRadius: 'var(--radius-container)',
         background: highlighted
-          ? 'linear-gradient(180deg, var(--color-accent-muted, #eef1fd) 0%, var(--color-background-surface) 130px)'
-          : 'var(--color-background-card, var(--color-background-surface))',
+          ? 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 16%, var(--color-background-surface)) 0%, var(--color-background-surface) 130px)'
+          : 'var(--color-background-surface)',
         border: highlighted ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)',
         boxShadow: highlighted ? 'var(--shadow-med)' : 'var(--shadow-low)',
       }}
@@ -217,7 +217,7 @@ export function PricingView({
   const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)' };
 
   return (
-    <div style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
+    <div className="vitrine-page" style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
       <div
         style={{
           position: 'sticky',
@@ -316,7 +316,7 @@ export function PricingView({
               border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-container)',
               overflow: 'hidden',
-              background: 'var(--color-background-card, var(--color-background-surface))',
+              background: 'var(--color-background-surface)',
               boxShadow: 'var(--shadow-low)',
             }}
           >
@@ -415,7 +415,7 @@ function Faq() {
       style={{
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-container)',
-        background: 'var(--color-background-card, var(--color-background-surface))',
+        background: 'var(--color-background-surface)',
         boxShadow: 'var(--shadow-low)',
         padding: '6px 24px',
       }}

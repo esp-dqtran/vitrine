@@ -7,6 +7,7 @@ import {
   renderFeatureDocumentMarkdown,
   type FeatureDocumentContent,
   type FeatureDocumentReviewStatus,
+  type FeatureDocumentView,
   type FeatureEvidenceManifestItem,
   type FeatureSourceFlow,
 } from "../../../src/featureDocument.ts";
@@ -127,6 +128,20 @@ function generationRequest(value: unknown): GenerationRequest | undefined {
   return { app, platform: body.platform as GenerationRequest["platform"], version, flowId, focusInstruction };
 }
 
+function sourceLookupRequest(query: express.Request["query"]): GenerationRequest | undefined {
+  const app = boundedText(query.app, 160, true);
+  const flowId = boundedText(query.flowId, 240, true);
+  const version = positiveId(query.version);
+  if (!app || !flowId || !version || !PLATFORM_VALUES.has(query.platform as string)) return undefined;
+  return {
+    app,
+    platform: query.platform as GenerationRequest["platform"],
+    version,
+    flowId,
+    focusInstruction: "",
+  };
+}
+
 function evidenceId(stepIndex: number, imageId: number): string {
   return `FLOW-STEP-${String(stepIndex + 1).padStart(2, "0")}-IMAGE-${imageId}`;
 }
@@ -213,6 +228,28 @@ async function prepareFromSource(
     flowId: source.flowId,
     focusInstruction,
   });
+}
+
+async function withCurrentSourceState(
+  deps: FeatureDocumentRouteDependencies,
+  user: FeatureDocumentUser,
+  document: FeatureDocumentView,
+): Promise<FeatureDocumentView> {
+  if (!document.currentRevision) return document;
+  const current = await prepareFromSource(
+    deps,
+    user,
+    document.currentRevision.source,
+    document.currentRevision.focusInstruction,
+  );
+  if (!current || current.missing.length > 0) {
+    return { ...document, sourceChanged: true };
+  }
+  return await deps.store.getDocument(
+    user.id,
+    document.id,
+    current.evidenceManifestSha256,
+  ) ?? document;
 }
 
 function missingEvidence(res: express.Response, missing: string[]): void {
@@ -334,29 +371,49 @@ export function mountFeatureDocumentRoutes(
     }
   }));
 
+  app.get("/feature-documents/source", asyncRoute(async (req, res) => {
+    const input = sourceLookupRequest(req.query);
+    if (!input) {
+      res.status(400).json({ error: "Invalid Document Flow source" });
+      return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, input.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
+    }
+    const versions = await deps.listAppVersions(
+      input.app,
+      input.platform,
+      res.locals.user.role !== "admin",
+    );
+    const version = versions.find(({ version_number }) => version_number === input.version);
+    if (!version) {
+      res.status(404).json({ error: "Document Flow unavailable", code: "document_flow_unavailable" });
+      return;
+    }
+    const document = await deps.store.getDocumentBySource(res.locals.user.id, {
+      app: input.app,
+      platform: input.platform,
+      sourceVersionId: version.id,
+      flowId: input.flowId,
+    });
+    if (!document) {
+      res.status(404).json({ error: "Document Flow unavailable", code: "document_flow_unavailable" });
+      return;
+    }
+    res.json(await withCurrentSourceState(deps, res.locals.user, document));
+  }));
+
   app.get("/feature-documents/:documentId", asyncRoute(async (req, res) => {
     const documentId = positiveId(req.params.documentId);
     if (!documentId) { res.status(400).json({ error: "Invalid Feature Document" }); return; }
     let document = await deps.store.getDocument(res.locals.user.id, documentId);
     if (!document) { res.status(404).json({ error: "Feature Document not found" }); return; }
-    if (document.currentRevision) {
-      const current = await prepareFromSource(
-        deps,
-        res.locals.user,
-        document.currentRevision.source,
-        document.currentRevision.focusInstruction,
-      );
-      if (current && current.missing.length === 0) {
-        document = await deps.store.getDocument(
-          res.locals.user.id,
-          documentId,
-          current.evidenceManifestSha256,
-        ) ?? document;
-      } else {
-        document = { ...document, sourceChanged: true };
-      }
+    if (document.visibility === "catalog" && document.currentRevision && !(await deps.canAccessApp(res.locals.user, document.currentRevision.source.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return;
     }
-    res.json(document);
+    res.json(await withCurrentSourceState(deps, res.locals.user, document));
   }));
 
   app.get("/feature-documents/:documentId/revisions/:revisionId/media/:imageId", asyncRoute(async (req, res) => {

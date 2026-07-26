@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, Dialog, EmptyState, Spinner } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
@@ -10,18 +10,22 @@ import {
 } from '../flowTree.ts';
 import { FlowGallery } from './FlowGallery.tsx';
 import { FlowTree } from './FlowTree.tsx';
-import { FlowViewer } from './FlowViewer.tsx';
+import { SelectedFlowWorkspace } from './SelectedFlowWorkspace.tsx';
+import type { FlowRepresentation } from '../router.ts';
 
 export interface FlowsWorkspaceProps {
   groups: FlowTreeGroup[];
   selectedFlow?: DesignFlow<EvidenceView>;
   selectedFlowId?: string;
   selectedStep?: number;
+  selectedFlowView?: FlowRepresentation;
   invalidFlowId?: string;
   app?: string;
   platform?: Platform;
   version?: number;
-  onSelectionChange(flowId?: string, step?: number): void;
+  userRole?: 'admin' | 'user';
+  analysisControls?: ReactNode;
+  onSelectionChange(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
 }
 
 export function FlowsWorkspaceLoading() {
@@ -51,10 +55,13 @@ export function FlowsWorkspace({
   selectedFlow,
   selectedFlowId,
   selectedStep,
+  selectedFlowView,
   invalidFlowId,
   app,
   platform,
   version,
+  userRole = 'user',
+  analysisControls,
   onSelectionChange,
 }: FlowsWorkspaceProps) {
   const groupSignature = groups.map(({ id }) => id).join('\u0000');
@@ -85,7 +92,7 @@ export function FlowsWorkspace({
 
   const selectFlow = (flowId: string) => {
     setDrawerOpen(false);
-    onSelectionChange(flowId, undefined);
+    onSelectionChange(flowId, undefined, 'visual');
   };
   const treeProps = {
     groups: visibleGroups,
@@ -97,7 +104,6 @@ export function FlowsWorkspace({
       setExpanded((current) => toggleFlowGroup(current, groupId)),
     onSelectFlow: selectFlow,
   };
-
   return (
     <div className="flow-workspace" data-flow-workspace="true">
       <aside className="flow-workspace__rail">
@@ -111,6 +117,7 @@ export function FlowsWorkspace({
           size="sm"
           clickAction={() => setDrawerOpen(true)}
         />
+        {analysisControls}
         {invalidFlowId && (
           <div className="flow-workspace__notice" role="status">
             <span>Flow unavailable</span>
@@ -118,19 +125,24 @@ export function FlowsWorkspace({
               label="Dismiss"
               size="sm"
               variant="ghost"
-              clickAction={() => onSelectionChange(undefined, undefined)}
+              clickAction={() => onSelectionChange(undefined, undefined, undefined)}
             />
           </div>
         )}
         {selectedFlow ? (
-          <FlowViewer
+          <SelectedFlowWorkspace
             flow={selectedFlow}
             app={app}
             platform={platform}
             version={version}
-            initialStep={selectedStep}
-            onBack={() => onSelectionChange(undefined, undefined)}
-            onStepChange={(step) => onSelectionChange(selectedFlow.id, step)}
+            userRole={userRole}
+            view={selectedFlowView ?? 'visual'}
+            selectedStep={selectedStep}
+            onViewChange={(flowView, step) =>
+              onSelectionChange(selectedFlow.id, step, flowView)}
+            onStepChange={(step) =>
+              onSelectionChange(selectedFlow.id, step, selectedFlowView ?? 'visual')}
+            onBack={() => onSelectionChange(undefined, undefined, undefined)}
           />
         ) : visibleGroups.length ? (
           <FlowGallery groups={visibleGroups} onSelectFlow={selectFlow} />
@@ -141,27 +153,29 @@ export function FlowsWorkspace({
           />
         )}
       </main>
-      <Dialog
-        isOpen={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        purpose="info"
-        width={320}
-        maxHeight="100vh"
-        position={{ top: 0, bottom: 0, left: 0 }}
-        padding={0}
-        className="flow-tree-drawer"
-      >
-        <div className="flow-tree-drawer__header">
-          <strong>Flows</strong>
-          <Button
-            label="Close"
-            size="sm"
-            variant="ghost"
-            clickAction={() => setDrawerOpen(false)}
-          />
-        </div>
-        <FlowTree idPrefix="drawer" {...treeProps} />
-      </Dialog>
+      {drawerOpen && (
+        <Dialog
+          isOpen
+          onOpenChange={setDrawerOpen}
+          purpose="info"
+          width={320}
+          maxHeight="100vh"
+          position={{ top: 0, bottom: 0, left: 0 }}
+          padding={0}
+          className="flow-tree-drawer"
+        >
+          <div className="flow-tree-drawer__header">
+            <strong>Flows</strong>
+            <Button
+              label="Close"
+              size="sm"
+              variant="ghost"
+              clickAction={() => setDrawerOpen(false)}
+            />
+          </div>
+          <FlowTree idPrefix="drawer" {...treeProps} />
+        </Dialog>
+      )}
     </div>
   );
 }

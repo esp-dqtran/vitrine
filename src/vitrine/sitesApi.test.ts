@@ -8,7 +8,10 @@ const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb
 test('maps list and positive Site version routes', () => {
   assert.deepEqual(parseRoutePath('/sites'), { name: 'sites' });
   assert.deepEqual(parseRoutePath('/sites/1/versions/2'), { name: 'site-version', siteId: 1, versionId: 2 });
-  assert.deepEqual(parseRoutePath('/sites/0/versions/2'), { name: 'landing' });
+  assert.deepEqual(parseRoutePath('/sites/0/versions/2'), {
+    name: 'not-found',
+    pathname: '/sites/0/versions/2',
+  });
   assert.equal(routeToPath({ name: 'sites' }), '/sites');
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
 });

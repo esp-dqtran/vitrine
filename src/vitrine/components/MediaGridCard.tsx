@@ -9,6 +9,8 @@ interface MediaGridCardProps {
   posterUrl?: string;
   accent?: string;
   aspectRatio?: string | number;
+  imageFit?: 'cover' | 'contain';
+  preferFullImage?: boolean;
   badges?: string[];
   title?: string;
   delay?: number;
@@ -23,6 +25,8 @@ export function MediaGridCard({
   posterUrl,
   accent,
   aspectRatio = '16 / 10',
+  imageFit = 'cover',
+  preferFullImage = false,
   badges = [],
   title,
   delay = 0,
@@ -66,12 +70,12 @@ export function MediaGridCard({
         />
       ) : (
         <img
-          src={thumbnailUrl ?? url}
+          src={preferFullImage ? url : thumbnailUrl ?? url}
           alt=""
           loading="lazy"
           decoding="async"
           onError={() => setMediaFailed(true)}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: accent ? `${accent}22` : 'var(--color-background-muted)', transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: imageFit, background: accent ? `${accent}22` : 'var(--color-background-muted)', transform: hovered && imageFit === 'cover' ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
         />
       )}
       {title && (

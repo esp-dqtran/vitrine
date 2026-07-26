@@ -1,53 +1,91 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { SiteSummary } from '../types.ts';
+import { DiscoveryCard } from './DiscoveryCard.tsx';
+
+type VisibilityObserver = Pick<IntersectionObserver, 'observe' | 'disconnect'>;
+type VisibilityObserverFactory = (
+  callback: IntersectionObserverCallback,
+  options: IntersectionObserverInit,
+) => VisibilityObserver;
+
+export function observeSiteCardMedia(
+  target: Element,
+  onVisible: () => void,
+  createObserver: VisibilityObserverFactory = (callback, options) =>
+    new IntersectionObserver(callback, options),
+) {
+  const observer = createObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    onVisible();
+    observer.disconnect();
+  }, { rootMargin: '320px 0px', threshold: 0.01 });
+  observer.observe(target);
+  return () => observer.disconnect();
+}
 
 export function SiteCard({ site, onOpen }: { site: SiteSummary; onOpen: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const shouldPlayRef = useRef(false);
+  const [mediaActive, setMediaActive] = useState(site.previewMediaKind === 'image');
   const [mediaFailed, setMediaFailed] = useState(false);
   const hostname = safeHostname(site.sourceUrl);
   const description = site.description || `${site.sectionCount} captured sections from ${hostname}.`;
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || mediaActive) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setMediaActive(true);
+      return;
+    }
+    return observeSiteCardMedia(video, () => setMediaActive(true));
+  }, [mediaActive]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!mediaActive || !video || !shouldPlayRef.current) return;
+    void video.play().catch(() => undefined);
+  }, [mediaActive]);
+
   const startPreview = () => {
+    shouldPlayRef.current = true;
+    setMediaActive(true);
     const video = videoRef.current;
     if (!video) return;
     void video.play().catch(() => undefined);
   };
   const stopPreview = () => {
+    shouldPlayRef.current = false;
     const video = videoRef.current;
     if (!video) return;
     video.pause();
   };
 
   return (
-    <article
-      data-site-discovery-card="true"
-      className="site-discovery-card"
-      onMouseEnter={startPreview}
-      onMouseLeave={stopPreview}
-      onFocus={startPreview}
-      onBlur={stopPreview}
-    >
-      <a
-        href={`/sites/${site.id}/versions/${site.versionId}`}
-        className="site-discovery-card__link"
-        aria-label={`Open ${site.name}`}
-        onClick={(event) => {
-          event.preventDefault();
-          onOpen();
-        }}
-      >
-        <span className="site-discovery-card__media">
+    <DiscoveryCard
+      kind="site"
+      ariaLabel={`Open ${site.name}`}
+      onOpen={onOpen}
+      href={`/sites/${site.id}/versions/${site.versionId}`}
+      articleProps={{
+        onMouseEnter: startPreview,
+        onMouseLeave: stopPreview,
+        onFocus: startPreview,
+        onBlur: stopPreview,
+      }}
+      media={(
+        <>
           {site.previewMediaKind === 'image' ? (
             <img src={site.previewUrl} alt={`${site.name} website preview`} loading="lazy" />
           ) : !mediaFailed ? (
             <video
               ref={videoRef}
-              src={site.previewUrl}
-              poster={site.previews[0]?.url}
+              src={mediaActive ? site.previewUrl : undefined}
+              poster={mediaActive ? site.previews[0]?.url : undefined}
               muted
               loop
               playsInline
-              preload="metadata"
+              preload={mediaActive ? 'metadata' : 'none'}
               onError={() => setMediaFailed(true)}
             />
           ) : site.previews[0] ? (
@@ -56,21 +94,15 @@ export function SiteCard({ site, onOpen }: { site: SiteSummary; onOpen: () => vo
             <span className="site-discovery-card__fallback">Preview unavailable</span>
           )}
           {site.isLatest ? <span className="site-discovery-card__badge">New</span> : null}
-        </span>
-        <span className="site-discovery-card__identity">
-          <span className="site-discovery-card__logo" aria-hidden="true">
-            {site.logoUrl
-              ? <img src={site.logoUrl} alt="" loading="lazy" />
-              : site.name.slice(0, 1).toUpperCase()}
-          </span>
-          <span className="site-discovery-card__copy">
-            <strong>{site.name}</strong>
-            <span>{description}</span>
-            <small>{site.label} · {site.sectionCount} sections</small>
-          </span>
-        </span>
-      </a>
-    </article>
+        </>
+      )}
+      logo={site.logoUrl
+        ? <img src={site.logoUrl} alt="" loading="lazy" />
+        : site.name.slice(0, 1).toUpperCase()}
+      title={site.name}
+      description={description}
+      metadata={<>{site.label} · {site.sectionCount} sections</>}
+    />
   );
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Button, TextInput } from "@astryxdesign/core";
 import {
   compatibleFilterKeys,
 } from "../../searchScope.ts";
@@ -138,16 +139,18 @@ export function QuickSearch({
     >
       <div className="quick-search__panel">
         <header>
-          <input
+          <TextInput
+            label="Quick Search query"
+            isLabelHidden
             role="combobox"
             aria-expanded={groups.length > 0}
             ref={input}
             value={state.query}
-            onChange={(event) => updateQuery(event.target.value)}
+            onChange={updateQuery}
             placeholder="Search screens, flows, UI elements…"
-            aria-label="Quick Search query"
+            width="100%"
           />
-          <button type="button" onClick={onClose}>Close</button>
+          <Button label="Close" variant="ghost" onClick={onClose} />
         </header>
         <QuickSearchFilters
           state={state}
@@ -164,7 +167,7 @@ export function QuickSearch({
               "onboarding with progressive disclosure",
               "empty states for project tools",
             ]).map((value) => (
-              <button type="button" key={value} onClick={() => updateQuery(value)}>{value}</button>
+              <Button key={value} label={value} variant="ghost" onClick={() => updateQuery(value)} />
             ))}
           </section>
         ) : null}
@@ -176,7 +179,7 @@ export function QuickSearch({
           {search.loading && !result ? <p>Searching…</p> : null}
           {search.error ? (
             <p role="alert">
-              {search.error} <button type="button" onClick={() => void search.retry()}>Retry</button>
+              {search.error} <Button label="Retry" size="sm" onClick={() => void search.retry()} />
             </p>
           ) : null}
           {groups.map(([type, items]) => (
@@ -185,16 +188,17 @@ export function QuickSearch({
               {items.map((item) => {
                 const index = visible.indexOf(item);
                 return (
-                  <button
-                    type="button"
+                  <Button
                     key={item.documentId}
+                    label={`Preview ${item.title}`}
+                    variant="ghost"
                     aria-selected={index === active}
                     onMouseEnter={() => setActive(index)}
                     onClick={() => onPreview(item)}
                   >
                     <strong>{item.title}</strong>
                     <span>{item.catalogName} · {item.platform}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </section>
@@ -202,9 +206,11 @@ export function QuickSearch({
         </div>
         {state.query.trim() ? (
           <footer>
-            <button type="button" onClick={() => onViewAll(state)}>
-              View all results for “{state.query.trim()}”
-            </button>
+            <Button
+              label={`View all results for “${state.query.trim()}”`}
+              variant="ghost"
+              onClick={() => onViewAll(state)}
+            />
           </footer>
         ) : null}
       </div>

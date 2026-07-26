@@ -90,7 +90,17 @@ export interface DesignFlow<T = number> {
   category?: string;
   description: string;
   tags: string[];
-  steps: Array<{ label: string; interaction?: string; evidence: T[] }>;
+  steps: Array<{
+    label: string;
+    interaction?: string;
+    evidence: T[];
+    analysis?: {
+      interaction: string;
+      visibleStates: string[];
+      systemFeedback: string[];
+      source: "llm_inferred";
+    };
+  }>;
   provenance?: FlowProvenance;
   insights?: DesignFlowInsights<T>;
 }

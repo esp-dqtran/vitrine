@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, Selector, TextInput } from "@astryxdesign/core";
 import type { SearchFilters, SearchResultItem, SearchType } from "../../searchTypes.ts";
 import { compatibleFilterKeys } from "../../searchScope.ts";
 import { useAdvancedSearch } from "../useAdvancedSearch.ts";
@@ -8,6 +9,7 @@ import {
   serializeSearchState,
   type SearchPageState,
 } from "../searchState.ts";
+import { updateLocation, useLocationKey } from "../router.ts";
 import { ActiveSearchFilters } from "./ActiveSearchFilters.tsx";
 import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
@@ -25,12 +27,6 @@ const tabs: Array<[SearchType, string]> = [
   ["site", "Sites"],
 ];
 
-function initialSearchState(): SearchPageState {
-  return typeof window === "undefined"
-    ? parseSearchState("")
-    : parseSearchState(window.location.search);
-}
-
 export function AdvancedSearchPage({
   onPreview = () => {},
   comparison = [],
@@ -40,23 +36,23 @@ export function AdvancedSearchPage({
   comparison?: SearchResultItem[];
   onComparisonChange?(items: SearchResultItem[]): void;
 }) {
-  const [state, setState] = useState(initialSearchState);
+  const location = useLocationKey();
+  const queryIndex = location.indexOf("?");
+  const state = parseSearchState(queryIndex < 0 ? "" : location.slice(queryIndex));
   const [filtersOpen, setFiltersOpen] = useState(false);
   const search = useAdvancedSearch(state);
   const commit = (next: SearchPageState, push = true) => {
-    setState(next);
     if (typeof window !== "undefined") {
       const query = serializeSearchState(next);
-      window.history[push ? "pushState" : "replaceState"](
-        null,
-        "",
+      updateLocation(
         `/search${query ? `?${query}` : ""}`,
+        { replace: !push },
       );
     }
   };
   const applyFilters = (filters: SearchFilters) => commit({ ...state, filters });
   return (
-    <main className="advanced-search-page">
+    <main className="vitrine-page advanced-search-page">
       <header className="advanced-search-header">
         <div><span>Research library</span><h1>Search product experiences</h1></div>
         <form onSubmit={(event) => {
@@ -64,57 +60,62 @@ export function AdvancedSearchPage({
           if (typeof window !== "undefined") recordRecentSearch(window.localStorage, state.query);
           commit(state);
         }}>
-          <input
+          <TextInput
+            label="Search the research library"
+            isLabelHidden
             role="combobox"
             aria-expanded="false"
             value={state.query}
-            onChange={(event) => commit({ ...state, query: event.target.value }, false)}
+            onChange={(value) => commit({ ...state, query: value }, false)}
             placeholder="Try “dark mobile checkout with trust signals”"
-            aria-label="Search the research library"
+            width="100%"
           />
         </form>
         <nav className="advanced-search-tabs" aria-label="Search scope" role="tablist">
           {(["apps", "sites", "all"] as const).map((scope) => (
-            <button
+            <Button
               key={scope}
-              type="button"
+              label={scope === "apps" ? "Apps" : scope === "sites" ? "Sites" : "All"}
+              variant="ghost"
+              size="sm"
               role="tab"
               aria-selected={state.scope === scope}
               tabIndex={state.scope === scope ? 0 : -1}
               onClick={() => commit(switchSearchScope(state, scope))}
-            >
-              {scope === "apps" ? "Apps" : scope === "sites" ? "Sites" : "All"}
-            </button>
+            />
           ))}
         </nav>
         <nav className="advanced-search-tabs" aria-label="Result type" role="tablist">
           {tabs.map(([type, label]) => (
-            <button
+            <Button
               key={type}
-              type="button"
+              label={label}
+              variant="ghost"
+              size="sm"
               role="tab"
               aria-selected={state.type === type}
               tabIndex={state.type === type ? 0 : -1}
               onClick={() => commit({ ...state, type })}
-            >{label}</button>
+            />
           ))}
         </nav>
       </header>
       <div className="advanced-search-toolbar">
-        <button type="button" onClick={() => setFiltersOpen(true)}>Filters</button>
-        <label>Sort
-          <select
-            value={state.sort}
-            onChange={(event) => commit({
+        <Button label="Filters" variant="secondary" onClick={() => setFiltersOpen(true)} />
+        <Selector
+          label="Sort"
+          value={state.sort}
+          onChange={(value) => commit({
               ...state,
-              sort: event.target.value as SearchPageState["sort"],
-            })}
-          >
-            <option value="relevance">Relevance</option>
-            <option value="recent">Recently added</option>
-            <option value="app-az">App A–Z</option>
-          </select>
-        </label>
+              sort: value as SearchPageState["sort"],
+          })}
+          options={[
+            { value: "relevance", label: "Relevance" },
+            { value: "recent", label: "Recently added" },
+            { value: "app-az", label: "App A–Z" },
+          ]}
+          size="sm"
+        />
       </div>
       <ActiveSearchFilters filters={state.filters} onChange={applyFilters} />
       <div className="advanced-search-layout">
@@ -131,7 +132,7 @@ export function AdvancedSearchPage({
           {search.error ? (
             <div className="advanced-search-error">
               <span>{search.error}</span>
-              <button type="button" onClick={() => void search.retry()}>Retry</button>
+              <Button label="Retry" size="sm" onClick={() => void search.retry()} />
             </div>
           ) : null}
           {search.result ? (
@@ -152,9 +153,11 @@ export function AdvancedSearchPage({
                 }}
               />
               {search.result.hasMore ? (
-                <button type="button" onClick={() => void search.loadMore()} disabled={search.loadingMore}>
-                  {search.loadingMore ? "Loading…" : "Load more"}
-                </button>
+                <Button
+                  label="Load more"
+                  isLoading={search.loadingMore}
+                  onClick={() => void search.loadMore()}
+                />
               ) : null}
             </>
           ) : null}
@@ -173,17 +176,18 @@ export function AdvancedSearchPage({
       {comparison.length ? (
         <div className="advanced-search-comparison-tray" role="status">
           <span>{comparison.length} {comparison.length === 1 ? "app" : "apps"} selected for comparison</span>
-          <button
-            type="button"
-            disabled={comparison.length < 2}
+          <Button
+            label="Compare selected"
+            variant="primary"
+            isDisabled={comparison.length < 2}
             onClick={() => window.open(
               `/api/compare?apps=${encodeURIComponent(comparison.flatMap(({ appName }) =>
                 appName ? [appName] : []).join(","))}`,
               "_blank",
               "noopener,noreferrer",
             )}
-          >Compare selected</button>
-          <button type="button" onClick={() => onComparisonChange([])}>Clear</button>
+          />
+          <Button label="Clear" variant="ghost" onClick={() => onComparisonChange([])} />
         </div>
       ) : null}
     </main>

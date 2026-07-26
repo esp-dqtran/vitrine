@@ -10,6 +10,7 @@ export function FeatureDocumentRevisionHistory({
   onSelect,
   onCompare,
   onRestore,
+  readOnly = false,
 }: {
   revisions: FeatureDocumentRevisionView[];
   selectedRevisionId: number;
@@ -17,6 +18,7 @@ export function FeatureDocumentRevisionHistory({
   onSelect: (revisionId: number) => void;
   onCompare?: (revisionId: number | undefined) => void;
   onRestore: (revisionId: number) => void;
+  readOnly?: boolean;
 }) {
   return (
     <aside className="feature-document-revision-history" aria-label="Revision history">
@@ -38,7 +40,7 @@ export function FeatureDocumentRevisionHistory({
           </Button>
           <div style={{ display: 'flex', gap: 6 }}>
             {onCompare && revision.id !== selectedRevisionId && <Button label={comparisonRevisionId === revision.id ? 'Stop comparing' : 'Compare'} size="sm" variant="ghost" clickAction={() => onCompare(comparisonRevisionId === revision.id ? undefined : revision.id)} />}
-            {revision.id !== selectedRevisionId && <Button label={`Restore revision ${revision.revisionNumber}`} size="sm" variant="ghost" clickAction={() => onRestore(revision.id)} />}
+            {!readOnly && revision.id !== selectedRevisionId && <Button label={`Restore revision ${revision.revisionNumber}`} size="sm" variant="ghost" clickAction={() => onRestore(revision.id)} />}
           </div>
         </article>
       ))}

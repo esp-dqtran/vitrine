@@ -1,18 +1,26 @@
 import type { ReactNode } from 'react';
 import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
-import { SearchInput } from './SearchInput.tsx';
+import { SearchTrigger } from './SearchTrigger.tsx';
 
 interface SitesTopNavProps {
-  query: string;
-  onQueryChange: (value: string) => void;
+  searchLabel: string;
+  activeCategory: string | null;
+  onClearCategory: () => void;
+  onOpenSearch: () => void;
+  searchMode: 'legacy' | 'advanced';
+  activeFilterCount?: number;
   isAdmin: boolean;
   onImport: () => void;
   accountControls?: ReactNode;
 }
 
 export function SitesTopNav({
-  query,
-  onQueryChange,
+  searchLabel,
+  activeCategory,
+  onClearCategory,
+  onOpenSearch,
+  searchMode,
+  activeFilterCount,
   isAdmin,
   onImport,
   accountControls,
@@ -21,7 +29,16 @@ export function SitesTopNav({
     <ReferenceDiscoveryTopNav
       active="sites"
       className="sites-top-nav"
-      search={<SearchInput value={query} onChange={onQueryChange} placeholder="Search Sites" />}
+      search={(
+        <SearchTrigger
+          label={searchLabel}
+          activeCategory={activeCategory}
+          onOpen={onOpenSearch}
+          onClearCategory={onClearCategory}
+          mode={searchMode}
+          activeFilterCount={activeFilterCount}
+        />
+      )}
       isAdmin={isAdmin}
       importLabel="Import Site"
       onImport={onImport}

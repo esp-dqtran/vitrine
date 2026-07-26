@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { App } from './types';
 
 interface CatalogResponse {
@@ -12,20 +12,33 @@ interface AdminAppsResponse {
   total: number;
 }
 
+export function appendUniqueApps(current: App[], next: App[]): App[] {
+  const seen = new Set(current.map(({ id }) => id));
+  return [...current, ...next.filter(({ id }) => !seen.has(id))];
+}
+
 export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [totalApps, setTotalApps] = useState<number | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
+  const requestGenerationRef = useRef(0);
 
   const refresh = useCallback((signal?: AbortSignal) => {
+    const generation = ++requestGenerationRef.current;
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
     setError(null);
+    setLoadMoreError(null);
     return (async () => {
       if (role === 'admin') {
         const response = await fetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = await response.json() as AdminAppsResponse;
+        if (generation !== requestGenerationRef.current) return;
         setApps(page.apps);
         setNextCursor(page.nextCursor);
         setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
@@ -35,11 +48,14 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
       const page = await response.json() as CatalogResponse;
       const firstPage = page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
+      if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
       setNextCursor(page.nextCursor);
       setTotalApps(firstPage.length);
     })().catch((err: Error) => {
-        if (err.name !== 'AbortError') setError(err.message);
+        if (err.name !== 'AbortError' && generation === requestGenerationRef.current) {
+          setError(err.message);
+        }
       });
   }, [role]);
 
@@ -51,8 +67,11 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   }, [apps, enabled, refresh]);
 
   const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMore) return;
+    if (!nextCursor || loadingMoreRef.current) return;
+    const generation = requestGenerationRef.current;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
+    setLoadMoreError(null);
     try {
       const endpoint = role === 'admin' ? `/api/apps?cursor=${encodeURIComponent(nextCursor)}`
         : `/api/catalog?cursor=${encodeURIComponent(nextCursor)}`;
@@ -62,17 +81,33 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       const nextApps = role === 'admin'
         ? (page as AdminAppsResponse).apps
         : (page as CatalogResponse).apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
-      setApps((current) => [...(current ?? []), ...nextApps]);
+      if (generation !== requestGenerationRef.current) return;
+      setApps((current) => appendUniqueApps(current ?? [], nextApps));
       setNextCursor(page.nextCursor);
       if (role === 'admin' && Number.isFinite((page as AdminAppsResponse).total)) {
         setTotalApps((page as AdminAppsResponse).total);
       }
     } catch (err) {
-      setError((err as Error).message);
+      if (generation === requestGenerationRef.current) {
+        setLoadMoreError((err as Error).message);
+      }
     } finally {
-      setLoadingMore(false);
+      if (generation === requestGenerationRef.current) {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
     }
-  }, [loadingMore, nextCursor, role]);
+  }, [nextCursor, role]);
 
-  return { apps, totalApps, loading: apps === null && !error, loadingMore, hasMore: nextCursor !== null, error, refresh, loadMore };
+  return {
+    apps,
+    totalApps,
+    loading: apps === null && !error,
+    loadingMore,
+    hasMore: nextCursor !== null,
+    error,
+    loadMoreError,
+    refresh,
+    loadMore,
+  };
 }

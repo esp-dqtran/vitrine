@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { FeatureDocumentContent, FeatureDocumentRevisionView } from '../featureDocument.ts';
+import type { DesignFlow, EvidenceView } from '../designSystem.ts';
+import type {
+  FeatureDocumentContent,
+  FeatureDocumentRevisionView,
+  FeatureDocumentView,
+} from '../featureDocument.ts';
+import { DocumentFlowPanelView } from './components/DocumentFlowPanel.tsx';
 import { FeatureDocumentEditor } from './components/FeatureDocumentEditor.tsx';
 import { FeatureDocumentEvidencePanel } from './components/FeatureDocumentEvidencePanel.tsx';
 import { FeatureDocumentRevisionHistory } from './components/FeatureDocumentRevisionHistory.tsx';
@@ -37,6 +43,26 @@ const revision: FeatureDocumentRevisionView = {
   createdAt: '2026-07-22T00:00:00.000Z',
 };
 
+const flow: DesignFlow<EvidenceView> = {
+  id: 'checkout',
+  title: 'Checkout',
+  category: 'Payments',
+  description: '',
+  tags: [],
+  steps: [{ label: 'Cart', evidence: [{ imageId: 42, imageUrl: '/42.png' }] }],
+};
+
+const featureDocument: FeatureDocumentView = {
+  id: 12,
+  title: 'Checkout',
+  visibility: 'private',
+  reviewStatus: 'draft',
+  sourceChanged: false,
+  currentRevision: revision,
+  revisions: [revision],
+  shares: [],
+};
+
 test('renders all structured sections without collapsing into Markdown', () => {
   const html = renderToStaticMarkup(<FeatureDocumentEditor content={content} onChange={() => {}} onEvidence={() => {}} />);
   for (const section of ['Executive summary', 'Observed flow', 'Flow analysis', 'Proposed feature', 'Requirements', 'Edge cases', 'Success metrics', 'Guardrail metrics', 'Analytics events', 'Dependencies', 'Open questions']) {
@@ -67,4 +93,36 @@ test('initial generation exposes durable progress and cancellation before a revi
   assert.match(html, /Analyzing image 2 of 3/);
   assert.match(html, /Cancel generation/);
   assert.doesNotMatch(html, /Loading Feature Document/);
+});
+
+test('Document Flow exposes revision editing without replacing the narrative by default', () => {
+  const reading = renderToStaticMarkup(
+    <DocumentFlowPanelView
+      flow={flow}
+      state={{ kind: 'ready', document: featureDocument, revision }}
+      userRole="admin"
+      selectedStep={1}
+      editing={false}
+      onEdit={() => undefined}
+      onOpenVisualStep={() => undefined}
+    />,
+  );
+  assert.match(reading, /Overview/);
+  assert.match(reading, />Edit Document Flow</);
+  assert.doesNotMatch(reading, /Revision history/);
+
+  const editing = renderToStaticMarkup(
+    <DocumentFlowPanelView
+      flow={flow}
+      state={{ kind: 'ready', document: featureDocument, revision }}
+      userRole="admin"
+      selectedStep={1}
+      editing
+      onEdit={() => undefined}
+      onOpenVisualStep={() => undefined}
+    />,
+  );
+  assert.match(editing, /Revision history/);
+  assert.match(editing, /Evidence inspector/);
+  assert.match(editing, /Save new revision/);
 });

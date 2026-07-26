@@ -7,6 +7,7 @@ import {
   listAppVersions,
   pool,
   query,
+  saveAnalyzedAppFlows,
   setJobStatus,
 } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
@@ -162,6 +163,7 @@ async function ensureAutomaticKnowledgeForCapture(
   const prepared = await buildAppKnowledgeEvidenceManifest({
     source,
     objectStore,
+    scope: "flows",
     overrides: await appKnowledgeStore.evidenceOverrides(version.id),
   });
   await ensureAutomaticAppKnowledgeJob({
@@ -186,9 +188,10 @@ const generateAppKnowledge = createBrowserAppKnowledgeGenerator({
   failProviderUnavailable: (runId) => appKnowledgeStore.failJob(
     Number(runId),
     "provider_unavailable",
-    "Analysis provider is temporarily unavailable",
+    "Flow analysis provider is temporarily unavailable",
   ),
   createService: (provider, concurrency) => createAppKnowledgeService({
+    mode: "flow-only",
     store: appKnowledgeStore,
     provider,
     objectStore,
@@ -209,19 +212,16 @@ const generateAppKnowledge = createBrowserAppKnowledgeGenerator({
       const prepared = await buildAppKnowledgeEvidenceManifest({
         source,
         objectStore,
+        scope: "flows",
         overrides: await appKnowledgeStore.evidenceOverrides(target.captureVersionId),
       });
       return prepared.sourceSha256;
     },
-    screenConcurrency: concurrency,
     flowConcurrency: concurrency,
     timeoutMs: 6 * 60_000,
-    designSystemChunkBytes:
-      automaticAppKnowledgeConfig.designSystemChunkBytes,
-    designSystemChunkConcurrency:
-      automaticAppKnowledgeConfig.designSystemChunkConcurrency,
     flowSynthesisChunkBytes:
       automaticAppKnowledgeConfig.flowSynthesisChunkBytes,
+    saveAnalyzedFlows: saveAnalyzedAppFlows,
   }),
 });
 

@@ -287,9 +287,11 @@ test("preview lookup uses explicit ranks one to three on the latest published ve
 
   assert.equal((await publishedPreviewObject({ app: "alpha", rank: 3 }, query))?.key, metadata.key);
   assert.deepEqual(captured?.values, ["alpha", 3]);
-  assert.match(captured!.sql, /DISTINCT ON \(a\.id, i\.id\)/);
+  assert.match(captured!.sql, /DISTINCT ON \(a\.id, latest\.platform, i\.id\)/);
   assert.match(captured!.sql, /api\.rank IS NULL/);
   assert.match(captured!.sql, /ROW_NUMBER\(\) OVER/);
+  assert.match(captured!.sql, /PARTITION BY app, platform/);
+  assert.match(captured!.sql, /ORDER BY platform_rank, platform/);
   assert.match(captured!.sql, /preview_rank = \$2/);
   assert.match(captured!.sql, /'protected', 'public-preview'/);
 });
@@ -334,8 +336,29 @@ test("facet preview lookup stays app-scoped in the latest published version", as
   assert.match(sql, /av\.status = 'published'/);
   assert.match(sql, /public_facet_previews/);
   assert.match(sql, /a\.name = \$3/);
+  assert.match(sql, /so\.object_key = COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
   assert.match(sql, /so\.access_class IN \('protected', 'public-preview'\)/);
   assert.doesNotMatch(sql, /jsonb_array_elements|app_flow_versions/);
+});
+
+test("Screen facet previews resolve the original stored image", async () => {
+  let sql = "";
+  await publishedFacetPreviewObject(
+    {
+      app: "linear",
+      group: "screens",
+      value: "Signup",
+      platform: "web",
+      rank: 1,
+    },
+    async (nextSql) => {
+      sql = nextSql;
+      return result();
+    },
+  );
+
+  assert.match(sql, /so\.object_key = i\.object_key/);
+  assert.doesNotMatch(sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
 });
 
 test("facet preview lookup rejects ranks outside its declared media bound", async () => {

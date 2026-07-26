@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FlowTreeGroup } from '../flowTree.ts';
 import { FlowCard } from './FlowCard.tsx';
-import {
-  ReferenceGalleryGrid,
-  ReferenceGallerySection,
-} from './ReferenceGallerySection.tsx';
+import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
 
 const FLOW_BATCH_SIZE = 24;
 
@@ -59,7 +56,7 @@ export function FlowGallery({
                 <span>{group.totalCount}</span>
               </div>
             )}
-            <ReferenceGalleryGrid minCardWidth={220}>
+            <div className="flow-gallery__strips">
               {group.flows.map((flow) => (
                 <FlowCard
                   key={flow.id}
@@ -67,7 +64,7 @@ export function FlowGallery({
                   onOpen={() => onSelectFlow(flow.id)}
                 />
               ))}
-            </ReferenceGalleryGrid>
+            </div>
           </section>
         ))}
       </div>

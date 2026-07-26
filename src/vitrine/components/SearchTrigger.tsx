@@ -35,31 +35,24 @@ export function SearchTrigger({
     : label;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 220, maxWidth: 420 }}>
+    <div className="reference-search-trigger" data-reference-component="search-trigger">
       <Button
+        className="reference-search-trigger__button"
         label={displayLabel}
         aria-label={mode === 'advanced' ? 'Open Quick Search' : 'Open search and filters'}
         variant="secondary"
         onClick={onOpen}
         icon={<Icon icon="search" size="sm" color="disabled" />}
-        endContent={<span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-disabled)', border: '1px solid var(--color-border)', borderRadius: 5, padding: '2px 5px' }}>⌘K</span>}
-        style={{
-          flex: 1,
-          height: 38,
-          borderRadius: 10,
-        }}
+        endContent={<span className="reference-search-trigger__shortcut">⌘K</span>}
       />
       {activeCategory && activeCategory !== 'All' && (
         <Button
           label={activeCategory}
           variant="primary"
           size="sm"
+          className="reference-search-trigger__category"
           onClick={onClearCategory}
           endContent={<Icon icon="close" size="xsm" />}
-          style={{
-            borderRadius: 9,
-            flex: '0 0 auto',
-          }}
         />
       )}
     </div>

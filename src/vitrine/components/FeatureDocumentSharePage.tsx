@@ -27,12 +27,12 @@ export function FeatureDocumentSharePage({
     return () => { live = false; };
   }, [initialShare, token]);
 
-  if (error) return <EmptyState title="Feature Document share unavailable" description="This share may have expired or been revoked." />;
-  if (!share) return <div role="status" aria-label="Loading shared Feature Document" style={{ display: 'grid', minHeight: '100vh', placeItems: 'center' }}><Spinner size="lg" /></div>;
+  if (error) return <div className="vitrine-page"><EmptyState title="Feature Document share unavailable" description="This share may have expired or been revoked." /></div>;
+  if (!share) return <div className="vitrine-page" role="status" aria-label="Loading shared Feature Document" style={{ display: 'grid', minHeight: '100vh', placeItems: 'center' }}><Spinner size="lg" /></div>;
   const evidence = share.revision.evidenceManifest.find(({ evidenceId }) => evidenceId === selectedEvidenceId)
     ?? share.revision.evidenceManifest[0];
   return (
-    <div className="feature-document-share-page">
+    <div className="vitrine-page feature-document-share-page">
       <header>
         <div className="feature-document-kicker">Read-only Feature Document</div>
         <h1>{share.title}</h1>

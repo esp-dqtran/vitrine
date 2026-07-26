@@ -1,3 +1,4 @@
+import { Button } from "@astryxdesign/core";
 import type { SearchResultItem } from "../../searchTypes.ts";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 
@@ -28,11 +29,11 @@ export function SearchResultCard({
     : [];
   return (
     <article className={`advanced-search-card advanced-search-card--${item.entityType}`}>
-      <button
+      <Button
         className="advanced-search-card__preview"
-        type="button"
+        label={`Preview ${item.title}`}
+        variant="ghost"
         onClick={() => onPreview(item)}
-        aria-label={`Preview ${item.title}`}
       >
         {item.entityType !== "app" ? (
           <div className="advanced-search-card__media">
@@ -55,16 +56,16 @@ export function SearchResultCard({
             </small>
           ))}
         </div>
-      </button>
+      </Button>
       {onToggleCompare && item.catalogScope === "apps" && item.appId !== undefined ? (
-        <button
-          type="button"
+        <Button
+          label={selected ? "Remove from compare" : "Compare app"}
+          variant="secondary"
+          size="sm"
           className="advanced-search-card__compare"
           aria-pressed={selected}
           onClick={() => onToggleCompare(item)}
-        >
-          {selected ? "Remove from compare" : "Compare app"}
-        </button>
+        />
       ) : null}
     </article>
   );

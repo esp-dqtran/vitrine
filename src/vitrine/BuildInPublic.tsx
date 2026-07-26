@@ -93,7 +93,7 @@ function RoadmapItem({ item }: { item: RoadmapItemData }) {
       <article
         style={{
           padding: '24px 26px', border: '1px solid var(--color-border)', borderRadius: 20,
-          background: 'var(--color-background-card, var(--color-background-surface))', boxShadow: 'var(--shadow-low)',
+          background: 'var(--color-background-surface)', boxShadow: 'var(--shadow-low)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -126,7 +126,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
   onPricing: () => void;
 }) {
   return (
-    <div style={page}>
+    <div className="vitrine-page" style={page}>
       <style>{`
         .bip-timeline { --bip-dot-left: 136px; }
         .bip-timeline::before { content: ''; position: absolute; top: 10px; bottom: 28px; left: 142px; width: 1px; background: var(--color-border); }
@@ -159,7 +159,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
         <section style={{ position: 'relative', padding: '104px 0 72px', textAlign: 'center' }}>
           <div aria-hidden="true" style={{ position: 'absolute', width: 560, height: 360, top: -70, left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(circle, rgba(59,110,246,0.17), transparent 68%)', pointerEvents: 'none' }} />
           <div style={{ ...wrap, position: 'relative' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 11px', borderRadius: 999, border: '1px solid var(--color-border)', background: 'var(--color-background-card, var(--color-background-surface))', marginBottom: 24 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 11px', borderRadius: 999, border: '1px solid var(--color-border)', background: 'var(--color-background-surface)', marginBottom: 24 }}>
               <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: '#2f64e9', boxShadow: '0 0 0 4px rgba(47,100,233,0.12)' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-secondary)' }}>BUILD IN PUBLIC</span>
             </div>
@@ -176,7 +176,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
         </section>
 
         <section aria-labelledby="snapshot-heading" style={{ ...wrap, paddingBottom: 88 }}>
-          <div style={{ padding: '26px 28px', borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-background-card, var(--color-background-surface))', boxShadow: 'var(--shadow-low)' }}>
+          <div style={{ padding: '26px 28px', borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-background-surface)', boxShadow: 'var(--shadow-low)' }}>
             <div style={{ marginBottom: 22 }}>
               <Heading id="snapshot-heading" level={2}>Current catalog snapshot</Heading>
               <div style={{ marginTop: 6 }}><Text type="supporting" color="secondary">Completed-crawl figures, maintained alongside this roadmap.</Text></div>
@@ -203,11 +203,11 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
           </ol>
         </section>
 
-        <section style={{ background: '#171717' }}>
+        <section style={{ background: 'var(--color-background-surface)', borderBlock: '1px solid var(--color-border)' }}>
           <div style={{ ...wrap, paddingTop: 68, paddingBottom: 68, textAlign: 'center' }}>
-            <Heading level={2}><span style={{ color: '#fff' }}>The useful parts are already here.</span></Heading>
-            <div style={{ maxWidth: 540, margin: '12px auto 26px' }}><Text type="body"><span style={{ color: '#a1a1aa' }}>Explore real product evidence while we keep improving the path from reference to decision to handoff.</span></Text></div>
-            <Button label="Browse the library" variant="primary" size="lg" onClick={onBrowse} style={{ background: '#fff', color: '#18181b' }} />
+            <Heading level={2}>The useful parts are already here.</Heading>
+            <div style={{ maxWidth: 540, margin: '12px auto 26px' }}><Text type="body" color="secondary">Explore real product evidence while we keep improving the path from reference to decision to handoff.</Text></div>
+            <Button label="Browse the library" variant="primary" size="lg" onClick={onBrowse} />
           </div>
         </section>
       </main>

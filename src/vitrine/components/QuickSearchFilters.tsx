@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@astryxdesign/core";
 import {
   compatibleSearchFilters,
   quickFilterKeys,
@@ -89,16 +90,16 @@ export function QuickSearchFilters({
     <div className="quick-search__filter-controls">
       <div className="quick-search__scope" role="tablist" aria-label="Search scope">
         {(["apps", "sites", "all"] as const).map((scope) => (
-          <button
-            type="button"
+          <Button
+            label={scopeLabels[scope]}
+            variant="ghost"
+            size="sm"
             role="tab"
             aria-selected={state.scope === scope}
             tabIndex={state.scope === scope ? 0 : -1}
             key={scope}
             onClick={() => onChange(switchSearchScope(state, scope))}
-          >
-            {scopeLabels[scope]}
-          </button>
+          />
         ))}
       </div>
       <div className="quick-search__quick-filters">
@@ -107,19 +108,21 @@ export function QuickSearchFilters({
           const selected = state.filters[key];
           return (
             <div className="quick-search__filter-menu" key={key}>
-              <button
-                type="button"
+              <Button
+                label={`${filterLabels[key]}${selected.length ? ` · ${selected.length}` : ""}`}
+                variant="ghost"
+                size="sm"
                 className="quick-search__filter-chip"
                 aria-expanded={openKey === key}
                 onClick={() => setOpenKey(openKey === key ? null : key)}
-              >
-                {filterLabels[key]}{selected.length ? ` · ${selected.length}` : ""}
-              </button>
+              />
               {openKey === key ? (
                 <div role="menu" aria-label={filterLabels[key]}>
                   {options.map(({ value, count }) => (
-                    <button
-                      type="button"
+                    <Button
+                      label={`${value} · ${count}`}
+                      variant="ghost"
+                      size="sm"
                       role="menuitemcheckbox"
                       aria-checked={selected.includes(value)}
                       key={value}
@@ -132,7 +135,7 @@ export function QuickSearchFilters({
                       })}
                     >
                       <span>{value}</span><small>{count}</small>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ) : null}
@@ -141,19 +144,21 @@ export function QuickSearchFilters({
         })}
         {state.scope === "all" ? (
           <div className="quick-search__filter-menu">
-            <button
-              type="button"
+            <Button
+              label={`Result type${state.type !== "all" ? ` · ${typeLabels[state.type]}` : ""}`}
+              variant="ghost"
+              size="sm"
               className="quick-search__filter-chip"
               aria-expanded={openKey === "type"}
               onClick={() => setOpenKey(openKey === "type" ? null : "type")}
-            >
-              Result type{state.type !== "all" ? ` · ${typeLabels[state.type]}` : ""}
-            </button>
+            />
             {openKey === "type" ? (
               <div role="menu" aria-label="Result type">
                 {types.map((type) => (
-                  <button
-                    type="button"
+                  <Button
+                    label={`${typeLabels[type]}${type !== "all" ? ` · ${typeCounts[type]}` : ""}`}
+                    variant="ghost"
+                    size="sm"
                     role="menuitemradio"
                     aria-checked={state.type === type}
                     key={type}
@@ -161,19 +166,19 @@ export function QuickSearchFilters({
                   >
                     <span>{typeLabels[type]}</span>
                     {type !== "all" ? <small>{typeCounts[type]}</small> : null}
-                  </button>
+                  </Button>
                 ))}
               </div>
             ) : null}
           </div>
         ) : null}
-        <button
-          type="button"
+        <Button
+          label="More filters"
+          variant="ghost"
+          size="sm"
           className="quick-search__filter-chip"
           onClick={onOpenMore}
-        >
-          More filters
-        </button>
+        />
       </div>
       <div className="quick-search__active-filters">
         <ActiveSearchFilters

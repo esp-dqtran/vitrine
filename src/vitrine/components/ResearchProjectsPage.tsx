@@ -40,7 +40,7 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
   };
 
   return (
-    <main style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 64px' }}>
+    <main className="vitrine-page" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px 64px' }}>
       <PageHeader
         title="Research projects"
         description="Turn selected product evidence into a design direction your team can understand and challenge."

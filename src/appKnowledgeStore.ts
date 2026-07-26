@@ -204,6 +204,7 @@ export interface AppKnowledgeStore extends AppKnowledgeCropStore {
   resumeJob(jobId: number, transportJobId: number): Promise<AppKnowledgeJobView | undefined>;
   retryFailedEvidence(jobId: number, transportJobId: number): Promise<AppKnowledgeJobView | undefined>;
   markStale(jobId: number): Promise<void>;
+  completeFlowAnalysis(jobId: number): Promise<AppKnowledgeJobView>;
   completeGeneration(jobId: number, snapshot: AppKnowledgeSnapshot): Promise<AppKnowledgeRevisionView>;
   failJob(jobId: number, code: string, safeMessage: string): Promise<void>;
   getAdminSnapshot(snapshotId: number): Promise<AppKnowledgeSnapshotView | undefined>;
@@ -1300,6 +1301,20 @@ export function createAppKnowledgeStore(
          WHERE id = $1 AND status IN ('queued', 'running')`,
         [jobId],
       );
+    },
+
+    async completeFlowAnalysis(jobId) {
+      const completed = await runQuery(
+        `UPDATE app_knowledge_jobs AS j
+         SET status = 'done', stage = 'complete', done_count = total_count,
+           completed_at = now(), updated_at = now()
+         WHERE j.id = $1 AND j.status = 'running'
+         RETURNING ${JOB_COLUMNS}`,
+        [jobId],
+      );
+      const job = jobFromRow(completed.rows[0]);
+      if (!job) throw new Error("App Knowledge job is not running");
+      return job;
     },
 
     async completeGeneration(jobId, rawSnapshot) {

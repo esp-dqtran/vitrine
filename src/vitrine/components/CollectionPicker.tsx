@@ -59,7 +59,7 @@ export function CollectionPicker({ reference, collections, onCollectionsChange, 
           variant: 'ghost',
           isDisabled: busy,
           style: dark
-            ? { border: '1px solid rgba(255,255,255,.3)', background: 'rgba(255,255,255,.08)', color: '#fff', borderRadius: 999 }
+            ? { border: '1px solid var(--color-border-emphasized)', background: 'var(--color-background-surface)', color: 'var(--color-text-primary)', borderRadius: 999 }
             : { borderRadius: 999 },
         }}
       >

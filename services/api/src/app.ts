@@ -73,6 +73,7 @@ import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSou
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
 import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
+import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import { parsePublicFacet } from "../../../src/publicFacetPreview.ts";
 import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts";
 import {
@@ -861,9 +862,17 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const page = await deps.publishedCatalogPage({ cursor, limit });
-    res.setHeader("Cache-Control", "private, max-age=280");
-    res.json(buildPublishedCatalogPage(page));
+    try {
+      const page = await deps.publishedCatalogPage({ cursor, limit });
+      res.setHeader("Cache-Control", "private, max-age=280");
+      res.json(buildPublishedCatalogPage(page));
+    } catch (error) {
+      if (error instanceof CatalogCursorError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
   });
 
   app.get("/catalog/stats", async (_req, res) => {
@@ -2503,8 +2512,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/apps", requireAdmin, async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const page = await deps.adminAppPage(cursor, limit);
-    res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor, total: page.total });
+    try {
+      const page = await deps.adminAppPage({ cursor, limit });
+      res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor, total: page.total });
+    } catch (error) {
+      if (error instanceof CatalogCursorError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
   });
 
   app.get("/images", requireAdmin, async (req, res) => {

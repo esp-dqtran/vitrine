@@ -26,7 +26,7 @@ interface LightboxProps {
 export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxProps) {
   return (
     <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
-      <div style={{ position: 'relative', width: '100%', height: '100%', background: 'rgba(10,10,11,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', background: 'color-mix(in srgb, var(--color-background-body) 94%, transparent)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, boxSizing: 'border-box' }}>
       <IconButton
         label="Close"
         icon={<Icon icon="close" size="sm" />}
@@ -40,8 +40,8 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
           top: 20,
           right: 24,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.1)',
-          color: '#fff',
+          background: 'var(--color-background-muted)',
+          color: 'var(--color-text-primary)',
         }}
       />
       <div
@@ -54,7 +54,7 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
           borderRadius: 14,
           overflow: 'hidden',
           background: 'var(--color-background-muted)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-high)',
           animation: 'vtScaleIn .3s cubic-bezier(.16,1,.3,1) both',
         }}
       >
@@ -64,7 +64,7 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
         {total > 1 && <ArrowButton direction="left" visible onClick={() => onNavigate(index - 1)} />}
         {total > 1 && <ArrowButton direction="right" visible onClick={() => onNavigate(index + 1)} />}
       </div>
-      <div style={{ marginTop: 16, fontSize: 13.5, color: '#d4d4d8' }}>
+      <div style={{ marginTop: 16, fontSize: 13.5, color: 'var(--color-text-secondary)' }}>
         {item.caption} — {index + 1} of {total}
       </div>
       </div>

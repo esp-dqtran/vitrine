@@ -247,10 +247,12 @@ function validSource(source: AppKnowledgeEvidenceSource): void {
 export async function buildAppKnowledgeEvidenceManifest(input: {
   source: AppKnowledgeEvidenceSource;
   objectStore: ObjectStore;
+  scope?: "all" | "flows";
   overrides?: AppKnowledgeEvidenceOverride[];
   maxImageBytes?: number;
 }): Promise<AppKnowledgeEvidenceManifest> {
   validSource(input.source);
+  const scope = input.scope ?? "all";
   const maxImageBytes = input.maxImageBytes ?? 20 * 1024 * 1024;
   if (!Number.isSafeInteger(maxImageBytes) || maxImageBytes < 1) {
     throw new AppKnowledgeEvidenceError("source_invalid");
@@ -258,7 +260,7 @@ export async function buildAppKnowledgeEvidenceManifest(input: {
   const images = input.source.images as EvidenceImage[];
   const byId = new Map<number, EvidenceImage>();
   for (const image of images) {
-    imageScope(input.source, image);
+    if (scope === "all") imageScope(input.source, image);
     if (byId.has(image.id)) throw new AppKnowledgeEvidenceError("source_invalid");
     byId.set(image.id, image);
   }
@@ -279,8 +281,10 @@ export async function buildAppKnowledgeEvidenceManifest(input: {
     kind: AppKnowledgeEvidenceKind;
     flow?: AppKnowledgeEvidenceManifestItem["flow"];
   }> = [];
-  for (const image of images.filter(({ kind }) => kind === "screen").sort((a, b) => a.id - b.id)) {
-    occurrences.push({ evidenceId: `SCREEN-${image.id}`, image, kind: "screen" });
+  if (scope === "all") {
+    for (const image of images.filter(({ kind }) => kind === "screen").sort((a, b) => a.id - b.id)) {
+      occurrences.push({ evidenceId: `SCREEN-${image.id}`, image, kind: "screen" });
+    }
   }
 
   let totalFlowReferences = 0;
@@ -296,6 +300,7 @@ export async function buildAppKnowledgeEvidenceManifest(input: {
         if (!image || image.kind !== "flow_step") {
           throw new AppKnowledgeEvidenceError("flow_evidence_missing");
         }
+        imageScope(input.source, image);
         flowImageIds.add(imageId);
         occurrences.push({
           evidenceId: `FLOW-${encodedFlowId}-STEP-${String(stepIndex).padStart(4, "0")}-IMAGE-${image.id}`,
@@ -314,8 +319,14 @@ export async function buildAppKnowledgeEvidenceManifest(input: {
     }
   }
 
-  for (const image of images.filter(({ kind }) => kind === "ui_element").sort((a, b) => a.id - b.id)) {
-    occurrences.push({ evidenceId: `UI-ELEMENT-${image.id}`, image, kind: "ui_element" });
+  if (scope === "flows" && totalFlowReferences === 0) {
+    throw new AppKnowledgeEvidenceError("flow_evidence_missing");
+  }
+
+  if (scope === "all") {
+    for (const image of images.filter(({ kind }) => kind === "ui_element").sort((a, b) => a.id - b.id)) {
+      occurrences.push({ evidenceId: `UI-ELEMENT-${image.id}`, image, kind: "ui_element" });
+    }
   }
 
   const verified = new Map<number, Awaited<ReturnType<typeof verifiedRaster>>>();
@@ -376,6 +387,7 @@ export async function buildAppKnowledgeEvidenceManifest(input: {
   }
 
   const canonicalSource = {
+    scope,
     identity: {
       appId: input.source.appId,
       app: input.source.app,

@@ -23,6 +23,11 @@ export function FlowTree({
   onToggleGroup,
   onSelectFlow,
 }: FlowTreeProps) {
+  const visibleFlowCount = groups.reduce(
+    (total, group) => total + group.flows.length,
+    0,
+  );
+
   return (
     <nav className="flow-tree" aria-label="Flows">
       <div className="flow-tree__search">
@@ -31,6 +36,10 @@ export function FlowTree({
           onChange={onQueryChange}
           placeholder="Search flows…"
         />
+      </div>
+      <div className="flow-tree__root">
+        <span className="flow-tree__root-label">Flows</span>
+        <span className="flow-tree__root-count">{visibleFlowCount}</span>
       </div>
       {groups.length === 0 ? (
         <p className="flow-tree__empty" role="status">
@@ -51,22 +60,21 @@ export function FlowTree({
                   aria-expanded={expanded}
                   aria-controls={childId}
                   onClick={() => onToggleGroup(group.id)}
-                  icon={(
-                    <Icon
-                      icon={expanded ? 'chevronDown' : 'chevronRight'}
-                      size="sm"
-                    />
-                  )}
-                  endContent={(
-                    <span className="flow-tree__count">{group.flows.length}</span>
-                  )}
                 >
-                  <span className="flow-tree__group-label">{group.label}</span>
+                  <span className="flow-tree__group-content">
+                    <span className="flow-tree__group-label">{group.label}</span>
+                    <span className="flow-tree__group-chevron" aria-hidden="true">
+                      <Icon
+                        icon={expanded ? 'chevronDown' : 'chevronRight'}
+                        size="sm"
+                      />
+                    </span>
+                  </span>
                 </Button>
                 {expanded && (
                   <ul className="flow-tree__flows" id={childId}>
                     {group.flows.map((flow) => (
-                      <li key={flow.id}>
+                      <li className="flow-tree__flow-branch" key={flow.id}>
                         <Button
                           label={flow.title}
                           variant="ghost"

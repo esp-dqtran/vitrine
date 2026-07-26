@@ -16,6 +16,7 @@ import {
   retryTransientFlowIngestion,
   waitForGridOrRedirect,
   flowMoreActionsLocator,
+  downloadWithFallback,
 } from "./bulkDownload.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
@@ -98,6 +99,18 @@ test("flow download falls back to the detail page when the row export is empty",
   assert.equal(fallbackCalls, 1);
 });
 
+test("flow download falls back to the detail page when row interaction throws", async () => {
+  let fallbackCalls = 0;
+
+  const result = await downloadWithFallback(
+    async () => { throw new Error("html intercepts pointer events"); },
+    async () => { fallbackCalls++; return ["settings.zip"]; },
+  );
+
+  assert.deepEqual(result, ["settings.zip"]);
+  assert.equal(fallbackCalls, 1);
+});
+
 test("flow coverage fails when the crawl sees fewer rows than Mobbin shows", () => {
   const flow = (id: string): DesignFlow => ({ id, title: id, description: "", tags: [], steps: [] });
   assert.deepEqual(flowStageCoverage(4, ["a", "b", "c"], [flow("mobbin-flow-a")], [
@@ -176,6 +189,38 @@ test("UI element selection keeps every Mobbin card regardless of alt text", asyn
   assert.equal(shouldSelect("ui-elements", "Button / Primary", "linear"), true);
   assert.equal(shouldSelect("screens", "Not Linear screen", "linear"), false);
   assert.equal(shouldSelect("screens", "Linear screen", "linear"), true);
+});
+
+test("UI selection tolerates transient no-progress sweeps while lazy cards settle", async () => {
+  const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
+  assert.equal(typeof bulk.nextSelectionSweep, "function");
+  const nextSelectionSweep = bulk.nextSelectionSweep as (
+    selected: number,
+    reselected: number,
+    shown: number,
+    stagnantPasses: number,
+  ) => { selected: number; stagnantPasses: number; shouldContinue: boolean };
+
+  assert.deepEqual(nextSelectionSweep(1560, 1560, 1625, 0), {
+    selected: 1560,
+    stagnantPasses: 1,
+    shouldContinue: true,
+  });
+  assert.deepEqual(nextSelectionSweep(1560, 1561, 1625, 2), {
+    selected: 1561,
+    stagnantPasses: 0,
+    shouldContinue: true,
+  });
+  assert.deepEqual(nextSelectionSweep(1560, 1560, 1625, 2), {
+    selected: 1560,
+    stagnantPasses: 3,
+    shouldContinue: false,
+  });
+  assert.deepEqual(nextSelectionSweep(1624, 1625, 1625, 0), {
+    selected: 1625,
+    stagnantPasses: 0,
+    shouldContinue: false,
+  });
 });
 
 test("mergeFlows replaces by id and keeps the rest", () => {

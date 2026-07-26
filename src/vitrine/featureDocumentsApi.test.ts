@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   createFeatureDocument,
+  getFeatureDocumentByFlow,
+  getFeatureDocumentMarkdown,
   getFeatureDocument,
   saveFeatureDocumentRevision,
   subscribeFeatureDocumentJob,
@@ -26,6 +28,31 @@ test('creates a generation with exact source identity', async () => {
   assert.deepEqual(JSON.parse(String(calls[0].init?.body)), input);
 });
 
+test('loads a Document Flow by encoded source identity', async () => {
+  const calls: string[] = [];
+  const request = async (url: string | URL | Request) => {
+    calls.push(String(url));
+    return response({
+      id: 12,
+      title: 'Checkout',
+      reviewStatus: 'draft',
+      sourceChanged: false,
+      revisions: [],
+      shares: [],
+    });
+  };
+  await getFeatureDocumentByFlow({
+    app: 'Linear & Co',
+    platform: 'web',
+    version: 3,
+    flowId: 'checkout/recovery',
+  }, request as typeof fetch);
+  assert.equal(
+    calls[0],
+    '/api/feature-documents/source?app=Linear+%26+Co&platform=web&version=3&flowId=checkout%2Frecovery',
+  );
+});
+
 test('uses optimistic immutable revision endpoints', async () => {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
   const request = async (url: string | URL | Request, init?: RequestInit) => {
@@ -40,6 +67,16 @@ test('uses optimistic immutable revision endpoints', async () => {
   assert.equal(calls[0].url, '/api/feature-documents/12');
   assert.equal(calls[1].url, '/api/feature-documents/12/revisions');
   assert.deepEqual(JSON.parse(String(calls[1].init?.body)), { revisionId: 4, content: { executiveSummary: {} } });
+});
+
+test('loads the rendered Markdown for a saved revision', async () => {
+  const calls: string[] = [];
+  const request = async (url: string | URL | Request) => {
+    calls.push(String(url));
+    return new Response('# Browse Exchange Settings', { status: 200, headers: { 'content-type': 'text/markdown' } });
+  };
+  assert.equal(await getFeatureDocumentMarkdown(618, 1, request as typeof fetch), '# Browse Exchange Settings');
+  assert.equal(calls[0], '/api/feature-documents/618/export.md?revisionId=1');
 });
 
 test('validates SSE progress and closes on a terminal update', () => {

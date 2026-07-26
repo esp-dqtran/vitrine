@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BuildInPublicPage } from './BuildInPublic.tsx';
+import { decideRootRoute } from './routeDecision.ts';
 
 test('renders the public roadmap as an accessible editorial timeline', () => {
   const html = renderToStaticMarkup(
@@ -33,6 +34,17 @@ test('keeps roadmap content typed, static, and independent from APIs', () => {
 test('renders the roadmap before authentication gates', () => {
   const source = readFileSync(new URL('./main.tsx', import.meta.url), 'utf8');
 
-  assert.ok(source.indexOf("route.name === 'build-in-public'") < source.indexOf('if (loading)'));
+  assert.deepEqual(
+    decideRootRoute(
+      { name: 'build-in-public' },
+      {
+        auth: 'loading',
+        advancedSearchEnabled: false,
+        researchProjectsEnabled: false,
+      },
+    ),
+    { kind: 'public', page: 'build-in-public' },
+  );
+  assert.match(source, /case 'public':[\s\S]+case 'build-in-public':/);
   assert.match(source, /<BuildInPublicPage/);
 });

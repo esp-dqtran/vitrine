@@ -12,6 +12,17 @@ test("advanced search page owns URL state and uses explicit load more", async ()
   assert.doesNotMatch(source, /setInterval|\/api\/jobs/);
 });
 
+test("derives search state from the subscribed location so Back and Forward stay in sync", async () => {
+  const source = await readFile(
+    new URL("./components/AdvancedSearchPage.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /useLocationKey/);
+  assert.match(source, /updateLocation/);
+  assert.doesNotMatch(source, /window\.history/);
+  assert.doesNotMatch(source, /useState\(initialSearchState\)/);
+});
+
 test("content type navigation implements the tabs accessibility pattern", async () => {
   const source = await readFile(
     new URL("./components/AdvancedSearchPage.tsx", import.meta.url),

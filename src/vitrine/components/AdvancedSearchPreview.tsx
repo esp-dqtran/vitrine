@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@astryxdesign/core";
 import type { ResearchCollection } from "../../db.ts";
 import type { SearchResultItem } from "../../searchTypes.ts";
 import { loadRelatedSearchResults } from "../advancedSearchApi.ts";
@@ -39,7 +40,7 @@ export function AdvancedSearchPreview({
   return (
     <div className="advanced-search-preview" role="dialog" aria-modal="true" aria-label={`Preview ${item.title}`}>
       <div className="advanced-search-preview__panel">
-        <button ref={close} type="button" onClick={onClose}>Close preview</button>
+        <Button ref={close} label="Close preview" variant="ghost" onClick={onClose} />
         <div className="advanced-search-preview__media"><PlaceholderImage src={item.imageUrl} /></div>
         <header><span>{item.catalogName} · {item.platform}</span><h2>{item.title}</h2><p>{item.description}</p></header>
         {item.flowName ? <p>Surrounding flow: {item.flowName}{item.flowStepIndex !== undefined ? ` · Step ${item.flowStepIndex + 1}` : ""}</p> : null}

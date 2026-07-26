@@ -18,6 +18,13 @@ export interface CreateFeatureDocumentRequest {
   focusInstruction: string;
 }
 
+export interface FeatureDocumentFlowSource {
+  app: string;
+  platform: 'ios' | 'android' | 'web';
+  version: number;
+  flowId: string;
+}
+
 export interface EventSourceLike {
   addEventListener(type: string, listener: EventListener): void;
   close(): void;
@@ -56,6 +63,22 @@ export function createFeatureDocument(
 
 export function getFeatureDocument(documentId: number, request: typeof fetch = fetch): Promise<FeatureDocumentView> {
   return json(`/api/feature-documents/${pathId(documentId)}`, undefined, request);
+}
+
+export function getFeatureDocumentByFlow(
+  source: FeatureDocumentFlowSource,
+  request: typeof fetch = fetch,
+): Promise<FeatureDocumentView> {
+  if (!Number.isSafeInteger(source.version) || source.version < 1) {
+    throw new Error('Invalid Document Flow version');
+  }
+  const params = new URLSearchParams({
+    app: source.app,
+    platform: source.platform,
+    version: String(source.version),
+    flowId: source.flowId,
+  });
+  return json(`/api/feature-documents/source?${params}`, undefined, request);
 }
 
 export function saveFeatureDocumentRevision(
@@ -150,6 +173,20 @@ export async function downloadFeatureDocumentMarkdown(
   const disposition = response.headers.get('content-disposition') ?? '';
   const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `feature-document-${documentId}-r${revisionId}.md`;
   return { blob: await response.blob(), filename };
+}
+
+export async function getFeatureDocumentMarkdown(
+  documentId: number,
+  revisionId?: number,
+  request: typeof fetch = fetch,
+): Promise<string> {
+  const suffix = revisionId === undefined ? '' : `?revisionId=${pathId(revisionId)}`;
+  const response = await request(`/api/feature-documents/${pathId(documentId)}/export.md${suffix}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error ?? `Feature Document Markdown returned ${response.status}`);
+  }
+  return response.text();
 }
 
 export function getPublicFeatureDocumentShare(token: string, request: typeof fetch = fetch): Promise<PublicFeatureDocumentShare> {

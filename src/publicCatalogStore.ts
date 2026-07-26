@@ -3,6 +3,10 @@ import {
   query as databaseQuery,
   type PublishedPreviewImage,
 } from "./db.ts";
+import {
+  decodeUpdatedCatalogCursor,
+  encodeUpdatedCatalogCursor,
+} from "./catalogCursor.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -13,6 +17,7 @@ const query: DatabaseQuery = (sql, values) =>
   databaseQuery(sql, values ? [...values] : undefined);
 
 export interface PublishedCatalogAppRecord {
+  app_id: number;
   app: string;
   display_name: string | null;
   category: string | null;
@@ -21,6 +26,7 @@ export interface PublishedCatalogAppRecord {
   accent_color: string | null;
   total_screens: number;
   available_platforms: string[];
+  last_captured_at: string;
 }
 
 export interface PublishedCatalogPageRecord {
@@ -29,86 +35,108 @@ export interface PublishedCatalogPageRecord {
   nextCursor: string | null;
 }
 
-const encodeCursor = (value: string): string =>
-  Buffer.from(value, "utf8").toString("base64url");
-
-function decodeCursor(value?: string): string | undefined {
-  if (!value || !/^[A-Za-z0-9_-]+$/.test(value)) return undefined;
-  const decoded = Buffer.from(value, "base64url").toString("utf8");
-  if (!decoded) return undefined;
-  return Buffer.from(decoded, "utf8").toString("base64url") === value
-    ? decoded
-    : undefined;
-}
-
 function pageLimit(requested = 24): number {
   if (!Number.isFinite(requested)) return 24;
   return Math.min(Math.max(Math.trunc(requested), 1), 24);
 }
 
 export async function publishedCatalogPage(
-  input: { cursor?: string; limit?: number } = {},
+  input: { cursor?: string; limit?: number; now?: Date } = {},
   runQuery: DatabaseQuery = query,
 ): Promise<PublishedCatalogPageRecord> {
   const limit = pageLimit(input.limit);
-  const after = decodeCursor(input.cursor) ?? null;
-  const namesResult = await runQuery(
-    `SELECT a.name AS app
-     FROM apps a
-     WHERE ($1::text IS NULL OR a.name > $1)
-       AND EXISTS (
-         SELECT 1
-         FROM app_versions av
-         WHERE av.app_id = a.id AND av.status = 'published'
+  const decoded = input.cursor
+    ? decodeUpdatedCatalogCursor(input.cursor)
+    : undefined;
+  const snapshotAt = decoded?.snapshotAt ?? (input.now ?? new Date()).toISOString();
+  const afterUpdatedAt = decoded?.updatedAt ?? null;
+  const afterAppId = decoded?.appId ?? null;
+  const identitiesResult = await runQuery(
+    `WITH latest AS MATERIALIZED (
+       SELECT DISTINCT ON (av.app_id, av.platform)
+         av.id AS version_id, av.app_id, av.platform, av.screen_count
+       FROM app_versions av
+       WHERE av.published_at IS NOT NULL
+         AND av.published_at <= $1::timestamptz
+       ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
+     ), app_updates AS (
+       SELECT latest.app_id, MAX(newest.captured_at) AS updated_at
+       FROM latest
+       JOIN LATERAL (
+         SELECT vi.captured_at
+         FROM version_images vi
+         JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
+         WHERE vi.version_id = latest.version_id
+           AND vi.captured_at <= $1::timestamptz
+         ORDER BY vi.captured_at DESC, vi.image_id DESC
+         LIMIT 1
+       ) newest ON true
+       GROUP BY latest.app_id
+     ), eligible AS (
+       SELECT a.id AS app_id, a.name AS app, app_updates.updated_at
+       FROM app_updates
+       JOIN apps a ON a.id = app_updates.app_id
+       WHERE (
+         $2::timestamptz IS NULL
+         OR (app_updates.updated_at, a.id) < ($2::timestamptz, $3::integer)
        )
-     ORDER BY a.name
-     LIMIT $2`,
-    [after, limit + 1],
+     )
+     SELECT app_id, app, updated_at
+     FROM eligible
+     ORDER BY updated_at DESC, app_id DESC
+     LIMIT $4`,
+    [snapshotAt, afterUpdatedAt, afterAppId, limit + 1],
   );
-  const selectedNames = (namesResult.rows as Array<{ app: string }>).map(({ app }) => app);
-  const hasMore = selectedNames.length > limit;
-  const names = selectedNames.slice(0, limit);
-  if (names.length === 0) return { apps: [], previews: [], nextCursor: null };
+  const selectedIdentities = identitiesResult.rows as Array<{
+    app_id: number;
+    app: string;
+    updated_at: string | Date;
+  }>;
+  const hasMore = selectedIdentities.length > limit;
+  const identities = selectedIdentities.slice(0, limit);
+  if (identities.length === 0) {
+    return { apps: [], previews: [], nextCursor: null };
+  }
+  const appIds = identities.map(({ app_id }) => app_id);
 
   const [appsResult, previewsResult] = await Promise.all([
     runQuery(
       `WITH latest AS MATERIALIZED (
          SELECT DISTINCT ON (av.app_id, av.platform)
-           av.id AS version_id, av.app_id, av.platform
+           av.id AS version_id, av.app_id, av.platform, av.screen_count
          FROM app_versions av
-         JOIN apps a ON a.id = av.app_id
-         WHERE av.status = 'published' AND a.name = ANY($1::text[])
-         ORDER BY av.app_id, av.platform, av.version_number DESC
+         WHERE av.app_id = ANY($1::integer[])
+           AND av.published_at IS NOT NULL
+           AND av.published_at <= $2::timestamptz
+         ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
        )
-       SELECT a.name AS app, a.display_name, a.category, a.website_url,
+       SELECT a.id AS app_id, a.name AS app, a.display_name, a.category, a.website_url,
          a.icon_url, a.accent_color,
-         COUNT(DISTINCT i.id) FILTER (WHERE i.kind = 'screen')::int AS total_screens,
+         COALESCE(SUM(latest.screen_count), 0)::int AS total_screens,
          COALESCE(
-           ARRAY_AGG(DISTINCT latest.platform ORDER BY latest.platform)
-             FILTER (WHERE i.kind = 'screen'),
+           ARRAY_AGG(latest.platform ORDER BY latest.platform)
+             FILTER (WHERE latest.screen_count > 0),
            ARRAY[]::text[]
          ) AS available_platforms
        FROM apps a
        JOIN latest ON latest.app_id = a.id
-       JOIN version_images vi ON vi.version_id = latest.version_id
-       JOIN images i ON i.id = vi.image_id
-       WHERE a.name = ANY($1::text[])
+       WHERE a.id = ANY($1::integer[])
        GROUP BY a.id, a.name, a.display_name, a.category, a.website_url,
-         a.icon_url, a.accent_color
-       ORDER BY a.name`,
-      [names],
+         a.icon_url, a.accent_color`,
+      [appIds, snapshotAt],
     ),
     runQuery(
       `WITH latest AS MATERIALIZED (
          SELECT DISTINCT ON (av.app_id, av.platform)
            av.id AS version_id, av.app_id, av.platform
          FROM app_versions av
-         JOIN apps a ON a.id = av.app_id
-         WHERE av.status = 'published' AND a.name = ANY($1::text[])
-         ORDER BY av.app_id, av.platform, av.version_number DESC
+         WHERE av.app_id = ANY($1::integer[])
+           AND av.published_at IS NOT NULL
+           AND av.published_at <= $2::timestamptz
+         ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
        ),
        candidates AS (
-         SELECT DISTINCT ON (a.id, i.id)
+         SELECT DISTINCT ON (a.id, latest.platform, i.id)
            i.id, a.name AS app, latest.platform, i.image_url, i.kind,
            i.description, i.analysis, a.icon_url, a.category,
            vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height,
@@ -119,17 +147,27 @@ export async function publishedCatalogPage(
          JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
          LEFT JOIN app_preview_images api
            ON api.version_id = latest.version_id AND api.image_id = i.id
-         WHERE a.name = ANY($1::text[])
-         ORDER BY a.id, i.id, api.rank NULLS LAST, vi.captured_at DESC NULLS LAST
+         WHERE a.id = ANY($1::integer[])
+           AND vi.captured_at <= $2::timestamptz
+         ORDER BY a.id, latest.platform, i.id, api.rank NULLS LAST,
+           vi.captured_at DESC NULLS LAST
        ),
-       ranked AS (
+       platform_ranked AS (
          SELECT candidates.*,
            ROW_NUMBER() OVER (
-             PARTITION BY app
+             PARTITION BY app, platform
              ORDER BY (curated_rank IS NULL), curated_rank NULLS LAST,
                captured_at DESC NULLS LAST, id DESC
-           ) AS preview_rank
+           ) AS platform_rank
          FROM candidates
+       ),
+       ranked AS (
+         SELECT platform_ranked.*,
+           ROW_NUMBER() OVER (
+             PARTITION BY app
+             ORDER BY platform_rank, platform
+           ) AS preview_rank
+         FROM platform_ranked
        )
        SELECT id, app, platform, image_url, kind, description, analysis,
          icon_url, category, capture_url, viewport_width, viewport_height,
@@ -137,13 +175,41 @@ export async function publishedCatalogPage(
        FROM ranked
        WHERE preview_rank <= 3
        ORDER BY app, preview_rank`,
-      [names],
+      [appIds, snapshotAt],
     ),
   ]);
 
+  const appsById = new Map(
+    (appsResult.rows as Array<Omit<PublishedCatalogAppRecord, "last_captured_at">>)
+      .map((app) => [app.app_id, app] as const),
+  );
+  const apps = identities.flatMap((identity) => {
+    const app = appsById.get(identity.app_id);
+    if (!app) return [];
+    return [{
+      ...app,
+      last_captured_at: new Date(identity.updated_at).toISOString(),
+    }];
+  });
+  const appOrder = new Map(identities.map(({ app }, index) => [app, index]));
+  const previews = (previewsResult.rows as PublishedPreviewImage[])
+    .sort((left, right) =>
+      (appOrder.get(left.app) ?? Number.MAX_SAFE_INTEGER)
+      - (appOrder.get(right.app) ?? Number.MAX_SAFE_INTEGER)
+      || left.preview_rank - right.preview_rank
+    );
+  const lastIdentity = identities.at(-1);
   return {
-    apps: appsResult.rows as PublishedCatalogAppRecord[],
-    previews: previewsResult.rows as PublishedPreviewImage[],
-    nextCursor: hasMore ? encodeCursor(names.at(-1)!) : null,
+    apps,
+    previews,
+    nextCursor: hasMore && lastIdentity
+      ? encodeUpdatedCatalogCursor({
+          v: 1,
+          sort: "updated",
+          snapshotAt,
+          updatedAt: new Date(lastIdentity.updated_at).toISOString(),
+          appId: lastIdentity.app_id,
+        })
+      : null,
   };
 }

@@ -1,7 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ReferralInviteNotice, SignIn, resolveReferralInvite } from "./SignIn.tsx";
+import {
+  AppPill,
+  ReferralInviteNotice,
+  SignIn,
+  SlidePlaceholder,
+  resolveReferralInvite,
+  showcaseTypeLabel,
+  toShowcaseSlide,
+} from "./SignIn.tsx";
 
 function memoryStorage() {
   const values = new Map<string, string>();
@@ -24,7 +32,83 @@ test("renders only the real email/password authentication controls", () => {
   assert.match(html, /Email/);
   assert.match(html, /Password/);
   assert.match(html, /Sign in/);
+  assert.match(html, /data-sign-in-layout="page"/);
+  assert.match(html, /width:26px;height:26px;border-radius:8px/);
+  assert.match(html, /Welcome back/);
+  assert.match(html, /data-sign-in-showcase="true"/);
   assert.doesNotMatch(html, /Continue with Google/);
+});
+
+test("maps real catalog identity into a showcase slide", () => {
+  const slide = toShowcaseSlide({
+    id: "linear",
+    name: "Linear",
+    accent: "#5e6ad2",
+    category: "Productivity",
+    iconUrl: "/icons/linear.svg",
+    screens: [{ url: "/api/preview-media/linear/1", type: "Dashboard" }],
+  });
+
+  assert.deepEqual(slide, {
+    id: "linear",
+    app: "Linear",
+    accent: "#5e6ad2",
+    type: "Dashboard",
+    image: "/api/preview-media/linear/1",
+    iconUrl: "/icons/linear.svg",
+  });
+});
+
+test("renders the full showcase image and the real app icon", () => {
+  const slide = {
+    id: "linear",
+    app: "Linear",
+    accent: "#5e6ad2",
+    type: "Dashboard",
+    image: "/api/preview-media/linear/1",
+    iconUrl: "/icons/linear.svg",
+  };
+
+  const preview = renderToStaticMarkup(<SlidePlaceholder {...slide} />);
+  const pill = renderToStaticMarkup(<AppPill slide={slide} />);
+
+  assert.match(preview, /object-fit:contain/);
+  assert.match(pill, /src="\/icons\/linear\.svg"/);
+  assert.match(pill, /alt=""/);
+});
+
+test("suppresses only unclassified showcase type labels", () => {
+  assert.equal(showcaseTypeLabel("Unclassified"), null);
+  assert.equal(showcaseTypeLabel(" unclassified "), null);
+  assert.equal(showcaseTypeLabel("Dashboard"), "Dashboard");
+  assert.equal(showcaseTypeLabel(" Sign in "), "Sign in");
+});
+
+test("renders the shared authentication form in an embedded layout", () => {
+  const html = renderToStaticMarkup(
+    <SignIn
+      embedded
+      authenticate={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
+      register={async () => ({ id: 1, email: "admin@example.com", role: "admin" })}
+      onSignedIn={() => {}}
+    />,
+  );
+
+  assert.match(html, /data-sign-in-layout="embedded"/);
+  assert.match(html, /display:flex;align-items:center;gap:6px/);
+  assert.match(html, /width:48px;height:48px;border-radius:12px/);
+  assert.match(html, /font-size:24px;font-weight:700/);
+  assert.match(html, /margin-bottom:30px;text-align:left/);
+  assert.match(html, /Sign in to Vitrine/);
+  assert.match(html, /Access your saved apps, sites, screens, and collections\./);
+  assert.match(html, /background:transparent/);
+  assert.doesNotMatch(html, /background:var\(--color-background-body\)/);
+  assert.doesNotMatch(html, /Welcome back/);
+  assert.doesNotMatch(html, /Sign in to pick up your saved screens and boards\./);
+  assert.match(html, /Email/);
+  assert.match(html, /Password/);
+  assert.doesNotMatch(html, /min-height:100vh/);
+  assert.doesNotMatch(html, /data-sign-in-showcase="true"/);
 });
 
 test("retains only a validated referral and a stable anonymous visitor", async () => {

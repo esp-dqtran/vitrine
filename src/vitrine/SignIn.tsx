@@ -4,7 +4,7 @@ import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type
 import type { AuthUser } from './authApi';
 import { validateReferral } from './referralApi';
 import { useFloatDrift } from './useFloatDrift';
-import { useCatalogPreview } from './useCatalogPreview';
+import { useCatalogPreview, type PreviewApp } from './useCatalogPreview';
 
 interface ReferralStorage {
   getItem(key: string): string | null;
@@ -47,13 +47,16 @@ export function ReferralInviteNotice() {
   );
 }
 
-function Wordmark() {
+function Wordmark({ enlarged = false }: { enlarged?: boolean }) {
+  const iconSize = enlarged ? 48 : 26;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-      <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-        <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: enlarged ? 6 : 9 }}>
+      <div style={{ width: iconSize, height: iconSize, borderRadius: enlarged ? 12 : 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+        {enlarged
+          ? <div style={{ width: 20, height: 20, borderRadius: 5, background: '#FFFFFF' }} />
+          : <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />}
       </div>
-      <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
+      <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
     </div>
   );
 }
@@ -139,13 +142,30 @@ function SuccessPanel() {
   );
 }
 
-interface Slide {
+export interface Slide {
   id: string;
   app: string;
   accent: string;
   type: string;
   // Real preview screenshot from the catalog; absent → gradient placeholder.
   image?: string;
+  iconUrl?: string | null;
+}
+
+export function toShowcaseSlide(app: PreviewApp): Slide {
+  return {
+    id: app.id,
+    app: app.name,
+    accent: app.accent,
+    type: app.screens[0].type,
+    image: app.screens[0].url,
+    iconUrl: app.iconUrl,
+  };
+}
+
+export function showcaseTypeLabel(type: string): string | null {
+  const label = type.trim();
+  return !label || label.toLowerCase() === 'unclassified' ? null : label;
 }
 
 // Fallback shown until the real catalog previews load (or if none are servable).
@@ -164,7 +184,7 @@ function slidePos(i: number, index: number, count: number) {
   return { tx: 0, rot: 0, scale: 0.88, opacity: 0, z: 0 };
 }
 
-function SlidePlaceholder({ accent, app, type, image }: Slide) {
+export function SlidePlaceholder({ accent, app, type, image }: Slide) {
   return (
     <>
       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(160deg,${accent}33,#101012 68%)` }} />
@@ -174,7 +194,7 @@ function SlidePlaceholder({ accent, app, type, image }: Slide) {
           alt={`${app} — ${type}`}
           loading="lazy"
           decoding="async"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}
         />
       ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, textAlign: 'center', padding: 24 }}>
@@ -182,6 +202,38 @@ function SlidePlaceholder({ accent, app, type, image }: Slide) {
         </div>
       )}
     </>
+  );
+}
+
+export function AppPill({ slide }: { slide: Slide }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 12,
+        bottom: 12,
+        zIndex: 4,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 10px 4px 4px',
+        borderRadius: 999,
+        background: 'rgba(255,255,255,0.94)',
+        animation: 'vtFadeUp .4s cubic-bezier(.16,1,.3,1) .15s both',
+      }}
+    >
+      {slide.iconUrl ? (
+        <img
+          src={slide.iconUrl}
+          alt=""
+          loading="lazy"
+          style={{ width: 18, height: 18, borderRadius: 5, objectFit: 'contain' }}
+        />
+      ) : (
+        <div style={{ width: 18, height: 18, borderRadius: 5, background: slide.accent }} />
+      )}
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#18181b' }}>{slide.app}</span>
+    </div>
   );
 }
 
@@ -340,7 +392,7 @@ function HeroCopy() {
 function Showcase() {
   const realApps = useCatalogPreview(8);
   const slides: Slide[] = realApps && realApps.length
-    ? realApps.slice(0, 5).map((a) => ({ id: a.id, app: a.name, accent: a.accent, type: a.screens[0].type, image: a.screens[0].url }))
+    ? realApps.slice(0, 5).map(toShowcaseSlide)
     : SHOWCASE;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -395,6 +447,7 @@ function Showcase() {
   };
 
   const active = slides[index] ?? slides[0];
+  const activeTypeLabel = showcaseTypeLabel(active.type);
   const prevIdx = (index - 1 + count) % count;
   const nextIdx = (index + 1) % count;
 
@@ -479,18 +532,14 @@ function Showcase() {
               <SlidePlaceholder {...s} />
             </div>
           ))}
-          <div
-            key={'pill-' + index}
-            style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 4, display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px 4px 4px', borderRadius: 999, background: 'rgba(255,255,255,0.94)', animation: 'vtFadeUp .4s cubic-bezier(.16,1,.3,1) .15s both' }}
-          >
-            <div style={{ width: 18, height: 18, borderRadius: 5, background: active.accent }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#18181b' }}>{active.app}</span>
-          </div>
-          <div key={'badge-' + index} style={{ position: 'absolute', top: 12, right: 12, zIndex: 4, animation: 'vtFadeUp .4s cubic-bezier(.16,1,.3,1) .15s both' }}>
-            <span style={{ display: 'inline-block', padding: '4px 11px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)' }}>
-              {active.type}
-            </span>
-          </div>
+          <AppPill key={'pill-' + index} slide={active} />
+          {activeTypeLabel ? (
+            <div key={'badge-' + index} style={{ position: 'absolute', top: 12, right: 12, zIndex: 4, animation: 'vtFadeUp .4s cubic-bezier(.16,1,.3,1) .15s both' }}>
+              <span style={{ display: 'inline-block', padding: '4px 11px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)' }}>
+                {activeTypeLabel}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -518,10 +567,12 @@ export function SignIn({
   authenticate,
   register,
   onSignedIn,
+  embedded = false,
 }: {
   authenticate: (email: string, password: string) => Promise<AuthUser>;
   register: (email: string, password: string, referralToken?: string) => Promise<AuthUser>;
   onSignedIn: (user: AuthUser) => void;
+  embedded?: boolean;
 }) {
   // Below md, the decorative Showcase panel (3D tilt/parallax that's meaningless on
   // touch anyway) is dropped so the form gets the full viewport width instead of
@@ -616,12 +667,40 @@ export function SignIn({
     }
   };
 
+  const headingText = mode === 'signup'
+    ? 'Create your account'
+    : embedded ? 'Sign in to Vitrine' : 'Welcome back';
+  const supportingText = mode === 'signup'
+    ? 'Sign up to start saving screens and boards.'
+    : embedded
+      ? 'Access your saved apps, sites, screens, and collections.'
+      : 'Sign in to pick up your saved screens and boards.';
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: 'var(--color-background-surface)' }}>
-      <div style={{ flex: isCompact ? '1 1 auto' : '1 1 480px', minWidth: isCompact ? 0 : 380, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 32px' }}>
+    <div
+      className="vitrine-page"
+      data-sign-in-layout={embedded ? 'embedded' : 'page'}
+      style={{
+        display: 'flex',
+        minHeight: embedded ? 0 : '100vh',
+        width: '100%',
+        background: embedded ? 'transparent' : 'var(--color-background-body)',
+      }}
+    >
+      <div
+        style={{
+          flex: embedded ? '1 1 auto' : isCompact ? '1 1 auto' : '1 1 480px',
+          minWidth: embedded || isCompact ? 0 : 380,
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: embedded ? 0 : '40px 32px',
+        }}
+      >
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ marginBottom: 44, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) both' }}>
-            <Wordmark />
+            <Wordmark enlarged={embedded} />
           </div>
 
           {success ? (
@@ -629,13 +708,11 @@ export function SignIn({
           ) : (
             <>
               {referralToken && <ReferralInviteNotice />}
-              <div style={{ marginBottom: 30, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both' }}>
-                <Heading level={1}>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</Heading>
+              <div style={{ marginBottom: 30, textAlign: embedded ? 'left' : undefined, animation: 'vtFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both' }}>
+                <Heading level={1}>{headingText}</Heading>
                 <div style={{ marginTop: 8 }}>
                   <Text type="large" color="secondary">
-                    {mode === 'signup'
-                      ? 'Sign up to start saving screens and boards.'
-                      : 'Sign in to pick up your saved screens and boards.'}
+                    {supportingText}
                   </Text>
                 </div>
               </div>
@@ -688,8 +765,8 @@ export function SignIn({
         </div>
       </div>
 
-      {!isCompact && (
-        <div style={{ flex: '1 1 55%', minWidth: 0 }}>
+      {!embedded && !isCompact && (
+        <div data-sign-in-showcase="true" style={{ flex: '1 1 55%', minWidth: 0 }}>
           <Showcase />
         </div>
       )}

@@ -22,6 +22,7 @@ import {
   parseAppKnowledgeFlowSynthesisResult,
   planFlowSynthesisChunks,
   planOrderedFlows,
+  projectFlowSynthesis,
 } from "./appKnowledgeFlow.ts";
 import {
   appKnowledgeCacheKey,
@@ -40,6 +41,7 @@ import type {
   AppKnowledgeWorkerJob,
 } from "./appKnowledgeStore.ts";
 import type { AppKnowledgeEvidenceSource } from "./db.ts";
+import type { DesignFlow } from "./designSystem.ts";
 import {
   EvidenceAnalysisError,
   mapBounded,
@@ -345,6 +347,7 @@ async function stopped(store: AppKnowledgeStore, jobId: number): Promise<AppKnow
 }
 
 export function createAppKnowledgeService(deps: {
+  mode?: "full" | "flow-only";
   store: AppKnowledgeStore;
   provider: AppKnowledgeProvider;
   objectStore: ObjectStore;
@@ -361,10 +364,17 @@ export function createAppKnowledgeService(deps: {
   designSystemChunkBytes?: number;
   designSystemChunkConcurrency?: number;
   flowSynthesisChunkBytes?: number;
+  saveAnalyzedFlows?(input: {
+    app: string;
+    platform: "ios" | "android" | "web";
+    versionId: number;
+    flows: DesignFlow[];
+  }): Promise<void>;
   seedDesignSystemWorkingCopy?(
     input: SeedDesignSystemWorkingCopyInput,
   ): Promise<"seeded" | "replaced" | "unchanged" | "conflict">;
 }): { generate(jobId: string): Promise<AppKnowledgeJobStatus | undefined> } {
+  const mode = deps.mode ?? "full";
   const screenConcurrency = deps.screenConcurrency ?? 3;
   const flowConcurrency = deps.flowConcurrency ?? 2;
   const timeoutMs = deps.timeoutMs ?? 60_000;
@@ -419,6 +429,7 @@ export function createAppKnowledgeService(deps: {
           const prepared = await buildAppKnowledgeEvidenceManifest({
             source: hydrated,
             objectStore: deps.objectStore,
+            scope: mode === "flow-only" ? "flows" : "all",
             overrides: await deps.evidenceOverrides(job.target.captureVersionId),
             maxImageBytes: deps.maxImageBytes,
           });
@@ -566,7 +577,7 @@ export function createAppKnowledgeService(deps: {
             const analysis = analyses.get(evidenceId);
             return analysis ? [analysis] : [];
           });
-        if (screenAnalyses.length === 0) {
+        if (mode === "full" && screenAnalyses.length === 0) {
           throw new EvidenceAnalysisError("output_invalid", "No completed screen evidence is available");
         }
         const flowGroupsForSynthesis = new Map<string, AppKnowledgeEvidenceManifestItem[]>();
@@ -588,6 +599,64 @@ export function createAppKnowledgeService(deps: {
           orderedFlows,
           flowSynthesisChunkBytes,
         );
+        const synthesizeFlowChunks = async () => mapBounded(
+          flowChunks,
+          flowConcurrency,
+          async (chunk) => {
+            const synthesized = await runValidatedProviderCall({
+              call: (validationError, signal) => deps.provider.synthesizeFlows({
+                app: job!.target.app,
+                platform: job!.target.platform,
+                flows: chunk.flows,
+                allowedFlowIds: chunk.flows.map(({ id }) => id),
+                allowedStepIds: chunk.flows.flatMap(({ steps }) =>
+                  steps.map(({ id }) => id)),
+                validationError,
+              }, signal),
+              parse: (raw) => parseAppKnowledgeFlowSynthesisResult(
+                raw,
+                chunk.flows,
+              ),
+              timeoutMs,
+              retryDelayMs,
+              signal: cancellation.signal,
+            });
+            return { chunk, result: synthesized.value };
+          },
+        );
+        if (mode === "flow-only") {
+          if (!deps.saveAnalyzedFlows) {
+            throw new Error("Flow analysis persistence is unavailable");
+          }
+          if (orderedFlows.length !== source.flows.length) {
+            throw new EvidenceAnalysisError(
+              "output_invalid",
+              "Not every Flow has complete analyzed evidence",
+            );
+          }
+          await deps.store.setSynthesisPlan(jobId, flowChunks.length, 0);
+          await deps.store.updateProgress(jobId, "synthesizing", Math.min(processed, job.totalCount));
+          const synthesized = await synthesizeFlowChunks();
+          const projected = projectFlowSynthesis(
+            source.flows,
+            orderedFlows,
+            { flows: synthesized.flatMap(({ result }) => result.flows) },
+          );
+          if (await stopped(deps.store, jobId)) return (await deps.store.workerJob(jobId))?.status;
+          const currentSha = await deps.currentSourceSha256(job.target);
+          if (!currentSha || currentSha !== job.sourceSha256) {
+            await deps.store.markStale(jobId);
+            return "stale";
+          }
+          await deps.store.updateProgress(jobId, "saving", job.totalCount);
+          await deps.saveAnalyzedFlows({
+            app: job.target.app,
+            platform: job.target.platform,
+            versionId: job.target.captureVersionId,
+            flows: projected,
+          });
+          return (await deps.store.completeFlowAnalysis(jobId)).status;
+        }
         const chunks = planDesignSystemChunks(screenAnalyses, designSystemChunkBytes);
         const persistedRecords = await deps.store.prepareDesignSystemChunks(
           jobId,
@@ -678,29 +747,8 @@ export function createAppKnowledgeService(deps: {
           retryDelayMs,
           signal: cancellation.signal,
         });
-        const enrichedFlows = (
-          await mapBounded(flowChunks, flowConcurrency, async (chunk) => {
-            const synthesized = await runValidatedProviderCall({
-              call: (validationError, signal) => deps.provider.synthesizeFlows({
-                app: job!.target.app,
-                platform: job!.target.platform,
-                flows: chunk.flows,
-                allowedFlowIds: chunk.flows.map(({ id }) => id),
-                allowedStepIds: chunk.flows.flatMap(({ steps }) =>
-                  steps.map(({ id }) => id)),
-                validationError,
-              }, signal),
-              parse: (raw) => parseAppKnowledgeFlowSynthesisResult(
-                raw,
-                chunk.flows,
-              ),
-              timeoutMs,
-              retryDelayMs,
-              signal: cancellation.signal,
-            });
-            return enrichOrderedFlows(chunk.flows, synthesized.value);
-          })
-        ).flat();
+        const enrichedFlows = (await synthesizeFlowChunks())
+          .flatMap(({ chunk, result }) => enrichOrderedFlows(chunk.flows, result));
         const crops = await deriveComponentCrops({
           job,
           manifest,

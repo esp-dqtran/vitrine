@@ -42,9 +42,17 @@ test('renders category disclosures, counts, nested flows, and selected state', (
 
   assert.match(html, /aria-label="Flows"/);
   assert.match(html, /placeholder="Search flows…"/);
+  assert.match(html, /class="flow-tree__root"/);
+  assert.match(html, /class="flow-tree__root-label">Flows<\/span>/);
+  assert.match(html, /class="flow-tree__root-count">3<\/span>/);
+  assert.doesNotMatch(html, /class="flow-tree__root-marker"/);
+  assert.doesNotMatch(html, /class="flow-tree__folder-icon"/);
+  assert.doesNotMatch(html, /class="flow-tree__leaf-icon"/);
+  assert.match(html, /class="flow-tree__flow-branch"/);
+  assert.match(html, /class="flow-tree__group-chevron"/);
+  assert.doesNotMatch(html, /class="flow-tree__count"/);
   assert.match(html, /aria-expanded="true"/);
   assert.match(html, /Onboarding/);
-  assert.match(html, />2<\/span>/);
   assert.match(html, /Inviting a team member/);
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
   assert.match(html, /Standalone flows/);
@@ -67,7 +75,7 @@ test('renders a local no-match status without replacing the workspace', () => {
   assert.match(html, /No flows match your search/);
 });
 
-test('keeps the tree mounted beside a selected Flow viewer', () => {
+test('renders a selected Flow in the persistent workspace beside its directory', () => {
   const flows = [
     flow('invite', 'Inviting a team member', 'Onboarding'),
     {
@@ -92,14 +100,23 @@ test('keeps the tree mounted beside a selected Flow viewer', () => {
   );
 
   assert.match(html, /data-flow-workspace="true"/);
-  assert.match(html, /aria-label="Flows"/);
+  assert.match(html, /class="flow-workspace"/);
+  assert.match(html, /<aside class="flow-workspace__rail"/);
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
-  assert.match(html, /Back to all flows/);
+  assert.match(html, /class="selected-flow-workspace"/);
+  assert.match(html, /role="tablist"/);
+  assert.match(html, /Visual Flow/);
+  assert.match(html, /Document Flow/);
+  assert.doesNotMatch(html, /role="dialog"/);
+  assert.doesNotMatch(html, /aria-modal="true"/);
+  assert.match(html, /Screens/);
+  assert.match(html, /Prototype/);
+  assert.doesNotMatch(html, /data-flow-strip-card="true"/);
   assert.match(html, /Choose a plan/);
+  assert.match(html, /Starting a trial/);
+  assert.match(html, /1 screen/);
+  assert.match(html, /Back to flows/);
   assert.match(html, /Browse flows/);
-  assert.match(html, /class="[^"]*flow-tree-drawer/);
-  assert.match(html, /desktop-flow-group-/);
-  assert.match(html, /drawer-flow-group-/);
 });
 
 test('keeps invalid routed Flow recovery inside the normal gallery workspace', () => {
@@ -126,10 +143,41 @@ test('renders Flow navigation skeletons beside the existing loading state', () =
 test('defines the desktop rail and 980px drawer transition', () => {
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
   assert.match(css, /\.flow-workspace\s*\{[\s\S]*grid-template-columns:\s*280px minmax\(0,\s*1fr\)/);
+  assert.doesNotMatch(css, /\.flow-workspace--viewer/);
+  assert.match(css, /\.flow-strip-card\s*\{[\s\S]*display:\s*grid/);
+  assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*overflow-x:\s*auto/);
+  assert.match(css, /\.flow-strip-card__screen\s*\{[\s\S]*flex:\s*0 0 min\(42vw,\s*620px\)/);
+  assert.match(css, /\.flow-strip-card__footer\s*\{[\s\S]*justify-content:\s*space-between/);
+  assert.doesNotMatch(css, /\.flow-strip-card__step-label/);
+  assert.match(css, /\.visual-flow-panel\s*\{[\s\S]*background:\s*#1f1f1f/);
+  assert.match(css, /\.visual-flow-panel--web \.visual-flow-panel__screen-card\s*\{[\s\S]*flex:\s*0 0 min\(76vw,\s*1120px\)[\s\S]*background:\s*transparent/);
+  assert.match(css, /\.visual-flow-panel--web \.visual-flow-panel__prototype-card\s*\{[\s\S]*width:\s*min\(76vw,\s*1120px\)[\s\S]*background:\s*transparent/);
+  assert.match(css, /\.visual-flow-panel__submodes button\[aria-pressed=['"]true['"]\]/);
+  assert.match(css, /\.visual-flow-panel__prototype-stage\s*\{[\s\S]*place-items:\s*center/);
+  assert.doesNotMatch(css, /\.flow-viewer__/);
   assert.match(css, /\.flow-workspace__rail\s*\{[\s\S]*position:\s*sticky/);
+  assert.match(css, /\.flow-tree__root\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\) auto/);
+  assert.match(css, /\.flow-tree__root-label\s*\{[^}]*font-size:\s*18px/);
+  assert.doesNotMatch(css, /\.flow-tree__root-marker/);
+  assert.doesNotMatch(css, /\.flow-tree__(folder|leaf)-icon/);
+  assert.match(css, /\.flow-tree__group-button\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*auto\)/);
+  assert.match(css, /\.flow-tree__group-button\s*\{[^}]*min-height:\s*42px[\s\S]*font-size:\s*18px/);
+  assert.match(css, /\.flow-tree__group-content\s*\{[^}]*justify-content:\s*flex-start[\s\S]*gap:\s*14px/);
+  assert.match(css, /\.flow-tree__group-chevron\s*\{[^}]*flex:\s*0 0 auto/);
+  assert.match(css, /\.flow-tree__flows\s*\{[^}]*padding-left:\s*48px/);
+  assert.match(css, /\.flow-tree__flow-branch\s*\{[^}]*justify-content:\s*flex-start/);
+  assert.match(css, /\.flow-tree__flow-button\s*\{[^}]*justify-content:\s*flex-start/);
+  assert.match(css, /\.flow-tree__flow-button\s*\{[^}]*min-height:\s*40px[\s\S]*font-size:\s*17px/);
+  assert.match(css, /\.flow-tree__flow-button > span:first-child\s*\{[^}]*justify-content:\s*flex-start/);
+  assert.doesNotMatch(css, /\.flow-tree__flows::before/);
+  assert.doesNotMatch(css, /\.flow-tree__flow-branch::before/);
   assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]/);
+  assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]\s*\{[^}]*background:\s*transparent/);
+  assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]\s*\{[^}]*box-shadow:\s*none/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__rail\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__browse\s*\{[\s\S]*display:/);
+  assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*selected-flow-workspace/);
+  assert.match(css, /\.selected-flow-workspace__tabs button:focus-visible/);
 });
 
 test('uses Astryx controls for every Flow tree action', () => {

@@ -10,7 +10,10 @@ test("maps project routes and rejects invalid project ids", () => {
   assert.equal(routeToPath({ name: "projects" }), "/projects");
   assert.equal(routeToPath({ name: "project", projectId: 17 }), "/projects/17");
   assert.deepEqual(parseRoutePath("/projects/17"), { name: "project", projectId: 17 });
-  assert.deepEqual(parseRoutePath("/projects/0"), { name: "landing" });
+  assert.deepEqual(parseRoutePath("/projects/0"), {
+    name: "not-found",
+    pathname: "/projects/0",
+  });
 });
 
 test("returns typed API conflicts with the latest project", async (t) => {

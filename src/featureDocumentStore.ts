@@ -10,7 +10,9 @@ import {
   type FeatureDocumentReviewStatus,
   type FeatureDocumentRevisionView,
   type FeatureDocumentShareView,
+  type FeatureDocumentSourceLookup,
   type FeatureDocumentView,
+  type FeatureDocumentVisibility,
   type FeatureEvidenceManifestItem,
   type FeatureSourceFlow,
   type FeatureStepAnalysis,
@@ -89,6 +91,7 @@ export interface FeatureDocumentStore {
   createGeneration(userId: number, input: CreateFeatureGenerationInput): Promise<{ document: FeatureDocumentView; job: FeatureDocumentJobView }>;
   createRegeneration(userId: number, documentId: number, input: CreateFeatureGenerationInput): Promise<FeatureDocumentJobView | undefined>;
   getDocument(userId: number, documentId: number, currentSourceSha256?: string): Promise<FeatureDocumentView | undefined>;
+  getDocumentBySource(userId: number, source: FeatureDocumentSourceLookup): Promise<FeatureDocumentView | undefined>;
   getJob(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
   workerJob(jobId: number): Promise<FeatureDocumentWorkerJob | undefined>;
   requestCancel(userId: number, jobId: number): Promise<FeatureDocumentJobView | undefined>;
@@ -293,13 +296,13 @@ async function loadDocument(
   currentSourceSha256?: string,
 ): Promise<FeatureDocumentView | undefined> {
   const documentResult = await runQuery(
-    `SELECT d.id, d.title, d.current_revision_id, d.source_change_acknowledged_sha256,
+    `SELECT d.id, d.title, d.visibility, d.current_revision_id, d.source_change_acknowledged_sha256,
             current_revision.evidence_manifest_sha256 AS revision_source_sha256,
             (SELECT j.evidence_manifest_sha256 FROM feature_document_jobs j
              WHERE j.document_id = d.id ORDER BY j.created_at DESC, j.id DESC LIMIT 1) AS current_source_sha256
      FROM feature_documents d
      LEFT JOIN feature_document_revisions current_revision ON current_revision.id = d.current_revision_id
-     WHERE d.id = $1 AND d.user_id = $2`,
+     WHERE d.id = $1 AND (d.user_id = $2 OR d.visibility = 'catalog')`,
     [documentId, userId],
   );
   const document = documentResult.rows[0];
@@ -335,6 +338,7 @@ async function loadDocument(
   return {
     id: positiveInteger(document.id),
     title: text(document.title),
+    visibility: document.visibility as FeatureDocumentVisibility,
     reviewStatus: currentRevision?.reviewStatus ?? "draft",
     sourceChanged: Boolean(revisionSha && currentSha && revisionSha !== currentSha && acknowledgedSha !== currentSha),
     ...(currentRevision ? { currentRevision } : {}),
@@ -447,6 +451,7 @@ export function createFeatureDocumentStore(
           document: {
             id: documentId,
             title: text(created.rows[0].title),
+            visibility: "private",
             reviewStatus: "draft",
             sourceChanged: false,
             revisions: [],
@@ -476,6 +481,48 @@ export function createFeatureDocumentStore(
 
     getDocument(userId, documentId, currentSourceSha256) {
       return loadDocument(runQuery, userId, documentId, currentSourceSha256);
+    },
+
+    async getDocumentBySource(userId, rawSource) {
+      const source: FeatureDocumentSourceLookup = {
+        app: text(rawSource.app, "source app"),
+        platform: rawSource.platform,
+        sourceVersionId: positiveInteger(rawSource.sourceVersionId, "source version"),
+        flowId: text(rawSource.flowId, "source Flow"),
+      };
+      positiveInteger(userId, "user");
+      if (!source.app.trim() || !source.flowId.trim()) {
+        throw new Error("Invalid Feature Document source");
+      }
+      if (source.platform !== "ios" && source.platform !== "android" && source.platform !== "web") {
+        throw new Error("Invalid Feature Document platform");
+      }
+      const result = await runQuery(
+        `SELECT d.id AS source_document_id
+         FROM feature_documents d
+         JOIN apps a ON a.id = d.app_id
+         JOIN platforms p ON p.id = d.platform_id
+         LEFT JOIN feature_document_revisions r ON r.id = d.current_revision_id
+         LEFT JOIN LATERAL (
+           SELECT j.source_version_id
+           FROM feature_document_jobs j
+           WHERE j.document_id = d.id
+           ORDER BY j.created_at DESC, j.id DESC
+           LIMIT 1
+         ) latest_job ON true
+         WHERE (d.user_id = $1 OR d.visibility = 'catalog')
+           AND a.name = $2
+           AND p.name = $3
+           AND d.source_flow_id = $4
+           AND COALESCE(r.source_version_id, latest_job.source_version_id) = $5
+         ORDER BY (d.user_id = $1) DESC, d.updated_at DESC, d.id DESC
+         LIMIT 1`,
+        [userId, source.app, source.platform, source.flowId, source.sourceVersionId],
+      );
+      const documentId = result.rows[0]?.source_document_id;
+      return documentId == null
+        ? undefined
+        : loadDocument(runQuery, userId, positiveInteger(documentId));
     },
 
     async getJob(userId, jobId) {
@@ -780,7 +827,7 @@ export function createFeatureDocumentStore(
            (document_id, revision_id, token_sha256, created_by, expires_at)
          SELECT d.id, r.id, $4, $2, $5::timestamptz + interval '7 days'
          FROM feature_documents d JOIN feature_document_revisions r ON r.document_id = d.id
-         WHERE d.id = $1 AND d.user_id = $2 AND r.id = $3
+         WHERE d.id = $1 AND (d.user_id = $2 OR d.visibility = 'catalog') AND r.id = $3
          RETURNING id, document_id, revision_id, expires_at, revoked_at`,
         [documentId, userId, revisionId, checksum, now.toISOString()],
       );

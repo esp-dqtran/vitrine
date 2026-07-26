@@ -97,7 +97,7 @@ export function PipelinePanel({ onPipelineDone }: { onPipelineDone: () => void |
           </div>
         </div>
 
-        {error ? <div style={{ color: 'var(--color-text-danger, #b42318)', fontSize: 13 }}>{error}</div> : null}
+        {error ? <div style={{ color: 'var(--color-text-danger)', fontSize: 13 }}>{error}</div> : null}
 
         {pipelines.slice(0, 5).map((pipeline) => (
           <div key={pipeline.root.id} style={{ borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>

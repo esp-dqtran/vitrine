@@ -74,9 +74,62 @@ test('round-trips allowlisted App evidence selections', () => {
   );
 });
 
+test('round-trips the selected Flow representation and drops invalid values', () => {
+  const documentFlow = {
+    name: 'app' as const,
+    appId: 'linear',
+    section: 'flows',
+    platform: 'web' as const,
+    version: 3,
+    flow: 'checkout',
+    step: 2,
+    flowView: 'document' as const,
+  };
+  assert.equal(
+    routeToPath(documentFlow),
+    '/apps/linear/flows?platform=web&version=3&flow=checkout&step=2&flowView=document',
+  );
+  assert.deepEqual(
+    parseRouteLocation(
+      '/apps/linear/flows',
+      '?platform=web&version=3&flow=checkout&step=2&flowView=document',
+    ),
+    documentFlow,
+  );
+  assert.deepEqual(
+    parseRouteLocation(
+      '/apps/linear/flows',
+      '?platform=web&version=3&flow=checkout&flowView=split',
+    ),
+    {
+      name: 'app',
+      appId: 'linear',
+      section: 'flows',
+      platform: 'web',
+      version: 3,
+      flow: 'checkout',
+    },
+  );
+});
+
 test('drops unknown or invalid App selection parameters', () => {
   assert.deepEqual(
     parseRouteLocation('/apps/linear/analysis', '?platform=windows&version=-1&secret=x'),
     { name: 'app', appId: 'linear', section: 'analysis' },
+  );
+});
+
+test('preserves unknown paths as an explicit not-found route', () => {
+  assert.deepEqual(
+    parseRoutePath('/missing/page'),
+    { name: 'not-found', pathname: '/missing/page' },
+  );
+});
+
+test('treats malformed encoded route segments as not found instead of throwing', () => {
+  assert.doesNotThrow(() => parseRoutePath('/apps/%E0%A4%A'));
+  assert.deepEqual(
+    parseRoutePath('/apps/%E0%A4%A'),
+    { name: 'not-found', pathname: '/apps/%E0%A4%A' },
   );
 });

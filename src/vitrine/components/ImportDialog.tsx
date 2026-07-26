@@ -48,7 +48,7 @@ export function buildPipelineRows(apps: App[], jobs: Job[]): RowVM[] {
           : stages.some((stage) => stage.status === 'cancelled')
             ? 'Cancelled'
             : 'Complete';
-      return { slug: name, name, cat: 'Importing', accent: '#a3a3ab', captured: 0, analyzed: 0, lastSynced: null, status };
+      return { slug: name, name, cat: 'Importing', accent: 'var(--color-text-disabled)', captured: 0, analyzed: 0, lastSynced: null, status };
     });
   return [...pipelineRows, ...real];
 }

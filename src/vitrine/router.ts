@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import type { Platform } from '../platformFromUrl.ts';
 
+export type FlowRepresentation = 'visual' | 'document';
+
 export type Route =
   | { name: 'landing' }
+  | { name: 'not-found'; pathname: string }
   | { name: 'build-in-public' }
   | { name: 'pricing' }
   | { name: 'billing-success' }
@@ -19,6 +22,7 @@ export type Route =
       evidence?: string;
       flow?: string;
       step?: number;
+      flowView?: FlowRepresentation;
     }
   | { name: 'sites' }
   | { name: 'site-version'; siteId: number; versionId: number; section?: string }
@@ -28,13 +32,48 @@ export type Route =
   | { name: 'feature-document-share'; token: string }
   | { name: 'admin' };
 
+interface LocationTarget {
+  location: { pathname: string; search: string };
+  history: {
+    pushState(state: unknown, title: string, path: string): void;
+    replaceState(state: unknown, title: string, path: string): void;
+  };
+  dispatchEvent(event: Event): boolean;
+}
+
+export function updateLocation(
+  path: string,
+  options: { replace?: boolean; target?: LocationTarget } = {},
+): void {
+  const target = options.target ?? window;
+  if (path === `${target.location.pathname}${target.location.search}`) return;
+  target.history[options.replace ? 'replaceState' : 'pushState'](null, '', path);
+  const event = typeof PopStateEvent === 'function'
+    ? new PopStateEvent('popstate')
+    : new Event('popstate');
+  target.dispatchEvent(event);
+}
+
 function subscribe(fn: () => void) {
   window.addEventListener('popstate', fn);
   return () => window.removeEventListener('popstate', fn);
 }
 
+function browserLocationSnapshot(): string {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+export function useLocationKey(): string {
+  return useSyncExternalStore(
+    subscribe,
+    browserLocationSnapshot,
+    () => '/',
+  );
+}
+
 export function parseRoutePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
+  if (path === '/' || path === '/landing') return { name: 'landing' };
   if (path === '/build-in-public') return { name: 'build-in-public' };
   if (path === '/pricing') return { name: 'pricing' };
   if (path === '/billing/success') return { name: 'billing-success' };
@@ -47,14 +86,15 @@ export function parseRoutePath(pathname: string): Route {
   if (siteMatch) {
     const siteId = Number(siteMatch[1]);
     const versionId = Number(siteMatch[2]);
-    return Number.isSafeInteger(siteId) && Number.isSafeInteger(versionId)
+    const section = siteMatch[3] ? decodeSegment(siteMatch[3]) : undefined;
+    return Number.isSafeInteger(siteId) && Number.isSafeInteger(versionId) && section !== null
       ? {
           name: 'site-version',
           siteId,
           versionId,
-          ...(siteMatch[3] ? { section: decodeURIComponent(siteMatch[3]) } : {}),
+          ...(section ? { section } : {}),
         }
-      : { name: 'landing' };
+      : { name: 'not-found', pathname: path };
   }
   if (path === '/projects') return { name: 'projects' };
   const projectMatch = path.match(/^\/projects\/([^/]+)$/);
@@ -62,19 +102,40 @@ export function parseRoutePath(pathname: string): Route {
     const projectId = Number(projectMatch[1]);
     return Number.isSafeInteger(projectId) && projectId > 0
       ? { name: 'project', projectId }
-      : { name: 'landing' };
+      : { name: 'not-found', pathname: path };
   }
   const featureDocumentMatch = path.match(/^\/feature-documents\/([1-9]\d*)$/);
   if (featureDocumentMatch) {
     const documentId = Number(featureDocumentMatch[1]);
-    return Number.isSafeInteger(documentId) ? { name: 'feature-document', documentId } : { name: 'landing' };
+    return Number.isSafeInteger(documentId)
+      ? { name: 'feature-document', documentId }
+      : { name: 'not-found', pathname: path };
   }
   const featureDocumentShareMatch = path.match(/^\/feature-document-shares\/([^/]+)$/);
-  if (featureDocumentShareMatch) return { name: 'feature-document-share', token: decodeURIComponent(featureDocumentShareMatch[1]) };
+  if (featureDocumentShareMatch) {
+    const token = decodeSegment(featureDocumentShareMatch[1]);
+    return token
+      ? { name: 'feature-document-share', token }
+      : { name: 'not-found', pathname: path };
+  }
   if (path === '/admin') return { name: 'admin' };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
-  if (appMatch) return { name: 'app', appId: decodeURIComponent(appMatch[1]), section: appMatch[2] };
-  return { name: 'landing' };
+  if (appMatch) {
+    const appId = decodeSegment(appMatch[1]);
+    const section = appMatch[2] ? decodeSegment(appMatch[2]) : undefined;
+    return appId && section !== null
+      ? { name: 'app', appId, ...(section ? { section } : {}) }
+      : { name: 'not-found', pathname: path };
+  }
+  return { name: 'not-found', pathname: path };
+}
+
+function decodeSegment(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
 }
 
 function positive(value: string | null): number | undefined {
@@ -103,6 +164,11 @@ export function parseRouteLocation(pathname: string, search = ''): Route {
   );
   const flow = bounded(params.get('flow'), /^[A-Za-z0-9][A-Za-z0-9._:-]*$/);
   const step = positive(params.get('step'));
+  const rawFlowView = params.get('flowView');
+  const flowView: FlowRepresentation | undefined =
+    rawFlowView === 'visual' || rawFlowView === 'document'
+      ? rawFlowView
+      : undefined;
   return {
     ...route,
     ...(platform ? { platform } : {}),
@@ -110,12 +176,14 @@ export function parseRouteLocation(pathname: string, search = ''): Route {
     ...(evidence ? { evidence } : {}),
     ...(flow ? { flow } : {}),
     ...(step ? { step } : {}),
+    ...(flowView ? { flowView } : {}),
   };
 }
 
 export function routeToPath(route: Route): string {
   switch (route.name) {
     case 'landing': return '/landing';
+    case 'not-found': return route.pathname;
     case 'build-in-public': return '/build-in-public';
     case 'pricing': return '/pricing';
     case 'billing-success': return '/billing/success';
@@ -138,6 +206,7 @@ export function routeToPath(route: Route): string {
       if (route.evidence) params.set('evidence', route.evidence);
       if (route.flow) params.set('flow', route.flow);
       if (route.step) params.set('step', String(route.step));
+      if (route.flowView) params.set('flowView', route.flowView);
       const search = params.toString();
       return search ? `${path}?${search}` : path;
     }
@@ -145,18 +214,11 @@ export function routeToPath(route: Route): string {
 }
 
 export function navigate(route: Route) {
-  const path = routeToPath(route);
-  if (path === `${window.location.pathname}${window.location.search}`) return;
-  window.history.pushState(null, '', path);
-  // pushState doesn't fire popstate itself — dispatch one so useRoute() re-reads the path.
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  updateLocation(routeToPath(route));
 }
 
 export function useRoute(): Route {
-  const location = useSyncExternalStore(
-    subscribe,
-    () => `${window.location.pathname}${window.location.search}`,
-  );
+  const location = useLocationKey();
   const split = location.indexOf('?');
   return parseRouteLocation(
     split < 0 ? location : location.slice(0, split),

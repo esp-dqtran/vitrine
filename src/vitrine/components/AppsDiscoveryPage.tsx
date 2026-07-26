@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { Button, EmptyState } from '@astryxdesign/core';
 import {
   APPS_DISCOVERY_FACETS,
   filterAndSortApps,
@@ -7,12 +7,96 @@ import {
   type AppsPlatform,
   type AppsSort,
 } from '../appsDiscovery.ts';
-import { fetchRandomFacetPreview } from '../facetPreviewApi.ts';
+import { fetchRandomFacetPreview, type FacetPreview } from '../facetPreviewApi.ts';
+import type { PublicFacetInput } from '../../publicFacetPreview.ts';
+import type { SearchFilters } from '../../searchTypes.ts';
 import type { App } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
+import { AppCardSkeleton } from './AppCardSkeleton.tsx';
+import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
+import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
+import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
 import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
+import { ReferenceDiscoveryToolbar } from './ReferenceDiscoveryToolbar.tsx';
 import { SearchTrigger } from './SearchTrigger.tsx';
+
+const readyAppFacetPreviews = new Map<string, FacetPreview>();
+const appFacetPreviewRequests = new Map<string, Promise<FacetPreview | null>>();
+const appFacetImageRequests = new Map<string, Promise<boolean>>();
+
+const appFacetKey = (facet: AppsFacet, platform: AppsPlatform) =>
+  `${platform}:${facet.group}:${facet.value}`;
+
+const appFacetPreviewSources = (preview: FacetPreview) => (
+  preview.kind === 'icon'
+    ? [preview.iconUrl].filter((url): url is string => Boolean(url))
+    : preview.media
+);
+
+function prefetchAppFacetImage(url: string): Promise<boolean> {
+  if (typeof Image === 'undefined') return Promise.resolve(false);
+  const cached = appFacetImageRequests.get(url);
+  if (cached) return cached;
+
+  const request = new Promise<boolean>((resolve) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      const decode = typeof image.decode === 'function'
+        ? image.decode().catch(() => undefined)
+        : Promise.resolve();
+      decode.finally(() => resolve(true));
+    };
+    image.onerror = () => {
+      appFacetImageRequests.delete(url);
+      resolve(false);
+    };
+    image.src = url;
+  });
+  appFacetImageRequests.set(url, request);
+  return request;
+}
+
+function prefetchAppFacetPreview(
+  facet: AppsFacet,
+  platform: AppsPlatform,
+): Promise<FacetPreview | null> {
+  if (platform === 'android') return Promise.resolve(null);
+  const key = appFacetKey(facet, platform);
+  const cached = appFacetPreviewRequests.get(key);
+  if (cached) return cached;
+
+  const request = fetchRandomFacetPreview({ ...facet, platform })
+    .then(async (preview) => {
+      if (!preview) return null;
+      const loaded = await Promise.all(
+        appFacetPreviewSources(preview).map(prefetchAppFacetImage),
+      );
+      if (loaded.length === 0 || loaded.some((ready) => !ready)) return null;
+      readyAppFacetPreviews.set(key, preview);
+      return preview;
+    })
+    .catch(() => null)
+    .finally(() => {
+      appFacetPreviewRequests.delete(key);
+    });
+  appFacetPreviewRequests.set(key, request);
+  return request;
+}
+
+export function visibleAppFacetInputs(platform: AppsPlatform): PublicFacetInput[] {
+  if (platform === 'android') return [];
+  return APPS_DISCOVERY_FACETS.flatMap(({ group, values }) => (
+    values.map((value) => ({ group, value, platform }))
+  ));
+}
+
+function prefetchVisibleAppFacetPreviews(platform: AppsPlatform): void {
+  visibleAppFacetInputs(platform).forEach(({ group, value }) => {
+    void prefetchAppFacetPreview({ group, value }, platform);
+  });
+}
 
 interface AppsDiscoveryPageProps {
   apps: App[] | null;
@@ -20,15 +104,18 @@ interface AppsDiscoveryPageProps {
   query: string;
   facet: AppsFacet | null;
   onFacetChange: (facet: AppsFacet | null) => void;
-  onOpenSearch: () => void;
+  onOpenSearch: (seed?: Partial<SearchFilters>) => void;
   searchMode: 'legacy' | 'advanced';
+  activeFilterCount?: number;
   onImport: () => void;
   onOpenApp: (appId: string) => void;
   onRetry: () => void;
   totalApps: number | null;
   error?: string | null;
+  loadMoreError?: string | null;
   hasMore: boolean;
   loadingMore: boolean;
+  onRetryLoadMore?: () => void;
   sentinelRef?: RefObject<HTMLDivElement | null>;
   accountControls?: ReactNode;
   beforeGrid?: ReactNode;
@@ -49,6 +136,15 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
     }),
     [platform, props.apps, props.facet, props.query, sort],
   );
+  useEffect(() => {
+    const prefetch = () => prefetchVisibleAppFacetPreviews(platform);
+    if (typeof window.requestIdleCallback === 'function') {
+      const requestId = window.requestIdleCallback(prefetch, { timeout: 1_000 });
+      return () => window.cancelIdleCallback(requestId);
+    }
+    const timeoutId = window.setTimeout(prefetch, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [platform]);
   const state = props.error
     ? {
         title: 'Could not load crawled screens',
@@ -70,122 +166,122 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
             role: 'status' as const,
           }
         : null;
-  const countLabel = props.isAdmin && !props.query.trim() && !props.facet && props.totalApps !== null
-    ? `Showing ${visibleApps.length} of ${props.totalApps} apps`
-    : `${visibleApps.length} apps`;
-
   return (
-    <main data-apps-discovery="true" data-reference-gallery-shell="apps" className="apps-discovery">
-      <ReferenceDiscoveryTopNav
-        active="apps"
-        className="apps-top-nav"
-        search={(
-          <SearchTrigger
-            label={props.query || props.facet ? `${visibleApps.length} apps · search or filter…` : 'Search on Web...'}
-            activeCategory={props.facet?.value ?? 'All'}
-            onOpen={props.onOpenSearch}
-            onClearCategory={() => props.onFacetChange(null)}
-            mode={props.searchMode}
-          />
-        )}
-        isAdmin={props.isAdmin}
-        importLabel="Import App"
-        onImport={props.onImport}
-        accountControls={props.accountControls}
-      />
-      <div className="apps-discovery__content">
-        <div className="apps-discovery__taxonomy" aria-label="App discovery filters">
+    <ReferenceDiscoveryPageShell
+      kind="apps"
+      header={(
+        <ReferenceDiscoveryTopNav
+          active="apps"
+          className="apps-top-nav"
+          search={(
+            <SearchTrigger
+              label={props.query || props.facet ? `${visibleApps.length} apps · search or filter…` : 'Search on Web...'}
+              activeCategory={props.facet?.value ?? 'All'}
+              onOpen={() => props.onOpenSearch({
+                platform: [platform],
+                ...(props.facet?.group === 'categories' ? { appCategory: [props.facet.value] } : {}),
+                ...(props.facet?.group === 'screens' ? { pageType: [props.facet.value] } : {}),
+                ...(props.facet?.group === 'elements' ? { component: [props.facet.value] } : {}),
+                ...(props.facet?.group === 'flows' ? { flow: [props.facet.value] } : {}),
+              })}
+              onClearCategory={() => props.onFacetChange(null)}
+              mode={props.searchMode}
+              activeFilterCount={props.activeFilterCount}
+            />
+          )}
+          isAdmin={props.isAdmin}
+          importLabel="Import App"
+          onImport={props.onImport}
+          accountControls={props.accountControls}
+        />
+      )}
+      taxonomyLabel="App discovery filters"
+      taxonomy={(
+        <>
           {APPS_DISCOVERY_FACETS.map((group) => (
-            <section
+            <ReferenceDiscoveryFacetGroup
               key={group.group}
+              label={group.label}
               className={`apps-discovery__facet apps-discovery__facet--${group.group}`}
             >
-              <h2>{group.label}</h2>
-              <div>
-                {group.values.map((value) => {
-                  const facet = { group: group.group, value } satisfies AppsFacet;
-                  const selected = props.facet?.group === group.group && props.facet.value === value;
-                  return (
-                    <Button
-                      key={value}
-                      label={value}
-                      variant="ghost"
-                      size="sm"
-                      aria-pressed={selected}
-                      data-has-app-preview="true"
-                      data-facet-preview={group.group}
-                      onPointerEnter={(event) => {
-                        const request = ++hoverRequestRef.current;
-                        hoverPointRef.current = { x: event.clientX, y: event.clientY };
-                        void fetchRandomFacetPreview({ ...facet, platform })
-                          .then((preview) => {
-                            if (preview && request === hoverRequestRef.current) {
-                              const point = hoverPointRef.current;
-                              showPreview(preview, point.x, point.y);
-                            }
-                          })
-                          .catch(() => undefined);
-                      }}
-                      onPointerMove={(event) => {
-                        hoverPointRef.current = { x: event.clientX, y: event.clientY };
-                        movePreview(event.clientX, event.clientY);
-                      }}
-                      onPointerLeave={() => {
-                        hoverRequestRef.current += 1;
-                        hidePreview();
-                      }}
-                      onClick={() => props.onFacetChange(selected ? null : facet)}
-                    />
-                  );
-                })}
-              </div>
-            </section>
+              {group.values.map((value) => {
+                const facet = { group: group.group, value } satisfies AppsFacet;
+                const selected = props.facet?.group === group.group && props.facet.value === value;
+                return (
+                  <Button
+                    key={value}
+                    label={value}
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={selected}
+                    data-has-app-preview="true"
+                    data-facet-preview={group.group}
+                    onPointerEnter={(event) => {
+                      const request = ++hoverRequestRef.current;
+                      hoverPointRef.current = { x: event.clientX, y: event.clientY };
+                      const readyPreview = readyAppFacetPreviews.get(appFacetKey(facet, platform));
+                      if (readyPreview) showPreview(
+                        readyPreview,
+                        event.clientX,
+                        event.clientY,
+                      );
+                      void prefetchAppFacetPreview(facet, platform)
+                        .then((preview) => {
+                          if (!readyPreview && preview && request === hoverRequestRef.current) {
+                            const point = hoverPointRef.current;
+                            showPreview(preview, point.x, point.y);
+                          }
+                        })
+                        .catch(() => undefined);
+                    }}
+                    onPointerMove={(event) => {
+                      hoverPointRef.current = { x: event.clientX, y: event.clientY };
+                      movePreview(event.clientX, event.clientY);
+                    }}
+                    onPointerLeave={() => {
+                      hoverRequestRef.current += 1;
+                      hidePreview();
+                    }}
+                    onClick={() => props.onFacetChange(selected ? null : facet)}
+                  />
+                );
+              })}
+            </ReferenceDiscoveryFacetGroup>
           ))}
-        </div>
+        </>
+      )}
+      preview={(
         <div ref={previewRef} className="apps-discovery__hover-preview" aria-hidden="true">
           <img alt="" aria-hidden="true" data-preview-frame="1" />
           <img alt="" aria-hidden="true" data-preview-frame="2" />
           <img alt="" aria-hidden="true" data-preview-frame="3" />
         </div>
-
-        <div className="apps-discovery__toolbar">
-          <div role="radiogroup" aria-label="App platform" className="apps-discovery__platform">
-            {(['ios', 'web'] as const).map((value) => (
-              <Button
-                key={value}
-                label={value === 'ios' ? 'iOS' : 'Web'}
-                variant="ghost"
-                size="sm"
-                role="radio"
-                aria-checked={platform === value}
-                onClick={() => setPlatform(value)}
-              />
-            ))}
-          </div>
-          <div role="tablist" aria-label="App ordering" className="apps-discovery__sort">
-            {([
-              ['latest', 'Latest'],
-              ['popular', 'Most popular'],
-              ['rated', 'Top rated'],
-              ['animations', 'Animations'],
-            ] as const).map(([value, label]) => (
-              <Button
-                key={value}
-                label={label}
-                variant="ghost"
-                size="sm"
-                role="tab"
-                aria-selected={sort === value}
-                onClick={() => setSort(value)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {props.beforeGrid}
-        {props.apps !== null && !state ? <div className="apps-discovery__count">{countLabel}</div> : null}
-        {state ? (
-          <div className="apps-discovery__state" role={state.role}>
+      )}
+      toolbar={(
+        <ReferenceDiscoveryToolbar
+          label="App ordering"
+          value={sort}
+          options={[
+            { value: 'latest', label: 'Latest' },
+            { value: 'popular', label: 'Most popular' },
+          ]}
+          onChange={setSort}
+          leading={(
+            <AppsPlatformSwitcher
+              value={platform}
+              onChange={(value) => {
+                hoverRequestRef.current += 1;
+                hidePreview();
+                setPlatform(value);
+              }}
+            />
+          )}
+        />
+      )}
+    >
+      {props.beforeGrid}
+      {state ? (
+          <div className="reference-discovery__state apps-discovery__state" role={state.role}>
             <EmptyState
               title={state.title}
               description={state.description}
@@ -194,36 +290,58 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
                 : undefined}
             />
           </div>
-        ) : props.apps === null ? (
-          <div className="apps-discovery__loading" role="status" aria-label="Loading Apps">
-            {Array.from({ length: 6 }, (_, index) => <div key={index} />)}
+      ) : props.apps === null ? (
+          <div
+            className="reference-discovery__grid apps-discovery__grid apps-discovery__loading"
+            role="status"
+            aria-label="Loading Apps"
+          >
+            {Array.from({ length: 6 }, (_, index) => (
+              <AppCardSkeleton key={index} index={index} />
+            ))}
           </div>
-        ) : (
-          <>
-            <div data-apps-discovery-grid="true" className="apps-discovery__grid">
-              {visibleApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  onOpen={() => props.onOpenApp(app.id)}
-                  status={props.isAdmin
-                    ? (app.analyzedScreens ?? 0) >= app.totalScreens ? 'Complete' : 'In progress'
-                    : undefined}
-                  progressLabel={`${app.analyzedScreens ?? 0}/${app.totalScreens} analyzed`}
-                />
-              ))}
-            </div>
-            {props.hasMore
-              ? <div ref={props.sentinelRef} aria-hidden="true" className="apps-discovery__sentinel" />
+      ) : (
+        <>
+          <div
+            data-apps-discovery-grid="true"
+            className="reference-discovery__grid apps-discovery__grid"
+          >
+            {visibleApps.map((app) => (
+              <AppCard
+                key={app.id}
+                app={app}
+                platform={platform}
+                onOpen={() => props.onOpenApp(app.id)}
+                status={props.isAdmin
+                  ? (app.analyzedScreens ?? 0) >= app.totalScreens ? 'Complete' : 'In progress'
+                  : undefined}
+                progressLabel={`${app.analyzedScreens ?? 0}/${app.totalScreens} analyzed`}
+              />
+            ))}
+            {props.loadingMore
+              ? Array.from({ length: 3 }, (_, index) => (
+                  <AppCardSkeleton key={`loading-${index}`} index={index} />
+                ))
               : null}
-            {props.loadingMore ? (
-              <div role="status" aria-label="Loading" className="apps-discovery__loading-more">
-                <Spinner size="sm" aria-hidden="true" />
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
-    </main>
+          </div>
+          {props.hasMore
+            ? <div ref={props.sentinelRef} aria-hidden="true" className="apps-discovery__sentinel" />
+            : null}
+          {props.loadingMore
+            ? <div className="visually-hidden" role="status">Loading more Apps</div>
+            : null}
+          {props.loadMoreError ? (
+            <div role="alert" className="apps-discovery__load-more-error">
+              <span>Could not load more Apps: {props.loadMoreError}</span>
+              <Button
+                variant="secondary"
+                label="Retry"
+                onClick={props.onRetryLoadMore}
+              />
+            </div>
+          ) : null}
+        </>
+      )}
+    </ReferenceDiscoveryPageShell>
   );
 }

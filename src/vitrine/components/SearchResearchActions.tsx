@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Button, Selector } from "@astryxdesign/core";
 import type { ResearchCollection } from "../../db.ts";
 import type {
   AddResearchItemInput,
@@ -119,29 +120,29 @@ export function SearchResearchActions({
         onCollectionsChange={onCollectionsChange}
         plan={plan}
       />
-      <label>
-        Project
-        <select value={workspace?.id ?? ""} onChange={async (event) => {
-          const next = await getResearchProject(Number(event.target.value));
+      <Selector
+        label="Project"
+        value={workspace ? String(workspace.id) : undefined}
+        placeholder="Choose project"
+        options={projects.map((project) => ({ value: String(project.id), label: project.title }))}
+        onChange={async (value) => {
+          const next = await getResearchProject(Number(value));
           setWorkspace(next);
           setLaneId(next.lanes[0]?.id ?? 0);
-        }}>
-          <option value="">Choose project</option>
-          {projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}
-        </select>
-      </label>
+        }}
+      />
       {workspace ? (
-        <label>
-          Lane
-          <select value={laneId} onChange={(event) => setLaneId(Number(event.target.value))}>
-            {workspace.lanes.map((lane) => <option key={lane.id} value={lane.id}>{lane.title}</option>)}
-          </select>
-        </label>
+        <Selector
+          label="Lane"
+          value={laneId ? String(laneId) : undefined}
+          options={workspace.lanes.map((lane) => ({ value: String(lane.id), label: lane.title }))}
+          onChange={(value) => setLaneId(Number(value))}
+        />
       ) : null}
-      <button
-        type="button"
-        disabled={!workspace || !laneId || !item.versionId || !item.mediaImageId}
-        onClick={async () => {
+      <Button
+        label="Add to research project"
+        isDisabled={!workspace || !laneId || !item.versionId || !item.mediaImageId}
+        clickAction={async () => {
           if (!workspace) return;
           try {
             setWorkspace(await addResultToProject(item, workspace, laneId));
@@ -150,9 +151,10 @@ export function SearchResearchActions({
             setMessage((error as Error).message);
           }
         }}
-      >Add to research project</button>
-      <button
-        type="button"
+      />
+      <Button
+        label={selected ? "Remove from compare" : "Compare app"}
+        variant="secondary"
         aria-pressed={selected}
         onClick={() => {
           if (selected) {
@@ -165,7 +167,7 @@ export function SearchResearchActions({
             setMessage((error as Error).message);
           }
         }}
-      >{selected ? "Remove from compare" : "Compare app"}</button>
+      />
       {message ? <span role="status">{message}</span> : null}
     </div>
   );

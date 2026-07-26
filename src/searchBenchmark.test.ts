@@ -39,7 +39,8 @@ test("search release surfaces keep bounded SQL and accessible interaction contra
   assert.match(page, /role="combobox"/);
   assert.match(page, /role="tablist"/);
   assert.match(page, /aria-selected=/);
-  assert.match(card, /aria-label=\{`Preview/);
+  assert.match(card, /import \{ Button \} from "@astryxdesign\/core"/);
+  assert.match(card, /label=\{`Preview/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /advanced-search-preview/);
   assert.match(css, /advanced-search-drawer/);

@@ -20,8 +20,7 @@ test('keeps every in-app Vitrine mark center white in all themes', async () => {
   const marks = [
     ['./SignIn.tsx', 11],
     ['./Pricing.tsx', 11],
-    ['./App.tsx', 11],
-    ['./components/Sidebar.tsx', 9],
+    ['./components/AdminSidebar.tsx', 9],
   ] as const;
 
   for (const [path, size] of marks) {
@@ -35,4 +34,9 @@ test('keeps every in-app Vitrine mark center white in all themes', async () => {
 
   const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
   assert.equal((home.match(/src="\/favicon\.svg"/g) ?? []).length, 2);
+  const discoveryNavigation = await readFile(
+    new URL('./components/ReferenceDiscoveryTopNav.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(discoveryNavigation, /src="\/favicon\.svg"/);
 });

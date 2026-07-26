@@ -21,15 +21,18 @@ test('keeps Landing implementation outside the public Apps change', async () => 
   assert.doesNotMatch(home, /GuestCatalogControls|requiresAuthentication|isGuest/);
 });
 
-test('keeps guest discovery overlays reachable from the unified Apps route', async () => {
+test('keeps guest discovery overlays mounted in the persistent application surface', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
   const overlays = source.indexOf('const discoveryOverlays =');
-  const appsRoute = source.indexOf("if (route.name === 'apps')");
+  const appsRoute = source.indexOf("case 'apps':");
+  const surface = source.indexOf('<ApplicationSurface');
 
   assert.notEqual(overlays, -1, 'discovery overlays should be shared');
   assert.notEqual(appsRoute, -1, 'Apps route should exist');
-  assert.ok(overlays < appsRoute, 'overlays must be defined before the Apps return');
-  assert.equal(source.match(/\{discoveryOverlays\}/g)?.length, 2);
+  assert.notEqual(surface, -1, 'persistent application surface should exist');
+  assert.ok(overlays < surface, 'overlays must be defined before the shared surface');
+  assert.ok(appsRoute < surface, 'Apps route should resolve before the shared surface');
+  assert.equal(source.match(/overlays=\{discoveryOverlays\}/g)?.length, 1);
 });
 
 test('lets guests search the public catalog without enabling member research', async () => {

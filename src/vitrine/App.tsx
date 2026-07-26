@@ -1,48 +1,51 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { AppShell, Button, DropdownMenu, EmptyState, Skeleton } from '@astryxdesign/core';
+import { Button, DropdownMenu, EmptyState, Spinner } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
-import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { ProgressBanner } from './components/ProgressBanner';
-import { ScreenDetail } from './components/ScreenDetail';
 import { CommandPalette } from './components/CommandPalette';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ImportDialog } from './components/ImportDialog';
-import { PageHeader } from './components/PageHeader';
-import { Sidebar } from './components/Sidebar';
 import { UnlockModal } from './components/UnlockModal';
-import { UsersPage } from './components/UsersPage';
-import { ResearchProjectsPage } from './components/ResearchProjectsPage';
-import { ResearchProjectPage } from './components/ResearchProjectPage';
-import { SitesPage } from './components/SitesPage';
-import { SiteVersionPage } from './components/SiteVersionPage';
-import { FeatureDocumentPage } from './components/FeatureDocumentPage.tsx';
-import { AdvancedSearchPage } from './components/AdvancedSearchPage.tsx';
 import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
 import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
-import { GalleryCardSkeleton } from './components/GalleryToolbar';
 import { GuestCatalogControls } from './components/GuestCatalogControls.tsx';
-import { ReferenceTypeTabs } from './components/ReferenceTypeTabs';
+import { LoginDialog } from './components/LoginDialog.tsx';
+import { AppDetailLoadingPage } from './components/AppDetailLoadingPage.tsx';
+import { ApplicationSurface } from './components/ApplicationSurface.tsx';
 import type { AppsFacet } from './appsDiscovery.ts';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
 import { submitUrlImport } from './jobsApi';
-import { searchCatalog, type SearchFilters } from './researchApi';
-import { navigate, useRoute } from './router';
+import { searchCatalog, type SearchFilters as LegacySearchFilters } from './researchApi';
+import { navigate, updateLocation, useRoute } from './router';
 import { loadSubscription, type SubscriptionView } from './billingApi';
 import type { CatalogSearchResult } from '../catalogResearch';
 import type { SearchResultItem } from '../searchTypes.ts';
-import { readRecentSearches } from './searchState.ts';
+import type { SearchFilters as AdvancedSearchFilters, SearchScope } from '../searchTypes.ts';
+import { defaultSearchState, readRecentSearches } from './searchState.ts';
+import { createSearchSession } from './searchSession.ts';
+import { activeFilterCount } from '../searchScope.ts';
+
+const AppsDiscoveryPage = lazy(() => import('./components/AppsDiscoveryPage.tsx').then((module) => ({ default: module.AppsDiscoveryPage })));
+const ScreenDetail = lazy(() => import('./components/ScreenDetail').then((module) => ({ default: module.ScreenDetail })));
+const ResearchProjectsPage = lazy(() => import('./components/ResearchProjectsPage').then((module) => ({ default: module.ResearchProjectsPage })));
+const ResearchProjectPage = lazy(() => import('./components/ResearchProjectPage').then((module) => ({ default: module.ResearchProjectPage })));
+const SitesPage = lazy(() => import('./components/SitesPage').then((module) => ({ default: module.SitesPage })));
+const SiteVersionPage = lazy(() => import('./components/SiteVersionPage').then((module) => ({ default: module.SiteVersionPage })));
+const FeatureDocumentPage = lazy(() => import('./components/FeatureDocumentPage.tsx').then((module) => ({ default: module.FeatureDocumentPage })));
+const AdvancedSearchPage = lazy(() => import('./components/AdvancedSearchPage.tsx').then((module) => ({ default: module.AdvancedSearchPage })));
 
 export function App() {
-  const { user, logout } = useAuth();
+  const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
   const route = useRoute();
   const isAdmin = user?.role === 'admin';
   const [importOpen, setImportOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
   const [siteQuery, setSiteQuery] = useState('');
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
@@ -51,7 +54,7 @@ export function App() {
     if (seed) { sessionStorage.removeItem('astryx:q'); sessionStorage.removeItem('vitrine:q'); }
     return seed ?? '';
   });
-  const [filters, setFilters] = useState<SearchFilters>({ kind: 'all' });
+  const [filters, setFilters] = useState<LegacySearchFilters>({ kind: 'all' });
   const [searchResult, setSearchResult] = useState<CatalogSearchResult | null>(null);
   const [searchError, setSearchError] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
@@ -59,7 +62,15 @@ export function App() {
   const { collections, loaded: collectionsLoaded, ensureCollections, setCollections } = useCollections();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [searchSession] = useState(() => createSearchSession({
+    ...defaultSearchState,
+    query: q,
+  }));
+  const searchSnapshot = useSyncExternalStore(
+    searchSession.subscribe,
+    searchSession.snapshot,
+    searchSession.snapshot,
+  );
   const [advancedPreview, setAdvancedPreview] = useState<SearchResultItem | null>(null);
   const [comparison, setComparison] = useState<SearchResultItem[]>([]);
   const [entitlements, setEntitlements] = useState<SubscriptionView | null>(null);
@@ -74,11 +85,10 @@ export function App() {
   const customerPlan: 'free' | 'pro' = isAdmin ? 'pro' : entitlements?.plan ?? 'free';
   const canUseProResearch = isAdmin || customerPlan === 'pro';
   const canUseAdvancedSearch = advancedSearchEnabled && user !== null;
-  const openSignIn = () => navigate({ name: 'signin' });
   const openPricing = () => navigate({ name: 'pricing' });
   const paletteCollections = isGuest ? [] : collections;
   const palettePlan = isGuest ? 'free' : customerPlan;
-  const paletteUpgrade = isGuest ? openSignIn : openPricing;
+  const paletteUpgrade = isGuest ? () => setLoginOpen(true) : openPricing;
   const closeSettings = () => {
     setSettingsOpen(false);
     if (route.name === 'settings-billing') navigate({ name: 'apps' });
@@ -88,7 +98,17 @@ export function App() {
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
   const detailGateLoading = route.name === 'app' && !entitlementsResolved;
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
-  const { apps, totalApps, loading: appsLoading, loadingMore, hasMore, error: appsError, refresh: refreshApps, loadMore } = useApps(user?.role, route.name === 'apps');
+  const {
+    apps,
+    totalApps,
+    loading: appsLoading,
+    loadingMore,
+    hasMore,
+    error: appsError,
+    loadMoreError,
+    refresh: refreshApps,
+    loadMore,
+  } = useApps(user?.role, route.name === 'apps');
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
     route.name === 'app' ? route.appId : undefined,
     route.name === 'app' && !detailGateLoading && !entitlementsError && !detailLocked,
@@ -116,9 +136,21 @@ export function App() {
     setCollectionsOpen(true);
   };
 
-  const openPalette = async () => {
+  const openPalette = async (
+    scope: SearchScope,
+    seed: Partial<AdvancedSearchFilters> = {},
+  ) => {
     if (user) await ensureCollections().catch(() => []);
-    setPaletteOpen(true);
+    searchSession.open(scope, seed);
+  };
+
+  const closeDiscoveryOverlays = () => {
+    setCollectionsOpen(false);
+    setSettingsOpen(false);
+    setLoginOpen(false);
+    setImportOpen(false);
+    setAdvancedPreview(null);
+    searchSession.close();
   };
 
   useEffect(() => {
@@ -157,18 +189,19 @@ export function App() {
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) void loadMore();
-    }, { rootMargin: '600px' });
+    }, { rootMargin: '900px 0px' });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, loadMore, loadingMore, route.name]);
 
   const openApp = async (appId: string) => {
+    closeDiscoveryOverlays();
     if (isFreeGated(appId)) {
       setUnlockTarget(appId);
       return;
     }
     navigate({ name: 'app', appId });
-    setCollectionsOpen(false);
+    setUnlockTarget(null);
   };
 
   const confirmUnlock = async () => {
@@ -178,9 +211,9 @@ export function App() {
     const result = await response.json() as { remaining: number };
     setEntitlements({ ...entitlements, freeUnlocks: [...entitlements.freeUnlocks, unlockTarget], freeUnlocksRemaining: result.remaining });
     const appId = unlockTarget;
+    closeDiscoveryOverlays();
     setUnlockTarget(null);
     navigate({ name: 'app', appId });
-    setCollectionsOpen(false);
   };
 
   // Landing straight on a locked app URL skips the catalog click handler.
@@ -203,165 +236,37 @@ export function App() {
       />
     </div>
   ) : (
-    <GuestCatalogControls onSignIn={openSignIn} />
+    <GuestCatalogControls onLogin={() => setLoginOpen(true)} />
   );
-
-  // Admins get a left sidebar to jump between screens without typing URLs. AppShell
-  // collapses it behind a hamburger + drawer below its md breakpoint automatically —
-  // no manual responsive logic needed here.
-  const frame = (node: ReactNode) =>
-    isAdmin ? (
-      <AppShell
-        variant="section"
-        sideNav={
-          <Sidebar
-            email={user?.email ?? ''}
-            collectionsCount={collectionsLoaded ? collections.length : undefined}
-            onOpenCollections={() => void openCollections()}
-            onOpenSettings={() => setSettingsOpen(true)}
-            onLogout={logout}
-          />
-        }
-      >
-        {node}
-      </AppShell>
-    ) : node;
-
-  if (route.name === 'admin' && isAdmin) {
-    return frame(<UsersPage />);
-  }
-
-  if (route.name === 'sites') {
-    return (
-      <SitesPage
-        isAdmin={isAdmin}
-        query={siteQuery}
-        onQueryChange={setSiteQuery}
-        memberControls={accountControls}
-      />
-    );
-  }
-  if (route.name === 'site-version') {
-    return (
-      <SiteVersionPage
-        siteId={route.siteId}
-        versionId={route.versionId}
-        isAdmin={isAdmin}
-        query={siteQuery}
-        onQueryChange={setSiteQuery}
-        accountControls={accountControls}
-        initialSection={route.section}
-        onSectionChange={(section) => navigate({ name: 'site-version', siteId: route.siteId, versionId: route.versionId, section })}
-      />
-    );
-  }
-
-  if (researchProjectsEnabled && route.name === 'projects') {
-    return frame(<ResearchProjectsPage />);
-  }
-  if (researchProjectsEnabled && route.name === 'project') {
-    return frame(<ResearchProjectPage projectId={route.projectId} />);
-  }
-  if (route.name === 'feature-document') {
-    return frame(<FeatureDocumentPage documentId={route.documentId} />);
-  }
-  if (advancedSearchEnabled && route.name === 'search') {
-    return frame(
-      <>
-        <AdvancedSearchPage
-          onPreview={setAdvancedPreview}
-          comparison={comparison}
-          onComparisonChange={setComparison}
-        />
-        {advancedPreview ? (
-          <AdvancedSearchPreview
-            item={advancedPreview}
-            onClose={() => setAdvancedPreview(null)}
-            collections={collections}
-            onCollectionsChange={setCollections}
-            plan={customerPlan}
-            comparison={comparison}
-            onComparisonChange={setComparison}
-          />
-        ) : null}
-      </>,
-    );
-  }
-
-  if (route.name === 'app' && (detailGateLoading || detailLoading)) {
-    return frame(
-      <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 28px' }}>
-        {isAdmin && <PageHeader title="References" description="Browse app and website design references." />}
-        <ReferenceTypeTabs active="apps" />
-        <div style={{ padding: '22px 0 14px' }}>
-          <Skeleton width={isAdmin ? 420 : 260} height={38} radius={2} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 22, paddingBottom: 72 }}>
-          {Array.from({ length: 9 }, (_, i) => <GalleryCardSkeleton key={i} index={i} />)}
-        </div>
-      </div>,
-    );
-  }
-
-  if (route.name === 'app' && entitlementsError) {
-    return frame(
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 }} role="alert">
-        <EmptyState
-          title="Could not load account access"
-          description={entitlementsError}
-          actions={<Button label="Retry" variant="primary" clickAction={retryEntitlements} />}
-        />
-      </div>,
-    );
-  }
-
-  if (route.name === 'app' && detailLocked) {
-    return frame(
-      <>
-        <div style={{ minHeight: '100vh' }} />
-        {unlockTarget && entitlements && (
-          <UnlockModal
-            appId={unlockTarget}
-            remaining={entitlements.freeUnlocksRemaining}
-            onConfirm={confirmUnlock}
-            onClose={() => { setUnlockTarget(null); navigate({ name: 'apps' }); }}
-            onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
-          />
-        )}
-      </>,
-    );
-  }
-
-  if (route.name === 'app' && (detailError || !detail)) {
-    return frame(
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 }}>
-        <EmptyState
-          title="Could not load app details"
-          description={detailError ? `The app could not be loaded: ${detailError}` : 'No app detail data was returned.'}
-        />
-      </div>,
-    );
-  }
+  const catalogLoginDialog = isGuest ? (
+    <LoginDialog
+      isOpen={loginOpen}
+      onClose={() => setLoginOpen(false)}
+      authenticate={authenticate}
+      register={register}
+      onSignedIn={completeLogin}
+    />
+  ) : null;
 
   const discoveryOverlays = (
     <AnimatePresence>
       {user && collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
       {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
-      {paletteOpen && (
+      {searchSnapshot.open && (
         canUseAdvancedSearch ? (
           <QuickSearch
-            initialQuery=""
+            state={searchSnapshot.state}
             recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
-            onClose={() => setPaletteOpen(false)}
+            onStateChange={searchSession.update}
+            onClose={searchSession.close}
             onPreview={(item) => {
-              setPaletteOpen(false);
+              searchSession.close();
               setAdvancedPreview(item);
             }}
-            onViewAll={(value) => {
-              const handoff = quickSearchHandoff(value);
-              setPaletteOpen(false);
-              window.history.pushState(null, '', `/search${handoff.search ? `?${handoff.search}` : ''}`);
-              window.dispatchEvent(new PopStateEvent('popstate'));
+            onViewAll={(state) => {
+              const handoff = quickSearchHandoff(state);
+              searchSession.close();
+              updateLocation(`/search${handoff.search ? `?${handoff.search}` : ''}`);
             }}
           />
         ) : (
@@ -378,10 +283,16 @@ export function App() {
             onCollectionsChange={user ? setCollections : () => undefined}
             onQueryChange={setQ}
             onRetrySearch={() => setSearchRetry((value) => value + 1)}
-            onClose={() => setPaletteOpen(false)}
+            onClose={searchSession.close}
             onSelectApp={(appId) => void openApp(appId)}
-            onSelectScreen={(appId) => navigate({ name: 'app', appId, section: 'screens' })}
-            onSelectFlow={(appId) => navigate({ name: 'app', appId, section: 'flows' })}
+            onSelectScreen={(appId) => {
+              closeDiscoveryOverlays();
+              navigate({ name: 'app', appId, section: 'screens' });
+            }}
+            onSelectFlow={(appId) => {
+              closeDiscoveryOverlays();
+              navigate({ name: 'app', appId, section: 'flows' });
+            }}
             onSelectCategory={(value) => setAppFacet(
               value === 'All' ? null : { group: 'categories', value },
             )}
@@ -402,24 +313,153 @@ export function App() {
     </AnimatePresence>
   );
 
-  if (route.name === 'apps') {
-    return (
-      <>
+  let page: ReactNode;
+
+  switch (route.name) {
+    case 'sites':
+      page = (
+        <SitesPage
+          isAdmin={isAdmin}
+          query={siteQuery}
+          onQueryChange={setSiteQuery}
+          onOpenSearch={(seed) => void openPalette('sites', seed)}
+          searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
+          activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
+          memberControls={accountControls}
+        />
+      );
+      break;
+    case 'site-version':
+      page = (
+        <SiteVersionPage
+          siteId={route.siteId}
+          versionId={route.versionId}
+          isAdmin={isAdmin}
+          query={siteQuery}
+          onQueryChange={setSiteQuery}
+          accountControls={accountControls}
+          initialSection={route.section}
+          onSectionChange={(section) => navigate({
+            name: 'site-version',
+            siteId: route.siteId,
+            versionId: route.versionId,
+            section,
+          })}
+        />
+      );
+      break;
+    case 'projects':
+      page = researchProjectsEnabled
+        ? <ResearchProjectsPage />
+        : <ApplicationStatusPage title="Research projects are unavailable" />;
+      break;
+    case 'project':
+      page = researchProjectsEnabled
+        ? <ResearchProjectPage projectId={route.projectId} />
+        : <ApplicationStatusPage title="Research projects are unavailable" />;
+      break;
+    case 'feature-document':
+      page = <FeatureDocumentPage documentId={route.documentId} />;
+      break;
+    case 'search':
+      page = advancedSearchEnabled ? (
+        <AdvancedSearchPage
+          onPreview={setAdvancedPreview}
+          comparison={comparison}
+          onComparisonChange={setComparison}
+        />
+      ) : <ApplicationStatusPage title="Search is unavailable" />;
+      break;
+    case 'app':
+      if (detailGateLoading || detailLoading) {
+        page = (
+          <AppDetailLoadingPage
+            isAdmin={isAdmin}
+            accountControls={accountControls}
+            onOpenSearch={() => void openPalette('apps')}
+            onImport={() => setImportOpen(true)}
+          />
+        );
+      } else if (entitlementsError) {
+        page = (
+          <ApplicationStatusPage
+            title="Could not load account access"
+            description={entitlementsError}
+            role="alert"
+            actions={<Button label="Retry" variant="primary" clickAction={retryEntitlements} />}
+          />
+        );
+      } else if (detailLocked) {
+        page = <div data-app-detail-locked="true" style={{ minHeight: '100vh' }} />;
+      } else if (detailError || !detail) {
+        page = (
+          <ApplicationStatusPage
+            title="Could not load app details"
+            description={detailError ? `The app could not be loaded: ${detailError}` : 'No app detail data was returned.'}
+          />
+        );
+      } else {
+        page = (
+          <AnimatePresence mode="wait">
+            <ScreenDetail
+              key={`detail-${detail.id}`}
+              app={detail}
+              role={user?.role ?? 'user'}
+              initialSection={route.section}
+              initialPlatform={route.platform}
+              initialVersion={route.version}
+              initialEvidence={route.evidence}
+              initialFlow={route.flow}
+              initialStep={route.step}
+              initialFlowView={route.flowView}
+              onSectionChange={(section, platform, version) => navigate({
+                name: 'app',
+                appId: detail.id,
+                section,
+                platform,
+                version,
+              })}
+              onFlowChange={(flow, step, flowView, platform, version) => navigate({
+                name: 'app',
+                appId: detail.id,
+                section: 'flows',
+                platform,
+                version,
+                ...(flow ? { flow } : {}),
+                ...(step ? { step } : {}),
+                ...(flowView ? { flowView } : {}),
+              })}
+              onBack={() => navigate({ name: 'apps' })}
+              accountControls={accountControls}
+              onOpenSearch={() => void openPalette('apps')}
+              onImport={() => setImportOpen(true)}
+              collections={collections}
+              onCollectionsChange={setCollections}
+            />
+          </AnimatePresence>
+        );
+      }
+      break;
+    case 'apps':
+      page = (
         <AppsDiscoveryPage
           apps={appsLoading ? null : apps}
           isAdmin={isAdmin}
           query={q}
           facet={appFacet}
           onFacetChange={setAppFacet}
-          onOpenSearch={() => void openPalette()}
+          onOpenSearch={(seed) => void openPalette('apps', seed)}
           searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
+          activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
           onImport={() => setImportOpen(true)}
           onOpenApp={(appId) => void openApp(appId)}
           onRetry={() => void refreshApps()}
           totalApps={totalApps}
           error={appsError}
+          loadMoreError={loadMoreError}
           hasMore={hasMore}
           loadingMore={loadingMore}
+          onRetryLoadMore={() => void loadMore()}
           sentinelRef={appsSentinelRef}
           accountControls={accountControls}
           beforeGrid={(
@@ -441,75 +481,94 @@ export function App() {
             </>
           )}
         />
-        {isAdmin && (
-          <ImportDialog
-            isOpen={importOpen}
-            onClose={() => setImportOpen(false)}
-            submitImport={submitUrlImport}
-          />
-        )}
-        {discoveryOverlays}
-        {unlockTarget && entitlements && (
-          <UnlockModal
-            appId={unlockTarget}
-            remaining={entitlements.freeUnlocksRemaining}
-            onConfirm={confirmUnlock}
-            onClose={() => setUnlockTarget(null)}
-            onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
-          />
-        )}
-      </>
-    );
+      );
+      break;
+    case 'settings-billing':
+      page = <div data-settings-backdrop="true" className="vitrine-page" style={{ minHeight: '100vh' }} />;
+      break;
+    case 'admin':
+    case 'landing':
+    case 'not-found':
+    case 'build-in-public':
+    case 'pricing':
+    case 'billing-success':
+    case 'signin':
+    case 'feature-document-share':
+      page = <ApplicationStatusPage title="This page is outside the application" />;
+      break;
+    default:
+      page = assertNeverRoute(route);
   }
 
-  const detailApp = route.name === 'app' && !isFreeGated(route.appId) ? detail ?? undefined : undefined;
-
-  return frame(
+  const dialogs = (
     <>
-    <AnimatePresence mode="wait">
-      {detailApp ? (
-        <ScreenDetail
-          key={`detail-${detailApp.id}`}
-          app={detailApp}
-          role={user?.role ?? 'user'}
-          initialSection={route.name === 'app' ? route.section : undefined}
-          initialPlatform={route.name === 'app' ? route.platform : undefined}
-          initialVersion={route.name === 'app' ? route.version : undefined}
-          initialEvidence={route.name === 'app' ? route.evidence : undefined}
-          initialFlow={route.name === 'app' ? route.flow : undefined}
-          initialStep={route.name === 'app' ? route.step : undefined}
-          onSectionChange={(section, platform, version) => navigate({
-            name: 'app',
-            appId: detailApp.id,
-            section,
-            platform,
-            version,
-          })}
-          onFlowChange={(flow, step, platform, version) => navigate({
-            name: 'app',
-            appId: detailApp.id,
-            section: 'flows',
-            platform,
-            version,
-            ...(flow ? { flow } : {}),
-            ...(step ? { step } : {}),
-          })}
-          onBack={() => navigate({ name: 'apps' })}
-          collections={collections}
-          onCollectionsChange={setCollections}
+      {catalogLoginDialog}
+      {isAdmin && importOpen ? (
+        <ImportDialog
+          isOpen={importOpen}
+          onClose={() => setImportOpen(false)}
+          submitImport={submitUrlImport}
         />
       ) : null}
-    </AnimatePresence>
-    {discoveryOverlays}
-    {unlockTarget && entitlements && (
-      <UnlockModal
-        appId={unlockTarget}
-        remaining={entitlements.freeUnlocksRemaining}
-        onConfirm={confirmUnlock}
-        onClose={() => setUnlockTarget(null)}
-        onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
-      />
-    )}
+      {unlockTarget && entitlements ? (
+        <UnlockModal
+          appId={unlockTarget}
+          remaining={entitlements.freeUnlocksRemaining}
+          onConfirm={confirmUnlock}
+          onClose={() => {
+            setUnlockTarget(null);
+            if (route.name === 'app' && detailLocked) navigate({ name: 'apps' });
+          }}
+          onUpgrade={() => { setUnlockTarget(null); navigate({ name: 'pricing' }); }}
+        />
+      ) : null}
     </>
   );
+
+  return (
+    <ApplicationSurface
+      page={<Suspense fallback={<ApplicationPageSpinner />}>{page}</Suspense>}
+      overlays={discoveryOverlays}
+      dialogs={dialogs}
+    />
+  );
+}
+
+function ApplicationPageSpinner() {
+  return (
+    <main
+      className="vitrine-page"
+      style={{ display: 'grid', minHeight: '100vh', placeItems: 'center' }}
+      role="status"
+      aria-label="Loading page"
+    >
+      <Spinner size="lg" />
+    </main>
+  );
+}
+
+function ApplicationStatusPage({
+  title,
+  description,
+  actions,
+  role,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  role?: 'alert' | 'status';
+}) {
+  return (
+    <main
+      className="vitrine-page"
+      style={{ display: 'grid', minHeight: '100vh', placeItems: 'center', padding: 24 }}
+      role={role}
+    >
+      <EmptyState title={title} description={description} actions={actions} />
+    </main>
+  );
+}
+
+function assertNeverRoute(value: never): never {
+  throw new Error(`Unhandled application route: ${JSON.stringify(value)}`);
 }

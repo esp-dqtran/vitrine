@@ -18,7 +18,7 @@ interface UsersPageViewProps {
 
 export function UsersPageView(props: UsersPageViewProps) {
   return (
-    <main className="admin-users-page">
+    <main className="vitrine-page admin-users-page">
       <header className="admin-users-header">
         <div><h1>Users</h1><p>Manage access and understand what members use most.</p><span>{props.total} {props.total === 1 ? 'member' : 'members'}</span></div>
       </header>
@@ -34,9 +34,9 @@ export function UsersPage() {
   const [range, setRange] = useState<UsageRangeKey>('30d');
   const insights = useUsersInsights(range);
 
-  if (insights.loading) return <div className="admin-users-state" aria-label="Loading users"><Spinner size="lg" /></div>;
+  if (insights.loading) return <div className="vitrine-page admin-users-state" aria-label="Loading users"><Spinner size="lg" /></div>;
   if (insights.error || !insights.growth || !insights.usage || !insights.referrals) {
-    return <div className="admin-users-state admin-users-error"><h1>Could not load users</h1><p>{insights.error ?? 'The user data is unavailable right now.'}</p><Button label="Try again" clickAction={() => void insights.refresh()} /></div>;
+    return <div className="vitrine-page admin-users-state admin-users-error"><h1>Could not load users</h1><p>{insights.error ?? 'The user data is unavailable right now.'}</p><Button label="Try again" clickAction={() => void insights.refresh()} /></div>;
   }
 
   return (

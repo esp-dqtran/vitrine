@@ -8,6 +8,18 @@ interface CategoryPreviewMotion {
   hide: () => void;
 }
 
+export function fitScreenPreviewSize(
+  width: number,
+  height: number,
+): { width: number; height: number } | null {
+  if (width <= 0 || height <= 0) return null;
+  const scale = Math.min(1, 240 / width, 280 / height);
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
+}
+
 export function useCategoryHoverPreview() {
   const previewRef = useRef<HTMLDivElement>(null);
   const motionRef = useRef<CategoryPreviewMotion | null>(null);
@@ -39,8 +51,10 @@ export function useCategoryHoverPreview() {
         const yTo = gsap.quickTo(element, 'y', { duration, ease: 'power3.out' });
         let visibilityTween: gsap.core.Tween | null = null;
         let flowTimeline: gsap.core.Timeline | null = null;
+        let lastPoint = { x: 0, y: 0 };
 
         const position = (x: number, y: number) => {
+          lastPoint = { x, y };
           const edge = 12;
           const left = Math.min(
             Math.max(x + 18, edge),
@@ -60,16 +74,32 @@ export function useCategoryHoverPreview() {
             flowTimeline = null;
             element.dataset.kind = preview.kind;
             element.dataset.app = preview.app;
+            element.style.removeProperty('width');
+            element.style.removeProperty('height');
             const sources = preview.kind === 'icon'
               ? [preview.iconUrl].filter((url): url is string => Boolean(url))
               : preview.media.slice(0, 3);
 
             images.forEach((image, index) => {
               const source = sources[index];
+              image.onload = null;
               if (source) image.src = source;
               else image.removeAttribute('src');
               gsap.set(image, { autoAlpha: index === 0 && source ? 1 : 0 });
             });
+            if (preview.kind === 'screen' && sources[0]) {
+              const image = images[0]!;
+              const fitImage = () => {
+                if (element.dataset.kind !== 'screen') return;
+                const size = fitScreenPreviewSize(image.naturalWidth, image.naturalHeight);
+                if (!size) return;
+                element.style.width = `${size.width}px`;
+                element.style.height = `${size.height}px`;
+                position(lastPoint.x, lastPoint.y);
+              };
+              image.onload = fitImage;
+              if (image.complete) fitImage();
+            }
             position(x, y);
 
             if (preview.kind === 'flow' && sources.length > 1 && !reduceMotion) {

@@ -173,6 +173,47 @@ test("keeps canonical occurrence order and deduplicates provider work without dr
   assert.equal(result.flowReferences.uniqueImages, 2);
 });
 
+test("builds a Flow-only manifest without reading loose Screens or UI Elements", async () => {
+  const { source, objects } = await fixture();
+  const reads: string[] = [];
+  const objectStore = store(objects);
+  const result = await buildAppKnowledgeEvidenceManifest({
+    source,
+    scope: "flows",
+    objectStore: {
+      ...objectStore,
+      async get(key) {
+        reads.push(key);
+        return objectStore.get(key);
+      },
+    },
+  });
+
+  assert.deepEqual(
+    result.items.map(({ imageId, kind }) => `${kind}:${imageId}`),
+    [
+      "flow_step:20",
+      "flow_step:20",
+      "flow_step:21",
+      "flow_step:21",
+    ],
+  );
+  assert.deepEqual(
+    reads.map((key) => Number(key.split("/")[1])).sort((a, b) => a - b),
+    [20, 21],
+  );
+});
+
+test("rejects a Flow-only manifest without referenced Flow evidence", async () => {
+  const { source, objects } = await fixture();
+  source.flows = [];
+
+  await assert.rejects(
+    buildAppKnowledgeEvidenceManifest({ source, scope: "flows", objectStore: store(objects) }),
+    (error: unknown) => error instanceof AppKnowledgeEvidenceError && error.code === "flow_evidence_missing",
+  );
+});
+
 test("quarantines UI Elements unless a human override proves isolation", async () => {
   const { source, objects } = await fixture();
   const fullPage = await buildAppKnowledgeEvidenceManifest({ source, objectStore: store(objects) });

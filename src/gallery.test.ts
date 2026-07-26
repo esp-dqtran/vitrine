@@ -183,6 +183,7 @@ test("builds the existing public catalog contract from bounded app records", () 
   };
   const page = buildPublishedCatalogPage({
     apps: [{
+      app_id: 1,
       app: "linear",
       display_name: "Linear",
       category: "Productivity",
@@ -191,6 +192,7 @@ test("builds the existing public catalog contract from bounded app records", () 
       accent_color: "#5E6AD2",
       total_screens: 236,
       available_platforms: ["web", "ios"],
+      last_captured_at: "2026-07-26T03:14:54.618Z",
     }],
     previews: [
       { ...image, preview_rank: 1 },
@@ -206,6 +208,77 @@ test("builds the existing public catalog contract from bounded app records", () 
     ["/api/preview-media/linear/1", "/api/preview-media/linear/2"],
   );
   assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
+  assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
   assert.equal(page.nextCursor, "next");
   assert.doesNotMatch(JSON.stringify(page), /image_url|object_key|capture:/);
+});
+
+test("keeps a UUID-disambiguated route while showing the human app name", () => {
+  const slug = "aboard-ea683077-aadb-47c5-a771-d21fd9676510";
+  const page = buildPublishedCatalogPage({
+    apps: [{
+      app_id: 2,
+      app: slug,
+      display_name: "Aboard",
+      category: "Productivity",
+      website_url: null,
+      icon_url: null,
+      accent_color: null,
+      total_screens: 624,
+      available_platforms: ["web"],
+      last_captured_at: "2026-07-26T00:00:00.000Z",
+    }],
+    previews: [{
+      id: 71,
+      app: slug,
+      platform: "web",
+      image_url: "mobbin-bulk:0123456789abcdef",
+      kind: "screen",
+      description: null,
+      analysis: null,
+      captured_at: "2026-07-26T00:00:00.000Z",
+      preview_rank: 1,
+    }],
+    nextCursor: null,
+  });
+
+  assert.equal(page.apps[0]?.id, slug);
+  assert.equal(page.apps[0]?.app, "Aboard");
+  assert.equal(page.apps[0]?.previewScreens[0]?.url, `/api/preview-media/${slug}/1`);
+});
+
+test("preserves the server's Updated At order for published Apps", () => {
+  const page = buildPublishedCatalogPage({
+    apps: [
+      {
+        app_id: 91,
+        app: "alltrails",
+        display_name: "AllTrails",
+        category: "Travel",
+        website_url: null,
+        icon_url: null,
+        accent_color: null,
+        total_screens: 20,
+        available_platforms: ["web"],
+        last_captured_at: "2026-07-26T03:14:54.618Z",
+      },
+      {
+        app_id: 42,
+        app: "ipsy",
+        display_name: "Ipsy",
+        category: "Shopping",
+        website_url: null,
+        icon_url: null,
+        accent_color: null,
+        total_screens: 12,
+        available_platforms: ["web"],
+        last_captured_at: "2026-07-26T03:03:57.624Z",
+      },
+    ],
+    previews: [],
+    nextCursor: null,
+  });
+
+  assert.deepEqual(page.apps.map(({ id }) => id), ["alltrails", "ipsy"]);
+  assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
 });

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { Button, EmptyState, Selector, Spinner, ToggleButton } from '@astryxdesign/core';
@@ -7,11 +7,12 @@ import type { Platform } from '../../platformFromUrl';
 import { PLATFORM_LABEL } from '../../platformFromUrl';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { AppMetadata, Screen } from '../types';
+import { resolveAppSectionTotals } from '../appSectionTotals';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
-import { AppKnowledgePanel } from './AppKnowledgePanel';
 import { AppOverviewPanel } from './AppOverviewPanel';
+import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
 import { CuratorReviewPanel } from './CuratorReviewPanel';
 import { ExportPanel } from './ExportPanel';
 import { FlowsPanel } from './FlowsPanel';
@@ -22,19 +23,31 @@ import { ScreenGridCard } from './ScreenGridCard';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { VersionPanel } from './VersionPanel';
 import { ReferenceDetailShell } from './ReferenceDetailShell';
+import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav';
 import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
+import { SearchTrigger } from './SearchTrigger';
+import type { FlowRepresentation } from '../router.ts';
 
 const DesignSystemPanel = lazy(() =>
   import('./DesignSystemPanel').then((module) => ({ default: module.DesignSystemPanel })),
 );
 
 type LightboxState = { index: number } | null;
-const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'analysis', 'design-system', 'export', 'review'];
+const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
+const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows'];
 
 const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
-  const allowed = initialSection === 'review' ? role === 'admin' : SECTIONS.includes(initialSection as DetailSection);
-  return (allowed ? initialSection : 'overview') as DetailSection;
+  const allowed = role === 'admin' ? SECTIONS : MEMBER_SECTIONS;
+  return allowed.includes(initialSection as DetailSection)
+    ? initialSection as DetailSection
+    : role === 'admin' ? 'overview' : 'screens';
 };
+
+const formatCapturedAt = (value: string) => new Intl.DateTimeFormat('en', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+}).format(new Date(value));
 
 interface ScreenDetailProps {
   app: AppMetadata;
@@ -48,13 +61,18 @@ interface ScreenDetailProps {
   initialEvidence?: string;
   initialFlow?: string;
   initialStep?: number;
+  initialFlowView?: FlowRepresentation;
   onSectionChange?: (section: DetailSection, platform: Platform, version?: number) => void;
   onFlowChange?: (
     flow: string | undefined,
     step: number | undefined,
+    flowView: FlowRepresentation | undefined,
     platform: Platform,
     version?: number,
   ) => void;
+  accountControls?: ReactNode;
+  onOpenSearch?: () => void;
+  onImport?: () => void;
 }
 
 export function ScreenDetail({
@@ -67,8 +85,12 @@ export function ScreenDetail({
   initialEvidence,
   initialFlow,
   initialStep,
+  initialFlowView,
   onSectionChange,
   onFlowChange,
+  accountControls,
+  onOpenSearch,
+  onImport,
 }: ScreenDetailProps) {
   const appPlatforms = (app.platforms ?? []).filter(
     (platform): platform is Platform => platform === 'ios' || platform === 'android' || platform === 'web',
@@ -126,6 +148,11 @@ export function ScreenDetail({
   const flows = sectionData.state.data && 'flows' in sectionData.state.data
     ? sectionData.state.data.flows
     : [] as DesignFlow<EvidenceView>[];
+  const sectionTotals = resolveAppSectionTotals(
+    app,
+    sectionData.versions,
+    sectionData.resolvedVersion,
+  );
   const nextCursor = evidence?.nextCursor ?? null;
   const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useState('All');
@@ -133,7 +160,6 @@ export function ScreenDetail({
   const [componentFilter, setComponentFilter] = useState('All');
   const [stateFilter, setStateFilter] = useState('All');
   const [lightbox, setLightbox] = useState<LightboxState>(null);
-  const platformTabRefs = useRef<Partial<Record<Platform, HTMLButtonElement>>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -228,7 +254,10 @@ export function ScreenDetail({
       sentinel={nextCursor ? <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div> : undefined}
     >
       {items.length ? (
-        <ReferenceGalleryGrid minCardWidth={section === 'elements' ? 200 : 280}>
+        <ReferenceGalleryGrid
+          minCardWidth={360}
+          columns={section === 'screens' || section === 'elements' ? 2 : undefined}
+        >
           {(section === 'screens' ? filtered : items).map((screen, index) => (
             <ScreenGridCard
               key={screen.id}
@@ -246,64 +275,74 @@ export function ScreenDetail({
   const platformControls = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Platform</span>
-      <div role="tablist" aria-label="Platform" style={{ display: 'inline-flex', gap: 2, padding: 3, border: '1px solid var(--color-border)', borderRadius: 999, background: 'var(--color-background-muted)' }}>
-        {(appPlatforms.length ? appPlatforms : [selectedPlatform]).map((platform, index, platforms) => (
-          <div key={platform} role="presentation" style={{ position: 'relative' }}>
-            {platform === selectedPlatform && <motion.div layoutId="platform-active-indicator" transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }} style={{ position: 'absolute', inset: 0, borderRadius: 999, background: 'var(--color-background-surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.18)', pointerEvents: 'none' }} />}
-            <ToggleButton
-              ref={(node) => { platformTabRefs.current[platform] = node ?? undefined; }}
-              label={PLATFORM_LABEL[platform]}
-              isPressed={platform === selectedPlatform}
-              onPressedChange={() => selectPlatform(platform)}
-              role="tab"
-              aria-pressed={undefined}
-              aria-selected={platform === selectedPlatform}
-              aria-label={PLATFORM_LABEL[platform]}
-              tabIndex={platform === selectedPlatform ? 0 : -1}
-              onKeyDown={(event) => {
-                const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-                const targetIndex = event.key === 'Home' ? 0 : event.key === 'End' ? platforms.length - 1 : offset ? (index + offset + platforms.length) % platforms.length : -1;
-                if (targetIndex < 0) return;
-                event.preventDefault();
-                const nextPlatform = platforms[targetIndex];
-                selectPlatform(nextPlatform);
-                platformTabRefs.current[nextPlatform]?.focus();
-              }}
-              size="sm"
-              style={{ position: 'relative', zIndex: 1, border: 'none', borderRadius: 999, background: 'transparent' }}
-            />
-          </div>
-        ))}
-      </div>
+      <AppsPlatformSwitcher
+        value={selectedPlatform}
+        platforms={appPlatforms.length ? appPlatforms : [selectedPlatform]}
+        onChange={selectPlatform}
+      />
     </div>
   );
-  const tabs = [
+  const adminTabs = [
     { id: 'overview' as const, label: 'Overview' },
     { id: 'screens' as const, label: 'Screens' },
     { id: 'elements' as const, label: 'UI Elements' },
     { id: 'flows' as const, label: 'Flows' },
-    { id: 'analysis' as const, label: 'Analysis' },
     { id: 'design-system' as const, label: 'Design System' },
     { id: 'export' as const, label: 'Export' },
     ...(role === 'admin' ? [{ id: 'review' as const, label: 'Review' }] : []),
   ];
+  const memberTabs = [
+    { id: 'screens' as const, label: 'Screens' },
+    { id: 'elements' as const, label: 'UI Elements' },
+    { id: 'flows' as const, label: 'Flows' },
+  ];
+  const tabs = role === 'admin' ? adminTabs : memberTabs;
+  const metadata = [
+    { label: 'Category', value: app.cat },
+    { label: 'Screens', value: String(app.totalScreens) },
+    ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
+  ];
+  const actions = role === 'admin' || app.websiteUrl ? (
+    <>
+      {role === 'admin' ? <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton> : null}
+      {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}
+    </>
+  ) : undefined;
   return (
     <>
+      <ReferenceDiscoveryTopNav
+        active="apps"
+        className="apps-top-nav"
+        search={(
+          <SearchTrigger
+            label={`Search on ${PLATFORM_LABEL[selectedPlatform]}...`}
+            activeCategory={null}
+            onOpen={onOpenSearch ?? (() => undefined)}
+            onClearCategory={() => undefined}
+          />
+        )}
+        isAdmin={role === 'admin'}
+        importLabel="Import App"
+        onImport={onImport ?? (() => undefined)}
+        accountControls={accountControls}
+      />
       <ReferenceDetailShell
+        dataDetailKind="app"
+        className="app-detail"
         title={app.app}
+        description={app.description}
         identityKey={`app-icon-${app.id}`}
         identityLabel={app.app[0]}
         identityImageUrl={app.iconUrl}
         accent={app.accent}
-        backLabel="Back to all apps"
         onBack={onBack}
         heroControls={platformControls}
-        metadata={[{ label: 'Category', value: app.cat }, { label: 'Screens', value: String(app.totalScreens) }]}
-        actions={<><HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton>{app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}</>}
+        metadata={metadata}
+        actions={actions}
         tabs={tabs}
         activeTab={section}
         onTabChange={setSection}
-        tabTrailing={<span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${screens.length} screens` : section === 'elements' ? `${screens.length} UI elements` : section === 'flows' ? `${flows.length} flows` : ''}</span>}
+        tabTrailing={<span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${sectionTotals.screens} screens` : section === 'elements' ? `${sectionTotals.elements} UI elements` : section === 'flows' ? `${sectionTotals.flows} flows` : ''}</span>}
         bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>
@@ -329,19 +368,27 @@ export function ScreenDetail({
                   ? <FlowsWorkspaceLoading />
                   : <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
                 : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} snapshot={snapshot} />
-                  : section === 'analysis' ? <AppKnowledgePanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} userRole={role} />
-                    : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
+                  : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
                       : section === 'flows' ? <FlowsPanel
                           flows={flows}
                           app={app.id}
                           platform={selectedPlatform}
                           version={sectionData.resolvedVersion}
+                          userRole={role}
+                          onAnalysisComplete={() => {
+                            if (sectionData.resolvedVersion !== undefined) {
+                              sectionData.invalidateVersion(selectedPlatform, sectionData.resolvedVersion);
+                              void sectionData.retry();
+                            }
+                          }}
                           selectedFlowId={initialFlow}
                           selectedStep={initialStep}
-                          onSelectionChange={(flow, step) => onFlowChange?.(
+                          selectedFlowView={initialFlowView}
+                          onSelectionChange={(flow, step, flowView) => onFlowChange?.(
                             flow,
                             step,
+                            flowView,
                             selectedPlatform,
                             sectionData.resolvedVersion,
                           )}

@@ -6,6 +6,10 @@ import type { PublishedSearchSource } from "./searchProjection.ts";
 import type { PublishedSiteSearchSource } from "./siteSearchProjection.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
 import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
+import {
+  decodeUpdatedCatalogCursor,
+  encodeUpdatedCatalogCursor,
+} from "./catalogCursor.ts";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/astryx";
@@ -64,13 +68,15 @@ export async function insertImage(
     );
     const imageRow = await client.query<{ id: number }>(
       `INSERT INTO images (platform_id, image_url, kind) VALUES ($1, $2, $3)
-       ON CONFLICT (platform_id, image_url) DO UPDATE SET image_url = EXCLUDED.image_url
+       ON CONFLICT (platform_id, image_url) DO UPDATE SET
+         image_url = EXCLUDED.image_url,
+         kind = EXCLUDED.kind
        RETURNING id`,
       [platformRow.rows[0].id, imageUrl, capture.kind ?? "screen"],
     );
     const imageId = imageRow.rows[0].id;
 
-    await client.query(
+    const createdVersion = await client.query<{ id: number }>(
       `WITH next AS (
          SELECT COALESCE(MAX(version_number), 0) + 1 AS revision
          FROM app_versions WHERE app_id = $1 AND platform = $2
@@ -80,23 +86,42 @@ export async function insertImage(
        WHERE NOT EXISTS (
          SELECT 1 FROM app_versions
          WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
-       )`,
+       )
+       RETURNING id`,
       [appId, platform],
     );
+    const activeVersion = createdVersion.rows[0] ?? (await client.query<{ id: number }>(
+      `SELECT id FROM app_versions
+       WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
+       ORDER BY version_number DESC LIMIT 1`,
+      [appId, platform],
+    )).rows[0];
+    if (!activeVersion) throw new Error("Unable to establish an active app version");
+
+    if (createdVersion.rowCount) {
+      await client.query(
+        `INSERT INTO version_images (version_id, image_id, captured_at, source_url, viewport_width, viewport_height, state_context)
+         SELECT $1, vi.image_id, now(), vi.source_url, vi.viewport_width, vi.viewport_height, vi.state_context
+         FROM version_images vi JOIN app_versions prior ON prior.id = vi.version_id
+         WHERE prior.app_id = $2 AND prior.platform = $3 AND prior.status = 'published'
+           AND prior.version_number = (
+             SELECT MAX(version_number) FROM app_versions
+             WHERE app_id = $2 AND platform = $3 AND status = 'published'
+           )
+         ON CONFLICT DO NOTHING`,
+        [activeVersion.id, appId, platform],
+      );
+    }
     await client.query(
       `INSERT INTO version_images (version_id, image_id, source_url, viewport_width, viewport_height, state_context)
-       SELECT av.id, $3, COALESCE($4, $5), $6, $7, $8
-       FROM app_versions av
-       WHERE av.app_id = $1 AND av.platform = $2 AND av.status IN ('draft', 'in_review')
-       ORDER BY av.version_number DESC LIMIT 1
+       VALUES ($1, $2, COALESCE($3, $4), $5, $6, $7)
        ON CONFLICT (version_id, image_id) DO UPDATE SET
          source_url = COALESCE(EXCLUDED.source_url, version_images.source_url),
          viewport_width = COALESCE(EXCLUDED.viewport_width, version_images.viewport_width),
          viewport_height = COALESCE(EXCLUDED.viewport_height, version_images.viewport_height),
          state_context = COALESCE(EXCLUDED.state_context, version_images.state_context)`,
       [
-        appId,
-        platform,
+        activeVersion.id,
         imageId,
         capture.sourceUrl ?? null,
         imageUrl,
@@ -165,12 +190,19 @@ export async function saveScreenAnalysis(id: number, analysis: ScreenAnalysis): 
   await query("UPDATE version_images SET state_context = $1 WHERE image_id = $2", [analysis.visibleStates.join(", ") || null, id]);
 }
 
-// Store app metadata captured from Mobbin at crawl time (icon, category). COALESCE only
+// Store app metadata captured from Mobbin at crawl time. COALESCE only
 // fills a null so a manual/backfilled value isn't clobbered by a later crawl that missed it.
-export async function setAppMeta(app: string, meta: { iconUrl?: string | null; category?: string | null }): Promise<void> {
+export async function setAppMeta(app: string, meta: {
+  iconUrl?: string | null;
+  category?: string | null;
+  displayName?: string | null;
+}): Promise<void> {
   await query(
-    "UPDATE apps SET icon_url = COALESCE(icon_url, $2), category = COALESCE(category, $3) WHERE name = $1",
-    [app, meta.iconUrl ?? null, meta.category ?? null],
+    `UPDATE apps SET icon_url = COALESCE(icon_url, $2),
+       category = COALESCE(category, $3),
+       display_name = COALESCE(display_name, $4)
+     WHERE name = $1`,
+    [app, meta.iconUrl ?? null, meta.category ?? null, meta.displayName ?? null],
   );
 }
 
@@ -579,7 +611,11 @@ export interface AdminGalleryImage extends CrawledImage {
   has_more?: boolean;
 }
 
-type AdminGalleryPageRow = AdminGalleryImage & { total_apps: number };
+type AdminGalleryPageRow = AdminGalleryImage & {
+  total_apps: number;
+  page_app_id: number;
+  page_updated_at: string | Date;
+};
 
 export interface AdminAppPage {
   images: AdminGalleryImage[];
@@ -587,34 +623,62 @@ export interface AdminAppPage {
   total: number;
 }
 
-export async function adminAppPage(cursor?: string, requestedLimit = 24): Promise<AdminAppPage> {
+export async function adminAppPage(input: {
+  cursor?: string;
+  limit?: number;
+  now?: Date;
+} = {}): Promise<AdminAppPage> {
+  const requestedLimit = input.limit ?? 24;
   const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 24, 1), 48);
+  const decoded = input.cursor
+    ? decodeUpdatedCatalogCursor(input.cursor)
+    : undefined;
+  const snapshotAt = decoded?.snapshotAt ?? (input.now ?? new Date()).toISOString();
+  const afterUpdatedAt = decoded?.updatedAt ?? null;
+  const afterAppId = decoded?.appId ?? null;
   const res = await query<AdminGalleryPageRow>(
     `WITH eligible_apps AS (
-       SELECT a.id, a.name, a.icon_url, a.category,
+       SELECT a.id AS app_id, a.name, a.icon_url, a.category,
               a.display_name, a.website_url, a.accent_color,
+              newest.updated_at,
               COUNT(*) OVER()::integer AS total_apps
        FROM apps a
-       WHERE EXISTS (
-         SELECT 1
+       JOIN LATERAL (
+         SELECT latest.created_at AS updated_at
          FROM platforms p
-         JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+         JOIN LATERAL (
+           SELECT i.created_at
+           FROM images i
+           WHERE i.platform_id = p.id AND i.kind = 'screen'
+             AND i.created_at <= $1::timestamptz
+           ORDER BY i.created_at DESC, i.id DESC
+           LIMIT 1
+         ) latest ON true
          WHERE p.app_id = a.id
-       )
+         ORDER BY latest.created_at DESC
+         LIMIT 1
+       ) newest ON true
      ), candidate_apps AS (
        SELECT *
        FROM eligible_apps
-       WHERE ($1::text IS NULL OR name > $1)
-       ORDER BY name
-       LIMIT ($2::integer + 1)
+       WHERE (
+         $2::timestamptz IS NULL
+         OR (updated_at, app_id) < ($2::timestamptz, $3::integer)
+       )
+       ORDER BY updated_at DESC, app_id DESC
+       LIMIT ($4::integer + 1)
      ), page_apps AS (
-       SELECT * FROM candidate_apps ORDER BY name LIMIT $2
+       SELECT *
+       FROM candidate_apps
+       ORDER BY updated_at DESC, app_id DESC
+       LIMIT $4
      ), page_image_facts AS MATERIALIZED (
-       SELECT pa.id AS app_id, p.name AS platform, i.id AS image_id,
+       SELECT pa.app_id, p.name AS platform, i.id AS image_id,
               i.created_at, (i.analysis IS NOT NULL) AS analyzed
-       FROM page_apps pa
-       JOIN platforms p ON p.app_id = pa.id
+       FROM platforms p
+       JOIN page_apps pa ON pa.app_id = p.app_id
        JOIN images i ON i.platform_id = p.id AND i.kind = 'screen'
+         AND i.created_at <= $1::timestamptz
      ), app_counts AS (
        SELECT app_id, COUNT(*)::integer AS total_screens,
               COUNT(*) FILTER (WHERE analyzed)::integer AS analyzed_screens,
@@ -658,19 +722,28 @@ export async function adminAppPage(cursor?: string, requestedLimit = 24): Promis
             i.image_url AS capture_url, i.created_at AS captured_at,
             c.total_screens, c.analyzed_screens, c.last_captured_at,
             pa.total_apps, ap.available_platforms,
-            ((SELECT COUNT(*) FROM candidate_apps) > $2)::boolean AS has_more
+            pa.app_id AS page_app_id, pa.updated_at AS page_updated_at,
+            ((SELECT COUNT(*) FROM candidate_apps) > $4)::boolean AS has_more
      FROM preview_ids pi
-     JOIN page_apps pa ON pa.id = pi.app_id
+     JOIN page_apps pa ON pa.app_id = pi.app_id
      JOIN images i ON i.id = pi.image_id
      JOIN app_counts c ON c.app_id = pi.app_id
      JOIN app_platforms ap ON ap.app_id = pi.app_id
-     ORDER BY pa.name, pi.preview_rank`,
-    [cursor ?? null, limit],
+     ORDER BY pa.updated_at DESC, pa.app_id DESC, pi.preview_rank`,
+    [snapshotAt, afterUpdatedAt, afterAppId, limit],
   );
-  const lastApp = res.rows.at(-1)?.app ?? null;
+  const lastApp = res.rows.at(-1);
   return {
     images: res.rows,
-    nextCursor: res.rows[0]?.has_more && lastApp ? lastApp : null,
+    nextCursor: res.rows[0]?.has_more && lastApp
+      ? encodeUpdatedCatalogCursor({
+          v: 1,
+          sort: "updated",
+          snapshotAt,
+          updatedAt: new Date(lastApp.page_updated_at).toISOString(),
+          appId: lastApp.page_app_id,
+        })
+      : null,
     total: res.rows[0]?.total_apps ?? 0,
   };
 }
@@ -724,6 +797,45 @@ export async function saveAppFlows(app: string, platform: string, flows: DesignF
      ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
     [app, platform, JSON.stringify(flows)]
   );
+}
+
+export async function saveAnalyzedAppFlows(input: {
+  app: string;
+  platform: "ios" | "android" | "web";
+  versionId: number;
+  flows: DesignFlow[];
+}): Promise<void> {
+  await withTransaction(async (client) => {
+    const version = await client.query<{
+      app_id: number;
+      app: string;
+      platform: string;
+      status: AppVersionStatus;
+    }>(
+      `SELECT av.app_id, a.name AS app, av.platform, av.status
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE av.id = $1
+       FOR UPDATE`,
+      [input.versionId],
+    );
+    const selected = version.rows[0];
+    if (!selected || selected.app !== input.app || selected.platform !== input.platform) {
+      throw new Error("Flow analysis version scope mismatch");
+    }
+    const serialized = JSON.stringify(input.flows);
+    await client.query(
+      `INSERT INTO app_flow_versions (version_id, flows) VALUES ($1, $2::jsonb)
+       ON CONFLICT (version_id) DO UPDATE SET flows = EXCLUDED.flows, created_at = now()`,
+      [input.versionId, serialized],
+    );
+    if (selected.status === "draft" || selected.status === "in_review") {
+      await client.query(
+        `INSERT INTO app_flows (app_id, platform, flows) VALUES ($1, $2, $3::jsonb)
+         ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
+        [selected.app_id, input.platform, serialized],
+      );
+    }
+  });
 }
 
 export async function getAppFlows(app: string, platform: string): Promise<DesignFlow[]> {

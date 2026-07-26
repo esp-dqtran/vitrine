@@ -7,7 +7,7 @@ const source = (path: string) => readFile(new URL(path, import.meta.url), 'utf8'
 test('removes legacy FLOW.md while preserving Feature Document creation', async () => {
   const [
     flowsPanel,
-    flowViewer,
+    documentFlowPanel,
     exportPanel,
     researchApi,
     exportEngine,
@@ -18,7 +18,7 @@ test('removes legacy FLOW.md while preserving Feature Document creation', async 
     dropMigration,
   ] = await Promise.all([
     source('./vitrine/components/FlowsPanel.tsx'),
-    source('./vitrine/components/FlowViewer.tsx'),
+    source('./vitrine/components/DocumentFlowPanel.tsx'),
     source('./vitrine/components/ExportPanel.tsx'),
     source('./vitrine/researchApi.ts'),
     source('./exportEngine.ts'),
@@ -30,7 +30,7 @@ test('removes legacy FLOW.md while preserving Feature Document creation', async 
   ]);
 
   assert.doesNotMatch(flowsPanel, /FlowDocEditor|Open FLOW\.md|editingDoc/);
-  assert.match(flowViewer, /Create Feature Document/);
+  assert.match(documentFlowPanel, /Document Flow/);
   assert.doesNotMatch(exportPanel, /flow-md|Export FLOW\.md|Product flow documentation/);
   assert.doesNotMatch(researchApi, /flow-doc|loadFlowDoc|saveFlowDoc/);
   assert.doesNotMatch(exportEngine, /flow-md|function flowMd/);

@@ -35,7 +35,8 @@ test("renders accessible scope, quick filters, More filters, and active pills", 
   );
 
   assert.match(html, /role="tablist" aria-label="Search scope"/);
-  assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>Apps/);
+  assert.match(html, /role="tab"[^>]+aria-selected="true"/);
+  assert.match(html, />Apps</);
   assert.match(html, />Platform/);
   assert.match(html, />App category/);
   assert.match(html, />More filters</);

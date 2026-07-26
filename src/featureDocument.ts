@@ -75,6 +75,7 @@ export interface FeatureStepAnalysis {
 }
 
 export type FeatureDocumentReviewStatus = "draft" | "in_review" | "approved" | "superseded";
+export type FeatureDocumentVisibility = "private" | "catalog";
 export type FeatureDocumentJobStatus = "queued" | "running" | "done" | "error" | "cancelled" | "stale";
 export type FeatureDocumentJobStage = "preparing" | "analyzing" | "synthesizing" | "validating" | "saving" | "complete";
 
@@ -110,6 +111,13 @@ export interface CreateFeatureGenerationInput {
   providerModel: string;
 }
 
+export interface FeatureDocumentSourceLookup {
+  app: string;
+  platform: "ios" | "android" | "web";
+  sourceVersionId: number;
+  flowId: string;
+}
+
 export interface FeatureDocumentJobView {
   id: number;
   documentId: number;
@@ -140,6 +148,7 @@ export interface FeatureDocumentRevisionView {
 export interface FeatureDocumentView {
   id: number;
   title: string;
+  visibility?: FeatureDocumentVisibility;
   reviewStatus: FeatureDocumentReviewStatus;
   sourceChanged: boolean;
   currentRevision?: FeatureDocumentRevisionView;

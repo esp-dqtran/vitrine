@@ -1,3 +1,4 @@
+import { CheckboxInput } from "@astryxdesign/core";
 import type { SearchFacets, SearchFilters } from "../../searchTypes.ts";
 
 const labels: Record<keyof SearchFilters, string> = {
@@ -35,19 +36,19 @@ export function AdvancedSearchFilters({
           <fieldset key={key}>
             <legend>{labels[key]}</legend>
             {options.map(({ value, count }) => (
-              <label key={value}>
-                <input
-                  type="checkbox"
-                  checked={filters[key].includes(value)}
-                  onChange={() => onChange({
+              <CheckboxInput
+                key={value}
+                label={value}
+                description={`${count}`}
+                value={filters[key].includes(value)}
+                size="sm"
+                onChange={() => onChange({
                     ...filters,
                     [key]: filters[key].includes(value)
                       ? filters[key].filter((selected) => selected !== value)
                       : [...filters[key], value].sort(),
-                  })}
-                />
-                <span>{value}</span><small>{count}</small>
-              </label>
+                })}
+              />
             ))}
           </fieldset>
         );

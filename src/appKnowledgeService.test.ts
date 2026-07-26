@@ -30,6 +30,7 @@ import type {
   SeedDesignSystemResult,
   SeedDesignSystemWorkingCopyInput,
 } from "./designSystemWorkingCopy.ts";
+import type { DesignFlow } from "./designSystem.ts";
 
 async function png(red: number, width = 8, height = 8): Promise<Buffer> {
   return sharp({
@@ -276,6 +277,7 @@ function designSystem(evidenceId: string, suffix = "merged"): AppKnowledgeDesign
 }
 
 async function harness(options: {
+  mode?: "full" | "flow-only";
   drift?: boolean;
   failEvidenceId?: string;
   failEvidenceKind?: "screen" | "flow_step" | "ui_element";
@@ -326,6 +328,8 @@ async function harness(options: {
   const records = new Map<string, AppKnowledgeJobEvidenceRecord>();
   const cache = new Map<string, { analysis: Record<string, unknown> }>();
   let completed: AppKnowledgeSnapshot | undefined;
+  let flowCompleted = false;
+  let savedFlows: DesignFlow[] | undefined;
   let stale = false;
   let failed: { code: string; message: string } | undefined;
   const cropWrites: Array<Record<string, unknown>> = [];
@@ -485,6 +489,12 @@ async function harness(options: {
         createdAt: "2026-07-24T00:00:00.000Z",
       };
     },
+    async completeFlowAnalysis() {
+      flowCompleted = true;
+      job.status = "done";
+      job.stage = "complete";
+      return structuredClone(job);
+    },
     async markStale() {
       stale = true;
       job.status = "stale";
@@ -621,6 +631,7 @@ async function harness(options: {
     },
   };
   const service = createAppKnowledgeService({
+    mode: options.mode,
     store,
     provider,
     objectStore,
@@ -634,6 +645,12 @@ async function harness(options: {
     timeoutMs: 20,
     cancelCheckIntervalMs: 1,
     designSystemChunkBytes: options.designSystemChunkBytes,
+    saveAnalyzedFlows: async (input) => {
+      assert.equal(input.app, source.app);
+      assert.equal(input.platform, source.platform);
+      assert.equal(input.versionId, source.versionId);
+      savedFlows = structuredClone(input.flows);
+    },
     seedDesignSystemWorkingCopy: async (input) => {
       seedCalls.push(structuredClone(input));
       return options.seedOutcome ?? "seeded";
@@ -655,6 +672,8 @@ async function harness(options: {
     progress,
     get maximum() { return maximum; },
     get completed() { return completed; },
+    get flowCompleted() { return flowCompleted; },
+    get savedFlows() { return savedFlows; },
     get stale() { return stale; },
     get failed() { return failed; },
     get attachedCropRevision() { return attachedCropRevision; },
@@ -716,6 +735,30 @@ function seedCompletedScreens(
   state.job.sourceSha256 = "0".repeat(64);
   state.job.totalCount = count;
 }
+
+test("Flow-only mode analyzes and saves ordered Flows without generating a Design System", async () => {
+  const state = await harness({ mode: "flow-only" });
+
+  assert.equal(await state.service.generate("1"), "done", JSON.stringify(state.failed));
+  assert.deepEqual(
+    state.calls.map(({ evidenceId }) => evidenceId),
+    [
+      state.job.manifest?.[0].evidenceId,
+      state.job.manifest?.[1].evidenceId,
+    ],
+  );
+  assert.ok(state.job.manifest?.every(({ kind }) => kind === "flow_step"));
+  assert.equal(state.designChunkCalls.length, 0);
+  assert.equal(state.designMergeCalls.length, 0);
+  assert.equal(state.cropWrites.length, 0);
+  assert.equal(state.seedCalls.length, 0);
+  assert.equal(state.completed, undefined);
+  assert.equal(state.flowCompleted, true);
+  assert.equal(state.savedFlows?.[0].id, "flow-a");
+  assert.deepEqual(state.savedFlows?.[0].steps.map(({ evidence }) => evidence), [[2], [3]]);
+  assert.equal(state.savedFlows?.[0].steps[1].interaction, "Tap Continue");
+  assert.equal(state.savedFlows?.[0].insights?.purpose, "Complete flow-a");
+});
 
 test("synthesizes 610 completed screens in bounded chunks without expanding flow duplicates", async () => {
   const state = await harness({ designSystemChunkBytes: 24_000 });

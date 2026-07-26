@@ -4,6 +4,8 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SiteImportDialog } from './components/SiteImportDialog.tsx';
 import { filterAndSortSites, SitesPageView } from './components/SitesPage.tsx';
+import * as SitesPageModule from './components/SitesPage.tsx';
+import * as SiteCardModule from './components/SiteCard.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
 import { Lightbox } from './components/Lightbox.tsx';
 import { MediaGridCard } from './components/MediaGridCard.tsx';
@@ -14,6 +16,7 @@ const site: SiteSummary = {
   label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
   previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
   description: 'AI-powered visual data platform.',
+  logoUrl: '/site-logo.png',
   categories: ['Technology', 'Business'],
   styles: ['Minimal', 'Motion'],
   popularity: 91,
@@ -126,6 +129,13 @@ const detail: SiteVersionDetail = {
 test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
   const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
   assert.match(html, /data-sites-discovery="true"/);
+  assert.match(html, /class="[^"]*reference-discovery[^"]*reference-discovery--sites[^"]*"/);
+  assert.match(html, /class="[^"]*reference-discovery-nav[^"]*sites-top-nav[^"]*"/);
+  assert.match(html, /class="[^"]*reference-search-trigger[^"]*"/);
+  assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
+  assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
+  assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
+  assert.match(html, /class="[^"]*reference-discovery__facet--wide[^"]*"/);
   assert.match(html, /Categories/);
   assert.match(html, /Sections/);
   assert.match(html, /Styles/);
@@ -137,17 +147,102 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /Colorful/);
   assert.match(html, /Latest/);
   assert.match(html, /Most popular/);
+  assert.match(html, /data-reference-discovery-toolbar="true"/);
+  assert.match(html, /class="reference-discovery-toolbar__sort"/);
+  assert.match(html, /aria-label="Site ordering"/);
+  assert.match(html, /data-facet-preview="categories"/);
+  assert.match(html, /data-facet-preview="sections"/);
+  assert.doesNotMatch(html, /data-facet-preview="styles"/);
+  assert.match(html, /class="apps-discovery__hover-preview sites-discovery__hover-preview"/);
+  assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
+  assert.doesNotMatch(html, />Filter</);
+  assert.doesNotMatch(html, /sites-discovery__toolbar-actions/);
   assert.match(html, /V7/);
-  assert.match(html, /Search Sites/);
+  assert.match(html, /Open search and filters/);
+  assert.match(html, /Search on Web\.\.\./);
+  assert.match(html, /⌘K/);
+  assert.doesNotMatch(html, /Search Sites/);
+  assert.match(html, /data-discovery-card="true"/);
+  assert.match(html, /class="[^"]*reference-discovery__grid[^"]*"/);
+  assert.match(html, /class="discovery-card site-discovery-card"/);
+  assert.match(html, /class="discovery-card__media site-discovery-card__media"/);
+  assert.match(html, /class="discovery-card__identity site-discovery-card__identity"/);
   assert.match(html, /data-site-discovery-card="true"/);
   assert.match(html, /46 sections/);
   assert.match(html, /AI-powered visual data platform/);
   assert.match(html, /<video/);
-  assert.match(html, /<a[^>]+href="\/sites\/1\/versions\/2"[^>]+class="site-discovery-card__link"/);
+  assert.match(html, /<a[^>]+href="\/sites\/1\/versions\/2"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
   assert.doesNotMatch(html, /Showing 1 of 1 sites/);
   assert.match(html, /Import Site/);
   assert.equal((html.match(/>Import Site</g) ?? []).length, 1);
+});
+
+test('composes Sites through the shared reference discovery shell', () => {
+  const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /import \{ ReferenceDiscoveryPageShell \} from '\.\/ReferenceDiscoveryPageShell\.tsx';/);
+  assert.match(source, /<ReferenceDiscoveryPageShell[\s\S]*kind="sites"/);
+});
+
+test('builds Site hover previews from matching categories and captured sections', () => {
+  const module = (
+    SitesPageModule as typeof SitesPageModule & {
+      buildSiteFacetPreviewPools?: (sites: SiteSummary[]) => unknown;
+      visibleSiteFacetPreviews?: (pools: unknown) => Array<{ kind: string; label: string }>;
+      siteFacetPreview?: (
+        pools: unknown,
+        facet: { group: 'categories' | 'sections' | 'styles'; value: string },
+        random?: () => number,
+      ) => unknown;
+    }
+  );
+  const { buildSiteFacetPreviewPools, visibleSiteFacetPreviews, siteFacetPreview } = module;
+  assert.equal(typeof buildSiteFacetPreviewPools, 'function');
+  assert.equal(typeof visibleSiteFacetPreviews, 'function');
+  assert.equal(typeof siteFacetPreview, 'function');
+  if (!buildSiteFacetPreviewPools || !visibleSiteFacetPreviews || !siteFacetPreview) return;
+
+  const pools = buildSiteFacetPreviewPools([site]);
+  assert.deepEqual(
+    visibleSiteFacetPreviews(pools).map(({ kind, label }) => ({ kind, label })),
+    [
+      { kind: 'icon', label: 'Business' },
+      { kind: 'screen', label: 'Pricing' },
+    ],
+  );
+  const category = siteFacetPreview(pools, { group: 'categories', value: 'Business' }, () => 0);
+  const section = siteFacetPreview(pools, { group: 'sections', value: 'Pricing' }, () => 0);
+  const style = siteFacetPreview(pools, { group: 'styles', value: 'Minimal' }, () => 0);
+
+  assert.deepEqual(category, {
+    kind: 'icon',
+    app: 'V7',
+    label: 'Business',
+    iconUrl: '/site-logo.png',
+    media: [],
+  });
+  assert.deepEqual(section, {
+    kind: 'screen',
+    app: 'V7',
+    label: 'Pricing',
+    iconUrl: '/site-logo.png',
+    media: ['/api/sites/1/versions/2/pages/11/media'],
+  });
+  assert.equal(style, null);
+});
+
+test('prefetches bounded Site taxonomy previews and starts GSAP without waiting', () => {
+  const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const previewPools = useMemo\(\s*\(\) => buildSiteFacetPreviewPools\(sites\),\s*\[sites\],?\s*\)/);
+  assert.match(source, /requestIdleCallback/);
+  assert.match(source, /prefetchVisibleSiteFacetPreviews\(previewPools\)/);
+  assert.match(source, /siteFacetPreview\([\s\S]*siteFacetImageReady/);
+  assert.match(source, /if \(preview\) showPreview\(preview,\s*event\.clientX,\s*event\.clientY\)/);
+  assert.match(source, /prefetchNextSiteFacetPreview\(previewPools,\s*hoverFacet\)/);
+  assert.doesNotMatch(source, /await prefetchSiteFacetPreview|prefetchSiteFacetPreview\(preview\)\.then/);
+  assert.doesNotMatch(source, /siteFacetPreview\(sites,\s*hoverFacet\)/);
 });
 
 test('renders image-only Mobbin Site previews without a broken video element', () => {
@@ -167,6 +262,60 @@ test('renders image-only Mobbin Site previews without a broken video element', (
   assert.doesNotMatch(catalog, /<video/);
   assert.match(version, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
   assert.doesNotMatch(version, /<video/);
+});
+
+test('defers Site video assets until the card is near the viewport', () => {
+  const html = renderToStaticMarkup(
+    <SiteCardModule.SiteCard site={site} onOpen={() => undefined} />,
+  );
+
+  assert.match(html, /<video[^>]+preload="none"/);
+  assert.doesNotMatch(html, new RegExp(`src="${site.previewUrl}"`));
+  assert.doesNotMatch(html, /poster=/);
+});
+
+test('activates deferred Site media once near the viewport and disconnects', () => {
+  const observeSiteCardMedia = (
+    SiteCardModule as typeof SiteCardModule & {
+      observeSiteCardMedia?: (
+        target: Element,
+        onVisible: () => void,
+        createObserver: (
+          callback: IntersectionObserverCallback,
+          options: IntersectionObserverInit,
+        ) => Pick<IntersectionObserver, 'observe' | 'disconnect'>,
+      ) => () => void;
+    }
+  ).observeSiteCardMedia;
+  assert.equal(typeof observeSiteCardMedia, 'function');
+  if (!observeSiteCardMedia) return;
+
+  let callback: IntersectionObserverCallback | undefined;
+  let visibleCalls = 0;
+  let disconnectCalls = 0;
+  const target = {} as Element;
+  const cleanup = observeSiteCardMedia(
+    target,
+    () => { visibleCalls += 1; },
+    (next, options) => {
+      callback = next;
+      assert.deepEqual(options, { rootMargin: '320px 0px', threshold: 0.01 });
+      return {
+        observe: (value) => assert.equal(value, target),
+        disconnect: () => { disconnectCalls += 1; },
+      };
+    },
+  );
+
+  callback?.(
+    [{ isIntersecting: true } as IntersectionObserverEntry],
+    {} as IntersectionObserver,
+  );
+  assert.equal(visibleCalls, 1);
+  assert.equal(disconnectCalls, 1);
+
+  cleanup();
+  assert.equal(disconnectCalls, 2);
 });
 
 test('filters Sites by name, version, and source page title', () => {
@@ -249,6 +398,28 @@ test('keeps shared Sites chrome visible for errors and no-result searches', () =
   assert.match(noResults, /No Sites match this search/);
 });
 
+test('keeps shared Sites chrome mounted while the catalog loads', () => {
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      sites={[]}
+      loading
+      isAdmin={false}
+      query=""
+      onQueryChange={() => undefined}
+      onRefresh={() => undefined}
+      onImport={() => undefined}
+    />,
+  );
+
+  assert.match(html, /data-reference-gallery-shell="sites"/);
+  assert.match(html, /aria-label="Reference type"/);
+  assert.match(html, /Open search and filters/);
+  assert.match(html, /Search on Web\.\.\./);
+  assert.match(html, /aria-label="Loading Sites"/);
+  assert.equal((html.match(/data-sites-discovery-skeleton="true"/g) ?? []).length, 6);
+  assert.doesNotMatch(html, /No Sites imported yet/);
+});
+
 test('keeps the Site import dialog URL-only', () => {
   const html = renderToStaticMarkup(<SiteImportDialog isOpen onClose={() => undefined} onExisting={() => undefined} />);
   assert.match(html, /Analyze one public page/);
@@ -259,7 +430,7 @@ test('keeps the Site import dialog URL-only', () => {
 
 test('renders evidence-backed Site analysis without raw evidence values', () => {
   const html = renderToStaticMarkup(
-    <SiteVersionView detail={detail} isAdmin={false} section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={detail} isAdmin section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
   );
   assert.match(html, />Analysis</);
   assert.match(html, /GSAP/);
@@ -269,6 +440,17 @@ test('renders evidence-backed Site analysis without raw evidence values', () => 
   assert.match(html, /Scroll-linked hero/);
   assert.match(html, /Mobile disables the hero ScrollTrigger/);
   assert.doesNotMatch(html, /GSAP 3\.15\.0<\/[^>]+>.*runtime/s);
+});
+
+test('shows only Preview and Sections to normal Site users', () => {
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={detail} isAdmin={false} section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+  );
+  assert.match(html, /aria-label="Preview"/);
+  assert.match(html, /aria-label="Sections"/);
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Preview"/);
+  assert.doesNotMatch(html, /aria-label="Analysis"/);
+  assert.doesNotMatch(html, /Evidence-backed claims/);
 });
 
 test('renders images and native videos through the shared media primitives', () => {
@@ -316,12 +498,26 @@ test('renders native video in the shared lightbox', () => {
   assert.match(html, /Home hero — 1 of 1/);
 });
 
+test('uses the shared neutral tokens for Site media overlays', () => {
+  const lightboxSource = readFileSync(new URL('./components/Lightbox.tsx', import.meta.url), 'utf8');
+  const inspectorSource = readFileSync(
+    new URL('./components/SiteSectionInspector.tsx', import.meta.url),
+    'utf8',
+  );
+  const source = `${lightboxSource}\n${inspectorSource}`;
+
+  assert.match(source, /var\(--color-background-body\)/);
+  assert.match(source, /var\(--color-text-primary\)/);
+  assert.match(source, /var\(--color-text-secondary\)/);
+  assert.match(source, /var\(--shadow-high\)/);
+  assert.doesNotMatch(source, /#fff|#d4d4d8|rgba\(10,\s*10,\s*11/);
+});
+
 test('renders the Mobbin Site-version hierarchy without Back or tab counts', () => {
   const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
-  assert.match(html, /data-site-detail="true"/);
-  assert.match(html, /data-site-detail-hero="true"/);
+  assert.match(html, /data-reference-detail="site"/);
   assert.doesNotMatch(html, /Back to Sites/);
-  assert.match(html, /<h1><span>V7 —<\/span><span>AI-powered visual data platform\.<\/span><\/h1>/);
+  assert.match(html, /<h1>V7<\/h1><p>AI-powered visual data platform\.<\/p>/);
   assert.match(html, /<span>Category<\/span>/);
   assert.match(html, /<span>Style<\/span>/);
   assert.match(html, />Latest</);
@@ -337,8 +533,14 @@ test('renders the Mobbin Site-version hierarchy without Back or tab counts', () 
   assert.match(html, /data-site-preview-stage="true"/);
   assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+controls=""[^>]+preload="metadata"/);
   assert.doesNotMatch(html, />Overview</);
-  assert.doesNotMatch(html, />Pages</);
+  assert.doesNotMatch(html, /aria-label="Pages"/);
   assert.doesNotMatch(html, /16 pages/);
+});
+
+test('renders Site detail through the shared reference shell', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /import \{ ReferenceDetailShell \} from '.\/ReferenceDetailShell/);
+  assert.match(source, /<ReferenceDetailShell/);
 });
 
 test('filters Sections by keyword and renders patterns without dumping OCR text', () => {

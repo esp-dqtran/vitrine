@@ -13,6 +13,7 @@ import { generateThumbnail } from "./imageThumbnail.ts";
 
 const LOGIN_WAIT_MS = 30 * 60_000; // time to log in manually in the opened window
 const SCROLL_STEP = 500;
+const CARD_SELECTION_SCROLL_STEP = 800;
 const SCROLL_DELAY_MS = 400;
 const MAX_SCROLL_ITERATIONS = 500; // ponytail: hard cap so a page with truly infinite scroll can't hang forever
 const STABLE_AT_BOTTOM_STREAK = 6;
@@ -66,8 +67,15 @@ export async function downloadWithFallback<T>(
   primary: () => Promise<T[]>,
   fallback: () => Promise<T[]>,
 ): Promise<T[]> {
-  const result = await primary();
-  return result.length > 0 ? result : fallback();
+  try {
+    const result = await primary();
+    if (result.length > 0) return result;
+  } catch {
+    // Row-level Flow controls are hover-revealed and Mobbin can temporarily place a
+    // full-page hit target above them. The detail page exposes the same export without
+    // requiring that fragile row hover, so interaction errors belong on this fallback.
+  }
+  return fallback();
 }
 
 async function newPageAndGoto(
@@ -191,46 +199,75 @@ export function shouldSelectCard(tab: BulkTab, cardAlt: string, appAltPrefix: st
   return tab === "ui-elements" || cardAlt.toLowerCase().startsWith(appAltPrefix.toLowerCase());
 }
 
-async function selectAllOwnCards(page: Page, appAltPrefix: string, tab: BulkTab): Promise<{ clicked: number; skipped: number }> {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(500);
+export function nextSelectionSweep(
+  selected: number,
+  reselected: number,
+  shown: number,
+  stagnantPasses: number,
+): { selected: number; stagnantPasses: number; shouldContinue: boolean } {
+  const nextSelected = Math.max(selected, reselected);
+  const nextStagnantPasses = reselected > selected ? 0 : stagnantPasses + 1;
+  return {
+    selected: nextSelected,
+    stagnantPasses: nextStagnantPasses,
+    shouldContinue: nextSelected < shown && nextStagnantPasses < 3,
+  };
+}
+
+async function selectAllOwnCards(
+  page: Page,
+  appAltPrefix: string,
+  tab: BulkTab,
+  resetToTop = true,
+): Promise<{ clicked: number; skipped: number }> {
+  if (resetToTop) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+  }
 
   let totalClicked = 0;
   let totalSkipped = 0;
   let stableAtBottom = 0;
-  for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
-    const { clicked, skipped } = await page.evaluate(({ prefix, includeEveryCard }) => {
-      // Only grids that actually hold screen links — excludes the unrelated "similar apps"
-      // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
-      const grids = Array.from(document.querySelectorAll("div.grid")).filter(
-        (g) => g.className.includes("content-start") && g.querySelectorAll('a[href*="/screens/"]').length > 0
-      );
-      let clicked = 0;
-      let skipped = 0;
-      for (const g of grids) {
-        for (const a of Array.from(g.querySelectorAll('a[href*="/screens/"]'))) {
-          const cardAlt = (a.querySelector("img")?.getAttribute("alt") || "").toLowerCase();
-          const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
-          if (!checkbox) continue;
-          if (!includeEveryCard && !cardAlt.startsWith(prefix)) {
-            skipped++;
-            continue;
-          }
-          checkbox.click();
-          clicked++;
+  const selectVisibleCards = () => page.evaluate(({ prefix, includeEveryCard }) => {
+    // Only grids that actually hold screen links — excludes the unrelated "similar apps"
+    // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
+    const grids = Array.from(document.querySelectorAll("div.grid")).filter(
+      (g) => g.className.includes("content-start") && g.querySelectorAll('a[href*="/screens/"]').length > 0
+    );
+    let clicked = 0;
+    let skipped = 0;
+    for (const g of grids) {
+      for (const a of Array.from(g.querySelectorAll('a[href*="/screens/"]'))) {
+        const cardAlt = (a.querySelector("img")?.getAttribute("alt") || "").toLowerCase();
+        const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
+        if (!checkbox) continue;
+        if (!includeEveryCard && !cardAlt.startsWith(prefix)) {
+          skipped++;
+          continue;
         }
+        checkbox.click();
+        clicked++;
       }
-      return { clicked, skipped };
-    }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements" });
-    totalClicked += clicked;
-    totalSkipped += skipped;
+    }
+    return { clicked, skipped };
+  }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements" });
+
+  for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
+    const first = await selectVisibleCards();
+    // Mobbin mounts every Shopee checkbox, but React can replace a just-clicked virtual
+    // card before its selection is committed. One settled recheck of the same viewport
+    // recovered all 1,625 cards in a live dry run; without it, exactly 65 clicks vanished.
+    await page.waitForTimeout(150);
+    const settled = await selectVisibleCards();
+    totalClicked += first.clicked + settled.clicked;
+    totalSkipped += first.skipped;
 
     const atBottom = await page.evaluate(
       () => window.scrollY + window.innerHeight >= document.body.scrollHeight - 300
     );
     stableAtBottom = atBottom ? stableAtBottom + 1 : 0;
 
-    await page.evaluate((step) => window.scrollBy(0, step), SCROLL_STEP);
+    await page.evaluate((step) => window.scrollBy(0, step), CARD_SELECTION_SCROLL_STEP);
     await page.waitForTimeout(SCROLL_DELAY_MS);
   }
   return { clicked: totalClicked, skipped: totalSkipped };
@@ -518,10 +555,14 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   }
 
   // Best-effort app metadata from the Mobbin app page, persisted after the app row exists.
+  //   name:     the visible heading, kept separate from the UUID-disambiguated route slug.
   //   icon:     the header <img> whose alt is the app name itself (screens are "<App> screen").
   //   category: Mobbin links the app's category (e.g. "Finance") to a category browse page.
   const pageMeta = await page.evaluate(() => {
-    const app = (document.querySelector("h1")?.textContent ?? "").split(/[—-]/)[0].trim().toLowerCase();
+    const displayName = (document.querySelector("h1")?.textContent ?? "")
+      .split(/\s+[—-]\s+/)[0]
+      .trim();
+    const app = displayName.toLowerCase();
     let iconUrl: string | null = null;
     if (app) {
       const icon = Array.from(document.querySelectorAll("img")).find((img) => {
@@ -532,8 +573,12 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     }
     const catLink = Array.from(document.querySelectorAll("a")).find((a) => /categor/i.test(a.getAttribute("href") ?? ""));
     const category = catLink ? (catLink.textContent ?? "").trim() || null : null;
-    return { iconUrl, category };
-  }).catch(() => ({ iconUrl: null as string | null, category: null as string | null }));
+    return { displayName, iconUrl, category };
+  }).catch(() => ({
+    displayName: null as string | null,
+    iconUrl: null as string | null,
+    category: null as string | null,
+  }));
   const discovered = await shownTotalCount(page);
   if (discovered === null) {
     await closeContext();
@@ -571,16 +616,26 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
     console.log(`[${appName}] Pass 1: selected ${selected} of ${shown ?? "?"} ${label} (${skipped} filtered as other-app).`);
     // A single scroll pass can miss cards whose checkbox hadn't finished rendering when that
     // tick ran (lazy-loaded content racing the scroll). Re-run — it only clicks cards still
-    // showing aria-pressed="false", so this is strictly additive — until the toolbar count
-    // matches Mobbin's own total or two passes in a row make no further progress (means
-    // whatever's left is genuinely unselectable, e.g. cross-app cards Mobbin's total doesn't
-    // exclude, not worth looping forever over).
-    for (let extraPass = 0; extraPass < 5 && shown != null && selected < shown; extraPass++) {
-      await selectAllOwnCards(page, appAltPrefix, tab);
+    // showing aria-pressed="false", so this is strictly additive. A large virtualized grid
+    // can plateau for one or two full sweeps while its next card batch settles, so do not
+    // declare the remaining cards unselectable until three consecutive sweeps make no
+    // progress. The exact toolbar/Showing count remains the completion gate.
+    let stagnantPasses = 0;
+    for (let extraPass = 0; extraPass < 8 && shown != null && selected < shown; extraPass++) {
+      // The initial sweep already selected every rendered card and stopped at the bottom.
+      // Stay there for retries so Mobbin can append the next lazy batch. Restarting at the
+      // top made Shopee re-render all 1,560 selected cards before it could reach the 65
+      // missing tail cards, turning each no-progress check into a 10+ minute full recrawl.
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(1_500);
+      await selectAllOwnCards(page, appAltPrefix, tab, false);
       const reselected = (await toolbarSelectedCount(page)) ?? selected;
-      if (reselected <= selected) break;
-      selected = reselected;
-      console.log(`[${appName}] Pass ${extraPass + 2}: selected ${selected} of ${shown} ${label}.`);
+      const madeProgress = reselected > selected;
+      const sweep = nextSelectionSweep(selected, reselected, shown, stagnantPasses);
+      selected = sweep.selected;
+      stagnantPasses = sweep.stagnantPasses;
+      console.log(`[${appName}] Pass ${extraPass + 2}: selected ${selected} of ${shown} ${label}${madeProgress ? "." : ` (no progress ${stagnantPasses}/3).`}`);
+      if (!sweep.shouldContinue) break;
     }
     if (shown != null && selected < shown) {
       console.warn(`[${appName}] Selected ${selected}/${shown} ${label} after retries — some cards may be genuinely unselectable.`);
@@ -629,7 +684,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   }
 
   rmSync(downloadDir, { recursive: true, force: true });
-  if (imported > 0 && (pageMeta.iconUrl || pageMeta.category)) await setAppMeta(appName, pageMeta).catch(() => {});
+  if (pageMeta.displayName || pageMeta.iconUrl || pageMeta.category) await setAppMeta(appName, pageMeta).catch(() => {});
   const target = catalogCaptureTarget(discovered);
   const captured = capturedIds.size;
   const complete = captured === target;

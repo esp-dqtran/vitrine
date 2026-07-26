@@ -32,7 +32,7 @@ export function BillingSuccessView({ state, error = '', onRetry, onContinue }: {
         ? 'Payment received'
         : 'Could not confirm your plan';
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24 }}>
+    <main className="vitrine-page" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24 }}>
       <section style={{ width: 'min(520px, 100%)', padding: 32, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', background: 'var(--color-background-surface)', textAlign: 'center' }}>
         {state === 'checking' && <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}><Spinner size="lg" /></div>}
         <Heading level={2}>{title}</Heading>

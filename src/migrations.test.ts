@@ -82,6 +82,15 @@ const migrationDefinitions = [
       /CREATE TRIGGER site_sections_search_queue/,
     ],
   },
+  {
+    file: "0032_catalog_feature_documents.sql",
+    patterns: [
+      /ALTER COLUMN user_id DROP NOT NULL/,
+      /ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'/,
+      /visibility = 'catalog' AND user_id IS NULL/,
+      /feature_documents_catalog_flow_identity_idx/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {

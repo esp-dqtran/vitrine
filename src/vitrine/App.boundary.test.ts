@@ -12,10 +12,12 @@ test('keeps the Apps shell independent from job-list loading', async () => {
 
 test('serializes Flow and step selection through the controlled App route', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
-  assert.match(source, /onFlowChange=\{\(flow, step, platform, version\) => navigate\(\{/);
+  assert.match(source, /initialFlowView=\{route\.flowView\}/);
+  assert.match(source, /onFlowChange=\{\(flow, step, flowView, platform, version\) => navigate\(\{/);
   assert.match(source, /section: 'flows'/);
   assert.match(source, /\.\.\.\(flow \? \{ flow \} : \{\}\)/);
   assert.match(source, /\.\.\.\(step \? \{ step \} : \{\}\)/);
+  assert.match(source, /\.\.\.\(flowView \? \{ flowView \} : \{\}\)/);
 });
 
 test('keeps adaptive Search and Quick Search in dedicated state boundaries', async () => {
@@ -33,64 +35,47 @@ test('keeps adaptive Search and Quick Search in dedicated state boundaries', asy
   assert.doesNotMatch(`${pageSource}\n${quickSource}\n${apiSource}`, /\/api\/jobs|jobsApi|useJobs/);
 });
 
-test('keeps Sites routes ahead of Apps branches and free from job-list reads', async () => {
+test('lazy-loads application pages behind the persistent application surface', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/AppsDiscoveryPage\.tsx['"]\)/);
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
+  assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
+  assert.match(source, /<ApplicationSurface/);
+});
+
+test('keeps Admin dashboard ownership out of the normal application renderer', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /components\/UsersPage/);
+  assert.doesNotMatch(source, /components\/Sidebar/);
+  assert.doesNotMatch(source, /\buseAdminFrame\b/);
+  assert.doesNotMatch(source, /\badminSideNav\b/);
+  assert.doesNotMatch(source, /<UsersPage/);
+  assert.doesNotMatch(source, /sideNav=/);
+});
+
+test('keeps Sites data independent from Apps and free from job-list reads', async () => {
   const [appSource, sitesSource, sitesApiSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./sitesApi.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.ok(appSource.indexOf("route.name === 'sites'") < appSource.indexOf("if (route.name === 'apps')"));
-  assert.ok(appSource.indexOf("route.name === 'site-version'") < appSource.indexOf("route.name === 'app' && (detailError"));
+  assert.match(appSource, /case 'sites':/);
+  assert.match(appSource, /case 'site-version':/);
+  assert.match(appSource, /useApps\(user\?\.role, route\.name === 'apps'\)/);
   assert.doesNotMatch(`${appSource}\n${sitesSource}\n${sitesApiSource}`, /\buseJobs\s*\(/);
   assert.doesNotMatch(`${sitesSource}\n${sitesApiSource}`, /fetch\(\s*['"]\/api\/jobs['"]\s*\)/);
   assert.doesNotMatch(sitesSource, /setInterval/);
 });
 
-test('renders both Sites routes outside the admin AppShell', async () => {
-  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
-  const catalogBranch = source.slice(
-    source.indexOf("if (route.name === 'sites')"),
-    source.indexOf("if (route.name === 'site-version')"),
-  );
-  const detailBranch = source.slice(
-    source.indexOf("if (route.name === 'site-version')"),
-    source.indexOf("if (researchProjectsEnabled"),
-  );
-
-  assert.doesNotMatch(catalogBranch, /return frame\(/);
-  assert.doesNotMatch(detailBranch, /return frame\(/);
-});
-
-test('renders Apps through its discovery page outside the admin AppShell', async () => {
-  const [appSource, sitesSource, sitesNavSource] = await Promise.all([
-    readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('./components/SitesTopNav.tsx', import.meta.url), 'utf8'),
-  ]);
-
-  assert.match(appSource, /from ['"]\.\/components\/AppsDiscoveryPage\.tsx['"]/);
-  assert.match(appSource, /if \(route\.name === 'apps'\) \{[\s\S]*?<AppsDiscoveryPage/);
-  assert.doesNotMatch(appSource, /if \(route\.name === 'apps'\) \{[\s\S]{0,160}?return frame\(/);
-  assert.match(sitesSource, /data-sites-discovery="true"/);
-  assert.match(sitesSource, /data-reference-gallery-shell="sites"/);
-  assert.match(sitesSource, /<SitesTopNav/);
-  assert.match(sitesNavSource, /<ReferenceDiscoveryTopNav/);
-  assert.match(sitesNavSource, /<SearchTrigger/);
-  assert.doesNotMatch(sitesNavSource, /<SearchInput/);
-  assert.doesNotMatch(sitesSource, /<ReferenceGalleryShell/);
-});
-
 test('opens the shared catalog search overlay from Sites', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
-  const catalogBranch = source.slice(
-    source.indexOf("if (route.name === 'sites')"),
-    source.indexOf("if (route.name === 'site-version')"),
-  );
-
-  assert.match(catalogBranch, /onOpenSearch=\{\(seed\) => void openPalette\('sites', seed\)\}/);
-  assert.match(catalogBranch, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
-  assert.match(catalogBranch, /\{discoveryOverlays\}/);
+  assert.match(source, /onOpenSearch=\{\(seed\) => void openPalette\('sites', seed\)\}/);
+  assert.match(source, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
+  assert.match(source, /<ApplicationSurface/);
+  assert.match(source, /overlays=\{discoveryOverlays\}/);
 });
 
 test('owns one scoped search session and seeds it from each gallery', async () => {
@@ -98,9 +83,11 @@ test('owns one scoped search session and seeds it from each gallery', async () =
 
   assert.match(source, /createSearchSession/);
   assert.match(source, /useSyncExternalStore/);
+  assert.match(source, /updateLocation/);
   assert.match(source, /openPalette\('sites', seed\)/);
   assert.match(source, /openPalette\('apps', seed\)/);
   assert.doesNotMatch(source, /const \[paletteOpen, setPaletteOpen\]/);
+  assert.doesNotMatch(source, /window\.history/);
 });
 
 test('maps each gallery taxonomy into only its compatible search filters', async () => {
@@ -129,9 +116,11 @@ test('keeps Apps retry and terminal no-results states inside its discovery page'
     readFile(new URL('./useApps.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(hookSource, /return \{[\s\S]*refresh,[\s\S]*loadMore \}/);
+  assert.match(hookSource, /return \{[\s\S]*refresh,[\s\S]*loadMore,[\s\S]*\};/);
+  assert.match(hookSource, /loadMoreError/);
   assert.match(appSource, /refresh: refreshApps/);
   assert.match(appSource, /onRetry=\{\(\) => void refreshApps\(\)\}/);
+  assert.match(appSource, /onRetryLoadMore=\{\(\) => void loadMore\(\)\}/);
   assert.match(pageSource, /title: 'Could not load crawled screens'/);
   assert.match(pageSource, /title: 'No Apps match these filters'/);
   assert.match(pageSource, /label="Retry"/);
@@ -159,8 +148,10 @@ test('loads additional app pages only when the gallery sentinel approaches the v
   assert.match(appSource, /appsSentinelRef/);
   assert.match(appSource, /void loadMore\(\)/);
   assert.match(appSource, /sentinelRef=\{appsSentinelRef\}/);
-  assert.match(pageSource, /<Spinner size="sm"/);
-  assert.doesNotMatch(`${appSource}\n${pageSource}`, /Loading more apps/);
+  assert.match(appSource, /rootMargin: '900px 0px'/);
+  assert.doesNotMatch(pageSource, /<Spinner size="sm"/);
+  assert.match(pageSource, /<AppCardSkeleton/);
+  assert.doesNotMatch(`${appSource}\n${pageSource}`, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 
 test('loads the member catalog one page at a time near the gallery viewport', async () => {
@@ -192,6 +183,29 @@ test('separates gallery and detail route loaders', async () => {
   assert.doesNotMatch(detailSource, /fetchAppDetailPage|limit=48/);
   assert.doesNotMatch(detailSource, /fetch\(['"]\/api\/apps['"]/);
   assert.doesNotMatch(appSource, /initialVersion=\{detail\?\.version\}|initialNextCursor=/);
+});
+
+test('opens App detail as the only active transient surface', async () => {
+  const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
+  const closeHelper = source.slice(
+    source.indexOf('const closeDiscoveryOverlays ='),
+    source.indexOf('const openApp = async'),
+  );
+  const openApp = source.slice(
+    source.indexOf('const openApp = async'),
+    source.indexOf('const confirmUnlock = async'),
+  );
+
+  assert.match(closeHelper, /setCollectionsOpen\(false\)/);
+  assert.match(closeHelper, /setSettingsOpen\(false\)/);
+  assert.match(closeHelper, /setLoginOpen\(false\)/);
+  assert.match(closeHelper, /setImportOpen\(false\)/);
+  assert.match(closeHelper, /setAdvancedPreview\(null\)/);
+  assert.match(closeHelper, /searchSession\.close\(\)/);
+  assert.ok(
+    openApp.indexOf('closeDiscoveryOverlays()') < openApp.indexOf("navigate({ name: 'app', appId })"),
+    'transient overlays should close before navigating to App detail',
+  );
 });
 
 test('does not reload a retained gallery merely because it is re-enabled', async () => {

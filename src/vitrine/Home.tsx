@@ -297,7 +297,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
   useRevealOnScroll(statsRef);
   useRevealOnScroll(ctaRef);
   return (
-    <div style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
+    <div className="vitrine-page" style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
       {/* header — glass pill nav */}
       <div
         style={{
@@ -313,11 +313,11 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
           gap: 20,
           padding: '11px 12px 11px 22px',
           borderRadius: 999,
-          background: 'light-dark(rgba(255,255,255,0.55), rgba(31,31,34,0.65))',
+          background: 'color-mix(in srgb, var(--color-background-body) 86%, transparent)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid light-dark(rgba(255,255,255,0.6), rgba(255,255,255,0.1))',
-          boxShadow: 'light-dark(0 8px 30px rgba(24,24,27,0.08), 0 8px 30px rgba(0,0,0,0.4)), inset 0 1px 0 light-dark(rgba(255,255,255,0.5), rgba(255,255,255,0.06))',
+          border: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-low)',
         }}
       >
         <Button type="button" label="Vitrine" variant="ghost" size="lg" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={24} height={24} style={{ display: 'block' }} />} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
@@ -360,7 +360,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
       </div>
 
       {/* find patterns (tabbed) */}
-      <div ref={patternsRef} style={{ background: 'var(--color-background-card, var(--color-background-surface))', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+      <div ref={patternsRef} style={{ background: 'var(--color-background-surface)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <Section style={{ padding: '80px 32px' }}>
           <div style={{ maxWidth: 560, marginBottom: 40 }}>
             <Heading level={2}>Find design patterns in seconds</Heading>
@@ -380,13 +380,13 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
       </Section>
 
       {/* final CTA band */}
-      <div ref={ctaRef} style={{ background: '#171717' }}>
+      <div ref={ctaRef} style={{ background: 'var(--color-background-surface)', borderBlock: '1px solid var(--color-border)' }}>
         <Section style={{ padding: '72px 32px', textAlign: 'center' }}>
-          <Heading level={2}><span style={{ color: '#fff' }}>Start studying the apps you admire.</span></Heading>
+          <Heading level={2}>Start studying the apps you admire.</Heading>
           <div style={{ margin: '12px auto 28px', maxWidth: 460 }}>
-            <Text type="large"><span style={{ color: '#a1a1aa' }}>Free to browse. No card required to unlock your first 3 apps.</span></Text>
+            <Text type="large" color="secondary">Free to browse. No card required to unlock your first 3 apps.</Text>
           </div>
-          <Button variant="primary" size="lg" label="Start browsing free" clickAction={onLogin} style={{ background: '#fff', color: '#18181b' }} />
+          <Button variant="primary" size="lg" label="Start browsing free" clickAction={onLogin} />
         </Section>
       </div>
 
