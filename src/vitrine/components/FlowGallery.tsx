@@ -3,7 +3,7 @@ import type { FlowTreeGroup } from '../flowTree.ts';
 import { FlowCard } from './FlowCard.tsx';
 import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
 
-const FLOW_BATCH_SIZE = 24;
+const FLOW_BATCH_SIZE = 8;
 
 export function FlowGallery({
   groups,

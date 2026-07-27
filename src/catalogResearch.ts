@@ -18,7 +18,7 @@ export interface CatalogSearchItem {
   states: string[];
   layoutPatterns: string[];
   componentNames: string[];
-  appCategory?: string;
+  appCategories: string[];
   searchText: string;
 }
 
@@ -39,7 +39,7 @@ export interface CatalogResearchSource {
   images: CrawledImage[];
   systems: DesignSystemSnapshot[];
   flows: Array<{ app: string; flows: DesignFlow[] }>;
-  appCategories?: Record<string, string>;
+  appCategories?: Record<string, string[]>;
 }
 
 export interface CatalogSearchFacets {
@@ -87,8 +87,12 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
       description: `${appImages.length} observed web screens`,
       evidenceIds: appImages.map(({ id }) => id),
       states: [],
-      layoutPatterns: [], componentNames: [], appCategory: appCategories[app],
-      searchText: [app, ...appImages.flatMap(({ analysis }) => [analysis?.pageType, analysis?.productArea])].filter(Boolean).join(" "),
+      layoutPatterns: [], componentNames: [], appCategories: appCategories[app] ?? [],
+      searchText: [
+        app,
+        ...(appCategories[app] ?? []),
+        ...appImages.flatMap(({ analysis }) => [analysis?.pageType, analysis?.productArea]),
+      ].filter(Boolean).join(" "),
     });
   }
 
@@ -108,14 +112,14 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
       states: analysis?.visibleStates ?? [],
       layoutPatterns: analysis?.layoutPatterns ?? [],
       componentNames: analysis?.componentNames ?? [],
-      appCategory: appCategories[image.app],
+      appCategories: appCategories[image.app] ?? [],
       searchText: [
         image.app, title, image.description, analysis?.description, analysis?.purpose,
         analysis?.productArea, analysis?.theme, ...(analysis?.visibleStates ?? []),
         ...(analysis?.componentNames ?? []),
         ...(analysis?.visibleText ?? []), ...(analysis?.layoutPatterns ?? []), ...(analysis?.icons ?? []),
         ...(analysis?.imagery ?? []), ...(analysis?.contentPatterns ?? []), ...(analysis?.interactionPatterns ?? []),
-        appCategories[image.app],
+        ...(appCategories[image.app] ?? []),
       ].filter(Boolean).join(" "),
     });
   }
@@ -130,8 +134,8 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
         description: component.description,
         evidenceIds: evidenceForComponent(component),
         states: component.variants.map(({ name }) => name),
-        layoutPatterns: [], componentNames: [component.name], appCategory: appCategories[system.app],
-        searchText: [system.app, component.name, component.category, component.description,
+        layoutPatterns: [], componentNames: [component.name], appCategories: appCategories[system.app] ?? [],
+        searchText: [system.app, ...(appCategories[system.app] ?? []), component.name, component.category, component.description,
           ...component.variants.flatMap(({ name, description }) => [name, description])].join(" "),
       });
     }
@@ -144,12 +148,12 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
         description: `${token.value} · ${token.role}`,
         evidenceIds: token.evidence,
         states: [],
-        layoutPatterns: [], componentNames: [], appCategory: appCategories[system.app],
-        searchText: [system.app, token.kind, token.name, token.value, token.role].join(" "),
+        layoutPatterns: [], componentNames: [], appCategories: appCategories[system.app] ?? [],
+        searchText: [system.app, ...(appCategories[system.app] ?? []), token.kind, token.name, token.value, token.role].join(" "),
       });
     }
     for (const rule of system.rules ?? []) {
-      items.push({ id: `pattern:${system.app}:${rule.id}`, kind: 'pattern', app: system.app, title: rule.name, description: rule.description, evidenceIds: rule.evidence, states: [], layoutPatterns: rule.kind === 'layout' ? [rule.name] : [], componentNames: [], appCategory: appCategories[system.app], searchText: [system.app, rule.kind, rule.name, rule.description].join(' ') });
+      items.push({ id: `pattern:${system.app}:${rule.id}`, kind: 'pattern', app: system.app, title: rule.name, description: rule.description, evidenceIds: rule.evidence, states: [], layoutPatterns: rule.kind === 'layout' ? [rule.name] : [], componentNames: [], appCategories: appCategories[system.app] ?? [], searchText: [system.app, ...(appCategories[system.app] ?? []), rule.kind, rule.name, rule.description].join(' ') });
     }
   }
 
@@ -163,8 +167,8 @@ function indexCatalog({ images, systems, flows, appCategories = {} }: CatalogRes
         description: flow.description,
         evidenceIds: evidenceForFlow(flow),
         states: [],
-        layoutPatterns: [], componentNames: [], appCategory: appCategories[entry.app],
-        searchText: [entry.app, flow.title, flow.description, ...flow.tags, ...flow.steps.map(({ label }) => label)].join(" "),
+        layoutPatterns: [], componentNames: [], appCategories: appCategories[entry.app] ?? [],
+        searchText: [entry.app, ...(appCategories[entry.app] ?? []), flow.title, flow.description, ...flow.tags, ...flow.steps.map(({ label }) => label)].join(" "),
       });
     }
   }
@@ -190,7 +194,7 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
     states: unique(index.flatMap(({ states }) => states)).sort(),
     layouts: unique(index.flatMap(({ layoutPatterns }) => layoutPatterns)).sort(),
     components: unique(index.flatMap(({ componentNames }) => componentNames)).sort(),
-    appCategories: unique(index.flatMap(({ appCategory }) => appCategory ? [appCategory] : [])).sort(),
+    appCategories: unique(index.flatMap(({ appCategories }) => appCategories)).sort(),
   };
   for (const item of index) facets.kinds[item.kind] += 1;
 
@@ -206,7 +210,7 @@ export function searchCatalog(source: CatalogResearchSource, options: CatalogSea
       && (!options.state || item.states.includes(options.state))
       && (!options.layout || item.layoutPatterns.includes(options.layout))
       && (!options.component || item.componentNames.includes(options.component))
-      && (!options.appCategory || item.appCategory === options.appCategory))
+      && (!options.appCategory || item.appCategories.includes(options.appCategory)))
     .sort((a, b) => b.score - a.score || kindOrder.indexOf(a.item.kind) - kindOrder.indexOf(b.item.kind) || a.item.title.localeCompare(b.item.title))
     .slice(0, Math.min(Math.max(options.limit ?? 50, 1), 100))
     .map(({ item: { searchText: _searchText, ...item } }) => item);

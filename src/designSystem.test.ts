@@ -56,7 +56,12 @@ test("hydrates evidence ids with public image data", () => {
     { id: 7, image_url: "mobbin-bulk:0123456789abcdef", description: "Toolbar" },
   ]);
   assert.deepEqual(hydrated.tokens[0].evidence, [
-    { imageId: 7, imageUrl: "/api/media/linear/0123456789abcdef", description: "Toolbar" },
+    {
+      imageId: 7,
+      imageUrl: "/api/media/linear/0123456789abcdef",
+      thumbnailUrl: "/api/media/linear/0123456789abcdef?variant=thumb",
+      description: "Toolbar",
+    },
   ]);
 });
 
@@ -121,6 +126,10 @@ test("hydrates ordered flow steps without changing curator order", () => {
     "/api/media/linear/0123456789abcdef",
     "/api/media/linear/fedcba9876543210",
   ]);
+  assert.deepEqual(hydrated.flows[0].steps.map((step) => step.evidence[0].thumbnailUrl), [
+    "/api/media/linear/0123456789abcdef?variant=thumb",
+    "/api/media/linear/fedcba9876543210?variant=thumb",
+  ]);
 });
 
 test("hydrates Flow insight evidence with the same captured images", () => {
@@ -152,6 +161,7 @@ test("hydrates Flow insight evidence with the same captured images", () => {
   assert.deepEqual(hydrated.flows[0].insights?.evidence, [{
     imageId: 7,
     imageUrl: "/api/media/linear/0123456789abcdef",
+    thumbnailUrl: "/api/media/linear/0123456789abcdef?variant=thumb",
     description: "Email",
   }]);
 });

@@ -13,8 +13,8 @@ const flow: DesignFlow<EvidenceView> = {
   description: '',
   tags: [],
   steps: [
-    { label: 'Review cart', evidence: [{ imageId: 42, imageUrl: '/api/media/42' }] },
-    { label: 'Pay', evidence: [{ imageId: 43, imageUrl: '/api/media/43' }] },
+    { label: 'Review cart', evidence: [{ imageId: 42, imageUrl: '/api/media/42', description: null }] },
+    { label: 'Pay', evidence: [{ imageId: 43, imageUrl: '/api/media/43', description: null }] },
   ],
 };
 
@@ -92,7 +92,7 @@ const featureDocument: FeatureDocumentView = {
   shares: [],
 };
 
-test('keeps the Flow directory mounted beside the selected Visual Flow', () => {
+test('selected Flow uses Screens and Document Flow as its only representation tabs', () => {
   const html = renderToStaticMarkup(
     <FlowsPanel
       flows={[flow]}
@@ -107,40 +107,47 @@ test('keeps the Flow directory mounted beside the selected Visual Flow', () => {
   assert.match(html, /role="tablist"/);
   assert.match(html, /role="tabpanel"/);
   assert.match(html, /aria-controls="flow-checkout-document-panel"/);
-  assert.match(html, /Visual Flow/);
-  assert.match(html, /Document Flow/);
-  assert.match(html, /aria-selected="true"[\s\S]*Visual Flow/);
   assert.match(html, /Screens/);
-  assert.match(html, /Prototype/);
+  assert.match(html, /Document Flow/);
+  assert.doesNotMatch(html, />Visual Flow</);
+  assert.doesNotMatch(html, /Prototype/);
+  assert.equal((html.match(/role="tablist"/g) ?? []).length, 1);
   assert.match(html, /aria-label="Checkout Visual Flow"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
 });
 
-test('renders the five-section Document Flow and opens its exact visual step', () => {
-  const opened: number[] = [];
+test('renders only the saved revision Markdown', () => {
   const html = renderToStaticMarkup(
     <DocumentFlowPanelView
-      flow={flow}
       state={{ kind: 'ready', document: featureDocument, revision }}
-      selectedStep={2}
+      markdown={{
+        kind: 'ready',
+        content: [
+          '# Checkout brief',
+          '',
+          '- Review cart',
+          '- Pay',
+          '',
+          '| State | Result |',
+          '| --- | --- |',
+          '| Paid | Complete |',
+        ].join('\n'),
+      }}
       userRole="user"
-      onOpenVisualStep={(step) => opened.push(step)}
     />,
   );
-  for (const label of ['Overview', 'Trigger', 'Ordered steps', 'Outcome', 'Alternate and error paths']) {
-    assert.match(html, new RegExp(label));
+  assert.match(html, /<h1>Checkout brief<\/h1>/);
+  assert.match(html, /<li>Review cart<\/li>/);
+  assert.match(html, /<table>/);
+  for (const label of ['Overview', 'Trigger', 'Ordered steps', 'Outcome', 'Alternate and error paths', 'Edit Document Flow']) {
+    assert.doesNotMatch(html, new RegExp(label));
   }
-  assert.match(html, /View visual step 1/);
-  assert.match(html, /View visual step 2/);
-  assert.match(html, /aria-current="step"/);
   assert.match(html, /aria-label="Document Flow"/);
-  assert.match(html, /class="document-flow__claim-kind is-observed"/);
 });
 
 test('shows generation progress before the first revision exists', () => {
   const html = renderToStaticMarkup(
     <DocumentFlowPanelView
-      flow={flow}
       state={{
         kind: 'pending',
         document: {
@@ -162,7 +169,6 @@ test('shows generation progress before the first revision exists', () => {
         },
       }}
       userRole="admin"
-      onOpenVisualStep={() => undefined}
     />,
   );
   assert.match(html, /Analyzing image 2 of 3/);

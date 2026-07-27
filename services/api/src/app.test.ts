@@ -26,6 +26,10 @@ import {
   CatalogCursorError,
   encodeUpdatedCatalogCursor,
 } from "../../../src/catalogCursor.ts";
+import {
+  CategoryConflictError,
+  CategoryNotFoundError,
+} from "../../../src/categoryStore.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -78,12 +82,17 @@ const catalogImages = [
     description: "Toolbar",
   },
 ];
+const productivityCategory = {
+  id: 1,
+  name: "Productivity",
+  slug: "productivity",
+};
 const catalogPageRecord = {
   apps: [{
     app_id: 1,
     app: "linear",
     display_name: "Linear",
-    category: "Productivity",
+    categories: [productivityCategory],
     website_url: "https://linear.app",
     icon_url: null,
     accent_color: "#5E6AD2",
@@ -329,6 +338,167 @@ test("serves real catalog stats publicly, without a session", async (t) => {
   const response = await fetch(`${base}/catalog/stats`);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { apps: 512, screens: 137412, uiElements: 647 });
+});
+
+test("serves ordered published Categories publicly", async (t) => {
+  const categories = [
+    { id: 2, name: "Business", slug: "business", appCount: 127 },
+    { id: 7, name: "Productivity", slug: "productivity", appCount: 101 },
+  ];
+  const { base, server } = await serve(createApiApp({
+    categoryStore: {
+      listPublished: async () => categories,
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog/categories`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "public, max-age=300");
+  assert.deepEqual(await response.json(), { categories });
+});
+
+test("manages Categories and App assignments through admin-only endpoints", async (t) => {
+  const calls: unknown[] = [];
+  const category = { id: 7, name: "Productivity", slug: "productivity" };
+  const categoryStore = {
+    list: async () => [{ ...category, appCount: 1 }],
+    create: async (input: unknown) => {
+      calls.push(["create", input]);
+      return category;
+    },
+    update: async (id: number, input: unknown) => {
+      calls.push(["update", id, input]);
+      return { ...category, name: "Work" };
+    },
+    remove: async (id: number) => {
+      calls.push(["remove", id]);
+      return { category, removedAppCount: 1 };
+    },
+    listApps: async (id: number) => {
+      calls.push(["listApps", id]);
+      return [{ id: 42, slug: "linear", name: "Linear" }];
+    },
+    attach: async (app: string, id: number) => {
+      calls.push(["attach", app, id]);
+    },
+    detach: async (app: string, id: number) => {
+      calls.push(["detach", app, id]);
+    },
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    categoryStore,
+  } as never));
+  t.after(() => close(server));
+
+  const jsonHeaders = { ...adminCookie, "content-type": "application/json" };
+  const listed = await fetch(`${base}/admin/categories`, { headers: adminCookie });
+  assert.equal(listed.status, 200);
+  assert.deepEqual(await listed.json(), {
+    categories: [{ ...category, appCount: 1 }],
+  });
+
+  const created = await fetch(`${base}/admin/categories`, {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify({ name: "Productivity", slug: "productivity" }),
+  });
+  assert.equal(created.status, 201);
+  assert.deepEqual(await created.json(), category);
+
+  const updated = await fetch(`${base}/admin/categories/7`, {
+    method: "PATCH",
+    headers: jsonHeaders,
+    body: JSON.stringify({ name: "Work", slug: "work" }),
+  });
+  assert.equal(updated.status, 200);
+  assert.equal((await updated.json()).name, "Work");
+
+  const assignedApps = await fetch(`${base}/admin/categories/7/apps`, {
+    headers: adminCookie,
+  });
+  assert.deepEqual(await assignedApps.json(), {
+    apps: [{ id: 42, slug: "linear", name: "Linear" }],
+  });
+
+  const attached = await fetch(`${base}/admin/categories/7/apps`, {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify({ app: "linear" }),
+  });
+  assert.equal(attached.status, 200);
+  assert.deepEqual(await attached.json(), { app: "linear", categoryId: 7 });
+
+  const detached = await fetch(`${base}/admin/categories/7/apps/linear`, {
+    method: "DELETE",
+    headers: adminCookie,
+  });
+  assert.equal(detached.status, 204);
+  const detachedAgain = await fetch(`${base}/admin/categories/7/apps/linear`, {
+    method: "DELETE",
+    headers: adminCookie,
+  });
+  assert.equal(detachedAgain.status, 204);
+
+  const removed = await fetch(`${base}/admin/categories/7`, {
+    method: "DELETE",
+    headers: adminCookie,
+  });
+  assert.deepEqual(await removed.json(), { category, removedAppCount: 1 });
+  assert.deepEqual(calls, [
+    ["create", { name: "Productivity", slug: "productivity" }],
+    ["update", 7, { name: "Work", slug: "work" }],
+    ["listApps", 7],
+    ["attach", "linear", 7],
+    ["detach", "linear", 7],
+    ["detach", "linear", 7],
+    ["remove", 7],
+  ]);
+});
+
+test("guards and validates Category management endpoints", async (t) => {
+  let calls = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async (token: string) => token === "admin" ? admin : user,
+    categoryStore: {
+      list: async () => { calls += 1; return []; },
+      create: async () => { calls += 1; throw new CategoryConflictError("duplicate"); },
+      attach: async () => { calls += 1; throw new CategoryNotFoundError("missing"); },
+    },
+  } as never));
+  t.after(() => close(server));
+
+  assert.equal(
+    (await fetch(`${base}/admin/categories`, {
+      headers: { cookie: "astryx_session=user" },
+    })).status,
+    403,
+  );
+  assert.equal(calls, 0);
+
+  const headers = { ...adminCookie, "content-type": "application/json" };
+  assert.equal((await fetch(`${base}/admin/categories/not-an-id`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ name: "Work", slug: "work" }),
+  })).status, 400);
+  assert.equal((await fetch(`${base}/admin/categories`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name: "Work", slug: "work", extra: true }),
+  })).status, 400);
+
+  assert.equal((await fetch(`${base}/admin/categories`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name: "Work", slug: "work" }),
+  })).status, 409);
+  assert.equal((await fetch(`${base}/admin/categories/7/apps`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ app: "missing" }),
+  })).status, 404);
 });
 
 test("keeps the progress stream admin-only without opening a subscription", async (t) => {
@@ -1250,6 +1420,7 @@ test("serves a hydrated structured design system", async (t) => {
   assert.equal(snapshot.tokens[0].evidence[0].imageUrl, "/api/media/linear/0123456789abcdef");
   assert.equal(snapshot.flows[0].steps[0].label, "Email");
   assert.equal(snapshot.flows[0].steps[0].evidence[0].imageUrl, "/api/media/linear/0123456789abcdef");
+  assert.equal(snapshot.flows[0].steps[0].evidence[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
   assert.match(response.headers.get("content-type") ?? "", /application\/json/);
 });
 
@@ -1879,6 +2050,7 @@ test("serves crawled flows even when an app has not been through AI synthesis", 
   assert.deepEqual(snapshot.components, []);
   assert.equal(snapshot.flows[0].title, "Onboarding");
   assert.equal(snapshot.flows[0].steps[0].evidence[0].imageUrl, "/api/media/lang-chain/0123456789abcdef");
+  assert.equal(snapshot.flows[0].steps[0].evidence[0].thumbnailUrl, "/api/media/lang-chain/0123456789abcdef?variant=thumb");
 });
 
 test("serves local bulk media", async (t) => {
@@ -2121,11 +2293,11 @@ test("keeps the Sites catalog public and every Site detail endpoint private", as
 });
 
 test("serves only the first three public preview images", async (t) => {
-  const ranks: number[] = [];
+  const inputs: Array<{ rank: number; variant?: "full" | "thumb" }> = [];
   const { base, server } = await serve(createApiApp({
     objectStore: localObjectStore,
-    publishedPreviewObject: async ({ rank }) => {
-      ranks.push(rank);
+    publishedPreviewObject: async ({ rank, variant }) => {
+      inputs.push({ rank, variant });
       return rank === 1 ? previewMetadata : undefined;
     },
   }));
@@ -2135,9 +2307,14 @@ test("serves only the first three public preview images", async (t) => {
   assert.equal(preview.headers.get("content-type"), "image/webp");
   assert.equal(preview.headers.get("x-content-type-options"), "nosniff");
   assert.equal(await preview.text(), "image");
+  assert.equal((await fetch(`${base}/preview-media/linear/1?variant=full`)).status, 200);
   assert.equal((await fetch(`${base}/preview-media/linear/2`)).status, 404);
   assert.equal((await fetch(`${base}/preview-media/linear/4`)).status, 400);
-  assert.deepEqual(ranks, [1, 2]);
+  assert.deepEqual(inputs, [
+    { rank: 1, variant: "thumb" },
+    { rank: 1, variant: "full" },
+    { rank: 2, variant: "thumb" },
+  ]);
 });
 
 test("serves allowlisted public taxonomy previews and protected media", async (t) => {
@@ -2293,7 +2470,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     appMetadata: async (app: string) => ({
-      app, icon_url: null, category: null, total_screens: 1, total_ui_elements: 0,
+      app, icon_url: null, categories: [], total_screens: 1, total_ui_elements: 0,
       total_flows: 0, analyzed_screens: 0, last_captured_at: null,
       available_platforms: ["web", "ios", "android"],
     }),
@@ -2326,7 +2503,7 @@ test("returns app metadata without invoking section dependencies", async (t) => 
     appMetadata: async () => ({
       app: "linear",
       icon_url: "https://cdn.example.com/linear.png",
-      category: "Productivity",
+      categories: [productivityCategory],
       total_screens: 236,
       total_ui_elements: 41,
       total_flows: 12,
@@ -2346,6 +2523,7 @@ test("returns app metadata without invoking section dependencies", async (t) => 
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.app.totalScreens, 236);
+  assert.deepEqual(body.app.categories, [productivityCategory]);
   assert.equal(body.app.totalUiElements, 41);
   assert.equal(body.app.totalFlows, 12);
   assert.equal("screens" in body.app, false);
@@ -2370,7 +2548,10 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
     appMetadata: async () => ({
       app: "example-com",
       icon_url: "https://example.com/favicon.ico",
-      category: "Developer tools",
+      categories: [
+        { id: 1, name: "Business", slug: "business" },
+        { id: 2, name: "Developer tools", slug: "developer-tools" },
+      ],
       display_name: "Example",
       description: "Build better examples.",
       website_url: "https://example.com",
@@ -2402,7 +2583,10 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
   assert.deepEqual((await detail.json()).app, {
     id: "example-com",
     app: "Example",
-    cat: "Developer tools",
+    categories: [
+      { id: 1, name: "Business", slug: "business" },
+      { id: 2, name: "Developer tools", slug: "developer-tools" },
+    ],
     accent: "#123456",
     totalScreens: 1,
     totalUiElements: 5,
@@ -2713,6 +2897,15 @@ test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
   assert.equal(deletedToken, "raw-session-token");
 });
 
+test("resolves an anonymous me request as no user", async (t) => {
+  const { base, server } = await serve(createApiApp());
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/auth/me`);
+  assert.equal(response.status, 200);
+  assert.equal(await response.json(), null);
+});
+
 test("returns one generic login failure", async (t) => {
   const { base, server } = await serve(
     createApiApp({ authenticateUser: async () => undefined })
@@ -2866,7 +3059,7 @@ test("records only authorized app-detail opens for referral activation", async (
       return { rewardIssued: false };
     },
     appMetadata: async (app: string) => ({
-      app, icon_url: null, category: null, total_screens: 1, total_ui_elements: 0,
+      app, icon_url: null, categories: [], total_screens: 1, total_ui_elements: 0,
       total_flows: 0, analyzed_screens: 0, last_captured_at: null,
       available_platforms: ["web"],
     }),
@@ -3057,7 +3250,7 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
     resolveSession: async () => user,
     canAccessApp: async () => true,
     appMetadata: async (app) => ({
-      app, icon_url: null, category: null,
+      app, icon_url: null, categories: [],
       total_screens: images.filter((image) => image.app === app).length,
       total_ui_elements: 0, total_flows: 0, analyzed_screens: 0,
       last_captured_at: null, available_platforms: ["web"],

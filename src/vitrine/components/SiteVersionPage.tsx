@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, DropdownMenu, EmptyState, Selector, Skeleton } from '@astryxdesign/core';
 import { navigate } from '../router.ts';
-import { getSiteVersion, listSites } from '../sitesApi.ts';
+import { getSiteVersion, listSitesPage } from '../sitesApi.ts';
 import type {
   SiteSectionView,
   SiteSummary,
@@ -96,7 +96,7 @@ export function SiteVersionView({
       page.title,
       page.url,
       ...patterns,
-      ...item.ocrBoxes.map((box) => box.text),
+      item.searchText ?? item.ocrBoxes.map((box) => box.text).join(' '),
     ].join(' ').toLowerCase();
     return (!needle || searchable.includes(needle))
       && (patternFilter === 'All patterns' || patterns.includes(patternFilter))
@@ -257,7 +257,12 @@ export function SiteVersionView({
               </div>
               <div className="site-detail__related-grid">
                 {relatedSites.slice(0, 3).map((site) => (
-                  <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onRelatedOpen(site)} />
+                  <SiteCard
+                    key={`${site.id}:${site.versionId}`}
+                    site={site}
+                    onOpen={() => onRelatedOpen(site)}
+                    deferMediaUntilIntent
+                  />
                 ))}
               </div>
             </section>
@@ -357,6 +362,7 @@ function SectionsPanel({
                       url={item.mediaUrl}
                       posterUrl={item.posterUrl}
                       delay={delay}
+                      deferMedia
                       onOpen={() => onOpen(visibleIndex)}
                     />
                   ) : (
@@ -365,6 +371,7 @@ function SectionsPanel({
                       kind="image"
                       url={item.mediaUrl}
                       delay={delay}
+                      deferMedia
                       onOpen={() => onOpen(visibleIndex)}
                     />
                   )}
@@ -430,7 +437,7 @@ export function SiteVersionPage({
     setError('');
     void Promise.all([
       getSiteVersion(siteId, versionId),
-      listSites().catch(() => []),
+      listSitesPage(4, 0).then(({ sites }) => sites).catch(() => []),
     ])
       .then(([value, sites]) => {
         if (!active) return;

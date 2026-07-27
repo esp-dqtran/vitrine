@@ -9,11 +9,20 @@ import {
   buildPublishedCatalogPage,
 } from "./gallery.ts";
 
+const productivity = {
+  id: 7,
+  name: "Productivity",
+  slug: "productivity",
+};
+
 test("builds app metadata without section payloads", () => {
   const app = buildAppMetadata({
     app: "claude",
     icon_url: "https://cdn.example.com/claude.png",
-    category: "AI",
+    categories: [
+      { id: 1, name: "AI", slug: "ai" },
+      productivity,
+    ],
     total_screens: 120,
     total_ui_elements: 31,
     total_flows: 7,
@@ -27,6 +36,8 @@ test("builds app metadata without section payloads", () => {
   assert.equal(app.totalUiElements, 31);
   assert.equal(app.totalFlows, 7);
   assert.deepEqual(app.platforms, ["ios", "android"]);
+  assert.deepEqual(app.categories.map(({ name }) => name), ["AI", "Productivity"]);
+  assert.equal("cat" in app, false);
   assert.equal("screens" in app, false);
 });
 
@@ -68,7 +79,8 @@ test("groups images, preserves metadata, maps local media, and caps screens", ()
   const [app] = buildGalleryApps(images);
 
   assert.equal(app.app, "Linear");
-  assert.equal(app.cat, "Productivity");
+  assert.deepEqual(app.categories, []);
+  assert.equal("cat" in app, false);
   assert.equal(app.totalScreens, 121);
   assert.equal(app.screens.length, 120);
   assert.equal(app.screens[0].url, "/api/media/linear/0123456789abcdef");
@@ -98,7 +110,7 @@ test("builds lightweight admin cards from database summaries", () => {
       componentNames: [],
       confidence: 0.9,
     } : null,
-    category: "Productivity",
+    categories: [productivity],
     icon_url: "https://cdn.example.com/linear.png",
     total_screens: 236,
     analyzed_screens: 17,
@@ -114,6 +126,7 @@ test("builds lightweight admin cards from database summaries", () => {
   assert.equal(app.screens.length, 5);
   assert.equal(app.iconUrl, "https://cdn.example.com/linear.png");
   assert.deepEqual(app.platforms, ["web", "ios", "android"]);
+  assert.deepEqual(app.categories, [productivity]);
 });
 
 test("uses captured website identity in the Apps gallery", () => {
@@ -123,7 +136,11 @@ test("uses captured website identity in the Apps gallery", () => {
     platform: "web",
     image_url: "capture:0123456789abcdef",
     description: null,
-    category: "Developer tools",
+    categories: [{
+      id: 8,
+      name: "Developer Tools",
+      slug: "developer-tools",
+    }],
     icon_url: "https://example.com/favicon.ico",
     display_name: "Example",
     website_url: "https://example.com",
@@ -157,6 +174,11 @@ test("builds paginated public previews without source image fields", () => {
   assert.equal(first.apps.length, 24);
   assert.equal(first.apps[0].previewScreens.length, 3);
   assert.deepEqual(first.apps[0].previewScreens.map(({ url }) => url), [
+    "/api/preview-media/catalog-01/1?variant=full",
+    "/api/preview-media/catalog-01/2?variant=full",
+    "/api/preview-media/catalog-01/3?variant=full",
+  ]);
+  assert.deepEqual(first.apps[0].previewScreens.map(({ thumbnailUrl }) => thumbnailUrl), [
     "/api/preview-media/catalog-01/1",
     "/api/preview-media/catalog-01/2",
     "/api/preview-media/catalog-01/3",
@@ -186,7 +208,7 @@ test("builds the existing public catalog contract from bounded app records", () 
       app_id: 1,
       app: "linear",
       display_name: "Linear",
-      category: "Productivity",
+      categories: [productivity],
       website_url: "https://linear.app",
       icon_url: "https://linear.app/icon.png",
       accent_color: "#5E6AD2",
@@ -205,10 +227,12 @@ test("builds the existing public catalog contract from bounded app records", () 
   assert.deepEqual(page.apps[0]?.platforms, ["web", "ios"]);
   assert.deepEqual(
     page.apps[0]?.previewScreens.map(({ url }) => url),
-    ["/api/preview-media/linear/1", "/api/preview-media/linear/2"],
+    ["/api/preview-media/linear/1?variant=full", "/api/preview-media/linear/2?variant=full"],
   );
   assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
   assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
+  assert.deepEqual(page.apps[0]?.categories, [productivity]);
+  assert.equal("cat" in page.apps[0]!, false);
   assert.equal(page.nextCursor, "next");
   assert.doesNotMatch(JSON.stringify(page), /image_url|object_key|capture:/);
 });
@@ -220,7 +244,7 @@ test("keeps a UUID-disambiguated route while showing the human app name", () => 
       app_id: 2,
       app: slug,
       display_name: "Aboard",
-      category: "Productivity",
+      categories: [productivity],
       website_url: null,
       icon_url: null,
       accent_color: null,
@@ -244,7 +268,7 @@ test("keeps a UUID-disambiguated route while showing the human app name", () => 
 
   assert.equal(page.apps[0]?.id, slug);
   assert.equal(page.apps[0]?.app, "Aboard");
-  assert.equal(page.apps[0]?.previewScreens[0]?.url, `/api/preview-media/${slug}/1`);
+  assert.equal(page.apps[0]?.previewScreens[0]?.url, `/api/preview-media/${slug}/1?variant=full`);
 });
 
 test("preserves the server's Updated At order for published Apps", () => {
@@ -254,7 +278,11 @@ test("preserves the server's Updated At order for published Apps", () => {
         app_id: 91,
         app: "alltrails",
         display_name: "AllTrails",
-        category: "Travel",
+        categories: [{
+          id: 9,
+          name: "Travel & Transportation",
+          slug: "travel-transportation",
+        }],
         website_url: null,
         icon_url: null,
         accent_color: null,
@@ -266,7 +294,11 @@ test("preserves the server's Updated At order for published Apps", () => {
         app_id: 42,
         app: "ipsy",
         display_name: "Ipsy",
-        category: "Shopping",
+        categories: [{
+          id: 10,
+          name: "Shopping",
+          slug: "shopping",
+        }],
         website_url: null,
         icon_url: null,
         accent_color: null,

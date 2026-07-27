@@ -40,13 +40,13 @@ export function VersionPanel({ app, platform, role, versions, selectedVersion, o
   return (
     <section style={{ margin: '0 0 20px', padding: 10, border: '1px solid var(--color-border)', borderRadius: 10 }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--color-text-disabled)' }}>Capture versions</span>
+        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--color-text-secondary)' }}>Capture versions</span>
         {versions.map((version) => (
           <ToggleButton key={version.id} label={`${version.label} · ${version.status === 'published' ? 'Published' : version.status.replace('_', ' ')}`} isPressed={selectedVersion === version.version_number} onPressedChange={() => onSelect(version.version_number)} size="sm" style={{ borderRadius: 999 }} />
         ))}
         {role === 'admin' && <Button label="Start recapture" size="sm" isDisabled={Boolean(active)} tooltip={active ? 'Finish the active version first' : undefined} onClick={() => setRecapture(true)} style={{ marginLeft: 'auto' }} />}
       </div>
-      {versions[0] && <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8, color: 'var(--color-text-disabled)', fontSize: 11 }}>
+      {versions[0] && <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8, color: 'var(--color-text-secondary)', fontSize: 11 }}>
         <span>{versions[0].screen_count} screens</span><span>{versions[0].analyzed_count} analyzed</span><span>{versions[0].component_count} components</span><span>{versions[0].token_count} tokens</span><span>{versions[0].flow_count} flows</span><span>{new Date(versions[0].captured_at).toLocaleDateString()}</span>
       </div>}
       {role === 'admin' && active && <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>

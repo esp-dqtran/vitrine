@@ -13,7 +13,7 @@ test('offers the generated design system alongside screens, elements, and flows'
       app={{
         id: 'linear',
         app: 'Linear',
-        cat: 'Productivity',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
         accent: '#5E6AD2',
         totalScreens: 0,
         totalUiElements: 0,
@@ -28,6 +28,12 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.doesNotMatch(html, /aria-label="Analysis"/);
   assert.match(html, /aria-label="Design System"/);
   assert.doesNotMatch(html, /Crawler/);
+});
+
+test('does not expose capture version controls in app detail', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /import \{ VersionPanel \}/);
+  assert.doesNotMatch(source, /<VersionPanel/);
 });
 
 test('removes App Knowledge analysis while preserving route selections', () => {
@@ -85,7 +91,7 @@ test('does not render a Back to all apps button in App detail', () => {
       app={{
         id: '15five',
         app: '15Five',
-        cat: 'Business',
+        categories: [{ id: 2, name: 'Business', slug: 'business' }],
         accent: '#ff4f1f',
         totalScreens: 610,
         totalUiElements: 610,
@@ -108,7 +114,7 @@ test('reuses the Apps header on admin App detail', () => {
       app={{
         id: '15five',
         app: '15Five',
-        cat: 'Business',
+        categories: [{ id: 2, name: 'Business', slug: 'business' }],
         accent: '#ff4f1f',
         totalScreens: 610,
         totalUiElements: 610,
@@ -148,7 +154,7 @@ test('renders metadata-only aggregate counts on Overview', () => {
       onCollectionsChange={() => undefined}
       role="admin"
       app={{
-        id: 'claude', app: 'Claude', cat: 'AI', accent: '#d97757',
+        id: 'claude', app: 'Claude', categories: [{ id: 3, name: 'AI', slug: 'ai' }], accent: '#d97757',
         totalScreens: 120, totalUiElements: 31, totalFlows: 7,
         analyzedScreens: 115, platforms: ['ios', 'android'],
       }}
@@ -172,7 +178,7 @@ test('shows every platform reported by app metadata even when the first screen p
       app={{
         id: 'adidas',
         app: 'Adidas',
-        cat: 'Shopping',
+        categories: [{ id: 4, name: 'Shopping', slug: 'shopping' }],
         accent: '#000000',
         totalScreens: 615,
         totalUiElements: 80,
@@ -194,7 +200,7 @@ test('shows full metadata totals before paginated Screens, UI Elements, and Flow
   const app = {
     id: 'zapier',
     app: 'Zapier',
-    cat: 'Productivity',
+    categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
     accent: '#ff4f00',
     totalScreens: 587,
     totalUiElements: 587,
@@ -235,7 +241,7 @@ test('shows only Screens, UI Elements, and Flows to members', () => {
       app={{
         id: 'linear',
         app: 'Linear',
-        cat: 'Productivity',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
         accent: '#5E6AD2',
         totalScreens: 1,
         totalUiElements: 0,

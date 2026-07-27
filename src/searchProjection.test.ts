@@ -9,7 +9,7 @@ const sourceFixture: PublishedSearchSource = {
     appId: 4,
     app: "Linear",
     platform: "web",
-    category: "Productivity",
+    categories: ["Business", "Productivity"],
     publishedAt: "2026-07-23T08:00:00.000Z",
   },
   images: [
@@ -83,6 +83,10 @@ test("projects every v1 entity type with stable source identity", () => {
   const appDocument = documents[0];
   assert.equal(appDocument.catalogScope, "apps");
   assert.equal(appDocument.catalogName, sourceFixture.version.app);
+  assert.deepEqual(appDocument.catalogCategories, ["Business", "Productivity"]);
+  assert.match(appDocument.searchText, /Business/);
+  assert.match(appDocument.searchText, /Productivity/);
+  assert.equal("appCategory" in appDocument, false);
   assert.deepEqual(
     documents.map(({ entityType, sourceId }) => [entityType, sourceId]),
     [

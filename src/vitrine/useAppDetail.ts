@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchAppMetadata } from './appsApi';
+import { loadAppDetail } from './appDetailPrefetch.ts';
 import type { AppMetadata } from './types';
 
 export function useAppDetail(appId: string | undefined, enabled: boolean) {
@@ -11,7 +11,7 @@ export function useAppDetail(appId: string | undefined, enabled: boolean) {
     const controller = new AbortController();
     setDetail(null);
     setError(null);
-    fetchAppMetadata(appId, controller.signal)
+    loadAppDetail(appId, controller.signal)
       .then(setDetail)
       .catch((cause: Error) => {
         if (cause.name !== 'AbortError') setError(cause.message);

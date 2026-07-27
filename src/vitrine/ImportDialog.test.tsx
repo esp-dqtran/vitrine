@@ -15,9 +15,9 @@ const screen = (id: number, over: Partial<Screen> = {}): Screen => ({
 
 const apps: App[] = [
   // fully analyzed sample covering every captured screen -> Complete
-  { id: 'done', app: 'DoneApp', cat: 'Fintech', accent: '#059669', totalScreens: 2, screens: [screen(1, { confidence: 0.9 }), screen(2, { confidence: 0.8 })] },
+  { id: 'done', app: 'DoneApp', categories: [{ id: 1, name: 'Fintech', slug: 'fintech' }], accent: '#059669', totalScreens: 2, screens: [screen(1, { confidence: 0.9 }), screen(2, { confidence: 0.8 })] },
   // captured=5 but only a 2-screen sample with 1 analyzed -> In progress (never fakes "pending")
-  { id: 'partial', app: 'PartialApp', cat: 'Travel', accent: '#f0763b', totalScreens: 5, screens: [screen(3, { confidence: 0.9 }), screen(4)] },
+  { id: 'partial', app: 'PartialApp', categories: [{ id: 2, name: 'Travel', slug: 'travel' }], accent: '#f0763b', totalScreens: 5, screens: [screen(3, { confidence: 0.9 }), screen(4)] },
 ];
 
 test('derives per-app capture/analysis metrics and status from real screen data', () => {

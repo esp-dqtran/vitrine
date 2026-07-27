@@ -114,6 +114,43 @@ test("serves only ready Site summaries and version details", async (t) => {
   assert.deepEqual(versionBody.versions, detail.versions);
 });
 
+test("compacts Site OCR geometry into searchable text for detail clients", async (t) => {
+  const withOcr: SiteVersionDetail = {
+    ...detail,
+    pages: [{
+      id: 10,
+      sourceId: "page-home",
+      title: "Home",
+      url: "https://v7labs.com/",
+      position: 0,
+      fullPageImageUrl: "/api/sites/1/versions/2/pages/10/media",
+      sections: [{
+        id: 20,
+        sourceId: "hero",
+        position: 0,
+        mediaKind: "image",
+        mediaUrl: "/api/sites/1/versions/2/sections/20/media",
+        ocrBoxes: [
+          { x: 0, y: 0, width: 100, height: 20, text: "Private equity" },
+          { x: 0, y: 24, width: 100, height: 20, text: "workflow" },
+        ],
+        sourceMetadata: { patterns: ["Hero"], sourceType: "mobbin" },
+      }],
+    }],
+  };
+  const { base, server } = await serve(fakeStore({
+    readyVersionDetail: async () => withOcr,
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/sites/1/versions/2`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.pages[0].sections[0].searchText, "Private equity workflow");
+  assert.deepEqual(body.pages[0].sections[0].ocrBoxes, []);
+  assert.deepEqual(body.pages[0].sections[0].sourceMetadata, { patterns: ["Hero"] });
+});
+
 test("validates positive Site route IDs before store reads", async (t) => {
   let reads = 0;
   const store = fakeStore({

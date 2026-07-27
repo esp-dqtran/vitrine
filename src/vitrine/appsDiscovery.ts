@@ -1,6 +1,6 @@
 import type { Platform } from '../platformFromUrl.ts';
-import { PUBLIC_APP_FACETS } from '../publicFacetPreview.ts';
-import type { App, Screen } from './types.ts';
+import { PUBLIC_APP_STATIC_FACETS } from '../publicFacetPreview.ts';
+import { categoryNames, type App, type Screen } from './types.ts';
 
 export type AppsFacet = {
   group: 'categories' | 'screens' | 'elements' | 'flows';
@@ -10,7 +10,7 @@ export type AppsFacet = {
 export type AppsSort = 'latest' | 'popular';
 export type AppsPlatform = Platform;
 
-export const APPS_DISCOVERY_FACETS = PUBLIC_APP_FACETS;
+export const APPS_DISCOVERY_STATIC_FACETS = PUBLIC_APP_STATIC_FACETS;
 
 const searchableText = (values: Array<string | null | undefined>) =>
   values.filter(Boolean).join(' ').toLowerCase();
@@ -35,7 +35,7 @@ export function filterAndSortApps(
       if (!platforms.includes(options.platform)) return false;
       if (query && !searchableText([
         app.app,
-        app.cat,
+        ...categoryNames(app),
         app.description,
         ...app.screens.flatMap((screen) => [
           screen.type,
@@ -48,7 +48,9 @@ export function filterAndSortApps(
       ]).includes(query)) return false;
       if (!options.facet) return true;
       const needle = options.facet.value.toLowerCase();
-      if (options.facet.group === 'categories') return app.cat.toLowerCase() === needle;
+      if (options.facet.group === 'categories') {
+        return app.categories.some(({ name }) => name.toLowerCase() === needle);
+      }
       return app.screens.some((screen) => screenFacetText(screen, options.facet!.group).includes(needle));
     });
   if (options.sort === 'latest') return filtered.map(({ app }) => app);

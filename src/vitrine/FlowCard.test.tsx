@@ -10,16 +10,23 @@ const flow = {
   tags: [],
   steps: [{
     label: 'Submit',
-    evidence: [{ imageId: 1, imageUrl: '/flow.png', description: null }],
+    evidence: [{
+      imageId: 1,
+      imageUrl: '/flow.png',
+      thumbnailUrl: '/flow-thumb.webp',
+      description: null,
+    }],
   }],
 };
 
-test('renders a flow strip with observed screen metadata', () => {
+test('renders a flow strip with responsive observed screen media', () => {
   const html = renderToStaticMarkup(<FlowCard flow={flow} onOpen={() => {}} />);
   assert.match(html, /data-flow-strip-card="true"/);
   assert.match(html, /aria-label="Open Login flow"/);
-  assert.match(html, /src="\/flow.png"/);
-  assert.match(html, />Login</);
+  assert.match(html, /src="\/flow-thumb.webp"/);
+  assert.doesNotMatch(html, /src="\/flow.png"/);
+  assert.match(html, /srcSet="\/flow-thumb\.webp 1x,\/flow\.png 2x"/);
+  assert.match(html, /<h2>Login<\/h2>/);
   assert.match(html, />1 screen</);
   assert.match(html, />Save</);
   assert.match(html, />Copy</);

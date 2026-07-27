@@ -91,6 +91,21 @@ const migrationDefinitions = [
       /feature_documents_catalog_flow_identity_idx/,
     ],
   },
+  {
+    file: "0033_app_categories.sql",
+    patterns: [
+      /CREATE TABLE categories/,
+      /CREATE TABLE app_categories/,
+      /PRIMARY KEY \(app_id, category_id\)/,
+      /REFERENCES apps\(id\) ON DELETE CASCADE/,
+      /REFERENCES categories\(id\) ON DELETE CASCADE/,
+      /INSERT INTO categories/,
+      /INSERT INTO app_categories/,
+      /CREATE TRIGGER sync_apps_category_to_relationship/,
+      /CREATE TRIGGER app_categories_search_queue/,
+      /CREATE TRIGGER categories_search_queue/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -234,4 +249,14 @@ test("ordinary database queries never bootstrap or mutate schema", async () => {
   const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
   assert.doesNotMatch(source, /ensureSchema|schemaReady/);
   assert.doesNotMatch(source, /pool\.query\(`\s*(?:CREATE|ALTER|DROP)/i);
+});
+
+test("migration verification checks Category tables and legacy backfill", async () => {
+  const source = await readFile(
+    new URL("../scripts/verify-migrations.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /const CATEGORY_TABLES/);
+  assert.match(source, /category backfill must retain every legacy assignment/);
+  assert.match(source, /categories_id_seq is behind categories\.id/);
 });

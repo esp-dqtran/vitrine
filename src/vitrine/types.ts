@@ -22,10 +22,16 @@ export interface Screen {
   confidence?: number | null;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 export interface AppSummary {
   id: string;
   app: string;
-  cat: string;
+  categories: Category[];
   accent: string;
   totalScreens: number;
   platforms?: Platform[];
@@ -45,6 +51,10 @@ export interface AppMetadata extends AppSummary {
 export interface App extends AppSummary {
   screens: Screen[];
 }
+
+export const categoryNames = (
+  app: Pick<AppSummary, 'categories'>,
+): string[] => app.categories.map(({ name }) => name);
 
 export interface SitePagePreview {
   id: number;
@@ -101,6 +111,7 @@ export interface SiteSectionView {
   videoStartSeconds?: number;
   videoEndSeconds?: number;
   patterns: string[];
+  searchText?: string;
   ocrBoxes: SiteOcrBox[];
   sourceMetadata: Record<string, unknown>;
 }

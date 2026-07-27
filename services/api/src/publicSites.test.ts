@@ -37,15 +37,23 @@ const metadata: ObjectMetadata = {
   accessClass: "protected",
 };
 
-async function serve() {
+async function serve(sites = [summary]) {
   const reads: Array<Parameters<SitesStore["siteMediaObject"]>[0]> = [];
+  let listReads = 0;
   const app = express();
   mountPublicSitesRoutes(app, {
     store: {
-      listReadySites: async () => [summary],
+      listReadySites: async () => {
+        listReads += 1;
+        return sites;
+      },
       siteMediaObject: async (input) => {
         reads.push(input);
-        return metadata;
+        return input.siteId !== 1
+          || input.versionId !== 2
+          || (input.kind === "page" && input.recordId !== 10)
+          ? undefined
+          : metadata;
       },
     } as never,
     sendObject: async (_object, res) => {
@@ -56,7 +64,12 @@ async function serve() {
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("No test port");
-  return { base: `http://127.0.0.1:${address.port}`, server, reads };
+  return {
+    base: `http://127.0.0.1:${address.port}`,
+    server,
+    reads,
+    listReads: () => listReads,
+  };
 }
 
 function close(server: Server): Promise<void> {
@@ -82,8 +95,42 @@ test("serves ready Site summaries with public catalog media URLs", async (t) => 
   );
 });
 
-test("serves only media referenced by the ready catalog summary", async (t) => {
-  const { base, server, reads } = await serve();
+test("serves a bounded public Site page when limit and offset are provided", async (t) => {
+  const second = {
+    ...summary,
+    siteId: 3,
+    versionId: 4,
+    name: "Second",
+    slug: "second",
+    previewUrl: "/api/sites/3/versions/4/media/preview",
+    previews: [{
+      id: 30,
+      title: "Home",
+      position: 0,
+      url: "/api/sites/3/versions/4/pages/30/media",
+    }],
+  };
+  const { base, server } = await serve([summary, second]);
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/sites?limit=1&offset=0`);
+  assert.equal(response.status, 200);
+  const page = await response.json();
+  assert.equal(page.total, 2);
+  assert.equal(page.nextOffset, 1);
+  assert.equal(page.sites.length, 1);
+  assert.equal(page.sites[0].name, "V7");
+  assert.equal(
+    page.sites[0].previewUrl,
+    "/api/sites/1/versions/2/catalog-media/preview",
+  );
+
+  assert.equal((await fetch(`${base}/sites?limit=0&offset=0`)).status, 400);
+  assert.equal((await fetch(`${base}/sites?limit=24&offset=-1`)).status, 400);
+});
+
+test("serves only ready Site media without reloading the complete catalog", async (t) => {
+  const { base, server, reads, listReads } = await serve();
   t.after(() => close(server));
 
   assert.equal(
@@ -101,7 +148,9 @@ test("serves only media referenced by the ready catalog summary", async (t) => {
   assert.deepEqual(reads, [
     { siteId: 1, versionId: 2, kind: "preview" },
     { siteId: 1, versionId: 2, kind: "page", recordId: 10 },
+    { siteId: 1, versionId: 2, kind: "page", recordId: 99 },
   ]);
+  assert.equal(listReads(), 0);
 });
 
 test("rejects invalid or non-ready catalog media references", async (t) => {

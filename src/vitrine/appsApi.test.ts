@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { fetchAppFlows, fetchAppMetadata, fetchAppScreens, fetchAppUiElements } from './appsApi.ts';
 
 const metadata = {
-  id: 'quora', app: 'Quora', cat: 'Social', accent: '#b92b27', totalScreens: 563,
+  id: 'quora', app: 'Quora', categories: [{ id: 1, name: 'Social', slug: 'social' }], accent: '#b92b27', totalScreens: 563,
   totalUiElements: 80, totalFlows: 12, platforms: ['ios'],
 };
 const section = {

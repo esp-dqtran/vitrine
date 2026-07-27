@@ -294,6 +294,28 @@ test("preview lookup uses explicit ranks one to three on the latest published ve
   assert.match(captured!.sql, /ORDER BY platform_rank, platform/);
   assert.match(captured!.sql, /preview_rank = \$2/);
   assert.match(captured!.sql, /'protected', 'public-preview'/);
+  assert.match(captured!.sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
+});
+
+test("preview lookup can resolve the full image for high-density catalog cards", async () => {
+  let sql = "";
+  const query: DatabaseQuery = async (statement) => {
+    sql = statement;
+    return result([{
+      object_key: metadata.key,
+      sha256: metadata.sha256,
+      byte_size: 123,
+      content_type: metadata.contentType,
+      access_class: "public-preview",
+    }]);
+  };
+
+  assert.equal(
+    (await publishedPreviewObject({ app: "alpha", rank: 1, variant: "full" }, query))?.key,
+    metadata.key,
+  );
+  assert.match(sql, /so\.object_key = i\.object_key/);
+  assert.doesNotMatch(sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
 });
 
 test("preview lookup rejects ranks outside one to three without querying", async () => {

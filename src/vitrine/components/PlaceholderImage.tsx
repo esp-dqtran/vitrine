@@ -4,13 +4,15 @@ import { EmptyState } from '@astryxdesign/core';
 interface PlaceholderImageProps {
   /** Real image URL — pass this when there's crawled data (src/db.ts). */
   src?: string;
+  /** Optional density-aware alternatives for preview surfaces. */
+  srcSet?: string;
   /** Stable label used only for neutral marketing/unavailable placeholders. */
   seed?: string;
   accent?: string;
   style?: CSSProperties;
 }
 
-export function PlaceholderImage({ src, accent, style }: PlaceholderImageProps) {
+export function PlaceholderImage({ src, srcSet, accent, style }: PlaceholderImageProps) {
   // A present-but-unservable URL (e.g. an old `capture:<hash>` scheme) should degrade to the
   // same neutral placeholder as a missing one, not a broken-image icon. Reset on src change
   // so a shared instance (e.g. the lightbox navigating) re-tries the next image.
@@ -23,6 +25,7 @@ export function PlaceholderImage({ src, accent, style }: PlaceholderImageProps) 
   return (
     <img
       src={src}
+      srcSet={srcSet}
       alt=""
       loading="lazy"
       decoding="async"

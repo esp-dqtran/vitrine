@@ -12,7 +12,7 @@ import * as HoverPreviewModule from './useCategoryHoverPreview.ts';
 const makeApp = (overrides: Partial<App> = {}): App => ({
   id: 'base',
   app: 'Base',
-  cat: 'Business',
+  categories: [{ id: 1, name: 'Business', slug: 'business' }],
   accent: '#777777',
   totalScreens: 1,
   platforms: ['web'],
@@ -45,7 +45,10 @@ test('filters Apps across Mobbin taxonomy fields and platform', () => {
     makeApp({
       id: 'ios',
       app: 'iOS App',
-      cat: 'Health & Fitness',
+      categories: [
+        { id: 2, name: 'Health & Fitness', slug: 'health-fitness' },
+        { id: 3, name: 'Wellness', slug: 'wellness' },
+      ],
       platforms: ['ios'],
       screens: [{ ...makeApp().screens[0]!, id: 2, platform: 'ios', type: 'Signup' }],
     }),
@@ -68,6 +71,24 @@ test('filters Apps across Mobbin taxonomy fields and platform', () => {
       sort: 'latest',
     }).map((app) => app.id),
     ['web'],
+  );
+  assert.deepEqual(
+    filterAndSortApps(apps, {
+      query: 'wellness',
+      facet: null,
+      platform: 'ios',
+      sort: 'latest',
+    }).map((app) => app.id),
+    ['ios'],
+  );
+  assert.deepEqual(
+    filterAndSortApps(apps, {
+      query: '',
+      facet: { group: 'categories', value: 'Wellness' },
+      platform: 'ios',
+      sort: 'latest',
+    }).map((app) => app.id),
+    ['ios'],
   );
 });
 
@@ -120,6 +141,7 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /class="[^"]*reference-discovery-nav[^"]*apps-top-nav[^"]*"/);
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /aria-selected="true"/);
+  assert.match(html, /aria-label="Vitrine Apps"/);
   assert.match(html, /Search on Web/);
   assert.match(html, /Import App/);
 });
@@ -138,6 +160,10 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={[app]}
+      categories={[
+        { id: 1, name: 'Business', slug: 'business', appCount: 1 },
+        { id: 7, name: 'Productivity', slug: 'productivity', appCount: 1 },
+      ]}
       isAdmin
       query=""
       facet={null}
@@ -162,6 +188,7 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /<img src="\/favicon\.svg" alt="" aria-hidden="true" width="32" height="32"\/>/);
   assert.doesNotMatch(html, /<span aria-hidden="true">V<\/span>/);
   assert.match(html, /Categories/);
+  assert.match(html, /Productivity/);
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
@@ -200,6 +227,7 @@ test('renders six App card skeletons while the initial page loads', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={null}
+      categories={null}
       isAdmin
       query=""
       facet={null}
@@ -223,6 +251,7 @@ test('appends three App card skeletons while loading another page', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={[makeApp()]}
+      categories={[]}
       isAdmin
       query=""
       facet={null}
@@ -384,36 +413,14 @@ test('requests a random cached taxonomy candidate on pointer entry', async () =>
   assert.doesNotMatch(source, /fetchFacetPreview\(\{ \.\.\.facet, platform \}\)/);
 });
 
-test('prefetches one bounded preview for every visible App taxonomy facet', async () => {
-  const visibleAppFacetInputs = (
-    AppsDiscoveryPageModule as typeof AppsDiscoveryPageModule & {
-      visibleAppFacetInputs?: (
-        platform: 'web' | 'ios' | 'android',
-      ) => Array<{ group: string; value: string; platform: string }>;
-    }
-  ).visibleAppFacetInputs;
-  assert.equal(typeof visibleAppFacetInputs, 'function');
-  if (!visibleAppFacetInputs) return;
-
-  assert.equal(visibleAppFacetInputs('web').length, 20);
-  assert.deepEqual(visibleAppFacetInputs('web')[0], {
-    group: 'categories',
-    value: 'Productivity',
-    platform: 'web',
-  });
-  assert.deepEqual(visibleAppFacetInputs('ios').at(-1), {
-    group: 'flows',
-    value: 'Reporting',
-    platform: 'ios',
-  });
-  assert.deepEqual(visibleAppFacetInputs('android'), []);
-
+test('loads App taxonomy previews only after pointer entry', async () => {
   const source = await readFile(
     new URL('./components/AppsDiscoveryPage.tsx', import.meta.url),
     'utf8',
   );
-  assert.match(source, /requestIdleCallback/);
-  assert.match(source, /prefetchVisibleAppFacetPreviews\(platform\)/);
+  assert.doesNotMatch(source, /requestIdleCallback/);
+  assert.doesNotMatch(source, /prefetchVisibleAppFacetPreviews/);
+  assert.doesNotMatch(source, /visibleAppFacetInputs/);
   assert.match(source, /readyAppFacetPreviews\.get/);
   assert.match(source, /if \(readyPreview\) showPreview\(/);
   assert.match(source, /void prefetchAppFacetPreview\(/);

@@ -47,3 +47,23 @@ test('every native-control baseline entry names an existing production file', ()
     assert.equal(existsSync(resolve(vitrineRoot, file)), true, `${file} does not exist`);
   }
 });
+
+test('primary buttons rely on their shared foreground treatment', () => {
+  const offenders: string[] = [];
+  for (const file of productionTsxFiles(vitrineRoot)) {
+    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const visit = (node: ts.Node): void => {
+      if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node))
+        && node.tagName.getText(source) === 'Button') {
+        const markup = node.getText(source);
+        if (/\bprimary\b/.test(markup) && /\bcolor\s*:/.test(markup)) {
+          const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));
+          offenders.push(`${relative(vitrineRoot, file)}:${line + 1}`);
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  assert.deepEqual(offenders, []);
+});

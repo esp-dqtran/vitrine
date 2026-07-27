@@ -6,6 +6,7 @@ export type TokenKind = "color" | "typography" | "spacing" | "radius" | "border"
 export interface EvidenceView {
   imageId: number;
   imageUrl: string;
+  thumbnailUrl?: string;
   description: string | null;
   capturedAt?: string | null;
   responsiveViewport?: string;
@@ -252,7 +253,7 @@ export function parseDesignSystemSnapshot(
 export function hydrateDesignSystem(
   snapshot: DesignSystemSnapshot,
   images: Array<{ id: number; image_url: string; description: string | null; captured_at?: string | null; capture_url?: string | null; analysis?: { responsiveViewport?: string } | null }>,
-  imageUrl: (app: string, source: string) => string = publicImageUrl,
+  imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
 ): DesignSystemSnapshot<EvidenceView> {
   const byId = new Map(images.map((image) => [image.id, image]));
   const hydrateOne = (imageId: number): EvidenceView | undefined => {
@@ -260,6 +261,7 @@ export function hydrateDesignSystem(
     return image ? {
       imageId,
       imageUrl: imageUrl(snapshot.app, image.image_url),
+      thumbnailUrl: imageUrl(snapshot.app, image.image_url, "thumb"),
       description: image.description,
       ...(image.captured_at !== undefined ? { capturedAt: image.captured_at } : {}),
       ...(image.analysis?.responsiveViewport ? { responsiveViewport: image.analysis.responsiveViewport } : {}),

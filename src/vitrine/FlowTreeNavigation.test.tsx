@@ -105,12 +105,12 @@ test('renders a selected Flow in the persistent workspace beside its directory',
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
   assert.match(html, /class="selected-flow-workspace"/);
   assert.match(html, /role="tablist"/);
-  assert.match(html, /Visual Flow/);
+  assert.match(html, /Screens/);
   assert.match(html, /Document Flow/);
+  assert.doesNotMatch(html, />Visual Flow</);
+  assert.doesNotMatch(html, /Prototype/);
   assert.doesNotMatch(html, /role="dialog"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
-  assert.match(html, /Screens/);
-  assert.match(html, /Prototype/);
   assert.doesNotMatch(html, /data-flow-strip-card="true"/);
   assert.match(html, /Choose a plan/);
   assert.match(html, /Starting a trial/);
@@ -145,7 +145,7 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /\.flow-workspace\s*\{[\s\S]*grid-template-columns:\s*280px minmax\(0,\s*1fr\)/);
   assert.doesNotMatch(css, /\.flow-workspace--viewer/);
   assert.match(css, /\.flow-strip-card\s*\{[\s\S]*display:\s*grid/);
-  assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*overflow-x:\s*auto/);
+  assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*justify-content:\s*flex-start[\s\S]*overflow-x:\s*auto/);
   assert.match(css, /\.flow-strip-card__screen\s*\{[\s\S]*flex:\s*0 0 min\(42vw,\s*620px\)/);
   assert.match(css, /\.flow-strip-card__footer\s*\{[\s\S]*justify-content:\s*space-between/);
   assert.doesNotMatch(css, /\.flow-strip-card__step-label/);
@@ -178,6 +178,22 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__browse\s*\{[\s\S]*display:/);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*selected-flow-workspace/);
   assert.match(css, /\.selected-flow-workspace__tabs button:focus-visible/);
+});
+
+test('moves Flow galleries and the selected Flow by exact screen positions', () => {
+  const cardSource = readFileSync(
+    new URL('./components/FlowCard.tsx', import.meta.url),
+    'utf8',
+  );
+  const visualFlowSource = readFileSync(
+    new URL('./components/VisualFlowPanel.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(cardSource, /scrollToAdjacentFlowScreen\(track,\s*direction\)/);
+  assert.match(visualFlowSource, /scrollToAdjacentFlowScreen\(track,\s*direction\)/);
+  assert.doesNotMatch(cardSource, /track\.clientWidth \* 0\.72/);
+  assert.doesNotMatch(visualFlowSource, /track\.clientWidth \* 0\.72/);
 });
 
 test('uses Astryx controls for every Flow tree action', () => {

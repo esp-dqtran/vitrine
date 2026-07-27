@@ -39,6 +39,10 @@ test("beginCapture preserves curated App metadata and reuses one ready content h
   const query: DatabaseQuery = async (sql, values) => {
     calls.push({ sql, values });
     if (/INSERT INTO apps/.test(sql)) return result([{ id: 1, name: "example-com" }]);
+    if (/SELECT id, name, slug[\s\S]+FROM categories/.test(sql)) return result();
+    if (/INSERT INTO categories/.test(sql)) {
+      return result([{ id: 9, name: "Website", slug: "website" }]);
+    }
     if (/INSERT INTO web_pages/.test(sql)) return result([{ id: 2 }]);
     if (/status = 'ready'/.test(sql)) return result([{ id: 3 }]);
     return result();
@@ -47,13 +51,26 @@ test("beginCapture preserves curated App metadata and reuses one ready content h
   const begun = await createPublicPageStore(query).beginCapture(capture, contentHash);
 
   assert.deepEqual(begun, { reused: true, app: "example-com", pageId: 2, versionId: 3 });
-  assert.match(calls[1].sql, /COALESCE\(apps\.display_name/);
+  const appUpsert = calls.find(({ sql }) => /INSERT INTO apps/.test(sql));
+  const categoryInsert = calls.find(({ sql }) => /INSERT INTO categories/.test(sql));
+  const relationshipInsert = calls.find(({ sql }) => /INSERT INTO app_categories/.test(sql));
+  assert.ok(appUpsert);
+  assert.ok(categoryInsert);
+  assert.ok(relationshipInsert);
+  assert.match(appUpsert.sql, /COALESCE\(apps\.display_name/);
+  assert.doesNotMatch(appUpsert.sql, /\bcategory\b/);
+  assert.deepEqual(categoryInsert.values, ["Website", "website"]);
+  assert.deepEqual(relationshipInsert.values, [1, [9]]);
   assert.equal(calls.some(({ sql }) => /INSERT INTO web_page_versions/.test(sql)), false);
 });
 
 test("beginCapture creates a new importing immutable version", async () => {
   const query: DatabaseQuery = async (sql) => {
     if (/INSERT INTO apps/.test(sql)) return result([{ id: 1, name: "example-com" }]);
+    if (/SELECT id, name, slug[\s\S]+FROM categories/.test(sql)) return result();
+    if (/INSERT INTO categories/.test(sql)) {
+      return result([{ id: 9, name: "Website", slug: "website" }]);
+    }
     if (/INSERT INTO web_pages/.test(sql)) return result([{ id: 2 }]);
     if (/SELECT id[\s\S]+status = 'ready'/.test(sql)) return result();
     if (/INSERT INTO web_page_versions/.test(sql)) return result([{ id: 4 }]);

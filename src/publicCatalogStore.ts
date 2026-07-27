@@ -7,6 +7,7 @@ import {
   decodeUpdatedCatalogCursor,
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
+import type { Category } from "./categoryStore.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -20,7 +21,7 @@ export interface PublishedCatalogAppRecord {
   app_id: number;
   app: string;
   display_name: string | null;
-  category: string | null;
+  categories: Category[];
   website_url: string | null;
   icon_url: string | null;
   accent_color: string | null;
@@ -52,25 +53,17 @@ export async function publishedCatalogPage(
   const afterUpdatedAt = decoded?.updatedAt ?? null;
   const afterAppId = decoded?.appId ?? null;
   const identitiesResult = await runQuery(
-    `WITH latest AS MATERIALIZED (
+     `WITH latest AS MATERIALIZED (
        SELECT DISTINCT ON (av.app_id, av.platform)
-         av.id AS version_id, av.app_id, av.platform, av.screen_count
+         av.id AS version_id, av.app_id, av.platform, av.screen_count, av.captured_at
        FROM app_versions av
        WHERE av.published_at IS NOT NULL
          AND av.published_at <= $1::timestamptz
        ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
      ), app_updates AS (
-       SELECT latest.app_id, MAX(newest.captured_at) AS updated_at
+       SELECT latest.app_id, MAX(latest.captured_at) AS updated_at
        FROM latest
-       JOIN LATERAL (
-         SELECT vi.captured_at
-         FROM version_images vi
-         JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
-         WHERE vi.version_id = latest.version_id
-           AND vi.captured_at <= $1::timestamptz
-         ORDER BY vi.captured_at DESC, vi.image_id DESC
-         LIMIT 1
-       ) newest ON true
+       WHERE latest.screen_count > 0
        GROUP BY latest.app_id
      ), eligible AS (
        SELECT a.id AS app_id, a.name AS app, app_updates.updated_at
@@ -110,7 +103,24 @@ export async function publishedCatalogPage(
            AND av.published_at <= $2::timestamptz
          ORDER BY av.app_id, av.platform, av.published_at DESC, av.version_number DESC
        )
-       SELECT a.id AS app_id, a.name AS app, a.display_name, a.category, a.website_url,
+       SELECT a.id AS app_id, a.name AS app, a.display_name,
+         COALESCE((
+           SELECT jsonb_agg(
+             jsonb_build_object(
+               'id', category_rows.id,
+               'name', category_rows.name,
+               'slug', category_rows.slug
+             )
+             ORDER BY lower(category_rows.name), category_rows.id
+           )
+           FROM (
+             SELECT c.id, c.name, c.slug
+             FROM app_categories ac
+             JOIN categories c ON c.id = ac.category_id
+             WHERE ac.app_id = a.id
+           ) category_rows
+         ), '[]'::jsonb) AS categories,
+         a.website_url,
          a.icon_url, a.accent_color,
          COALESCE(SUM(latest.screen_count), 0)::int AS total_screens,
          COALESCE(
@@ -121,7 +131,7 @@ export async function publishedCatalogPage(
        FROM apps a
        JOIN latest ON latest.app_id = a.id
        WHERE a.id = ANY($1::integer[])
-       GROUP BY a.id, a.name, a.display_name, a.category, a.website_url,
+       GROUP BY a.id, a.name, a.display_name, a.website_url,
          a.icon_url, a.accent_color`,
       [appIds, snapshotAt],
     ),
@@ -138,7 +148,7 @@ export async function publishedCatalogPage(
        candidates AS (
          SELECT DISTINCT ON (a.id, latest.platform, i.id)
            i.id, a.name AS app, latest.platform, i.image_url, i.kind,
-           i.description, i.analysis, a.icon_url, a.category,
+           i.description, i.analysis, a.icon_url,
            vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height,
            vi.state_context, vi.captured_at, api.rank::int AS curated_rank
          FROM apps a
@@ -170,7 +180,7 @@ export async function publishedCatalogPage(
          FROM platform_ranked
        )
        SELECT id, app, platform, image_url, kind, description, analysis,
-         icon_url, category, capture_url, viewport_width, viewport_height,
+         icon_url, capture_url, viewport_width, viewport_height,
          state_context, captured_at, preview_rank::int
        FROM ranked
        WHERE preview_rank <= 3

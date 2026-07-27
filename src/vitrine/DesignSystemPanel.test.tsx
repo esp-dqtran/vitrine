@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DesignSystemPanel, designSystemMarkdown } from './components/DesignSystemPanel.tsx';
+
+test('keeps empty design-system headings sequential under the detail title', () => {
+  const html = renderToStaticMarkup(
+    <DesignSystemPanel snapshot={null} status="missing" />,
+  );
+
+  assert.match(html, /<h2[^>]*>No design system yet<\/h2>/);
+});
 import type { DesignSystemGenerationView } from './useDesignSystemGeneration.ts';
 
 function generation(

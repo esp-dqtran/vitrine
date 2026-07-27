@@ -33,7 +33,9 @@ export function AppOverviewPanel({ app }: { app: AppMetadata }) {
         {stats.map(([label, value]) => <Card key={label} padding={4}><Text type="supporting" color="secondary">{label}</Text><div style={{ marginTop: 8, fontSize: 28, fontWeight: 700 }}>{value}</div></Card>)}
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Badge label={app.cat} variant="neutral" />
+        {app.categories.map((category) => (
+          <Badge key={category.id} label={category.name} variant="neutral" />
+        ))}
         {(app.platforms ?? []).map((platform) => <Badge key={platform} label={PLATFORM_LABEL[platform]} variant="neutral" />)}
       </div>
       <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>

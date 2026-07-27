@@ -99,6 +99,11 @@ const SEARCH_TABLES = [
   "search_index_queue",
 ] as const;
 
+const CATEGORY_TABLES = [
+  "app_categories",
+  "categories",
+] as const;
+
 const AUXILIARY_MIGRATION_TABLES = [
   "design_system_import_history",
   "organization_members",
@@ -293,6 +298,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...REFERRAL_TABLES,
       ...FEATURE_DOCUMENT_TABLES,
       ...SEARCH_TABLES,
+      ...CATEGORY_TABLES,
       ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();
@@ -328,6 +334,50 @@ async function verifyUpgradeDatabase(databaseUrlValue: string): Promise<Migratio
     const after = await captureUpgradeState(pool);
     assert.deepEqual(after.counts, before.counts, "upgrade changed protected row counts");
     assert.deepEqual(after.hashes, before.hashes, "upgrade changed protected rows or sequences");
+    const categoryBackfill = await pool.query<{
+      categories: number;
+      relationships: number;
+      missing: number;
+    }>(
+      `SELECT
+         (SELECT count(*)::integer FROM categories) AS categories,
+         (SELECT count(*)::integer FROM app_categories) AS relationships,
+         (
+           SELECT count(*)::integer
+           FROM apps a
+           WHERE a.category IS NOT NULL
+             AND btrim(a.category) <> ''
+             AND NOT EXISTS (
+               SELECT 1 FROM app_categories ac WHERE ac.app_id = a.id
+             )
+         ) AS missing`,
+    );
+    assert.equal(
+      categoryBackfill.rows[0].missing,
+      0,
+      "category backfill must retain every legacy assignment",
+    );
+    assert.ok(
+      categoryBackfill.rows[0].categories > 0,
+      "upgrade fixture must create categories",
+    );
+    assert.ok(
+      categoryBackfill.rows[0].relationships > 0,
+      "upgrade fixture must create app category relationships",
+    );
+    const categorySequence = await pool.query<{
+      last_value: string;
+      maximum: string;
+    }>(
+      `SELECT sequence_row.last_value::text,
+         COALESCE((SELECT max(id) FROM categories), 0)::text AS maximum
+       FROM categories_id_seq sequence_row`,
+    );
+    assert.ok(
+      BigInt(categorySequence.rows[0].last_value)
+        >= BigInt(categorySequence.rows[0].maximum),
+      "categories_id_seq is behind categories.id",
+    );
     for (const table of OBJECT_STORAGE_TABLES) {
       const result = await pool.query<{ count: number }>(
         `SELECT count(*)::integer AS count FROM ${quotedIdentifier(table)}`,

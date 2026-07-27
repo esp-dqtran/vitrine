@@ -9,7 +9,7 @@ export interface PublishedSearchSource {
     appId: number;
     app: string;
     platform: string;
-    category?: string;
+    categories: string[];
     publishedAt: string;
   };
   images: CrawledImage[];
@@ -96,11 +96,10 @@ function baseDocument(
     versionId: source.version.id,
     appId: source.version.appId,
     appName: source.version.app,
-    catalogCategories: source.version.category ? [source.version.category] : [],
+    catalogCategories: source.version.categories,
     siteSections: [],
     siteStyles: [],
     platform: source.version.platform,
-    ...(source.version.category ? { appCategory: source.version.category } : {}),
     publishedAt: source.version.publishedAt,
   };
   return { ...document, sourceRevision: searchDocumentRevision(document) };
@@ -159,7 +158,7 @@ function projectImage(
       title,
       description,
       source.version.app,
-      source.version.category,
+      source.version.categories,
       source.version.platform,
       visibleText,
       analysis?.pageType,
@@ -195,7 +194,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
     searchText: searchDocumentText(
       source.version.app,
       appDescription,
-      source.version.category,
+      source.version.categories,
       source.version.platform,
     ),
   }));
@@ -237,7 +236,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
         aliases,
         component.description,
         source.version.app,
-        source.version.category,
+        source.version.categories,
         source.version.platform,
         visibleText,
         component.anatomy,
@@ -277,7 +276,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
       searchText: searchDocumentText(
         pattern.name,
         source.version.app,
-        source.version.category,
+        source.version.categories,
         source.version.platform,
       ),
     }));
@@ -313,7 +312,7 @@ export function projectSearchDocuments(source: PublishedSearchSource): SearchDoc
         flow.tags,
         flow.steps.flatMap(({ label, interaction }) => [label, interaction]),
         source.version.app,
-        source.version.category,
+        source.version.categories,
         source.version.platform,
       ),
     }));

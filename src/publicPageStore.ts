@@ -1,5 +1,6 @@
 import type { QueryResult } from "pg";
 import { query as databaseQuery, withTransaction } from "./db.ts";
+import { createCategoryStore } from "./categoryStore.ts";
 import {
   validateObjectMetadata,
   type ObjectMetadata,
@@ -101,16 +102,15 @@ export function createPublicPageStore(
       return runTransaction(async (tx) => {
         const appResult = await tx(
           `INSERT INTO apps
-             (name, source_domain, display_name, description, website_url, accent_color, icon_url, category)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             (name, source_domain, display_name, description, website_url, accent_color, icon_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (name) DO UPDATE SET
              source_domain = COALESCE(apps.source_domain, EXCLUDED.source_domain),
              display_name = COALESCE(apps.display_name, EXCLUDED.display_name),
              description = COALESCE(apps.description, EXCLUDED.description),
              website_url = COALESCE(apps.website_url, EXCLUDED.website_url),
              accent_color = COALESCE(apps.accent_color, EXCLUDED.accent_color),
-             icon_url = COALESCE(apps.icon_url, EXCLUDED.icon_url),
-             category = COALESCE(apps.category, EXCLUDED.category)
+             icon_url = COALESCE(apps.icon_url, EXCLUDED.icon_url)
            RETURNING id, name`,
           [
             identity.appSlug,
@@ -120,12 +120,15 @@ export function createPublicPageStore(
             websiteUrl,
             capture.metadata.accent,
             capture.metadata.iconUrl ?? null,
-            capture.metadata.category,
           ],
         );
         const appRow = appResult.rows[0];
         const appId = positiveId(appRow?.id);
         const app = nonEmptyText(appRow?.name);
+        await createCategoryStore(
+          tx,
+          async (work) => work(tx),
+        ).assignNames(appId, [capture.metadata.category], { replace: false });
         const pageResult = await tx(
           `INSERT INTO web_pages (app_id, canonical_url, title)
            VALUES ($1, $2, $3)

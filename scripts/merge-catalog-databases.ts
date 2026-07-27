@@ -128,7 +128,10 @@ export function sameObjectContent(left: ObjectMetadataRow, right: ObjectMetadata
 interface AppRow {
   name: string;
   icon_url: string | null;
-  category: string | null;
+  categories: Array<{
+    name: string;
+    slug: string;
+  }>;
 }
 
 interface PlatformRow {
@@ -189,7 +192,19 @@ async function loadCatalog(database: Queryable, includeUnreferencedObjects = fal
          SELECT thumbnail_object_key FROM images WHERE thumbnail_object_key IS NOT NULL
        )`;
   const [apps, platforms, images, objects, flows] = await Promise.all([
-    database.query<AppRow>("SELECT name, icon_url, category FROM apps ORDER BY name"),
+    database.query<AppRow>(
+      `SELECT a.name, a.icon_url, COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac
+         JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories
+       FROM apps a
+       ORDER BY a.name`,
+    ),
     database.query<PlatformRow>(
       `SELECT a.name AS app, p.name AS platform
        FROM platforms p JOIN apps a ON a.id = p.app_id
@@ -267,13 +282,66 @@ function assertNoPreflightConflicts(source: CatalogRows, target: CatalogRows): v
 async function mergeApps(client: PoolClient, rows: AppRow[]): Promise<void> {
   for (const batch of chunks(rows, BATCH_SIZE)) {
     await client.query(
-      `INSERT INTO apps (name, icon_url, category)
-       SELECT name, icon_url, category
-       FROM jsonb_to_recordset($1::jsonb) AS x(name text, icon_url text, category text)
+      `INSERT INTO apps (name, icon_url)
+       SELECT name, icon_url
+       FROM jsonb_to_recordset($1::jsonb) AS x(name text, icon_url text)
        ON CONFLICT (name) DO UPDATE SET
-         icon_url = COALESCE(apps.icon_url, EXCLUDED.icon_url),
-         category = COALESCE(apps.category, EXCLUDED.category)`,
+         icon_url = COALESCE(apps.icon_url, EXCLUDED.icon_url)`,
       [JSON.stringify(batch)],
+    );
+  }
+}
+
+async function mergeCategories(client: PoolClient, rows: AppRow[]): Promise<void> {
+  const relationships = rows.flatMap(({ name: app, categories }) =>
+    categories.map(({ name, slug }) => ({
+      app,
+      category_name: name,
+      category_slug: slug,
+    })));
+
+  for (const batch of chunks(relationships, BATCH_SIZE)) {
+    const values = JSON.stringify(batch);
+    await client.query(
+      `INSERT INTO categories (name, slug)
+       SELECT DISTINCT category_name, category_slug
+       FROM jsonb_to_recordset($1::jsonb) AS x(
+         app text, category_name text, category_slug text
+       )
+       ON CONFLICT DO NOTHING`,
+      [values],
+    );
+
+    const conflicts = await client.query<{ category_name: string; category_slug: string }>(
+      `SELECT DISTINCT x.category_name, x.category_slug
+       FROM jsonb_to_recordset($1::jsonb) AS x(
+         app text, category_name text, category_slug text
+       )
+       LEFT JOIN categories by_name ON lower(by_name.name) = lower(x.category_name)
+       LEFT JOIN categories by_slug ON lower(by_slug.slug) = lower(x.category_slug)
+       WHERE by_name.id IS NULL OR by_slug.id IS NULL OR by_name.id <> by_slug.id
+       ORDER BY x.category_name, x.category_slug`,
+      [values],
+    );
+    if (conflicts.rows.length) {
+      const conflict = conflicts.rows[0];
+      throw new Error(
+        `Category identity conflict while merging ${conflict.category_name}/${conflict.category_slug}`,
+      );
+    }
+
+    await client.query(
+      `INSERT INTO app_categories (app_id, category_id)
+       SELECT a.id, c.id
+       FROM jsonb_to_recordset($1::jsonb) AS x(
+         app text, category_name text, category_slug text
+       )
+       JOIN apps a ON a.name = x.app
+       JOIN categories c
+         ON lower(c.name) = lower(x.category_name)
+        AND lower(c.slug) = lower(x.category_slug)
+       ON CONFLICT (app_id, category_id) DO NOTHING`,
+      [values],
     );
   }
 }
@@ -456,6 +524,7 @@ async function applyMerge(target: pg.Pool, source: CatalogRows): Promise<void> {
   try {
     await client.query("BEGIN");
     await mergeApps(client, source.apps);
+    await mergeCategories(client, source.apps);
     await mergePlatforms(client, source.platforms);
     await mergeObjects(client, source.objects);
     await mergeImages(client, source.images);

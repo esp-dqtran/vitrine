@@ -21,7 +21,6 @@ import { HeroButton } from './HeroButton';
 import { Lightbox } from './Lightbox';
 import { ScreenGridCard } from './ScreenGridCard';
 import { ScrollToTopButton } from './ScrollToTopButton';
-import { VersionPanel } from './VersionPanel';
 import { ReferenceDetailShell } from './ReferenceDetailShell';
 import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav';
 import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
@@ -298,7 +297,7 @@ export function ScreenDetail({
   ];
   const tabs = role === 'admin' ? adminTabs : memberTabs;
   const metadata = [
-    { label: 'Category', value: app.cat },
+    { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },
     { label: 'Screens', value: String(app.totalScreens) },
     ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
   ];
@@ -346,21 +345,6 @@ export function ScreenDetail({
         bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>
-          {section !== 'overview' && sectionData.versions !== null && (
-            <VersionPanel
-              app={app.id}
-              platform={selectedPlatform}
-              role={role}
-              versions={sectionData.versions}
-              selectedVersion={sectionData.resolvedVersion}
-              onVersionsChange={(items) => {
-                if (sectionData.resolvedVersion !== undefined) sectionData.invalidateVersion(selectedPlatform, sectionData.resolvedVersion);
-                invalidateDesignSystem();
-                sectionData.setVersions(items);
-              }}
-              onSelect={setSelectedVersion}
-            />
-          )}
           {section === 'overview' ? <AppOverviewPanel app={app} />
             : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
               : sectionLoading
@@ -376,12 +360,6 @@ export function ScreenDetail({
                           platform={selectedPlatform}
                           version={sectionData.resolvedVersion}
                           userRole={role}
-                          onAnalysisComplete={() => {
-                            if (sectionData.resolvedVersion !== undefined) {
-                              sectionData.invalidateVersion(selectedPlatform, sectionData.resolvedVersion);
-                              void sectionData.retry();
-                            }
-                          }}
                           selectedFlowId={initialFlow}
                           selectedStep={initialStep}
                           selectedFlowView={initialFlowView}

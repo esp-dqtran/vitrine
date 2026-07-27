@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type {
-  FeatureClaim,
   FeatureDocumentRevisionView,
   FeatureDocumentView,
 } from '../../featureDocument.ts';
 import type { Platform } from '../../platformFromUrl.ts';
-import { buildDocumentFlowNarrative } from '../documentFlowModel.ts';
 import {
   cancelFeatureDocumentJob,
   getFeatureDocument,
   getFeatureDocumentByFlow,
+  getFeatureDocumentMarkdown,
   retryFeatureDocumentJob,
   subscribeFeatureDocumentJob,
 } from '../featureDocumentsApi.ts';
 import { FeatureDocumentProgress } from './FeatureDocumentProgress.tsx';
-import { FeatureDocumentWorkspace } from './FeatureDocumentPage.tsx';
 import { FeatureDocumentSetupDialog } from './FeatureDocumentSetupDialog.tsx';
 
 export interface DocumentFlowPanelProps {
@@ -36,20 +36,21 @@ export type DocumentFlowState =
   | { kind: 'ready'; document: FeatureDocumentView; revision: FeatureDocumentRevisionView }
   | { kind: 'error'; message: string; retryable: boolean };
 
+export type DocumentFlowMarkdownState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; content: string }
+  | { kind: 'error'; message: string };
+
 export interface DocumentFlowPanelViewProps {
-  flow: DesignFlow<EvidenceView>;
   state: DocumentFlowState;
   userRole: 'admin' | 'user';
-  selectedStep?: number;
-  editing?: boolean;
+  markdown?: DocumentFlowMarkdownState;
   connectionError?: string;
-  onOpenVisualStep(step: number): void;
-  onEdit?(): void;
-  onDocumentChange?(document: FeatureDocumentView): void;
   onGenerate?(): void;
   onCancel?(): void;
   onRetry?(): void;
   onReconnect?(): void;
+  onMarkdownRetry?(): void;
 }
 
 export function classifyDocumentFlow(document: FeatureDocumentView): DocumentFlowState {
@@ -63,43 +64,17 @@ export function classifyDocumentFlow(document: FeatureDocumentView): DocumentFlo
   };
 }
 
-function Claim({ claim }: { claim: FeatureClaim }) {
-  return (
-    <div className="document-flow__claim">
-      <span className={`document-flow__claim-kind is-${claim.kind}`}>{claim.kind}</span>
-      <p>{claim.text}</p>
-    </div>
-  );
-}
-
 export function DocumentFlowPanelView({
-  flow,
   state,
   userRole,
-  selectedStep,
-  editing = false,
+  markdown = { kind: 'loading' },
   connectionError,
-  onOpenVisualStep,
-  onEdit,
-  onDocumentChange,
   onGenerate,
   onCancel,
   onRetry,
   onReconnect,
+  onMarkdownRetry,
 }: DocumentFlowPanelViewProps) {
-  const mounted = useRef(false);
-
-  useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      return;
-    }
-    if (selectedStep === undefined) return;
-    globalThis.document
-      ?.getElementById(`document-flow-step-${selectedStep}`)
-      ?.scrollIntoView({ block: 'nearest' });
-  }, [selectedStep]);
-
   if (state.kind === 'loading') {
     return (
       <section className="document-flow document-flow--loading" aria-label="Document Flow">
@@ -154,75 +129,30 @@ export function DocumentFlowPanelView({
     );
   }
 
-  if (editing) {
+  if (markdown.kind === 'loading') {
     return (
-      <section className="document-flow document-flow--editing" aria-label="Document Flow">
-        <Button
-          label="Back to Document Flow"
-          variant="ghost"
-          clickAction={onEdit}
-        />
-        <FeatureDocumentWorkspace
-          initialDocument={state.document}
-          embedded
-          onDocumentChange={onDocumentChange}
-        />
+      <section className="document-flow document-flow--loading" aria-label="Document Flow">
+        <div role="status" aria-label="Loading Document Flow Markdown"><Spinner size="lg" /></div>
       </section>
     );
   }
 
-  const narrative = buildDocumentFlowNarrative(flow, state.revision);
+  if (markdown.kind === 'error') {
+    return (
+      <section className="document-flow document-flow--error" aria-label="Document Flow">
+        <div role="alert">{markdown.message}</div>
+        {onMarkdownRetry && (
+          <Button label="Retry Markdown" variant="primary" clickAction={onMarkdownRetry} />
+        )}
+      </section>
+    );
+  }
+
   return (
     <section className="document-flow document-flow--ready" aria-label="Document Flow">
-      {userRole === 'admin' && onEdit && (
-        <div className="document-flow__actions">
-          <Button label="Edit Document Flow" variant="secondary" clickAction={onEdit} />
-        </div>
-      )}
-      <section className="document-flow__section" aria-labelledby="document-flow-overview">
-        <h3 id="document-flow-overview">Overview</h3>
-        <Claim claim={narrative.overview.purpose} />
-        <Claim claim={narrative.overview.userValue} />
-      </section>
-      <section className="document-flow__section" aria-labelledby="document-flow-trigger">
-        <h3 id="document-flow-trigger">Trigger</h3>
-        <Claim claim={narrative.trigger} />
-      </section>
-      <section className="document-flow__section" aria-labelledby="document-flow-steps">
-        <h3 id="document-flow-steps">Ordered steps</h3>
-        <ol className="document-flow__steps">
-          {narrative.steps.map((step) => (
-            <li
-              key={step.number}
-              id={`document-flow-step-${step.number}`}
-              className="document-flow__step"
-              aria-current={selectedStep === step.number ? 'step' : undefined}
-            >
-              <div>
-                <strong>{String(step.number).padStart(2, '0')} · {step.label}</strong>
-                <span className={`document-flow__claim-kind is-${step.kind}`}>{step.kind}</span>
-                <p>{step.text}</p>
-              </div>
-              <Button
-                label={`View visual step ${step.number}`}
-                variant="ghost"
-                size="sm"
-                clickAction={() => onOpenVisualStep(step.number)}
-              />
-            </li>
-          ))}
-        </ol>
-      </section>
-      <section className="document-flow__section" aria-labelledby="document-flow-outcome">
-        <h3 id="document-flow-outcome">Outcome</h3>
-        <Claim claim={narrative.outcome} />
-      </section>
-      <section className="document-flow__section" aria-labelledby="document-flow-alternates">
-        <h3 id="document-flow-alternates">Alternate and error paths</h3>
-        {narrative.alternates.length > 0
-          ? narrative.alternates.map((claim) => <Claim key={claim.id} claim={claim} />)
-          : <p>No alternate or error paths documented.</p>}
-      </section>
+      <article className="document-flow__markdown">
+        <Markdown remarkPlugins={[remarkGfm]}>{markdown.content}</Markdown>
+      </article>
     </section>
   );
 }
@@ -238,7 +168,8 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   const [setupOpen, setSetupOpen] = useState(false);
   const [connectionError, setConnectionError] = useState('');
   const [subscriptionVersion, setSubscriptionVersion] = useState(0);
-  const [editing, setEditing] = useState(false);
+  const [markdown, setMarkdown] = useState<DocumentFlowMarkdownState>({ kind: 'loading' });
+  const [markdownReloadVersion, setMarkdownReloadVersion] = useState(0);
 
   const loadBySource = useCallback(async () => {
     if (!app || !platform || !version) {
@@ -270,6 +201,33 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   useEffect(() => {
     void loadBySource();
   }, [loadBySource]);
+
+  const readyDocumentId = state.kind === 'ready' ? state.document.id : undefined;
+  const readyRevisionId = state.kind === 'ready' ? state.revision.id : undefined;
+
+  useEffect(() => {
+    if (readyDocumentId === undefined || readyRevisionId === undefined) {
+      setMarkdown({ kind: 'loading' });
+      return;
+    }
+    let live = true;
+    setMarkdown({ kind: 'loading' });
+    void getFeatureDocumentMarkdown(readyDocumentId, readyRevisionId)
+      .then((content) => {
+        if (live) setMarkdown({ kind: 'ready', content });
+      })
+      .catch((error: Error) => {
+        if (live) {
+          setMarkdown({
+            kind: 'error',
+            message: error.message || 'Could not load Document Flow Markdown.',
+          });
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [markdownReloadVersion, readyDocumentId, readyRevisionId]);
 
   useEffect(() => {
     if (state.kind !== 'pending' || !state.document.currentJob) return;
@@ -327,19 +285,15 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   return (
     <>
       <DocumentFlowPanelView
-        flow={flow}
         state={state}
         userRole={props.userRole}
-        selectedStep={props.selectedStep}
-        editing={editing}
+        markdown={markdown}
         connectionError={connectionError}
-        onOpenVisualStep={props.onOpenVisualStep}
-        onEdit={() => setEditing((current) => !current)}
-        onDocumentChange={(next) => setState(classifyDocumentFlow(next))}
         onGenerate={() => setSetupOpen(true)}
         onCancel={() => void cancel()}
         onRetry={() => void retry()}
         onReconnect={() => setSubscriptionVersion((current) => current + 1)}
+        onMarkdownRetry={() => setMarkdownReloadVersion((current) => current + 1)}
       />
       {app && platform && version && setupOpen && (
         <FeatureDocumentSetupDialog

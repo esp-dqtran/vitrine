@@ -238,7 +238,7 @@ export async function crawlFailureObject(
 }
 
 export async function publishedPreviewObject(
-  input: { app: string; rank: number },
+  input: { app: string; rank: number; variant?: "full" | "thumb" },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
   if (!Number.isInteger(input.rank) || input.rank < 1 || input.rank > 3) {
@@ -286,7 +286,7 @@ export async function publishedPreviewObject(
      SELECT ${METADATA_COLUMNS}
      FROM ranked
      JOIN images i ON i.id = ranked.image_id
-     JOIN stored_objects so ON ${imageObjectJoin("thumb")}
+     JOIN stored_objects so ON ${imageObjectJoin(input.variant ?? "thumb")}
      WHERE ranked.app = $1 AND ranked.preview_rank = $2
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,

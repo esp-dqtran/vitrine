@@ -14,6 +14,7 @@ test("reuses catalog search for related references and the comparison endpoint f
     title: "Login",
     description: "Sign in",
     evidenceIds: [1],
+    appCategories: ["Productivity"],
     pageType: "Login",
     productArea: "Authentication",
     states: [],

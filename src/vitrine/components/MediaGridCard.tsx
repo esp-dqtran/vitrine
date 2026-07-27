@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge, ClickableCard } from '@astryxdesign/core';
+import { observeNearViewportMedia } from './deferredMedia.ts';
 
 interface MediaGridCardProps {
   label: string;
@@ -11,6 +12,7 @@ interface MediaGridCardProps {
   aspectRatio?: string | number;
   imageFit?: 'cover' | 'contain';
   preferFullImage?: boolean;
+  deferMedia?: boolean;
   badges?: string[];
   title?: string;
   delay?: number;
@@ -27,21 +29,44 @@ export function MediaGridCard({
   aspectRatio = '16 / 10',
   imageFit = 'cover',
   preferFullImage = false,
+  deferMedia = false,
   badges = [],
   title,
   delay = 0,
   onOpen,
 }: MediaGridCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
+  const imageSrc = preferFullImage ? url : thumbnailUrl ?? url;
+  const imageSrcSet = !preferFullImage && thumbnailUrl && url && thumbnailUrl !== url
+    ? `${thumbnailUrl} 1x,${url} 2x`
+    : undefined;
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!deferMedia || mediaActive || !card) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setMediaActive(true);
+      return;
+    }
+    return observeNearViewportMedia(card, () => setMediaActive(true));
+  }, [deferMedia, mediaActive]);
+
   return (
     <ClickableCard
+      ref={cardRef}
       label={label}
       onClick={onOpen}
       padding={0}
       variant="muted"
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => {
+        setHovered(true);
+        setMediaActive(true);
+      }}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setMediaActive(true)}
       style={{
         position: 'relative',
         aspectRatio,
@@ -52,7 +77,9 @@ export function MediaGridCard({
         transform: hovered ? 'translateY(-4px)' : 'none',
       }}
     >
-      {mediaFailed || !url ? (
+      {!mediaActive ? (
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: accent ? `${accent}22` : 'var(--color-background-muted)' }} />
+      ) : mediaFailed || !url ? (
         <div role="img" aria-label="Preview unavailable" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--color-text-secondary)', background: `linear-gradient(135deg, ${accent ? `${accent}22` : 'var(--color-background-muted)'}, var(--color-background-surface))` }}>
           Preview unavailable
         </div>
@@ -70,7 +97,8 @@ export function MediaGridCard({
         />
       ) : (
         <img
-          src={preferFullImage ? url : thumbnailUrl ?? url}
+          src={imageSrc}
+          srcSet={imageSrcSet}
           alt=""
           loading="lazy"
           decoding="async"

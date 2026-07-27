@@ -14,6 +14,17 @@ test('uses the Vitrine brand mark as the browser favicon', async () => {
   assert.match(favicon, /#3E9EFB/);
   assert.equal(favicon.match(/\.inner\s*\{\s*fill:/g)?.length, 1);
   assert.match(favicon, /<rect x="10" y="10" width="12" height="12" rx="4"/);
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+});
+
+test('publishes crawlable catalog metadata', async () => {
+  const [html, robots] = await Promise.all([
+    readFile(new URL('../../index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../../public/robots.txt', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /<meta name="description" content="[^"]+" \/>/);
+  assert.equal(robots, 'User-agent: *\nAllow: /\n');
 });
 
 test('keeps every in-app Vitrine mark center white in all themes', async () => {

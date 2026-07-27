@@ -263,6 +263,11 @@
   gap: 28px 16px;
 }
 
+.sites-discovery__sentinel {
+  grid-column: 1 / -1;
+  min-height: 1px;
+}
+
 .reference-discovery__loading {
   padding-top: 18px;
 }
@@ -309,7 +314,7 @@
 }
 
 .discovery-card__copy small {
-  color: var(--color-text-disabled);
+  color: var(--color-text-secondary);
   font-size: 10px;
 }
 

@@ -57,7 +57,10 @@ export async function publishedFacetPreviews(
        SELECT a.name AS app, a.icon_url, 0::int AS media_count
        FROM latest
        JOIN apps a ON a.id = latest.app_id
-       WHERE lower(a.category) = lower($2) AND a.icon_url IS NOT NULL
+       JOIN app_categories ac ON ac.app_id = a.id
+       JOIN categories c ON c.id = ac.category_id
+       WHERE lower(c.name) = lower($2) AND a.icon_url IS NOT NULL
+       GROUP BY a.id, a.name, a.icon_url
        ORDER BY a.name
        LIMIT 6`
     : cachedMediaSql(input.group);

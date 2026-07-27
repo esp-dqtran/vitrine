@@ -11,6 +11,21 @@ const version = {
 };
 const key: AppSectionKey = { appId: 'claude', section: 'screens', platform: 'ios', version: 'latest' };
 
+test('starts evidence galleries with one bounded page', async () => {
+  const limits: number[] = [];
+  const store = createAppSectionStore({
+    screens: async (_app, input) => {
+      limits.push(input.limit ?? 0);
+      return { screens: [], nextCursor: null, platform: 'ios', version };
+    },
+    uiElements: async () => { throw new Error('unused'); },
+    flows: async () => { throw new Error('unused'); },
+  });
+
+  await store.load(key);
+  assert.deepEqual(limits, [8]);
+});
+
 test('deduplicates in-flight loads and reuses fulfilled section data', async () => {
   let calls = 0;
   let resolve!: (value: unknown) => void;

@@ -9,9 +9,9 @@ import {
 } from "./inspirationSearch.ts";
 
 const items: CatalogSearchResultItem[] = [
-  { id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], states: [], layoutPatterns: [], componentNames: [] },
-  { id: "flow:linear:signin", kind: "flow", app: "linear", title: "Sign in", description: "Authentication", evidenceIds: [1], states: [], layoutPatterns: [], componentNames: [] },
-  { id: "pattern:linear:sidebar", kind: "pattern", app: "linear", title: "Sidebar", description: "Persistent navigation", evidenceIds: [2], states: [], layoutPatterns: ["Sidebar"], componentNames: [] },
+  { id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], appCategories: ["Productivity"], states: [], layoutPatterns: [], componentNames: [] },
+  { id: "flow:linear:signin", kind: "flow", app: "linear", title: "Sign in", description: "Authentication", evidenceIds: [1], appCategories: ["Productivity"], states: [], layoutPatterns: [], componentNames: [] },
+  { id: "pattern:linear:sidebar", kind: "pattern", app: "linear", title: "Sidebar", description: "Persistent navigation", evidenceIds: [2], appCategories: ["Productivity"], states: [], layoutPatterns: ["Sidebar"], componentNames: [] },
 ];
 
 test("offers useful starting intents", () => {

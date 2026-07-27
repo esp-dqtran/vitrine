@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { SiteSectionVideoCard } from './components/SiteSectionVideoCard.tsx';
 
 test('plays at 35% visibility, pauses below it, and disconnects on cleanup', async () => {
   const module = await import('./components/SiteSectionVideoCard.tsx');
@@ -65,4 +67,19 @@ test('consumes rejected autoplay without blocking cleanup', async () => {
   await new Promise<void>((resolve) => setImmediate(resolve));
   cleanup();
   assert.equal(disconnectCalls, 1);
+});
+
+test('keeps deferred Site video source and poster inactive before visibility', () => {
+  const html = renderToStaticMarkup(
+    <SiteSectionVideoCard
+      label="Open hero"
+      url="/deferred-hero.mp4"
+      posterUrl="/deferred-hero.webp"
+      deferMedia
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /deferred-hero\.mp4/);
+  assert.doesNotMatch(html, /deferred-hero\.webp/);
 });

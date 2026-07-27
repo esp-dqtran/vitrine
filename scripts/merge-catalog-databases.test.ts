@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   auditSnapshots,
@@ -9,6 +10,18 @@ import {
   sameObjectContent,
   sameObjectMetadata,
 } from "./merge-catalog-databases.ts";
+
+const mergerSource = readFileSync(new URL("./merge-catalog-databases.ts", import.meta.url), "utf8");
+
+test("catalog merge copies normalized Category entities and relationships", () => {
+  assert.match(mergerSource, /FROM app_categories/);
+  assert.match(mergerSource, /JOIN categories/);
+  assert.match(mergerSource, /INSERT INTO categories/);
+  assert.match(mergerSource, /INSERT INTO app_categories/);
+  assert.match(mergerSource, /await mergeCategories\(client, source\.apps\)/);
+  assert.doesNotMatch(mergerSource, /SELECT name, icon_url, category FROM apps/);
+  assert.doesNotMatch(mergerSource, /INSERT INTO apps \(name, icon_url, category\)/);
+});
 
 test("chunks keeps every item exactly once", () => {
   assert.deepEqual(chunks([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);

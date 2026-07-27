@@ -38,3 +38,10 @@ test("admin app page aggregates only the selected page identities", () => {
     /page_image_facts AS MATERIALIZED[\s\S]*i\.created_at <= \$1::timestamptz/,
   );
 });
+
+test("admin app page returns Category arrays without multiplying screen facts", () => {
+  assert.match(adminAppPageSource, /\b(?:FROM|JOIN) app_categories/);
+  assert.match(adminAppPageSource, /JOIN categories/);
+  assert.match(adminAppPageSource, /jsonb_agg/);
+  assert.doesNotMatch(adminAppPageSource, /\ba\.category\b|\bpa\.category\b/);
+});

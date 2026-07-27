@@ -15,7 +15,7 @@ test("renders inspiration prompts as actions", () => {
 
 test("renders thumbnail-first grouped references", () => {
   const html = renderToStaticMarkup(<InspirationResults
-    items={[{ id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], states: [], layoutPatterns: [], componentNames: [], thumbnailUrl: "/thumb.webp" }]}
+    items={[{ id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], appCategories: ["Productivity"], states: [], layoutPatterns: [], componentNames: [], thumbnailUrl: "/thumb.webp" }]}
     activeId="screen:1"
     onPreview={() => undefined}
   />);
@@ -28,7 +28,7 @@ test("renders thumbnail-first grouped references", () => {
 
 test("renders preview context and all three actions", () => {
   const html = renderToStaticMarkup(<InspirationPreview
-    item={{ id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], states: [], layoutPatterns: [], componentNames: [], imageUrl: "/full.webp" }}
+    item={{ id: "screen:1", kind: "screen", app: "linear", title: "Login", description: "Sign in", evidenceIds: [1], appCategories: ["Productivity"], states: [], layoutPatterns: [], componentNames: [], imageUrl: "/full.webp" }}
     related={[]}
     relatedLoading={false}
     collections={[]}

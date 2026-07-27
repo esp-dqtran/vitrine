@@ -8,6 +8,8 @@ test('renders the Users outlet inside the dedicated Admin shell', () => {
   const html = renderToStaticMarkup(
     <AdminDashboardShell
       email="admin@example.com"
+      section="categories"
+      onSectionChange={() => undefined}
       onBack={() => undefined}
       onLogout={() => undefined}
       page={<main data-admin-page="users">Users content</main>}
@@ -18,12 +20,15 @@ test('renders the Users outlet inside the dedicated Admin shell', () => {
   assert.match(html, /Vitrine Admin/);
   assert.match(html, /data-admin-page="users"/);
   assert.match(html, /Users content/);
+  assert.match(html, /Categories/);
 });
 
 test('lazy-loads Users without importing normal application state', async () => {
   const source = await readFile(new URL('./AdminDashboard.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/UsersPage['"]\)/);
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/CategoriesPage/);
+  assert.match(source, /useState<AdminSection>\(['"]users['"]\)/);
   assert.match(source, /<Suspense fallback=\{<AdminPageSpinner \/>}/);
   assert.doesNotMatch(
     source,

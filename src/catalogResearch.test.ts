@@ -80,7 +80,16 @@ const flows: Array<{ app: string; flows: DesignFlow[] }> = [{
 }];
 
 test("searches every observed catalog entity and returns evidence-backed facets", () => {
-  const result = searchCatalog({ images, systems, flows }, { query: "primary", kind: "all" });
+  const source = {
+    images,
+    systems,
+    flows,
+    appCategories: {
+      linear: ["Business", "Productivity"],
+      airbnb: ["Travel"],
+    },
+  };
+  const result = searchCatalog(source, { query: "primary", kind: "all" });
   assert.ok(result.items.some(({ id }) => id === "component:linear:button"));
   assert.deepEqual(result.items.find(({ id }) => id === "token:linear:color-accent")?.evidenceIds, [1]);
   assert.ok(result.facets.kinds.component >= 1);
@@ -91,6 +100,15 @@ test("searches every observed catalog entity and returns evidence-backed facets"
     { query: "", kind: "screen", theme: "dark", pageType: "Login", state: "disabled" },
   );
   assert.deepEqual(filtered.items.map(({ id }) => id), ["screen:1"]);
+
+  for (const appCategory of ["Business", "Productivity"]) {
+    const categoryFiltered = searchCatalog(
+      source,
+      { query: "", kind: "app", appCategory },
+    );
+    assert.deepEqual(categoryFiltered.items.map(({ app }) => app), ["linear"]);
+  }
+  assert.deepEqual(result.facets.appCategories, ["Business", "Productivity", "Travel"]);
 });
 
 test("matches natural phrases across screen purpose and curator-authored flows", () => {

@@ -3,8 +3,7 @@ import { Button, Icon, IconButton } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
-
-type VisualFlowView = 'screens' | 'prototype';
+import { scrollToAdjacentFlowScreen } from './flowCarousel.ts';
 
 export interface VisualFlowPanelProps {
   flow: DesignFlow<EvidenceView>;
@@ -39,25 +38,12 @@ export function VisualFlowPanel({
   );
   const trackRef = useRef<HTMLDivElement>(null);
   const [saved, setSaved] = useState(false);
-  const [mode, setMode] = useState<VisualFlowView>('screens');
-  const [prototypeIndex, setPrototypeIndex] = useState(() =>
-    Math.min(
-      Math.max((selectedStep ?? 1) - 1, 0),
-      Math.max(screenItems.length - 1, 0),
-    ),
-  );
   const screenCount = screenItems.length;
-  const activePrototype = screenItems[prototypeIndex] ?? screenItems[0];
   const isWeb = platform === 'web';
   const imageBackground = isWeb ? 'transparent' : '#fff';
 
   useEffect(() => {
     if (selectedStep === undefined) return;
-    const nextIndex = Math.min(
-      Math.max(selectedStep - 1, 0),
-      Math.max(screenItems.length - 1, 0),
-    );
-    setPrototypeIndex(nextIndex);
     trackRef.current
       ?.querySelector<HTMLElement>(`[data-flow-step="${selectedStep}"]`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -66,10 +52,7 @@ export function VisualFlowPanel({
   const scrollScreens = (direction: -1 | 1) => {
     const track = trackRef.current;
     if (!track) return;
-    track.scrollBy({
-      left: direction * Math.max(track.clientWidth * 0.72, 360),
-      behavior: 'smooth',
-    });
+    scrollToAdjacentFlowScreen(track, direction);
   };
 
   const copyFlow = () => {
@@ -79,34 +62,11 @@ export function VisualFlowPanel({
     }
   };
 
-  const movePrototype = (direction: -1 | 1) => {
-    setPrototypeIndex((current) => {
-      const next = Math.min(Math.max(current + direction, 0), screenItems.length - 1);
-      onStepChange?.(screenItems[next]?.stepNumber);
-      return next;
-    });
-  };
-
   return (
     <section
       className={`visual-flow-panel${platform ? ` visual-flow-panel--${platform}` : ''}`}
       aria-label={`${flow.title} Visual Flow`}
     >
-      <div className="visual-flow-panel__submodes" role="group" aria-label="Visual Flow view">
-        <Button
-          label="Screens"
-          variant="ghost"
-          aria-pressed={mode === 'screens'}
-          clickAction={() => setMode('screens')}
-        />
-        <Button
-          label="Prototype"
-          variant="ghost"
-          aria-pressed={mode === 'prototype'}
-          clickAction={() => setMode('prototype')}
-        />
-      </div>
-
       {flow.insights && (
         <section className="visual-flow-panel__analysis" aria-label="Flow analysis">
           <div className="visual-flow-panel__analysis-summary">
@@ -138,113 +98,67 @@ export function VisualFlowPanel({
         </section>
       )}
 
-      {mode === 'screens' ? (
-        <div className="visual-flow-panel__stage">
-          {screenItems.length > 1 && (
-            <IconButton
-              label="Previous flow screens"
-              icon={<Icon icon="chevronLeft" size="lg" />}
-              variant="secondary"
-              className="visual-flow-panel__arrow visual-flow-panel__arrow--left"
-              onClick={() => scrollScreens(-1)}
-            />
-          )}
-          <div ref={trackRef} className="visual-flow-panel__track" aria-label={`${flow.title} flow screens`}>
-            {screenItems.map(({ evidence, label, stepNumber }) => (
-              <article
-                key={`${label}-${evidence?.imageId ?? stepNumber}`}
-                className={`visual-flow-panel__screen-card${isWeb ? ' visual-flow-panel__screen-card--web' : ''}`}
-                aria-label={`Flow screen ${stepNumber}: ${label}`}
-                aria-current={selectedStep === stepNumber ? 'step' : undefined}
-                data-flow-step={stepNumber}
-              >
-                <Button
-                  label={`Select visual step ${stepNumber}: ${label}`}
-                  variant="ghost"
-                  className="visual-flow-panel__screen-focus"
-                  clickAction={() => onStepChange?.(stepNumber)}
-                >
-                  <PlaceholderImage
-                    src={evidence?.imageUrl}
-                    style={{ objectFit: 'contain', background: imageBackground }}
-                  />
-                </Button>
-                <div className="visual-flow-panel__screen-actions">
-                  <Button label="Save" variant="primary" size="sm" clickAction={() => setSaved(true)} />
-                  <Button
-                    label="Copy"
-                    icon={<Icon icon="copy" size="sm" />}
-                    variant="secondary"
-                    size="sm"
-                    clickAction={copyFlow}
-                  />
-                </div>
-              </article>
-            ))}
-          </div>
-          {screenItems.length > 1 && (
-            <IconButton
-              label="Next flow screens"
-              icon={<Icon icon="chevronRight" size="lg" />}
-              variant="secondary"
-              className="visual-flow-panel__arrow visual-flow-panel__arrow--right"
-              onClick={() => scrollScreens(1)}
-            />
-          )}
-        </div>
-      ) : (
-        <div className="visual-flow-panel__prototype-stage">
+      <div className="visual-flow-panel__stage">
+        {screenItems.length > 1 && (
           <IconButton
-            label="Previous prototype screen"
+            label="Previous flow screens"
             icon={<Icon icon="chevronLeft" size="lg" />}
             variant="secondary"
-            className="visual-flow-panel__prototype-arrow visual-flow-panel__prototype-arrow--left"
-            isDisabled={prototypeIndex === 0}
-            onClick={() => movePrototype(-1)}
+            className="visual-flow-panel__arrow visual-flow-panel__arrow--left"
+            onClick={() => scrollScreens(-1)}
           />
-          <article
-            className={`visual-flow-panel__prototype-card${isWeb ? ' visual-flow-panel__prototype-card--web' : ''}`}
-            aria-label={`Prototype screen ${activePrototype.stepNumber}: ${activePrototype.label}`}
-          >
-            <PlaceholderImage
-              src={activePrototype.evidence?.imageUrl}
-              style={{ objectFit: 'contain', background: imageBackground }}
-            />
-          </article>
+        )}
+        <div ref={trackRef} className="visual-flow-panel__track" aria-label={`${flow.title} flow screens`}>
+          {screenItems.map(({ evidence, label, stepNumber }) => (
+            <article
+              key={`${label}-${evidence?.imageId ?? stepNumber}`}
+              className={`visual-flow-panel__screen-card${isWeb ? ' visual-flow-panel__screen-card--web' : ''}`}
+              aria-label={`Flow screen ${stepNumber}: ${label}`}
+              aria-current={selectedStep === stepNumber ? 'step' : undefined}
+              data-flow-step={stepNumber}
+              data-flow-carousel-item
+            >
+              <Button
+                label={`Select visual step ${stepNumber}: ${label}`}
+                variant="ghost"
+                className="visual-flow-panel__screen-focus"
+                clickAction={() => onStepChange?.(stepNumber)}
+              >
+                <PlaceholderImage
+                  src={evidence?.imageUrl}
+                  style={{ objectFit: 'contain', background: imageBackground }}
+                />
+              </Button>
+              <div className="visual-flow-panel__screen-actions">
+                <Button label="Save" variant="primary" size="sm" clickAction={() => setSaved(true)} />
+                <Button
+                  label="Copy"
+                  icon={<Icon icon="copy" size="sm" />}
+                  variant="secondary"
+                  size="sm"
+                  clickAction={copyFlow}
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+        {screenItems.length > 1 && (
           <IconButton
-            label="Next prototype screen"
+            label="Next flow screens"
             icon={<Icon icon="chevronRight" size="lg" />}
             variant="secondary"
-            className="visual-flow-panel__prototype-arrow visual-flow-panel__prototype-arrow--right"
-            isDisabled={prototypeIndex >= screenItems.length - 1}
-            onClick={() => movePrototype(1)}
+            className="visual-flow-panel__arrow visual-flow-panel__arrow--right"
+            onClick={() => scrollScreens(1)}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <footer className="visual-flow-panel__footer">
         <div className="visual-flow-panel__meta">
           <h3>{flow.title}</h3>
-          <p>
-            {mode === 'prototype'
-              ? `${prototypeIndex + 1} of ${screenCount}`
-              : `${screenCount} ${screenCount === 1 ? 'screen' : 'screens'}`}
-          </p>
+          <p>{screenCount} {screenCount === 1 ? 'screen' : 'screens'}</p>
         </div>
         <div className="visual-flow-panel__actions">
-          {mode === 'prototype' && (
-            <Button
-              label="Restart prototype"
-              variant="secondary"
-              size="lg"
-              className="visual-flow-panel__restart"
-              isDisabled={prototypeIndex === 0}
-              clickAction={() => {
-                setPrototypeIndex(0);
-                onStepChange?.(screenItems[0]?.stepNumber);
-              }}
-            />
-          )}
           <Button
             label={saved ? 'Saved' : 'Save'}
             variant="primary"

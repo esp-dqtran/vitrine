@@ -33,13 +33,16 @@ export function SearchTrigger({
   const displayLabel = activeFilterCount
     ? `${label} · ${activeFilterCount} ${activeFilterCount === 1 ? 'filter' : 'filters'}`
     : label;
+  const actionLabel = mode === 'advanced'
+    ? `${displayLabel}, Open Quick Search`
+    : `${displayLabel}, Open search and filters`;
 
   return (
     <div className="reference-search-trigger" data-reference-component="search-trigger">
       <Button
         className="reference-search-trigger__button"
         label={displayLabel}
-        aria-label={mode === 'advanced' ? 'Open Quick Search' : 'Open search and filters'}
+        aria-label={actionLabel}
         variant="secondary"
         onClick={onOpen}
         icon={<Icon icon="search" size="sm" color="disabled" />}

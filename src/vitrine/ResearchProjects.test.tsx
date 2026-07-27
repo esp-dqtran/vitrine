@@ -131,6 +131,7 @@ test("shows suggestion reasons and bounded screenshot upload", () => {
       platform: "web",
       title: "SSO onboarding",
       description: "Explains SSO",
+      appCategories: ["Productivity"],
       tags: [],
       states: [],
       components: [],

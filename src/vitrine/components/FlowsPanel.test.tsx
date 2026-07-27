@@ -45,6 +45,20 @@ test("does not offer the retired FLOW.md editor", () => {
   assert.doesNotMatch(html, /FLOW\.md/);
 });
 
+test("does not expose Flow analysis controls in the Flow workspace", () => {
+  const html = renderToStaticMarkup(
+    <FlowsPanel
+      flows={[loginFlow]}
+      app="linear"
+      platform="web"
+      userRole="admin"
+    />,
+  );
+  assert.doesNotMatch(html, /Flow analysis/);
+  assert.doesNotMatch(html, /Analyze ordered Flow steps/);
+  assert.doesNotMatch(html, /Analyze flows/);
+});
+
 test("VisualFlowPanel renders curator-ordered flow steps with real evidence images", () => {
   const html = renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} />);
   assert.match(html, /Login/);
@@ -120,14 +134,14 @@ test("offers admins a Flow-specific analysis action without reviving screen anal
   );
 });
 
-test("VisualFlowPanel renders a Mobbin-style horizontal flow stage", () => {
+test("VisualFlowPanel renders a screens-only flow stage", () => {
   const html = renderToStaticMarkup(<VisualFlowPanel flow={loginFlow} />);
   assert.match(html, /aria-label="Login Visual Flow"/);
   assert.doesNotMatch(html, /role="dialog"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
   assert.match(html, /class="visual-flow-panel"/);
-  assert.match(html, /Screens/);
-  assert.match(html, /Prototype/);
+  assert.doesNotMatch(html, /visual-flow-panel__submodes/);
+  assert.doesNotMatch(html, /Prototype|Restart prototype|prototype screen/);
   assert.match(html, /class="visual-flow-panel__stage"/);
   assert.match(html, /class="visual-flow-panel__track"/);
   assert.equal((html.match(/class="visual-flow-panel__screen-card"/g) ?? []).length, 2);

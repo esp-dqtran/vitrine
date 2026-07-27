@@ -232,17 +232,40 @@ test('builds Site hover previews from matching categories and captured sections'
   assert.equal(style, null);
 });
 
-test('prefetches bounded Site taxonomy previews and starts GSAP without waiting', () => {
+test('loads Site taxonomy previews only after pointer entry', () => {
   const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /const previewPools = useMemo\(\s*\(\) => buildSiteFacetPreviewPools\(sites\),\s*\[sites\],?\s*\)/);
-  assert.match(source, /requestIdleCallback/);
-  assert.match(source, /prefetchVisibleSiteFacetPreviews\(previewPools\)/);
+  assert.doesNotMatch(source, /requestIdleCallback/);
+  assert.doesNotMatch(source, /prefetchVisibleSiteFacetPreviews/);
   assert.match(source, /siteFacetPreview\([\s\S]*siteFacetImageReady/);
   assert.match(source, /if \(preview\) showPreview\(preview,\s*event\.clientX,\s*event\.clientY\)/);
   assert.match(source, /prefetchNextSiteFacetPreview\(previewPools,\s*hoverFacet\)/);
   assert.doesNotMatch(source, /await prefetchSiteFacetPreview|prefetchSiteFacetPreview\(preview\)\.then/);
   assert.doesNotMatch(source, /siteFacetPreview\(sites,\s*hoverFacet\)/);
+});
+
+test('renders the first 24 Sites before the gallery sentinel advances', () => {
+  const sites = Array.from({ length: 30 }, (_, index) => ({
+    ...site,
+    id: index + 1,
+    versionId: index + 101,
+    name: `Site ${index + 1}`,
+    slug: `site-${index + 1}`,
+  }));
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      sites={sites}
+      isAdmin={false}
+      query=""
+      onQueryChange={() => undefined}
+      onRefresh={() => undefined}
+      onImport={() => undefined}
+    />,
+  );
+
+  assert.equal((html.match(/data-site-discovery-card="true"/g) ?? []).length, 24);
+  assert.match(html, /data-sites-gallery-sentinel="true"/);
 });
 
 test('renders image-only Mobbin Site previews without a broken video element', () => {
@@ -272,6 +295,37 @@ test('defers Site video assets until the card is near the viewport', () => {
   assert.match(html, /<video[^>]+preload="none"/);
   assert.doesNotMatch(html, new RegExp(`src="${site.previewUrl}"`));
   assert.doesNotMatch(html, /poster=/);
+});
+
+test('keeps related Site preview media inactive until user intent', () => {
+  const imageSite: SiteSummary = { ...site, previewMediaKind: 'image' };
+  const html = renderToStaticMarkup(
+    <SiteCardModule.SiteCard
+      site={imageSite}
+      onOpen={() => undefined}
+      deferMediaUntilIntent
+    />,
+  );
+
+  assert.match(html, /data-site-discovery-card="true"/);
+  assert.match(html, />V7</);
+  assert.doesNotMatch(html, new RegExp(`src="${imageSite.previewUrl}"`));
+  assert.doesNotMatch(html, new RegExp(`src="${imageSite.previews[0]?.url}"`));
+  assert.doesNotMatch(html, /aria-label="Open V7"/);
+});
+
+test('uses an AA text token for related Site metadata', () => {
+  const css = readFileSync(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const rule = css.match(/\.discovery-card__copy small\s*\{[^}]+\}/)?.[0] ?? '';
+  assert.match(rule, /color:\s*var\(--color-text-secondary\)/);
+  assert.doesNotMatch(rule, /color-text-disabled/);
+});
+
+test('loads only a bounded related Site page on detail routes', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /listSitesPage\(4,\s*0\)/);
+  assert.doesNotMatch(source, /listSites\(\)/);
+  assert.match(source, /deferMediaUntilIntent/);
 });
 
 test('activates deferred Site media once near the viewport and disconnects', () => {
@@ -456,24 +510,30 @@ test('shows only Preview and Sections to normal Site users', () => {
 test('renders images and native videos through the shared media primitives', () => {
   const image = renderToStaticMarkup(<MediaGridCard label="Open Home" kind="image" url="/home.png" badges={['Home']} onOpen={() => undefined} />);
   const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" badges={['Home', 'Video']} onOpen={() => undefined} />);
+  const deferredImage = renderToStaticMarkup(<MediaGridCard label="Open deferred Home" kind="image" url="/deferred-home.png" deferMedia onOpen={() => undefined} />);
   assert.match(image, /home\.png/);
   assert.match(video, /<video/);
   assert.match(video, /controls=""/);
   assert.match(video, /poster="\/hero\.webp"/);
+  assert.doesNotMatch(deferredImage, /deferred-home\.png/);
 });
 
-test('renders Site videos as Mobbin-style section actions without changing image cards', () => {
+test('renders Site sections as deferred Mobbin-style media actions', () => {
   const html = renderToStaticMarkup(
     <SiteVersionView detail={detail} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
   );
-  const video = html.match(/<video[^>]+src="\/video"[^>]*>/)?.[0] ?? '';
-  assert.match(video, /poster="\/poster"/);
-  assert.match(video, /loop=""/);
-  assert.match(video, /playsInline=""/);
-  assert.doesNotMatch(video, /controls=/);
+  assert.doesNotMatch(html, /src="\/video"/);
+  assert.doesNotMatch(html, /poster="\/poster"/);
+  assert.doesNotMatch(html, /src="\/image"/);
   assert.match(html, /View section/);
   assert.match(html, /data-site-section-video-card="true"/);
-  assert.match(html, /<img[^>]+src="\/image"/);
+});
+
+test('defers Site section assets until their cards are near the viewport', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /<SiteSectionVideoCard[\s\S]*deferMedia/);
+  assert.match(source, /<MediaGridCard[\s\S]*deferMedia/);
 });
 
 test('contains image and video failures inside one media card', () => {
@@ -552,8 +612,8 @@ test('filters Sections by keyword and renders patterns without dumping OCR text'
   assert.match(html, /Images/);
   assert.match(html, /Videos/);
   assert.doesNotMatch(html, /Secret visible copy/);
-  assert.match(html, /\/image/);
-  assert.doesNotMatch(html, /\/video/);
+  assert.doesNotMatch(html, /src="\/image"/);
+  assert.doesNotMatch(html, /src="\/video"/);
   assert.match(html, /data-site-sections-grid="true"/);
   assert.match(html, /0 selected/);
 });

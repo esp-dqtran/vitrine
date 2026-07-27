@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { DesignFlow, EvidenceView } from '../designSystem.ts';
 import type {
   FeatureDocumentContent,
   FeatureDocumentRevisionView,
@@ -41,15 +40,6 @@ const revision: FeatureDocumentRevisionView = {
   promptVersion: 1,
   providerModel: 'research-model',
   createdAt: '2026-07-22T00:00:00.000Z',
-};
-
-const flow: DesignFlow<EvidenceView> = {
-  id: 'checkout',
-  title: 'Checkout',
-  category: 'Payments',
-  description: '',
-  tags: [],
-  steps: [{ label: 'Cart', evidence: [{ imageId: 42, imageUrl: '/42.png' }] }],
 };
 
 const featureDocument: FeatureDocumentView = {
@@ -95,34 +85,15 @@ test('initial generation exposes durable progress and cancellation before a revi
   assert.doesNotMatch(html, /Loading Feature Document/);
 });
 
-test('Document Flow exposes revision editing without replacing the narrative by default', () => {
-  const reading = renderToStaticMarkup(
+test('Document Flow renders saved Markdown without exposing the editor', () => {
+  const html = renderToStaticMarkup(
     <DocumentFlowPanelView
-      flow={flow}
       state={{ kind: 'ready', document: featureDocument, revision }}
+      markdown={{ kind: 'ready', content: '# Checkout brief\n\n**Ready for handoff.**' }}
       userRole="admin"
-      selectedStep={1}
-      editing={false}
-      onEdit={() => undefined}
-      onOpenVisualStep={() => undefined}
     />,
   );
-  assert.match(reading, /Overview/);
-  assert.match(reading, />Edit Document Flow</);
-  assert.doesNotMatch(reading, /Revision history/);
-
-  const editing = renderToStaticMarkup(
-    <DocumentFlowPanelView
-      flow={flow}
-      state={{ kind: 'ready', document: featureDocument, revision }}
-      userRole="admin"
-      selectedStep={1}
-      editing
-      onEdit={() => undefined}
-      onOpenVisualStep={() => undefined}
-    />,
-  );
-  assert.match(editing, /Revision history/);
-  assert.match(editing, /Evidence inspector/);
-  assert.match(editing, /Save new revision/);
+  assert.match(html, /<h1>Checkout brief<\/h1>/);
+  assert.match(html, /<strong>Ready for handoff.<\/strong>/);
+  assert.doesNotMatch(html, /Overview|Edit Document Flow|Revision history|Evidence inspector|Save new revision/);
 });

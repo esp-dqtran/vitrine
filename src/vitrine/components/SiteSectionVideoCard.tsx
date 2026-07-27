@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Badge, ClickableCard } from '@astryxdesign/core';
+import { observeNearViewportMedia } from './deferredMedia.ts';
 
 export const SITE_VIDEO_VISIBILITY_THRESHOLD = 0.35;
 
@@ -33,6 +34,7 @@ interface SiteSectionVideoCardProps {
   posterUrl?: string;
   badges?: string[];
   delay?: number;
+  deferMedia?: boolean;
   onOpen: () => void;
 }
 
@@ -42,22 +44,36 @@ export function SiteSectionVideoCard({
   posterUrl,
   badges = [],
   delay = 0,
+  deferMedia = false,
   onOpen,
 }: SiteSectionVideoCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
   const actionVisible = hovered || focused;
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || typeof IntersectionObserver === 'undefined') return;
+    if (!mediaActive || !video || typeof IntersectionObserver === 'undefined') return;
     return observeSiteVideoPlayback(video, video);
-  }, [url]);
+  }, [mediaActive, url]);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!deferMedia || mediaActive || !card) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setMediaActive(true);
+      return;
+    }
+    return observeNearViewportMedia(card, () => setMediaActive(true));
+  }, [deferMedia, mediaActive]);
 
   return (
     <div
+      ref={cardRef}
       data-site-section-video-card="true"
       style={{
         display: 'grid',
@@ -70,9 +86,15 @@ export function SiteSectionVideoCard({
         onClick={onOpen}
         padding={0}
         variant="muted"
-        onMouseEnter={() => setHovered(true)}
+        onMouseEnter={() => {
+          setHovered(true);
+          setMediaActive(true);
+        }}
         onMouseLeave={() => setHovered(false)}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          setMediaActive(true);
+        }}
         onBlur={() => setFocused(false)}
         style={{
           position: 'relative',
@@ -83,7 +105,9 @@ export function SiteSectionVideoCard({
           boxShadow: 'var(--shadow-low)',
         }}
       >
-        {mediaFailed ? (
+        {!mediaActive ? (
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'var(--color-background-muted)' }} />
+        ) : mediaFailed ? (
           <div
             role="img"
             aria-label="Preview unavailable"

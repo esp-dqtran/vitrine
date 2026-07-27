@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRoutePath, routeToPath } from './router.ts';
-import { getSiteVersion, listSites, submitSiteImport } from './sitesApi.ts';
+import { getSiteVersion, listSites, listSitesPage, submitSiteImport } from './sitesApi.ts';
 
 const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview';
 
@@ -146,6 +146,32 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
   assert.equal(detail.mobilePageUrl, '/api/sites/1/versions/2/media/mobile');
   assert.deepEqual(urls, ['/api/sites', '/api/sites/1/versions/2']);
   assert.ok(urls.every((url) => url !== '/api/jobs'));
+});
+
+test('requests a bounded Site page for related detail references', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  const urls: string[] = [];
+  globalThis.fetch = async (input) => {
+    urls.push(String(input));
+    return Response.json({
+      sites: [{
+        siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
+        label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
+        previewMediaKind: 'image',
+        previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
+        previews: [],
+      }],
+      nextOffset: 4,
+      total: 274,
+    });
+  };
+
+  const page = await listSitesPage(4, 0);
+  assert.equal(page.sites[0]?.id, 1);
+  assert.equal(page.nextOffset, 4);
+  assert.equal(page.total, 274);
+  assert.deepEqual(urls, ['/api/sites?limit=4&offset=0']);
 });
 
 test('rejects malformed successful Sites responses', async (t) => {

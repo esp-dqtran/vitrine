@@ -18,7 +18,7 @@ const screen = (id: number, url: string, platform: Screen['platform'] = 'web'): 
 const app = (screens: Screen[]): App => ({
   id: 'linear',
   app: 'Linear',
-  cat: 'Productivity',
+  categories: [{ id: 7, name: 'Productivity', slug: 'productivity' }],
   accent: '#7957ff',
   totalScreens: screens.length,
   platforms: ['web'],
@@ -48,6 +48,24 @@ test('renders only the selected preview for a multi-screen App card', () => {
   assert.doesNotMatch(html, /<button/);
   assert.match(html, /Jul 25, 2026 · 2 screens/);
   assert.doesNotMatch(html, /Productivity · 2 screens/);
+});
+
+test('offers the full preview to high-density displays while keeping the thumbnail fallback', () => {
+  const html = renderToStaticMarkup(
+    <AppCard
+      app={app([{
+        ...screen(1, '/api/preview-media/linear/1?variant=full'),
+        thumbnailUrl: '/api/preview-media/linear/1',
+      }])}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /src="\/api\/preview-media\/linear\/1"/);
+  assert.match(
+    html,
+    /srcSet="\/api\/preview-media\/linear\/1 1x,\/api\/preview-media\/linear\/1\?variant=full 2x"/,
+  );
 });
 
 test('renders a preview from the active platform for a mixed-platform App', () => {

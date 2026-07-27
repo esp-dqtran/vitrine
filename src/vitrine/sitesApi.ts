@@ -32,6 +32,30 @@ export async function listSites(): Promise<SiteSummary[]> {
   return body.map(parseSummary);
 }
 
+export interface SitesPageResult {
+  sites: SiteSummary[];
+  nextOffset: number | null;
+  total: number;
+}
+
+export async function listSitesPage(limit: number, offset: number): Promise<SitesPageResult> {
+  if (!positiveId(limit) || limit > 48 || !Number.isSafeInteger(offset) || offset < 0) {
+    throw new Error('Invalid Sites page');
+  }
+  const response = await fetch(`/api/sites?limit=${limit}&offset=${offset}`);
+  const body = await responseBody(response);
+  if (!response.ok) throw new Error(errorMessage(body, `Sites returned ${response.status}`));
+  if (!isRecord(body) || !Array.isArray(body.sites)) {
+    throw new Error('Sites returned an invalid response');
+  }
+  const nextOffset = body.nextOffset === null ? null : nonNegativeInteger(body.nextOffset);
+  return {
+    sites: body.sites.map(parseSummary),
+    nextOffset,
+    total: nonNegativeInteger(body.total),
+  };
+}
+
 export async function getSiteVersion(siteId: number, versionId: number): Promise<SiteVersionDetail> {
   if (!positiveId(siteId) || !positiveId(versionId)) throw new Error('Invalid Site version reference');
   const response = await fetch(`/api/sites/${siteId}/versions/${versionId}`);
@@ -181,6 +205,12 @@ function parseSection(value: unknown): SiteSectionView {
     mediaKind: value.mediaKind,
     mediaUrl: apiPath(value.mediaUrl),
     patterns: optionalStringArray(sourceMetadata.patterns),
+    searchText: typeof value.searchText === 'string'
+      ? value.searchText
+      : value.ocrBoxes
+          .filter(isRecord)
+          .map((box) => typeof box.text === 'string' ? box.text : '')
+          .join(' '),
     ocrBoxes: value.ocrBoxes.map((box) => {
       if (!isRecord(box)) throw new Error('Site version returned an invalid response');
       return {

@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  fetchCatalogCategories,
+  type CategorySummary,
+} from './categoriesApi.ts';
 import type { App } from './types';
 
 interface CatalogResponse {
@@ -19,6 +23,7 @@ export function appendUniqueApps(current: App[], next: App[]): App[] {
 
 export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const [apps, setApps] = useState<App[] | null>(null);
+  const [categories, setCategories] = useState<CategorySummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -34,22 +39,31 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     setError(null);
     setLoadMoreError(null);
     return (async () => {
+      const categoriesPromise = fetchCatalogCategories(signal);
       if (role === 'admin') {
-        const response = await fetch('/api/apps', { signal });
+        const [response, nextCategories] = await Promise.all([
+          fetch('/api/apps', { signal }),
+          categoriesPromise,
+        ]);
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = await response.json() as AdminAppsResponse;
         if (generation !== requestGenerationRef.current) return;
         setApps(page.apps);
+        setCategories(nextCategories);
         setNextCursor(page.nextCursor);
         setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
         return;
       }
-      const response = await fetch('/api/catalog', { signal });
+      const [response, nextCategories] = await Promise.all([
+        fetch('/api/catalog', { signal }),
+        categoriesPromise,
+      ]);
       if (!response.ok) throw new Error(`/api/catalog returned ${response.status}`);
       const page = await response.json() as CatalogResponse;
       const firstPage = page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
       if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
+      setCategories(nextCategories);
       setNextCursor(page.nextCursor);
       setTotalApps(firstPage.length);
     })().catch((err: Error) => {
@@ -101,6 +115,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
 
   return {
     apps,
+    categories,
     totalApps,
     loading: apps === null && !error,
     loadingMore,

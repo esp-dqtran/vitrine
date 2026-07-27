@@ -45,6 +45,52 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
   assert.doesNotMatch(html, /background:[^;"]+;min-height:400px/);
 });
 
+test('keeps remote identity media off the mobile critical path', () => {
+  const html = renderToStaticMarkup(
+    <ReferenceDetailShell
+      title="Quora"
+      identityKey="app-icon-quora"
+      identityLabel="Q"
+      identityImageUrl="/quora.png"
+      metadata={[]}
+      tabs={[{ id: 'overview', label: 'Overview' }]}
+      activeTab="overview"
+      onTabChange={() => undefined}
+    >Overview</ReferenceDetailShell>,
+  );
+
+  assert.match(html, /<source[^>]+media="\(min-width: 601px\)"[^>]+srcSet="\/quora\.png"/);
+  assert.match(html, /<img[^>]+loading="eager"/);
+  assert.doesNotMatch(html, /<img[^>]+src="\/quora\.png"/);
+  assert.match(html, /reference-detail__logo-fallback[^>]*>Q<\/span>/);
+  assert.match(html, /fetchPriority="high"/);
+  assert.match(html, /width="88"/);
+  assert.match(html, /height="88"/);
+});
+
+test('renders Vitrine primary actions as white buttons with black content', async () => {
+  const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const primaryActionRule = styles.match(
+    /button\[data-variant='primary'\]\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+
+  assert.match(primaryActionRule, /border-color:\s*#fff\s*!important/);
+  assert.match(primaryActionRule, /background:\s*#fff\s*!important/);
+  assert.match(primaryActionRule, /color:\s*#111\s*!important/);
+  assert.match(
+    styles,
+    /button\[data-variant='primary'\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*#f1f1f1\s*!important/,
+  );
+  assert.match(
+    styles,
+    /button\[data-variant='primary'\]:active:not\(:disabled\)\s*\{[^}]*background:\s*#e5e5e5\s*!important/,
+  );
+  assert.doesNotMatch(
+    styles,
+    /\.reference-detail\[data-reference-detail='app'\] button\[data-variant='primary'\]/,
+  );
+});
+
 test('copies the Apps ordering strip style onto App detail tabs only', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const tabsRule = styles.match(

@@ -1,7 +1,11 @@
 import { Button, SideNav, SideNavHeading, SideNavItem } from '@astryxdesign/core';
 
+export type AdminSection = 'users' | 'categories';
+
 interface AdminSidebarProps {
   email: string;
+  section: AdminSection;
+  onSectionChange: (section: AdminSection) => void;
   onBack: () => void;
   onLogout: () => void | Promise<void>;
 }
@@ -24,7 +28,13 @@ function AdminWordmarkIcon() {
   );
 }
 
-export function AdminSidebar({ email, onBack, onLogout }: AdminSidebarProps) {
+export function AdminSidebar({
+  email,
+  section,
+  onSectionChange,
+  onBack,
+  onLogout,
+}: AdminSidebarProps) {
   return (
     <SideNav
       header={<SideNavHeading icon={<AdminWordmarkIcon />} heading="Vitrine Admin" />}
@@ -37,7 +47,16 @@ export function AdminSidebar({ email, onBack, onLogout }: AdminSidebarProps) {
         </div>
       )}
     >
-      <SideNavItem label="Users" isSelected onClick={() => undefined} />
+      <SideNavItem
+        label="Users"
+        isSelected={section === 'users'}
+        onClick={() => onSectionChange('users')}
+      />
+      <SideNavItem
+        label="Categories"
+        isSelected={section === 'categories'}
+        onClick={() => onSectionChange('categories')}
+      />
       <SideNavItem label="Back to Vitrine" isSelected={false} onClick={onBack} />
     </SideNav>
   );

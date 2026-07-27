@@ -5,7 +5,6 @@ import type { Platform } from '../../platformFromUrl.ts';
 import { buildFlowTreeGroups } from '../flowTree.ts';
 import { FlowsWorkspace } from './FlowsWorkspace.tsx';
 import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
-import { FlowAnalysisControls } from './FlowAnalysisControls.tsx';
 import type { FlowRepresentation } from '../router.ts';
 
 export function FlowsPanel({
@@ -18,7 +17,6 @@ export function FlowsPanel({
   selectedFlowView,
   onSelectionChange = () => undefined,
   userRole = 'user',
-  onAnalysisComplete,
 }: {
   flows: DesignFlow<EvidenceView>[];
   app?: string;
@@ -29,7 +27,6 @@ export function FlowsPanel({
   selectedFlowView?: FlowRepresentation;
   onSelectionChange?(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
   userRole?: 'admin' | 'user';
-  onAnalysisComplete?(): void;
 }) {
   const groups = useMemo(() => buildFlowTreeGroups(flows), [flows]);
   const selectedFlow = selectedFlowId
@@ -59,15 +56,6 @@ export function FlowsPanel({
       platform={platform}
       version={version}
       userRole={userRole}
-      analysisControls={userRole === 'admin' && app && platform ? (
-        <FlowAnalysisControls
-          app={app}
-          platform={platform}
-          version={version}
-          userRole={userRole}
-          onComplete={onAnalysisComplete}
-        />
-      ) : undefined}
       onSelectionChange={onSelectionChange}
     />
   );

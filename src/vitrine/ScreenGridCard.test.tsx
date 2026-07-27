@@ -16,7 +16,7 @@ const screen: Screen = {
   thumbnailUrl: '/media/thumb-screen.webp',
 };
 
-test('renders Screen cards with the full image and contained fit', () => {
+test('renders Screen cards with a thumbnail fallback and full image for high-density displays', () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard
       screen={screen}
@@ -26,8 +26,12 @@ test('renders Screen cards with the full image and contained fit', () => {
     />,
   );
 
-  assert.match(html, /src="\/media\/full-screen\.png"/);
-  assert.doesNotMatch(html, /src="\/media\/thumb-screen\.webp"/);
+  assert.match(html, /src="\/media\/thumb-screen\.webp"/);
+  assert.doesNotMatch(html, /src="\/media\/full-screen\.png"/);
+  assert.match(
+    html,
+    /srcSet="\/media\/thumb-screen\.webp 1x,\/media\/full-screen\.png 2x"/,
+  );
   assert.match(html, /object-fit:contain/);
   assert.doesNotMatch(html, /object-fit:cover/);
   assert.doesNotMatch(html, /scale\(1\.04\)/);

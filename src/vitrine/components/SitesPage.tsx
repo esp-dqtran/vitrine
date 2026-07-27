@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import type { FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
@@ -17,6 +17,7 @@ export type SiteSort = 'latest' | 'popular';
 export type SiteFacet = { group: 'categories' | 'sections' | 'styles'; value: string };
 export type SiteFacetPreviewPools = Map<string, FacetPreview[]>;
 
+const SITE_RENDER_BATCH = 24;
 const siteFacetImageCache = new Map<string, Promise<void>>();
 const siteFacetImageReady = new Set<string>();
 
@@ -182,18 +183,33 @@ function prefetchSiteFacetPreview(preview: FacetPreview): Promise<void> {
   return request;
 }
 
-function prefetchVisibleSiteFacetPreviews(pools: SiteFacetPreviewPools): void {
-  visibleSiteFacetPreviews(pools).forEach((preview) => {
-    void prefetchSiteFacetPreview(preview);
-  });
-}
-
 function prefetchNextSiteFacetPreview(pools: SiteFacetPreviewPools, facet: SiteFacet): void {
   const next = (pools.get(siteFacetKey(facet)) ?? []).find((preview) => {
     const url = siteFacetPreviewUrl(preview);
     return Boolean(url && !siteFacetImageCache.has(url));
   });
   if (next) void prefetchSiteFacetPreview(next);
+}
+
+type GalleryObserver = Pick<IntersectionObserver, 'observe' | 'disconnect'>;
+type GalleryObserverFactory = (
+  callback: IntersectionObserverCallback,
+  options: IntersectionObserverInit,
+) => GalleryObserver;
+
+export function observeSiteGallerySentinel(
+  target: Element,
+  onVisible: () => void,
+  createObserver: GalleryObserverFactory = (callback, options) =>
+    new IntersectionObserver(callback, options),
+) {
+  const observer = createObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    onVisible();
+    observer.disconnect();
+  }, { rootMargin: '600px 0px', threshold: 0.01 });
+  observer.observe(target);
+  return () => observer.disconnect();
 }
 
 interface SitesPageViewProps {
@@ -229,6 +245,8 @@ export function SitesPageView({
 }: SitesPageViewProps) {
   const [sort, setSort] = useState<SiteSort>('latest');
   const [facet, setFacet] = useState<SiteFacet | null>(null);
+  const [renderedCount, setRenderedCount] = useState(SITE_RENDER_BATCH);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const previewPools = useMemo(
     () => buildSiteFacetPreviewPools(sites),
@@ -238,17 +256,24 @@ export function SitesPageView({
     () => filterAndSortSites(sites, query, facet, sort),
     [sites, query, facet, sort],
   );
+  const renderedSites = visibleSites.slice(0, renderedCount);
   const facetGroups = DISCOVERY_FACETS.map((entry) => ({ ...entry, values: entry.defaults }));
 
   useEffect(() => {
-    const prefetch = () => prefetchVisibleSiteFacetPreviews(previewPools);
-    if (typeof window.requestIdleCallback === 'function') {
-      const requestId = window.requestIdleCallback(prefetch, { timeout: 1_000 });
-      return () => window.cancelIdleCallback(requestId);
+    setRenderedCount(SITE_RENDER_BATCH);
+  }, [facet, query, sites, sort]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || renderedCount >= visibleSites.length) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setRenderedCount(visibleSites.length);
+      return;
     }
-    const timeoutId = window.setTimeout(prefetch, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [previewPools]);
+    return observeSiteGallerySentinel(sentinel, () => {
+      setRenderedCount((current) => Math.min(current + SITE_RENDER_BATCH, visibleSites.length));
+    });
+  }, [renderedCount, visibleSites.length]);
 
   const state = loading
     ? null
@@ -384,9 +409,17 @@ export function SitesPageView({
           data-reference-gallery-grid="true"
           className="reference-discovery__grid sites-discovery__grid"
         >
-          {visibleSites.map((site) => (
+          {renderedSites.map((site) => (
             <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onOpen(site)} />
           ))}
+          {renderedCount < visibleSites.length ? (
+            <div
+              ref={sentinelRef}
+              className="sites-discovery__sentinel"
+              data-sites-gallery-sentinel="true"
+              aria-hidden="true"
+            />
+          ) : null}
         </div>
       )}
     </ReferenceDiscoveryPageShell>

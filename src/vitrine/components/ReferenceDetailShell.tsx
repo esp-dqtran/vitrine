@@ -97,11 +97,26 @@ export function ReferenceDetailShell<T extends string>({
           <motion.div
             layoutId={identityKey}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-            className={`reference-detail__logo${loading ? ' app-detail-loading__logo' : ''}`}
+            className={`reference-detail__logo${identityImageUrl ? ' reference-detail__logo--image' : ''}${loading ? ' app-detail-loading__logo' : ''}`}
             style={{ background: identityImageUrl ? 'transparent' : accent }}
           >
             {identityContent ?? (identityImageUrl
-              ? <img src={identityImageUrl} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+              ? (
+                  <>
+                    <picture className="reference-detail__logo-picture">
+                      <source media="(min-width: 601px)" srcSet={identityImageUrl} />
+                      <img
+                        alt=""
+                        loading="eager"
+                        fetchPriority="high"
+                        width={88}
+                        height={88}
+                        onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                      />
+                    </picture>
+                    <span className="reference-detail__logo-fallback" aria-hidden="true">{identityLabel}</span>
+                  </>
+                )
               : <span>{identityLabel}</span>)}
           </motion.div>
           <div className={`reference-detail__heading${loading ? ' app-detail-loading__heading' : ''}`}>

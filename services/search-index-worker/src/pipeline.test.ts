@@ -26,7 +26,7 @@ const sourceFixture: PublishedSearchSource = {
     appId: 4,
     app: "Linear",
     platform: "web",
-    category: "Productivity",
+    categories: ["Business", "Productivity"],
     publishedAt: "2026-07-23T08:00:00.000Z",
   },
   images: [
@@ -124,9 +124,10 @@ const fakeEmbedder = {
 };
 
 test("indexes one claimed app-platform version", async () => {
+  const store = fakeStore(sourceFixture);
   const report = await processSearchIndexJob({
     job,
-    store: fakeStore(sourceFixture),
+    store,
     embedder: fakeEmbedder,
   });
   assert.deepEqual(report, {
@@ -135,6 +136,9 @@ test("indexes one claimed app-platform version", async () => {
     documents: 6,
     embedded: 6,
   });
+  const appDocument = store.replacedDocuments?.find(({ entityType }) => entityType === "app");
+  assert.deepEqual(appDocument?.catalogCategories, ["Business", "Productivity"]);
+  assert.equal("appCategory" in appDocument!, false);
 });
 
 test("indexes a ready Site with a Site-scoped replacement", async () => {

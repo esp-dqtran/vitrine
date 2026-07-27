@@ -21,6 +21,14 @@ test("accepts only the public Apps taxonomy and supported platforms", () => {
   assert.equal(parsePublicFacet({ group: "elements", value: "Unknown", platform: "web" }), null);
   assert.equal(parsePublicFacet({ group: "flows", value: "Setting Up", platform: "android" }), null);
   assert.equal(parsePublicFacet({ group: ["flows"], value: "Setting Up", platform: "web" }), null);
+  assert.deepEqual(
+    parsePublicFacet({ group: "categories", value: "New Category", platform: "web" }),
+    { group: "categories", value: "New Category", platform: "web" },
+  );
+  assert.equal(
+    parsePublicFacet({ group: "categories", value: "   ", platform: "web" }),
+    null,
+  );
 });
 
 test("maps at most six distinct latest-published Flow preview candidates", async () => {
@@ -60,15 +68,19 @@ test("maps at most six distinct latest-published Flow preview candidates", async
 });
 
 test("maps icon-only Category candidates and returns an empty pool without media", async () => {
+  let capturedSql = "";
   const categories = await publishedFacetPreviews(
     { group: "categories", value: "Finance", platform: "ios" },
-    async () => ({
-      rows: [{ app: "Revolut", icon_url: "https://cdn.example/revolut.png", media_count: 0 }],
-      rowCount: 1,
-      command: "SELECT",
-      oid: 0,
-      fields: [],
-    }),
+    async (sql) => {
+      capturedSql = sql;
+      return {
+        rows: [{ app: "Revolut", icon_url: "https://cdn.example/revolut.png", media_count: 0 }],
+        rowCount: 1,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
+      };
+    },
   );
   assert.deepEqual(categories, [{
     kind: "icon",
@@ -77,6 +89,10 @@ test("maps icon-only Category candidates and returns an empty pool without media
     iconUrl: "https://cdn.example/revolut.png",
     mediaCount: 0,
   }]);
+  assert.match(capturedSql, /JOIN app_categories ac ON ac\.app_id = a\.id/);
+  assert.match(capturedSql, /JOIN categories c ON c\.id = ac\.category_id/);
+  assert.match(capturedSql, /lower\(c\.name\) = lower\(\$2\)/);
+  assert.doesNotMatch(capturedSql, /a\.category/);
 
   assert.deepEqual(
     await publishedFacetPreviews(

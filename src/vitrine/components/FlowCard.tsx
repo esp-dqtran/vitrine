@@ -2,6 +2,7 @@ import type { DesignFlow, EvidenceView } from '../../designSystem';
 import { Button, Icon, IconButton } from '@astryxdesign/core';
 import { useRef, useState } from 'react';
 import { PlaceholderImage } from './PlaceholderImage';
+import { scrollToAdjacentFlowScreen } from './flowCarousel';
 
 function flowScreenItems(flow: DesignFlow<EvidenceView>) {
   return flow.steps.flatMap((step, index) => {
@@ -24,10 +25,7 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
   const scrollTrack = (direction: -1 | 1) => {
     const track = trackRef.current;
     if (!track) return;
-    track.scrollBy({
-      left: direction * Math.max(track.clientWidth * 0.72, 360),
-      behavior: 'smooth',
-    });
+    scrollToAdjacentFlowScreen(track, direction);
   };
 
   return (
@@ -43,10 +41,14 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
           {previewItems.map(({ evidence, label, stepNumber }) => (
             <span
               className="flow-strip-card__screen"
+              data-flow-carousel-item
               key={`${flow.id}-${stepNumber}-${evidence?.imageId ?? label}`}
             >
               <PlaceholderImage
-                src={evidence?.imageUrl}
+                src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
+                srcSet={evidence?.thumbnailUrl && evidence.imageUrl && evidence.thumbnailUrl !== evidence.imageUrl
+                  ? `${evidence.thumbnailUrl} 1x,${evidence.imageUrl} 2x`
+                  : undefined}
                 accent="#111"
                 style={{ objectFit: 'contain', background: '#fff' }}
               />
@@ -74,7 +76,7 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
       </div>
       <footer className="flow-strip-card__footer">
         <div className="flow-strip-card__meta">
-          <h3>{flow.title}</h3>
+          <h2>{flow.title}</h2>
           <p>{countLabel}</p>
         </div>
         <div className="flow-strip-card__actions">

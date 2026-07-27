@@ -1,6 +1,6 @@
 import { Badge, type BadgeVariant } from '@astryxdesign/core';
 import type { AppsPlatform } from '../appsDiscovery';
-import type { App, RowStatus } from '../types';
+import { categoryNames, type App, type RowStatus } from '../types';
 import { DiscoveryCard } from './DiscoveryCard';
 import { PlaceholderImage } from './PlaceholderImage';
 
@@ -43,9 +43,14 @@ export function AppCard({ app, platform, onOpen, status, progressLabel }: AppCar
     screenLabel,
     progressLabel && status && status !== 'Complete' ? progressLabel : null,
   ].filter(Boolean).join(' · ');
+  const previewSrc = active?.thumbnailUrl ?? active?.url;
+  const previewSrcSet = active?.thumbnailUrl && active.url && active.thumbnailUrl !== active.url
+    ? `${active.thumbnailUrl} 1x,${active.url} 2x`
+    : undefined;
   const preview = (
     <PlaceholderImage
-      src={active?.thumbnailUrl ?? active?.url}
+      src={previewSrc}
+      srcSet={previewSrcSet}
       accent={app.accent}
       style={{
         background: 'transparent',
@@ -76,7 +81,7 @@ export function AppCard({ app, platform, onOpen, status, progressLabel }: AppCar
         ? <img src={app.iconUrl} alt="" loading="lazy" />
         : app.app.slice(0, 1).toUpperCase()}
       title={app.app}
-      description={app.description || app.cat}
+      description={app.description || categoryNames(app).join(', ')}
       metadata={metadata}
     />
   );

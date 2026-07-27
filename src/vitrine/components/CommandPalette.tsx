@@ -76,7 +76,7 @@ interface CommandPaletteProps {
   onClose: () => void;
   onSelectApp: (appId: string) => void;
   onSelectScreen: (appId: string, evidenceId?: number) => void;
-  onSelectCategory: (cat: string) => void;
+  onSelectCategory: (categoryName: string) => void;
   onSelectFlow: (appId: string) => void;
 }
 
@@ -120,7 +120,11 @@ export function CommandPalette({
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const app of apps) counts.set(app.cat, (counts.get(app.cat) ?? 0) + 1);
+    for (const app of apps) {
+      for (const { name } of app.categories) {
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
+    }
     return Array.from(counts.entries());
   }, [apps]);
   const screenSamples = useMemo(() => apps.flatMap((app) => app.screens.map((_, index) => ({ app, index }))), [apps]);
@@ -135,7 +139,7 @@ export function CommandPalette({
     return apps.filter((app) => {
       const searchText = [
         app.app,
-        app.cat,
+        ...app.categories.map(({ name }) => name),
         ...app.screens.flatMap((screen) => [
           screen.type,
           screen.productArea,
@@ -266,19 +270,22 @@ export function CommandPalette({
 
   const selectApp = (appId: string) => requestClose(() => onSelectApp(appId));
   const selectScreen = (app: App, index: number) => requestClose(() => onSelectScreen(app.id, app.screens[index].id));
-  const selectCategory = (cat: string) => { onQueryChange(''); requestClose(() => onSelectCategory(cat)); };
+  const selectCategory = (categoryName: string) => {
+    onQueryChange('');
+    requestClose(() => onSelectCategory(categoryName));
+  };
   const selectFlow = (appId: string) => requestClose(() => onSelectFlow(appId));
 
   const browseContent = nav === 'categories' ? (
     <>
       <div style={SECTION_LABEL}>Categories</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {categories.map(([cat, count]) => (
+        {categories.map(([categoryName, count]) => (
           <Button
-            key={cat}
-            label={cat}
+            key={categoryName}
+            label={categoryName}
             size="sm"
-            onClick={() => selectCategory(cat)}
+            onClick={() => selectCategory(categoryName)}
             endContent={<span style={{ fontSize: 11.5, fontWeight: 600, background: 'var(--color-background-muted)', color: 'var(--color-text-secondary)', borderRadius: 999, padding: '1px 7px' }}>{count}</span>}
             style={{ borderRadius: 10 }}
           />

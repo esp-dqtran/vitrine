@@ -16,7 +16,7 @@ test("shows the active filter count without changing the action name", () => {
   );
 
   assert.match(html, /Search on Web\.\.\. · 3 filters/);
-  assert.match(html, /aria-label="Open search and filters"/);
+  assert.match(html, /aria-label="Search on Web\.\.\. · 3 filters, Open search and filters"/);
   assert.match(html, /class="reference-search-trigger"/);
   assert.match(html, /class="[^"]*reference-search-trigger__button[^"]*"/);
   assert.doesNotMatch(

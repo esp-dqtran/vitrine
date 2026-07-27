@@ -27,3 +27,16 @@ test('loads public and application pages through route-level lazy boundaries', a
   assert.match(source, /lazy\(\(\) => import\(['"]\.\/Pricing['"]\)/);
   assert.match(source, /<Suspense fallback=\{<FullPageSpinner \/>}/);
 });
+
+test('starts App metadata before the private application bundle mounts', async () => {
+  const [entrySource, hookSource] = await Promise.all([
+    readFile(new URL('./entry.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./useAppDetail.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(entrySource, /import\('\.\/appDetailPrefetch\.ts'\)/);
+  assert.match(entrySource, /prefetchAppDetail/);
+  assert.match(entrySource, /decodeURIComponent/);
+  assert.match(hookSource, /loadAppDetail/);
+  assert.doesNotMatch(hookSource, /fetchAppMetadata/);
+});

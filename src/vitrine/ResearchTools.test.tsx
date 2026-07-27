@@ -9,7 +9,7 @@ import { VersionPanel } from './components/VersionPanel.tsx';
 test('renders grouped evidence-aware catalog results and facets', () => {
   const html = renderToStaticMarkup(<SearchResults
     result={{
-      items: [{ id: 'component:linear:button', kind: 'component', app: 'linear', title: 'Button', description: 'Primary action', evidenceIds: [7], states: ['Primary'], layoutPatterns: [], componentNames: ['Button'] }],
+      items: [{ id: 'component:linear:button', kind: 'component', app: 'linear', title: 'Button', description: 'Primary action', evidenceIds: [7], appCategories: ['Productivity'], states: ['Primary'], layoutPatterns: [], componentNames: ['Button'] }],
       facets: { kinds: { app: 1, screen: 2, component: 1, token: 3, flow: 1, pattern: 1 }, themes: ['dark'], pageTypes: ['Workspace'], productAreas: ['Issues'], states: ['Primary'], layouts: ['Sidebar'], components: ['Button'], appCategories: ['Productivity'] },
     }}
     filters={{ kind: 'all' }}
@@ -51,6 +51,8 @@ test('keeps Free users to their existing collection', () => {
 test('makes editable Figma the primary export and keeps code formats secondary', () => {
   const html = renderToStaticMarkup(<ExportPanel app="linear" />);
   assert.match(html, /Export editable Figma library/);
+  assert.match(html, /class="[^"]*export-panel__primary[^"]*"/);
+  assert.doesNotMatch(html, /color:var\(--color-text-disabled\)/);
   assert.match(html, /Variable collections/);
   assert.match(html, /Secondary formats/);
   assert.match(html, /JSON/);
@@ -73,4 +75,5 @@ test('shows capture counts and curator review actions without exposing draft as 
   assert.doesNotMatch(html, />Publish<\/button>/);
   assert.match(html, /Published/);
   assert.match(html, /Start recapture/);
+  assert.doesNotMatch(html, /color:var\(--color-text-disabled\)/);
 });

@@ -10,6 +10,7 @@ import {
   decodeUpdatedCatalogCursor,
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
+import { createCategoryStore, type Category } from "./categoryStore.ts";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/astryx";
@@ -197,13 +198,25 @@ export async function setAppMeta(app: string, meta: {
   category?: string | null;
   displayName?: string | null;
 }): Promise<void> {
-  await query(
-    `UPDATE apps SET icon_url = COALESCE(icon_url, $2),
-       category = COALESCE(category, $3),
-       display_name = COALESCE(display_name, $4)
-     WHERE name = $1`,
-    [app, meta.iconUrl ?? null, meta.category ?? null, meta.displayName ?? null],
-  );
+  await withTransaction(async (client) => {
+    const updated = await client.query<{ id: number }>(
+      `UPDATE apps SET icon_url = COALESCE(icon_url, $2),
+         display_name = COALESCE(display_name, $3)
+       WHERE name = $1
+       RETURNING id`,
+      [app, meta.iconUrl ?? null, meta.displayName ?? null],
+    );
+    const appId = updated.rows[0]?.id;
+    if (!appId || !meta.category?.trim()) return;
+    const transactionQuery = (
+      sql: string,
+      values?: readonly unknown[],
+    ) => client.query(sql, values ? [...values] : undefined);
+    await createCategoryStore(
+      transactionQuery,
+      async (work) => work(transactionQuery),
+    ).assignNames(appId, [meta.category], { replace: false });
+  });
 }
 
 // "flow_step" is a screenshot captured via a flow's own export rather than the Screens tab —
@@ -221,7 +234,7 @@ export interface CrawledImage {
   analysis?: ScreenAnalysis | null;
   capture_url?: string | null;
   icon_url?: string | null;
-  category?: string | null;
+  categories?: Category[];
   viewport_width?: number | null;
   viewport_height?: number | null;
   state_context?: string | null;
@@ -325,7 +338,7 @@ export async function appKnowledgeEvidenceSource(
 export interface AppMetadataRow {
   app: string;
   icon_url: string | null;
-  category: string | null;
+  categories: Category[];
   display_name?: string | null;
   description?: string | null;
   website_url?: string | null;
@@ -359,7 +372,7 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
   try {
     const res = await query<AppMetadataRow>(
     `WITH target AS (
-       SELECT id, name, icon_url, category, display_name, description, website_url, accent_color
+       SELECT id, name, icon_url, display_name, description, website_url, accent_color
        FROM apps WHERE name = $1
      ), latest_versions AS (
        SELECT DISTINCT ON (av.platform) av.id, av.platform
@@ -384,7 +397,24 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
        FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
        WHERE $2::boolean = true
      )
-     SELECT t.name AS app, t.icon_url, t.category, t.display_name, t.description,
+     SELECT t.name AS app, t.icon_url,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object(
+             'id', category_rows.id,
+             'name', category_rows.name,
+             'slug', category_rows.slug
+           )
+           ORDER BY lower(category_rows.name), category_rows.id
+         )
+         FROM (
+           SELECT c.id, c.name, c.slug
+           FROM app_categories ac
+           JOIN categories c ON c.id = ac.category_id
+           WHERE ac.app_id = t.id
+         ) category_rows
+       ), '[]'::jsonb) AS categories,
+       t.display_name, t.description,
        t.website_url, t.accent_color,
        (
          SELECT wpv.id::integer
@@ -409,7 +439,7 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
          FROM (SELECT DISTINCT platform FROM eligible_images WHERE platform IS NOT NULL) available
        ), ARRAY[]::text[]) AS available_platforms
      FROM target t LEFT JOIN eligible_images ei ON true
-     GROUP BY t.id, t.name, t.icon_url, t.category, t.display_name, t.description,
+     GROUP BY t.id, t.name, t.icon_url, t.display_name, t.description,
        t.website_url, t.accent_color`,
     [app, publishedOnly],
   );
@@ -426,7 +456,7 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
 async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<AppMetadataRow | null> {
   const res = await query<AppMetadataRow>(
     `WITH target AS (
-       SELECT id, name, icon_url, category FROM apps WHERE name = $1
+       SELECT id, name, icon_url FROM apps WHERE name = $1
      ), latest_versions AS (
        SELECT DISTINCT ON (av.platform) av.id, av.platform
        FROM app_versions av JOIN target t ON t.id = av.app_id
@@ -450,7 +480,23 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
        FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
        WHERE $2::boolean = true
      )
-     SELECT t.name AS app, t.icon_url, t.category,
+     SELECT t.name AS app, t.icon_url,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object(
+             'id', category_rows.id,
+             'name', category_rows.name,
+             'slug', category_rows.slug
+           )
+           ORDER BY lower(category_rows.name), category_rows.id
+         )
+         FROM (
+           SELECT c.id, c.name, c.slug
+           FROM app_categories ac
+           JOIN categories c ON c.id = ac.category_id
+           WHERE ac.app_id = t.id
+         ) category_rows
+       ), '[]'::jsonb) AS categories,
        COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'screen')::integer AS total_screens,
        COUNT(DISTINCT ei.id) FILTER (WHERE ei.kind = 'ui_element')::integer AS total_ui_elements,
        COALESCE((SELECT SUM(flow_count) FROM eligible_flows), 0)::integer AS total_flows,
@@ -461,7 +507,7 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
          FROM (SELECT DISTINCT platform FROM eligible_images WHERE platform IS NOT NULL) available
        ), ARRAY[]::text[]) AS available_platforms
      FROM target t LEFT JOIN eligible_images ei ON true
-     GROUP BY t.id, t.name, t.icon_url, t.category`,
+     GROUP BY t.id, t.name, t.icon_url`,
     [app, publishedOnly],
   );
   return res.rows[0] ?? null;
@@ -489,14 +535,30 @@ export async function appEvidencePage(input: {
        ORDER BY av.version_number DESC LIMIT 1
      ), eligible AS (
        SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
-         a.icon_url, a.category, i.image_url AS capture_url, i.created_at AS captured_at,
+         a.icon_url, COALESCE((
+           SELECT jsonb_agg(
+             jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+             ORDER BY lower(c.name), c.id
+           )
+           FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+           WHERE ac.app_id = a.id
+         ), '[]'::jsonb) AS categories,
+         i.image_url AS capture_url, i.created_at AS captured_at,
          NULL::integer AS viewport_width, NULL::integer AS viewport_height, NULL::text AS state_context
        FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
        UNION ALL
        SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
-         a.icon_url, a.category, COALESCE(vi.source_url, i.image_url) AS capture_url, vi.captured_at,
+         a.icon_url, COALESCE((
+           SELECT jsonb_agg(
+             jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+             ORDER BY lower(c.name), c.id
+           )
+           FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+           WHERE ac.app_id = a.id
+         ), '[]'::jsonb) AS categories,
+         COALESCE(vi.source_url, i.image_url) AS capture_url, vi.captured_at,
          vi.viewport_width, vi.viewport_height, vi.state_context
        FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
        JOIN images i ON i.id = vi.image_id JOIN platforms p ON p.id = i.platform_id
@@ -570,7 +632,14 @@ export async function flowEvidenceImages(input: {
        ORDER BY av.version_number DESC LIMIT 1
      )
      SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
-       a.icon_url, a.category,
+       a.icon_url, COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories,
        COALESCE(vi.source_url, i.image_url) AS capture_url,
        COALESCE(vi.captured_at, i.created_at) AS captured_at,
        vi.viewport_width, vi.viewport_height, vi.state_context
@@ -588,7 +657,15 @@ export async function flowEvidenceImages(input: {
 export async function allImages(kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
   const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
-    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url, a.category,
+    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories,
        i.image_url AS capture_url, i.created_at AS captured_at
      FROM images i
      JOIN platforms p ON p.id = i.platform_id
@@ -638,7 +715,23 @@ export async function adminAppPage(input: {
   const afterAppId = decoded?.appId ?? null;
   const res = await query<AdminGalleryPageRow>(
     `WITH eligible_apps AS (
-       SELECT a.id AS app_id, a.name, a.icon_url, a.category,
+       SELECT a.id AS app_id, a.name, a.icon_url,
+              COALESCE((
+                SELECT jsonb_agg(
+                  jsonb_build_object(
+                    'id', category_rows.id,
+                    'name', category_rows.name,
+                    'slug', category_rows.slug
+                  )
+                  ORDER BY lower(category_rows.name), category_rows.id
+                )
+                FROM (
+                  SELECT c.id, c.name, c.slug
+                  FROM app_categories ac
+                  JOIN categories c ON c.id = ac.category_id
+                  WHERE ac.app_id = a.id
+                ) category_rows
+              ), '[]'::jsonb) AS categories,
               a.display_name, a.website_url, a.accent_color,
               newest.updated_at,
               COUNT(*) OVER()::integer AS total_apps
@@ -717,7 +810,7 @@ export async function adminAppPage(input: {
        WHERE preview_rank <= 5
      )
      SELECT i.id, pa.name AS app, pi.platform, i.image_url, i.kind,
-            i.description, i.analysis, pa.icon_url, pa.category,
+            i.description, i.analysis, pa.icon_url, pa.categories,
             pa.display_name, pa.website_url, pa.accent_color,
             i.image_url AS capture_url, i.created_at AS captured_at,
             c.total_screens, c.analyzed_screens, c.last_captured_at,
@@ -751,7 +844,15 @@ export async function adminAppPage(input: {
 export async function appImages(app: string, kind: ImageKind | ImageKind[] = "screen", platform?: string): Promise<CrawledImage[]> {
   const kinds = Array.isArray(kind) ? kind : [kind];
   const res = await query<CrawledImage>(
-    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url, a.category,
+    `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis, a.icon_url,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories,
        i.image_url AS capture_url, i.created_at AS captured_at
      FROM images i
      JOIN platforms p ON p.id = i.platform_id
@@ -1160,11 +1261,18 @@ export async function publishedSearchSource(
     id: number;
     app_id: number;
     app: string;
-    category: string | null;
+    categories: string[];
     platform: string;
     published_at: string;
   }>(
-    `SELECT av.id, av.app_id, a.name AS app, a.category, av.platform, av.published_at
+    `SELECT av.id, av.app_id, a.name AS app,
+       COALESCE((
+         SELECT array_agg(c.name ORDER BY lower(c.name), c.id)
+         FROM app_categories ac
+         JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = av.app_id
+       ), ARRAY[]::text[]) AS categories,
+       av.platform, av.published_at
      FROM app_versions av JOIN apps a ON a.id = av.app_id
      WHERE av.app_id = $1 AND av.platform = $2 AND av.status = 'published'
      ORDER BY av.version_number DESC LIMIT 1`,
@@ -1177,7 +1285,7 @@ export async function publishedSearchSource(
     query<CrawledImage>(
       `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
          vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height, vi.state_context,
-         vi.captured_at, a.icon_url, a.category
+         vi.captured_at, a.icon_url
        FROM version_images vi
        JOIN app_versions av ON av.id = vi.version_id
        JOIN apps a ON a.id = av.app_id
@@ -1203,7 +1311,7 @@ export async function publishedSearchSource(
       appId: selected.app_id,
       app: selected.app,
       platform: selected.platform,
-      ...(selected.category ? { category: selected.category } : {}),
+      categories: selected.categories,
       publishedAt: new Date(selected.published_at).toISOString(),
     },
     images: images.rows.map((image) => ({
@@ -1287,6 +1395,14 @@ export async function publishedSiteSearchSource(
 export async function publishedImages(): Promise<CrawledImage[]> {
   const res = await query<CrawledImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories,
        vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height, vi.state_context, vi.captured_at
      FROM apps a JOIN app_versions av ON av.app_id = a.id
      JOIN version_images vi ON vi.version_id = av.id JOIN images i ON i.id = vi.image_id
@@ -1305,7 +1421,15 @@ export interface PublishedPreviewImage extends CrawledImage {
 export async function publishedPreviewImages(): Promise<PublishedPreviewImage[]> {
   const res = await query<PublishedPreviewImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
-       a.icon_url, a.category, vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height,
+       a.icon_url, COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = a.id
+       ), '[]'::jsonb) AS categories,
+       vi.source_url AS capture_url, vi.viewport_width, vi.viewport_height,
        vi.state_context, vi.captured_at, api.rank::integer AS preview_rank
      FROM apps a
      JOIN LATERAL (

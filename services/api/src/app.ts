@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import {
   query,
+  withTransaction,
   pool,
   allImages,
   adminAppPage,
@@ -76,6 +77,12 @@ import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import { parsePublicFacet } from "../../../src/publicFacetPreview.ts";
 import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts";
+import {
+  CategoryConflictError,
+  CategoryNotFoundError,
+  CategoryValidationError,
+  createCategoryStore,
+} from "../../../src/categoryStore.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -301,6 +308,11 @@ export function createCrawlRepairRequester(overrides: Partial<CrawlRepairRequest
 }
 
 const requestCrawlRepair = createCrawlRepairRequester();
+const categoryStore = createCategoryStore(
+  (sql, values) => query(sql, values ? [...values] : undefined),
+  (work) => withTransaction((client) =>
+    work((sql, values) => client.query(sql, values ? [...values] : undefined))),
+);
 
 const defaults = {
   query,
@@ -337,6 +349,7 @@ const defaults = {
   publishedPreviewImages,
   publishedCatalogPage,
   publishedFacetPreviews,
+  categoryStore,
   catalogStats,
   listPublishedDesignSystems,
   listPublishedFlowSets,
@@ -859,6 +872,31 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.clearCookie(SESSION_COOKIE, cookieOptions).status(204).end();
   });
 
+  const resolveRequestSession = async (
+    req: express.Request,
+  ): Promise<Awaited<ReturnType<typeof resolveSessionState>>> => {
+    const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
+    if (!token) return { status: "invalid" };
+    if (overrides.resolveSessionState) return deps.resolveSessionState(token);
+    if (overrides.resolveSession) {
+      const user = await deps.resolveSession(token);
+      return user ? { status: "authenticated", user } : { status: "invalid" };
+    }
+    return deps.resolveSessionState(token);
+  };
+
+  app.get("/auth/me", async (req, res) => {
+    const resolution = await resolveRequestSession(req);
+    if (resolution.status === "signed_in_elsewhere") {
+      res.status(401).json({
+        error: "Signed in on another device",
+        code: "signed_in_elsewhere",
+      });
+      return;
+    }
+    res.json(resolution.status === "authenticated" ? resolution.user : null);
+  });
+
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
@@ -878,6 +916,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog/stats", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=600");
     res.json(await deps.catalogStats());
+  });
+
+  app.get("/catalog/categories", async (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.json({ categories: await deps.categoryStore.listPublished() });
   });
 
   app.get("/catalog/facet-preview", async (req, res) => {
@@ -955,6 +998,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/preview-media/:app/:rank", async (req, res) => {
     const rank = Number(req.params.rank);
+    const variant = req.query.variant === "full" ? "full" : "thumb";
     if (!isAppSlug(req.params.app) || !Number.isInteger(rank) || rank < 1 || rank > 3) {
       res.status(400).json({ error: "invalid media reference" });
       return;
@@ -963,7 +1007,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(503).json({ error: "media storage unavailable" });
       return;
     }
-    const metadata = await deps.publishedPreviewObject({ app: req.params.app, rank });
+    const metadata = await deps.publishedPreviewObject({ app: req.params.app, rank, variant });
     if (!metadata) {
       res.status(404).json({ error: "preview not found" });
       return;
@@ -993,13 +1037,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   mountPublicSitesRoutes(app, sitesRouteDependencies);
 
   app.use(async (req, res, next) => {
-    const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
-    let resolution: Awaited<ReturnType<typeof resolveSessionState>> = { status: "invalid" };
-    if (token && overrides.resolveSessionState) resolution = await deps.resolveSessionState(token);
-    else if (token && overrides.resolveSession) {
-      const user = await deps.resolveSession(token);
-      resolution = user ? { status: "authenticated", user } : { status: "invalid" };
-    } else if (token) resolution = await deps.resolveSessionState(token);
+    const resolution = await resolveRequestSession(req);
     if (resolution.status === "signed_in_elsewhere") {
       res.status(401).json({
         error: "Signed in on another device",
@@ -1048,6 +1086,127 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  const sendCategoryError = (res: express.Response, error: unknown): void => {
+    if (error instanceof CategoryValidationError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    if (error instanceof CategoryConflictError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    if (error instanceof CategoryNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    throw error;
+  };
+
+  app.get("/admin/categories", requireAdmin, async (_req, res) => {
+    res.json({ categories: await deps.categoryStore.list() });
+  });
+
+  app.post("/admin/categories", requireAdmin, async (req, res) => {
+    const body = exactBody(req.body, ["name", "slug"]);
+    if (!body) {
+      res.status(400).json({ error: "invalid category" });
+      return;
+    }
+    try {
+      res.status(201).json(await deps.categoryStore.create(
+        body as { name: string; slug: string },
+      ));
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
+
+  app.patch("/admin/categories/:categoryId", requireAdmin, async (req, res) => {
+    const categoryId = positiveId(Array.isArray(req.params.categoryId)
+      ? req.params.categoryId[0]
+      : req.params.categoryId);
+    const body = exactBody(req.body, ["name", "slug"]);
+    if (!categoryId || !body) {
+      res.status(400).json({ error: "invalid category" });
+      return;
+    }
+    try {
+      res.json(await deps.categoryStore.update(
+        categoryId,
+        body as { name: string; slug: string },
+      ));
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
+
+  app.delete("/admin/categories/:categoryId", requireAdmin, async (req, res) => {
+    const categoryId = positiveId(Array.isArray(req.params.categoryId)
+      ? req.params.categoryId[0]
+      : req.params.categoryId);
+    if (!categoryId) {
+      res.status(400).json({ error: "invalid category id" });
+      return;
+    }
+    try {
+      res.json(await deps.categoryStore.remove(categoryId));
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
+
+  app.get("/admin/categories/:categoryId/apps", requireAdmin, async (req, res) => {
+    const categoryId = positiveId(Array.isArray(req.params.categoryId)
+      ? req.params.categoryId[0]
+      : req.params.categoryId);
+    if (!categoryId) {
+      res.status(400).json({ error: "invalid category id" });
+      return;
+    }
+    try {
+      res.json({ apps: await deps.categoryStore.listApps(categoryId) });
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
+
+  app.post("/admin/categories/:categoryId/apps", requireAdmin, async (req, res) => {
+    const categoryId = positiveId(Array.isArray(req.params.categoryId)
+      ? req.params.categoryId[0]
+      : req.params.categoryId);
+    const body = exactBody(req.body, ["app"]);
+    const appSlug = typeof body?.app === "string" && isAppSlug(body.app)
+      ? body.app
+      : undefined;
+    if (!categoryId || !appSlug) {
+      res.status(400).json({ error: "invalid category assignment" });
+      return;
+    }
+    try {
+      await deps.categoryStore.attach(appSlug, categoryId);
+      res.json({ app: appSlug, categoryId });
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
+
+  app.delete("/admin/categories/:categoryId/apps/:app", requireAdmin, async (req, res) => {
+    const categoryId = positiveId(Array.isArray(req.params.categoryId)
+      ? req.params.categoryId[0]
+      : req.params.categoryId);
+    const appSlug = Array.isArray(req.params.app) ? req.params.app[0] : req.params.app;
+    if (!categoryId || !isAppSlug(appSlug)) {
+      res.status(400).json({ error: "invalid category assignment" });
+      return;
+    }
+    try {
+      await deps.categoryStore.detach(appSlug, categoryId);
+      res.status(204).end();
+    } catch (error) {
+      sendCategoryError(res, error);
+    }
+  });
 
   const effectiveCustomerPlan = async (res: express.Response): Promise<"free" | "pro"> =>
     res.locals.user.role === "admin"
@@ -1147,7 +1306,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         platform: image.platform as "ios" | "android" | "web",
         title: analysis?.pageType || image.description || `Screen ${image.id}`,
         description: analysis?.description || image.description || "",
-        appCategory: image.category ?? undefined,
+        appCategories: image.categories?.map(({ name }) => name) ?? [],
         productArea: analysis?.productArea,
         pageType: analysis?.pageType,
         tags: analysis?.contentPatterns ?? [],
@@ -1646,8 +1805,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     return `/api/media/${appSlug}/${hash}?${params.toString()}`;
   };
 
-  app.get("/auth/me", (_req, res) => res.json(res.locals.user));
-
   app.post("/auth/password", async (req, res) => {
     const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
     const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
@@ -1839,7 +1996,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       allowed.add(appName);
     }
     const allowedImages = images.filter(({ app }) => allowed.has(app));
-    const appCategories = Object.fromEntries(buildGalleryApps(allowedImages).map(({ id, cat }) => [id, cat]));
+    const appCategories = Object.fromEntries(
+      allowedImages.map((image) => [
+        image.app,
+        image.categories?.map(({ name }) => name) ?? [],
+      ]),
+    );
     const searchOptions = {
       query: optionalQuery(req.query.q) ?? "",
       kind: requestedKind as CatalogEntityKind | "all",

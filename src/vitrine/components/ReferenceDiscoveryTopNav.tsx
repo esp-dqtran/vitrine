@@ -30,6 +30,7 @@ export function ReferenceDiscoveryTopNav({
       <div className={`reference-discovery-nav__left ${className}__left`}>
         <a
           href={active === 'apps' ? '/apps' : '/sites'}
+          aria-label={`Vitrine ${active === 'apps' ? 'Apps' : 'Sites'}`}
           className={`reference-discovery-nav__brand ${className}__brand`}
           data-reference-gallery-identity="true"
           onClick={(event) => {

@@ -23,23 +23,33 @@ export function observeSiteCardMedia(
   return () => observer.disconnect();
 }
 
-export function SiteCard({ site, onOpen }: { site: SiteSummary; onOpen: () => void }) {
+export function SiteCard({
+  site,
+  onOpen,
+  deferMediaUntilIntent = false,
+}: {
+  site: SiteSummary;
+  onOpen: () => void;
+  deferMediaUntilIntent?: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const shouldPlayRef = useRef(false);
-  const [mediaActive, setMediaActive] = useState(site.previewMediaKind === 'image');
+  const [mediaActive, setMediaActive] = useState(
+    site.previewMediaKind === 'image' && !deferMediaUntilIntent,
+  );
   const [mediaFailed, setMediaFailed] = useState(false);
   const hostname = safeHostname(site.sourceUrl);
   const description = site.description || `${site.sectionCount} captured sections from ${hostname}.`;
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || mediaActive) return;
+    if (!video || mediaActive || deferMediaUntilIntent) return;
     if (typeof IntersectionObserver === 'undefined') {
       setMediaActive(true);
       return;
     }
     return observeSiteCardMedia(video, () => setMediaActive(true));
-  }, [mediaActive]);
+  }, [deferMediaUntilIntent, mediaActive]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -75,7 +85,9 @@ export function SiteCard({ site, onOpen }: { site: SiteSummary; onOpen: () => vo
       }}
       media={(
         <>
-          {site.previewMediaKind === 'image' ? (
+          {deferMediaUntilIntent && !mediaActive ? (
+            <span className="site-discovery-card__fallback" aria-hidden="true" />
+          ) : site.previewMediaKind === 'image' ? (
             <img src={site.previewUrl} alt={`${site.name} website preview`} loading="lazy" />
           ) : !mediaFailed ? (
             <video

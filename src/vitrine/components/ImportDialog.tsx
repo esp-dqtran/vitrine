@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Dialog, Heading, Text, TextInput } from '@astryxdesign/core';
-import type { App, Job, RowStatus } from '../types';
+import { categoryNames, type App, type Job, type RowStatus } from '../types';
 import { groupPipelines } from '../jobs';
 
 // ------------------------------------------------------------------
@@ -10,7 +10,7 @@ import { groupPipelines } from '../jobs';
 export interface RowVM {
   slug: string;
   name: string;
-  cat: string;
+  categoryLabel: string;
   accent: string;
   iconUrl?: string | null;
   captured: number;
@@ -24,7 +24,18 @@ export function appRow(a: App): RowVM {
   const captured = a.totalScreens;
   const analyzed = a.analyzedScreens ?? a.screens.filter((s) => s.confidence != null).length;
   const lastSynced = a.lastCapturedAt ?? a.screens.reduce<string | null>((m, s) => (s.capturedAt && (!m || s.capturedAt > m) ? s.capturedAt : m), null);
-  return { slug: a.id, name: a.app, cat: a.cat, accent: a.accent, iconUrl: a.iconUrl, captured, analyzed, lastSynced, status: captured > 0 && analyzed >= captured ? 'Complete' : 'In progress', app: a };
+  return {
+    slug: a.id,
+    name: a.app,
+    categoryLabel: categoryNames(a).join(', ') || 'Uncategorized',
+    accent: a.accent,
+    iconUrl: a.iconUrl,
+    captured,
+    analyzed,
+    lastSynced,
+    status: captured > 0 && analyzed >= captured ? 'Complete' : 'In progress',
+    app: a,
+  };
 }
 
 export const ROW_STATUS_VARIANT: Record<RowStatus, 'neutral' | 'blue' | 'green' | 'red'> = { Queued: 'neutral', 'In progress': 'blue', Complete: 'green', 'Needs attention': 'red', Cancelled: 'neutral' };
@@ -48,7 +59,16 @@ export function buildPipelineRows(apps: App[], jobs: Job[]): RowVM[] {
           : stages.some((stage) => stage.status === 'cancelled')
             ? 'Cancelled'
             : 'Complete';
-      return { slug: name, name, cat: 'Importing', accent: 'var(--color-text-disabled)', captured: 0, analyzed: 0, lastSynced: null, status };
+      return {
+        slug: name,
+        name,
+        categoryLabel: 'Uncategorized',
+        accent: 'var(--color-text-disabled)',
+        captured: 0,
+        analyzed: 0,
+        lastSynced: null,
+        status,
+      };
     });
   return [...pipelineRows, ...real];
 }

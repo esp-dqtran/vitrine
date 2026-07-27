@@ -3,5 +3,6 @@ dist/
 data/
 storybook-static/
 .codegraph/
+.superpowers/
 .env
 backups/

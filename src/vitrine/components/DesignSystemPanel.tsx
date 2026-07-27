@@ -378,7 +378,7 @@ export function DesignSystemPanel({
     return (
       <>
         {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
-        <EmptyState title="No design system yet" description="No design-system data is available for this app." />
+        <EmptyState title="No design system yet" description="No design-system data is available for this app." headingLevel={2} />
       </>
     );
   }
@@ -396,7 +396,7 @@ export function DesignSystemPanel({
   const showcaseVariant = showcaseComponent?.variants[0];
 
   if (!tokenGroups.length && !hasComponents && !hasRules) {
-    return <EmptyState title="No design system available" description="No design tokens, components, or rules are available for this app." />;
+    return <EmptyState title="No design system available" description="No design tokens, components, or rules are available for this app." headingLevel={2} />;
   }
 
   let sectionIndex = 0;

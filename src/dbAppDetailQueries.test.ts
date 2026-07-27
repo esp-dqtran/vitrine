@@ -19,6 +19,40 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   assert.doesNotMatch(evidenceBody, /\bversionImages\(/);
 });
 
+test("app metadata aggregates ordered Category records without a scalar read", () => {
+  const start = source.indexOf("export async function appMetadata(");
+  const end = source.indexOf("\nasync function legacyAppMetadata", start);
+  const body = source.slice(start, end);
+
+  assert.match(body, /\b(?:FROM|JOIN) app_categories/);
+  assert.match(body, /JOIN categories/);
+  assert.match(body, /jsonb_agg/);
+  assert.match(body, /ORDER BY lower\(category_rows\.name\), category_rows\.id/);
+  assert.doesNotMatch(body, /\bt\.category\b/);
+});
+
+test("image read paths return Category arrays without reading the legacy App column", () => {
+  assert.doesNotMatch(source, /\b(?:a|t|pa)\.category\b/);
+
+  for (const functionName of [
+    "appEvidencePage",
+    "flowEvidenceImages",
+    "allImages",
+    "appImages",
+    "publishedImages",
+    "publishedPreviewImages",
+  ]) {
+    const start = source.indexOf(`export async function ${functionName}(`);
+    const end = source.indexOf("\nexport ", start + 1);
+    const body = source.slice(start, end);
+
+    assert.ok(start >= 0, `${functionName} source was not found`);
+    assert.match(body, /\b(?:FROM|JOIN) app_categories/);
+    assert.match(body, /JOIN categories/);
+    assert.match(body, /jsonb_agg/);
+  }
+});
+
 test("Flow analysis persists atomically to the exact app version", () => {
   const start = source.indexOf("export async function saveAnalyzedAppFlows(");
   const end = source.indexOf("\nexport async function", start + 1);

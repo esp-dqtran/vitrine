@@ -65,10 +65,10 @@ export function createAppSectionStore(clients: AppSectionClients = defaultClient
   const request = (key: AppSectionKey, signal?: AbortSignal, cursor?: string): Promise<AppSectionData> => {
     const version = key.version === 'latest' ? undefined : key.version;
     if (key.section === 'screens') {
-      return clients.screens(key.appId, { platform: key.platform, version, cursor, limit: 48, signal });
+      return clients.screens(key.appId, { platform: key.platform, version, cursor, limit: 8, signal });
     }
     if (key.section === 'ui-elements') {
-      return clients.uiElements(key.appId, { platform: key.platform, version, cursor, limit: 48, signal });
+      return clients.uiElements(key.appId, { platform: key.platform, version, cursor, limit: 8, signal });
     }
     return clients.flows(key.appId, { platform: key.platform, version, signal });
   };

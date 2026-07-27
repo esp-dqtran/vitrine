@@ -48,7 +48,11 @@ test("selects published Apps globally by Updated At and emits a snapshot cursor"
         app_id,
         app,
         display_name: app.toUpperCase(),
-        category: "Productivity",
+        categories: [{
+          id: 7,
+          name: "Productivity",
+          slug: "productivity",
+        }],
         website_url: null,
         icon_url: null,
         accent_color: "#123456",
@@ -80,11 +84,17 @@ test("selects published Apps globally by Updated At and emits a snapshot cursor"
     3,
   ]);
   assert.match(calls[0]?.sql ?? "", /ORDER BY updated_at DESC,\s*app_id DESC/);
-  assert.match(calls[0]?.sql ?? "", /JOIN LATERAL/);
+  assert.match(calls[0]?.sql ?? "", /MAX\(latest\.captured_at\) AS updated_at/);
+  assert.match(calls[0]?.sql ?? "", /latest\.screen_count > 0/);
+  assert.doesNotMatch(calls[0]?.sql ?? "", /JOIN LATERAL/);
+  assert.doesNotMatch(calls[0]?.sql ?? "", /JOIN images/);
   assert.match(calls[0]?.sql ?? "", /av\.published_at <= \$1::timestamptz/);
-  assert.match(calls[0]?.sql ?? "", /vi\.captured_at <= \$1::timestamptz/);
   assert.doesNotMatch(calls[0]?.sql ?? "", /av\.status = 'published'/);
   assert.doesNotMatch(calls[0]?.sql ?? "", /GROUP BY[\s\S]*MAX\(i\.created_at\)/);
+  assert.match(calls[1]?.sql ?? "", /\b(?:FROM|JOIN) app_categories/);
+  assert.match(calls[1]?.sql ?? "", /JOIN categories/);
+  assert.match(calls[1]?.sql ?? "", /jsonb_agg/);
+  assert.doesNotMatch(calls[1]?.sql ?? "", /\ba\.category\b/);
 });
 
 test("selects one extra Updated At identity before reading bounded catalog metadata", async () => {
@@ -102,7 +112,11 @@ test("selects one extra Updated At identity before reading bounded catalog metad
         app_id,
         app,
         display_name: app.toUpperCase(),
-        category: "Productivity",
+        categories: [{
+          id: 7,
+          name: "Productivity",
+          slug: "productivity",
+        }],
         website_url: null,
         icon_url: null,
         accent_color: "#123456",

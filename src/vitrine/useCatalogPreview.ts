@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { Category } from './types.ts';
 
 export interface PreviewScreen {
   url: string;
@@ -9,7 +10,7 @@ export interface PreviewApp {
   id: string;
   name: string;
   accent: string;
-  category: string;
+  categories: Category[];
   iconUrl: string | null;
   screens: PreviewScreen[];
 }
@@ -18,7 +19,7 @@ interface CatalogAppShape {
   id: string;
   app: string;
   accent: string;
-  cat: string;
+  categories: Category[];
   iconUrl: string | null;
   previewScreens?: Array<{ url: string | null; type: string }>;
 }
@@ -31,7 +32,7 @@ export function toPreviewApps(page: { apps?: CatalogAppShape[] }): PreviewApp[] 
       id: a.id,
       name: a.app,
       accent: a.accent,
-      category: a.cat,
+      categories: a.categories,
       iconUrl: a.iconUrl,
       screens: (a.previewScreens ?? [])
         .filter((s): s is { url: string; type: string } => Boolean(s.url))

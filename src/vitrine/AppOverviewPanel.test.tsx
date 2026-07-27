@@ -7,7 +7,10 @@ test('shows captured website context and an autoplaying continuous preview', () 
   const html = renderToStaticMarkup(<AppOverviewPanel app={{
     id: 'example-com',
     app: 'Example',
-    cat: 'Developer tools',
+    categories: [
+      { id: 1, name: 'Business', slug: 'business' },
+      { id: 2, name: 'Developer tools', slug: 'developer-tools' },
+    ],
     accent: '#123456',
     totalScreens: 1,
     totalUiElements: 5,
@@ -25,4 +28,6 @@ test('shows captured website context and an autoplaying continuous preview', () 
   assert.match(html, /autoPlay/);
   assert.match(html, /loop/);
   assert.match(html, /muted/);
+  assert.match(html, /Business/);
+  assert.match(html, /Developer tools/);
 });

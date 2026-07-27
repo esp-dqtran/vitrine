@@ -44,7 +44,7 @@ test("maps real catalog identity into a showcase slide", () => {
     id: "linear",
     name: "Linear",
     accent: "#5e6ad2",
-    category: "Productivity",
+    categories: [{ id: 1, name: "Productivity", slug: "productivity" }],
     iconUrl: "/icons/linear.svg",
     screens: [{ url: "/api/preview-media/linear/1", type: "Dashboard" }],
   });

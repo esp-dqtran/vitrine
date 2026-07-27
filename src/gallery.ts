@@ -1,10 +1,11 @@
 import type { AdminGalleryImage, CrawledImage, PublishedPreviewImage } from "./db.ts";
+import type { Category } from "./categoryStore.ts";
 import { bulkImageHash, publicImageUrl } from "./imageSource.ts";
 import type { PublishedCatalogPageRecord } from "./publicCatalogStore.ts";
 
-const APP_META: Record<string, { label: string; cat: string; accent: string; websiteUrl: string }> = {
-  linear: { label: "Linear", cat: "Productivity", accent: "#5E6AD2", websiteUrl: "https://linear.app" },
-  airbnb: { label: "Airbnb", cat: "Travel", accent: "#FF5A5F", websiteUrl: "https://airbnb.com" },
+const APP_META: Record<string, { label: string; accent: string; websiteUrl: string }> = {
+  linear: { label: "Linear", accent: "#5E6AD2", websiteUrl: "https://linear.app" },
+  airbnb: { label: "Airbnb", accent: "#FF5A5F", websiteUrl: "https://airbnb.com" },
 };
 
 const FALLBACK_ACCENTS = ["#3b6ef6", "#0e9f6e", "#e0518a", "#f0763b", "#7c3aed", "#0891b2"];
@@ -33,7 +34,7 @@ export interface CatalogScreen {
 export interface CatalogApp {
   id: string;
   app: string;
-  cat: string;
+  categories: Category[];
   accent: string;
   totalScreens: number;
   platforms: string[];
@@ -51,7 +52,7 @@ export interface CatalogPage {
 export interface CatalogAppMetadata {
   id: string;
   app: string;
-  cat: string;
+  categories: Category[];
   accent: string;
   totalScreens: number;
   totalUiElements: number;
@@ -68,7 +69,7 @@ export interface CatalogAppMetadata {
 export interface AppMetadataRecord {
   app: string;
   icon_url: string | null;
-  category: string | null;
+  categories: Category[];
   display_name?: string | null;
   description?: string | null;
   website_url?: string | null;
@@ -92,7 +93,6 @@ function appMeta(app: string) {
   const hue = [...app].reduce((sum, character) => sum + character.charCodeAt(0), 0);
   return {
     label: app[0].toUpperCase() + app.slice(1),
-    cat: "Design inspiration",
     accent: FALLBACK_ACCENTS[hue % FALLBACK_ACCENTS.length],
     websiteUrl: null,
   };
@@ -121,7 +121,7 @@ function screen(
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,
-    url: previewRank ? previewUrl : imageUrl(app, image.image_url),
+    url: previewRank && previewUrl ? `${previewUrl}?variant=full` : imageUrl(app, image.image_url),
     thumbnailUrl: previewRank ? previewUrl : imageUrl(app, image.image_url, "thumb"),
   };
 }
@@ -148,7 +148,7 @@ function catalogApp(app: string, images: CrawledImage[], previews: PublishedPrev
   return {
     id: app,
     app: meta.label,
-    cat: images[0]?.category ?? meta.cat,
+    categories: images[0]?.categories ?? [],
     accent: meta.accent,
     totalScreens: images.length,
     platforms: [...new Set(images.map(({ platform }) => platform))],
@@ -165,7 +165,7 @@ export function buildAppMetadata(row: AppMetadataRecord): CatalogAppMetadata {
   return {
     id: row.app,
     app: row.display_name ?? meta.label,
-    cat: row.category ?? meta.cat,
+    categories: row.categories,
     accent: row.accent_color ?? meta.accent,
     totalScreens: row.total_screens,
     totalUiElements: row.total_ui_elements,
@@ -225,7 +225,7 @@ export function buildPublishedCatalogPage(
       return {
         id: row.app,
         app: row.display_name ?? meta.label,
-        cat: row.category ?? meta.cat,
+        categories: row.categories,
         accent: row.accent_color ?? meta.accent,
         totalScreens: row.total_screens,
         platforms: row.available_platforms,
@@ -249,7 +249,7 @@ export function buildGalleryApps(images: CrawledImage[]) {
     return {
       id: app,
       app: meta.label,
-      cat: appImages[0]?.category ?? meta.cat,
+      categories: appImages[0]?.categories ?? [],
       accent: meta.accent,
       totalScreens: appImages.length,
       platforms: [...new Set(appImages.map(({ platform }) => platform))],
@@ -268,7 +268,7 @@ export function buildAdminGalleryApps(images: AdminGalleryImage[]) {
     return {
       id: app,
       app: summary?.display_name ?? meta.label,
-      cat: summary?.category ?? meta.cat,
+      categories: summary?.categories ?? [],
       accent: summary?.accent_color ?? meta.accent,
       totalScreens: summary?.total_screens ?? 0,
       platforms: summary?.available_platforms ?? [],

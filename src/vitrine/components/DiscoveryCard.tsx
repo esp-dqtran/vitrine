@@ -69,7 +69,6 @@ export function DiscoveryCard({
         <a
           href={href}
           className={`discovery-card__link ${kind}-discovery-card__link`}
-          aria-label={ariaLabel}
           onClick={(event: MouseEvent<HTMLAnchorElement>) => {
             event.preventDefault();
             onOpen();

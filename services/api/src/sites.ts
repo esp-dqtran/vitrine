@@ -1,6 +1,6 @@
 import type express from "express";
 import type { ObjectMetadata } from "../../../src/objectStore.ts";
-import type { SitesStore } from "../../../src/sitesStore.ts";
+import type { SiteVersionDetail, SitesStore } from "../../../src/sitesStore.ts";
 
 export interface SitesRouteDependencies {
   store: Pick<SitesStore, "listReadySites" | "readyVersionDetail" | "siteMediaObject">;
@@ -50,7 +50,7 @@ export function mountPrivateSitesRoutes(
       res.status(404).json({ error: "Site version not found" });
       return;
     }
-    res.json(version);
+    res.json(clientSiteVersion(version));
   });
 
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
@@ -60,15 +60,69 @@ export function mountPrivateSitesRoutes(
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/poster", "poster");
 }
 
+function clientSiteVersion(version: SiteVersionDetail) {
+  return {
+    ...version,
+    pages: version.pages.map((page) => ({
+      ...page,
+      sections: page.sections.map((section) => ({
+        ...section,
+        searchText: section.ocrBoxes
+          .map(({ text }) => text.trim())
+          .filter(Boolean)
+          .join(" "),
+        ocrBoxes: [],
+        sourceMetadata: {
+          patterns: Array.isArray(section.sourceMetadata.patterns)
+            ? section.sourceMetadata.patterns.filter(
+                (pattern): pattern is string => typeof pattern === "string" && Boolean(pattern),
+              )
+            : [],
+        },
+      })),
+    })),
+  };
+}
+
 function mountReadySitesList(
   app: express.Express,
   dependencies: SitesRouteDependencies,
   publicCatalogMedia: boolean,
 ): void {
-  app.get("/sites", async (_req, res) => {
+  app.get("/sites", async (req, res) => {
     const sites = await dependencies.store.listReadySites();
-    res.json(publicCatalogMedia ? sites.map(publicSiteSummary) : sites);
+    const summaries = publicCatalogMedia ? sites.map(publicSiteSummary) : sites;
+    const requestedPage = req.query.limit !== undefined || req.query.offset !== undefined;
+    if (!requestedPage) {
+      res.json(summaries);
+      return;
+    }
+    const limit = boundedQueryInteger(req.query.limit, 1, 48);
+    const offset = boundedQueryInteger(req.query.offset, 0, 100_000);
+    if (limit === undefined || offset === undefined) {
+      res.status(400).json({ error: "invalid Site catalog page" });
+      return;
+    }
+    const nextOffset = offset + limit < summaries.length ? offset + limit : null;
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json({
+      sites: summaries.slice(offset, offset + limit),
+      nextOffset,
+      total: summaries.length,
+    });
   });
+}
+
+function boundedQueryInteger(
+  value: unknown,
+  minimum: number,
+  maximum: number,
+): number | undefined {
+  if (typeof value !== "string" || !/^\d+$/.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum
+    ? parsed
+    : undefined;
 }
 
 function publicSiteSummary(
@@ -95,14 +149,6 @@ async function sendPublicCatalogMedia(
   const recordId = kind === "poster" ? positiveId(req.params.recordId) : undefined;
   if (!ids || (kind === "poster" && !recordId)) {
     res.status(400).json({ error: "invalid Site catalog media reference" });
-    return;
-  }
-
-  const site = (await dependencies.store.listReadySites()).find(
-    (entry) => entry.siteId === ids.siteId && entry.versionId === ids.versionId,
-  );
-  if (!site || (recordId !== undefined && !site.previews.some((entry) => entry.id === recordId))) {
-    res.status(404).json({ error: "Site catalog media not found" });
     return;
   }
 

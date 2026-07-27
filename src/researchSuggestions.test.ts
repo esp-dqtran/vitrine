@@ -12,7 +12,7 @@ const fixture = (overrides: Partial<ResearchSuggestionCandidate>): ResearchSugge
   platform: "web",
   title: "Account settings",
   description: "Manage an account",
-  appCategory: "Productivity",
+  appCategories: ["Business", "Productivity"],
   tags: [],
   states: [],
   components: [],
@@ -24,7 +24,7 @@ const fixture = (overrides: Partial<ResearchSuggestionCandidate>): ResearchSugge
 test("ranks and explains relevant evidence", () => {
   const [first] = rankResearchSuggestions("b2b sso onboarding", [
     fixture({ id: "a", flowTitle: "Invite teammate" }),
-    fixture({ id: "b", flowTitle: "SSO onboarding", appCategory: "B2B" }),
+    fixture({ id: "b", flowTitle: "SSO onboarding", appCategories: ["B2B", "Productivity"] }),
   ], { platform: "web", limit: 20 });
 
   assert.equal(first.id, "b");

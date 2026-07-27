@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import {
-  APPS_DISCOVERY_FACETS,
+  APPS_DISCOVERY_STATIC_FACETS,
   filterAndSortApps,
   type AppsFacet,
   type AppsPlatform,
   type AppsSort,
 } from '../appsDiscovery.ts';
 import { fetchRandomFacetPreview, type FacetPreview } from '../facetPreviewApi.ts';
-import type { PublicFacetInput } from '../../publicFacetPreview.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
 import type { App } from '../types.ts';
+import type { CategorySummary } from '../categoriesApi.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
 import { AppCardSkeleton } from './AppCardSkeleton.tsx';
@@ -85,21 +85,9 @@ function prefetchAppFacetPreview(
   return request;
 }
 
-export function visibleAppFacetInputs(platform: AppsPlatform): PublicFacetInput[] {
-  if (platform === 'android') return [];
-  return APPS_DISCOVERY_FACETS.flatMap(({ group, values }) => (
-    values.map((value) => ({ group, value, platform }))
-  ));
-}
-
-function prefetchVisibleAppFacetPreviews(platform: AppsPlatform): void {
-  visibleAppFacetInputs(platform).forEach(({ group, value }) => {
-    void prefetchAppFacetPreview({ group, value }, platform);
-  });
-}
-
 interface AppsDiscoveryPageProps {
   apps: App[] | null;
+  categories: CategorySummary[] | null;
   isAdmin: boolean;
   query: string;
   facet: AppsFacet | null;
@@ -127,6 +115,16 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const hoverRequestRef = useRef(0);
   const hoverPointRef = useRef({ x: 0, y: 0 });
+  const facets = useMemo(() => [
+    ...(props.categories?.length
+      ? [{
+          group: 'categories' as const,
+          label: 'Categories',
+          values: props.categories.map(({ name }) => name),
+        }]
+      : []),
+    ...APPS_DISCOVERY_STATIC_FACETS,
+  ], [props.categories]);
   const visibleApps = useMemo(
     () => filterAndSortApps(props.apps ?? [], {
       query: props.query,
@@ -136,15 +134,6 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
     }),
     [platform, props.apps, props.facet, props.query, sort],
   );
-  useEffect(() => {
-    const prefetch = () => prefetchVisibleAppFacetPreviews(platform);
-    if (typeof window.requestIdleCallback === 'function') {
-      const requestId = window.requestIdleCallback(prefetch, { timeout: 1_000 });
-      return () => window.cancelIdleCallback(requestId);
-    }
-    const timeoutId = window.setTimeout(prefetch, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [platform]);
   const state = props.error
     ? {
         title: 'Could not load crawled screens',
@@ -198,7 +187,7 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
       taxonomyLabel="App discovery filters"
       taxonomy={(
         <>
-          {APPS_DISCOVERY_FACETS.map((group) => (
+          {facets.map((group) => (
             <ReferenceDiscoveryFacetGroup
               key={group.group}
               label={group.label}

@@ -100,6 +100,7 @@ export function App() {
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
   const {
     apps,
+    categories,
     totalApps,
     loading: appsLoading,
     loadingMore,
@@ -444,6 +445,7 @@ export function App() {
       page = (
         <AppsDiscoveryPage
           apps={appsLoading ? null : apps}
+          categories={categories}
           isAdmin={isAdmin}
           query={q}
           facet={appFacet}

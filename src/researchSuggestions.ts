@@ -8,7 +8,7 @@ export interface ResearchSuggestionCandidate {
   title: string;
   description?: string;
   flowTitle?: string;
-  appCategory?: string;
+  appCategories: string[];
   productArea?: string;
   pageType?: string;
   tags: string[];
@@ -50,7 +50,7 @@ function matchingTokenCount(tokens: string[], value: string | string[] | undefin
 function scoreCandidate(tokens: string[], candidate: ResearchSuggestionCandidate): ResearchSuggestion {
   const fields: Array<[string, string | string[] | undefined, number]> = [
     ["flow title", candidate.flowTitle, 6],
-    ["app category", candidate.appCategory, 5],
+    ["app category", candidate.appCategories, 5],
     ["title", candidate.title, 5],
     ["page type", candidate.pageType, 4],
     ["product area", candidate.productArea, 4],
