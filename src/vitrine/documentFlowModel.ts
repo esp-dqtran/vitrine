@@ -5,60 +5,141 @@ import type {
   FeatureDocumentRevisionView,
 } from '../featureDocument.ts';
 
-export interface DocumentFlowStep {
-  number: number;
+export interface DocumentFlowEvidenceLink {
+  evidenceId: string;
   label: string;
-  text: string;
+  stepNumber?: number;
+  stepLabel?: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  description?: string;
+}
+
+export interface DocumentFlowScenario {
+  id: string;
+  given: string;
+  when: string;
+  then: string;
+}
+
+export interface DocumentFlowRequirementCard {
+  id: string;
+  priority: 'must' | 'should' | 'could' | 'later';
   kind: FeatureClaimKind;
-  evidenceIds: string[];
+  text: string;
+  userStory: string;
+  businessRules: string[];
+  evidence: DocumentFlowEvidenceLink[];
+  scenarios: DocumentFlowScenario[];
 }
 
-export interface DocumentFlowNarrative {
-  overview: {
-    purpose: FeatureClaim;
-    userValue: FeatureClaim;
+export interface DocumentFlowPresentation {
+  summary: {
+    goal: string;
+    entryPoint: string;
+    completionPoint: string;
+    reviewStatus: FeatureDocumentRevisionView['reviewStatus'];
+    requirementCount: number;
+    acceptanceCriteriaCount: number;
+    supportedRequirementCount: number;
+    openQuestionCount: number;
   };
-  trigger: FeatureClaim;
-  steps: DocumentFlowStep[];
-  outcome: FeatureClaim;
-  alternates: FeatureClaim[];
+  requirements: DocumentFlowRequirementCard[];
+  openQuestions: FeatureClaim[];
 }
 
-export function buildDocumentFlowNarrative(
+function normalize(text: string): string {
+  return text.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function unique<T>(values: T[]): T[] {
+  return [...new Set(values)];
+}
+
+function evidenceLinks(
+  evidenceIds: string[],
+  revision: FeatureDocumentRevisionView,
+  flow: DesignFlow<EvidenceView>,
+): DocumentFlowEvidenceLink[] {
+  const wanted = unique(evidenceIds);
+  const resolved = revision.evidenceManifest
+    .filter(({ evidenceId }) => wanted.includes(evidenceId))
+    .map((item) => {
+      const stepEvidence = flow.steps[item.stepIndex]?.evidence[item.imageIndex];
+      return {
+        evidenceId: item.evidenceId,
+        label: item.evidenceId,
+        stepNumber: item.stepIndex + 1,
+        stepLabel: item.stepLabel,
+        imageUrl: stepEvidence?.imageUrl,
+        thumbnailUrl: stepEvidence?.thumbnailUrl,
+        description: stepEvidence?.description ?? item.description ?? undefined,
+      };
+    });
+  const resolvedIds = new Set(resolved.map(({ evidenceId }) => evidenceId));
+  return [
+    ...resolved,
+    ...wanted
+      .filter((evidenceId) => !resolvedIds.has(evidenceId))
+      .map((evidenceId) => ({ evidenceId, label: evidenceId })),
+  ];
+}
+
+function deduplicateClaims(claims: FeatureClaim[]): FeatureClaim[] {
+  const seen = new Set<string>();
+  return claims.flatMap((claim) => {
+    const text = claim.text.trim().replace(/\s+/g, ' ');
+    const key = normalize(text);
+    if (!key || seen.has(key)) return [];
+    seen.add(key);
+    return [{ ...claim, text }];
+  });
+}
+
+export function buildDocumentFlowPresentation(
   flow: DesignFlow<EvidenceView>,
   revision: FeatureDocumentRevisionView,
-): DocumentFlowNarrative {
-  const journey = revision.content.observedFlow.journey;
-  const steps = flow.steps.map((step, stepIndex) => {
-    const evidenceIds = revision.evidenceManifest
-      .filter((item) => item.stepIndex === stepIndex)
-      .map((item) => item.evidenceId);
-    const claim = journey.find((item) =>
-      item.evidenceIds.some((evidenceId) => evidenceIds.includes(evidenceId)));
-    return {
-      number: stepIndex + 1,
-      label: step.label,
-      text: claim?.text
-        ?? step.analysis?.interaction
-        ?? step.interaction
-        ?? 'No documented description.',
-      kind: claim?.kind ?? (step.analysis || step.interaction ? 'observed' : 'unknown'),
-      evidenceIds: claim?.evidenceIds.length ? claim.evidenceIds : evidenceIds,
-    };
-  });
+): DocumentFlowPresentation {
+  const { content } = revision;
+  const requirements = content.requirements.map((requirement) => ({
+    id: requirement.id,
+    priority: requirement.priority,
+    kind: requirement.kind,
+    text: requirement.text,
+    userStory: requirement.userStory,
+    businessRules: requirement.preconditions,
+    evidence: evidenceLinks([
+      ...requirement.evidenceIds,
+      ...requirement.acceptanceCriteria.flatMap(({ evidenceIds }) => evidenceIds),
+    ], revision, flow),
+    scenarios: requirement.acceptanceCriteria.map(({ id, given, when, then }) => ({
+      id,
+      given,
+      when,
+      then,
+    })),
+  }));
+  const openQuestions = deduplicateClaims([
+    ...content.flowAnalysis.missingStates,
+    ...content.openQuestions,
+  ]);
   return {
-    overview: {
-      purpose: revision.content.executiveSummary.purpose,
-      userValue: revision.content.executiveSummary.userValue,
+    summary: {
+      goal: content.observedFlow.userGoal.text,
+      entryPoint: content.observedFlow.entryPoint.text,
+      completionPoint: content.observedFlow.completionPoint.text,
+      reviewStatus: revision.reviewStatus,
+      requirementCount: requirements.length,
+      acceptanceCriteriaCount: requirements.reduce(
+        (total, requirement) => total + requirement.scenarios.length,
+        0,
+      ),
+      supportedRequirementCount: requirements.filter(
+        ({ evidence }) => evidence.length > 0,
+      ).length,
+      openQuestionCount: openQuestions.length,
     },
-    trigger: revision.content.observedFlow.entryPoint,
-    steps,
-    outcome: revision.content.observedFlow.completionPoint,
-    alternates: [
-      ...revision.content.edgeCases,
-      ...revision.content.flowAnalysis.friction,
-      ...revision.content.flowAnalysis.missingStates,
-      ...revision.content.flowAnalysis.risksAndAssumptions,
-    ],
+    requirements,
+    openQuestions,
   };
 }

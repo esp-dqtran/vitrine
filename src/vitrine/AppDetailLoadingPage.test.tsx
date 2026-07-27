@@ -12,10 +12,8 @@ const source = readFileSync(
 test('renders App detail loading through the shared detail shell boundary', () => {
   const html = renderToStaticMarkup(
     <AppDetailLoadingPage
-      isAdmin={false}
       accountControls={<button type="button">Account</button>}
       onOpenSearch={() => undefined}
-      onImport={() => undefined}
     />,
   );
 
@@ -26,5 +24,6 @@ test('renders App detail loading through the shared detail shell boundary', () =
   assert.match(html, /reference-detail__tabs/);
   assert.match(html, /app-detail-loading__overview/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
+  assert.doesNotMatch(html, /Import App/);
   assert.doesNotMatch(source, /label: 'Analysis'/);
 });

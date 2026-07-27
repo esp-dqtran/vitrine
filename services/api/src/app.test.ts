@@ -17,8 +17,6 @@ import { createApiApp, createCrawlRepairRequester } from "./app.ts";
 import type { ObjectMetadata, ObjectStore } from "../../../src/objectStore.ts";
 import type { CatalogSearchResult } from "../../../src/catalogResearch.ts";
 import type { JobRow, JobStatus } from "../../../src/db.ts";
-import type { SitesJob } from "../../../src/sitesQueue.ts";
-import type { PublicPageJob } from "../../../src/publicPageQueue.ts";
 import type { ReferralCampaign } from "../../../src/referralStore.ts";
 import type { ProgressSnapshot } from "../../../src/progress.ts";
 import type { PublicFacetInput } from "../../../src/publicFacetPreview.ts";
@@ -1090,269 +1088,7 @@ test("repair suggestions attach only the verified internal failure object", asyn
   assert.deepEqual(askedWith, [{ name: "crawl-failure.png", mimeType: "image/png", buffer: failureBody }, undefined]);
 });
 
-test("rejects an invalid Mobbin import before creating a job", async (t) => {
-  let created = false;
-  const { base, server } = await serve(
-    createApiApp({
-      resolveSession: async () => admin,
-      createJob: async () => {
-        created = true;
-        return 1;
-      },
-    })
-  );
-  t.after(() => close(server));
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "import-app", name: "../linear", url: "http://example.com" }),
-  });
-  assert.equal(response.status, 400);
-  assert.equal(created, false);
-});
-
-test("marks a created job error when RabbitMQ publication fails", async (t) => {
-  const statuses: string[] = [];
-  const { base, server } = await serve(
-    createApiApp({
-      resolveSession: async () => admin,
-      createJob: async () => 42,
-      publishJob: async () => {
-        throw new Error("broker down");
-      },
-      setJobStatus: async (_id, status) => {
-        statuses.push(status);
-      },
-    })
-  );
-  t.after(() => close(server));
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "import-app",
-      name: "linear",
-      url: "https://mobbin.com/apps/linear-web-00000000-0000-0000-0000-000000000000/version/screens",
-    }),
-  });
-  assert.equal(response.status, 503);
-  assert.deepEqual(statuses, ["error"]);
-});
-
-test("routes an exact Mobbin Sites URL only to the isolated Sites publisher", async (t) => {
-  const calls: unknown[] = [];
-  const approvedUrl = "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview";
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    sitesStore: {
-      readyVersionByCanonicalUrl: async () => undefined,
-    },
-    createJob: async (type: string, payload: Record<string, unknown>) => {
-      calls.push(["create", type, payload]);
-      return 42;
-    },
-    publishJob: async () => { calls.push(["apps-publisher"]); },
-    publishSitesJob: async (job: SitesJob) => { calls.push(["sites-publisher", job]); },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "import-site", url: approvedUrl }),
-  });
-
-  assert.equal(response.status, 201);
-  assert.deepEqual(await response.json(), { id: 42 });
-  assert.deepEqual(calls, [
-    ["create", "import-site", { url: approvedUrl }],
-    ["sites-publisher", { type: "import-site", url: approvedUrl, jobId: 42 }],
-  ]);
-});
-
-test("routes an arbitrary public page to the isolated Sites publisher", async (t) => {
-  const calls: unknown[] = [];
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    sitesStore: {
-      readyVersionByCanonicalUrl: async () => undefined,
-    },
-    createJob: async (type: string, payload: Record<string, unknown>) => {
-      calls.push(["create", type, payload]);
-      return 43;
-    },
-    publishSitesJob: async (job: SitesJob) => {
-      calls.push(["sites-publisher", job]);
-    },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "import-site",
-      url: "https://www.framer.com/#hero",
-    }),
-  });
-
-  assert.equal(response.status, 201);
-  assert.deepEqual(await response.json(), { id: 43 });
-  assert.deepEqual(calls, [
-    ["create", "import-site", { url: "https://www.framer.com/" }],
-    ["sites-publisher", {
-      type: "import-site",
-      url: "https://www.framer.com/",
-      jobId: 43,
-    }],
-  ]);
-});
-
-test("rejects a private Site URL before creating a job", async (t) => {
-  let created = false;
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    createJob: async () => { created = true; return 1; },
-  }));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "import-site", url: "http://127.0.0.1/" }),
-  });
-  assert.equal(response.status, 400);
-  assert.equal(created, false);
-});
-
-test("returns an existing ready Site version without creating or publishing a job", async (t) => {
-  let touchedJobs = false;
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    sitesStore: {
-      readyVersionByCanonicalUrl: async () => ({ siteId: 7, versionId: 9 }),
-    },
-    createJob: async () => { touchedJobs = true; return 1; },
-    publishSitesJob: async () => { touchedJobs = true; },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "import-site",
-      url: "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview",
-    }),
-  });
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { existing: true, siteId: 7, versionId: 9 });
-  assert.equal(touchedJobs, false);
-});
-
-test("sanitizes Sites broker errors and records the same safe message", async (t) => {
-  const statuses: unknown[] = [];
-  const secretUrl = "https://broker.example/path?token=secret";
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    sitesStore: { readyVersionByCanonicalUrl: async () => undefined },
-    createJob: async () => 51,
-    publishSitesJob: async () => { throw new Error(`failed at ${secretUrl}`); },
-    setJobStatus: async (id: number, status: JobStatus, message?: string) => {
-      statuses.push([id, status, message]);
-    },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "import-site",
-      url: "https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview",
-    }),
-  });
-  assert.equal(response.status, 503);
-  const body = await response.json();
-  assert.equal(body.error, "failed at [redacted-url]");
-  assert.deepEqual(statuses, [[51, "error", "failed at [redacted-url]"]]);
-  assert.doesNotMatch(JSON.stringify(body), /broker\.example|secret/);
-});
-
-test("routes a public URL only to the isolated public-page publisher", async (t) => {
-  const calls: unknown[] = [];
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    createJob: async (type: string, payload: Record<string, unknown>) => {
-      calls.push(["create", type, payload]);
-      return 52;
-    },
-    publishJob: async () => { calls.push(["apps-publisher"]); },
-    publishSitesJob: async () => { calls.push(["sites-publisher"]); },
-    publishPublicPageJob: async (job: PublicPageJob) => { calls.push(["public-page-publisher", job]); },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "crawl-public-page", url: "https://www.example.com/pricing#plans" }),
-  });
-
-  assert.equal(response.status, 201);
-  assert.deepEqual(await response.json(), { id: 52 });
-  assert.deepEqual(calls, [
-    ["create", "crawl-public-page", { url: "https://www.example.com/pricing" }],
-    ["public-page-publisher", {
-      type: "crawl-public-page",
-      url: "https://www.example.com/pricing",
-      jobId: 52,
-    }],
-  ]);
-});
-
-test("rejects private public-page targets before creating a job", async (t) => {
-  let created = false;
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    createJob: async () => { created = true; return 1; },
-  }));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "crawl-public-page", url: "http://127.0.0.1/admin" }),
-  });
-  assert.equal(response.status, 400);
-  assert.equal(created, false);
-});
-
-test("sanitizes public-page broker errors and marks the job terminal", async (t) => {
-  const statuses: unknown[] = [];
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    createJob: async () => 53,
-    publishPublicPageJob: async () => {
-      throw new Error("failed at https://broker.example/path?token=secret");
-    },
-    setJobStatus: async (id: number, status: JobStatus, message?: string) => {
-      statuses.push([id, status, message]);
-    },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({ type: "crawl-public-page", url: "https://example.com" }),
-  });
-  assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { id: 53, error: "Public page queue unavailable" });
-  assert.deepEqual(statuses, [[53, "error", "Public page queue unavailable"]]);
-});
-
-test("cancels Sites and Apps jobs without crossing their cancellation boundary", async (t) => {
+ test("cancels Sites and Apps jobs without crossing their cancellation boundary", async (t) => {
   let appCancellationSignals = 0;
   const jobs = new Map<number, ReturnType<typeof jobRecord>>([
     [1, jobRecord({ id: 1, type: "import-site", status: "running" })],
@@ -1891,24 +1627,17 @@ test("prevents active Pro from banking permanent Free unlocks", async (t) => {
   assert.equal(unlockCalled, false);
 });
 
-test("runs the admin draft-review-publish workflow and hides drafts from designers", async (t) => {
+test("reviews and publishes an existing admin draft while hiding drafts from designers", async (t) => {
   const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
   const { base, server } = await serve(createApiApp({
     resolveSession: async (token) => token === "admin" ? admin : user,
-    createAppVersion: async () => version,
-    createJob: async () => 44,
-    publishJob: async () => undefined,
     listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
   }));
   t.after(() => close(server));
-  const jsonHeaders = { ...adminCookie, "content-type": "application/json" };
-  const created = await fetch(`${base}/apps/linear/versions`, { method: "POST", headers: jsonHeaders, body: JSON.stringify({ platform: "web", sourceUrl: "https://mobbin.com/apps/linear/version/screens" }) });
-  assert.equal(created.status, 201);
-  assert.equal((await created.json()).status, "draft");
   assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminCookie })).status, 200);
   assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminCookie })).status, 200);
   assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminCookie })).json()).status, "published");
@@ -2149,33 +1878,7 @@ test("keeps liveness up but fails readiness when object storage is unavailable",
   assert.deepEqual(await response.json(), { status: "error", error: "object_storage_unavailable" });
 });
 
-test("rejects import job acceptance when object storage is unavailable", async (t) => {
-  let created = false;
-  const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
-    storageReady: async () => { throw new Error("Object storage is unavailable"); },
-    createJob: async () => {
-      created = true;
-      return 1;
-    },
-  }));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/jobs`, {
-    method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "import-app",
-      name: "linear",
-      url: "https://mobbin.com/apps/linear/version/screens",
-    }),
-  });
-  assert.equal(response.status, 503);
-  assert.equal(created, false);
-  assert.deepEqual(await response.json(), { error: "Object storage unavailable", code: "object_storage_unavailable" });
-});
-
-test("serves the public catalog from one bounded page dependency", async (t) => {
+ test("serves the public catalog from one bounded page dependency", async (t) => {
   let input: { cursor?: string; limit?: number } | undefined;
   const validCursor = encodeUpdatedCatalogCursor({
     v: 1,
@@ -3134,7 +2837,7 @@ test("explains when a normal-user session was evicted", async (t) => {
   });
 });
 
-test("rejects normal users and permits admins on pipeline creation", async (t) => {
+test("rejects normal users and keeps imports disabled for admins", async (t) => {
   const userApp = await serve(createApiApp({ resolveSession: async () => user }));
   t.after(() => close(userApp.server));
   const denied = await fetch(`${userApp.base}/jobs`, {
@@ -3169,8 +2872,9 @@ test("rejects normal users and permits admins on pipeline creation", async (t) =
       url: "https://mobbin.com/apps/a/b/screens",
     }),
   });
-  assert.equal(allowed.status, 201);
-  assert.equal(created, true);
+  assert.equal(allowed.status, 410);
+  assert.deepEqual(await allowed.json(), { error: "Imports are disabled" });
+  assert.equal(created, false);
 });
 
 test("accepts raw Stripe webhooks before JSON parsing", async (t) => {

@@ -31,6 +31,10 @@ export interface SiteTechnologyFinding {
   id: string;
   name: string;
   version?: string;
+  slug?: string;
+  categories?: string[];
+  icon?: string;
+  source?: "wappalyzer" | "native";
   category:
     | "framework"
     | "renderer"
@@ -91,7 +95,7 @@ export interface SiteAnalysisSynthesis {
 }
 
 export interface SiteAnalysis {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   status: SiteAnalysisStatus;
   evidence: SiteEvidence[];
   structure: Array<Record<string, unknown> & { id: string }>;
@@ -133,7 +137,10 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
     "synthesis",
     "warnings",
   ]);
-  if (input.schemaVersion !== 1) throw new Error("Invalid Site analysis schema version");
+  if (input.schemaVersion !== 1 && input.schemaVersion !== 2) {
+    throw new Error("Invalid Site analysis schema version");
+  }
+  const schemaVersion = input.schemaVersion;
   const status = enumValue(input.status, ["ready", "evidence-only"] as const);
   const evidence = boundedArray(input.evidence, MAX_EVIDENCE, "Site analysis evidence")
     .map(parseEvidence);
@@ -147,7 +154,7 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
     .map((item) => parseMotion(item, evidenceIds, structureIds));
   uniqueIds(motion, "Site analysis motion");
   const technology = boundedArray(input.technology, MAX_FINDINGS, "Site analysis technology")
-    .map((item) => parseTechnology(item, evidenceIds));
+    .map((item) => parseTechnology(item, evidenceIds, schemaVersion));
   uniqueIds(technology, "Site analysis technology");
   const synthesis = input.synthesis === null
     ? null
@@ -155,7 +162,7 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
   const warnings = boundedArray(input.warnings, MAX_WARNINGS, "Site analysis warnings")
     .map((item) => text(item, MAX_TEXT, false));
   return {
-    schemaVersion: 1,
+    schemaVersion,
     status,
     evidence,
     structure,
@@ -190,18 +197,33 @@ function parseEvidence(value: unknown): SiteEvidence {
 function parseTechnology(
   value: unknown,
   evidenceIds: Set<string>,
+  schemaVersion: 1 | 2,
 ): SiteTechnologyFinding {
   const input = exactRecord(
     value,
     ["id", "name", "category", "state", "evidenceIds", "confidence"],
-    ["version"],
+    schemaVersion === 2
+      ? ["version", "slug", "categories", "icon", "source"]
+      : ["version"],
   );
   const refs = references(input.evidenceIds, evidenceIds);
   const version = optionalText(input.version, 200);
+  const slug = optionalTechnologySlug(input.slug);
+  const categories = input.categories === undefined
+    ? undefined
+    : stringArray(input.categories, 20);
+  const icon = optionalTechnologyIcon(input.icon);
+  const source = input.source === undefined
+    ? undefined
+    : enumValue(input.source, ["wappalyzer", "native"] as const);
   return {
     id: identifier(input.id),
     name: text(input.name, 200),
     ...(version ? { version } : {}),
+    ...(slug ? { slug } : {}),
+    ...(categories ? { categories } : {}),
+    ...(icon ? { icon } : {}),
+    ...(source ? { source } : {}),
     category: enumValue(input.category, [
       "framework",
       "renderer",
@@ -220,6 +242,30 @@ function parseTechnology(
     evidenceIds: refs,
     confidence: confidence(input.confidence),
   };
+}
+
+function optionalTechnologySlug(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const slug = text(value, 200);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throw new Error("Invalid Site technology slug");
+  }
+  return slug;
+}
+
+function optionalTechnologyIcon(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "string" || value.includes("\0") || value.length > 200) {
+    throw new Error("Invalid Site technology icon");
+  }
+  const icon = text(value, 200);
+  if (
+    !/^[A-Za-z0-9][A-Za-z0-9 ._()+@'-]*\.(?:svg|png|webp)$/i.test(icon) ||
+    icon.includes("..")
+  ) {
+    throw new Error("Invalid Site technology icon");
+  }
+  return icon;
 }
 
 function parseMotion(

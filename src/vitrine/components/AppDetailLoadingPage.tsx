@@ -5,10 +5,8 @@ import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchTrigger } from './SearchTrigger.tsx';
 
 interface AppDetailLoadingPageProps {
-  isAdmin: boolean;
   accountControls?: ReactNode;
   onOpenSearch: () => void;
-  onImport: () => void;
 }
 
 const loadingTabs = [
@@ -20,10 +18,8 @@ const loadingTabs = [
 ] as const;
 
 export function AppDetailLoadingPage({
-  isAdmin,
   accountControls,
   onOpenSearch,
-  onImport,
 }: AppDetailLoadingPageProps) {
   return (
     <>
@@ -38,9 +34,6 @@ export function AppDetailLoadingPage({
             onClearCategory={() => undefined}
           />
         )}
-        isAdmin={isAdmin}
-        importLabel="Import App"
-        onImport={onImport}
         accountControls={accountControls}
       />
       <div data-app-detail-loading="true" style={{ display: 'contents' }}>

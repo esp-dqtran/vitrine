@@ -196,6 +196,28 @@ test('moves Flow galleries and the selected Flow by exact screen positions', () 
   assert.doesNotMatch(visualFlowSource, /track\.clientWidth \* 0\.72/);
 });
 
+test('focuses the selected Visual Flow screen after cross-view evidence navigation', () => {
+  const source = readFileSync(
+    new URL('./components/VisualFlowPanel.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /const selectedCard = trackRef\.current/);
+  assert.match(source, /selectedCard\?\.scrollIntoView/);
+  assert.match(source, /selectedCard\?\.querySelector<HTMLElement>\('button'\)\?\.focus/);
+});
+
+test('styles Document Flow as a responsive requirements workspace', () => {
+  const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(css, /\.document-flow__summary\s*\{[\s\S]*grid-template-columns:/);
+  assert.match(css, /\.document-flow__counts\s*\{[\s\S]*grid-template-columns:/);
+  assert.match(css, /\.document-flow__requirement\s*\{/);
+  assert.match(css, /\.document-flow__scenario dl div\s*\{[\s\S]*grid-template-columns:\s*64px/);
+  assert.match(css, /\.document-flow__evidence-chip\s*\{/);
+  assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.document-flow__summary\s*\{[\s\S]*grid-template-columns:\s*1fr/);
+});
+
 test('uses Astryx controls for every Flow tree action', () => {
   const source = readFileSync(
     new URL('./components/FlowTree.tsx', import.meta.url),

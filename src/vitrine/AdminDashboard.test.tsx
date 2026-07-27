@@ -32,6 +32,6 @@ test('lazy-loads Users without importing normal application state', async () => 
   assert.match(source, /<Suspense fallback=\{<AdminPageSpinner \/>}/);
   assert.doesNotMatch(
     source,
-    /useApps|useAppDetail|useCollections|createSearchSession|loadSubscription|ApplicationSurface|ImportDialog/,
+    /useApps|useAppDetail|useCollections|createSearchSession|loadSubscription|ApplicationSurface/,
   );
 });

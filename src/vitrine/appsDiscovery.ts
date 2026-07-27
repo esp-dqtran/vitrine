@@ -10,6 +10,7 @@ export type AppsFacet = {
 export type AppsSort = 'latest' | 'popular';
 export type AppsPlatform = Platform;
 
+export const APPS_DISCOVERY_CATEGORIES = ['AI', 'Finance', 'CRM', 'Business', 'News'];
 export const APPS_DISCOVERY_STATIC_FACETS = PUBLIC_APP_STATIC_FACETS;
 
 const searchableText = (values: Array<string | null | undefined>) =>

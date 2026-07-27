@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, ClickableCard } from '@astryxdesign/core';
+import { Badge, Card, ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
 
 interface MediaGridCardProps {
@@ -17,6 +17,15 @@ interface MediaGridCardProps {
   title?: string;
   delay?: number;
   onOpen: () => void;
+}
+
+export function handleMediaCardKeyDown(
+  event: { key: string; preventDefault: () => void },
+  onOpen: () => void,
+) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onOpen();
 }
 
 export function MediaGridCard({
@@ -37,6 +46,7 @@ export function MediaGridCard({
 }: MediaGridCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
   const imageSrc = preferFullImage ? url : thumbnailUrl ?? url;
@@ -54,29 +64,21 @@ export function MediaGridCard({
     return observeNearViewportMedia(card, () => setMediaActive(true));
   }, [deferMedia, mediaActive]);
 
-  return (
-    <ClickableCard
-      ref={cardRef}
-      label={label}
-      onClick={onOpen}
-      padding={0}
-      variant="muted"
-      onMouseEnter={() => {
-        setHovered(true);
-        setMediaActive(true);
-      }}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setMediaActive(true)}
-      style={{
-        position: 'relative',
-        aspectRatio,
-        overflow: 'hidden',
-        boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
-        animation: `vtFadeUp .45s cubic-bezier(.16,1,.3,1) ${delay}s both`,
-        transition: 'transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1)',
-        transform: hovered ? 'translateY(-4px)' : 'none',
-      }}
-    >
+  const activateMedia = () => {
+    setFocused(true);
+    setMediaActive(true);
+  };
+  const cardStyle = {
+    position: 'relative' as const,
+    aspectRatio,
+    overflow: 'hidden',
+    boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
+    animation: `vtFadeUp .45s cubic-bezier(.16,1,.3,1) ${delay}s both`,
+    transition: 'transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1)',
+    transform: hovered ? 'translateY(-4px)' : 'none',
+  };
+  const contents = (
+    <>
       {!mediaActive ? (
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: accent ? `${accent}22` : 'var(--color-background-muted)' }} />
       ) : mediaFailed || !url ? (
@@ -129,6 +131,64 @@ export function MediaGridCard({
       <div style={{ position: 'absolute', left: 10, right: 10, ...(title ? { top: 8, justifyContent: 'flex-end' } : { bottom: 10 }), zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
         {badges.filter(Boolean).map((badge) => <Badge key={badge} label={badge} variant="neutral" style={{ background: 'rgba(24,24,27,.72)', color: '#fff', backdropFilter: 'blur(4px)' }} />)}
       </div>
+    </>
+  );
+
+  if (kind === 'image') {
+    return (
+      <Card ref={cardRef} padding={0} variant="muted" style={cardStyle}>
+        <button
+          type="button"
+          aria-label={label}
+          onClick={onOpen}
+          onKeyDown={(event) => handleMediaCardKeyDown(event, onOpen)}
+          onMouseEnter={() => {
+            setHovered(true);
+            setMediaActive(true);
+          }}
+          onMouseLeave={() => setHovered(false)}
+          onFocus={activateMedia}
+          onBlur={() => setFocused(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            padding: 0,
+            border: 0,
+            borderRadius: 'inherit',
+            background: 'transparent',
+            color: 'inherit',
+            cursor: 'pointer',
+            font: 'inherit',
+            textAlign: 'left',
+            outline: focused ? '2px solid var(--color-accent)' : 'none',
+            outlineOffset: -2,
+          }}
+        >
+          {contents}
+        </button>
+      </Card>
+    );
+  }
+
+  return (
+    <ClickableCard
+      ref={cardRef}
+      label={label}
+      onClick={onOpen}
+      padding={0}
+      variant="muted"
+      onMouseEnter={() => {
+        setHovered(true);
+        setMediaActive(true);
+      }}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={activateMedia}
+      onBlur={() => setFocused(false)}
+      style={cardStyle}
+    >
+      {contents}
     </ClickableCard>
   );
 }

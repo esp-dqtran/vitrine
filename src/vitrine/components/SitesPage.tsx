@@ -6,7 +6,6 @@ import { navigate } from '../router.ts';
 import { listSites } from '../sitesApi.ts';
 import type { SiteSummary } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
-import { SiteImportDialog } from './SiteImportDialog.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
@@ -223,7 +222,6 @@ interface SitesPageViewProps {
   searchMode?: 'legacy' | 'advanced';
   activeFilterCount?: number;
   onRefresh: () => void;
-  onImport: () => void;
   onOpen?: (site: SiteSummary) => void;
   memberControls?: ReactNode;
 }
@@ -239,7 +237,6 @@ export function SitesPageView({
   searchMode = 'legacy',
   activeFilterCount = 0,
   onRefresh,
-  onImport,
   onOpen = (site) => navigate({ name: 'site-version', siteId: site.id, versionId: site.versionId }),
   memberControls,
 }: SitesPageViewProps) {
@@ -286,10 +283,8 @@ export function SitesPageView({
       }
     : sites.length === 0
       ? {
-          title: 'No Sites imported yet',
-          description: isAdmin
-            ? 'Analyze one public page to create the first website reference.'
-            : 'No ready website references are available yet.',
+          title: 'No Sites available yet',
+          description: 'No ready website references are available yet.',
           role: 'status' as const,
         }
       : visibleSites.length === 0
@@ -317,8 +312,6 @@ export function SitesPageView({
           })}
           searchMode={searchMode}
           activeFilterCount={activeFilterCount}
-          isAdmin={isAdmin}
-          onImport={onImport}
           accountControls={memberControls}
         />
       )}
@@ -448,7 +441,6 @@ export function SitesPage({
   const [sites, setSites] = useState<SiteSummary[] | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
-  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -471,16 +463,8 @@ export function SitesPage({
         searchMode={searchMode}
         activeFilterCount={activeFilterCount}
         onRefresh={() => setRevision((value) => value + 1)}
-        onImport={() => setImportOpen(true)}
         memberControls={memberControls}
       />
-      {isAdmin && (
-        <SiteImportDialog
-          isOpen={importOpen}
-          onClose={() => setImportOpen(false)}
-          onExisting={(siteId, versionId) => navigate({ name: 'site-version', siteId, versionId })}
-        />
-      )}
     </>
   );
 }

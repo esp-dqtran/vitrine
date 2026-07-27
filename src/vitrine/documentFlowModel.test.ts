@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { DesignFlow, EvidenceView } from '../designSystem.ts';
 import type { FeatureDocumentRevisionView } from '../featureDocument.ts';
-import { buildDocumentFlowNarrative } from './documentFlowModel.ts';
+import { buildDocumentFlowPresentation } from './documentFlowModel.ts';
 
 const flow: DesignFlow<EvidenceView> = {
   id: 'checkout',
@@ -11,8 +11,20 @@ const flow: DesignFlow<EvidenceView> = {
   description: '',
   tags: [],
   steps: [
-    { label: 'Review cart', evidence: [{ imageId: 42, imageUrl: '/42.png' }] },
-    { label: 'Pay', interaction: 'Submit card', evidence: [{ imageId: 43, imageUrl: '/43.png' }] },
+    {
+      label: 'Review cart',
+      evidence: [{
+        imageId: 42,
+        imageUrl: '/42.png',
+        thumbnailUrl: '/42-thumb.png',
+        description: 'Cart visible',
+      }],
+    },
+    {
+      label: 'Pay',
+      interaction: 'Submit card',
+      evidence: [{ imageId: 43, imageUrl: '/43.png', description: 'Card form' }],
+    },
   ],
 };
 
@@ -70,26 +82,105 @@ const revision = {
       behavior: [],
       journey: [],
     },
-    requirements: [],
+    requirements: [
+      {
+        id: 'REQ-01',
+        kind: 'observed',
+        text: 'The checkout must support card payment.',
+        evidenceIds: ['E-42', 'E-missing'],
+        userStory: 'As a buyer, I want to pay by card.',
+        priority: 'must',
+        preconditions: ['The cart contains an item.'],
+        acceptanceCriteria: [
+          {
+            id: 'AC-01',
+            given: 'The buyer has reviewed the cart',
+            when: 'the buyer submits a valid card',
+            then: 'the payment is accepted',
+            evidenceIds: ['E-43'],
+          },
+          {
+            id: 'AC-02',
+            given: 'The buyer has reviewed the cart',
+            when: 'the buyer returns to edit the order',
+            then: 'the cart remains available',
+            evidenceIds: ['E-42'],
+          },
+        ],
+      },
+    ],
     edgeCases: [],
     successMetrics: [],
     guardrailMetrics: [],
     analyticsEvents: [],
     dependencies: [],
-    openQuestions: [],
+    openQuestions: [
+      { id: 'question', kind: 'unknown', text: ' Declined   card state ', evidenceIds: [] },
+    ],
   },
 } satisfies FeatureDocumentRevisionView;
 
-test('builds one Document Flow row per source step and preserves claim kinds', () => {
-  const narrative = buildDocumentFlowNarrative(flow, revision);
-  assert.equal(narrative.overview.purpose.text, 'Complete a purchase');
-  assert.equal(narrative.trigger.text, 'Open cart');
-  assert.deepEqual(narrative.steps.map(({ number, label, text, kind }) => ({
-    number, label, text, kind,
-  })), [
-    { number: 1, label: 'Review cart', text: 'Review the cart', kind: 'observed' },
-    { number: 2, label: 'Pay', text: 'Submit card', kind: 'observed' },
-  ]);
-  assert.equal(narrative.outcome.kind, 'unknown');
-  assert.equal(narrative.alternates[0].text, 'Declined card state');
+test('builds requirements-first presentation data from a revision and Flow', () => {
+  const model = buildDocumentFlowPresentation(flow, revision);
+
+  assert.deepEqual(model.summary, {
+    goal: 'Buy items',
+    entryPoint: 'Open cart',
+    completionPoint: 'Order confirmation',
+    reviewStatus: 'draft',
+    requirementCount: 1,
+    acceptanceCriteriaCount: 2,
+    supportedRequirementCount: 1,
+    openQuestionCount: 1,
+  });
+  assert.equal(model.requirements[0].text, 'The checkout must support card payment.');
+  assert.equal(model.requirements[0].userStory, 'As a buyer, I want to pay by card.');
+  assert.deepEqual(model.requirements[0].businessRules, ['The cart contains an item.']);
+  assert.equal(model.requirements[0].scenarios.length, 2);
+  assert.equal(model.requirements[0].scenarios[0].given, 'The buyer has reviewed the cart');
+  assert.equal(model.requirements[0].scenarios[1].id, 'AC-02');
+  assert.deepEqual(
+    model.requirements[0].evidence.map(({
+      evidenceId,
+      stepNumber,
+      stepLabel,
+      imageUrl,
+      thumbnailUrl,
+      description,
+    }) => ({
+      evidenceId,
+      stepNumber,
+      stepLabel,
+      imageUrl,
+      thumbnailUrl,
+      description,
+    })),
+    [
+      {
+        evidenceId: 'E-42',
+        stepNumber: 1,
+        stepLabel: 'Review cart',
+        imageUrl: '/42.png',
+        thumbnailUrl: '/42-thumb.png',
+        description: 'Cart visible',
+      },
+      {
+        evidenceId: 'E-43',
+        stepNumber: 2,
+        stepLabel: 'Pay',
+        imageUrl: '/43.png',
+        thumbnailUrl: undefined,
+        description: 'Card form',
+      },
+      {
+        evidenceId: 'E-missing',
+        stepNumber: undefined,
+        stepLabel: undefined,
+        imageUrl: undefined,
+        thumbnailUrl: undefined,
+        description: undefined,
+      },
+    ],
+  );
+  assert.deepEqual(model.openQuestions.map(({ text }) => text), ['Declined card state']);
 });

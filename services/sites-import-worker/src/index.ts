@@ -16,8 +16,10 @@ import {
   parseSitesQueueScope,
 } from "../../../src/sitesQueue.ts";
 import { createSitesStore } from "../../../src/sitesStore.ts";
+import { createWappalyzerTechnologyDetector } from "../../../src/wappalyzerBrowser.ts";
 import { createSitesPipelineHandler } from "./pipeline.ts";
 import { startSitesImportWorker } from "./start.ts";
+import { wappalyzerOptionsFromEnvironment } from "./wappalyzerConfig.ts";
 
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 const sitesStore = createSitesStore();
@@ -37,6 +39,10 @@ const multimodalProvider = createMultimodalJsonProvider();
 const siteAnalysisProvider = multimodalProvider
   ? siteAnalysisProviderFromMultimodal(multimodalProvider)
   : undefined;
+const wappalyzerOptions = wappalyzerOptionsFromEnvironment(process.env);
+const technologyDetector = wappalyzerOptions
+  ? await createWappalyzerTechnologyDetector(wappalyzerOptions)
+  : undefined;
 const queueScope = parseSitesQueueScope(process.env.MOBBIN_SITES_QUEUE_SCOPE);
 const handler = createSitesPipelineHandler({
   crawl: async (url, controls) => {
@@ -51,6 +57,7 @@ const handler = createSitesPipelineHandler({
           objectStore,
           sitesStore: genericSitesStore,
           ...(siteAnalysisProvider ? { analysisProvider: siteAnalysisProvider } : {}),
+          ...(technologyDetector ? { technologyDetector } : {}),
           isCancelled: controls.isCancelled,
           report: controls.report,
         });

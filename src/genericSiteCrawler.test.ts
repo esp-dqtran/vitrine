@@ -40,6 +40,13 @@ test("crawls one public page into Sites with mobile and analysis objects", async
   });
   assert.equal(state.completed?.analysis.status, "evidence-only");
   assert.equal(state.completed?.sections.length, 2);
+  assert.deepEqual(
+    state.completed?.sections.map((section) => section.sourceMetadata?.patterns),
+    [
+      ["Pricing", "Pricing Section"],
+      ["Footer Section"],
+    ],
+  );
   assert.ok(state.objectKeys.some((key) => key.includes("/mobile/")));
   assert.equal(
     state.objectKeys.every((key) => key.startsWith("sites/")),
@@ -70,6 +77,356 @@ test("provider success produces ready synthesis while failure keeps evidence-onl
   assert.doesNotMatch(
     failure.completed?.analysis.warnings.join(" ") ?? "",
     /private/,
+  );
+});
+
+test("persists Wappalyzer technology and merges matching native evidence", async () => {
+  const capture = fixtureCapture();
+  capture.analysis.evidence.push({
+    id: "TECH-1",
+    kind: "script-url",
+    value: "/_next/static/chunks/app.js",
+  });
+  capture.analysis.technology = [{
+    id: "TECHNOLOGY-1",
+    name: "Next.js",
+    category: "framework",
+    state: "observed-in-use",
+    evidenceIds: ["TECH-1"],
+    confidence: 0.85,
+  }];
+  const detectedUrls: string[] = [];
+  const state = harness({
+    capture,
+    technologyDetector: {
+      async detect(url) {
+        detectedUrls.push(url);
+        return [{
+          id: "TECHNOLOGY-WAPPALYZER-NEXT-JS",
+          name: "Next.js",
+          slug: "next-js",
+          categories: ["Web frameworks"],
+          icon: "Next.js.svg",
+          source: "wappalyzer",
+          category: "framework",
+          state: "confirmed",
+          evidenceIds: [],
+          confidence: 1,
+        }];
+      },
+    },
+  });
+
+  await crawlGenericSite("https://example.com/old", state.dependencies);
+
+  assert.deepEqual(detectedUrls, ["https://example.com/pricing"]);
+  assert.equal(state.completed?.analysis.schemaVersion, 2);
+  assert.deepEqual(state.completed?.analysis.technology[0], {
+    id: "TECHNOLOGY-WAPPALYZER-NEXT-JS",
+    name: "Next.js",
+    slug: "next-js",
+    categories: ["Web frameworks"],
+    icon: "Next.js.svg",
+    source: "wappalyzer",
+    category: "framework",
+    state: "confirmed",
+    evidenceIds: ["TECH-1"],
+    confidence: 1,
+  });
+});
+
+test("keeps native technology and a safe warning when Wappalyzer fails", async () => {
+  const capture = fixtureCapture();
+  capture.analysis.technology = [{
+    id: "TECHNOLOGY-1",
+    name: "CSS Keyframes",
+    category: "animation",
+    state: "observed-in-use",
+    evidenceIds: [],
+    confidence: 0.99,
+  }];
+  const state = harness({
+    capture,
+    technologyDetector: {
+      async detect() {
+        throw new Error("private extension path /secret/wappalyzer");
+      },
+    },
+  });
+
+  await crawlGenericSite("https://example.com/pricing", state.dependencies);
+
+  assert.equal(state.completed?.analysis.technology[0]?.name, "CSS Keyframes");
+  assert.match(
+    state.completed?.analysis.warnings.join(" ") ?? "",
+    /Extended technology detection was unavailable/,
+  );
+  assert.doesNotMatch(
+    state.completed?.analysis.warnings.join(" ") ?? "",
+    /secret|wappalyzer/i,
+  );
+});
+
+test("derives a Dark style from the captured page pixels", async () => {
+  const capture = fixtureCapture();
+  capture.pageImage = await sharp({
+    create: {
+      width: 20,
+      height: 20,
+      channels: 3,
+      background: "#111111",
+    },
+  }).png().toBuffer();
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/pricing", state.dependencies);
+
+  assert.deepEqual(state.beginInputs[0]?.styles, ["Dark"]);
+});
+
+test("derives Motion only from named animation technology evidence", async () => {
+  const namedCapture = fixtureCapture();
+  namedCapture.analysis.technology = [{
+    id: "TECHNOLOGY-FINDING-0",
+    name: "Framer Motion",
+    category: "animation",
+    state: "loaded",
+    confidence: 0.82,
+    evidenceIds: ["TECHNOLOGY-EVIDENCE-0"],
+  }];
+  const named = harness({ capture: namedCapture });
+
+  await crawlGenericSite("https://example.com/pricing", named.dependencies);
+
+  assert.deepEqual(named.beginInputs[0]?.styles, ["Motion"]);
+
+  const genericCapture = fixtureCapture();
+  genericCapture.analysis.technology = [{
+    id: "TECHNOLOGY-FINDING-0",
+    name: "Custom JavaScript Motion",
+    category: "animation",
+    state: "observed-in-use",
+    confidence: 0.99,
+    evidenceIds: ["TECHNOLOGY-EVIDENCE-0"],
+  }];
+  const generic = harness({ capture: genericCapture });
+
+  await crawlGenericSite("https://example.com/pricing", generic.dependencies);
+
+  assert.deepEqual(generic.beginInputs[0]?.styles, []);
+});
+
+test("persists readable headings and reusable section taxonomy", async () => {
+  const capture = fixtureCapture();
+  capture.capture.sections = [
+    {
+      position: 0,
+      selector: "header nav",
+      tagName: "nav",
+      text: "Product Resources Customers",
+      bounds: { x: 0, y: 0, width: 1_440, height: 80 },
+    },
+    {
+      position: 1,
+      selector: "main > section",
+      tagName: "section",
+      heading: "The product development system for teams and agents",
+      text: "Plan and build products. Customers can review pricing and updates.",
+      bounds: { x: 0, y: 80, width: 1_440, height: 920 },
+    },
+  ];
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/", state.dependencies);
+
+  assert.deepEqual(
+    state.completed?.sections.map((section) => section.sourceMetadata?.patterns),
+    [
+      ["Navigation Section"],
+      [
+        "The product development system for teams and agents",
+        "Hero Section",
+      ],
+    ],
+  );
+});
+
+test("labels headingless Webflow bands without failing the import", async () => {
+  const capture = fixtureCapture();
+  capture.capture.sections[1] = {
+    position: 1,
+    selector: "main > div:nth-of-type(2)",
+    tagName: "div",
+    text: "A visual project gallery with no heading element",
+    bounds: { x: 0, y: 500, width: 1_440, height: 500 },
+  };
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/", state.dependencies);
+
+  assert.deepEqual(
+    state.completed?.sections[1]?.sourceMetadata?.patterns,
+    ["Hero Section"],
+  );
+});
+
+test("labels a compact headingless top band as navigation", async () => {
+  const capture = fixtureCapture();
+  capture.capture.sections[0] = {
+    position: 0,
+    selector: "body > div:nth-of-type(1)",
+    tagName: "div",
+    text: "",
+    bounds: { x: 0, y: 0, width: 1_440, height: 189 },
+  };
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/", state.dependencies);
+
+  assert.deepEqual(
+    state.completed?.sections[0]?.sourceMetadata?.patterns,
+    ["Navigation Section"],
+  );
+});
+
+test("classifies Webflow FAQ, testimonial, and visual footer sections", async () => {
+  const capture = fixtureCapture();
+  capture.capture.sections = [
+    {
+      position: 0,
+      selector: "body > section:nth-of-type(1)",
+      tagName: "section",
+      heading: "FREQUENTLY",
+      text: "Frequently Asked Questions",
+      bounds: { x: 0, y: 0, width: 1_440, height: 400 },
+    },
+    {
+      position: 1,
+      selector: "body > section:nth-of-type(2)",
+      tagName: "section",
+      heading: "WHAT OUR CLIENTS SAY",
+      text: "What our clients say about us",
+      bounds: { x: 0, y: 400, width: 1_440, height: 400 },
+    },
+    {
+      position: 2,
+      selector: "body > section:nth-of-type(3)",
+      tagName: "section",
+      text: "Resources Contact copyright © 2026 All rights reserved.",
+      bounds: { x: 0, y: 800, width: 1_440, height: 400 },
+    },
+    {
+      position: 3,
+      selector: "body > section:nth-of-type(4)",
+      tagName: "section",
+      heading: "BEYOND AESTHETICS. INTO INTELLIGENCE.",
+      text: "Have a project in mind? Start your project today.",
+      bounds: { x: 0, y: 1_200, width: 1_440, height: 200 },
+    },
+  ];
+  capture.sectionImages = [
+    { position: 0, body: png },
+    { position: 1, body: png },
+    { position: 2, body: png },
+    { position: 3, body: png },
+  ];
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/", state.dependencies);
+
+  assert.deepEqual(
+    state.completed?.sections.map((section) => section.sourceMetadata?.patterns),
+    [
+      ["FREQUENTLY", "FAQ Section"],
+      ["WHAT OUR CLIENTS SAY", "Social Proof Section"],
+      ["Footer Section"],
+      [
+        "BEYOND AESTHETICS. INTO INTELLIGENCE.",
+        "Call to Action Section",
+      ],
+    ],
+  );
+});
+
+test("classifies Framer landing-page bands from their rendered evidence", async () => {
+  const capture = fixtureCapture();
+  capture.capture.document.height = 700;
+  capture.capture.sections = [
+    {
+      position: 0,
+      selector: "nav",
+      tagName: "nav",
+      text: "Product Community Resources",
+      bounds: { x: 0, y: 0, width: 1_440, height: 100 },
+    },
+    {
+      position: 1,
+      selector: "main > div:nth-of-type(1)",
+      tagName: "div",
+      heading: "Create AI landing pages with editable control in Framer",
+      text: "Get started for free",
+      bounds: { x: 0, y: 100, width: 1_440, height: 100 },
+    },
+    {
+      position: 2,
+      selector: "main > div:nth-of-type(2)",
+      tagName: "div",
+      heading: "Start with a landing page idea",
+      text: "Generate sections with AI agents. Refine visually. Add conversion paths.",
+      bounds: { x: 0, y: 200, width: 1_440, height: 100 },
+    },
+    {
+      position: 3,
+      selector: "main > div:nth-of-type(3)",
+      tagName: "div",
+      heading: "Why teams create landing pages with AI",
+      text: "AI agent control. Built for landing pages. Production hosting.",
+      bounds: { x: 0, y: 300, width: 1_440, height: 100 },
+    },
+    {
+      position: 4,
+      selector: "main > div:nth-of-type(4)",
+      tagName: "div",
+      heading: "How to build AI landing pages in Framer",
+      text: "1. Create the campaign page. 2. Optimize the message. 3. Prepare for traffic.",
+      bounds: { x: 0, y: 400, width: 1_440, height: 100 },
+    },
+    {
+      position: 5,
+      selector: "main > div:nth-of-type(5)",
+      tagName: "div",
+      heading: "Explore Framer’s solutions for designers",
+      text: "Agency websites. Marketing websites. AI website builder.",
+      bounds: { x: 0, y: 500, width: 1_440, height: 100 },
+    },
+    {
+      position: 6,
+      selector: "main > div:nth-of-type(6)",
+      tagName: "div",
+      heading: "Your next idea starts here",
+      text: "Create personal portfolio. Build startup site. Start without AI.",
+      bounds: { x: 0, y: 600, width: 1_440, height: 100 },
+    },
+  ];
+  capture.sectionImages = capture.capture.sections.map(({ position }) => ({
+    position,
+    body: png,
+  }));
+  const state = harness({ capture });
+
+  await crawlGenericSite("https://example.com/", state.dependencies);
+
+  assert.deepEqual(
+    state.completed?.sections.slice(2).map((section) =>
+      section.sourceMetadata?.patterns
+    ),
+    [
+      ["Start with a landing page idea", "Feature Section"],
+      ["Why teams create landing pages with AI", "Feature Section"],
+      ["How to build AI landing pages in Framer", "How It Works Section"],
+      ["Explore Framer’s solutions for designers", "Feature Section"],
+      ["Your next idea starts here", "Call to Action Section"],
+    ],
   );
 });
 
@@ -121,8 +478,12 @@ function harness(options: {
   capture?: PublicPageBrowserResult;
   reused?: boolean;
   analysisProvider?: SiteAnalysisProvider;
+  technologyDetector?: {
+    detect(url: string): Promise<PublicPageBrowserResult["analysis"]["technology"]>;
+  };
   isCancelled?: () => Promise<boolean>;
 } = {}) {
+  const capture = options.capture ?? fixtureCapture();
   const objectKeys: string[] = [];
   const failures: string[] = [];
   const beginInputs: GenericSiteBeginInput[] = [];
@@ -154,7 +515,7 @@ function harness(options: {
     browser: {
       async capture() {
         captureCalls += 1;
-        return options.capture ?? fixtureCapture();
+        return capture;
       },
     },
     objectStore,
@@ -169,7 +530,7 @@ function harness(options: {
       },
       async completeGenericImport(input, objects) {
         completed = input;
-        assert.equal(objects.length, 7);
+        assert.equal(objects.length, 5 + capture.sectionImages.length);
         return { siteId: 7, versionId: 9 };
       },
       async failGenericImport(_url, message) {
@@ -178,6 +539,9 @@ function harness(options: {
     },
     ...(options.analysisProvider
       ? { analysisProvider: options.analysisProvider }
+      : {}),
+    ...(options.technologyDetector
+      ? { technologyDetector: options.technologyDetector }
       : {}),
     isCancelled: options.isCancelled ?? (async () => false),
   };

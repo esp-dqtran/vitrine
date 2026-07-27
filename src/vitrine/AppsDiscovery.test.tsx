@@ -39,6 +39,35 @@ const makeApp = (overrides: Partial<App> = {}): App => ({
   ...overrides,
 });
 
+test('renders the five fixed public App categories in product order', () => {
+  const html = renderToStaticMarkup(
+    <AppsDiscoveryPage
+      apps={[makeApp()]}
+      isAdmin={false}
+      query=""
+      facet={null}
+      onFacetChange={() => undefined}
+      onOpenSearch={() => undefined}
+      searchMode="legacy"
+      onOpenApp={() => undefined}
+      onRetry={() => undefined}
+      totalApps={1}
+      hasMore={false}
+      loadingMore={false}
+    />,
+  );
+  const categories = html.slice(
+    html.indexOf('>Categories<'),
+    html.indexOf('>Screens<'),
+  );
+
+  assert.ok(categories.indexOf('>AI<') < categories.indexOf('>Finance<'));
+  assert.ok(categories.indexOf('>Finance<') < categories.indexOf('>CRM<'));
+  assert.ok(categories.indexOf('>CRM<') < categories.indexOf('>Business<'));
+  assert.ok(categories.indexOf('>Business<') < categories.indexOf('>News<'));
+  assert.doesNotMatch(categories, /Productivity/);
+});
+
 test('filters Apps across Mobbin taxonomy fields and platform', () => {
   const apps = [
     makeApp({ id: 'web', app: 'Web App' }),
@@ -132,9 +161,6 @@ test('renders the shared full-width discovery navigation for Apps', () => {
       active="apps"
       className="apps-top-nav"
       search={<button>Search on Web...</button>}
-      isAdmin
-      importLabel="Import App"
-      onImport={() => undefined}
     />,
   );
 
@@ -142,8 +168,9 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /aria-label="Vitrine Apps"/);
+  assert.doesNotMatch(html, /<strong>Vitrine<\/strong>/);
   assert.match(html, /Search on Web/);
-  assert.match(html, /Import App/);
+  assert.doesNotMatch(html, /Import App/);
 });
 
 test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', () => {
@@ -160,17 +187,12 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={[app]}
-      categories={[
-        { id: 1, name: 'Business', slug: 'business', appCount: 1 },
-        { id: 7, name: 'Productivity', slug: 'productivity', appCount: 1 },
-      ]}
       isAdmin
       query=""
       facet={null}
       onFacetChange={() => undefined}
       onOpenSearch={() => undefined}
       searchMode="legacy"
-      onImport={() => undefined}
       onOpenApp={() => undefined}
       onRetry={() => undefined}
       totalApps={1}
@@ -187,8 +209,10 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /class="[^"]*reference-search-trigger[^"]*"/);
   assert.match(html, /<img src="\/favicon\.svg" alt="" aria-hidden="true" width="32" height="32"\/>/);
   assert.doesNotMatch(html, /<span aria-hidden="true">V<\/span>/);
+  assert.doesNotMatch(html, /Import App/);
   assert.match(html, /Categories/);
-  assert.match(html, /Productivity/);
+  assert.match(html, /Business/);
+  assert.doesNotMatch(html, /Productivity/);
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
@@ -227,14 +251,12 @@ test('renders six App card skeletons while the initial page loads', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={null}
-      categories={null}
       isAdmin
       query=""
       facet={null}
       onFacetChange={() => undefined}
       onOpenSearch={() => undefined}
       searchMode="legacy"
-      onImport={() => undefined}
       onOpenApp={() => undefined}
       onRetry={() => undefined}
       totalApps={null}
@@ -251,14 +273,12 @@ test('appends three App card skeletons while loading another page', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={[makeApp()]}
-      categories={[]}
       isAdmin
       query=""
       facet={null}
       onFacetChange={() => undefined}
       onOpenSearch={() => undefined}
       searchMode="legacy"
-      onImport={() => undefined}
       onOpenApp={() => undefined}
       onRetry={() => undefined}
       totalApps={2}
@@ -290,7 +310,12 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /--reference-facet-size:\s*24px/);
   assert.match(css, /--reference-card-radius:\s*24px/);
   assert.match(css, /\.reference-discovery-nav\s*\{[^}]*height:\s*var\(--reference-nav-height\)/);
+  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*#111/);
+  assert.match(css, /\.reference-discovery-nav__types button\s*\{[^}]*background:\s*transparent\s*!important/);
+  assert.match(css, /\.reference-discovery-nav__types button\[aria-selected="true"\]\s*\{/);
   assert.match(css, /\.reference-discovery-nav__search\s+\.reference-search-trigger\s*\{[^}]*max-width:\s*none/);
+  assert.match(css, /\.reference-search-trigger__button\s*\{[^}]*background:\s*#303030\s*!important/);
+  assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.reference-discovery-toolbar\s*\{[^}]*min-height:\s*var\(--reference-toolbar-height\)/);
   assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*var\(--reference-font-family\)/);
   assert.match(css, /\.discovery-card\s*\{[^}]*border-radius:\s*var\(--reference-card-radius\)/);

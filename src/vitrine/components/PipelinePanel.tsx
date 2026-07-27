@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, Card, Text, TextInput } from '@astryxdesign/core';
+import { useEffect, useRef } from 'react';
+import { Badge, Button, Card, Text } from '@astryxdesign/core';
 import { groupPipelines } from '../jobs';
 import type { Job } from '../types';
 import { useJobs } from '../useJobs';
-import { platformFromUrl } from '../../platformFromUrl';
 
 const STAGE_LABEL: Record<Job['type'], string> = {
   'import-app': 'Import screenshots',
@@ -24,10 +23,7 @@ const STATUS_VARIANT: Record<Job['status'], 'neutral' | 'info' | 'success' | 'er
 };
 
 export function PipelinePanel({ onPipelineDone }: { onPipelineDone: () => void | Promise<void> }) {
-  const { jobs, error, submitImport, cancelJob } = useJobs();
-  const [name, setName] = useState('');
-  const [url, setUrl] = useState('');
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { jobs, error, cancelJob } = useJobs();
   const seenDone = useRef(new Set<number>());
   const pipelines = groupPipelines(jobs);
 
@@ -40,61 +36,14 @@ export function PipelinePanel({ onPipelineDone }: { onPipelineDone: () => void |
     }
   }, [jobs, onPipelineDone]);
 
-  const submit = async () => {
-    setSubmitError(null);
-    try {
-      await submitImport(name.trim(), url.trim(), platformFromUrl(url.trim()));
-      setUrl('');
-    } catch (cause) {
-      setSubmitError((cause as Error).message);
-    }
-  };
-
   return (
     <Card>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <Text weight="semibold">Import a Mobbin app</Text>
+          <Text weight="semibold">Pipeline activity</Text>
           <Text type="supporting" color="secondary">
-            Crawl screenshots, caption them, and synthesize a design system.
+            Monitor and cancel existing processing jobs.
           </Text>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 12,
-            alignItems: 'end',
-          }}
-        >
-          <TextInput
-            label="App name"
-            value={name}
-            onChange={setName}
-            placeholder="linear"
-            isRequired
-            hasClear
-            width="100%"
-          />
-          <TextInput
-            label="Mobbin screens URL"
-            value={url}
-            onChange={setUrl}
-            placeholder="https://mobbin.com/apps/.../screens"
-            isRequired
-            hasClear
-            width="100%"
-            status={submitError ? { type: 'error', message: submitError } : undefined}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              label="Import app"
-              variant="primary"
-              clickAction={submit}
-              isDisabled={!name.trim() || !url.trim()}
-            />
-          </div>
         </div>
 
         {error ? <div style={{ color: 'var(--color-text-danger)', fontSize: 13 }}>{error}</div> : null}

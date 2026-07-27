@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, EmptyState, Spinner } from '@astryxdesign/core';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type {
   FeatureDocumentRevisionView,
@@ -12,10 +10,14 @@ import {
   cancelFeatureDocumentJob,
   getFeatureDocument,
   getFeatureDocumentByFlow,
-  getFeatureDocumentMarkdown,
   retryFeatureDocumentJob,
   subscribeFeatureDocumentJob,
 } from '../featureDocumentsApi.ts';
+import { buildDocumentFlowPresentation } from '../documentFlowModel.ts';
+import {
+  DocumentFlowReadyView,
+  type DocumentFlowSection,
+} from './DocumentFlowReadyView.tsx';
 import { FeatureDocumentProgress } from './FeatureDocumentProgress.tsx';
 import { FeatureDocumentSetupDialog } from './FeatureDocumentSetupDialog.tsx';
 
@@ -36,21 +38,16 @@ export type DocumentFlowState =
   | { kind: 'ready'; document: FeatureDocumentView; revision: FeatureDocumentRevisionView }
   | { kind: 'error'; message: string; retryable: boolean };
 
-export type DocumentFlowMarkdownState =
-  | { kind: 'loading' }
-  | { kind: 'ready'; content: string }
-  | { kind: 'error'; message: string };
-
 export interface DocumentFlowPanelViewProps {
+  flow: DesignFlow<EvidenceView>;
   state: DocumentFlowState;
   userRole: 'admin' | 'user';
-  markdown?: DocumentFlowMarkdownState;
   connectionError?: string;
   onGenerate?(): void;
   onCancel?(): void;
   onRetry?(): void;
   onReconnect?(): void;
-  onMarkdownRetry?(): void;
+  onOpenVisualStep(stepNumber: number): void;
 }
 
 export function classifyDocumentFlow(document: FeatureDocumentView): DocumentFlowState {
@@ -65,16 +62,18 @@ export function classifyDocumentFlow(document: FeatureDocumentView): DocumentFlo
 }
 
 export function DocumentFlowPanelView({
+  flow,
   state,
   userRole,
-  markdown = { kind: 'loading' },
   connectionError,
   onGenerate,
   onCancel,
   onRetry,
   onReconnect,
-  onMarkdownRetry,
+  onOpenVisualStep,
 }: DocumentFlowPanelViewProps) {
+  const [activeSection, setActiveSection] = useState<DocumentFlowSection>('requirements');
+
   if (state.kind === 'loading') {
     return (
       <section className="document-flow document-flow--loading" aria-label="Document Flow">
@@ -129,31 +128,14 @@ export function DocumentFlowPanelView({
     );
   }
 
-  if (markdown.kind === 'loading') {
-    return (
-      <section className="document-flow document-flow--loading" aria-label="Document Flow">
-        <div role="status" aria-label="Loading Document Flow Markdown"><Spinner size="lg" /></div>
-      </section>
-    );
-  }
-
-  if (markdown.kind === 'error') {
-    return (
-      <section className="document-flow document-flow--error" aria-label="Document Flow">
-        <div role="alert">{markdown.message}</div>
-        {onMarkdownRetry && (
-          <Button label="Retry Markdown" variant="primary" clickAction={onMarkdownRetry} />
-        )}
-      </section>
-    );
-  }
-
   return (
-    <section className="document-flow document-flow--ready" aria-label="Document Flow">
-      <article className="document-flow__markdown">
-        <Markdown remarkPlugins={[remarkGfm]}>{markdown.content}</Markdown>
-      </article>
-    </section>
+    <DocumentFlowReadyView
+      presentation={buildDocumentFlowPresentation(flow, state.revision)}
+      revision={state.revision}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      onOpenVisualStep={onOpenVisualStep}
+    />
   );
 }
 
@@ -168,8 +150,6 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   const [setupOpen, setSetupOpen] = useState(false);
   const [connectionError, setConnectionError] = useState('');
   const [subscriptionVersion, setSubscriptionVersion] = useState(0);
-  const [markdown, setMarkdown] = useState<DocumentFlowMarkdownState>({ kind: 'loading' });
-  const [markdownReloadVersion, setMarkdownReloadVersion] = useState(0);
 
   const loadBySource = useCallback(async () => {
     if (!app || !platform || !version) {
@@ -201,33 +181,6 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   useEffect(() => {
     void loadBySource();
   }, [loadBySource]);
-
-  const readyDocumentId = state.kind === 'ready' ? state.document.id : undefined;
-  const readyRevisionId = state.kind === 'ready' ? state.revision.id : undefined;
-
-  useEffect(() => {
-    if (readyDocumentId === undefined || readyRevisionId === undefined) {
-      setMarkdown({ kind: 'loading' });
-      return;
-    }
-    let live = true;
-    setMarkdown({ kind: 'loading' });
-    void getFeatureDocumentMarkdown(readyDocumentId, readyRevisionId)
-      .then((content) => {
-        if (live) setMarkdown({ kind: 'ready', content });
-      })
-      .catch((error: Error) => {
-        if (live) {
-          setMarkdown({
-            kind: 'error',
-            message: error.message || 'Could not load Document Flow Markdown.',
-          });
-        }
-      });
-    return () => {
-      live = false;
-    };
-  }, [markdownReloadVersion, readyDocumentId, readyRevisionId]);
 
   useEffect(() => {
     if (state.kind !== 'pending' || !state.document.currentJob) return;
@@ -285,15 +238,15 @@ export function DocumentFlowPanel(props: DocumentFlowPanelProps) {
   return (
     <>
       <DocumentFlowPanelView
+        flow={flow}
         state={state}
         userRole={props.userRole}
-        markdown={markdown}
         connectionError={connectionError}
         onGenerate={() => setSetupOpen(true)}
         onCancel={() => void cancel()}
         onRetry={() => void retry()}
         onReconnect={() => setSubscriptionVersion((current) => current + 1)}
-        onMarkdownRetry={() => setMarkdownReloadVersion((current) => current + 1)}
+        onOpenVisualStep={props.onOpenVisualStep}
       />
       {app && platform && version && setupOpen && (
         <FeatureDocumentSetupDialog

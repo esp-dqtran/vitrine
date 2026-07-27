@@ -31,6 +31,63 @@ test("parses evidence-backed Site analysis", () => {
   assert.equal(siteEvidenceId("technology", 7), "TECHNOLOGY-7");
 });
 
+test("parses Wappalyzer technology metadata in schema version 2", () => {
+  const parsed = parseSiteAnalysis({
+    ...fixture,
+    schemaVersion: 2,
+    technology: [{
+      id: "TECHNOLOGY-WAPPALYZER-NEXT-JS",
+      name: "Next.js",
+      slug: "next-js",
+      categories: ["Web frameworks"],
+      icon: "Next.js.svg",
+      source: "wappalyzer",
+      category: "framework",
+      state: "confirmed",
+      evidenceIds: [],
+      confidence: 1,
+    }],
+  });
+
+  assert.equal(parsed.schemaVersion, 2);
+  assert.deepEqual(parsed.technology[0], {
+    id: "TECHNOLOGY-WAPPALYZER-NEXT-JS",
+    name: "Next.js",
+    slug: "next-js",
+    categories: ["Web frameworks"],
+    icon: "Next.js.svg",
+    source: "wappalyzer",
+    category: "framework",
+    state: "confirmed",
+    evidenceIds: [],
+    confidence: 1,
+  });
+});
+
+test("rejects unsafe Wappalyzer icon filenames", () => {
+  for (const icon of [
+    "../Next.js.svg",
+    "https://example.com/icon.svg",
+    "folder/icon.svg",
+    "icon\u0000.svg",
+  ]) {
+    assert.throws(
+      () => parseSiteAnalysis({
+        ...fixture,
+        schemaVersion: 2,
+        technology: [{
+          ...fixture.technology[0],
+          slug: "next-js",
+          categories: ["Web frameworks"],
+          icon,
+          source: "wappalyzer",
+        }],
+      }),
+      /icon/i,
+    );
+  }
+});
+
 test("rejects findings that invent evidence IDs", () => {
   assert.throws(
     () => parseSiteAnalysis({

@@ -18,6 +18,8 @@ import {
   type SiteAnalysisProvider,
 } from "./siteAnalysisProvider.ts";
 import { classifySiteImportUrl } from "./sites.ts";
+import type { WappalyzerTechnologyDetector } from "./wappalyzerBrowser.ts";
+import { mergeWappalyzerTechnology } from "./wappalyzerTechnology.ts";
 import type {
   GenericSiteCompleteInput,
   GenericSitesStoreMethods,
@@ -25,6 +27,91 @@ import type {
 
 const MAXIMUM_OBJECT_BYTES = 64 * 1_024 * 1_024;
 const ANALYSIS_TIMEOUT_MS = 60_000;
+const DARK_PAGE_LUMINANCE = 0.4;
+const MOTION_TECHNOLOGIES = new Set([
+  "Anime.js",
+  "CSS Keyframes",
+  "Embla",
+  "Framer Motion",
+  "GSAP",
+  "Lenis",
+  "Lottie",
+  "React Spring",
+  "Rive",
+  "ScrollTrigger",
+  "Spline",
+  "SplitText",
+  "Swiper",
+  "Three.js",
+  "Web Animations API",
+  "Webflow IX2",
+]);
+
+type CapturedSection =
+  PublicPageBrowserResult["capture"]["sections"][number];
+
+function genericSectionPatterns(section: CapturedSection): string[] {
+  const heading = section.heading?.replace(/\s+/g, " ").trim();
+  const tagName = section.tagName.toLowerCase();
+  const role = section.role?.toLowerCase();
+  const text = (heading || section.text).toLowerCase();
+  const bodyText = section.text.toLowerCase();
+  const semanticText = `${text} ${bodyText}`;
+  let taxonomy: string;
+
+  if (
+    tagName === "nav" ||
+    role === "navigation" ||
+    (
+      section.position === 0 &&
+      !heading &&
+      section.bounds.height <= 320
+    )
+  ) {
+    taxonomy = "Navigation Section";
+  } else if (
+    tagName === "footer" ||
+    role === "contentinfo" ||
+    /\b(copyright|all rights reserved)\b|©/.test(text)
+  ) {
+    taxonomy = "Footer Section";
+  } else if (/\b(pricing|plans|subscriptions?)\b/.test(text)) {
+    taxonomy = "Pricing Section";
+  } else if (/\b(faq|frequently(?: asked)?|questions?)\b/.test(text)) {
+    taxonomy = "FAQ Section";
+  } else if (
+    /\b(testimonials?|customers?|clients?|trusted by|social proof)\b/.test(text)
+  ) {
+    taxonomy = "Social Proof Section";
+  } else if (/\b(how it works|how to|process|workflow)\b/.test(text)) {
+    taxonomy = "How It Works Section";
+  } else if (/\b(about|our story|mission|company)\b/.test(text)) {
+    taxonomy = "About Section";
+  } else if (/\b(contact|talk to|book a demo|request a demo)\b/.test(text)) {
+    taxonomy = "Contact Section";
+  } else if (/\b(blog|changelog|news|updates?)\b/.test(text)) {
+    taxonomy = "Updates Section";
+  } else if (
+    /\b(get started|start building|start (?:your )?project|have a project|sign up|try (?:it|for)|available today|ready to|(?:your )?next (?:idea|project|chapter) starts here)\b/
+      .test(semanticText)
+  ) {
+    taxonomy = "Call to Action Section";
+  } else if (section.position <= 1) {
+    taxonomy = "Hero Section";
+  } else if (
+    tagName === "section" ||
+    /\b(features?|product|platform|solutions?|agents?)\b/.test(semanticText)
+  ) {
+    taxonomy = "Feature Section";
+  } else {
+    taxonomy = "Content Section";
+  }
+
+  const structural = taxonomy === "Navigation Section" ||
+    taxonomy === "Footer Section";
+  return unique(structural || !heading ? [taxonomy] : [heading, taxonomy])
+    .slice(0, 4);
+}
 
 export class GenericSiteImportCancelledError extends Error {
   constructor() {
@@ -48,6 +135,7 @@ export interface GenericSiteCrawlerDependencies {
     "beginGenericImport" | "completeGenericImport" | "failGenericImport"
   >>;
   analysisProvider?: SiteAnalysisProvider;
+  technologyDetector?: Pick<WappalyzerTechnologyDetector, "detect">;
   isCancelled(): Promise<boolean>;
   report?(message: string): Promise<void>;
 }
@@ -71,15 +159,20 @@ export async function crawlGenericSite(
   }
   await assertNotCancelled(deps);
   await deps.report?.("Rendering page");
-  const capture = await deps.browser.capture(requestedIdentity.canonicalUrl);
+  const browserCapture = await deps.browser.capture(requestedIdentity.canonicalUrl);
   await assertNotCancelled(deps);
 
-  const identity = classifySiteImportUrl(capture.capture.canonicalUrl);
+  const identity = classifySiteImportUrl(browserCapture.capture.canonicalUrl);
   if (identity.kind !== "public-page") {
     throw new PermanentGenericSiteImportError(
       "Generic Site redirected to an unsupported source",
     );
   }
+  const capture = await withDetectedTechnology(
+    browserCapture,
+    identity.canonicalUrl,
+    deps.technologyDetector,
+  );
   await deps.report?.("Analyzing structure and motion");
   const { analysis, model } = await synthesizeAnalysis(
     capture,
@@ -91,6 +184,7 @@ export async function crawlGenericSite(
     capture.capture.metadata.category,
     ...(analysis.synthesis?.category ? [analysis.synthesis.category] : []),
   ]).slice(0, 20);
+  const styles = await genericSiteStyles(capture.pageImage, analysis);
   const begin = await deps.sitesStore.beginGenericImport({
     identity,
     name: capture.capture.metadata.name,
@@ -99,7 +193,7 @@ export async function crawlGenericSite(
       ? { iconUrl: capture.capture.metadata.iconUrl }
       : {}),
     categories,
-    styles: [],
+    styles,
     contentHash,
     analysis,
   });
@@ -126,6 +220,39 @@ export async function crawlGenericSite(
       .failGenericImport(identity.canonicalUrl, safeFailure(error))
       .catch(() => undefined);
     throw error;
+  }
+}
+
+async function withDetectedTechnology(
+  capture: PublicPageBrowserResult,
+  canonicalUrl: string,
+  detector: Pick<WappalyzerTechnologyDetector, "detect"> | undefined,
+): Promise<PublicPageBrowserResult> {
+  if (!detector) return capture;
+  try {
+    const detected = await detector.detect(canonicalUrl);
+    return {
+      ...capture,
+      analysis: parseSiteAnalysis({
+        ...capture.analysis,
+        schemaVersion: 2,
+        technology: mergeWappalyzerTechnology(
+          capture.analysis.technology,
+          detected,
+        ),
+      }),
+    };
+  } catch {
+    return {
+      ...capture,
+      analysis: parseSiteAnalysis({
+        ...capture.analysis,
+        warnings: unique([
+          ...capture.analysis.warnings,
+          "Extended technology detection was unavailable; browser evidence was retained.",
+        ]),
+      }),
+    };
   }
 }
 
@@ -180,6 +307,34 @@ async function synthesizeAnalysis(
       }),
     };
   }
+}
+
+async function genericSiteStyles(
+  pageImage: Buffer,
+  analysis: SiteAnalysis,
+): Promise<string[]> {
+  const styles: string[] = [];
+  const pixel = await sharp(pageImage)
+    .resize(1, 1, { fit: "fill" })
+    .removeAlpha()
+    .raw()
+    .toBuffer();
+  if (pixel.length >= 3) {
+    const luminance = (
+      (0.2126 * pixel[0]!)
+      + (0.7152 * pixel[1]!)
+      + (0.0722 * pixel[2]!)
+    ) / 255;
+    if (luminance < DARK_PAGE_LUMINANCE) styles.push("Dark");
+  }
+  if (analysis.technology.some((finding) =>
+    finding.state !== "not-detected"
+    && finding.evidenceIds.length > 0
+    && MOTION_TECHNOLOGIES.has(finding.name)
+  )) {
+    styles.push("Motion");
+  }
+  return styles;
 }
 
 async function completeCapture(
@@ -318,6 +473,7 @@ async function completeCapture(
         tagName: section.tagName,
         ...(section.role ? { role: section.role } : {}),
         ...(section.heading ? { heading: section.heading } : {}),
+        patterns: genericSectionPatterns(section),
       },
     })),
     analysis: capture.analysis,
@@ -411,6 +567,8 @@ function captureHash(result: PublicPageBrowserResult): string {
     .update(result.pageImage)
     .update("\0")
     .update(result.mobilePageImage)
+    .update("\0")
+    .update(JSON.stringify(result.analysis.technology))
     .digest("hex");
 }
 

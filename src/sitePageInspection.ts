@@ -11,7 +11,7 @@ import {
   type SiteTechnologySignals,
 } from "./siteTechnology.ts";
 
-const MAXIMUM_STRUCTURE_NODES = 1_000;
+const MAXIMUM_STRUCTURE_NODES = 500;
 const MAXIMUM_ANIMATION_SAMPLES = 500;
 const MAXIMUM_SCROLL_POSITIONS = 6;
 
@@ -166,13 +166,29 @@ export async function inspectSiteViewport(
       scrollRange?: { start: number; end: number };
     };
     const warnings: string[] = [];
-    const clean = (value: unknown, maximum = 500) =>
+    const [clean] = [(value: unknown, maximum = 500) =>
       typeof value === "string"
         ? value.replace(/\s+/g, " ").trim().slice(0, maximum)
-        : "";
-    const rounded = (value: number) =>
-      Number.isFinite(value) ? Math.round(value * 100) / 100 : 0;
-    const selectorFor = (element: Element): string => {
+        : ""] as const;
+    const [headingLabel] = [(value: string): string => {
+      const words = value.split(" ").filter(Boolean);
+      if (words.length < 6) return value;
+      for (let size = 3; size <= Math.floor(words.length / 2); size += 1) {
+        if (words.length % size !== 0) continue;
+        let repeated = true;
+        for (let index = size; index < words.length; index += 1) {
+          if (words[index] !== words[index % size]) {
+            repeated = false;
+            break;
+          }
+        }
+        if (repeated) return words.slice(0, size).join(" ");
+      }
+      return value;
+    }] as const;
+    const [rounded] = [(value: number) =>
+      Number.isFinite(value) ? Math.round(value * 100) / 100 : 0] as const;
+    const [selectorFor] = [(element: Element): string => {
       if (element.id && /^[A-Za-z][\w-]{0,80}$/.test(element.id)) {
         return `#${CSS.escape(element.id)}`;
       }
@@ -201,8 +217,8 @@ export async function inspectSiteViewport(
         current = parent;
       }
       return parts.join(" > ").slice(0, 500);
-    };
-    const visible = (element: Element): boolean => {
+    }] as const;
+    const [visible] = [(element: Element): boolean => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return style.display !== "none" &&
@@ -210,7 +226,7 @@ export async function inspectSiteViewport(
         Number(style.opacity || 1) > 0 &&
         rect.width > 0 &&
         rect.height > 0;
-    };
+    }] as const;
     const semanticTags = new Set([
       "body",
       "header",
@@ -262,6 +278,9 @@ export async function inspectSiteViewport(
       const heading = element.matches("h1,h2,h3")
         ? element
         : element.querySelector("h1,h2,h3");
+      const headingText = heading instanceof HTMLElement
+        ? heading.innerText
+        : heading?.textContent;
       const tag = element.tagName.toLowerCase();
       return {
         id: idByElement.get(element)!,
@@ -275,7 +294,7 @@ export async function inspectSiteViewport(
             element.getAttribute("title"),
           200,
         ) || undefined,
-        heading: clean(heading?.textContent, 200) || undefined,
+        heading: headingLabel(clean(headingText, 200)) || undefined,
         text: clean(element.textContent, 500),
         visible: visible(element),
         media: ["video", "canvas", "picture", "img", "svg"].includes(tag)
@@ -379,7 +398,7 @@ export async function inspectSiteViewport(
       "width",
       "height",
     ] as const;
-    const captureStates = (): Map<string, AnimationState> => {
+    const [captureStates] = [(): Map<string, AnimationState> => {
       const states = new Map<string, AnimationState>();
       retainedElements.forEach((element, index) => {
         const rect = element.getBoundingClientRect();
@@ -401,8 +420,8 @@ export async function inspectSiteViewport(
         });
       });
       return states;
-    };
-    const changedProperties = (
+    }] as const;
+    const [changedProperties] = [(
       first: AnimationState | undefined,
       second: AnimationState | undefined,
     ): string[] => {
@@ -410,7 +429,7 @@ export async function inspectSiteViewport(
       return sampledProperties.filter((property) =>
         String(first[property]) !== String(second[property])
       );
-    };
+    }] as const;
     const documentHeight = Math.min(
       100_000,
       Math.max(
@@ -586,11 +605,11 @@ export async function inspectSiteViewport(
 
     const globalObject = window as typeof window & Record<string, unknown>;
     const runtimes: Record<string, string> = {};
-    const readVersion = (key: string, value: unknown) => {
+    const [readVersion] = [(key: string, value: unknown) => {
       if (typeof value === "string" || typeof value === "number") {
         runtimes[key] = String(value).slice(0, 100);
       }
-    };
+    }] as const;
     const gsap = globalObject.gsap as {
       version?: unknown;
       globalTimeline?: { getChildren?: () => unknown[] };
@@ -722,7 +741,11 @@ export function buildSiteAnalysis(
     });
   }
   const motion: SiteMotionFinding[] = [];
-  const desktopIdByKey = new Map(desktop.structure.map((item) => [item.key, item.id]));
+  const desktopIdByKey = new Map(
+    desktop.structure
+      .slice(0, MAXIMUM_STRUCTURE_NODES)
+      .map((item) => [item.key, item.id]),
+  );
   const motionSamples = [
     ...desktop.animationSamples.map((sample) => ({
       ...sample,

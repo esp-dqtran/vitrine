@@ -1,201 +1,149 @@
+import { useState } from 'react';
 import { EmptyState } from '@astryxdesign/core';
+import type { SiteTechnologyFinding } from '../../siteAnalysis.ts';
 import type { SiteVersionDetail } from '../types.ts';
 
-const TECHNOLOGY_STATES = [
-  'observed-in-use',
-  'confirmed',
-  'loaded',
-  'inferred',
-  'not-detected',
-] as const;
+const ICON_BASE_URL = 'https://www.wappalyzer.com/images/icons/';
 
 export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
-  const analysis = detail.analysis;
-  const synthesis = analysis?.synthesis;
-  const supportedClaims = synthesis?.claims.filter((claim) =>
-    claim.kind === 'unknown' || claim.evidenceIds.length > 0
-  ) ?? [];
-  const supportedText = new Set(supportedClaims.map((claim) => claim.text));
-  const cited = (values: string[] | undefined) =>
-    (values ?? []).filter((value) => supportedText.has(value));
+  const detected = (detail.analysis?.technology ?? [])
+    .filter((finding) => finding.state !== 'not-detected')
+    .sort((left, right) =>
+      right.confidence - left.confidence || left.name.localeCompare(right.name)
+    );
+  const groups = groupTechnology(detected);
+  const hasWappalyzer = detected.some((finding) =>
+    finding.source === 'wappalyzer'
+  );
+
   return (
-    <section className="site-analysis" aria-labelledby="site-analysis-title">
-      <header className="site-analysis__header">
+    <section className="site-technology" aria-labelledby="site-technology-title">
+      <header className="site-technology__header">
         <div>
-          <p>Reverse engineering report</p>
-          <h2 id="site-analysis-title">Analysis</h2>
+          <p>Detected technology</p>
+          <h2 id="site-technology-title">Technology</h2>
+          <span>Frameworks, libraries, services, and platforms used by this page.</span>
         </div>
-        <span>{detail.analysisStatus === 'ready' ? 'AI synthesized' : 'Evidence only'}</span>
+        <strong>{detected.length} detected</strong>
       </header>
-      {detail.analysisStatus === 'evidence-only' ? (
-        <p className="site-analysis__notice">
-          Deterministic browser evidence is available. AI synthesis was not configured or could not complete.
+
+      {detected.length && !hasWappalyzer ? (
+        <p className="site-technology__notice">
+          Extended technology detection was unavailable. Showing browser-evidence results.
         </p>
       ) : null}
-      {!analysis ? (
+
+      {!detected.length ? (
         <EmptyState
-          title="No analysis for this capture"
-          description="Older captures still retain their preview and sections."
+          title="No technologies detected"
+          description="Import this page again with Wappalyzer enabled to build its technology profile."
           isCompact
         />
       ) : (
-        <>
-          {synthesis ? (
-            <div className="site-analysis__summary">
-              <SummaryValue
-                label="Purpose"
-                value={supportedText.has(synthesis.purpose) ? synthesis.purpose : 'Unknown'}
-              />
-              <SummaryValue
-                label="Category"
-                value={supportedText.has(synthesis.category) ? synthesis.category : 'Unknown'}
-              />
-              {detail.analysisModel
-                ? <SummaryValue label="Model" value={detail.analysisModel} />
-                : null}
-            </div>
-          ) : null}
-
-          <div className="site-analysis__grid">
-            <AnalysisList
-              title="Structure"
-              items={cited(synthesis?.structure).length
-                ? cited(synthesis?.structure)
-                : analysis.structure.map((item) =>
-                  typeof item.label === 'string'
-                    ? item.label
-                    : typeof item.key === 'string'
-                    ? item.key
-                    : item.id
-                )}
-            />
-            <AnalysisList
-              title="Reconstruction priorities"
-              items={cited(synthesis?.reconstructionPriorities)}
-            />
-            <AnalysisList title="Motion summary" items={cited(synthesis?.motion)} />
-            <AnalysisList title="Responsive behavior" items={[
-              ...cited(synthesis?.responsive),
-              ...analysis.responsive.map((item) =>
-                typeof item.change === 'string' && typeof item.key === 'string'
-                  ? `${item.key}: ${item.change}`
-                  : item.id
-              ),
-            ]} />
-          </div>
-
-          <section className="site-analysis__section">
-            <h3>Measured motion</h3>
-            {analysis.motion.length ? (
-              <div className="site-analysis__cards">
-                {analysis.motion.map((motion) => (
-                  <article key={motion.id}>
-                    <strong>{titleCase(motion.type)}</strong>
-                    <dl>
-                      <div><dt>Trigger</dt><dd>{titleCase(motion.trigger)}</dd></div>
-                      <div><dt>Viewport</dt><dd>{motion.viewports.map(titleCase).join(', ')}</dd></div>
-                      <div><dt>Confidence</dt><dd>{Math.round(motion.confidence * 100)}%</dd></div>
-                    </dl>
-                    {motion.properties.length ? <p>{motion.properties.join(', ')}</p> : null}
-                  </article>
+        <div className="site-technology__groups">
+          {groups.map(([category, findings]) => (
+            <section className="site-technology__group" key={category}>
+              <div className="site-technology__group-heading">
+                <h3>{category}</h3>
+                <span>{findings.length}</span>
+              </div>
+              <div className="site-technology__grid">
+                {findings.map((finding) => (
+                  <TechnologyCard finding={finding} key={finding.id} />
                 ))}
               </div>
-            ) : <p>No measurable motion was retained.</p>}
-          </section>
-
-          <section className="site-analysis__section">
-            <h3>Frontend technology</h3>
-            <div className="site-analysis__technology">
-              {TECHNOLOGY_STATES.map((state) => {
-                const findings = analysis.technology.filter((item) => item.state === state);
-                if (!findings.length) return null;
-                return (
-                  <div key={state}>
-                    <h4>{technologyStateLabel(state)}</h4>
-                    <ul>
-                      {findings.map((finding) => (
-                        <li key={finding.id}>
-                          <strong>{finding.name}{finding.version ? ` ${finding.version}` : ''}</strong>
-                          <span>{finding.category} · {Math.round(finding.confidence * 100)}%</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {supportedClaims.length ? (
-            <section className="site-analysis__section site-analysis__claims">
-              <h3>Evidence-backed claims</h3>
-              <ul>
-                {supportedClaims.map((claim, index) => (
-                  <li key={`${claim.kind}:${claim.text}:${index}`}>
-                    <strong>{claim.text}</strong>
-                    <span>
-                      {titleCase(claim.kind)} · {Math.round(claim.confidence * 100)}%
-                      {claim.evidenceIds.length
-                        ? ` · ${claim.evidenceIds.join(', ')}`
-                        : ' · No captured evidence'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </section>
-          ) : null}
-
-          {detail.mobilePageUrl ? (
-            <section className="site-analysis__section">
-              <h3>Mobile render</h3>
-              <img
-                className="site-analysis__mobile"
-                src={detail.mobilePageUrl}
-                alt={`${detail.site.name} mobile page capture`}
-              />
-            </section>
-          ) : null}
-
-          {analysis.warnings.length ? (
-            <section className="site-analysis__section site-analysis__warnings">
-              <h3>Limitations</h3>
-              <ul>{analysis.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
-            </section>
-          ) : null}
-        </>
+          ))}
+        </div>
       )}
     </section>
   );
 }
 
-function SummaryValue({ label, value }: { label: string; value: string }) {
-  return <div><span>{label}</span><strong>{value}</strong></div>;
-}
-
-function AnalysisList({ title, items }: { title: string; items: string[] }) {
+function TechnologyCard({ finding }: { finding: SiteTechnologyFinding }) {
   return (
-    <section>
-      <h3>{title}</h3>
-      {items.length
-        ? <ul>{items.map((item, index) => <li key={`${title}:${index}`}>{item}</li>)}</ul>
-        : <p>Not determined.</p>}
-    </section>
+    <article className="site-technology__card">
+      <TechnologyIcon icon={finding.icon} />
+      <div className="site-technology__card-copy">
+        <strong>
+          {finding.name}
+          {finding.version ? <small>{finding.version}</small> : null}
+        </strong>
+        <span>
+          {technologyStateLabel(finding.state)}
+          {' · '}
+          {Math.round(finding.confidence * 100)}%
+        </span>
+      </div>
+    </article>
   );
 }
 
-function titleCase(value: string): string {
-  return value
-    .split('-')
-    .map((part) => part ? part[0].toUpperCase() + part.slice(1) : part)
-    .join(' ');
+function TechnologyIcon({ icon }: { icon: string | undefined }) {
+  const [failed, setFailed] = useState(false);
+  const url = failed ? undefined : wappalyzerIconUrl(icon);
+  return url ? (
+    <img
+      className="site-technology__icon"
+      src={url}
+      alt=""
+      width={32}
+      height={32}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  ) : (
+    <span className="site-technology__icon-fallback" aria-hidden="true">
+      &lt;/&gt;
+    </span>
+  );
 }
 
-function technologyStateLabel(value: typeof TECHNOLOGY_STATES[number]): string {
+export function wappalyzerIconUrl(icon: string | undefined): string | undefined {
+  if (
+    !icon ||
+    icon.length > 200 ||
+    icon.includes('..') ||
+    !/^[A-Za-z0-9][A-Za-z0-9 ._()+@'-]*\.(?:svg|png|webp)$/i.test(icon)
+  ) {
+    return undefined;
+  }
+  return `${ICON_BASE_URL}${encodeURIComponent(icon)}`;
+}
+
+function groupTechnology(
+  findings: SiteTechnologyFinding[],
+): Array<[string, SiteTechnologyFinding[]]> {
+  const groups = new Map<string, SiteTechnologyFinding[]>();
+  for (const finding of findings) {
+    const category = finding.categories?.[0]
+      ?? categoryLabel(finding.category);
+    groups.set(category, [...(groups.get(category) ?? []), finding]);
+  }
+  return [...groups.entries()].sort(([left], [right]) =>
+    left.localeCompare(right)
+  );
+}
+
+function categoryLabel(category: SiteTechnologyFinding['category']): string {
   return {
-    'observed-in-use': 'Observed in use',
+    framework: 'Frameworks',
+    renderer: 'Rendering',
+    bundler: 'Build tools',
+    animation: 'Animation',
+    media: 'Media',
+    service: 'Services',
+  }[category];
+}
+
+function technologyStateLabel(
+  state: SiteTechnologyFinding['state'],
+): string {
+  return {
     confirmed: 'Confirmed',
+    'observed-in-use': 'Observed in use',
     loaded: 'Loaded',
     inferred: 'Inferred',
     'not-detected': 'Not detected',
-  }[value];
+  }[state];
 }

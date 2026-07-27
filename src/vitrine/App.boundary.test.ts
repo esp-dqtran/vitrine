@@ -199,7 +199,7 @@ test('opens App detail as the only active transient surface', async () => {
   assert.match(closeHelper, /setCollectionsOpen\(false\)/);
   assert.match(closeHelper, /setSettingsOpen\(false\)/);
   assert.match(closeHelper, /setLoginOpen\(false\)/);
-  assert.match(closeHelper, /setImportOpen\(false\)/);
+  assert.doesNotMatch(closeHelper, /setImportOpen/);
   assert.match(closeHelper, /setAdvancedPreview\(null\)/);
   assert.match(closeHelper, /searchSession\.close\(\)/);
   assert.ok(

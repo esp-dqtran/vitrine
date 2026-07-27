@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Job } from './types';
-import type { Platform } from '../platformFromUrl';
-import { submitImportJob } from './jobsApi';
 
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -24,16 +22,11 @@ export function useJobs() {
     return () => window.clearInterval(id);
   }, [jobs, refresh]);
 
-  const submitImport = async (name: string, url: string, platform: Platform) => {
-    await submitImportJob(name, url, platform);
-    await refresh();
-  };
-
   const cancelJob = async (id: number) => {
     const response = await fetch(`/api/jobs/${id}/cancel`, { method: 'POST' });
     if (!response.ok) throw new Error(`Cancel returned ${response.status}`);
     await refresh();
   };
 
-  return { jobs, error, refresh, submitImport, cancelJob };
+  return { jobs, error, refresh, cancelJob };
 }

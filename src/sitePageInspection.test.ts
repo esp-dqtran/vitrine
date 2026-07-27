@@ -58,6 +58,43 @@ test("builds evidence-backed motion and technology findings", () => {
   );
 });
 
+test("bounds rich page structure to the persisted analysis limit", () => {
+  const desktop = fixtureInspection("desktop");
+  desktop.structure = Array.from({ length: 650 }, (_, index) => ({
+    id: `STRUCTURE-${index}`,
+    key: `main > div:nth-of-type(${index + 1})`,
+    tag: "div",
+    visible: true,
+    order: index,
+  }));
+  desktop.visualTokens = desktop.structure.map((item, index) => ({
+    id: `VISUAL-${index}`,
+    structureId: item.id,
+    color: "rgb(0, 0, 0)",
+  }));
+  desktop.animationSamples.push({
+    targetId: "STRUCTURE-649",
+    key: "main > div:nth-of-type(650)",
+    scrollChanged: true,
+    timeChanged: false,
+    sticky: false,
+    threeDimensional: false,
+    properties: ["transform"],
+    states: [{ transform: "none" }, { transform: "matrix(1,0,0,1,10,0)" }],
+  });
+
+  const analysis = buildSiteAnalysis(desktop);
+
+  assert.equal(analysis.structure.length, 500);
+  assert.equal(analysis.visualTokens.length, 500);
+  assert.equal(analysis.structure.at(-1)?.id, "STRUCTURE-499");
+  assert.equal(analysis.visualTokens.at(-1)?.id, "VISUAL-499");
+  assert.equal(
+    analysis.motion.some((finding) => finding.targetEvidenceId === "STRUCTURE-649"),
+    false,
+  );
+});
+
 function fixtureInspection(
   viewport: "desktop" | "mobile",
 ): SiteViewportInspection {

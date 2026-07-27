@@ -14,6 +14,12 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
   assert.match(source, /\{canUseAdvancedSearch && advancedPreview \?/);
 });
 
+test('does not fetch the full category catalog for Apps discovery', async () => {
+  const source = await readFile(new URL('./useApps.ts', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /fetchCatalogCategories|\/api\/catalog\/categories/);
+});
+
 test('keeps Landing implementation outside the public Apps change', async () => {
   const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
 

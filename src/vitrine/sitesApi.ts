@@ -1,28 +1,10 @@
 import type {
-  SiteImportResult,
   SiteSectionView,
   SiteSummary,
   SiteVersionDetail,
   SiteVersionPage,
 } from './types.ts';
 import { parseSiteAnalysis } from '../siteAnalysis.ts';
-
-export async function submitSiteImport(url: string): Promise<SiteImportResult> {
-  const response = await fetch('/api/jobs', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'import-site', url }),
-  });
-  const body = await responseBody(response);
-  if (!response.ok) throw new Error(errorMessage(body, `Site import returned ${response.status}`));
-  if (response.status === 200 && isRecord(body) && body.existing === true && positiveId(body.siteId) && positiveId(body.versionId)) {
-    return { existing: true, siteId: body.siteId, versionId: body.versionId };
-  }
-  if (response.status === 201 && isRecord(body) && positiveId(body.id)) {
-    return { existing: false, id: body.id };
-  }
-  throw new Error('Site import returned an invalid response');
-}
 
 export async function listSites(): Promise<SiteSummary[]> {
   const response = await fetch('/api/sites');

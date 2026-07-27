@@ -93,6 +93,9 @@ test('renders Vitrine primary actions as white buttons with black content', asyn
 
 test('copies the Apps ordering strip style onto App detail tabs only', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const navigationRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__navigation\s*\{[^}]+\}/,
+  )?.[0] ?? '';
   const tabsRule = styles.match(
     /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs\s*\{[^}]+\}/,
   )?.[0] ?? '';
@@ -106,20 +109,25 @@ test('copies the Apps ordering strip style onto App detail tabs only', async () 
     /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tab-indicator\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
+  assert.match(navigationRule, /min-height:\s*56px/);
+  assert.match(navigationRule, /border-top:\s*1px solid var\(--color-border-subtle\)/);
+
   assert.match(tabsRule, /align-self:\s*stretch/);
   assert.match(tabsRule, /gap:\s*25px/);
   assert.match(tabsRule, /overflow-x:\s*auto/);
+  assert.match(tabsRule, /scroll-snap-type:\s*inline proximity/);
 
   assert.match(tabRule, /min-width:\s*max-content/);
-  assert.match(tabRule, /height:\s*64px/);
+  assert.match(tabRule, /height:\s*56px/);
   assert.match(tabRule, /color:\s*var\(--color-text-secondary\)/);
   assert.match(tabRule, /font-size:\s*14px/);
+  assert.match(tabRule, /scroll-snap-align:\s*start/);
   assert.match(tabRule, /transition:\s*color 180ms ease/);
 
   assert.match(activeRule, /background:\s*transparent/);
   assert.match(activeRule, /color:\s*var\(--color-text-primary\)/);
 
-  assert.match(indicatorRule, /bottom:\s*13px/);
+  assert.match(indicatorRule, /bottom:\s*0/);
   assert.match(indicatorRule, /height:\s*2px/);
   assert.match(indicatorRule, /border-radius:\s*999px/);
 

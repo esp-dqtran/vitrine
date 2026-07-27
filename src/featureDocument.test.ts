@@ -80,9 +80,13 @@ function stepAnalysisFixture() {
   };
 }
 
-test("accepts a complete document and renders its evidence appendix", () => {
+test("renders a concise Document Flow without repeating technical analysis", () => {
+  const fixture = completeDocumentFixture();
+  fixture.openQuestions.push(
+    claim("question-duplicate", "Recovery state is not shown", "unknown", []),
+  );
   const content = parseFeatureDocumentContent(
-    completeDocumentFixture(),
+    fixture,
     new Set(["FLOW-STEP-01", "IMAGE-42"]),
   );
   const markdown = renderFeatureDocumentMarkdown("Checkout recovery", content, {
@@ -95,10 +99,32 @@ test("accepts a complete document and renders its evidence appendix", () => {
   });
 
   assert.equal(content.requirements[0].kind, "proposed");
-  assert.match(markdown, /## Acceptance criteria/);
+  assert.match(markdown, /## Summary/);
+  assert.match(markdown, /## Observed steps/);
+  assert.match(markdown, /1\. Review cart \[FLOW-STEP-01, IMAGE-42\]/);
+  assert.match(markdown, /## Behavior requirements/);
+  assert.match(markdown, /\*\*Behavior:\*\* The system preserves checkout progress/);
+  assert.match(markdown, /\*\*Status:\*\* Proposed/);
+  assert.match(markdown, /\*\*Evidence:\*\* IMAGE-42/);
+  assert.match(markdown, /#### Scenario criterion-1/);
+  assert.match(markdown, /\*\*Given\*\* a shopper has entered checkout/);
+  assert.match(markdown, /\*\*When\*\* the session is interrupted/);
+  assert.match(markdown, /\*\*Then\*\* the shopper can resume the saved checkout/);
+  assert.match(markdown, /## Missing evidence/);
   assert.match(markdown, /FLOW-STEP-01/);
   assert.match(markdown, /IMAGE-42/);
-  assert.match(markdown, /Step 1 \(Cart\), image 1 \(image ID 42\)/);
+  assert.equal((markdown.match(/Recovery state is not shown/g) ?? []).length, 1);
+  for (const repeatedSection of [
+    "Executive summary",
+    "Flow analysis",
+    "Proposed feature",
+    "Acceptance criteria",
+    "User story",
+    "Preconditions",
+    "Evidence appendix",
+  ]) {
+    assert.doesNotMatch(markdown, new RegExp(repeatedSection, "i"));
+  }
 });
 
 test("rejects an observed claim without evidence", () => {

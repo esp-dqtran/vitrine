@@ -65,8 +65,31 @@ VALUES
 
 INSERT INTO app_flows (app_id, flows, updated_at)
 VALUES
-  (101, '[{"id":"fixture-flow","title":"Fixture flow","steps":[]}]',
-   '2025-01-09T00:00:00Z');
+  (101, '[
+    {
+      "id":"settings-password",
+      "title":"Changing password",
+      "category":"Settings",
+      "description":"Change the account password",
+      "tags":["account"],
+      "steps":[{"label":"Save","evidence":[301]}]
+    },
+    {
+      "id":"search",
+      "title":"  Searching   products ",
+      "description":"Search without a category",
+      "tags":["search"],
+      "steps":[]
+    },
+    {
+      "id":"self-settings",
+      "title":"Settings",
+      "category":" settings ",
+      "description":"Self-named root",
+      "tags":[],
+      "steps":[]
+    }
+  ]', '2025-01-09T00:00:00Z');
 
 INSERT INTO app_versions
   (id, app_id, version_number, label, source_url, status, notes, captured_at,
@@ -92,8 +115,35 @@ VALUES
 
 INSERT INTO app_flow_versions (version_id, flows, created_at)
 VALUES
-  (501, '[{"id":"fixture-flow","version":1}]', '2025-01-03T00:00:00Z'),
-  (502, '[{"id":"fixture-flow","version":2}]', '2025-01-04T00:00:00Z');
+  (501, '[
+    {
+      "id":"settings-password",
+      "title":"Changing password",
+      "category":"settings",
+      "description":"Published password flow",
+      "tags":["account"],
+      "steps":[{"label":"Save","evidence":[301]}]
+    }
+  ]', '2025-01-03T00:00:00Z'),
+  (502, '[
+    {
+      "id":"settings-password",
+      "title":"Changing password",
+      "category":"Settings",
+      "description":"Draft password flow",
+      "tags":["account","draft"],
+      "steps":[{"label":"Save","evidence":[302]}],
+      "provenance":{"source":"fixture"},
+      "insights":{"purpose":"fixture"}
+    },
+    {
+      "id":"search",
+      "title":"Searching products",
+      "description":"Draft search flow",
+      "tags":["search"],
+      "steps":[]
+    }
+  ]', '2025-01-04T00:00:00Z');
 
 INSERT INTO review_issues
   (id, version_id, entity_kind, entity_id, severity, message, resolved, created_at, resolved_at)

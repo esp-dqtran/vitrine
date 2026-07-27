@@ -74,6 +74,6 @@ test('shows capture counts and curator review actions without exposing draft as 
   assert.match(html, /Submit for review/);
   assert.doesNotMatch(html, />Publish<\/button>/);
   assert.match(html, /Published/);
-  assert.match(html, /Start recapture/);
+  assert.doesNotMatch(html, /Start recapture|Mobbin web screens URL|Create draft/);
   assert.doesNotMatch(html, /color:var\(--color-text-disabled\)/);
 });

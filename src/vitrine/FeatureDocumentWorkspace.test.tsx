@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { DesignFlow, EvidenceView } from '../designSystem.ts';
 import type {
   FeatureDocumentContent,
   FeatureDocumentRevisionView,
@@ -53,6 +54,20 @@ const featureDocument: FeatureDocumentView = {
   shares: [],
 };
 
+const flow = {
+  id: 'checkout',
+  title: 'Checkout',
+  category: 'Payments',
+  description: '',
+  tags: [],
+  steps: [
+    {
+      label: 'Cart',
+      evidence: [{ imageId: 42, imageUrl: '/api/media/42', description: 'Cart review' }],
+    },
+  ],
+} satisfies DesignFlow<EvidenceView>;
+
 test('renders all structured sections without collapsing into Markdown', () => {
   const html = renderToStaticMarkup(<FeatureDocumentEditor content={content} onChange={() => {}} onEvidence={() => {}} />);
   for (const section of ['Executive summary', 'Observed flow', 'Flow analysis', 'Proposed feature', 'Requirements', 'Edge cases', 'Success metrics', 'Guardrail metrics', 'Analytics events', 'Dependencies', 'Open questions']) {
@@ -85,15 +100,17 @@ test('initial generation exposes durable progress and cancellation before a revi
   assert.doesNotMatch(html, /Loading Feature Document/);
 });
 
-test('Document Flow renders saved Markdown without exposing the editor', () => {
+test('Document Flow renders structured requirements without exposing the editor', () => {
   const html = renderToStaticMarkup(
     <DocumentFlowPanelView
+      flow={flow}
       state={{ kind: 'ready', document: featureDocument, revision }}
-      markdown={{ kind: 'ready', content: '# Checkout brief\n\n**Ready for handoff.**' }}
       userRole="admin"
+      onOpenVisualStep={() => {}}
     />,
   );
-  assert.match(html, /<h1>Checkout brief<\/h1>/);
-  assert.match(html, /<strong>Ready for handoff.<\/strong>/);
+  assert.match(html, /Preserve progress/);
+  assert.match(html, /GIVEN/);
+  assert.match(html, /Open evidence IMAGE-42 in Visual Flow/);
   assert.doesNotMatch(html, /Overview|Edit Document Flow|Revision history|Evidence inspector|Save new revision/);
 });

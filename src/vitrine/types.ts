@@ -154,10 +154,6 @@ export interface SiteVersionDetail {
   pages: SiteVersionPage[];
 }
 
-export type SiteImportResult =
-  | { existing: true; siteId: number; versionId: number }
-  | { existing: false; id: number };
-
 export type RowStatus = 'Queued' | 'In progress' | 'Complete' | 'Needs attention' | 'Cancelled';
 
 export interface ElementItem {

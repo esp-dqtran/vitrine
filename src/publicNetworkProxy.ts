@@ -1,5 +1,10 @@
 import { lookup } from "node:dns/promises";
-import { createServer, request as requestHttp, type Server } from "node:http";
+import {
+  createServer,
+  request as requestHttp,
+  type IncomingHttpHeaders,
+  type Server,
+} from "node:http";
 import { request as requestHttps } from "node:https";
 import { connect, type Socket } from "node:net";
 import { canonicalPublicPageUrl, PublicPageValidationError } from "./publicPage.ts";
@@ -15,6 +20,24 @@ export interface PinnedPublicTarget {
 type AddressResolver = (
   hostname: string,
 ) => Promise<Array<{ address: string; family: number }>>;
+
+export function forwardProxyHeaders(
+  headers: IncomingHttpHeaders,
+  host: string,
+): IncomingHttpHeaders {
+  const forwarded: IncomingHttpHeaders = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (
+      value !== undefined &&
+      name !== "proxy-authorization" &&
+      name !== "proxy-connection"
+    ) {
+      forwarded[name] = value;
+    }
+  }
+  forwarded.host = host;
+  return forwarded;
+}
 
 export async function resolvePinnedPublicTarget(
   value: string,
@@ -137,12 +160,7 @@ export async function createPinnedPublicProxy(): Promise<PinnedPublicProxy> {
         port: target.port,
         method: incoming.method,
         path: `${parsed.pathname}${parsed.search}`,
-        headers: {
-          ...incoming.headers,
-          host: parsed.host,
-          "proxy-authorization": undefined,
-          "proxy-connection": undefined,
-        },
+        headers: forwardProxyHeaders(incoming.headers, parsed.host),
       }, (response) => {
         outgoing.writeHead(response.statusCode ?? 502, response.headers);
         response.pipe(outgoing);
@@ -210,8 +228,9 @@ function listen(server: Server): Promise<void> {
   });
 }
 
-function trackSocket(socket: Socket, sockets: Set<Socket>): void {
+export function trackSocket(socket: Socket, sockets: Set<Socket>): void {
   sockets.add(socket);
+  socket.on("error", () => socket.destroy());
   socket.once("close", () => sockets.delete(socket));
 }
 

@@ -34,7 +34,7 @@ export function SelectedFlowWorkspace(props: SelectedFlowWorkspaceProps) {
         {(['visual', 'document'] as const).map((candidate) => (
           <Button
             key={candidate}
-            label={candidate === 'visual' ? 'Screens' : 'Document Flow'}
+            label={candidate === 'visual' ? 'Visual Flow' : 'Document Flow'}
             variant="ghost"
             role="tab"
             aria-selected={view === candidate}

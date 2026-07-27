@@ -1,0 +1,354 @@
+[
+  {
+    "platform": "web",
+    "flowId": "mobbin-flow-65948d00-c5b3-4278-9a7c-4312df7a507d",
+    "requirements": [
+      {
+        "id": "REQ-01",
+        "kind": "observed",
+        "text": "The system shall allow a user to select an existing trend line and open its configuration dialog from the chart editing controls.",
+        "evidenceIds": [
+          "S01",
+          "S02"
+        ],
+        "userStory": "As a chart user, I want to open settings for a selected trend line so that I can modify the existing annotation.",
+        "priority": "high",
+        "preconditions": [
+          "An existing trend line is visible on the trading chart."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-01-01",
+            "given": "An existing trend line is visible on the chart",
+            "when": "The user selects the trend line",
+            "then": "The trend line is highlighted with anchor handles and a contextual editing toolbar is displayed.",
+            "evidenceIds": [
+              "S01"
+            ]
+          },
+          {
+            "id": "AC-01-02",
+            "given": "The trend line is selected and its contextual toolbar is visible",
+            "when": "The user opens the trend line settings",
+            "then": "A Trend Line dialog is displayed with the Style tab active and controls for Template, Cancel, and OK.",
+            "evidenceIds": [
+              "S02"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "REQ-02",
+        "kind": "observed",
+        "text": "The system shall allow the user to configure the selected trend line's endpoint style, left and right extensions, and middle-point visibility, and apply those edits to the chart.",
+        "evidenceIds": [
+          "S02",
+          "S03",
+          "S04",
+          "S05"
+        ],
+        "userStory": "As a chart user, I want to adjust a trend line's style and geometry so that the annotation better supports my technical analysis.",
+        "priority": "high",
+        "preconditions": [
+          "An existing trend line is selected.",
+          "The Trend Line settings dialog is open on the Style tab."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-02-01",
+            "given": "The Trend Line dialog is open on the Style tab",
+            "when": "The user opens an endpoint-style selector",
+            "then": "A menu displays Normal and Arrow endpoint-style options.",
+            "evidenceIds": [
+              "S03"
+            ]
+          },
+          {
+            "id": "AC-02-02",
+            "given": "The Trend Line dialog is open on the Style tab",
+            "when": "The user enables Extend left line, Extend right line, and Middle point",
+            "then": "All three options are displayed as checked simultaneously.",
+            "evidenceIds": [
+              "S04"
+            ]
+          },
+          {
+            "id": "AC-02-03",
+            "given": "Both extension options and the middle-point option are enabled",
+            "when": "The user confirms the settings using OK",
+            "then": "The dialog closes and the selected trend line is rendered beyond its original anchors with a visible middle point.",
+            "evidenceIds": [
+              "S04",
+              "S05"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "platform": "ios",
+    "flowId": "mobbin-flow-fe012f64-34f5-4fda-a0e1-572cb59d5774",
+    "requirements": [
+      {
+        "id": "REQ-01",
+        "kind": "functional",
+        "text": "The system shall let the user configure a BRC-20 mint using a ticker, mint amount, and repeat-mint quantity, and shall enable progression when the entered configuration is accepted.",
+        "evidenceIds": [
+          "S01",
+          "S02"
+        ],
+        "userStory": "As a Web3 Wallet user, I want to configure a BRC-20 mint so that I can prepare the inscription transaction I intend to submit.",
+        "priority": "high",
+        "preconditions": [
+          "The user is in the Inscription Center.",
+          "The BRC-20 Mint tab is selected."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-01-01",
+            "given": "The BRC-20 mint form is open with empty ticker and amount fields",
+            "when": "The user has not completed the visible mint configuration",
+            "then": "The form displays ticker, amount, and repeat-mint inputs, and the Next action is disabled.",
+            "evidenceIds": [
+              "S01"
+            ]
+          },
+          {
+            "id": "AC-01-02",
+            "given": "The BRC-20 mint form is open",
+            "when": "The user enters ticker DOGE, amount 4200, and repeat mint 1",
+            "then": "The form displays DOGE, 4200, repeat mint 1, Minted: 1.88%, and an enabled Next action.",
+            "evidenceIds": [
+              "S02"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "REQ-02",
+        "kind": "functional",
+        "text": "The system shall present a confirmation summary for the configured BRC-20 mint before submission.",
+        "evidenceIds": [
+          "S02",
+          "S03"
+        ],
+        "userStory": "As a Web3 Wallet user, I want to review the configured mint details so that I can verify the transaction before confirming it.",
+        "priority": "high",
+        "preconditions": [
+          "The mint form shows ticker DOGE, amount 4200, and repeat mint 1.",
+          "The Next action is enabled."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-02-01",
+            "given": "The configured mint has ticker DOGE, amount 4200, and repeat mint 1",
+            "when": "The user selects Next",
+            "then": "A Web3 Wallet Confirm Mint sheet is displayed.",
+            "evidenceIds": [
+              "S02",
+              "S03"
+            ]
+          },
+          {
+            "id": "AC-02-02",
+            "given": "The Confirm Mint sheet is displayed",
+            "when": "The user reviews the transaction summary",
+            "then": "The sheet displays ticker DOGE, protocol BRC-20, amount 4,200, repeat mint 1, and UTXO value 330 sats multiplied by 1.",
+            "evidenceIds": [
+              "S03"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "REQ-03",
+        "kind": "functional",
+        "text": "The system shall prevent mint confirmation when the wallet lacks sufficient Bitcoin balance or a suitable UTXO and shall expose the available recovery and exit actions shown in the blocked state.",
+        "evidenceIds": [
+          "S03"
+        ],
+        "userStory": "As a Web3 Wallet user, I want blocking wallet conditions to be shown before submission so that I do not attempt a mint that cannot currently be funded.",
+        "priority": "high",
+        "preconditions": [
+          "The Confirm Mint sheet is open.",
+          "The connected wallet has 0 Bitcoin available and no suitable UTXO can be selected."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-03-01",
+            "given": "The connected wallet has insufficient Bitcoin balance",
+            "when": "The Confirm Mint sheet evaluates the wallet funding state",
+            "then": "The sheet displays an insufficient-balance message, shows 0 Bitcoin available, and provides a Deposit action.",
+            "evidenceIds": [
+              "S03"
+            ]
+          },
+          {
+            "id": "AC-03-02",
+            "given": "A suitable UTXO cannot be selected",
+            "when": "The Confirm Mint sheet evaluates the transaction inputs",
+            "then": "The sheet reports that a proper UTXO cannot be selected and suggests waiting for a network transaction to complete.",
+            "evidenceIds": [
+              "S03"
+            ]
+          },
+          {
+            "id": "AC-03-03",
+            "given": "The confirmation sheet shows the insufficient-balance and unavailable-UTXO conditions",
+            "when": "The user views the available transaction actions",
+            "then": "Confirm is disabled and Cancel remains available.",
+            "evidenceIds": [
+              "S03"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "platform": "android",
+    "flowId": "mobbin-flow-da8c3cf2-117f-4bf4-9e90-73598da13ca3",
+    "requirements": [
+      {
+        "id": "REQ-01",
+        "kind": "observed",
+        "text": "The system shall allow users to select multiple recommended creators and follow the selected set through a count-aware primary action.",
+        "evidenceIds": [
+          "S01"
+        ],
+        "userStory": "As a Feed user, I want to select and follow multiple recommended creators so that I can quickly personalize my Following feed.",
+        "priority": "high",
+        "preconditions": [
+          "The user is viewing the creator-selection experience within the Following tab.",
+          "Recommended creator cards are available for selection."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-01-01",
+            "given": "The creator-selection experience is displayed",
+            "when": "The user selects creator cards",
+            "then": "Each selected creator card displays a visible check indicator.",
+            "evidenceIds": [
+              "S01"
+            ]
+          },
+          {
+            "id": "AC-01-02",
+            "given": "One or more creator cards are selected",
+            "when": "The selection count changes",
+            "then": "The primary Follow CTA displays the current number of selected creators.",
+            "evidenceIds": [
+              "S01"
+            ]
+          },
+          {
+            "id": "AC-01-03",
+            "given": "Ten creator cards are selected",
+            "when": "The selection state is displayed",
+            "then": "The primary CTA is visibly labeled “Follow (10).”",
+            "evidenceIds": [
+              "S01"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "REQ-02",
+        "kind": "observed",
+        "text": "The system shall provide a dedicated Following feed containing shortcuts to followed creators and posts from followed accounts.",
+        "evidenceIds": [
+          "S02"
+        ],
+        "userStory": "As a user who follows creators, I want a dedicated feed for their content so that I can browse posts from accounts I follow.",
+        "priority": "high",
+        "preconditions": [
+          "The user has followed at least one creator.",
+          "The user is viewing the Feed destination with the Following tab active."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-02-01",
+            "given": "The user is viewing the Following feed",
+            "when": "The feed is displayed",
+            "then": "A horizontal row of followed-creator avatars is visible.",
+            "evidenceIds": [
+              "S02"
+            ]
+          },
+          {
+            "id": "AC-02-02",
+            "given": "The user follows creators who have available content",
+            "when": "The Following feed is displayed",
+            "then": "A post from a followed creator is visible beneath the creator row.",
+            "evidenceIds": [
+              "S02"
+            ]
+          },
+          {
+            "id": "AC-02-03",
+            "given": "The Following feed is open",
+            "when": "The user views the bottom navigation",
+            "then": "The Feed destination remains visibly selected.",
+            "evidenceIds": [
+              "S02"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "REQ-03",
+        "kind": "observed",
+        "text": "The system shall provide a creator-management view where users can switch between currently followed creators and suggested creators, with relationship-specific actions shown for each account.",
+        "evidenceIds": [
+          "S03",
+          "S04"
+        ],
+        "userStory": "As a user, I want to review followed creators and browse suggested creators in one place so that I can manage and expand the accounts I follow.",
+        "priority": "high",
+        "preconditions": [
+          "The user has opened the dedicated creator-management screen."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC-03-01",
+            "given": "The creator-management screen is open",
+            "when": "The Following tab is selected",
+            "then": "The screen displays the current followed-creator list with a gray “Following” button for each visible account.",
+            "evidenceIds": [
+              "S03"
+            ]
+          },
+          {
+            "id": "AC-03-02",
+            "given": "The creator-management screen is open",
+            "when": "The user selects the Suggested Creators tab",
+            "then": "The followed-creator list is replaced by suggested creator accounts.",
+            "evidenceIds": [
+              "S04"
+            ]
+          },
+          {
+            "id": "AC-03-03",
+            "given": "The Suggested Creators tab is selected",
+            "when": "Suggested accounts are displayed",
+            "then": "Each visible suggested account has a yellow “Follow” action.",
+            "evidenceIds": [
+              "S04"
+            ]
+          },
+          {
+            "id": "AC-03-04",
+            "given": "The creator-management screen is displayed",
+            "when": "The user views its navigation controls",
+            "then": "Both “Following” and “Suggested Creators” tabs are visible.",
+            "evidenceIds": [
+              "S03",
+              "S04"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

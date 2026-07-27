@@ -33,8 +33,11 @@ import {
 const VIEWPORT = { width: 1440 as const, height: 900 as const };
 const MOBILE_VIEWPORT = { width: 390 as const, height: 844 as const };
 const PREVIEW_FRAMES_PER_SECOND = 60;
-const MAXIMUM_CAPTURE_HEIGHT = 30_000;
+const MAXIMUM_CAPTURE_HEIGHT = 100_000;
 const MAXIMUM_CAPTURE_BYTES = 64 * 1_024 * 1_024;
+const MAXIMUM_HTML_BYTES = 2 * 1_024 * 1_024;
+const CONSENT_ACTION_NAME =
+  /^(?:accept(?: all)?(?: cookies)?|allow(?: all)?(?: cookies)?|agree(?: and continue)?|okay|ok|got it)$/i;
 
 export interface PublicPageBrowserOptions {
   headless?: boolean;
@@ -119,7 +122,9 @@ async function capturePublicPage(
     await options.validateNavigation(finalUrl);
     await lockMainFrameNavigation(page);
     await settlePage(page);
+    await dismissRecognizedConsent(page);
     await primeLazyContent(page);
+    await dismissRecognizedConsent(page);
     assertPageUrl(page, finalUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
@@ -131,17 +136,12 @@ async function capturePublicPage(
     );
     const raw = await analyzeRenderedPage(page, requestedUrl, finalUrl);
     const capture = parsePublicPageCapture(raw);
-    const freeze = await page.addStyleTag({
-      content: `*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`,
-    });
-    const pageImage = Buffer.from(await page.screenshot({
-      clip: publicPageCaptureClip(capture.document, VIEWPORT),
-      type: "png",
-      animations: "disabled",
-    }));
+    const pageImage = await captureStablePagePng(
+      page,
+      publicPageCaptureClip(capture.document, VIEWPORT),
+    );
     assertCaptureBytes(pageImage);
     const sectionImages = await cropSections(pageImage, capture.sections);
-    await freeze.evaluate((node) => node.parentNode?.removeChild(node));
 
     const recording = await recordContinuousScroll(page, {
       pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
@@ -255,7 +255,9 @@ async function captureMobileEvidence(
     await validateNavigation(finalUrl);
     await lockMainFrameNavigation(page);
     await settlePage(page);
+    await dismissRecognizedConsent(page);
     await primeLazyContent(page);
+    await dismissRecognizedConsent(page);
     assertPageUrl(page, requestedUrl);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
@@ -268,16 +270,132 @@ async function captureMobileEvidence(
       width: document.documentElement.scrollWidth,
       height: document.documentElement.scrollHeight,
     }));
-    const image = Buffer.from(await page.screenshot({
-      clip: publicPageCaptureClip(dimensions, MOBILE_VIEWPORT),
-      type: "png",
-      animations: "disabled",
-    }));
+    const image = await captureStablePagePng(
+      page,
+      publicPageCaptureClip(dimensions, MOBILE_VIEWPORT),
+    );
     assertCaptureBytes(image);
     return { inspection, image };
   } finally {
     await context.close();
   }
+}
+
+async function captureStablePagePng(
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number },
+): Promise<Buffer> {
+  const viewport = page.viewportSize();
+  const needsViewportStitching = Boolean(
+    viewport && clip.height > viewport.height,
+  );
+  const freeze = await page.addStyleTag({
+    content: needsViewportStitching
+      ? `html{scroll-snap-type:none!important}*,*::before,*::after{transition-duration:0s!important;scroll-behavior:auto!important;scroll-snap-align:none!important}`
+      : `*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`,
+  });
+  try {
+    if (viewport && needsViewportStitching) {
+      return await captureScrolledPagePng(page, clip, viewport);
+    }
+    const session = await page.context().newCDPSession(page);
+    try {
+      const screenshot = await session.send("Page.captureScreenshot", {
+        format: "png",
+        fromSurface: true,
+        captureBeyondViewport: true,
+        clip: { ...clip, scale: 1 },
+      });
+      return Buffer.from(screenshot.data, "base64");
+    } finally {
+      await session.detach();
+    }
+  } finally {
+    await freeze.evaluate((node) => node.parentNode?.removeChild(node))
+      .catch(() => undefined);
+  }
+}
+
+async function captureScrolledPagePng(
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number },
+  viewport: { width: number; height: number },
+): Promise<Buffer> {
+  const tiles: Array<{ input: Buffer; top: number; left: 0 }> = [];
+  const clipBottom = clip.y + clip.height;
+  const maximumScrollTop = Math.max(0, clipBottom - viewport.height);
+  const topOverlayHeight = await page.evaluate(({ width, height }) => {
+    let bottom = 0;
+    for (const element of document.querySelectorAll("*")) {
+      const style = getComputedStyle(element);
+      if (style.position !== "fixed" && style.position !== "sticky") continue;
+      if (style.display === "none" || style.visibility === "hidden") continue;
+      const rect = element.getBoundingClientRect();
+      if (
+        rect.top > 1 ||
+        rect.bottom <= 0 ||
+        rect.width < width * 0.5 ||
+        rect.height > height * 0.25
+      ) {
+        continue;
+      }
+      bottom = Math.max(bottom, Math.ceil(rect.bottom));
+    }
+    return Math.min(Math.round(height * 0.25), bottom);
+  }, viewport);
+  let cursor = clip.y;
+  while (cursor < clipBottom) {
+    const requestedTop = Math.min(
+      maximumScrollTop,
+      cursor === clip.y
+        ? cursor
+        : Math.max(clip.y, cursor - topOverlayHeight),
+    );
+    const actualTop = await page.evaluate(async (top) => {
+      window.scrollTo(0, top);
+      await new Promise<void>((resolve) => requestAnimationFrame(() =>
+        requestAnimationFrame(() => resolve())
+      ));
+      return Math.round(window.scrollY);
+    }, requestedTop);
+    await page.waitForTimeout(100);
+    const screenTop = Math.max(
+      cursor === clip.y ? 0 : topOverlayHeight,
+      cursor - actualTop,
+    );
+    const height = Math.min(
+      viewport.height - screenTop,
+      clipBottom - cursor,
+    );
+    if (height < 1) {
+      throw new PublicPageValidationError(
+        "Public page viewport stitching did not advance",
+      );
+    }
+    const screenshot = Buffer.from(await page.screenshot({ type: "png" }));
+    const input = await sharp(screenshot)
+      .extract({
+        left: clip.x,
+        top: screenTop,
+        width: clip.width,
+        height,
+      })
+      .png()
+      .toBuffer();
+    tiles.push({ input, top: cursor - clip.y, left: 0 });
+    cursor += height;
+  }
+  return sharp({
+    create: {
+      width: clip.width,
+      height: clip.height,
+      channels: 4,
+      background: "#ffffff",
+    },
+  })
+    .composite(tiles)
+    .png()
+    .toBuffer();
 }
 
 async function settlePage(page: Page): Promise<void> {
@@ -294,6 +412,51 @@ async function settlePage(page: Page): Promise<void> {
       }));
     await Promise.all(pending);
   });
+}
+
+async function dismissRecognizedConsent(page: Page): Promise<void> {
+  for (const frame of page.frames()) {
+    const actions = frame.getByRole("button", { name: CONSENT_ACTION_NAME });
+    const count = Math.min(await actions.count().catch(() => 0), 20);
+    for (let index = 0; index < count; index += 1) {
+      const action = actions.nth(index);
+      if (!await action.isVisible().catch(() => false)) continue;
+      const belongsToConsentOverlay = await action.evaluate((element) => {
+        const consentCopy = /(?:cookie|privacy|consent|tracking)/i;
+        const overlayIdentity = /(?:cookie|privacy|consent)/i;
+        let node: Element | null = element;
+        let context = "";
+        let overlay = false;
+        for (let depth = 0; node && depth < 8; depth += 1) {
+          context += ` ${node.textContent ?? ""}`;
+          const role = node.getAttribute("role") ?? "";
+          const identity = [
+            node.id,
+            node.getAttribute("class") ?? "",
+            node.getAttribute("aria-label") ?? "",
+          ].join(" ");
+          const position = getComputedStyle(node).position;
+          if (
+            position === "fixed"
+            || position === "sticky"
+            || role === "dialog"
+            || role === "alertdialog"
+            || overlayIdentity.test(identity)
+          ) {
+            overlay = true;
+          }
+          const root = node.getRootNode();
+          node = node.parentElement
+            ?? (root instanceof ShadowRoot ? root.host : null);
+        }
+        return overlay && consentCopy.test(context);
+      }).catch(() => false);
+      if (!belongsToConsentOverlay) continue;
+      await action.click({ timeout: 1_000 }).catch(() => undefined);
+      await page.waitForTimeout(100);
+      return;
+    }
+  }
 }
 
 async function primeLazyContent(page: Page): Promise<void> {
@@ -313,11 +476,33 @@ async function analyzeRenderedPage(
   requestedUrl: string,
   finalUrl: string,
 ): Promise<unknown> {
-  return page.evaluate(({ requested, canonical, viewport, maximumHeight }) => {
+  return page.evaluate(({
+    requested,
+    canonical,
+    viewport,
+    maximumHeight,
+    maximumHtmlBytes,
+  }) => {
     type AnyRecord = Record<string, unknown>;
     const [clean] = [(value: unknown, maximum: number) => typeof value === "string"
       ? value.replace(/\s+/g, " ").trim().slice(0, maximum)
       : ""] as const;
+    const [headingLabel] = [(value: string): string => {
+      const words = value.split(" ").filter(Boolean);
+      if (words.length < 6) return value;
+      for (let size = 3; size <= Math.floor(words.length / 2); size += 1) {
+        if (words.length % size !== 0) continue;
+        let repeated = true;
+        for (let index = size; index < words.length; index += 1) {
+          if (words[index] !== words[index % size]) {
+            repeated = false;
+            break;
+          }
+        }
+        if (repeated) return words.slice(0, size).join(" ");
+      }
+      return value;
+    }] as const;
     const jsonLd: AnyRecord[] = [];
     for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
       try {
@@ -370,19 +555,90 @@ async function analyzeRenderedPage(
       const role = element.getAttribute("role");
       return style.position === "fixed" || role === "dialog" || role === "alertdialog";
     }] as const;
-    const roots = [...document.querySelectorAll(
-      "header,main>section,main>article,main>div,body>section,body>article,body>div,footer",
-    )].filter((element) => visible(element) && !overlay(element));
-    const candidates = roots.map((element) => {
+    const documentHeight = Math.min(
+      maximumHeight,
+      Math.max(
+        document.documentElement.scrollHeight,
+        document.body?.scrollHeight ?? 0,
+      ),
+    );
+    const semanticRoots = [...document.querySelectorAll(
+      "nav,header,main>section,main>article,main>div,body>section,body>article,body>div,[role=region],footer",
+    )];
+    const headingRoots: Element[] = [];
+    for (const heading of document.querySelectorAll("h1,h2,h3")) {
+      let current = heading.parentElement;
+      let best: Element | undefined;
+      while (
+        current &&
+        current !== document.body &&
+        current !== document.documentElement &&
+        current.tagName !== "MAIN"
+      ) {
+        const rect = current.getBoundingClientRect();
+        const headingCount = current.querySelectorAll("h1,h2,h3").length;
+        if (
+          visible(current) &&
+          !overlay(current) &&
+          rect.width >= viewport.width * 0.5 &&
+          rect.height >= 120 &&
+          (
+            rect.height < documentHeight * 0.85 ||
+            current.matches("section,article,[role=region]")
+          ) &&
+          headingCount <= 8
+        ) {
+          if (best && headingCount > 1) break;
+          best = current;
+        }
+        if (
+          current.matches("section,article,[role=region]") &&
+          best === current
+        ) {
+          break;
+        }
+        current = current.parentElement;
+      }
+      if (best) headingRoots.push(best);
+    }
+    const rawRoots = [...new Set([...semanticRoots, ...headingRoots])]
+      .filter((element) => visible(element) && !overlay(element));
+    const roots = rawRoots.filter((element) => {
+      const rect = element.getBoundingClientRect();
+      const coversPage = rect.height >= documentHeight * 0.85;
+      const nestedAlternatives = rawRoots.filter((candidate) =>
+        candidate !== element && element.contains(candidate)
+      );
+      const nestedBandStarts = nestedAlternatives
+        .map((candidate) => Math.round(candidate.getBoundingClientRect().top + window.scrollY))
+        .sort((left, right) => left - right)
+        .filter((top, index, values) =>
+          index === 0 || top - values[index - 1]! >= viewport.height * 0.25
+        );
+      const spansNestedBands = nestedBandStarts.length >= 2;
+      return !nestedAlternatives.length ||
+        (!coversPage && !spansNestedBands);
+    });
+    const captureRoots = roots.length > 0
+      ? roots
+      : rawRoots.length > 0
+      ? rawRoots.slice(0, 1)
+      : document.body
+      ? [document.body]
+      : [];
+    const candidates = captureRoots.map((element) => {
       const rect = element.getBoundingClientRect();
       const heading = element.matches("h1,h2,h3")
         ? element
         : element.querySelector("h1,h2,h3");
+      const headingText = heading instanceof HTMLElement
+        ? heading.innerText
+        : heading?.textContent;
       return {
         selector: selectorFor(element),
         tagName: element.tagName.toLowerCase(),
         role: clean(element.getAttribute("role"), 100) || undefined,
-        heading: clean(heading?.textContent, 200) || undefined,
+        heading: headingLabel(clean(headingText, 200)) || undefined,
         text: clean(element.textContent, 1_000),
         bounds: {
           x: Math.max(0, Math.round(rect.left + window.scrollX)),
@@ -391,7 +647,11 @@ async function analyzeRenderedPage(
           height: Math.max(1, Math.round(rect.height)),
         },
       };
-    }).sort((left, right) => left.bounds.y - right.bounds.y || left.bounds.x - right.bounds.x);
+    }).sort((left, right) =>
+      left.bounds.y - right.bounds.y ||
+      right.bounds.height - left.bounds.height ||
+      left.bounds.x - right.bounds.x
+    );
     const sections: typeof candidates = [];
     for (const candidate of candidates) {
       const prior = sections.at(-1);
@@ -404,6 +664,49 @@ async function analyzeRenderedPage(
       }
       if (candidate.bounds.height >= 60) sections.push(candidate);
     }
+    const capturedSections = sections
+      .filter((section) => section.bounds.y < maximumHeight)
+      .slice(0, 200);
+    const pageWidth = Math.min(
+      viewport.width,
+      Math.max(
+        document.documentElement.scrollWidth,
+        document.body?.scrollWidth ?? 0,
+      ),
+    );
+    const bandStarts = capturedSections.map((section, position) => {
+      if (position === 0) return 0;
+      const previous = capturedSections[position - 1]!;
+      if (previous.tagName === "nav" || previous.tagName === "header") {
+        return Math.min(
+          section.bounds.y,
+          previous.bounds.y + previous.bounds.height,
+        );
+      }
+      return section.bounds.y;
+    });
+    const sectionBands = capturedSections.map((section, position) => {
+      const y = bandStarts[position]!;
+      const nextY = bandStarts[position + 1] ?? documentHeight;
+      return {
+        position,
+        ...section,
+        bounds: {
+          x: 0,
+          y,
+          width: pageWidth,
+          height: Math.max(1, Math.min(nextY, maximumHeight) - y),
+        },
+      };
+    });
+    const htmlBytes = new TextEncoder().encode(
+      document.documentElement.outerHTML,
+    );
+    const html = new TextDecoder().decode(
+      htmlBytes.byteLength <= maximumHtmlBytes
+        ? htmlBytes
+        : htmlBytes.slice(0, maximumHtmlBytes - 4),
+    );
     return {
       requestedUrl: requested,
       canonicalUrl: canonical,
@@ -411,26 +714,17 @@ async function analyzeRenderedPage(
       viewport,
       document: {
         width: Math.min(100_000, Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth ?? 0)),
-        height: Math.min(maximumHeight, Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0)),
+        height: documentHeight,
       },
-      html: document.documentElement.outerHTML,
-      sections: sections
-        .filter((section) => section.bounds.y < maximumHeight)
-        .slice(0, 200)
-        .map((section, position) => ({
-          position,
-          ...section,
-          bounds: {
-            ...section.bounds,
-            height: Math.min(section.bounds.height, maximumHeight - section.bounds.y),
-          },
-        })),
+      html,
+      sections: sectionBands,
     };
   }, {
     requested: requestedUrl,
     canonical: finalUrl,
     viewport: VIEWPORT,
     maximumHeight: MAXIMUM_CAPTURE_HEIGHT,
+    maximumHtmlBytes: MAXIMUM_HTML_BYTES,
   });
 }
 

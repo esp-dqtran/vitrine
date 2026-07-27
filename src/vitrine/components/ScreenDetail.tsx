@@ -71,7 +71,6 @@ interface ScreenDetailProps {
   ) => void;
   accountControls?: ReactNode;
   onOpenSearch?: () => void;
-  onImport?: () => void;
 }
 
 export function ScreenDetail({
@@ -89,7 +88,6 @@ export function ScreenDetail({
   onFlowChange,
   accountControls,
   onOpenSearch,
-  onImport,
 }: ScreenDetailProps) {
   const appPlatforms = (app.platforms ?? []).filter(
     (platform): platform is Platform => platform === 'ios' || platform === 'android' || platform === 'web',
@@ -271,15 +269,12 @@ export function ScreenDetail({
     </ReferenceGallerySection>
   );
 
-  const platformControls = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Platform</span>
-      <AppsPlatformSwitcher
-        value={selectedPlatform}
-        platforms={appPlatforms.length ? appPlatforms : [selectedPlatform]}
-        onChange={selectPlatform}
-      />
-    </div>
+  const platformControl = (
+    <AppsPlatformSwitcher
+      value={selectedPlatform}
+      platforms={appPlatforms.length ? appPlatforms : [selectedPlatform]}
+      onChange={selectPlatform}
+    />
   );
   const adminTabs = [
     { id: 'overview' as const, label: 'Overview' },
@@ -297,6 +292,7 @@ export function ScreenDetail({
   ];
   const tabs = role === 'admin' ? adminTabs : memberTabs;
   const metadata = [
+    { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform], content: platformControl },
     { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },
     { label: 'Screens', value: String(app.totalScreens) },
     ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
@@ -320,22 +316,18 @@ export function ScreenDetail({
             onClearCategory={() => undefined}
           />
         )}
-        isAdmin={role === 'admin'}
-        importLabel="Import App"
-        onImport={onImport ?? (() => undefined)}
         accountControls={accountControls}
       />
       <ReferenceDetailShell
         dataDetailKind="app"
         className="app-detail"
-        title={app.app}
+        title={app.description ? `${app.app} —` : app.app}
         description={app.description}
         identityKey={`app-icon-${app.id}`}
         identityLabel={app.app[0]}
         identityImageUrl={app.iconUrl}
         accent={app.accent}
         onBack={onBack}
-        heroControls={platformControls}
         metadata={metadata}
         actions={actions}
         tabs={tabs}

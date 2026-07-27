@@ -106,6 +106,18 @@ const migrationDefinitions = [
       /CREATE TRIGGER categories_search_queue/,
     ],
   },
+  {
+    file: "0034_hierarchical_flow_data.sql",
+    patterns: [
+      /CREATE TABLE flows/,
+      /CREATE TABLE app_flows/,
+      /CREATE TABLE app_flow_mappings/,
+      /CREATE TABLE app_flow_versions/,
+      /CREATE TABLE app_flow_version_mappings/,
+      /DROP TABLE legacy_app_flow_versions/,
+      /DROP TABLE legacy_app_flows/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -259,4 +271,33 @@ test("migration verification checks Category tables and legacy backfill", async 
   assert.match(source, /const CATEGORY_TABLES/);
   assert.match(source, /category backfill must retain every legacy assignment/);
   assert.match(source, /categories_id_seq is behind categories\.id/);
+});
+
+test("migration verification includes every post-v1 table family", async () => {
+  const source = await readFile(
+    new URL("../scripts/verify-migrations.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /const APP_KNOWLEDGE_TABLES/);
+  assert.match(source, /"app_knowledge_component_crops"/);
+  assert.match(source, /"app_knowledge_design_system_chunks"/);
+  assert.match(source, /"app_knowledge_snapshots"/);
+  assert.match(source, /"public_facet_previews"/);
+  assert.match(source, /"site_search_index_queue"/);
+  assert.match(source, /\.\.\.APP_KNOWLEDGE_TABLES/);
+});
+
+test("upgrade hashes exclude derived columns added after the legacy fixture", async () => {
+  const source = await readFile(
+    new URL("../scripts/verify-migrations.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /app_versions: \["platform", "screen_count", "ui_element_count"\]/,
+  );
+  assert.match(
+    source,
+    /design_systems: \[\s*"origin",\s*"platform",\s*"capture_version_id",\s*"source_app_knowledge_revision_id",\s*"generated_at",?\s*\]/,
+  );
 });

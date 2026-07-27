@@ -105,6 +105,57 @@ test('does not render a Back to all apps button in App detail', () => {
   assert.doesNotMatch(html, /reference-detail__back/);
 });
 
+test('renders the App identity and interactive platform inside the reference metadata rhythm', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="user"
+      app={{
+        id: 'linear',
+        app: 'Linear',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
+        accent: '#5E6AD2',
+        totalScreens: 24,
+        totalUiElements: 8,
+        totalFlows: 3,
+        description: 'Plan and build products together.',
+        platforms: ['web'],
+      }}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.match(html, /<h1>Linear —<\/h1>/);
+  assert.match(
+    html,
+    /reference-detail__metadata-item[^>]*><span>Platform<\/span><div role="radiogroup"[^>]*class="apps-platform-switcher"/,
+  );
+});
+
+test('does not leave a dangling title dash when an App has no description', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="user"
+      app={{
+        id: 'mercor',
+        app: 'Mercor',
+        categories: [{ id: 1, name: 'Jobs & Recruitment', slug: 'jobs-recruitment' }],
+        accent: '#7767ff',
+        totalScreens: 190,
+        totalUiElements: 190,
+        totalFlows: 39,
+      }}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.match(html, /<h1>Mercor<\/h1>/);
+  assert.doesNotMatch(html, /<h1>Mercor —<\/h1>/);
+});
+
 test('reuses the Apps header on admin App detail', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
@@ -122,7 +173,6 @@ test('reuses the Apps header on admin App detail', () => {
       }}
       accountControls={<button>Account</button>}
       onOpenSearch={() => undefined}
-      onImport={() => undefined}
       onBack={() => undefined}
     />,
   );
@@ -132,7 +182,7 @@ test('reuses the Apps header on admin App detail', () => {
   assert.match(html, /Apps/);
   assert.match(html, /Sites/);
   assert.match(html, /Search on Web\.\.\./);
-  assert.match(html, /Import App/);
+  assert.doesNotMatch(html, /Import App/);
   assert.match(html, /Account/);
 });
 
@@ -277,9 +327,41 @@ test('renders detail platforms through the Apps platform switcher', () => {
   assert.match(source, /<AppsPlatformSwitcher/);
 });
 
-test('uses a larger hero icon only for App details', () => {
+test('uses a compact App-only detail header without promoting a content section', () => {
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
-  assert.match(css, /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__logo\s*\{[\s\S]*width:\s*120px;[\s\S]*height:\s*120px;/);
-  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__logo\s*\{[\s\S]*width:\s*80px;[\s\S]*height:\s*80px;/);
+  assert.match(
+    css,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero\s*\{[^}]*min-height:\s*auto;/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero-inner\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*80px minmax\(0,\s*1fr\) auto;[^}]*grid-template-areas:\s*"logo heading actions"\s*"logo metadata actions";/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__logo\s*\{[^}]*grid-area:\s*logo;[^}]*width:\s*80px;[^}]*height:\s*80px;[^}]*margin-bottom:\s*0;/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata\s*\{[^}]*grid-area:\s*metadata;[^}]*gap:\s*32px;[^}]*padding-top:\s*0;/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions\s*\{[^}]*grid-area:\s*actions;[^}]*align-self:\s*center;[^}]*padding:\s*0;/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero-inner\s*\{[^}]*display:\s*flex;[^}]*padding-top:\s*24px;[^}]*padding-bottom:\s*20px;/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata\s*\{[^}]*width:\s*100%;[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions\s*\{[^}]*width:\s*100%;[^}]*padding:\s*18px 0 0;/,
+  );
+  assert.doesNotMatch(css, /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs > button:nth-child/);
+  assert.doesNotMatch(css, /\.reference-detail\[data-reference-detail='site'\] \.reference-detail__hero\s*\{/);
 });

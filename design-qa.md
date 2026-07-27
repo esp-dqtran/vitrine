@@ -61,4 +61,76 @@ the same loaded catalog/detail state.
 - Production build: passed.
 - Vite reports only its existing large-chunk optimization warning.
 
+## Apps/Sites header replication QA — 2026-07-27
+
+### Visual truth and normalization
+
+- Source visual truth:
+  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_pxRSMa/Screenshot 2026-07-27 at 12.28.13.png`
+- Browser-rendered implementation: `/tmp/astryx-apps-after.png`
+- Normalized source header: `/tmp/astryx-header-reference.png`
+- Normalized implementation header: `/tmp/astryx-header-implementation.png`
+- Combined comparison input: `/tmp/astryx-header-comparison.png`
+- Browser viewport: 1512 × 900 CSS px at device pixel ratio 2.
+- Source pixels: 3024 × 146 at 2× density, downsampled to 1512 × 73.
+- Implementation pixels: 1512 × 900 CSS-normalized browser capture; the
+  1512 × 72 header crop was extended by one background pixel to match the
+  source comparison frame.
+- State: source is Mobbin signed-in; implementation is Vitrine Apps in the
+  guest state. The product logo and right-side account controls are intentional
+  product/state differences and were excluded from false-precision matching.
+
+### Findings
+
+- No actionable P0, P1, or P2 differences remain.
+- Fonts and typography: the active/inactive tab hierarchy, 16 px/600 tab
+  treatment, and subdued search copy match the source. The implementation keeps
+  the existing product font stack.
+- Spacing and layout rhythm: the header is 72 px high; the centered search is
+  512 × 48 at x=500; the logo, tabs, and search align to the source frame.
+- Colors and visual tokens: the header resolves to `#111111`, the search to
+  `#303030`, the active tab to `#f5f5f5`, and inactive tabs to `#686868`.
+- Image quality and asset fidelity: Vitrine's existing SVG favicon remains
+  sharp at 32 × 32. The Mobbin logo was not copied because this is Vitrine's
+  product header.
+- Copy and content: `Apps`, `Sites`, and `Search on Web...` match the source.
+  The source's signed-in actions intentionally remain Vitrine's functional
+  guest `Login` control.
+
+### Comparison evidence
+
+- Full-view evidence: the normalized two-row comparison shows matching header
+  frame, centered search proportions, baseline, dark surfaces, and flat tabs.
+- Focused-region evidence: the complete header is itself the focused region;
+  no smaller crop was required because all typography, icon, and control edges
+  are legible in the 1512 × 146 combined comparison.
+- Comparison history: the first formal comparison found no actionable
+  P0/P1/P2 mismatch, so no blocking design-QA iteration was required.
+
+### Interaction and runtime verification
+
+- Apps → Sites and Sites → Apps navigation both reached their expected routes.
+- The header search opened the catalog dialog and its Close action dismissed it.
+- Browser console: no runtime errors; only the existing Astryx development
+  theme-injection warning and Vite development messages.
+- Focused Apps/Sites tests: 52 passed.
+- Production build: passed.
+
+### Open questions
+
+- None blocking. The signed-in action cluster can only be compared exactly in
+  the equivalent authenticated Vitrine state.
+
+### Implementation checklist
+
+- Keep Vitrine branding and account behavior.
+- Preserve the shared header across Apps and Sites.
+- Recheck the authenticated action cluster when that state is next changed.
+
+### Follow-up polish
+
+- [P3] The reference placeholder begins a few pixels farther from the search
+  icon; the current spacing remains clear and consistent with the design-system
+  button internals.
+
 final result: passed

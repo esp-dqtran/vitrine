@@ -2,13 +2,18 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { SiteImportDialog } from './components/SiteImportDialog.tsx';
 import { filterAndSortSites, SitesPageView } from './components/SitesPage.tsx';
 import * as SitesPageModule from './components/SitesPage.tsx';
 import * as SiteCardModule from './components/SiteCard.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
+import * as SiteVersionPageModule from './components/SiteVersionPage.tsx';
 import { Lightbox } from './components/Lightbox.tsx';
 import { MediaGridCard } from './components/MediaGridCard.tsx';
+import * as MediaGridCardModule from './components/MediaGridCard.tsx';
+import {
+  SiteAnalysisPanel,
+  wappalyzerIconUrl,
+} from './components/SiteAnalysisPanel.tsx';
 import type { SiteSummary, SiteVersionDetail } from './types.ts';
 
 const site: SiteSummary = {
@@ -46,7 +51,7 @@ const detail: SiteVersionDetail = {
   analysisModel: 'fixture-model',
   mobilePageUrl: '/api/sites/1/versions/2/media/mobile',
   analysis: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     status: 'ready',
     evidence: [{ id: 'TECH-1', kind: 'runtime', value: 'GSAP 3.15.0' }],
     structure: [{ id: 'STRUCTURE-1', label: 'Sticky hero' }],
@@ -65,10 +70,21 @@ const detail: SiteVersionDetail = {
     technology: [{
       id: 'TECHNOLOGY-1',
       name: 'GSAP',
+      slug: 'gsap',
+      categories: ['JavaScript libraries'],
+      icon: 'GSAP.svg',
+      source: 'wappalyzer',
       version: '3.15.0',
       category: 'animation',
       state: 'observed-in-use',
       evidenceIds: ['TECH-1'],
+      confidence: 1,
+    }, {
+      id: 'TECHNOLOGY-2',
+      name: 'React',
+      category: 'framework',
+      state: 'not-detected',
+      evidenceIds: [],
       confidence: 1,
     }],
     responsive: [],
@@ -127,7 +143,7 @@ const detail: SiteVersionDetail = {
 };
 
 test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
-  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
+  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} />);
   assert.match(html, /data-sites-discovery="true"/);
   assert.match(html, /class="[^"]*reference-discovery[^"]*reference-discovery--sites[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery-nav[^"]*sites-top-nav[^"]*"/);
@@ -174,8 +190,7 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /<a[^>]+href="\/sites\/1\/versions\/2"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
   assert.doesNotMatch(html, /Showing 1 of 1 sites/);
-  assert.match(html, /Import Site/);
-  assert.equal((html.match(/>Import Site</g) ?? []).length, 1);
+  assert.doesNotMatch(html, /Import Site/);
 });
 
 test('composes Sites through the shared reference discovery shell', () => {
@@ -260,7 +275,6 @@ test('renders the first 24 Sites before the gallery sentinel advances', () => {
       query=""
       onQueryChange={() => undefined}
       onRefresh={() => undefined}
-      onImport={() => undefined}
     />,
   );
 
@@ -275,10 +289,10 @@ test('renders image-only Mobbin Site previews without a broken video element', (
     version: { ...detail.version, previewMediaKind: 'image' },
   };
   const catalog = renderToStaticMarkup(
-    <SitesPageView sites={[imageSite]} isAdmin={false} query="" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />,
+    <SitesPageView sites={[imageSite]} isAdmin={false} query="" onQueryChange={() => undefined} onRefresh={() => undefined} />,
   );
   const version = renderToStaticMarkup(
-    <SiteVersionView detail={imageDetail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={imageDetail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
 
   assert.match(catalog, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
@@ -373,7 +387,7 @@ test('activates deferred Site media once near the viewport and disconnects', () 
 });
 
 test('filters Sites by name, version, and source page title', () => {
-  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} onImport={() => undefined} />);
+  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} />);
   assert.match(html, /data-site-discovery-card="true"/);
   assert.doesNotMatch(html, /Showing 1 of 1 sites/);
 });
@@ -409,14 +423,13 @@ test('renders member Sites with the Apps gallery identity and account-control sl
       query=""
       onQueryChange={() => undefined}
       onRefresh={() => undefined}
-      onImport={() => undefined}
       memberControls={<button type="button">Account</button>}
     />,
   );
 
   assert.match(html, /data-reference-gallery-shell="sites"/);
   assert.match(html, /data-reference-gallery-identity="true"/);
-  assert.match(html, />Vitrine</);
+  assert.doesNotMatch(html, /<strong>Vitrine<\/strong>/);
   assert.match(html, />Account</);
   assert.doesNotMatch(html, /<h1[^>]*>References<\/h1>/);
 });
@@ -430,7 +443,6 @@ test('keeps shared Sites chrome visible for errors and no-result searches', () =
       query=""
       onQueryChange={() => undefined}
       onRefresh={() => undefined}
-      onImport={() => undefined}
     />,
   );
   const noResults = renderToStaticMarkup(
@@ -440,7 +452,6 @@ test('keeps shared Sites chrome visible for errors and no-result searches', () =
       query="missing"
       onQueryChange={() => undefined}
       onRefresh={() => undefined}
-      onImport={() => undefined}
     />,
   );
 
@@ -461,7 +472,6 @@ test('keeps shared Sites chrome mounted while the catalog loads', () => {
       query=""
       onQueryChange={() => undefined}
       onRefresh={() => undefined}
-      onImport={() => undefined}
     />,
   );
 
@@ -471,39 +481,66 @@ test('keeps shared Sites chrome mounted while the catalog loads', () => {
   assert.match(html, /Search on Web\.\.\./);
   assert.match(html, /aria-label="Loading Sites"/);
   assert.equal((html.match(/data-sites-discovery-skeleton="true"/g) ?? []).length, 6);
-  assert.doesNotMatch(html, /No Sites imported yet/);
+  assert.doesNotMatch(html, /No Sites available yet/);
 });
 
-test('keeps the Site import dialog URL-only', () => {
-  const html = renderToStaticMarkup(<SiteImportDialog isOpen onClose={() => undefined} onExisting={() => undefined} />);
-  assert.match(html, /Analyze one public page/);
-  assert.match(html, /Public page URL/);
-  assert.doesNotMatch(html, /Import Site from Mobbin/);
-  assert.doesNotMatch(html, /App name|Platform/);
-});
-
-test('renders evidence-backed Site analysis without raw evidence values', () => {
+test('replaces Site Analysis with icon-based Wappalyzer Technology results', () => {
   const html = renderToStaticMarkup(
-    <SiteVersionView detail={detail} isAdmin section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={detail} isAdmin section="technology" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
-  assert.match(html, />Analysis</);
+  assert.match(html, /aria-label="Technology"/);
+  assert.match(html, />Technology</);
   assert.match(html, /GSAP/);
+  assert.match(html, /src="https:\/\/www\.wappalyzer\.com\/images\/icons\/GSAP\.svg"/);
+  assert.match(html, /JavaScript libraries/);
   assert.match(html, /Observed in use/);
-  assert.match(html, /Evidence-backed claims/);
-  assert.match(html, /TECH-1/);
-  assert.match(html, /Scroll-linked hero/);
-  assert.match(html, /Mobile disables the hero ScrollTrigger/);
-  assert.doesNotMatch(html, /GSAP 3\.15\.0<\/[^>]+>.*runtime/s);
+  assert.doesNotMatch(html, /Checked but not detected|React/);
+  assert.doesNotMatch(html, />Analysis</);
+  assert.doesNotMatch(html, /Structure|Measured motion|Evidence-backed claims|Mobile render|Limitations/);
+});
+
+test('keeps the old analysis URL section as a Technology alias', () => {
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={detail} isAdmin section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
+  );
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Technology"/);
+  assert.match(html, /GSAP/);
+});
+
+test('builds only safe Wappalyzer technology icon URLs', () => {
+  assert.equal(
+    wappalyzerIconUrl('Next.js.svg'),
+    'https://www.wappalyzer.com/images/icons/Next.js.svg',
+  );
+  assert.equal(
+    wappalyzerIconUrl('Tailwind CSS.svg'),
+    'https://www.wappalyzer.com/images/icons/Tailwind%20CSS.svg',
+  );
+  assert.equal(wappalyzerIconUrl('../React.svg'), undefined);
+  assert.equal(wappalyzerIconUrl('https://example.com/React.svg'), undefined);
+});
+
+test('lays out Technology icons in a responsive card grid', () => {
+  const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  assert.match(
+    styles,
+    /\.site-technology__grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(220px,\s*1fr\)\)/,
+  );
+  assert.match(
+    styles,
+    /\.site-technology__icon\s*\{[\s\S]*width:\s*32px[\s\S]*height:\s*32px/,
+  );
 });
 
 test('shows only Preview and Sections to normal Site users', () => {
   const html = renderToStaticMarkup(
-    <SiteVersionView detail={detail} isAdmin={false} section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={detail} isAdmin={false} section="analysis" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
   assert.match(html, /aria-label="Preview"/);
   assert.match(html, /aria-label="Sections"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Preview"/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
+  assert.doesNotMatch(html, /aria-label="Technology"/);
   assert.doesNotMatch(html, /Evidence-backed claims/);
 });
 
@@ -512,15 +549,67 @@ test('renders images and native videos through the shared media primitives', () 
   const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" badges={['Home', 'Video']} onOpen={() => undefined} />);
   const deferredImage = renderToStaticMarkup(<MediaGridCard label="Open deferred Home" kind="image" url="/deferred-home.png" deferMedia onOpen={() => undefined} />);
   assert.match(image, /home\.png/);
+  assert.match(image, /<button[^>]+aria-label="Open Home"[^>]*><img/);
   assert.match(video, /<video/);
   assert.match(video, /controls=""/);
   assert.match(video, /poster="\/hero\.webp"/);
   assert.doesNotMatch(deferredImage, /deferred-home\.png/);
 });
 
+test('opens image media cards only for Enter and Space', () => {
+  const handleMediaCardKeyDown = (
+    MediaGridCardModule as typeof MediaGridCardModule & {
+      handleMediaCardKeyDown?: (
+        event: { key: string; preventDefault: () => void },
+        onOpen: () => void,
+      ) => void;
+    }
+  ).handleMediaCardKeyDown;
+  assert.equal(typeof handleMediaCardKeyDown, 'function');
+  if (!handleMediaCardKeyDown) return;
+
+  let opened = 0;
+  let prevented = 0;
+  for (const key of ['Enter', ' ', 'Escape']) {
+    handleMediaCardKeyDown(
+      { key, preventDefault: () => { prevented += 1; } },
+      () => { opened += 1; },
+    );
+  }
+
+  assert.equal(opened, 2);
+  assert.equal(prevented, 2);
+  const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
+  assert.match(source, /onKeyDown=\{\(event\) => handleMediaCardKeyDown\(event, onOpen\)\}/);
+});
+
+test('returns focus to the section card after closing the inspector', () => {
+  const restoreInspectorFocus = (
+    SiteVersionPageModule as typeof SiteVersionPageModule & {
+      restoreInspectorFocus?: (
+        trigger: { focus: () => void } | null,
+        schedule: (callback: () => void) => void,
+      ) => void;
+    }
+  ).restoreInspectorFocus;
+  assert.equal(typeof restoreInspectorFocus, 'function');
+  if (!restoreInspectorFocus) return;
+
+  let focused = 0;
+  restoreInspectorFocus(
+    { focus: () => { focused += 1; } },
+    (callback) => callback(),
+  );
+  assert.equal(focused, 1);
+
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /onClose=\{closeInspector\}/);
+  assert.match(source, /restoreInspectorFocus\(inspectorTriggerRef\.current\)/);
+});
+
 test('renders Site sections as deferred Mobbin-style media actions', () => {
   const html = renderToStaticMarkup(
-    <SiteVersionView detail={detail} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={detail} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
   assert.doesNotMatch(html, /src="\/video"/);
   assert.doesNotMatch(html, /poster="\/poster"/);
@@ -529,11 +618,62 @@ test('renders Site sections as deferred Mobbin-style media actions', () => {
   assert.match(html, /data-site-section-video-card="true"/);
 });
 
-test('defers Site section assets until their cards are near the viewport', () => {
+test('shows a focused Technology empty state for captures without detections', () => {
+  const evidenceOnlyDetail: SiteVersionDetail = {
+    ...detail,
+    analysisStatus: 'evidence-only',
+    analysisModel: undefined,
+    analysis: {
+      schemaVersion: 1,
+      status: 'evidence-only',
+      evidence: [
+        { id: 'DOM-1', kind: 'dom', value: 'navigation' },
+        { id: 'MOTION-1', kind: 'animation', value: 'sticky navigation' },
+      ],
+      structure: [
+        { id: 'STRUCTURE-1', key: 'header', tag: 'header', visible: true },
+        { id: 'STRUCTURE-2', key: 'header > nav[aria-label="Main navigation"]', tag: 'nav', visible: true },
+        { id: 'STRUCTURE-3', key: 'body > div:nth-of-type(2) > main', tag: 'main', visible: true },
+        { id: 'STRUCTURE-4', key: 'main > section:nth-of-type(1)', tag: 'section', visible: true },
+        { id: 'STRUCTURE-5', key: 'main > section:nth-of-type(2)', tag: 'section', visible: true },
+        { id: 'STRUCTURE-6', key: 'body > footer', tag: 'footer', visible: true },
+      ],
+      visualTokens: [],
+      responsive: [
+        { id: 'RESPONSIVE-1', key: 'header > nav', change: 'hidden-on-mobile' },
+        { id: 'RESPONSIVE-2', key: 'header > a', change: 'hidden-on-mobile' },
+        { id: 'RESPONSIVE-3', key: 'button[aria-label="Menu"]', change: 'mobile-only' },
+      ],
+      motion: [0, 1].map((position) => ({
+        id: `MOTION-FINDING-${position}`,
+        targetEvidenceId: 'STRUCTURE-2',
+        type: 'sticky' as const,
+        trigger: 'scroll-progress' as const,
+        properties: ['top'],
+        states: [],
+        viewports: ['desktop' as const, 'mobile' as const],
+        evidenceIds: ['MOTION-1'],
+        confidence: 0.92,
+      })),
+      technology: [],
+      synthesis: null,
+      warnings: [],
+    },
+  };
+
+  const html = renderToStaticMarkup(<SiteAnalysisPanel detail={evidenceOnlyDetail} />);
+
+  assert.match(html, />Technology</);
+  assert.match(html, /No technologies detected/);
+  assert.doesNotMatch(html, /body &gt; div:nth-of-type/);
+  assert.doesNotMatch(html, /Structure|Measured motion|Evidence-backed claims|Mobile render|Limitations/);
+});
+
+test('defers Site section assets and preserves complete image crops', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /<SiteSectionVideoCard[\s\S]*deferMedia/);
-  assert.match(source, /<MediaGridCard[\s\S]*deferMedia/);
+  assert.match(source, /<MediaGridCard[\s\S]*imageFit="contain"[\s\S]*deferMedia/);
 });
 
 test('contains image and video failures inside one media card', () => {
@@ -574,7 +714,7 @@ test('uses the shared neutral tokens for Site media overlays', () => {
 });
 
 test('renders the Mobbin Site-version hierarchy without Back or tab counts', () => {
-  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
   assert.match(html, /data-reference-detail="site"/);
   assert.doesNotMatch(html, /Back to Sites/);
   assert.match(html, /<h1>V7<\/h1><p>AI-powered visual data platform\.<\/p>/);
@@ -604,7 +744,7 @@ test('renders Site detail through the shared reference shell', () => {
 });
 
 test('filters Sections by keyword and renders patterns without dumping OCR text', () => {
-  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" initialSectionQuery="Hero" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" initialSectionQuery="Hero" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
   assert.match(html, /Search sections/);
   assert.match(html, /All patterns/);
   assert.match(html, /Hero Section/);
@@ -627,15 +767,15 @@ test('uses the captured page title when a section has no extracted pattern', () 
     })),
   };
   const html = renderToStaticMarkup(
-    <SiteVersionView detail={withoutPatterns} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />,
+    <SiteVersionView detail={withoutPatterns} isAdmin={false} section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
   assert.match(html, /<strong>Home<\/strong>/);
   assert.doesNotMatch(html, /Unclassified/);
 });
 
 test('falls back legacy and unknown Site detail sections to Preview', () => {
-  const unknown = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="unknown" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
-  const pages = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="pages" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} onImport={() => undefined} />);
+  const unknown = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="unknown" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
+  const pages = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin={false} section="pages" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
   const html = `${unknown}${pages}`;
   assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
   assert.doesNotMatch(html, /Full-page capture/);

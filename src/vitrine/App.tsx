@@ -7,7 +7,6 @@ import { CommandPalette } from './components/CommandPalette';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { ImportDialog } from './components/ImportDialog';
 import { UnlockModal } from './components/UnlockModal';
 import { AdvancedSearchPreview } from './components/AdvancedSearchPreview.tsx';
 import { QuickSearch, quickSearchHandoff } from './components/QuickSearch.tsx';
@@ -19,7 +18,6 @@ import type { AppsFacet } from './appsDiscovery.ts';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
-import { submitUrlImport } from './jobsApi';
 import { searchCatalog, type SearchFilters as LegacySearchFilters } from './researchApi';
 import { navigate, updateLocation, useRoute } from './router';
 import { loadSubscription, type SubscriptionView } from './billingApi';
@@ -44,7 +42,6 @@ export function App() {
   const isGuest = user === null;
   const route = useRoute();
   const isAdmin = user?.role === 'admin';
-  const [importOpen, setImportOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
   const [siteQuery, setSiteQuery] = useState('');
@@ -100,7 +97,6 @@ export function App() {
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
   const {
     apps,
-    categories,
     totalApps,
     loading: appsLoading,
     loadingMore,
@@ -149,7 +145,6 @@ export function App() {
     setCollectionsOpen(false);
     setSettingsOpen(false);
     setLoginOpen(false);
-    setImportOpen(false);
     setAdvancedPreview(null);
     searchSession.close();
   };
@@ -375,10 +370,8 @@ export function App() {
       if (detailGateLoading || detailLoading) {
         page = (
           <AppDetailLoadingPage
-            isAdmin={isAdmin}
             accountControls={accountControls}
             onOpenSearch={() => void openPalette('apps')}
-            onImport={() => setImportOpen(true)}
           />
         );
       } else if (entitlementsError) {
@@ -433,7 +426,6 @@ export function App() {
               onBack={() => navigate({ name: 'apps' })}
               accountControls={accountControls}
               onOpenSearch={() => void openPalette('apps')}
-              onImport={() => setImportOpen(true)}
               collections={collections}
               onCollectionsChange={setCollections}
             />
@@ -445,7 +437,6 @@ export function App() {
       page = (
         <AppsDiscoveryPage
           apps={appsLoading ? null : apps}
-          categories={categories}
           isAdmin={isAdmin}
           query={q}
           facet={appFacet}
@@ -453,7 +444,6 @@ export function App() {
           onOpenSearch={(seed) => void openPalette('apps', seed)}
           searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
           activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
-          onImport={() => setImportOpen(true)}
           onOpenApp={(appId) => void openApp(appId)}
           onRetry={() => void refreshApps()}
           totalApps={totalApps}
@@ -505,13 +495,6 @@ export function App() {
   const dialogs = (
     <>
       {catalogLoginDialog}
-      {isAdmin && importOpen ? (
-        <ImportDialog
-          isOpen={importOpen}
-          onClose={() => setImportOpen(false)}
-          submitImport={submitUrlImport}
-        />
-      ) : null}
       {unlockTarget && entitlements ? (
         <UnlockModal
           appId={unlockTarget}

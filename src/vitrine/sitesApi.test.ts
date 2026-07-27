@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRoutePath, routeToPath } from './router.ts';
-import { getSiteVersion, listSites, listSitesPage, submitSiteImport } from './sitesApi.ts';
+import { getSiteVersion, listSites, listSitesPage } from './sitesApi.ts';
 
 const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview';
 
@@ -14,27 +14,6 @@ test('maps list and positive Site version routes', () => {
   });
   assert.equal(routeToPath({ name: 'sites' }), '/sites');
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
-});
-
-test('submits only an import-site URL and distinguishes queued from existing', async (t) => {
-  const original = globalThis.fetch;
-  t.after(() => { globalThis.fetch = original; });
-  const requests: Array<{ url: string; method?: string; body?: string }> = [];
-  let existing = false;
-  globalThis.fetch = async (input, init) => {
-    requests.push({ url: String(input), method: init?.method, body: init?.body as string | undefined });
-    return existing
-      ? Response.json({ existing: true, siteId: 7, versionId: 9 }, { status: 200 })
-      : Response.json({ id: 42 }, { status: 201 });
-  };
-
-  assert.deepEqual(await submitSiteImport(approvedUrl), { existing: false, id: 42 });
-  existing = true;
-  assert.deepEqual(await submitSiteImport(approvedUrl), { existing: true, siteId: 7, versionId: 9 });
-  assert.deepEqual(requests, [
-    { url: '/api/jobs', method: 'POST', body: JSON.stringify({ type: 'import-site', url: approvedUrl }) },
-    { url: '/api/jobs', method: 'POST', body: JSON.stringify({ type: 'import-site', url: approvedUrl }) },
-  ]);
 });
 
 test('loads Sites only from dedicated list and detail endpoints', async (t) => {
@@ -172,11 +151,4 @@ test('requests a bounded Site page for related detail references', async (t) => 
   assert.equal(page.nextOffset, 4);
   assert.equal(page.total, 274);
   assert.deepEqual(urls, ['/api/sites?limit=4&offset=0']);
-});
-
-test('rejects malformed successful Sites responses', async (t) => {
-  const original = globalThis.fetch;
-  t.after(() => { globalThis.fetch = original; });
-  globalThis.fetch = async () => Response.json({ id: 0 }, { status: 201 });
-  await assert.rejects(() => submitSiteImport(approvedUrl), /invalid response/i);
 });

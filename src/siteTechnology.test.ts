@@ -87,6 +87,70 @@ test("separates loaded Swiper from active GSAP on Webflow", () => {
   );
 });
 
+test("detects Next.js from framework-owned production assets", () => {
+  const result = detectSiteTechnology({
+    generator: [],
+    htmlAttributes: {},
+    scriptUrls: [
+      "https://example.com/_next/static/chunks/app/page-123.js",
+      "https://example.com/_next/static/chunks/turbopack-456.js",
+    ],
+    stylesheetUrls: [
+      "https://example.com/_next/static/css/app-789.css",
+    ],
+    resourceUrls: [
+      "https://example.com/_next/image?url=%2Fhero.png&w=1920&q=75",
+    ],
+    inlineScripts: [],
+    sourceMapSources: [],
+    runtimes: {},
+    activeRuntimeSignals: [],
+  });
+
+  const next = result.find((item) => item.name === "Next.js");
+  assert.equal(next?.category, "framework");
+  assert.equal(next?.state, "loaded");
+  assert.match(next?.evidence[0]?.value ?? "", /_next\/static/);
+  assert.equal(
+    result.find((item) => item.name === "Turbopack")?.state,
+    "loaded",
+  );
+});
+
+test("confirms Next.js from its inline bootstrap without matching prose", () => {
+  const confirmed = detectSiteTechnology({
+    generator: [],
+    htmlAttributes: {},
+    scriptUrls: [],
+    stylesheetUrls: [],
+    resourceUrls: [],
+    inlineScripts: ["self.__next_f.push([1, 'payload'])"],
+    sourceMapSources: [],
+    runtimes: {},
+    activeRuntimeSignals: [],
+  });
+  const proseOnly = detectSiteTechnology({
+    generator: [],
+    htmlAttributes: {},
+    scriptUrls: [],
+    stylesheetUrls: [],
+    resourceUrls: [],
+    inlineScripts: ["Learn why Next.js is the next framework for your team"],
+    sourceMapSources: [],
+    runtimes: {},
+    activeRuntimeSignals: [],
+  });
+
+  assert.equal(
+    confirmed.find((item) => item.name === "Next.js")?.state,
+    "confirmed",
+  );
+  assert.equal(
+    proseOnly.find((item) => item.name === "Next.js")?.state,
+    "not-detected",
+  );
+});
+
 test("keeps the registry ordered and caps evidence", () => {
   const result = detectSiteTechnology({
     generator: [],
@@ -105,10 +169,10 @@ test("keeps the registry ordered and caps evidence", () => {
 
   assert.deepEqual(result.slice(0, 5).map((item) => item.name), [
     "Framer Sites",
+    "Next.js",
+    "Turbopack",
     "React",
     "React DOM",
-    "Framer Motion",
-    "Webflow",
   ]);
   const lottie = result.find((item) => item.name === "Lottie");
   assert.equal(lottie?.state, "observed-in-use");

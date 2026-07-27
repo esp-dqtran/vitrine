@@ -26,7 +26,6 @@ import {
   updateCollectionItemNotes,
   removeCollectionItem,
   deleteCollection,
-  createAppVersion,
   ensureActiveAppVersion,
   listAppVersions,
   resolveAppVersion,
@@ -194,6 +193,13 @@ import {
 } from "../../../src/referralStore.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site", "crawl-public-page"] as const;
+const DISABLED_IMPORT_JOB_TYPES = new Set([
+  "discover-catalog",
+  "import-app",
+  "import-site",
+  "crawl-public-page",
+]);
+const IMPORTS_DISABLED_RESPONSE = { error: "Imports are disabled" } as const;
 export const DEFAULT_API_PORT = 3010;
 const disabledBilling: BillingService = {
   createCheckout: async () => { throw new Error("Billing is not configured"); },
@@ -336,7 +342,6 @@ const defaults = {
   updateCollectionItemNotes,
   removeCollectionItem,
   deleteCollection,
-  createAppVersion,
   listAppVersions,
   resolveAppVersion,
   getVersionPublicationBlockers,
@@ -452,7 +457,7 @@ const defaults = {
   publicPageStore: apiPublicPageStore,
   featureDocumentStore: createFeatureDocumentStore(),
   featureDocumentProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
-  featureDocumentPromptVersion: 1,
+  featureDocumentPromptVersion: 2,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
   appKnowledgeStore: createAppKnowledgeStore(),
   appKnowledgeProviderModel: appKnowledgeProviderModelFromEnvironment(),
@@ -1831,31 +1836,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.post("/apps/:app/versions", requireAdmin, async (req, res) => {
-    const appSlug = String(req.params.app);
-    const platform = platformQuery(req.body?.platform);
-    const sourceUrl = boundedText(req.body?.sourceUrl, 2000);
-    if (!isAppSlug(appSlug) || !platform || sourceUrl === undefined || (sourceUrl && !validMobbinScreensUrl(sourceUrl))) {
-      res.status(400).json({ error: "invalid recapture request" });
-      return;
-    }
-    try {
-      const version = await deps.createAppVersion(appSlug, platform, res.locals.user.id, sourceUrl || undefined);
-      if (sourceUrl) {
-        if (!await requireStorageReady(res)) return;
-        const jobId = await deps.createJob("import-app", { name: appSlug, url: sourceUrl, platform, versionId: version.id });
-        try { await deps.publishJob({ type: "import-app", name: appSlug, url: sourceUrl, platform, jobId }); }
-        catch (error) {
-          await deps.setJobStatus(jobId, "error", (error as Error).message);
-          res.status(503).json({ error: (error as Error).message, version, jobId });
-          return;
-        }
-        res.status(201).json({ ...version, recaptureJobId: jobId });
-        return;
-      }
-      res.status(201).json(version);
-    } catch (error) {
-      res.status(409).json({ error: (error as Error).message });
-    }
+    void req;
+    res.status(410).json(IMPORTS_DISABLED_RESPONSE);
   });
 
   app.get("/versions/:versionId/blockers", requireAdmin, async (req, res) => {
@@ -2738,6 +2720,10 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const platform = platformQuery(req.body?.platform) ?? (typeof url === "string" ? platformFromUrl(url) : undefined);
     if (!JOB_TYPES.includes(type)) {
       res.status(400).json({ error: `type must be one of: ${JOB_TYPES.join(", ")}` });
+      return;
+    }
+    if (DISABLED_IMPORT_JOB_TYPES.has(type)) {
+      res.status(410).json(IMPORTS_DISABLED_RESPONSE);
       return;
     }
     if (type === "import-site") {

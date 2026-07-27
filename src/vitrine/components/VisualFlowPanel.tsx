@@ -44,9 +44,10 @@ export function VisualFlowPanel({
 
   useEffect(() => {
     if (selectedStep === undefined) return;
-    trackRef.current
-      ?.querySelector<HTMLElement>(`[data-flow-step="${selectedStep}"]`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    const selectedCard = trackRef.current
+      ?.querySelector<HTMLElement>(`[data-flow-step="${selectedStep}"]`);
+    selectedCard?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    selectedCard?.querySelector<HTMLElement>('button')?.focus({ preventScroll: true });
   }, [screenItems.length, selectedStep]);
 
   const scrollScreens = (direction: -1 | 1) => {

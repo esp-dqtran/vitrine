@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Button, EmptyState } from '@astryxdesign/core';
 import {
+  APPS_DISCOVERY_CATEGORIES,
   APPS_DISCOVERY_STATIC_FACETS,
   filterAndSortApps,
   type AppsFacet,
@@ -10,7 +11,6 @@ import {
 import { fetchRandomFacetPreview, type FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
 import type { App } from '../types.ts';
-import type { CategorySummary } from '../categoriesApi.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { AppCard } from './AppCard.tsx';
 import { AppCardSkeleton } from './AppCardSkeleton.tsx';
@@ -87,7 +87,6 @@ function prefetchAppFacetPreview(
 
 interface AppsDiscoveryPageProps {
   apps: App[] | null;
-  categories: CategorySummary[] | null;
   isAdmin: boolean;
   query: string;
   facet: AppsFacet | null;
@@ -95,7 +94,6 @@ interface AppsDiscoveryPageProps {
   onOpenSearch: (seed?: Partial<SearchFilters>) => void;
   searchMode: 'legacy' | 'advanced';
   activeFilterCount?: number;
-  onImport: () => void;
   onOpenApp: (appId: string) => void;
   onRetry: () => void;
   totalApps: number | null;
@@ -115,16 +113,14 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const hoverRequestRef = useRef(0);
   const hoverPointRef = useRef({ x: 0, y: 0 });
-  const facets = useMemo(() => [
-    ...(props.categories?.length
-      ? [{
-          group: 'categories' as const,
-          label: 'Categories',
-          values: props.categories.map(({ name }) => name),
-        }]
-      : []),
+  const facets = [
+    {
+      group: 'categories' as const,
+      label: 'Categories',
+      values: APPS_DISCOVERY_CATEGORIES,
+    },
     ...APPS_DISCOVERY_STATIC_FACETS,
-  ], [props.categories]);
+  ];
   const visibleApps = useMemo(
     () => filterAndSortApps(props.apps ?? [], {
       query: props.query,
@@ -178,9 +174,6 @@ export function AppsDiscoveryPage(props: AppsDiscoveryPageProps) {
               activeFilterCount={props.activeFilterCount}
             />
           )}
-          isAdmin={props.isAdmin}
-          importLabel="Import App"
-          onImport={props.onImport}
           accountControls={props.accountControls}
         />
       )}

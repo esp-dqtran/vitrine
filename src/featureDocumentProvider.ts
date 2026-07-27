@@ -29,7 +29,12 @@ const STEP_SYSTEM_PROMPT = [
 const SYNTHESIS_SYSTEM_PROMPT = [
   "Return JSON only using this exact top-level structure: executiveSummary, observedFlow, flowAnalysis, proposedFeature, requirements, edgeCases, successMetrics, guardrailMetrics, analyticsEvents, dependencies, openQuestions.",
   "Each claim has id, kind, text, evidenceIds, and optional confidence.",
-  "Each requirement is a claim plus userStory, priority, preconditions, and acceptanceCriteria; every criterion has id, given, when, then, and evidenceIds.",
+  "Each requirement is a claim plus userStory, priority, preconditions, and acceptanceCriteria.",
+  "Requirement text must describe one capability-level behavior in product language, not an implementation task.",
+  "Each acceptance criterion is one BDD scenario with id, given, when, then, and evidenceIds.",
+  "Write complete Given, When, and Then clauses and group related happy-path, alternate-path, and error scenarios under the same requirement.",
+  "Normally create 2 to 5 acceptance criteria per requirement, covering distinct happy-path, alternate, validation, or recovery outcomes supported by the supplied evidence; never invent unsupported scenarios merely to reach a count.",
+  "Do not create one requirement per screen, screenshot, step, or UI control.",
   "Classify every claim as observed, inferred, proposed, or unknown.",
   "Every observed or inferred claim must cite one or more supplied evidence IDs.",
   "Never invent an evidence ID.",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, DropdownMenu, EmptyState, Selector, Skeleton } from '@astryxdesign/core';
 import { navigate } from '../router.ts';
 import { getSiteVersion, listSitesPage } from '../sitesApi.ts';
@@ -14,7 +14,6 @@ import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteCard } from './SiteCard.tsx';
-import { SiteImportDialog } from './SiteImportDialog.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
 import { SitesTopNav } from './SitesTopNav.tsx';
 import {
@@ -23,11 +22,11 @@ import {
   type SiteInspectorView,
 } from './SiteSectionInspector.tsx';
 
-export type SiteDetailSection = 'preview' | 'sections' | 'analysis';
+export type SiteDetailSection = 'preview' | 'sections' | 'technology';
 
 function resolveSiteSection(value: string | undefined, isAdmin: boolean): SiteDetailSection {
   if (value === 'sections') return 'sections';
-  if (value === 'analysis' && isAdmin) return 'analysis';
+  if ((value === 'technology' || value === 'analysis') && isAdmin) return 'technology';
   return 'preview';
 }
 
@@ -40,7 +39,6 @@ interface SiteVersionViewProps {
   onSectionChange: (section: SiteDetailSection) => void;
   onVersionChange: (versionId: number) => void;
   onBack: () => void;
-  onImport: () => void;
   onRelatedOpen?: (site: SiteSummary) => void;
 }
 
@@ -57,6 +55,13 @@ type SiteInspectorState = {
   view: SiteInspectorView;
 } | null;
 
+export function restoreInspectorFocus(
+  trigger: { focus: () => void } | null,
+  schedule: (callback: () => void) => void = (callback) => requestAnimationFrame(callback),
+) {
+  schedule(() => trigger?.focus());
+}
+
 export function SiteVersionView({
   detail,
   isAdmin,
@@ -66,10 +71,8 @@ export function SiteVersionView({
   onSectionChange,
   onVersionChange,
   onBack,
-  onImport,
   onRelatedOpen = (site) => navigate({ name: 'site-version', siteId: site.id, versionId: site.versionId }),
 }: SiteVersionViewProps) {
-  void onImport;
   const pages = useMemo(() => [...detail.pages]
     .sort((a, b) => a.position - b.position)
     .map((page) => ({ ...page, sections: [...page.sections].sort((a, b) => a.position - b.position) })), [detail.pages]);
@@ -79,6 +82,7 @@ export function SiteVersionView({
   const [patternFilter, setPatternFilter] = useState('All patterns');
   const [mediaFilter, setMediaFilter] = useState('All media');
   const [inspector, setInspector] = useState<SiteInspectorState>(null);
+  const inspectorTriggerRef = useRef<HTMLElement | null>(null);
   const [saved, setSaved] = useState(false);
   const [selectedSectionIds, setSelectedSectionIds] = useState<Set<number>>(() => new Set());
   const [savedSectionIds, setSavedSectionIds] = useState<Set<number>>(() => new Set());
@@ -120,11 +124,22 @@ export function SiteVersionView({
       ? { ...current, index: ((index % current.items.length) + current.items.length) % current.items.length }
       : current);
   };
+  const openInspector = (index: number) => {
+    inspectorTriggerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    setInspector({ items: inspectorItems, index, view: 'section' });
+  };
+  const closeInspector = () => {
+    setInspector(null);
+    restoreInspectorFocus(inspectorTriggerRef.current);
+    inspectorTriggerRef.current = null;
+  };
 
   useEffect(() => {
     if (!inspector) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setInspector(null);
+      if (event.key === 'Escape') closeInspector();
       else if (event.key === 'ArrowLeft') goInspector(inspector.index - 1);
       else if (event.key === 'ArrowRight') goInspector(inspector.index + 1);
     };
@@ -156,7 +171,7 @@ export function SiteVersionView({
 
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
-    : activeSection === 'analysis'
+    : activeSection === 'technology'
     ? <SiteAnalysisPanel detail={detail} />
     : (
       <SectionsPanel
@@ -173,13 +188,13 @@ export function SiteVersionView({
         onToggleSelect={toggleSection}
         onClearSelection={() => setSelectedSectionIds(new Set())}
         onSaveSelected={saveSelected}
-        onOpen={(index) => setInspector({ items: inspectorItems, index, view: 'section' })}
+        onOpen={openInspector}
       />
     );
   const tabs = [
     { id: 'preview' as const, label: 'Preview' },
     { id: 'sections' as const, label: 'Sections' },
-    ...(isAdmin ? [{ id: 'analysis' as const, label: 'Analysis' }] : []),
+    ...(isAdmin ? [{ id: 'technology' as const, label: 'Technology' }] : []),
   ];
   const metadata = [
     ...(categories.length ? [{
@@ -276,7 +291,7 @@ export function SiteVersionView({
           total={inspector.items.length}
           view={inspector.view}
           onViewChange={(view) => setInspector((current) => current ? { ...current, view } : current)}
-          onClose={() => setInspector(null)}
+          onClose={closeInspector}
           onNavigate={goInspector}
         />
       )}
@@ -370,6 +385,7 @@ function SectionsPanel({
                       label={label}
                       kind="image"
                       url={item.mediaUrl}
+                      imageFit="contain"
                       delay={delay}
                       deferMedia
                       onOpen={() => onOpen(visibleIndex)}
@@ -430,7 +446,6 @@ export function SiteVersionPage({
   const [relatedSites, setRelatedSites] = useState<SiteSummary[]>([]);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
-  const [importOpen, setImportOpen] = useState(false);
   useEffect(() => {
     let active = true;
     setDetail(null);
@@ -451,10 +466,11 @@ export function SiteVersionPage({
   const onBack = () => navigate({ name: 'sites' });
   const topNav = (
     <SitesTopNav
-      query={query}
-      onQueryChange={onQueryChange}
-      isAdmin={isAdmin}
-      onImport={() => setImportOpen(true)}
+      searchLabel={query || 'Search on Web...'}
+      activeCategory={null}
+      onClearCategory={() => undefined}
+      onOpenSearch={() => undefined}
+      searchMode="legacy"
       accountControls={accountControls}
     />
   );
@@ -471,15 +487,7 @@ export function SiteVersionPage({
         onSectionChange={onSectionChange ?? (() => undefined)}
         onVersionChange={(nextVersionId) => navigate({ name: 'site-version', siteId, versionId: nextVersionId })}
         onBack={onBack}
-        onImport={() => setImportOpen(true)}
       />
-      {isAdmin && (
-        <SiteImportDialog
-          isOpen={importOpen}
-          onClose={() => setImportOpen(false)}
-          onExisting={(nextSiteId, nextVersionId) => navigate({ name: 'site-version', siteId: nextSiteId, versionId: nextVersionId })}
-        />
-      )}
     </>
   );
 }

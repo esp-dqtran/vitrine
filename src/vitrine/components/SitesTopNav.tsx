@@ -9,8 +9,6 @@ interface SitesTopNavProps {
   onOpenSearch: () => void;
   searchMode: 'legacy' | 'advanced';
   activeFilterCount?: number;
-  isAdmin: boolean;
-  onImport: () => void;
   accountControls?: ReactNode;
 }
 
@@ -21,8 +19,6 @@ export function SitesTopNav({
   onOpenSearch,
   searchMode,
   activeFilterCount,
-  isAdmin,
-  onImport,
   accountControls,
 }: SitesTopNavProps) {
   return (
@@ -39,9 +35,6 @@ export function SitesTopNav({
           activeFilterCount={activeFilterCount}
         />
       )}
-      isAdmin={isAdmin}
-      importLabel="Import Site"
-      onImport={onImport}
       accountControls={accountControls}
     />
   );

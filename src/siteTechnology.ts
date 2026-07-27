@@ -71,6 +71,18 @@ const REGISTRY: TechnologyDefinition[] = [
     loaded: [/framer(?:usercontent|static)\.com/i],
   },
   {
+    name: "Next.js",
+    category: "framework",
+    direct: [/\bself\.__next_f\.push\s*\(/i, /\b__NEXT_DATA__\b/i],
+    loaded: [/(?:^|\/)_next\/(?:static|image)(?:\/|\?|$)/i],
+  },
+  {
+    name: "Turbopack",
+    category: "bundler",
+    direct: [/\b__turbopack_(?:load|context)__\b/i],
+    loaded: [/(?:^|[/.-])turbopack(?:[./_-]|$)/i],
+  },
+  {
     name: "React",
     category: "framework",
     direct: [/\breact(?:\.production)?(?:\.min)?\.js\b/i, /node_modules\/react\//i],

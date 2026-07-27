@@ -25,11 +25,9 @@ const TABLE_ORDER = {
   export_usage: "user_id, window_start",
   access_events: "id",
   design_systems: "app_id",
-  app_flows: "app_id",
   app_versions: "id",
   version_images: "version_id, image_id",
   design_system_versions: "version_id",
-  app_flow_versions: "version_id",
   review_issues: "id",
   exports: "id",
   crawl_plans: "id",
@@ -94,14 +92,39 @@ const FEATURE_DOCUMENT_TABLES = [
   "feature_documents",
 ] as const;
 
+const APP_KNOWLEDGE_TABLES = [
+  "app_knowledge_component_crops",
+  "app_knowledge_design_system_chunks",
+  "app_knowledge_evidence_cache",
+  "app_knowledge_evidence_overrides",
+  "app_knowledge_job_evidence",
+  "app_knowledge_jobs",
+  "app_knowledge_review_events",
+  "app_knowledge_revisions",
+  "app_knowledge_snapshots",
+] as const;
+
 const SEARCH_TABLES = [
   "search_documents",
   "search_index_queue",
+  "site_search_index_queue",
+] as const;
+
+const PUBLIC_PREVIEW_TABLES = [
+  "public_facet_previews",
 ] as const;
 
 const CATEGORY_TABLES = [
   "app_categories",
   "categories",
+] as const;
+
+const FLOW_TABLES = [
+  "app_flow_mappings",
+  "app_flow_version_mappings",
+  "app_flow_versions",
+  "app_flows",
+  "flows",
 ] as const;
 
 const AUXILIARY_MIGRATION_TABLES = [
@@ -113,10 +136,15 @@ const AUXILIARY_MIGRATION_TABLES = [
 const ADDED_COLUMNS: Partial<Record<keyof typeof TABLE_ORDER, readonly string[]>> = {
   access_events: ["feature_key", "metadata"],
   apps: ["source_domain", "display_name", "description", "website_url", "accent_color"],
-  app_flows: ["platform"],
-  app_versions: ["platform"],
+  app_versions: ["platform", "screen_count", "ui_element_count"],
   crawl_runs: ["run_kind", "parent_run_id", "platform", "allow_all", "pause_requested_at"],
-  design_systems: ["origin", "platform"],
+  design_systems: [
+    "origin",
+    "platform",
+    "capture_version_id",
+    "source_app_knowledge_revision_id",
+    "generated_at",
+  ],
   images: ["object_key", "thumbnail_object_key"],
   exports: ["object_key"],
   crawl_run_steps: ["failure_object_key"],
@@ -297,8 +325,11 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...PUBLIC_PAGE_TABLES,
       ...REFERRAL_TABLES,
       ...FEATURE_DOCUMENT_TABLES,
+      ...APP_KNOWLEDGE_TABLES,
       ...SEARCH_TABLES,
+      ...PUBLIC_PREVIEW_TABLES,
       ...CATEGORY_TABLES,
+      ...FLOW_TABLES,
       ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();
@@ -313,6 +344,100 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
   } finally {
     await pool.end();
   }
+}
+
+async function assertHierarchicalFlowUpgrade(pool: pg.Pool): Promise<void> {
+  const counts = await pool.query<{
+    roots: number;
+    children: number;
+    current_rows: number;
+    current_mappings: number;
+    version_rows: number;
+    version_mappings: number;
+  }>(`SELECT
+    (SELECT count(*)::integer FROM flows WHERE parent_id IS NULL) AS roots,
+    (SELECT count(*)::integer FROM flows WHERE parent_id IS NOT NULL) AS children,
+    (SELECT count(*)::integer FROM app_flows) AS current_rows,
+    (SELECT count(*)::integer FROM app_flow_mappings) AS current_mappings,
+    (SELECT count(*)::integer FROM app_flow_versions) AS version_rows,
+    (SELECT count(*)::integer FROM app_flow_version_mappings) AS version_mappings`);
+
+  assert.deepEqual(counts.rows[0], {
+    roots: 2,
+    children: 1,
+    current_rows: 3,
+    current_mappings: 3,
+    version_rows: 3,
+    version_mappings: 3,
+  });
+
+  const hierarchy = await pool.query<{
+    parent: string | null;
+    name: string;
+    normalized_name: string;
+  }>(`SELECT parent.name AS parent, child.name, child.normalized_name
+     FROM flows child
+     LEFT JOIN flows parent ON parent.id = child.parent_id
+     ORDER BY parent.name NULLS FIRST, child.name`);
+
+  assert.deepEqual(hierarchy.rows, [
+    { parent: null, name: "Searching products", normalized_name: "searching products" },
+    { parent: null, name: "Settings", normalized_name: "settings" },
+    { parent: "Settings", name: "Changing password", normalized_name: "changing password" },
+  ]);
+
+  const preserved = await pool.query<{
+    source_flow_id: string;
+    position: number;
+    source_category: string | null;
+    steps: unknown;
+  }>(`SELECT source_flow_id, position, source_category, steps
+     FROM app_flows
+     WHERE app_id = 101 AND platform = 'web'
+     ORDER BY position`);
+
+  assert.equal(preserved.rows[0].source_flow_id, "settings-password");
+  assert.equal(preserved.rows[0].source_category, "Settings");
+  assert.deepEqual(preserved.rows[0].steps, [{
+    label: "Save",
+    evidence: [301],
+  }]);
+  assert.equal(preserved.rows[1].source_flow_id, "search");
+  assert.equal(preserved.rows[1].position, 2);
+  assert.equal(preserved.rows[2].source_flow_id, "self-settings");
+
+  const aggregateColumns = await pool.query<{ count: number }>(
+    `SELECT count(*)::integer AS count
+     FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name IN ('app_flows', 'app_flow_versions')
+       AND column_name = 'flows'`,
+  );
+  assert.equal(aggregateColumns.rows[0].count, 0);
+
+  const appCategories = await pool.query<{ count: number }>(
+    `SELECT count(*)::integer AS count
+     FROM app_categories
+     WHERE app_id = 101`,
+  );
+  assert.equal(appCategories.rows[0].count, 1);
+
+  const sequences = await pool.query<{
+    flows_valid: boolean;
+    app_flows_valid: boolean;
+    app_flow_versions_valid: boolean;
+  }>(`SELECT
+    (SELECT last_value >= COALESCE((SELECT max(id) FROM flows), 0)
+       FROM flows_id_seq) AS flows_valid,
+    (SELECT last_value >= COALESCE((SELECT max(id) FROM app_flows), 0)
+       FROM app_flows_id_seq) AS app_flows_valid,
+    (SELECT last_value >= COALESCE((SELECT max(id) FROM app_flow_versions), 0)
+       FROM app_flow_versions_id_seq) AS app_flow_versions_valid`);
+  assert.deepEqual(sequences.rows[0], {
+    flows_valid: true,
+    app_flows_valid: true,
+    app_flow_versions_valid: true,
+  });
 }
 
 async function verifyUpgradeDatabase(databaseUrlValue: string): Promise<MigrationVerificationResult["upgrade"]> {
@@ -334,6 +459,7 @@ async function verifyUpgradeDatabase(databaseUrlValue: string): Promise<Migratio
     const after = await captureUpgradeState(pool);
     assert.deepEqual(after.counts, before.counts, "upgrade changed protected row counts");
     assert.deepEqual(after.hashes, before.hashes, "upgrade changed protected rows or sequences");
+    await assertHierarchicalFlowUpgrade(pool);
     const categoryBackfill = await pool.query<{
       categories: number;
       relationships: number;

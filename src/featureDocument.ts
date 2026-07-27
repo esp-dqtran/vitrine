@@ -400,10 +400,9 @@ function cited(item: FeatureClaim | FeatureAcceptanceCriterion): string {
   return item.evidenceIds.length ? ` [${item.evidenceIds.join(", ")}]` : "";
 }
 
-function claimLines(title: string, items: FeatureClaim[]): string[] {
-  return [`### ${title}`, "", ...(items.length
-    ? items.map((item) => `- **${item.kind}:** ${item.text}${cited(item)}`)
-    : ["- None observed."]), ""];
+function claimStatus(kind: FeatureClaimKind, hasEvidence: boolean): string {
+  const label = `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`;
+  return hasEvidence ? label : `${label} — missing evidence`;
 }
 
 export function renderFeatureDocumentMarkdown(
@@ -411,117 +410,74 @@ export function renderFeatureDocumentMarkdown(
   content: FeatureDocumentContent,
   metadata: { sourceFlowTitle: string; generatedAt: string; evidenceManifest: FeatureEvidenceManifestItem[] },
 ): string {
+  const missingEvidence = [
+    ...content.flowAnalysis.missingStates,
+    ...content.openQuestions,
+  ].filter((item, index, items) => {
+    const normalized = item.text.trim().toLocaleLowerCase();
+    return normalized.length > 0 && items.findIndex(
+      (candidate) => candidate.text.trim().toLocaleLowerCase() === normalized,
+    ) === index;
+  });
+
   const lines = [
     `# ${heading(title)}`,
     "",
     `**Source Flow:** ${heading(metadata.sourceFlowTitle)}`,
     `**Generated:** ${metadata.generatedAt}`,
     "",
-    "## Executive summary",
+    "## Summary",
     "",
-    `- **Purpose:** ${content.executiveSummary.purpose.text}${cited(content.executiveSummary.purpose)}`,
-    `- **User value:** ${content.executiveSummary.userValue.text}${cited(content.executiveSummary.userValue)}`,
-    `- **Recommendation:** ${content.executiveSummary.recommendation.text}${cited(content.executiveSummary.recommendation)}`,
+    `- **Goal:** ${content.observedFlow.userGoal.text}${cited(content.observedFlow.userGoal)}`,
+    `- **Starts:** ${content.observedFlow.entryPoint.text}${cited(content.observedFlow.entryPoint)}`,
+    `- **Ends:** ${content.observedFlow.completionPoint.text}${cited(content.observedFlow.completionPoint)}`,
     "",
-    "## Observed current Flow",
+    "## Observed steps",
     "",
-    `- **User goal:** ${content.observedFlow.userGoal.text}${cited(content.observedFlow.userGoal)}`,
-    `- **Entry point:** ${content.observedFlow.entryPoint.text}${cited(content.observedFlow.entryPoint)}`,
-    `- **Completion point:** ${content.observedFlow.completionPoint.text}${cited(content.observedFlow.completionPoint)}`,
+    ...(content.observedFlow.journey.length
+      ? content.observedFlow.journey.map(
+        (step, index) => `${index + 1}. ${step.text}${cited(step)}`,
+      )
+      : ["No observed steps documented."]),
     "",
-    ...claimLines("Journey", content.observedFlow.journey),
-    ...claimLines("Actors", content.observedFlow.actors),
-    ...claimLines("Visible states", content.observedFlow.visibleStates),
-    "## Flow analysis",
-    "",
-    ...claimLines("Effective patterns", content.flowAnalysis.effectivePatterns),
-    ...claimLines("Friction", content.flowAnalysis.friction),
-    ...claimLines("Missing states", content.flowAnalysis.missingStates),
-    ...claimLines("Inconsistencies", content.flowAnalysis.inconsistencies),
-    ...claimLines("Risks and assumptions", content.flowAnalysis.risksAndAssumptions),
-    "## Proposed feature",
-    "",
-    `- **Problem:** ${content.proposedFeature.problem.text}${cited(content.proposedFeature.problem)}`,
-    "",
-    ...claimLines("Target users", content.proposedFeature.targetUsers),
-    ...claimLines("Goals", content.proposedFeature.goals),
-    ...claimLines("Non-goals", content.proposedFeature.nonGoals),
-    ...claimLines("Proposed behavior", content.proposedFeature.behavior),
-    ...claimLines("Recommended journey", content.proposedFeature.journey),
-    "## Requirements",
+    "## Behavior requirements",
     "",
   ];
   for (const requirement of content.requirements) {
+    const requirementEvidenceIds = [...new Set([
+      ...requirement.evidenceIds,
+      ...requirement.acceptanceCriteria.flatMap((criterion) => criterion.evidenceIds),
+    ])];
     lines.push(
       `### ${requirement.id} · ${requirement.priority.toUpperCase()}`,
       "",
-      `${requirement.text}${cited(requirement)}`,
-      "",
-      `**User story:** ${requirement.userStory}`,
-      "",
-      "**Preconditions:**",
-      "",
-      ...(requirement.preconditions.length ? requirement.preconditions.map((item) => `- ${item}`) : ["- None."]),
-      "",
-      "#### Acceptance criteria",
+      `**Behavior:** ${requirement.text}`,
+      `**Status:** ${claimStatus(requirement.kind, requirementEvidenceIds.length > 0)}`,
+      `**Evidence:** ${requirementEvidenceIds.length > 0 ? requirementEvidenceIds.join(", ") : "Missing evidence"}`,
       "",
     );
     for (const criterion of requirement.acceptanceCriteria) {
-      lines.push(`- **${criterion.id}:** Given ${criterion.given}; when ${criterion.when}; then ${criterion.then}.${cited(criterion)}`);
+      lines.push(
+        `#### Scenario ${criterion.id}`,
+        "",
+        `**Given** ${criterion.given}`,
+        "",
+        `**When** ${criterion.when}`,
+        "",
+        `**Then** ${criterion.then}`,
+        "",
+      );
     }
     lines.push("");
   }
   lines.push(
-    ...claimLines("Edge cases", content.edgeCases),
-    "## Success measurement", "",
-    ...claimLines("Product metrics", content.successMetrics),
-    ...claimLines("Guardrail metrics", content.guardrailMetrics),
-    ...claimLines("Analytics events", content.analyticsEvents),
-    "## Dependencies and open questions", "",
-    ...claimLines("Dependencies", content.dependencies),
-    ...claimLines("Open questions", content.openQuestions),
+    "## Missing evidence",
+    "",
+    ...(missingEvidence.length
+      ? missingEvidence.map((item) => `- ${item.text}${cited(item)}`)
+      : ["- None identified."]),
+    "",
   );
-  const evidence = new Set<string>();
-  const collect = (items: Array<FeatureClaim | FeatureAcceptanceCriterion>) => {
-    for (const item of items) for (const id of item.evidenceIds) evidence.add(id);
-  };
-  collect([
-    content.executiveSummary.purpose,
-    content.executiveSummary.userValue,
-    content.executiveSummary.recommendation,
-    content.observedFlow.userGoal,
-    content.observedFlow.entryPoint,
-    content.observedFlow.completionPoint,
-    ...content.observedFlow.journey,
-    ...content.observedFlow.actors,
-    ...content.observedFlow.visibleStates,
-    ...content.flowAnalysis.effectivePatterns,
-    ...content.flowAnalysis.friction,
-    ...content.flowAnalysis.missingStates,
-    ...content.flowAnalysis.inconsistencies,
-    ...content.flowAnalysis.risksAndAssumptions,
-    content.proposedFeature.problem,
-    ...content.proposedFeature.targetUsers,
-    ...content.proposedFeature.goals,
-    ...content.proposedFeature.nonGoals,
-    ...content.proposedFeature.behavior,
-    ...content.proposedFeature.journey,
-    ...content.requirements,
-    ...content.requirements.flatMap((item) => item.acceptanceCriteria),
-    ...content.edgeCases,
-    ...content.successMetrics,
-    ...content.guardrailMetrics,
-    ...content.analyticsEvents,
-    ...content.dependencies,
-    ...content.openQuestions,
-  ]);
-  const manifestById = new Map(metadata.evidenceManifest.map((item) => [item.evidenceId, item]));
-  lines.push("## Evidence appendix", "", ...[...evidence].sort().map((id) => {
-    const item = manifestById.get(id);
-    return item
-      ? `- **${id}:** Step ${item.stepIndex + 1} (${heading(item.stepLabel)}), image ${item.imageIndex + 1} (image ID ${item.imageId})${item.description ? ` — ${heading(item.description)}` : ""}`
-      : `- **${id}:** Source mapping unavailable`;
-  }), "");
   return `${lines.join("\n").trim()}\n`;
 }
 import { createHash } from "node:crypto";
