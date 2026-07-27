@@ -31,6 +31,49 @@ test("app metadata aggregates ordered Category records without a scalar read", (
   assert.doesNotMatch(body, /\bt\.category\b/);
 });
 
+test("app metadata counts normalized Flow rows after the hierarchical migration", () => {
+  const start = source.indexOf("export async function appMetadata(");
+  const end = source.indexOf("\nasync function legacyAppMetadata", start);
+  const body = source.slice(start, end);
+
+  assert.match(body, /COUNT\(af\.id\)::integer AS flow_count/);
+  assert.match(body, /COUNT\(afv\.id\)::integer/);
+  assert.doesNotMatch(body, /jsonb_array_length\(af\.flows\)/);
+  assert.doesNotMatch(body, /jsonb_array_length\(afv\.flows\)/);
+});
+
+test("app version and Flow reads use normalized rows after the hierarchical migration", () => {
+  const versionStart = source.indexOf("const versionSelect =");
+  const versionEnd = source.indexOf("\nexport async function listAppVersions", versionStart);
+  const versionBody = source.slice(versionStart, versionEnd);
+  assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flows/);
+  assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flow_versions/);
+  assert.doesNotMatch(versionBody, /\b(?:af|afv)\.flows\b/);
+
+  const currentStart = source.indexOf("export async function getAppFlows(");
+  const currentEnd = source.indexOf("\nexport async function", currentStart + 1);
+  const currentBody = source.slice(currentStart, currentEnd);
+  assert.match(currentBody, /readCurrentFlows/);
+  assert.doesNotMatch(currentBody, /SELECT f\.flows/);
+
+  const versionFlowStart = source.indexOf("export async function getVersionFlows(");
+  const versionFlowEnd = source.indexOf("\nexport async function", versionFlowStart + 1);
+  const versionFlowBody = source.slice(versionFlowStart, versionFlowEnd);
+  assert.match(versionFlowBody, /readCurrentFlows/);
+  assert.match(versionFlowBody, /readVersionFlows/);
+  assert.doesNotMatch(versionFlowBody, /\b(?:af|afv)\.flows\b/);
+});
+
+test("versioned design systems load Flows through the normalized read path", () => {
+  const start = source.indexOf("export async function getVersionDesignSystem(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.match(body, /getVersionFlows\(app, platform, version\.version_number/);
+  assert.doesNotMatch(body, /\bafv\.flows\b/);
+  assert.doesNotMatch(body, /JOIN app_flow_versions/);
+});
+
 test("image read paths return Category arrays without reading the legacy App column", () => {
   assert.doesNotMatch(source, /\b(?:a|t|pa)\.category\b/);
 
@@ -63,7 +106,38 @@ test("Flow analysis persists atomically to the exact app version", () => {
   assert.match(body, /WHERE av\.id = \$1[\s\S]*FOR UPDATE/);
   assert.match(body, /app !== input\.app|input\.app !==/);
   assert.match(body, /platform !== input\.platform|input\.platform !==/);
-  assert.match(body, /INSERT INTO app_flow_versions/);
-  assert.match(body, /INSERT INTO app_flows/);
+  assert.match(body, /replaceVersionFlows/);
+  assert.match(body, /replaceCurrentFlows/);
+  assert.doesNotMatch(body, /INSERT INTO app_flow_versions/);
+  assert.doesNotMatch(body, /INSERT INTO app_flows/);
   assert.match(body, /draft[\s\S]*in_review/);
+});
+
+test("future Flow imports and publication share the normalized persistence boundary", () => {
+  const saveStart = source.indexOf("export async function saveAppFlows(");
+  const saveEnd = source.indexOf("\nexport async function", saveStart + 1);
+  const saveBody = source.slice(saveStart, saveEnd);
+  assert.match(saveBody, /withTransaction/);
+  assert.match(saveBody, /replaceCurrentFlows/);
+  assert.doesNotMatch(saveBody, /INSERT INTO app_flows/);
+
+  const publishStart = source.indexOf("export async function publishAppVersion(");
+  const publishEnd = source.indexOf("\nexport async function", publishStart + 1);
+  const publishBody = source.slice(publishStart, publishEnd);
+  assert.match(publishBody, /readCurrentFlows/);
+  assert.match(publishBody, /replaceVersionFlows/);
+  assert.doesNotMatch(publishBody, /SELECT flows FROM app_flows/);
+  assert.doesNotMatch(publishBody, /INSERT INTO app_flow_versions/);
+});
+
+test("feature source reads current active Flows and immutable published Flows by version id", () => {
+  const start = source.indexOf("export async function getVersionFlowsById(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.match(body, /av\.id = \$1 AND a\.name = \$2 AND av\.platform = \$3/);
+  assert.match(body, /draft[\s\S]*in_review/);
+  assert.match(body, /readCurrentFlows/);
+  assert.match(body, /readVersionFlows/);
+  assert.doesNotMatch(body, /\b(?:af|afv)\.flows\b/);
 });

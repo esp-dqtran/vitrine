@@ -5,7 +5,6 @@ import {
   auditSnapshots,
   assertDifferentDatabases,
   chunks,
-  mergeFlowArrays,
   missingKeys,
   sameObjectContent,
   sameObjectMetadata,
@@ -21,6 +20,15 @@ test("catalog merge copies normalized Category entities and relationships", () =
   assert.match(mergerSource, /await mergeCategories\(client, source\.apps\)/);
   assert.doesNotMatch(mergerSource, /SELECT name, icon_url, category FROM apps/);
   assert.doesNotMatch(mergerSource, /INSERT INTO apps \(name, icon_url, category\)/);
+});
+
+test("catalog merge reads row-per-Flow data and delegates normalized persistence", () => {
+  assert.match(mergerSource, /mergeCurrentFlows/);
+  assert.match(mergerSource, /f\.source_flow_id/);
+  assert.match(mergerSource, /f\.source_category/);
+  assert.match(mergerSource, /ORDER BY a\.name, f\.platform, f\.position/);
+  assert.doesNotMatch(mergerSource, /SELECT a\.name AS app, f\.platform, f\.flows/);
+  assert.doesNotMatch(mergerSource, /INSERT INTO app_flows[\s\S]*\bflows\b/);
 });
 
 test("chunks keeps every item exactly once", () => {
@@ -64,23 +72,6 @@ test("auditSnapshots reports every missing crawler-owned natural key", () => {
     target: { apps: 1, platforms: 1, images: 1, objects: 1, flows: 1 },
     missing: { apps: 1, platforms: 1, images: 1, objects: 1, flows: 1 },
   });
-});
-
-test("mergeFlowArrays preserves target-only flows and lets source refresh matching ids", () => {
-  const target = [
-    { id: "target-only", title: "Target", steps: [] },
-    { id: "shared", title: "Old", steps: [] },
-  ];
-  const source = [
-    { id: "shared", title: "Fresh", steps: [1] },
-    { id: "source-only", title: "Source", steps: [] },
-  ];
-
-  assert.deepEqual(mergeFlowArrays(target, source), [
-    { id: "target-only", title: "Target", steps: [] },
-    { id: "shared", title: "Fresh", steps: [1] },
-    { id: "source-only", title: "Source", steps: [] },
-  ]);
 });
 
 test("sameObjectMetadata ignores database number representation but rejects content drift", () => {
@@ -141,4 +132,61 @@ test("flow evidence remapping aborts when an evidence id cannot be resolved", as
     () => remap([{ id: "broken", steps: [{ evidence: [999] }] }], () => { throw new Error("unresolved 999"); }),
     /unresolved 999/,
   );
+});
+
+test("normalized source rows group into ordered standalone and child Flows", async () => {
+  const merger = await import("./merge-catalog-databases.ts") as Record<string, unknown>;
+  const group = merger.groupSourceFlows as (rows: unknown[]) => Map<string, {
+    app: string;
+    platform: string;
+    flows: unknown[];
+  }>;
+  const grouped = group([
+    {
+      app: "Aboard",
+      platform: "web",
+      source_flow_id: "onboarding",
+      title: "Onboarding",
+      source_category: null,
+      description: "Start",
+      tags: [],
+      steps: [],
+      provenance: null,
+      insights: null,
+    },
+    {
+      app: "Aboard",
+      platform: "web",
+      source_flow_id: "account",
+      title: "Create account",
+      source_category: "Onboarding",
+      description: "Register",
+      tags: ["auth"],
+      steps: [],
+      provenance: null,
+      insights: null,
+    },
+  ]);
+
+  assert.deepEqual([...grouped.values()], [{
+    app: "Aboard",
+    platform: "web",
+    flows: [
+      {
+        id: "onboarding",
+        title: "Onboarding",
+        description: "Start",
+        tags: [],
+        steps: [],
+      },
+      {
+        id: "account",
+        title: "Create account",
+        category: "Onboarding",
+        description: "Register",
+        tags: ["auth"],
+        steps: [],
+      },
+    ],
+  }]);
 });

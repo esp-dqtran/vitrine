@@ -120,7 +120,7 @@ test('copies the Apps ordering strip style onto App detail tabs only', async () 
   assert.match(tabRule, /min-width:\s*max-content/);
   assert.match(tabRule, /height:\s*56px/);
   assert.match(tabRule, /color:\s*var\(--color-text-secondary\)/);
-  assert.match(tabRule, /font-size:\s*14px/);
+  assert.match(tabRule, /font-size:\s*17px/);
   assert.match(tabRule, /scroll-snap-align:\s*start/);
   assert.match(tabRule, /transition:\s*color 180ms ease/);
 
@@ -132,4 +132,29 @@ test('copies the Apps ordering strip style onto App detail tabs only', async () 
   assert.match(indicatorRule, /border-radius:\s*999px/);
 
   assert.doesNotMatch(styles, /\.reference-detail\[data-reference-detail='site'\] \.reference-detail__tabs > button/);
+});
+
+test('matches App detail metadata and navigation text to the Flow directory scale', async () => {
+  const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const metadataLabelRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item > span\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const metadataValueRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item > strong\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const platformRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item \.apps-platform-switcher button\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const countRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tab-trailing\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const actionRule = styles.match(
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions button\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+
+  assert.match(metadataLabelRule, /font-size:\s*16px/);
+  assert.match(metadataValueRule, /font-size:\s*17px/);
+  assert.match(platformRule, /font-size:\s*17px/);
+  assert.match(countRule, /font-size:\s*16px/);
+  assert.match(actionRule, /font-size:\s*16px/);
 });

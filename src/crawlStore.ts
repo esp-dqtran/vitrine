@@ -4,6 +4,7 @@ import { parseCrawlPlan, parseCrawlStep, type CrawlPlan, type CrawlStep } from "
 import { query, withTransaction } from "./db.ts";
 import type { DesignFlow } from "./designSystem.ts";
 import { failureObjectKey, validateObjectMetadata, type ObjectMetadata } from "./objectStore.ts";
+import { replaceCurrentFlows } from "./normalizedFlowStore.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -1409,29 +1410,16 @@ export async function loadWorkerRunExecution(
 export async function saveWorkerAppFlows(input: SaveWorkerAppFlowsInput): Promise<void> {
   nonEmpty(input.runId, "Run id");
   nonEmpty(input.app, "App");
-  if (!Array.isArray(input.flows)) throw new Error("App flows must be an array");
-  const ids = new Set<string>();
-  for (const flow of input.flows) {
-    const id = nonEmpty(flow.id, "Flow id");
-    if (ids.has(id)) throw new Error("App flow ids must be unique");
-    ids.add(id);
-  }
-  let serialized: string;
-  try {
-    serialized = JSON.stringify(input.flows);
-  } catch {
-    throw new Error("App flows must be JSON-serializable");
-  }
   return withTransaction(async (client) => {
     const locked = await lockedWorkerRun(client, input.runId, input.workerId);
     if (locked.run.app !== input.app || locked.plan.app_id !== locked.run.app_id) {
       throw new Error("App flows must use the run's pinned app");
     }
-    await client.query(
-      `INSERT INTO app_flows (app_id, platform, flows) VALUES ($1, $2, $3::jsonb)
-       ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-      [locked.run.app_id, locked.run.platform, serialized],
-    );
+    await replaceCurrentFlows(client, {
+      appId: locked.run.app_id,
+      platform: locked.run.platform,
+      flows: input.flows,
+    });
   });
 }
 

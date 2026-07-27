@@ -1,5 +1,11 @@
 # Project working rules
 
+## Superpowers skill policy
+
+- Do not automatically invoke or follow any `superpowers:*` skill.
+- Treat Superpowers skills as opt-in. Use one only when the user explicitly asks for that specific skill or explicitly requests the Superpowers workflow.
+- For ordinary tasks, execute the request directly without adding Superpowers brainstorming, specification, planning, worktree, or subagent steps.
+
 ## Git branch and worktree policy
 
 - Work directly on the `main` branch for this project.

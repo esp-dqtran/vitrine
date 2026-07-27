@@ -70,6 +70,8 @@ export function FlowsWorkspace({
     () => new Set(groups.map(({ id }) => id)),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeTocFlowId, setActiveTocFlowId] = useState<string>();
+  const [scrollTargetFlowId, setScrollTargetFlowId] = useState<string>();
 
   useEffect(() => {
     setExpanded(new Set(groups.map(({ id }) => id)));
@@ -90,19 +92,29 @@ export function FlowsWorkspace({
     [expanded, groups, query, selectedFlowId, visibleGroups],
   );
 
-  const selectFlow = (flowId: string) => {
+  const openFlow = (flowId: string) => {
     setDrawerOpen(false);
+    setActiveTocFlowId(flowId);
+    setScrollTargetFlowId(undefined);
     onSelectionChange(flowId, undefined, 'visual');
+  };
+  const navigateToFlow = (flowId: string) => {
+    setDrawerOpen(false);
+    setActiveTocFlowId(flowId);
+    setScrollTargetFlowId(flowId);
+    if (selectedFlowId) {
+      onSelectionChange(undefined, undefined, undefined);
+    }
   };
   const treeProps = {
     groups: visibleGroups,
     query,
     expandedGroupIds: effectiveExpanded,
-    selectedFlowId,
+    selectedFlowId: selectedFlowId ?? activeTocFlowId,
     onQueryChange: setQuery,
     onToggleGroup: (groupId: string) =>
       setExpanded((current) => toggleFlowGroup(current, groupId)),
-    onSelectFlow: selectFlow,
+    onSelectFlow: navigateToFlow,
   };
   return (
     <div className="flow-workspace" data-flow-workspace="true">
@@ -145,7 +157,13 @@ export function FlowsWorkspace({
             onBack={() => onSelectionChange(undefined, undefined, undefined)}
           />
         ) : visibleGroups.length ? (
-          <FlowGallery groups={visibleGroups} onSelectFlow={selectFlow} />
+          <FlowGallery
+            groups={visibleGroups}
+            scrollTargetFlowId={scrollTargetFlowId}
+            onScrollTargetHandled={() => setScrollTargetFlowId(undefined)}
+            onActiveFlowChange={setActiveTocFlowId}
+            onSelectFlow={openFlow}
+          />
         ) : (
           <EmptyState
             title="No flows match your search"

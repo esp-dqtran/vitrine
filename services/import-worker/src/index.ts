@@ -2,7 +2,9 @@ import { consumeJobs, publishJob } from "../../../src/queue.ts";
 import {
   appKnowledgeEvidenceSource,
   createJob,
+  getAppFlows,
   getJob,
+  getVersionFlowsById,
   insertImage,
   listAppVersions,
   pool,
@@ -42,7 +44,6 @@ import {
   type FeatureEvidenceManifestItem,
   type FeatureSourceFlow,
 } from "../../../src/featureDocument.ts";
-import type { DesignFlow } from "../../../src/designSystem.ts";
 
 const workerId = process.env.CRAWL_WORKER_ID?.trim() || `${hostname()}-${process.pid}`;
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -74,26 +75,14 @@ const autonomousOrchestrator = createProductionAutonomousOrchestrator({
 const staleRunThresholdMs = Number(process.env.CRAWL_STALE_RUN_THRESHOLD_MS ?? 5 * 60_000);
 
 async function currentFeatureSourceManifest(source: FeatureSourceFlow): Promise<{ sha256: string }> {
-  const flowResult = source.versionId === undefined
-    ? await query<{ flows: DesignFlow[] }>(
-      `SELECT af.flows FROM app_flows af
-       JOIN apps a ON a.id = af.app_id
-       WHERE a.name = $1 AND af.platform = $2`,
-      [source.app, source.platform],
-    )
-    : await query<{ flows: DesignFlow[] }>(
-      `SELECT COALESCE(
-         CASE WHEN av.status IN ('draft', 'in_review') THEN af.flows ELSE afv.flows END,
-         '[]'::jsonb
-       ) AS flows
-       FROM app_versions av
-       JOIN apps a ON a.id = av.app_id
-       LEFT JOIN app_flows af ON af.app_id = av.app_id AND af.platform = av.platform
-       LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
-       WHERE av.id = $3 AND a.name = $1 AND av.platform = $2`,
-      [source.app, source.platform, source.versionId],
-    );
-  const flow = flowResult.rows[0]?.flows.find(({ id }) => id === source.flowId);
+  const flows = source.versionId === undefined
+    ? await getAppFlows(source.app, source.platform)
+    : await getVersionFlowsById({
+        app: source.app,
+        platform: source.platform,
+        versionId: source.versionId,
+      });
+  const flow = flows.find(({ id }) => id === source.flowId);
   if (!flow) throw new Error("Feature source Flow is no longer available");
   const imageIds = [...new Set(flow.steps.flatMap(({ evidence }) => evidence))];
   const imageResult = await query<{

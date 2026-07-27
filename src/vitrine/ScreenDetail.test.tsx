@@ -327,6 +327,12 @@ test('renders detail platforms through the Apps platform switcher', () => {
   assert.match(source, /<AppsPlatformSwitcher/);
 });
 
+test('renders App section totals at the readable navigation scale', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /tabTrailing=\{<span style=\{\{ fontSize: 16,/);
+});
+
 test('uses a compact App-only detail header without promoting a content section', () => {
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 

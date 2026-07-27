@@ -333,7 +333,7 @@ export function ScreenDetail({
         tabs={tabs}
         activeTab={section}
         onTabChange={setSection}
-        tabTrailing={<span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${sectionTotals.screens} screens` : section === 'elements' ? `${sectionTotals.elements} UI elements` : section === 'flows' ? `${sectionTotals.flows} flows` : ''}</span>}
+        tabTrailing={<span style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${sectionTotals.screens} screens` : section === 'elements' ? `${sectionTotals.elements} UI elements` : section === 'flows' ? `${sectionTotals.flows} flows` : ''}</span>}
         bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>

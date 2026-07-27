@@ -12,6 +12,7 @@ import {
 } from "./autonomousCrawler.ts";
 import type { CrawlRunRecord } from "./crawlStore.ts";
 import type { DesignFlow } from "./designSystem.ts";
+import { mergeCurrentFlows } from "./normalizedFlowStore.ts";
 import type { Platform } from "./platformFromUrl.ts";
 
 export interface CreateAutonomousRunInput {
@@ -463,20 +464,11 @@ export function createAutonomousStore(overrides: Partial<StoreDependencies> = {}
     if (!['draft', 'in_review'].includes(target.rows[0].status)) {
       throw new Error("Autonomous flows can only update an active version");
     }
-    const existing = await client.query<{ flows: DesignFlow[] }>(
-      `SELECT flows FROM app_flows WHERE app_id = $1 AND platform = $2 FOR UPDATE`,
-      [target.rows[0].app_id, target.rows[0].platform],
-    );
-    const merged = new Map((existing.rows[0]?.flows ?? []).map((flow) => [flow.id, flow]));
-    for (const flow of incoming) merged.set(flow.id, flow);
-    const flows = [...merged.values()];
-    await client.query(
-      `INSERT INTO app_flows (app_id, platform, flows)
-       VALUES ($1, $2, $3::jsonb)
-       ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-      [target.rows[0].app_id, target.rows[0].platform, JSON.stringify(flows)],
-    );
-    return flows;
+    return mergeCurrentFlows(client, {
+      appId: target.rows[0].app_id,
+      platform: target.rows[0].platform,
+      flows: incoming,
+    });
   });
 
   const requestPause = async (runId: string): Promise<void> => {

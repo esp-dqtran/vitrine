@@ -13,6 +13,7 @@ const complete: CatalogPersistenceSnapshot = {
   screens: 89,
   uiElements: 89,
   flows: 32,
+  invalidFlowMappings: 0,
   invalidFlowReferences: 0,
   missingScreenObjects: 0,
   missingUiElementObjects: 0,
@@ -52,6 +53,7 @@ test("persistence loader requires object backing and normalizes database counter
           screens: "89",
           ui_elements: "89",
           flows: "32",
+          invalid_flow_mappings: "0",
           invalid_flow_references: "0",
           missing_screen_objects: "1",
           missing_ui_element_objects: "2",
@@ -70,6 +72,11 @@ test("persistence loader requires object backing and normalizes database counter
   assert.match(queries[0]?.text ?? "", /missing_screen_objects/);
   assert.match(queries[0]?.text ?? "", /missing_ui_element_objects/);
   assert.match(queries[0]?.text ?? "", /missing_flow_objects/);
+  assert.match(queries[0]?.text ?? "", /count\(DISTINCT af\.id\)::int AS flows/);
+  assert.match(queries[0]?.text ?? "", /app_flow_mappings/);
+  assert.match(queries[0]?.text ?? "", /jsonb_array_elements\(COALESCE\(af\.steps/);
+  assert.doesNotMatch(queries[0]?.text ?? "", /jsonb_array_elements\(COALESCE\(af\.flows/);
+  assert.doesNotMatch(queries[0]?.text ?? "", /jsonb_array_length\(af\.flows/);
   assert.deepEqual(result.get("airalo\u0000ios"), {
     ...complete,
     missingScreenObjects: 1,
@@ -88,6 +95,7 @@ test("persisted verification error retains exact repair phases", () => {
         screens: 144,
         uiElements: 136,
         flows: 0,
+        invalidFlowMappings: 0,
         invalidFlowReferences: 0,
         missingScreenObjects: 0,
         missingUiElementObjects: 0,

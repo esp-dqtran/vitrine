@@ -13,7 +13,15 @@ function flowScreenItems(flow: DesignFlow<EvidenceView>) {
   });
 }
 
-export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onOpen: () => void }) {
+export function FlowCard({
+  flow,
+  onOpen,
+  anchorId,
+}: {
+  flow: DesignFlow<EvidenceView>;
+  onOpen: () => void;
+  anchorId?: string;
+}) {
   const trackRef = useRef<HTMLButtonElement>(null);
   const [saved, setSaved] = useState(false);
   const screens = flowScreenItems(flow);
@@ -29,7 +37,12 @@ export function FlowCard({ flow, onOpen }: { flow: DesignFlow<EvidenceView>; onO
   };
 
   return (
-    <article className="flow-strip-card" data-flow-strip-card="true">
+    <article
+      className="flow-strip-card"
+      data-flow-strip-card="true"
+      data-flow-gallery-id={flow.id}
+      id={anchorId}
+    >
       <div className="flow-strip-card__stage">
         <Button
           ref={trackRef}

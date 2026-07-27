@@ -68,8 +68,7 @@ async function globalInvalidFlowReferenceCount(pool: pg.Pool): Promise<number> {
     )::int AS invalid_flow_references
     FROM app_flows af
     JOIN apps a ON a.id = af.app_id
-    CROSS JOIN LATERAL jsonb_array_elements(af.flows) f
-    CROSS JOIN LATERAL jsonb_array_elements(COALESCE(f->'steps', '[]'::jsonb)) s
+    CROSS JOIN LATERAL jsonb_array_elements(af.steps) s
     CROSS JOIN LATERAL jsonb_array_elements(COALESCE(s->'evidence', '[]'::jsonb)) e
     LEFT JOIN images i ON i.id = (e #>> '{}')::bigint
     LEFT JOIN platforms evidence_platform ON evidence_platform.id = i.platform_id`);
@@ -117,6 +116,7 @@ export async function main(): Promise<void> {
           screens: actual.screens,
           uiElements: actual.uiElements,
           flows: actual.flows,
+          invalidFlowMappings: actual.invalidFlowMappings,
           invalidFlowReferences: actual.invalidFlowReferences,
           missingScreenObjects: actual.missingScreenObjects,
           missingUiElementObjects: actual.missingUiElementObjects,

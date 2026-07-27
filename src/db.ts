@@ -11,6 +11,12 @@ import {
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
 import { createCategoryStore, type Category } from "./categoryStore.ts";
+import {
+  readCurrentFlows,
+  readVersionFlows,
+  replaceCurrentFlows,
+  replaceVersionFlows,
+} from "./normalizedFlowStore.ts";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/astryx";
@@ -303,13 +309,36 @@ export async function appKnowledgeEvidenceSource(
            AND i.kind IN ('screen', 'flow_step', 'ui_element')
        ), '[]'::jsonb) AS images,
        COALESCE(
-         CASE WHEN selected.status IN ('draft', 'in_review') THEN af.flows ELSE afv.flows END,
+         CASE WHEN selected.status IN ('draft', 'in_review') THEN (
+           SELECT jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+             'id', af.source_flow_id,
+             'title', af.title,
+             'category', af.source_category,
+             'description', af.description,
+             'tags', af.tags,
+             'steps', af.steps,
+             'provenance', af.provenance,
+             'insights', af.insights
+           )) ORDER BY af.position)
+           FROM app_flows af
+           WHERE af.app_id = selected.app_id AND af.platform = selected.platform
+         ) ELSE (
+           SELECT jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+             'id', afv.source_flow_id,
+             'title', afv.title,
+             'category', afv.source_category,
+             'description', afv.description,
+             'tags', afv.tags,
+             'steps', afv.steps,
+             'provenance', afv.provenance,
+             'insights', afv.insights
+           )) ORDER BY afv.position)
+           FROM app_flow_versions afv
+           WHERE afv.version_id = selected.version_id
+         ) END,
          '[]'::jsonb
        ) AS flows
-     FROM selected
-     LEFT JOIN app_flows af
-       ON af.app_id = selected.app_id AND af.platform = selected.platform
-     LEFT JOIN app_flow_versions afv ON afv.version_id = selected.version_id`,
+     FROM selected`,
     [input.app, input.platform, input.versionNumber],
   );
   const row = result.rows[0] as {
@@ -389,11 +418,11 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
      ), eligible_flows AS (
-       SELECT COALESCE(jsonb_array_length(af.flows), 0)::integer AS flow_count
-       FROM target t JOIN app_flows af ON af.app_id = t.id
+       SELECT COUNT(af.id)::integer AS flow_count
+       FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
        WHERE $2::boolean = false
        UNION ALL
-       SELECT COALESCE(jsonb_array_length(afv.flows), 0)::integer
+       SELECT COUNT(afv.id)::integer
        FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
        WHERE $2::boolean = true
      )
@@ -472,11 +501,11 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
      ), eligible_flows AS (
-       SELECT COALESCE(jsonb_array_length(af.flows), 0)::integer AS flow_count
-       FROM target t JOIN app_flows af ON af.app_id = t.id
+       SELECT COUNT(af.id)::integer AS flow_count
+       FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
        WHERE $2::boolean = false
        UNION ALL
-       SELECT COALESCE(jsonb_array_length(afv.flows), 0)::integer
+       SELECT COUNT(afv.id)::integer
        FROM latest_versions lv LEFT JOIN app_flow_versions afv ON afv.version_id = lv.id
        WHERE $2::boolean = true
      )
@@ -594,22 +623,58 @@ export async function getVersionFlows(
   publishedOnly = false,
 ): Promise<DesignFlow[]> {
   if (versionNumber == null && !publishedOnly) return getAppFlows(app, platform);
-  const res = await query<{ flows: DesignFlow[] }>(
-    `SELECT COALESCE(
-       CASE WHEN av.status IN ('draft', 'in_review') THEN af.flows ELSE afv.flows END,
-       '[]'::jsonb
-     ) AS flows
-     FROM app_versions av JOIN apps a ON a.id = av.app_id
-     LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
-     LEFT JOIN app_flows af ON af.app_id = av.app_id AND af.platform = av.platform
-     WHERE a.name = $1 AND av.platform = $2
-       AND (($3::integer IS NOT NULL AND av.version_number = $3)
-         OR ($3::integer IS NULL AND av.status = 'published'))
-       AND ($4::boolean = false OR av.status = 'published')
-     ORDER BY av.version_number DESC LIMIT 1`,
-    [app, platform, versionNumber ?? null, publishedOnly],
-  );
-  return res.rows[0]?.flows ?? [];
+  return withTransaction(async (client) => {
+    const selected = await client.query<{
+      id: number;
+      app_id: number;
+      status: AppVersionStatus;
+    }>(
+      `SELECT av.id, av.app_id, av.status
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC LIMIT 1`,
+      [app, platform, versionNumber ?? null, publishedOnly],
+    );
+    const version = selected.rows[0];
+    if (!version) return [];
+    return version.status === "draft" || version.status === "in_review"
+      ? readCurrentFlows(client, {
+          appId: Number(version.app_id),
+          platform,
+        })
+      : readVersionFlows(client, { versionId: Number(version.id) });
+  });
+}
+
+export async function getVersionFlowsById(input: {
+  app: string;
+  platform: string;
+  versionId: number;
+}): Promise<DesignFlow[]> {
+  return withTransaction(async (client) => {
+    const scope = await client.query<{
+      id: number;
+      app_id: number;
+      status: AppVersionStatus;
+    }>(
+      `SELECT av.id, av.app_id, av.status
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE av.id = $1 AND a.name = $2 AND av.platform = $3`,
+      [input.versionId, input.app, input.platform],
+    );
+    const version = scope.rows[0];
+    if (!version) throw new Error("Flow target version was not found");
+    return version.status === "draft" || version.status === "in_review"
+      ? readCurrentFlows(client, {
+          appId: Number(version.app_id),
+          platform: input.platform,
+        })
+      : readVersionFlows(client, { versionId: input.versionId });
+  });
 }
 
 export async function flowEvidenceImages(input: {
@@ -892,12 +957,18 @@ export async function listDesignSystems(): Promise<DesignSystemSnapshot[]> {
 }
 
 export async function saveAppFlows(app: string, platform: string, flows: DesignFlow[]): Promise<void> {
-  await query(
-    `INSERT INTO app_flows (app_id, platform, flows)
-     SELECT id, $2, $3::jsonb FROM apps WHERE name = $1
-     ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-    [app, platform, JSON.stringify(flows)]
-  );
+  await withTransaction(async (client) => {
+    const target = await client.query<{ id: number }>(
+      "SELECT id FROM apps WHERE name = $1",
+      [app],
+    );
+    if (!target.rows[0]) throw new Error("Flow target app was not found");
+    await replaceCurrentFlows(client, {
+      appId: Number(target.rows[0].id),
+      platform,
+      flows,
+    });
+  });
 }
 
 export async function saveAnalyzedAppFlows(input: {
@@ -923,35 +994,49 @@ export async function saveAnalyzedAppFlows(input: {
     if (!selected || selected.app !== input.app || selected.platform !== input.platform) {
       throw new Error("Flow analysis version scope mismatch");
     }
-    const serialized = JSON.stringify(input.flows);
-    await client.query(
-      `INSERT INTO app_flow_versions (version_id, flows) VALUES ($1, $2::jsonb)
-       ON CONFLICT (version_id) DO UPDATE SET flows = EXCLUDED.flows, created_at = now()`,
-      [input.versionId, serialized],
-    );
+    await replaceVersionFlows(client, {
+      versionId: input.versionId,
+      flows: input.flows,
+    });
     if (selected.status === "draft" || selected.status === "in_review") {
-      await client.query(
-        `INSERT INTO app_flows (app_id, platform, flows) VALUES ($1, $2, $3::jsonb)
-         ON CONFLICT (app_id, platform) DO UPDATE SET flows = EXCLUDED.flows, updated_at = now()`,
-        [selected.app_id, input.platform, serialized],
-      );
+      await replaceCurrentFlows(client, {
+        appId: selected.app_id,
+        platform: input.platform,
+        flows: input.flows,
+      });
     }
   });
 }
 
 export async function getAppFlows(app: string, platform: string): Promise<DesignFlow[]> {
-  const res = await query<{ flows: DesignFlow[] }>(
-    `SELECT f.flows FROM app_flows f JOIN apps a ON a.id = f.app_id WHERE a.name = $1 AND f.platform = $2`,
-    [app, platform]
-  );
-  return res.rows[0]?.flows ?? [];
+  return withTransaction(async (client) => {
+    const target = await client.query<{ id: number }>(
+      "SELECT id FROM apps WHERE name = $1",
+      [app],
+    );
+    if (!target.rows[0]) return [];
+    return readCurrentFlows(client, {
+      appId: Number(target.rows[0].id),
+      platform,
+    });
+  });
 }
 
 export async function listAppFlowSets(): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
-  const res = await query<{ app: string; flows: DesignFlow[] }>(
-    `SELECT a.name AS app, f.flows FROM app_flows f JOIN apps a ON a.id = f.app_id ORDER BY a.name`
-  );
-  return res.rows;
+  return withTransaction(async (client) => {
+    const scopes = await client.query<{ app_id: number; app: string; platform: string }>(
+      `SELECT DISTINCT af.app_id, a.name AS app, af.platform
+       FROM app_flows af JOIN apps a ON a.id = af.app_id
+       ORDER BY a.name, af.platform`,
+    );
+    return Promise.all(scopes.rows.map(async (scope) => ({
+      app: scope.app,
+      flows: await readCurrentFlows(client, {
+        appId: Number(scope.app_id),
+        platform: scope.platform,
+      }),
+    })));
+  });
 }
 
 export interface AppVersion {
@@ -984,7 +1069,11 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
   COALESCE(image_counts.analyzed_count, 0)::int AS analyzed_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'components'), 0)::int AS component_count,
   COALESCE(jsonb_array_length((CASE WHEN av.status IN ('draft','in_review') THEN ds.snapshot ELSE dsv.snapshot END)->'tokens'), 0)::int AS token_count,
-  COALESCE(jsonb_array_length(CASE WHEN av.status IN ('draft','in_review') THEN af.flows ELSE afv.flows END), 0)::int AS flow_count
+  CASE WHEN av.status IN ('draft','in_review')
+    THEN (SELECT COUNT(*) FROM app_flows af
+          WHERE af.app_id = av.app_id AND af.platform = av.platform)
+    ELSE (SELECT COUNT(*) FROM app_flow_versions afv WHERE afv.version_id = av.id)
+  END::int AS flow_count
   FROM app_versions av JOIN apps a ON a.id = av.app_id
   JOIN platforms platform_identity ON platform_identity.app_id = av.app_id
     AND platform_identity.name = av.platform
@@ -996,9 +1085,7 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
     WHERE vi.version_id = av.id
   ) image_counts ON true
   LEFT JOIN design_system_versions dsv ON dsv.version_id = av.id
-  LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
-  LEFT JOIN design_systems ds ON ds.app_id = av.app_id AND ds.platform = av.platform
-  LEFT JOIN app_flows af ON af.app_id = av.app_id AND af.platform = av.platform`;
+  LEFT JOIN design_systems ds ON ds.app_id = av.app_id AND ds.platform = av.platform`;
 
 export async function listAppVersions(app: string, platform: string, publishedOnly = false): Promise<AppVersion[]> {
   const res = await query<AppVersion>(
@@ -1147,10 +1234,10 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
       `SELECT snapshot FROM design_systems WHERE app_id = $1 AND platform = $2`,
       [version.rows[0].app_id, version.rows[0].platform],
     );
-    const flows = await client.query<{ flows: DesignFlow[] }>(
-      `SELECT flows FROM app_flows WHERE app_id = $1 AND platform = $2`,
-      [version.rows[0].app_id, version.rows[0].platform],
-    );
+    const flows = await readCurrentFlows(client, {
+      appId: version.rows[0].app_id,
+      platform: version.rows[0].platform,
+    });
     const issues = await client.query<{ message: string }>(
       `SELECT message FROM review_issues
        WHERE version_id = $1 AND severity = 'blocker' AND resolved = false`,
@@ -1159,7 +1246,7 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
     const candidate = {
       images: images.rows,
       snapshot: snapshot.rows[0]?.snapshot,
-      flows: flows.rows[0]?.flows ?? [],
+      flows,
     };
     const blockers = [
       ...validatePublication(candidate),
@@ -1187,11 +1274,10 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
        ON CONFLICT (version_id) DO UPDATE SET snapshot = EXCLUDED.snapshot, created_at = now()`,
       [versionId, JSON.stringify(markSnapshotReviewed(candidate.snapshot!))]
     );
-    await client.query(
-      `INSERT INTO app_flow_versions (version_id, flows) VALUES ($1, $2::jsonb)
-       ON CONFLICT (version_id) DO UPDATE SET flows = EXCLUDED.flows, created_at = now()`,
-      [versionId, JSON.stringify(candidate.flows)]
-    );
+    await replaceVersionFlows(client, {
+      versionId,
+      flows: candidate.flows,
+    });
     const updated = await client.query(
       `WITH counts AS (
          SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
@@ -1229,12 +1315,14 @@ export async function getVersionDesignSystem(app: string, platform: string, vers
     if (!snapshot) return undefined;
     return { version, snapshot, flows: await getAppFlows(app, platform) };
   }
-  const res = await query<{ snapshot: DesignSystemSnapshot; flows: DesignFlow[] }>(
-    `SELECT dsv.snapshot, COALESCE(afv.flows, '[]'::jsonb) AS flows
-     FROM design_system_versions dsv LEFT JOIN app_flow_versions afv ON afv.version_id = dsv.version_id
-     WHERE dsv.version_id = $1`, [version.id]
+  const res = await query<{ snapshot: DesignSystemSnapshot }>(
+    `SELECT snapshot FROM design_system_versions WHERE version_id = $1`,
+    [version.id],
   );
-  return res.rows[0] ? { version, ...res.rows[0] } : undefined;
+  const snapshot = res.rows[0]?.snapshot;
+  if (!snapshot) return undefined;
+  const flows = await getVersionFlows(app, platform, version.version_number);
+  return { version, snapshot, flows };
 }
 
 export async function versionImages(app: string, platform: string, versionNumber?: number, kind: ImageKind | ImageKind[] = "screen"): Promise<CrawledImage[]> {
@@ -1299,10 +1387,11 @@ export async function publishedSearchSource(
       "SELECT snapshot FROM design_system_versions WHERE version_id = $1",
       [selected.id],
     ),
-    query<{ flows: DesignFlow[] }>(
-      "SELECT flows FROM app_flow_versions WHERE version_id = $1",
-      [selected.id],
-    ),
+    getVersionFlowsById({
+      app: selected.app,
+      platform: selected.platform,
+      versionId: selected.id,
+    }),
   ]);
 
   return {
@@ -1321,7 +1410,7 @@ export async function publishedSearchSource(
         : {}),
     })),
     ...(system.rows[0] ? { system: system.rows[0].snapshot } : {}),
-    flows: flows.rows[0]?.flows ?? [],
+    flows,
   };
 }
 
@@ -1486,16 +1575,22 @@ export async function listPublishedDesignSystems(): Promise<DesignSystemSnapshot
 }
 
 export async function listPublishedFlowSets(): Promise<Array<{ app: string; flows: DesignFlow[] }>> {
-  const res = await query<{ app: string; flows: DesignFlow[] }>(
-    `SELECT a.name AS app, COALESCE(afv.flows, '[]'::jsonb) AS flows
-     FROM app_versions av JOIN apps a ON a.id = av.app_id
-     LEFT JOIN app_flow_versions afv ON afv.version_id = av.id
-     WHERE av.status = 'published' AND av.version_number = (
-       SELECT MAX(latest.version_number) FROM app_versions latest
-       WHERE latest.app_id = av.app_id AND latest.platform = av.platform AND latest.status = 'published'
-     ) ORDER BY a.name`
-  );
-  return res.rows;
+  return withTransaction(async (client) => {
+    const versions = await client.query<{ id: number; app: string; platform: string }>(
+      `SELECT av.id, a.name AS app, av.platform
+       FROM app_versions av JOIN apps a ON a.id = av.app_id
+       WHERE av.status = 'published' AND av.version_number = (
+         SELECT MAX(latest.version_number) FROM app_versions latest
+         WHERE latest.app_id = av.app_id AND latest.platform = av.platform
+           AND latest.status = 'published'
+       )
+       ORDER BY a.name, av.platform`,
+    );
+    return Promise.all(versions.rows.map(async (version) => ({
+      app: version.app,
+      flows: await readVersionFlows(client, { versionId: Number(version.id) }),
+    })));
+  });
 }
 
 export async function recordExport(

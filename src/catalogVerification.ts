@@ -11,6 +11,7 @@ export interface CatalogPersistenceSnapshot {
   screens: number;
   uiElements: number;
   flows: number;
+  invalidFlowMappings: number;
   invalidFlowReferences: number;
   missingScreenObjects: number;
   missingUiElementObjects: number;
@@ -23,6 +24,7 @@ interface CatalogPersistenceRow {
   screens: number | string;
   ui_elements: number | string;
   flows: number | string;
+  invalid_flow_mappings: number | string;
   invalid_flow_references: number | string;
   missing_screen_objects: number | string;
   missing_ui_element_objects: number | string;
@@ -40,6 +42,7 @@ export function emptyCatalogPersistence(app: string, platform: string): CatalogP
     screens: 0,
     uiElements: 0,
     flows: 0,
+    invalidFlowMappings: 0,
     invalidFlowReferences: 0,
     missingScreenObjects: 0,
     missingUiElementObjects: 0,
@@ -63,7 +66,9 @@ export function catalogPersistenceRepair(
   return {
     screens: counts.screens || persisted.missingScreenObjects > 0,
     uiElements: counts.uiElements || persisted.missingUiElementObjects > 0,
-    flows: counts.flows || persisted.missingFlowObjects > 0,
+    flows: counts.flows
+      || persisted.invalidFlowMappings > 0
+      || persisted.missingFlowObjects > 0,
   };
 }
 
@@ -126,6 +131,7 @@ export function assertCatalogPersistenceComplete(
     `Persisted verification failed: screens ${persisted.screens}/${expected.screens ?? "?"}, `
       + `UI elements ${persisted.uiElements}/${expected.uiElements ?? "?"}, `
       + `flows ${persisted.flows}/${expected.flows ?? "?"}, `
+      + `invalid flow mappings ${persisted.invalidFlowMappings}, `
       + `invalid flow references ${persisted.invalidFlowReferences}, `
       + `missing objects ${persisted.missingScreenObjects + persisted.missingUiElementObjects + persisted.missingFlowObjects}`,
   );
@@ -153,10 +159,19 @@ export async function loadCatalogPersistence(
       GROUP BY wanted.app, wanted.platform
     ), flow_counts AS (
       SELECT wanted.app, wanted.platform,
-             COALESCE(jsonb_array_length(af.flows), 0)::int AS flows
+             count(DISTINCT af.id)::int AS flows,
+             count(DISTINCT af.id) FILTER (
+               WHERE af.id IS NOT NULL AND COALESCE(flow_mappings.mapping_count, 0) <> 1
+             )::int AS invalid_flow_mappings
       FROM wanted
       LEFT JOIN apps a ON a.name = wanted.app
       LEFT JOIN app_flows af ON af.app_id = a.id AND af.platform = wanted.platform
+      LEFT JOIN LATERAL (
+        SELECT count(*)::int AS mapping_count
+        FROM app_flow_mappings afm
+        WHERE afm.app_flow_id = af.id
+      ) flow_mappings ON true
+      GROUP BY wanted.app, wanted.platform
     ), evidence_counts AS (
       SELECT wanted.app, wanted.platform,
              count(*) FILTER (
@@ -169,8 +184,7 @@ export async function loadCatalogPersistence(
       FROM wanted
       LEFT JOIN apps a ON a.name = wanted.app
       LEFT JOIN app_flows af ON af.app_id = a.id AND af.platform = wanted.platform
-      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(af.flows, '[]'::jsonb)) f ON true
-      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(f->'steps', '[]'::jsonb)) s ON true
+      LEFT JOIN LATERAL jsonb_array_elements(COALESCE(af.steps, '[]'::jsonb)) s ON true
       LEFT JOIN LATERAL jsonb_array_elements(COALESCE(s->'evidence', '[]'::jsonb)) e ON true
       LEFT JOIN images i ON i.id = CASE WHEN e IS NULL THEN NULL ELSE (e #>> '{}')::bigint END
       LEFT JOIN platforms evidence_platform ON evidence_platform.id = i.platform_id
@@ -178,7 +192,8 @@ export async function loadCatalogPersistence(
       GROUP BY wanted.app, wanted.platform
     )
     SELECT image_counts.app, image_counts.platform, image_counts.screens, image_counts.ui_elements,
-           flow_counts.flows, evidence_counts.invalid_flow_references,
+           flow_counts.flows, flow_counts.invalid_flow_mappings,
+           evidence_counts.invalid_flow_references,
            image_counts.missing_screen_objects, image_counts.missing_ui_element_objects,
            evidence_counts.missing_flow_objects
     FROM image_counts
@@ -193,6 +208,7 @@ export async function loadCatalogPersistence(
       screens: Number(row.screens),
       uiElements: Number(row.ui_elements),
       flows: Number(row.flows),
+      invalidFlowMappings: Number(row.invalid_flow_mappings),
       invalidFlowReferences: Number(row.invalid_flow_references),
       missingScreenObjects: Number(row.missing_screen_objects),
       missingUiElementObjects: Number(row.missing_ui_element_objects),

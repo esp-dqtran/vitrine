@@ -1,5 +1,10 @@
 import { pathToFileURL } from "node:url";
 import pg, { type PoolClient } from "pg";
+import type { DesignFlow } from "../src/designSystem.ts";
+import {
+  mergeCurrentFlows,
+  validateIncomingFlows,
+} from "../src/normalizedFlowStore.ts";
 
 const LOCAL_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/astryx";
 const BATCH_SIZE = 200;
@@ -57,26 +62,6 @@ export function auditSnapshots(source: CatalogKeySnapshot, target: CatalogKeySna
 }
 
 type JsonObject = Record<string, unknown>;
-
-export function mergeFlowArrays(target: unknown, source: unknown): unknown[] {
-  const targetFlows = Array.isArray(target) ? target : [];
-  const sourceFlows = Array.isArray(source) ? source : [];
-  const sourceById = new Map(
-    sourceFlows
-      .filter((flow): flow is JsonObject => Boolean(flow) && typeof flow === "object" && !Array.isArray(flow))
-      .filter((flow) => typeof flow.id === "string")
-      .map((flow) => [flow.id as string, flow]),
-  );
-  const merged = targetFlows.map((flow) => {
-    if (!flow || typeof flow !== "object" || Array.isArray(flow)) return flow;
-    const id = (flow as JsonObject).id;
-    if (typeof id !== "string") return flow;
-    const replacement = sourceById.get(id);
-    if (replacement) sourceById.delete(id);
-    return replacement ?? flow;
-  });
-  return [...merged, ...sourceById.values()];
-}
 
 export function remapFlowEvidence(flows: unknown, resolve: (imageId: number) => number): unknown[] {
   if (!Array.isArray(flows)) return [];
@@ -160,8 +145,14 @@ interface ImageRow {
 interface FlowRow {
   app: string;
   platform: string;
-  flows: unknown;
-  updated_at: string | Date;
+  source_flow_id: string;
+  title: string;
+  source_category: string | null;
+  description: string;
+  tags: DesignFlow["tags"];
+  steps: DesignFlow["steps"];
+  provenance: DesignFlow["provenance"] | null;
+  insights: DesignFlow["insights"] | null;
 }
 
 interface CatalogRows {
@@ -181,7 +172,8 @@ function snapshot(rows: CatalogRows): CatalogKeySnapshot {
     platforms: rows.platforms.map(({ app, platform }) => naturalKey(app, platform)),
     images: rows.images.map(({ app, platform, image_url }) => naturalKey(app, platform, image_url)),
     objects: rows.objects.map(({ object_key }) => object_key),
-    flows: rows.flows.map(({ app, platform }) => naturalKey(app, platform)),
+    flows: rows.flows.map(({ app, platform, source_flow_id }) =>
+      naturalKey(app, platform, source_flow_id)),
   };
 }
 
@@ -237,9 +229,11 @@ async function loadCatalog(database: Queryable, includeUnreferencedObjects = fal
        ORDER BY object_key`,
     ),
     database.query<FlowRow>(
-      `SELECT a.name AS app, f.platform, f.flows, f.updated_at
-       FROM app_flows f JOIN apps a ON a.id = f.app_id
-       ORDER BY a.name, f.platform`,
+      `SELECT a.name AS app, f.platform, f.source_flow_id, f.title,
+         f.source_category, f.description, f.tags, f.steps, f.provenance, f.insights
+       FROM app_flows f
+       JOIN apps a ON a.id = f.app_id
+       ORDER BY a.name, f.platform, f.position`,
     ),
   ]);
   return { apps: apps.rows, platforms: platforms.rows, images: images.rows, objects: objects.rows, flows: flows.rows };
@@ -479,43 +473,67 @@ async function targetImageIds(client: PoolClient, rows: ImageRow[]): Promise<Map
   return result;
 }
 
+export function groupSourceFlows(
+  rows: FlowRow[],
+  remapEvidence?: (row: FlowRow, sourceImageId: number) => number,
+): Map<string, { app: string; platform: string; flows: DesignFlow[] }> {
+  const grouped = new Map<string, {
+    app: string;
+    platform: string;
+    flows: DesignFlow[];
+  }>();
+  for (const row of rows) {
+    const key = naturalKey(row.app, row.platform);
+    const target = grouped.get(key) ?? {
+      app: row.app,
+      platform: row.platform,
+      flows: [],
+    };
+    const sourceFlow: DesignFlow = {
+      id: row.source_flow_id,
+      title: row.title,
+      ...(row.source_category ? { category: row.source_category } : {}),
+      description: row.description,
+      tags: row.tags,
+      steps: row.steps,
+      ...(row.provenance ? { provenance: row.provenance } : {}),
+      ...(row.insights ? { insights: row.insights } : {}),
+    };
+    const translated = remapEvidence
+      ? remapFlowEvidence(
+          [sourceFlow],
+          (sourceImageId) => remapEvidence(row, sourceImageId),
+        )[0] as DesignFlow
+      : sourceFlow;
+    target.flows.push(translated);
+    grouped.set(key, target);
+  }
+  return grouped;
+}
+
 async function mergeFlows(client: PoolClient, rows: FlowRow[], imageIds: Map<string, number>): Promise<void> {
-  for (const batch of chunks(rows, BATCH_SIZE)) {
-    const translated = batch.map((row) => ({
-      ...row,
-      flows: remapFlowEvidence(row.flows, (sourceId) => {
-        const targetId = imageIds.get(naturalKey(row.app, row.platform, String(sourceId)));
-        if (!targetId) throw new Error(`Missing target image for flow evidence ${row.app}/${row.platform}/${sourceId}`);
-        return targetId;
-      }),
-    }));
-    const pairs = translated.map(({ app, platform }) => ({ app, platform }));
-    const existing = await client.query<FlowRow>(
-      `SELECT a.name AS app, f.platform, f.flows, f.updated_at
-       FROM jsonb_to_recordset($1::jsonb) AS x(app text, platform text)
-       JOIN apps a ON a.name = x.app
-       JOIN app_flows f ON f.app_id = a.id AND f.platform = x.platform`,
-      [JSON.stringify(pairs)],
+  const flowSets = groupSourceFlows(rows, (row, sourceImageId) => {
+    const targetId = imageIds.get(
+      naturalKey(row.app, row.platform, String(sourceImageId)),
     );
-    const existingByKey = new Map(
-      existing.rows.map((row) => [naturalKey(row.app, row.platform), row.flows]),
+    if (!targetId) {
+      throw new Error(
+        `Missing target image for flow evidence ${row.app}/${row.platform}/${sourceImageId}`,
+      );
+    }
+    return targetId;
+  });
+  for (const source of flowSets.values()) {
+    const target = await client.query<{ id: number }>(
+      "SELECT id FROM apps WHERE name = $1",
+      [source.app],
     );
-    const merged = translated.map((row) => ({
-      ...row,
-      flows: mergeFlowArrays(existingByKey.get(naturalKey(row.app, row.platform)), row.flows),
-    }));
-    await client.query(
-      `INSERT INTO app_flows (app_id, platform, flows, updated_at)
-       SELECT a.id, x.platform, x.flows, COALESCE(x.updated_at, now())
-       FROM jsonb_to_recordset($1::jsonb) AS x(
-         app text, platform text, flows jsonb, updated_at timestamptz
-       )
-       JOIN apps a ON a.name = x.app
-       ON CONFLICT (app_id, platform) DO UPDATE SET
-         flows = EXCLUDED.flows,
-         updated_at = GREATEST(app_flows.updated_at, EXCLUDED.updated_at)`,
-      [JSON.stringify(merged)],
-    );
+    if (!target.rows[0]) throw new Error(`Target app not found: ${source.app}`);
+    await mergeCurrentFlows(client, {
+      appId: Number(target.rows[0].id),
+      platform: source.platform,
+      flows: source.flows,
+    });
   }
 }
 
@@ -563,6 +581,9 @@ async function main(): Promise<void> {
     assertNoPreflightConflicts(sourceRows, targetRows);
     const before = auditSnapshots(snapshot(sourceRows), snapshot(targetRows));
     if (dryRun) {
+      for (const source of groupSourceFlows(sourceRows.flows).values()) {
+        validateIncomingFlows(source.flows);
+      }
       console.log(JSON.stringify({ mode: "dry-run", before }, null, 2));
       return;
     }

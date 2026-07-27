@@ -2095,6 +2095,14 @@ body {
   align-content: start;
 }
 
+.reference-detail[data-reference-detail='app'] .reference-detail__metadata-item > span {
+  font-size: 16px;
+}
+
+.reference-detail[data-reference-detail='app'] .reference-detail__metadata-item > strong {
+  font-size: 17px;
+}
+
 .reference-detail[data-reference-detail='app'] .reference-detail__metadata-item .apps-platform-switcher {
   gap: 12px;
   padding: 0;
@@ -2111,8 +2119,12 @@ body {
   min-height: 0 !important;
   padding: 0 !important;
   color: var(--color-text-secondary) !important;
-  font-size: 15px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
+}
+
+.reference-detail[data-reference-detail='app'] .reference-detail__metadata-item .apps-platform-switcher button span {
+  font-size: 17px !important;
 }
 
 .reference-detail[data-reference-detail='app'] .reference-detail__metadata-item .apps-platform-switcher button:hover,
@@ -2153,6 +2165,11 @@ body {
 
 .reference-detail[data-reference-detail='app'] .reference-detail__actions button {
   min-height: 44px;
+  font-size: 16px !important;
+}
+
+.reference-detail[data-reference-detail='app'] .reference-detail__actions button span {
+  font-size: 16px !important;
 }
 
 .reference-detail__navigation {
@@ -2224,9 +2241,13 @@ body {
   min-width: max-content !important;
   height: 56px !important;
   color: var(--color-text-secondary) !important;
-  font-size: 14px !important;
+  font-size: 17px !important;
   scroll-snap-align: start;
   transition: color 180ms ease;
+}
+
+.reference-detail[data-reference-detail='app'] .reference-detail__tabs > button span {
+  font-size: 17px !important;
 }
 
 .reference-detail[data-reference-detail='app'] .reference-detail__tabs > button:hover,
@@ -2245,6 +2266,10 @@ body {
 .reference-detail__tab-trailing {
   padding-bottom: 18px;
   flex: 0 0 auto;
+}
+
+.reference-detail[data-reference-detail='app'] .reference-detail__tab-trailing {
+  font-size: 16px;
 }
 
 .reference-detail__body-inner {
@@ -5025,9 +5050,35 @@ body {
   display: inline-flex;
   flex: 0 0 auto;
   color: currentColor;
+  transform: rotate(0);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.flow-tree__group-chevron[data-expanded='true'] {
+  transform: rotate(90deg);
+}
+
+.flow-tree__flows-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 160ms ease,
+    visibility 0s linear 220ms;
+}
+
+.flow-tree__flows-collapse[data-expanded='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .flow-tree__flows {
+  min-height: 0;
+  overflow: hidden;
   padding-left: 48px;
 }
 
@@ -5044,6 +5095,12 @@ body {
   font-size: 17px;
   font-weight: 600;
   line-height: 1.25;
+  transform: translateX(0);
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    font-weight 180ms ease;
 }
 
 .flow-tree__flow-button > span:first-child {
@@ -5068,6 +5125,20 @@ body {
   background: transparent;
   box-shadow: none;
   font-weight: 650;
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-tree__group-button,
+  .flow-tree__flow-button,
+  .flow-tree__group-chevron,
+  .flow-tree__flows-collapse {
+    transition: none;
+  }
+
+  .flow-tree__flow-button[aria-current='page'] {
+    transform: none;
+  }
 }
 
 .flow-tree__empty {
@@ -5127,6 +5198,7 @@ body {
   min-width: 0;
   display: grid;
   gap: 16px;
+  scroll-margin-top: calc(var(--reference-nav-height) + 24px);
 }
 
 .flow-strip-card__stage {

@@ -21,7 +21,7 @@ const flow = (
   steps: [],
 });
 
-test('renders category disclosures, counts, nested flows, and selected state', () => {
+test('renders standalone flows at the root and categories as disclosures', () => {
   const groups = buildFlowTreeGroups([
     flow('invite', 'Inviting a team member', 'Onboarding'),
     flow('trial', 'Starting a trial', 'Onboarding'),
@@ -55,7 +55,11 @@ test('renders category disclosures, counts, nested flows, and selected state', (
   assert.match(html, /Onboarding/);
   assert.match(html, /Inviting a team member/);
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
-  assert.match(html, /Standalone flows/);
+  assert.doesNotMatch(html, /Standalone flows/);
+  assert.match(
+    html,
+    /<ul class="flow-tree__groups"><li class="flow-tree__flow-branch">[\s\S]*Home/,
+  );
   assert.match(html, /id="desktop-flow-group-/);
 });
 
@@ -73,6 +77,29 @@ test('renders a local no-match status without replacing the workspace', () => {
   );
   assert.match(html, /role="status"/);
   assert.match(html, /No flows match your search/);
+});
+
+test('keeps collapsed category content mounted but out of keyboard focus', () => {
+  const html = renderToStaticMarkup(
+    <FlowTree
+      idPrefix="desktop"
+      groups={buildFlowTreeGroups([
+        flow('invite', 'Inviting a team member', 'Onboarding'),
+      ])}
+      query=""
+      expandedGroupIds={new Set()}
+      onQueryChange={() => undefined}
+      onToggleGroup={() => undefined}
+      onSelectFlow={() => undefined}
+    />,
+  );
+
+  assert.match(
+    html,
+    /class="flow-tree__flows-collapse" data-expanded="false" aria-hidden="true"/,
+  );
+  assert.match(html, /Inviting a team member/);
+  assert.match(html, /tabindex="-1"/);
 });
 
 test('renders a selected Flow in the persistent workspace beside its directory', () => {
@@ -174,6 +201,13 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]/);
   assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]\s*\{[^}]*background:\s*transparent/);
   assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]\s*\{[^}]*box-shadow:\s*none/);
+  assert.match(css, /\.flow-tree__flow-button\s*\{[^}]*transition:[^}]*transform/);
+  assert.match(css, /\.flow-tree__flow-button\[aria-current=['"]page['"]\]\s*\{[^}]*transform:\s*translateX\(4px\)/);
+  assert.match(css, /\.flow-tree__flows-collapse\s*\{[^}]*grid-template-rows:\s*0fr[\s\S]*transition:/);
+  assert.match(css, /\.flow-tree__flows-collapse\[data-expanded=['"]true['"]\]\s*\{[^}]*grid-template-rows:\s*1fr/);
+  assert.match(css, /\.flow-tree__group-chevron\s*\{[^}]*transition:\s*transform/);
+  assert.match(css, /\.flow-tree__group-chevron\[data-expanded=['"]true['"]\]\s*\{[^}]*transform:\s*rotate\(90deg\)/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.flow-tree__flows-collapse/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__rail\s*\{[\s\S]*display:\s*none/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*\.flow-workspace__browse\s*\{[\s\S]*display:/);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*selected-flow-workspace/);
