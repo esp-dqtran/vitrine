@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-type ReferenceDiscoveryKind = 'apps' | 'sites';
+type ReferenceDiscoveryKind = 'apps' | 'sites' | 'flows';
 
 interface ReferenceDiscoveryPageShellProps {
   kind: ReferenceDiscoveryKind;
@@ -25,6 +25,7 @@ export function ReferenceDiscoveryPageShell({
     <main
       data-apps-discovery={kind === 'apps' ? 'true' : undefined}
       data-sites-discovery={kind === 'sites' ? 'true' : undefined}
+      data-flows-discovery={kind === 'flows' ? 'true' : undefined}
       data-reference-gallery-shell={kind}
       className={`reference-discovery reference-discovery--${kind} ${kind}-discovery`}
     >

@@ -4,7 +4,7 @@ import type { Platform } from '../platformFromUrl';
 import { createAppSectionStore, type AppDataSection, type AppSectionKey } from './appSectionStore.ts';
 import { listAppVersions } from './researchApi.ts';
 
-export type DetailSection = 'overview' | 'screens' | 'elements' | 'flows' | 'design-system' | 'export' | 'review';
+export type DetailSection = 'screens' | 'elements' | 'flows' | 'design-system' | 'export';
 export type DataDependency = 'versions' | 'screens' | 'ui-elements' | 'flows' | 'design-system';
 
 export function sectionDependencies(section: DetailSection): DataDependency[] {
@@ -14,8 +14,6 @@ export function sectionDependencies(section: DetailSection): DataDependency[] {
     case 'flows': return ['versions', 'flows'];
     case 'design-system': return ['versions', 'design-system'];
     case 'export': return ['versions', 'design-system', 'screens'];
-    case 'review': return ['versions', 'design-system'];
-    case 'overview': return [];
   }
 }
 

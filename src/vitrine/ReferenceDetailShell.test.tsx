@@ -45,7 +45,7 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
   assert.doesNotMatch(html, /background:[^;"]+;min-height:400px/);
 });
 
-test('keeps remote identity media off the mobile critical path', () => {
+test('renders real identity media on mobile with a letter fallback', async () => {
   const html = renderToStaticMarkup(
     <ReferenceDetailShell
       title="Quora"
@@ -58,11 +58,16 @@ test('keeps remote identity media off the mobile critical path', () => {
       onTabChange={() => undefined}
     >Overview</ReferenceDetailShell>,
   );
+  const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const fallbackRule = styles.match(
+    /\.reference-detail__logo-fallback\s*\{[^}]+\}/,
+  )?.[0] ?? '';
 
-  assert.match(html, /<source[^>]+media="\(min-width: 601px\)"[^>]+srcSet="\/quora\.png"/);
-  assert.match(html, /<img[^>]+loading="eager"/);
-  assert.doesNotMatch(html, /<img[^>]+src="\/quora\.png"/);
+  assert.match(html, /<img[^>]+src="\/quora\.png"[^>]+loading="eager"/);
+  assert.doesNotMatch(html, /<source[^>]+media="\(min-width: 601px\)"/);
   assert.match(html, /reference-detail__logo-fallback[^>]*>Q<\/span>/);
+  assert.match(fallbackRule, /display:\s*grid/);
+  assert.doesNotMatch(styles, /\.reference-detail__logo-picture\s*\{\s*display:\s*none/);
   assert.match(html, /fetchPriority="high"/);
   assert.match(html, /width="88"/);
   assert.match(html, /height="88"/);
@@ -91,70 +96,144 @@ test('renders Vitrine primary actions as white buttons with black content', asyn
   );
 });
 
-test('copies the Apps ordering strip style onto App detail tabs only', async () => {
+test('shares the compact Apps detail presentation with Sites', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const heroRule = styles.match(
+    /\.reference-detail__hero-inner\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const logoRule = styles.match(
+    /\.reference-detail__logo\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const headingRule = styles.match(
+    /\.reference-detail__heading h1\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const descriptionRule = styles.match(
+    /\.reference-detail__heading p\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const metadataRule = styles.match(
+    /\.reference-detail__metadata\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const actionsRule = styles.match(
+    /\.reference-detail__actions\s*\{[^}]+\}/,
+  )?.[0] ?? '';
   const navigationRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__navigation\s*\{[^}]+\}/,
+    /\.reference-detail__navigation\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const tabsRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs\s*\{[^}]+\}/,
+    /\.reference-detail__tabs\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const tabRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs > button\s*\{[^}]+\}/,
+    /\.reference-detail__tabs > button\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const activeRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs > button:hover,[\s\S]*?\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs > button\[aria-selected='true'\]\s*\{[^}]+\}/,
+    /\.reference-detail__tabs > button:hover,[\s\S]*?\.reference-detail__tabs > button\[aria-selected='true'\]\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const indicatorRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tab-indicator\s*\{[^}]+\}/,
+    /\.reference-detail__tab-indicator\s*\{[^}]+\}/,
   )?.[0] ?? '';
+
+  assert.match(heroRule, /grid-template-columns:\s*80px minmax\(0,\s*1fr\) auto/);
+  assert.match(heroRule, /grid-template-areas:[\s\S]*"logo heading actions"[\s\S]*"logo metadata actions"/);
+  assert.match(heroRule, /column-gap:\s*24px/);
+  assert.match(heroRule, /padding-bottom:\s*28px/);
+
+  assert.match(logoRule, /width:\s*80px/);
+  assert.match(logoRule, /height:\s*80px/);
+  assert.match(logoRule, /border-radius:\s*20px/);
+
+  assert.match(headingRule, /font-size:\s*clamp\(32px,\s*3vw,\s*38px\)/);
+  assert.match(descriptionRule, /color:\s*var\(--color-text-secondary\)/);
+  assert.match(descriptionRule, /font-size:\s*clamp\(18px,\s*1\.7vw,\s*24px\)/);
+
+  assert.match(metadataRule, /gap:\s*32px/);
+  assert.match(metadataRule, /padding-top:\s*0/);
+  assert.match(actionsRule, /grid-area:\s*actions/);
+  assert.match(actionsRule, /padding:\s*0/);
 
   assert.match(navigationRule, /min-height:\s*56px/);
   assert.match(navigationRule, /border-top:\s*1px solid var\(--color-border-subtle\)/);
-
-  assert.match(tabsRule, /align-self:\s*stretch/);
   assert.match(tabsRule, /gap:\s*25px/);
   assert.match(tabsRule, /overflow-x:\s*auto/);
   assert.match(tabsRule, /scroll-snap-type:\s*inline proximity/);
-
   assert.match(tabRule, /min-width:\s*max-content/);
   assert.match(tabRule, /height:\s*56px/);
-  assert.match(tabRule, /color:\s*var\(--color-text-secondary\)/);
   assert.match(tabRule, /font-size:\s*17px/);
-  assert.match(tabRule, /scroll-snap-align:\s*start/);
-  assert.match(tabRule, /transition:\s*color 180ms ease/);
-
   assert.match(activeRule, /background:\s*transparent/);
   assert.match(activeRule, /color:\s*var\(--color-text-primary\)/);
-
   assert.match(indicatorRule, /bottom:\s*0/);
   assert.match(indicatorRule, /height:\s*2px/);
   assert.match(indicatorRule, /border-radius:\s*999px/);
-
-  assert.doesNotMatch(styles, /\.reference-detail\[data-reference-detail='site'\] \.reference-detail__tabs > button/);
 });
 
-test('matches App detail metadata and navigation text to the Flow directory scale', async () => {
+test('shares metadata and action scale without leaking App controls into Sites', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const metadataLabelRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item > span\s*\{[^}]+\}/,
+    /\.reference-detail__metadata-item > span\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const metadataValueRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item > strong\s*\{[^}]+\}/,
-  )?.[0] ?? '';
-  const platformRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item \.apps-platform-switcher button\s*\{[^}]+\}/,
-  )?.[0] ?? '';
-  const countRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tab-trailing\s*\{[^}]+\}/,
+    /\.reference-detail__metadata-item > strong\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const actionRule = styles.match(
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions button\s*\{[^}]+\}/,
+    /\.reference-detail__actions button\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const leadingRule = styles.match(
+    /\.reference-detail__tab-leading\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
   assert.match(metadataLabelRule, /font-size:\s*16px/);
   assert.match(metadataValueRule, /font-size:\s*17px/);
-  assert.match(platformRule, /font-size:\s*17px/);
-  assert.match(countRule, /font-size:\s*16px/);
+  assert.match(actionRule, /min-height:\s*44px/);
   assert.match(actionRule, /font-size:\s*16px/);
+  assert.match(leadingRule, /padding-bottom:\s*0/);
+
+  assert.match(
+    styles,
+    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item \.apps-platform-switcher/,
+  );
+  assert.doesNotMatch(
+    styles,
+    /\.reference-detail\[data-reference-detail='site'\][^{]*\.apps-platform-switcher/,
+  );
+});
+
+test('stacks the shared compact detail shell at the mobile breakpoint', async () => {
+  const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const keyframesStart = styles.indexOf('@keyframes vtDraw');
+  const mobileStart = styles.lastIndexOf('@media (max-width: 760px)', keyframesStart);
+  assert.notEqual(mobileStart, -1);
+  assert.notEqual(keyframesStart, -1);
+  const mobile = styles.slice(mobileStart, keyframesStart);
+
+  assert.match(
+    mobile,
+    /(?:^|\n)\s{2}\.reference-detail__hero-inner\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/,
+  );
+  assert.match(
+    mobile,
+    /(?:^|\n)\s{2}\.reference-detail__metadata\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+  );
+  assert.match(
+    mobile,
+    /(?:^|\n)\s{2}\.reference-detail__actions\s*\{[^}]*width:\s*100%/,
+  );
+});
+
+test('centers shared detail loading while preserving Site failure gutters', async () => {
+  const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+  const loadingRule = styles.match(/\.reference-detail-loading\s*\{[^}]+\}/)?.[0] ?? '';
+  const failureRule = styles.match(/\.site-detail--failure\s*\{[^}]+\}/)?.[0] ?? '';
+  const keyframesStart = styles.indexOf('@keyframes vtDraw');
+  const mobileStart = styles.lastIndexOf('@media (max-width: 760px)', keyframesStart);
+  assert.notEqual(mobileStart, -1);
+  assert.notEqual(keyframesStart, -1);
+  const mobile = styles.slice(mobileStart, keyframesStart);
+
+  assert.match(loadingRule, /min-height:\s*calc\(100vh - var\(--reference-nav-height,\s*72px\)\)/);
+  assert.match(loadingRule, /place-content:\s*center/);
+  assert.match(failureRule, /width:\s*100%/);
+  assert.match(failureRule, /padding:\s*24px 32px 80px/);
+  assert.match(
+    mobile,
+    /\.site-detail--failure\s*\{[^}]*padding:\s*24px 16px 80px/,
+  );
 });

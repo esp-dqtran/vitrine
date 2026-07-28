@@ -39,18 +39,54 @@ export function mountPrivateSitesRoutes(
   app: express.Express,
   dependencies: SitesRouteDependencies,
 ): void {
+  app.get("/sites/:siteSlug", async (req, res) => {
+    const routeSlug = routeSlugParameter(req.params.siteSlug);
+    if (!routeSlug) {
+      res.status(400).json({ error: "invalid Site name" });
+      return;
+    }
+    const sites = withRouteSlugs(await dependencies.store.listReadySites());
+    const site = sites.find((candidate) => candidate.routeSlug === routeSlug)
+      ?? legacyDuplicateRouteSite(sites, routeSlug);
+    if (!site) {
+      res.status(404).json({ error: "Site not found" });
+      return;
+    }
+    const requestedVersionId = req.query.version === undefined
+      ? site.versionId
+      : boundedQueryInteger(req.query.version, 1, Number.MAX_SAFE_INTEGER);
+    if (!requestedVersionId) {
+      res.status(400).json({ error: "invalid Site version reference" });
+      return;
+    }
+    const version = await dependencies.store.readyVersionDetail(site.siteId, requestedVersionId);
+    if (!version) {
+      res.status(404).json({ error: "Site version not found" });
+      return;
+    }
+    res.json({ ...clientSiteVersion(version), routeSlug: site.routeSlug });
+  });
+
   app.get("/sites/:siteId/versions/:versionId", async (req, res) => {
     const ids = versionIds(req.params);
     if (!ids) {
       res.status(400).json({ error: "invalid Site version reference" });
       return;
     }
-    const version = await dependencies.store.readyVersionDetail(ids.siteId, ids.versionId);
+    const [version, sites] = await Promise.all([
+      dependencies.store.readyVersionDetail(ids.siteId, ids.versionId),
+      dependencies.store.listReadySites(),
+    ]);
     if (!version) {
       res.status(404).json({ error: "Site version not found" });
       return;
     }
-    res.json(clientSiteVersion(version));
+    const site = withRouteSlugs(sites).find((candidate) => candidate.siteId === ids.siteId);
+    if (!site) {
+      res.status(404).json({ error: "Site not found" });
+      return;
+    }
+    res.json({ ...clientSiteVersion(version), routeSlug: site.routeSlug });
   });
 
   mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
@@ -72,16 +108,106 @@ function clientSiteVersion(version: SiteVersionDetail) {
           .filter(Boolean)
           .join(" "),
         ocrBoxes: [],
-        sourceMetadata: {
-          patterns: Array.isArray(section.sourceMetadata.patterns)
-            ? section.sourceMetadata.patterns.filter(
-                (pattern): pattern is string => typeof pattern === "string" && Boolean(pattern),
-              )
-            : [],
-        },
+        sourceMetadata: clientSectionMetadata(section.sourceMetadata),
       })),
     })),
   };
+}
+
+function clientSectionMetadata(
+  source: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {
+    patterns: stringArray(source.patterns, 20),
+  };
+  for (const [key, maximum] of [
+    ["selector", 1_024],
+    ["tagName", 80],
+    ["role", 100],
+    ["heading", 200],
+    ["headingLevel", 10],
+    ["anchor", 160],
+    ["text", 1_000],
+  ] as const) {
+    const value = boundedText(source[key], maximum);
+    if (value) result[key] = value;
+  }
+  const classNames = stringArray(source.classNames, 20);
+  if (classNames.length) result.classNames = classNames;
+  const elementBounds = numericRecord(source.elementBounds, [
+    "x",
+    "y",
+    "width",
+    "height",
+  ]);
+  if (elementBounds) result.elementBounds = elementBounds;
+  const style = textRecord(source.style, [
+    "display",
+    "position",
+    "flexDirection",
+    "gridTemplateColumns",
+    "maxWidth",
+    "padding",
+    "gap",
+    "backgroundColor",
+    "color",
+  ]);
+  if (style) result.style = style;
+  const content = numericRecord(source.content, [
+    "links",
+    "buttons",
+    "images",
+    "videos",
+    "forms",
+  ]);
+  if (content) result.content = content;
+  return result;
+}
+
+function boundedText(value: unknown, maximum: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.replace(/\s+/g, " ").trim().slice(0, maximum);
+  return normalized || undefined;
+}
+
+function stringArray(value: unknown, maximumItems: number): string[] {
+  return Array.isArray(value)
+    ? value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, maximumItems)
+    : [];
+}
+
+function numericRecord(
+  value: unknown,
+  keys: readonly string[],
+): Record<string, number> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const result: Record<string, number> = {};
+  for (const key of keys) {
+    const item = source[key];
+    if (typeof item === "number" && Number.isFinite(item)) {
+      result[key] = item;
+    }
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
+function textRecord(
+  value: unknown,
+  keys: readonly string[],
+): Record<string, string> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const result: Record<string, string> = {};
+  for (const key of keys) {
+    const item = boundedText(source[key], 240);
+    if (item) result[key] = item;
+  }
+  return Object.keys(result).length ? result : undefined;
 }
 
 function mountReadySitesList(
@@ -90,7 +216,7 @@ function mountReadySitesList(
   publicCatalogMedia: boolean,
 ): void {
   app.get("/sites", async (req, res) => {
-    const sites = await dependencies.store.listReadySites();
+    const sites = withRouteSlugs(await dependencies.store.listReadySites());
     const summaries = publicCatalogMedia ? sites.map(publicSiteSummary) : sites;
     const requestedPage = req.query.limit !== undefined || req.query.offset !== undefined;
     if (!requestedPage) {
@@ -111,6 +237,60 @@ function mountReadySitesList(
       total: summaries.length,
     });
   });
+}
+
+type ReadySite = Awaited<ReturnType<SitesStore["listReadySites"]>>[number];
+type RoutedReadySite = ReadySite & { routeSlug: string };
+
+export function withRouteSlugs(sites: ReadySite[]): RoutedReadySite[] {
+  const groups = new Map<string, ReadySite[]>();
+  for (const site of sites) {
+    const base = routeSlugBase(site.name, site.siteId);
+    const group = groups.get(base) ?? [];
+    group.push(site);
+    groups.set(base, group);
+  }
+  const routeSlugs = new Map<number, string>();
+  for (const [base, group] of groups) {
+    group
+      .sort((left, right) => left.siteId - right.siteId)
+      .forEach((site, index) => {
+        routeSlugs.set(site.siteId, index === 0 ? base : `${base}-${index + 1}`);
+      });
+  }
+  return sites.map((site) => ({
+    ...site,
+    routeSlug: routeSlugs.get(site.siteId) ?? routeSlugBase(site.name, site.siteId),
+  }));
+}
+
+function legacyDuplicateRouteSite(
+  sites: RoutedReadySite[],
+  routeSlug: string,
+): RoutedReadySite | undefined {
+  const match = routeSlug.match(/^(.+)-([2-9]\d*)$/);
+  if (!match) return undefined;
+  return sites.find((candidate) => candidate.routeSlug === match[1]);
+}
+
+function routeSlugBase(name: string, siteId: number): string {
+  const normalized = name
+    .normalize("NFKD")
+    .replace(/\p{Mark}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
+  return normalized || `site-${siteId}`;
+}
+
+function routeSlugParameter(value: unknown): string | undefined {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= 240
+    && value.trim() === value
+    && !value.includes("/")
+    ? value
+    : undefined;
 }
 
 function boundedQueryInteger(

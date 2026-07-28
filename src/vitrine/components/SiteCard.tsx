@@ -76,7 +76,7 @@ export function SiteCard({
       kind="site"
       ariaLabel={`Open ${site.name}`}
       onOpen={onOpen}
-      href={`/sites/${site.id}/versions/${site.versionId}`}
+      href={`/sites/${encodeURIComponent(site.routeSlug)}`}
       articleProps={{
         onMouseEnter: startPreview,
         onMouseLeave: stopPreview,

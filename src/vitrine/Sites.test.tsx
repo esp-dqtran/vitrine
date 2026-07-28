@@ -12,12 +12,13 @@ import { MediaGridCard } from './components/MediaGridCard.tsx';
 import * as MediaGridCardModule from './components/MediaGridCard.tsx';
 import {
   SiteAnalysisPanel,
+  technologyIconUrl,
   wappalyzerIconUrl,
 } from './components/SiteAnalysisPanel.tsx';
 import type { SiteSummary, SiteVersionDetail } from './types.ts';
 
 const site: SiteSummary = {
-  id: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
+  id: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
   label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
   previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
   description: 'AI-powered visual data platform.',
@@ -32,6 +33,7 @@ const site: SiteSummary = {
 };
 
 const detail: SiteVersionDetail = {
+  routeSlug: 'v7',
   site: {
     id: 1,
     name: 'V7',
@@ -187,7 +189,7 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /46 sections/);
   assert.match(html, /AI-powered visual data platform/);
   assert.match(html, /<video/);
-  assert.match(html, /<a[^>]+href="\/sites\/1\/versions\/2"[^>]+class="discovery-card__link site-discovery-card__link"/);
+  assert.match(html, /<a[^>]+href="\/sites\/v7"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
   assert.doesNotMatch(html, /Showing 1 of 1 sites/);
   assert.doesNotMatch(html, /Import Site/);
@@ -398,6 +400,7 @@ test('filters Sites by taxonomy and ranks popular references by captured depth',
     id: 2,
     versionId: 3,
     name: 'Ledger',
+    routeSlug: 'ledger',
     sourceUrl: 'https://ledger.example/',
     categories: ['Finance'],
     styles: ['Photography'],
@@ -479,8 +482,9 @@ test('keeps shared Sites chrome mounted while the catalog loads', () => {
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /Open search and filters/);
   assert.match(html, /Search on Web\.\.\./);
+  assert.match(html, /data-reference-catalog-loading="true"/);
   assert.match(html, /aria-label="Loading Sites"/);
-  assert.equal((html.match(/data-sites-discovery-skeleton="true"/g) ?? []).length, 6);
+  assert.doesNotMatch(html, /data-sites-discovery-skeleton="true"/);
   assert.doesNotMatch(html, /No Sites available yet/);
 });
 
@@ -518,6 +522,48 @@ test('builds only safe Wappalyzer technology icon URLs', () => {
   );
   assert.equal(wappalyzerIconUrl('../React.svg'), undefined);
   assert.equal(wappalyzerIconUrl('https://example.com/React.svg'), undefined);
+});
+
+test('hides CSS Keyframes and gives native Technology results app icons', () => {
+  const nativeDetail: SiteVersionDetail = {
+    ...detail,
+    analysis: {
+      ...detail.analysis!,
+      status: 'evidence-only',
+      technology: [{
+        id: 'TECHNOLOGY-CSS',
+        name: 'CSS Keyframes',
+        category: 'animation',
+        state: 'observed-in-use',
+        evidenceIds: [],
+        confidence: 0.99,
+      }, {
+        id: 'TECHNOLOGY-JS',
+        name: 'Custom JavaScript Motion',
+        category: 'animation',
+        state: 'observed-in-use',
+        evidenceIds: [],
+        confidence: 0.99,
+      }, {
+        id: 'TECHNOLOGY-NEXT',
+        name: 'Next.js',
+        category: 'framework',
+        state: 'confirmed',
+        evidenceIds: [],
+        confidence: 0.98,
+      }],
+    },
+  };
+  const html = renderToStaticMarkup(<SiteAnalysisPanel detail={nativeDetail} />);
+
+  assert.doesNotMatch(html, /Detected technology|CSS Keyframes|&lt;\/&gt;/);
+  assert.match(html, />2 detected</);
+  assert.match(html, /cdn\.simpleicons\.org\/javascript/);
+  assert.match(html, /cdn\.simpleicons\.org\/nextdotjs/);
+  assert.equal(
+    technologyIconUrl({ name: 'Turbopack' }),
+    'https://cdn.simpleicons.org/turborepo',
+  );
 });
 
 test('lays out Technology icons in a responsive card grid', () => {
@@ -719,14 +765,14 @@ test('renders the Mobbin Site-version hierarchy without Back or tab counts', () 
   assert.doesNotMatch(html, /Back to Sites/);
   assert.match(html, /<h1>V7<\/h1><p>AI-powered visual data platform\.<\/p>/);
   assert.match(html, /<span>Category<\/span>/);
-  assert.match(html, /<span>Style<\/span>/);
+  assert.doesNotMatch(html, /<span>Style<\/span>/);
   assert.match(html, />Latest</);
   assert.match(html, /Preview/);
   assert.match(html, />Sections</);
   assert.doesNotMatch(html, />Sections 2</);
-  assert.match(html, /Save/);
+  assert.doesNotMatch(html, />Save</);
+  assert.doesNotMatch(html, />Saved</);
   assert.match(html, /Technology/);
-  assert.match(html, /Minimal/);
   assert.match(html, /AI-powered visual data platform/);
   assert.doesNotMatch(html, /Import Site/);
   assert.match(html, /Visit site/);
@@ -743,19 +789,19 @@ test('renders Site detail through the shared reference shell', () => {
   assert.match(source, /<ReferenceDetailShell/);
 });
 
-test('filters Sections by keyword and renders patterns without dumping OCR text', () => {
-  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" initialSectionQuery="Hero" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
-  assert.match(html, /Search sections/);
-  assert.match(html, /All patterns/);
+test('renders all Sections without search or filters and does not dump OCR text', () => {
+  const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
+  assert.doesNotMatch(html, /Search sections/);
+  assert.doesNotMatch(html, /All patterns/);
   assert.match(html, /Hero Section/);
-  assert.match(html, /All media/);
-  assert.match(html, /Images/);
-  assert.match(html, /Videos/);
+  assert.match(html, /Navigation Section/);
+  assert.doesNotMatch(html, /All media/);
   assert.doesNotMatch(html, /Secret visible copy/);
   assert.doesNotMatch(html, /src="\/image"/);
   assert.doesNotMatch(html, /src="\/video"/);
   assert.match(html, /data-site-sections-grid="true"/);
-  assert.match(html, /0 selected/);
+  assert.doesNotMatch(html, /Select Hero Section|Save selected|site-sections__selection|site-section-tile__select/);
+  assert.doesNotMatch(html, />Save</);
 });
 
 test('uses the captured page title when a section has no extracted pattern', () => {
@@ -781,14 +827,27 @@ test('falls back legacy and unknown Site detail sections to Preview', () => {
   assert.doesNotMatch(html, /Full-page capture/);
 });
 
-test('maps ready versions and sections into their dedicated controls', () => {
+test('renders Site versions as capture date-time options and keeps the section inspector', () => {
+  const html = renderToStaticMarkup(
+    <SiteVersionView detail={detail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
+  );
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /detail\.versionOptions\.map/);
+  assert.match(html, /aria-label="Site version"/);
+  assert.match(html, /Jul 20, 2026/);
+  assert.match(html, /Nov 20, 2025/);
+  assert.match(html, />Latest</);
+  assert.match(html, /role="menuitemradio"/);
+  assert.match(html, /aria-checked="true"/);
+  assert.doesNotMatch(html, /<select/);
+  assert.match(source, /versions\.map/);
   assert.match(source, /SiteSectionInspector/);
+  assert.match(source, /onInspectorChange\(inspectorItems\[index\]\?\.id/);
+  assert.match(source, /onInspectorChange\(null\)/);
 });
 
 test('keeps Site loading and failures inside the detail frame', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
   assert.match(source, /function SiteVersionLoading/);
+  assert.match(source, /<ReferenceDetailLoading kind="site" label="Loading Site details"/);
   assert.match(source, /Retry/);
 });

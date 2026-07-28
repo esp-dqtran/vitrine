@@ -1,7 +1,11 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { Platform } from '../platformFromUrl.ts';
 
 export type FlowRepresentation = 'visual' | 'document';
+
+export type SiteVersionRoute =
+  | { name: 'site-version'; siteSlug: string; version?: number; section?: string; sectionId?: number }
+  | { name: 'site-version'; siteId: number; versionId: number; section?: string; sectionId?: number };
 
 export type Route =
   | { name: 'landing' }
@@ -13,6 +17,7 @@ export type Route =
   | { name: 'signin' }
   | { name: 'search' }
   | { name: 'apps' }
+  | { name: 'flows' }
   | {
       name: 'app';
       appId: string;
@@ -25,7 +30,7 @@ export type Route =
       flowView?: FlowRepresentation;
     }
   | { name: 'sites' }
-  | { name: 'site-version'; siteId: number; versionId: number; section?: string }
+  | SiteVersionRoute
   | { name: 'projects' }
   | { name: 'project'; projectId: number }
   | { name: 'feature-document'; documentId: number }
@@ -81,18 +86,40 @@ export function parseRoutePath(pathname: string): Route {
   if (path === '/signin') return { name: 'signin' };
   if (path === '/search') return { name: 'search' };
   if (path === '/apps') return { name: 'apps' };
+  if (path === '/flows') return { name: 'flows' };
   if (path === '/sites') return { name: 'sites' };
-  const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+))?$/);
+  const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/);
   if (siteMatch) {
     const siteId = Number(siteMatch[1]);
     const versionId = Number(siteMatch[2]);
     const section = siteMatch[3] ? decodeSegment(siteMatch[3]) : undefined;
-    return Number.isSafeInteger(siteId) && Number.isSafeInteger(versionId) && section !== null
+    const sectionId = siteMatch[4] ? Number(siteMatch[4]) : undefined;
+    return Number.isSafeInteger(siteId)
+      && Number.isSafeInteger(versionId)
+      && section !== null
+      && (sectionId === undefined || (section === 'sections' && Number.isSafeInteger(sectionId)))
       ? {
           name: 'site-version',
           siteId,
           versionId,
           ...(section ? { section } : {}),
+          ...(sectionId ? { sectionId } : {}),
+        }
+      : { name: 'not-found', pathname: path };
+  }
+  const namedSiteMatch = path.match(/^\/sites\/([^/]+)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/);
+  if (namedSiteMatch) {
+    const siteSlug = decodeSegment(namedSiteMatch[1]);
+    const section = namedSiteMatch[2] ? decodeSegment(namedSiteMatch[2]) : undefined;
+    const sectionId = namedSiteMatch[3] ? Number(namedSiteMatch[3]) : undefined;
+    return siteSlug
+      && section !== null
+      && (sectionId === undefined || (section === 'sections' && Number.isSafeInteger(sectionId)))
+      ? {
+          name: 'site-version',
+          siteSlug,
+          ...(section ? { section } : {}),
+          ...(sectionId ? { sectionId } : {}),
         }
       : { name: 'not-found', pathname: path };
   }
@@ -150,7 +177,17 @@ function bounded(value: string | null, pattern: RegExp, maximum = 240): string |
 
 export function parseRouteLocation(pathname: string, search = ''): Route {
   const route = parseRoutePath(pathname);
+  if (route.name === 'site-version' && 'siteSlug' in route) {
+    const version = positive(new URLSearchParams(search).get('version'));
+    return {
+      ...route,
+      ...(version ? { version } : {}),
+    };
+  }
   if (route.name !== 'app') return route;
+  const normalizedRoute = route.section === 'overview'
+    ? { ...route, section: 'screens' }
+    : route;
   const params = new URLSearchParams(search);
   const rawPlatform = params.get('platform');
   const platform = rawPlatform === 'ios' || rawPlatform === 'android' || rawPlatform === 'web'
@@ -170,7 +207,7 @@ export function parseRouteLocation(pathname: string, search = ''): Route {
       ? rawFlowView
       : undefined;
   return {
-    ...route,
+    ...normalizedRoute,
     ...(platform ? { platform } : {}),
     ...(version ? { version } : {}),
     ...(evidence ? { evidence } : {}),
@@ -191,8 +228,21 @@ export function routeToPath(route: Route): string {
     case 'signin': return '/signin';
     case 'search': return '/search';
     case 'apps': return '/apps';
+    case 'flows': return '/flows';
     case 'sites': return '/sites';
-    case 'site-version': return `/sites/${route.siteId}/versions/${route.versionId}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;
+    case 'site-version': {
+      const base = 'siteSlug' in route
+        ? `/sites/${encodeURIComponent(route.siteSlug)}`
+        : `/sites/${route.siteId}/versions/${route.versionId}`;
+      const section = route.section ? `/${encodeURIComponent(route.section)}` : '';
+      const sectionId = route.section === 'sections' && route.sectionId
+        ? `/${route.sectionId}`
+        : '';
+      const version = 'siteSlug' in route && route.version
+        ? `?version=${route.version}`
+        : '';
+      return `${base}${section}${sectionId}${version}`;
+    }
     case 'projects': return '/projects';
     case 'project': return `/projects/${route.projectId}`;
     case 'feature-document': return `/feature-documents/${route.documentId}`;
@@ -220,8 +270,15 @@ export function navigate(route: Route) {
 export function useRoute(): Route {
   const location = useLocationKey();
   const split = location.indexOf('?');
-  return parseRouteLocation(
-    split < 0 ? location : location.slice(0, split),
-    split < 0 ? '' : location.slice(split),
-  );
+  const pathname = split < 0 ? location : location.slice(0, split);
+  const search = split < 0 ? '' : location.slice(split);
+  const rawRoute = parseRoutePath(pathname);
+  const route = parseRouteLocation(pathname, search);
+  const legacyOverviewPath = rawRoute.name === 'app' && rawRoute.section === 'overview'
+    ? routeToPath(route)
+    : null;
+  useEffect(() => {
+    if (legacyOverviewPath) updateLocation(legacyOverviewPath, { replace: true });
+  }, [legacyOverviewPath]);
+  return route;
 }

@@ -3,12 +3,13 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ReferenceTypeTabs } from './components/ReferenceTypeTabs.tsx';
 
-test('renders Apps and Sites as accessible reference-type tabs', () => {
+test('renders Apps, Sites, and Flows as accessible reference-type tabs', () => {
   const html = renderToStaticMarkup(
-    <ReferenceTypeTabs active="sites" onChange={() => undefined} />,
+    <ReferenceTypeTabs active="flows" onChange={() => undefined} />,
   );
   assert.match(html, /role="tablist"/);
   assert.match(html, /Apps/);
-  assert.match(html, /role="tab"[^>]+aria-selected="true"/);
   assert.match(html, /Sites/);
+  assert.match(html, /Flows/);
+  assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>.*?Flows/s);
 });

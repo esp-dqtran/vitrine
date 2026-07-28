@@ -178,7 +178,8 @@ test('renders concise requirements with multiple acceptance criteria and screens
   assert.match(html, /Acceptance criteria \(2\)/);
   assert.match(html, /AC-01/);
   assert.match(html, /AC-02/);
-  assert.match(html, /Observed/);
+  assert.doesNotMatch(html, /document-flow__status/);
+  assert.doesNotMatch(html, />Observed</);
   assert.match(html, /GIVEN/);
   assert.match(html, /The buyer has reviewed the cart/);
   assert.match(html, /WHEN/);

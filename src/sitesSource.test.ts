@@ -51,6 +51,42 @@ test("decodes the inspected V7 graph exactly", async () => {
   ]);
 });
 
+test("normalizes one-based Mobbin section display order", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    for (const section of sections) {
+      section.display_order = Number(section.display_order) + 1;
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+
+  for (const page of result.pages) {
+    assert.deepEqual(
+      page.sections.map((section) => section.position),
+      page.sections.map((_, index) => index),
+    );
+  }
+});
+
+test("normalizes sparse Mobbin section display order", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    sections.forEach((section, index) => {
+      section.display_order = index * 7 + 3;
+    });
+  });
+
+  const result = decodeMobbinSitesSource(changed);
+
+  for (const page of result.pages) {
+    assert.deepEqual(
+      page.sections.map((section) => section.position),
+      page.sections.map((_, index) => index),
+    );
+  }
+});
+
 test("decodes Mobbin custom images without OCR or crop metadata", async () => {
   const raw = await readFile(fixtureUrl, "utf8");
   const changed = mutateCapturedSections(raw, (sections) => {

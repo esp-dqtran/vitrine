@@ -107,6 +107,48 @@ test("persists one generic page and its analysis only in Sites tables", async ()
   assert.doesNotMatch(sql, /\bapps\b|\bweb_pages\b|\bweb_page_versions\b|\bweb_page_sections\b/);
 });
 
+test("adds a public-page capture as a version of an existing Site with the same URL", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query = async (
+    sql: string,
+    values?: readonly unknown[],
+  ): Promise<QueryResult<Record<string, unknown>>> => {
+    calls.push({ sql, values });
+    if (/SELECT id[\s\S]+regexp_replace\(lower\(source_url\)/.test(sql)) {
+      return result([{ id: 329 }]);
+    }
+    if (/UPDATE sites[\s\S]+RETURNING id/.test(sql)) return result([{ id: 329 }]);
+    if (/INSERT INTO site_versions/.test(sql)) {
+      return result([{ id: 454, status: "importing" }]);
+    }
+    return result();
+  };
+  const identity = classifySiteImportUrl("https://vercel.com/");
+  assert.equal(identity.kind, "public-page");
+  if (identity.kind !== "public-page") throw new Error("fixture identity");
+
+  const begin = await createGenericSitesStoreMethods(
+    query,
+    async (work) => work(query),
+  ).beginGenericImport({
+    identity,
+    name: "Vercel",
+    description: "Developer cloud",
+    iconUrl: "https://vercel.com/icon.png",
+    categories: ["Developer tools"],
+    styles: ["Minimal"],
+    contentHash: "b".repeat(64),
+    analysis: fixtureAnalysis(),
+  });
+
+  assert.deepEqual(begin, { reused: false, siteId: 329, versionId: 454 });
+  assert.equal(calls.some(({ sql }) => /INSERT INTO sites/.test(sql)), false);
+  assert.equal(
+    calls.find(({ sql }) => /INSERT INTO site_versions/.test(sql))?.values?.[0],
+    329,
+  );
+});
+
 function fixtureAnalysis() {
   return buildSiteAnalysis({
     viewport: "desktop",

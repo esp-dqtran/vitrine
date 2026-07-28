@@ -296,6 +296,28 @@ test("beginImport resets only a non-ready version to importing", async () => {
   ]);
 });
 
+test("adds a Mobbin capture as a version of an existing Site with the same URL", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const fakeQuery: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    if (/SELECT id[\s\S]+regexp_replace\(lower\(source_url\)/.test(sql)) {
+      return result([{ id: 7 }]);
+    }
+    if (/UPDATE sites[\s\S]+RETURNING id/.test(sql)) return result([{ id: 7 }]);
+    if (/INSERT INTO site_versions/.test(sql)) return result([{ id: 8 }]);
+    return result();
+  };
+
+  const created = await createSitesStore(fakeQuery).beginImport(identity, graph);
+
+  assert.deepEqual(created, { siteId: 7, versionId: 8 });
+  assert.equal(calls.some(({ sql }) => /INSERT INTO sites/.test(sql)), false);
+  assert.equal(
+    calls.find(({ sql }) => /INSERT INTO site_versions/.test(sql))?.values?.[0],
+    7,
+  );
+});
+
 test("completeImport writes object metadata and graph before the final ready transition", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   let pageId = 10;
@@ -339,6 +361,8 @@ test("completeImport writes object metadata and graph before the final ready tra
   const readyIndex = calls.findIndex((call) => /status = 'ready'/.test(call.sql));
   const sectionIndex = calls.findIndex((call) => /INSERT INTO site_sections/.test(call.sql));
   assert.ok(readyIndex > sectionIndex);
+  assert.match(calls.map(({ sql }) => sql).join("\n"), /SET is_latest = false[\s\S]+id <> \$2/);
+  assert.match(calls[readyIndex].sql, /is_latest = true/);
 });
 
 test("completeImport persists image Site sections without optional crop bounds", async () => {

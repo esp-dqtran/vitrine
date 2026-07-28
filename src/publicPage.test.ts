@@ -66,8 +66,19 @@ test("normalizes one ordered rendered capture", () => {
         selector: "main > section",
         tagName: "SECTION",
         heading: " Pricing ",
+        headingLevel: "H2",
+        anchor: "pricing",
+        classNames: ["pricing-grid", "wide"],
         text: " Pricing plans ",
         bounds: { x: 0, y: 100, width: 1440, height: 600 },
+        elementBounds: { x: 80, y: 120, width: 1280, height: 520 },
+        style: {
+          display: "grid",
+          position: "relative",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "24px",
+        },
+        content: { links: 3, buttons: 3, images: 0, videos: 0, forms: 0 },
       },
       {
         position: 1,
@@ -83,6 +94,10 @@ test("normalizes one ordered rendered capture", () => {
   assert.equal(capture.metadata.name, "Example");
   assert.equal(capture.sections[0].tagName, "section");
   assert.equal(capture.sections[0].heading, "Pricing");
+  assert.equal(capture.sections[0].headingLevel, "h2");
+  assert.deepEqual(capture.sections[0].classNames, ["pricing-grid", "wide"]);
+  assert.equal(capture.sections[0].style?.gridTemplateColumns, "repeat(3, 1fr)");
+  assert.equal(capture.sections[0].content?.buttons, 3);
   assert.equal(capture.sections[1].role, "contentinfo");
 });
 

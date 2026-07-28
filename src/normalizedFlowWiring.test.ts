@@ -19,6 +19,7 @@ test("active crawl and import paths do not use aggregate Flow columns", () => {
     "scripts/catalog-import.ts",
     "scripts/merge-catalog-databases.ts",
     "scripts/verify-catalog-import.ts",
+    "scripts/flow-analysis/run.ts",
   ];
 
   for (const path of activeFiles) {

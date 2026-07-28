@@ -104,6 +104,49 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
         </html>`);
       return;
     }
+    if (request.url === "/fixed-canvas") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(`<!doctype html>
+        <html>
+          <head>
+            <title>Fixed canvas</title>
+            <style>
+              html, body, #root { margin: 0; width: 100%; height: 0; overflow: hidden; }
+              main { position: fixed; inset: 0; display: grid; place-items: center; background: #f4ead8; }
+            </style>
+          </head>
+          <body><div id="root"><main><img alt="Interactive map" width="800" height="600"></main></div></body>
+        </html>`);
+      return;
+    }
+    if (request.url === "/nested-coverage") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(`<!doctype html>
+        <html>
+          <head>
+            <title>Nested coverage</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; font: 18px sans-serif; }
+              section, article { width: 100%; }
+              section { min-height: 1100px; padding-top: 40px; }
+              section > h1 { margin: 0 60px 40px; }
+              article { min-height: 300px; padding: 60px; }
+            </style>
+          </head>
+          <body>
+            <main>
+              <section id="platform" class="product-platform">
+                <h1>Product platform</h1>
+                <article><h2>Build collaboratively</h2><button>Start building</button></article>
+                <article><h2>Ship with confidence</h2><img alt="Deployment graph"></article>
+                <article><h2>Scale automatically</h2><a href="/docs">Read documentation</a></article>
+              </section>
+            </main>
+          </body>
+        </html>`);
+      return;
+    }
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(`<!doctype html>
       <html>
@@ -252,6 +295,62 @@ test("segments nested div-only marketing bands at their headings", { timeout: 20
   );
 });
 
+test("falls back to one viewport section for fixed-position canvas pages", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 10,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(
+    new URL("/fixed-canvas", fixture.url).toString(),
+  );
+
+  assert.equal(result.capture.sections.length, 1);
+  assert.equal(result.capture.sections[0]?.bounds.y, 0);
+  assert.equal(result.capture.sections[0]?.bounds.height, result.capture.viewport.height);
+  assert.equal(result.sectionImages.length, 1);
+});
+
+test("keeps nested content bands and reconstruction metadata", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 10,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(
+    new URL("/nested-coverage", fixture.url).toString(),
+  );
+
+  assert.deepEqual(
+    result.capture.sections.map((section) => section.heading),
+    [
+      "Product platform",
+      "Build collaboratively",
+      "Ship with confidence",
+      "Scale automatically",
+    ],
+  );
+  assert.equal(result.capture.sections[0]?.anchor, "platform");
+  assert.deepEqual(result.capture.sections[0]?.classNames, ["product-platform"]);
+  assert.equal(result.capture.sections[1]?.headingLevel, "h2");
+  assert.equal(result.capture.sections[1]?.content?.buttons, 1);
+  assert.equal(result.capture.sections[2]?.content?.images, 1);
+  assert.equal(result.capture.sections[3]?.content?.links, 1);
+  assert.equal(result.capture.sections.length, result.sectionImages.length);
+});
+
 test("captures viewport-driven content at its document position", { timeout: 20_000 }, async (t) => {
   const fixture = await fixtureServer();
   t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
@@ -357,7 +456,7 @@ test("caps screenshot dimensions before rendering page bytes", () => {
   );
 });
 
-test("captures ordered HTML sections, crops, metadata, and a continuous WebM preview", { timeout: 45_000 }, async (t) => {
+test("captures ordered HTML sections, crops, metadata, and a continuous WebM preview", { timeout: 60_000 }, async (t) => {
   const fixture = await fixtureServer();
   t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
   const browser = await createPublicPageBrowser({

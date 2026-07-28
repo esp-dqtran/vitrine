@@ -35,11 +35,17 @@ test('keeps adaptive Search and Quick Search in dedicated state boundaries', asy
   assert.doesNotMatch(`${pageSource}\n${quickSource}\n${apiSource}`, /\/api\/jobs|jobsApi|useJobs/);
 });
 
-test('lazy-loads application pages behind the persistent application surface', async () => {
+test('keeps primary catalogs and detail surfaces ready while lazy-loading secondary pages', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
-  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/AppsDiscoveryPage\.tsx['"]\)/);
-  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
-  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
+  assert.match(source, /import \{ AppsDiscoveryPage \} from ['"]\.\/components\/AppsDiscoveryPage\.tsx['"]/);
+  assert.match(source, /import \{ SitesPage \} from ['"]\.\/components\/SitesPage\.tsx['"]/);
+  assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/AppsDiscoveryPage\.tsx['"]\)/);
+  assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SitesPage['"]\)/);
+  assert.match(source, /import \{ ScreenDetail \} from ['"]\.\/components\/ScreenDetail['"]/);
+  assert.match(source, /import \{ SiteVersionPage \} from ['"]\.\/components\/SiteVersionPage['"]/);
+  assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
+  assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
   assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
   assert.match(source, /<ApplicationSurface/);
 });
@@ -149,8 +155,8 @@ test('loads additional app pages only when the gallery sentinel approaches the v
   assert.match(appSource, /void loadMore\(\)/);
   assert.match(appSource, /sentinelRef=\{appsSentinelRef\}/);
   assert.match(appSource, /rootMargin: '900px 0px'/);
-  assert.doesNotMatch(pageSource, /<Spinner size="sm"/);
-  assert.match(pageSource, /<AppCardSkeleton/);
+  assert.match(pageSource, /<ReferenceCatalogLoading label="Loading more Apps" compact/);
+  assert.doesNotMatch(pageSource, /<AppCardSkeleton/);
   assert.doesNotMatch(`${appSource}\n${pageSource}`, /fetch\(\s*['"]\/api\/jobs['"]/);
 });
 

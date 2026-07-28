@@ -17,6 +17,11 @@ test('round-trips the advanced search route without owning its query parameters'
   assert.equal(routeToPath({ name: 'search' }), '/search');
 });
 
+test('round-trips the first-class Flows catalog route', () => {
+  assert.deepEqual(parseRoutePath('/flows'), { name: 'flows' });
+  assert.equal(routeToPath({ name: 'flows' }), '/flows');
+});
+
 test('round-trips the public build-in-public route', () => {
   assert.deepEqual(parseRoutePath('/build-in-public'), { name: 'build-in-public' });
   assert.deepEqual(parseRoutePath('/build-in-public/'), { name: 'build-in-public' });
@@ -31,11 +36,54 @@ test('round-trips authenticated documents and public share routes', () => {
 });
 
 test('round-trips current and legacy Site detail tabs while keeping the base route stable', () => {
+  assert.deepEqual(parseRoutePath('/sites/typeform'), {
+    name: 'site-version',
+    siteSlug: 'typeform',
+  });
+  assert.deepEqual(parseRoutePath('/sites/typeform/sections'), {
+    name: 'site-version',
+    siteSlug: 'typeform',
+    section: 'sections',
+  });
+  assert.deepEqual(parseRoutePath('/sites/typeform/sections/42'), {
+    name: 'site-version',
+    siteSlug: 'typeform',
+    section: 'sections',
+    sectionId: 42,
+  });
+  assert.equal(
+    routeToPath({ name: 'site-version', siteSlug: 'typeform' }),
+    '/sites/typeform',
+  );
+  assert.equal(
+    routeToPath({ name: 'site-version', siteSlug: 'typeform', section: 'sections' }),
+    '/sites/typeform/sections',
+  );
+  assert.deepEqual(
+    parseRouteLocation('/sites/typeform/sections', '?version=454'),
+    { name: 'site-version', siteSlug: 'typeform', section: 'sections', version: 454 },
+  );
+  assert.equal(
+    routeToPath({ name: 'site-version', siteSlug: 'typeform', section: 'sections', version: 454 }),
+    '/sites/typeform/sections?version=454',
+  );
+  assert.equal(
+    routeToPath({
+      name: 'site-version',
+      siteSlug: 'typeform',
+      section: 'sections',
+      sectionId: 42,
+    }),
+    '/sites/typeform/sections/42',
+  );
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/preview'), { name: 'site-version', siteId: 1, versionId: 2, section: 'preview' });
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/pages'), { name: 'site-version', siteId: 1, versionId: 2, section: 'pages' });
   assert.deepEqual(parseRoutePath('/sites/1/versions/2/sections'), { name: 'site-version', siteId: 1, versionId: 2, section: 'sections' });
+  assert.deepEqual(parseRoutePath('/sites/1/versions/2/sections/42'), { name: 'site-version', siteId: 1, versionId: 2, section: 'sections', sectionId: 42 });
+  assert.deepEqual(parseRoutePath('/sites/typeform/preview/42'), { name: 'not-found', pathname: '/sites/typeform/preview/42' });
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2, section: 'preview' }), '/sites/1/versions/2/preview');
+  assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2, section: 'sections', sectionId: 42 }), '/sites/1/versions/2/sections/42');
 });
 
 test('round-trips allowlisted App evidence selections', () => {
@@ -71,6 +119,19 @@ test('round-trips allowlisted App evidence selections', () => {
   assert.deepEqual(
     parseRouteLocation('/apps/15five/flows', '?platform=web&version=1&flow=onboarding&step=3'),
     flow,
+  );
+});
+
+test('normalizes legacy App Overview routes to Screens while preserving valid context', () => {
+  assert.deepEqual(
+    parseRouteLocation('/apps/linear/overview', '?platform=web&version=3'),
+    {
+      name: 'app',
+      appId: 'linear',
+      section: 'screens',
+      platform: 'web',
+      version: 3,
+    },
   );
 });
 

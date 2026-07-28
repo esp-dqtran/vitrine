@@ -12,6 +12,14 @@ const item: SiteInspectorItem = {
   pageUrl: 'https://v7labs.com/',
   patterns: ['Hero Section'],
   caption: 'Home · Section 1',
+  metadata: {
+    heading: 'Build intelligent products',
+    selector: 'main > section',
+    tagName: 'section',
+    text: 'Build intelligent products with production-ready AI.',
+    style: { display: 'grid', gap: '24px' },
+    content: { links: 2, buttons: 1, images: 3, videos: 0, forms: 0 },
+  },
 };
 
 test('renders the focused Site section with context controls', () => {
@@ -32,6 +40,16 @@ test('renders the focused Site section with context controls', () => {
   assert.match(html, /https:\/\/v7labs\.com\//);
   assert.match(html, /sections\/12\/media/);
   assert.match(html, /1 of 2/);
+  assert.match(html, /Build intelligent products/);
+  assert.match(html, /main &gt; section/);
+  assert.match(html, /grid · gap 24px/);
+  assert.match(html, /2 links · 1 button · 3 images/);
+  assert.match(html, /site-section-inspector__header/);
+  assert.match(html, /Reconstruction details/);
+  assert.match(html, />Copy</);
+  assert.match(html, /Download/);
+  assert.doesNotMatch(html, />Save</);
+  assert.doesNotMatch(html, />Saved</);
 });
 
 test('renders parent full-page media when Full page is selected', () => {

@@ -1,3 +1,14 @@
+export function flowCarouselEdges(
+  track: Pick<HTMLElement, 'clientWidth' | 'scrollLeft' | 'scrollWidth'>,
+) {
+  const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+  const tolerance = 2;
+  return {
+    canScrollLeft: track.scrollLeft > tolerance,
+    canScrollRight: track.scrollLeft < maxScrollLeft - tolerance,
+  };
+}
+
 export function scrollToAdjacentFlowScreen(
   track: HTMLElement,
   direction: -1 | 1,

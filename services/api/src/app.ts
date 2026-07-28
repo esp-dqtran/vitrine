@@ -74,8 +74,15 @@ import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
 import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
-import { parsePublicFacet } from "../../../src/publicFacetPreview.ts";
+import {
+  parsePublicCatalogFacet,
+  parsePublicFacet,
+} from "../../../src/publicFacetPreview.ts";
 import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts";
+import {
+  FlowCatalogCursorError,
+  publishedFlowCatalogPage,
+} from "../../../src/flowCatalogStore.ts";
 import {
   CategoryConflictError,
   CategoryNotFoundError,
@@ -109,6 +116,7 @@ import {
   entitledImageObject,
   imageObjectById,
   legacyImageReference,
+  publishedFlowCatalogPreviewObject,
   publishedFacetPreviewObject,
   publishedPreviewObject,
 } from "../../../src/objectStoreDb.ts";
@@ -354,6 +362,7 @@ const defaults = {
   publishedPreviewImages,
   publishedCatalogPage,
   publishedFacetPreviews,
+  publishedFlowCatalogPage,
   categoryStore,
   catalogStats,
   listPublishedDesignSystems,
@@ -445,6 +454,7 @@ const defaults = {
   entitledImageObject,
   legacyImageReference,
   publishedFacetPreviewObject,
+  publishedFlowCatalogPreviewObject,
   publishedPreviewObject,
   imageObjectById,
   researchProjectStore: createResearchProjectStore(),
@@ -905,8 +915,26 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const hasFacet = req.query.group !== undefined
+      || req.query.value !== undefined
+      || req.query.platform !== undefined;
+    const facet = hasFacet
+      ? parsePublicCatalogFacet({
+          group: req.query.group,
+          value: req.query.value,
+          platform: req.query.platform,
+        })
+      : null;
+    if (hasFacet && !facet) {
+      res.status(400).json({ error: "invalid catalog facet" });
+      return;
+    }
     try {
-      const page = await deps.publishedCatalogPage({ cursor, limit });
+      const page = await deps.publishedCatalogPage({
+        cursor,
+        limit,
+        ...(facet ? { facet } : {}),
+      });
       res.setHeader("Cache-Control", "private, max-age=280");
       res.json(buildPublishedCatalogPage(page));
     } catch (error) {
@@ -926,6 +954,76 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog/categories", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=300");
     res.json({ categories: await deps.categoryStore.listPublished() });
+  });
+
+  app.get("/catalog/flows", async (req, res) => {
+    const platform = platformQuery(req.query.platform);
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const search = typeof req.query.query === "string" ? req.query.query : undefined;
+    const view = typeof req.query.view === "string" ? req.query.view : undefined;
+    if (!platform
+      || (search !== undefined && search.length > 120)
+      || (view !== undefined && view !== "browse")) {
+      res.status(400).json({ error: "invalid Flow catalog query" });
+      return;
+    }
+    try {
+      const page = await deps.publishedFlowCatalogPage({
+        platform,
+        cursor,
+        limit,
+        query: search,
+        order: view === "browse" ? "browse" : "grouped",
+      });
+      res.setHeader("Cache-Control", "public, max-age=300");
+      res.json(page);
+    } catch (error) {
+      if (error instanceof FlowCatalogCursorError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  app.get("/catalog/flow-media/:app/:platform/:versionId/:versionFlowId/:rank", async (req, res) => {
+    const platform = platformQuery(req.params.platform);
+    const versionId = positiveId(req.params.versionId);
+    const versionFlowId = positiveId(req.params.versionFlowId);
+    const rank = Number(req.params.rank);
+    if (
+      !isAppSlug(req.params.app)
+      || !platform
+      || !versionId
+      || !versionFlowId
+      || !Number.isInteger(rank)
+      || rank < 1
+      || rank > 6
+    ) {
+      res.status(400).json({ error: "invalid Flow catalog media reference" });
+      return;
+    }
+    if (!deps.objectStore) {
+      res.status(503).json({ error: "media storage unavailable" });
+      return;
+    }
+    const metadata = await deps.publishedFlowCatalogPreviewObject({
+      app: req.params.app,
+      platform,
+      versionId,
+      versionFlowId,
+      rank,
+    });
+    if (!metadata) {
+      res.status(404).json({ error: "Flow catalog preview not found" });
+      return;
+    }
+    try {
+      await sendStoredObject(deps.objectStore, metadata, res);
+    } catch {
+      res.status(503).json({ error: "media storage unavailable" });
+    }
   });
 
   app.get("/catalog/facet-preview", async (req, res) => {

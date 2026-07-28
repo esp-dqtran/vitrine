@@ -43,12 +43,13 @@ test('redirects authenticated landing and sign-in routes to Apps', () => {
   });
 });
 
-test('keeps both catalogs public and sends private guest routes to sign-in', () => {
+test('keeps all three catalogs public and sends private guest routes to sign-in', () => {
   assert.deepEqual(decideRootRoute({ name: 'apps' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites' }, guest), { kind: 'application' });
+  assert.deepEqual(decideRootRoute({ name: 'flows' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'app', appId: 'linear' }, guest), { kind: 'signin' });
   assert.deepEqual(
-    decideRootRoute({ name: 'site-version', siteId: 1, versionId: 2 }, guest),
+    decideRootRoute({ name: 'site-version', siteSlug: 'v7' }, guest),
     { kind: 'signin' },
   );
 });
@@ -68,8 +69,9 @@ test('uses the same application renderer for members and admins on normal routes
   const routes: Route[] = [
     { name: 'apps' },
     { name: 'sites' },
+    { name: 'flows' },
     { name: 'app', appId: 'linear' },
-    { name: 'site-version', siteId: 1, versionId: 2 },
+    { name: 'site-version', siteSlug: 'v7' },
     { name: 'search' },
     { name: 'projects' },
     { name: 'project', projectId: 7 },
@@ -121,9 +123,10 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'signin' },
     { name: 'search' },
     { name: 'apps' },
+    { name: 'flows' },
     { name: 'app', appId: 'linear' },
     { name: 'sites' },
-    { name: 'site-version', siteId: 1, versionId: 2 },
+    { name: 'site-version', siteSlug: 'v7' },
     { name: 'projects' },
     { name: 'project', projectId: 7 },
     { name: 'feature-document', documentId: 9 },

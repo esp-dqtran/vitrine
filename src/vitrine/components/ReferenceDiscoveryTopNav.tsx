@@ -15,6 +15,12 @@ export function ReferenceDiscoveryTopNav({
   search,
   accountControls,
 }: ReferenceDiscoveryTopNavProps) {
+  const activeRoute = active === 'apps'
+    ? { name: 'apps' } as const
+    : active === 'sites'
+      ? { name: 'sites' } as const
+      : { name: 'flows' } as const;
+  const activeLabel = active === 'apps' ? 'Apps' : active === 'sites' ? 'Sites' : 'Flows';
   return (
     <header
       data-reference-component="top-nav"
@@ -22,13 +28,13 @@ export function ReferenceDiscoveryTopNav({
     >
       <div className={`reference-discovery-nav__left ${className}__left`}>
         <a
-          href={active === 'apps' ? '/apps' : '/sites'}
-          aria-label={`Vitrine ${active === 'apps' ? 'Apps' : 'Sites'}`}
+          href={`/${active}`}
+          aria-label={`Vitrine ${activeLabel}`}
           className={`reference-discovery-nav__brand ${className}__brand`}
           data-reference-gallery-identity="true"
           onClick={(event) => {
             event.preventDefault();
-            navigate(active === 'apps' ? { name: 'apps' } : { name: 'sites' });
+            navigate(activeRoute);
           }}
         >
           <img src="/favicon.svg" alt="" aria-hidden="true" width="32" height="32" />

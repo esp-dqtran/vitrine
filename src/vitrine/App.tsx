@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Button, DropdownMenu, EmptyState, Spinner } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { ProgressBanner } from './components/ProgressBanner';
-import { CommandPalette } from './components/CommandPalette';
+import { CommandPalette, flowIdFromCatalogResultId } from './components/CommandPalette';
 import { SearchResults } from './components/SearchResults';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -14,7 +14,12 @@ import { GuestCatalogControls } from './components/GuestCatalogControls.tsx';
 import { LoginDialog } from './components/LoginDialog.tsx';
 import { AppDetailLoadingPage } from './components/AppDetailLoadingPage.tsx';
 import { ApplicationSurface } from './components/ApplicationSurface.tsx';
-import type { AppsFacet } from './appsDiscovery.ts';
+import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
+import { FlowsPage } from './components/FlowsPage.tsx';
+import { ScreenDetail } from './components/ScreenDetail';
+import { SitesPage } from './components/SitesPage.tsx';
+import { SiteVersionPage } from './components/SiteVersionPage';
+import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -28,12 +33,8 @@ import { defaultSearchState, readRecentSearches } from './searchState.ts';
 import { createSearchSession } from './searchSession.ts';
 import { activeFilterCount } from '../searchScope.ts';
 
-const AppsDiscoveryPage = lazy(() => import('./components/AppsDiscoveryPage.tsx').then((module) => ({ default: module.AppsDiscoveryPage })));
-const ScreenDetail = lazy(() => import('./components/ScreenDetail').then((module) => ({ default: module.ScreenDetail })));
 const ResearchProjectsPage = lazy(() => import('./components/ResearchProjectsPage').then((module) => ({ default: module.ResearchProjectsPage })));
 const ResearchProjectPage = lazy(() => import('./components/ResearchProjectPage').then((module) => ({ default: module.ResearchProjectPage })));
-const SitesPage = lazy(() => import('./components/SitesPage').then((module) => ({ default: module.SitesPage })));
-const SiteVersionPage = lazy(() => import('./components/SiteVersionPage').then((module) => ({ default: module.SiteVersionPage })));
 const FeatureDocumentPage = lazy(() => import('./components/FeatureDocumentPage.tsx').then((module) => ({ default: module.FeatureDocumentPage })));
 const AdvancedSearchPage = lazy(() => import('./components/AdvancedSearchPage.tsx').then((module) => ({ default: module.AdvancedSearchPage })));
 
@@ -44,6 +45,7 @@ export function App() {
   const isAdmin = user?.role === 'admin';
   const [loginOpen, setLoginOpen] = useState(false);
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
+  const [appPlatform, setAppPlatform] = useState<AppsPlatform>('web');
   const [siteQuery, setSiteQuery] = useState('');
   // Seed the search from a query handed off by the marketing landing (Home) across sign-in.
   const [q, setQ] = useState(() => {
@@ -285,9 +287,22 @@ export function App() {
               closeDiscoveryOverlays();
               navigate({ name: 'app', appId, section: 'screens' });
             }}
-            onSelectFlow={(appId) => {
+            onSelectFlow={(appId, flow) => {
               closeDiscoveryOverlays();
-              navigate({ name: 'app', appId, section: 'flows' });
+              navigate({
+                name: 'app',
+                appId,
+                section: 'flows',
+                ...(flow ? { flow } : {}),
+              });
+            }}
+            onSearchFlow={(flowTitle, platform) => {
+              setQ('');
+              setFilters({ kind: 'all' });
+              setAppFacet({ group: 'flows', value: flowTitle });
+              setAppPlatform(platform);
+              closeDiscoveryOverlays();
+              navigate({ name: 'apps' });
             }}
             onSelectCategory={(value) => setAppFacet(
               value === 'All' ? null : { group: 'categories', value },
@@ -312,6 +327,24 @@ export function App() {
   let page: ReactNode;
 
   switch (route.name) {
+    case 'flows':
+      page = (
+        <FlowsPage
+          onOpenSearch={() => void openPalette('apps')}
+          onSelectFlow={(title, platform) => {
+            setQ('');
+            setSearchResult(null);
+            setFilters({ kind: 'all' });
+            setAppFacet({ group: 'flows', value: title });
+            setAppPlatform(platform);
+            closeDiscoveryOverlays();
+            navigate({ name: 'apps' });
+          }}
+          onSelectApp={(appId) => void openApp(appId)}
+          accountControls={accountControls}
+        />
+      );
+      break;
     case 'sites':
       page = (
         <SitesPage
@@ -328,19 +361,42 @@ export function App() {
     case 'site-version':
       page = (
         <SiteVersionPage
-          siteId={route.siteId}
-          versionId={route.versionId}
+          {...('siteSlug' in route
+            ? { siteSlug: route.siteSlug, selectedVersionId: route.version }
+            : { siteId: route.siteId, versionId: route.versionId })}
           isAdmin={isAdmin}
           query={siteQuery}
           onQueryChange={setSiteQuery}
           accountControls={accountControls}
           initialSection={route.section}
-          onSectionChange={(section) => navigate({
-            name: 'site-version',
-            siteId: route.siteId,
-            versionId: route.versionId,
-            section,
-          })}
+          initialSectionId={route.sectionId}
+          onSectionChange={(section) => navigate(
+            'siteSlug' in route
+              ? { name: 'site-version', siteSlug: route.siteSlug, version: route.version, section }
+              : {
+                  name: 'site-version',
+                  siteId: route.siteId,
+                  versionId: route.versionId,
+                  section,
+                },
+          )}
+          onInspectorChange={(sectionId) => navigate(
+            'siteSlug' in route
+              ? {
+                  name: 'site-version',
+                  siteSlug: route.siteSlug,
+                  version: route.version,
+                  section: 'sections',
+                  ...(sectionId ? { sectionId } : {}),
+                }
+              : {
+                  name: 'site-version',
+                  siteId: route.siteId,
+                  versionId: route.versionId,
+                  section: 'sections',
+                  ...(sectionId ? { sectionId } : {}),
+                },
+          )}
         />
       );
       break;
@@ -440,6 +496,7 @@ export function App() {
           isAdmin={isAdmin}
           query={q}
           facet={appFacet}
+          initialPlatform={appPlatform}
           onFacetChange={setAppFacet}
           onOpenSearch={(seed) => void openPalette('apps', seed)}
           searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
@@ -465,7 +522,15 @@ export function App() {
                   result={searchResult}
                   filters={filters}
                   onFiltersChange={setFilters}
-                  onOpen={(appId) => void openApp(appId)}
+                  onOpen={(appId, resultId) => {
+                    const flow = flowIdFromCatalogResultId(appId, resultId);
+                    if (flow) {
+                      closeDiscoveryOverlays();
+                      navigate({ name: 'app', appId, section: 'flows', flow });
+                      return;
+                    }
+                    void openApp(appId);
+                  }}
                   collections={collections}
                   onCollectionsChange={setCollections}
                 />

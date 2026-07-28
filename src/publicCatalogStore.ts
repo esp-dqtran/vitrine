@@ -8,6 +8,7 @@ import {
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
 import type { Category } from "./categoryStore.ts";
+import type { PublicCatalogFacetInput } from "./publicFacetPreview.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -42,7 +43,12 @@ function pageLimit(requested = 24): number {
 }
 
 export async function publishedCatalogPage(
-  input: { cursor?: string; limit?: number; now?: Date } = {},
+  input: {
+    cursor?: string;
+    limit?: number;
+    now?: Date;
+    facet?: PublicCatalogFacetInput;
+  } = {},
   runQuery: DatabaseQuery = query,
 ): Promise<PublishedCatalogPageRecord> {
   const limit = pageLimit(input.limit);
@@ -70,15 +76,76 @@ export async function publishedCatalogPage(
        FROM app_updates
        JOIN apps a ON a.id = app_updates.app_id
        WHERE (
-         $2::timestamptz IS NULL
-         OR (app_updates.updated_at, a.id) < ($2::timestamptz, $3::integer)
-       )
+           $2::timestamptz IS NULL
+           OR (app_updates.updated_at, a.id) < ($2::timestamptz, $3::integer)
+         )
+         AND (
+           $4::text IS NULL
+           OR EXISTS (
+             SELECT 1
+             FROM latest platform_latest
+             WHERE platform_latest.app_id = a.id
+               AND platform_latest.platform = $6
+               AND platform_latest.screen_count > 0
+           )
+         )
+         AND (
+           $4::text IS NULL
+           OR (
+             $4 = 'categories'
+             AND EXISTS (
+               SELECT 1
+               FROM app_categories ac
+               JOIN categories c ON c.id = ac.category_id
+               WHERE ac.app_id = a.id
+                 AND lower(c.name) = lower($5)
+             )
+           )
+           OR (
+             $4 = 'flows'
+             AND EXISTS (
+               SELECT 1
+               FROM latest facet_latest
+               JOIN app_flow_versions afv
+                 ON afv.version_id = facet_latest.version_id
+               JOIN app_flow_version_mappings mapping
+                 ON mapping.app_flow_version_id = afv.id
+               JOIN flows canonical
+                 ON canonical.id = mapping.flow_id
+               WHERE facet_latest.app_id = a.id
+                 AND facet_latest.platform = $6
+                 AND lower(canonical.name) = lower($5)
+             )
+           )
+           OR (
+             $4 <> 'categories'
+             AND $4 <> 'flows'
+             AND EXISTS (
+               SELECT 1
+               FROM latest facet_latest
+               JOIN public_facet_previews pfp
+                 ON pfp.version_id = facet_latest.version_id
+               WHERE facet_latest.app_id = a.id
+                 AND facet_latest.platform = $6
+                 AND pfp.facet_group = $4
+                 AND pfp.facet_value = $5
+             )
+           )
+         )
      )
      SELECT app_id, app, updated_at
      FROM eligible
      ORDER BY updated_at DESC, app_id DESC
-     LIMIT $4`,
-    [snapshotAt, afterUpdatedAt, afterAppId, limit + 1],
+     LIMIT $7`,
+    [
+      snapshotAt,
+      afterUpdatedAt,
+      afterAppId,
+      input.facet?.group ?? null,
+      input.facet?.value ?? null,
+      input.facet?.platform ?? null,
+      limit + 1,
+    ],
   );
   const selectedIdentities = identitiesResult.rows as Array<{
     app_id: number;

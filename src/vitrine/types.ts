@@ -68,6 +68,7 @@ export interface SiteSummary {
   versionId: number;
   name: string;
   slug: string;
+  routeSlug: string;
   sourceUrl: string;
   description?: string;
   logoUrl?: string | null;
@@ -127,6 +128,7 @@ export interface SiteVersionPage {
 }
 
 export interface SiteVersionDetail {
+  routeSlug: string;
   site: {
     id: number;
     name: string;

@@ -1,4 +1,4 @@
-import { chromium, type Page } from "playwright";
+import { chromium, type BrowserContext, type Page } from "playwright";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -10,6 +10,16 @@ type Provider = {
   textInput: string;
   response: string;
   loggedOutText: string;
+  uploadMenuButtonName?: string;
+  uploadMenuItemName?: string;
+  /**
+   * Visible only while the provider is actively generating a reply. Providers
+   * that stream with long pauses (notably Gemini Pro) must finish this state
+   * before a stable response can be captured.
+   */
+  generationInProgress?: string;
+  /** Use the provider's submit button instead of Enter after filling the prompt. */
+  submitWithButton?: boolean;
   /**
    * Submit control to gate the "upload actually finished" check on. When set,
    * `ask()` waits for this to become enabled instead of just waiting for the
@@ -43,6 +53,12 @@ const PROVIDERS: Record<string, Provider> = {
     textInput: "div.ql-editor",
     response: ".model-response-text",
     loggedOutText: "Sign in",
+    uploadMenuButtonName: "Upload & tools",
+    uploadMenuItemName: "Upload files",
+    sendButton: 'button[aria-label="Send message"]',
+    generationInProgress:
+      'button[aria-label="Stop response"], button[aria-label="Stop generating"]',
+    submitWithButton: true,
   },
 };
 
@@ -87,12 +103,13 @@ async function waitForCount(
 // Enter in — instead poll the page for the (login-gated) text input until it appears.
 // A textarea existing isn't enough proof of login on its own — ChatGPT still renders a
 // working (but upload-less) textarea for guests — so also check the logged-out marker is gone.
-async function isLoggedIn(page: Page, provider: Provider): Promise<boolean> {
-  const [hasInput, loggedOutCount] = await Promise.all([
+export async function isLoggedIn(page: Page, provider: Provider): Promise<boolean> {
+  const [hasInput, loggedOutButtons, loggedOutLinks] = await Promise.all([
     page.locator(provider.textInput).count(),
-    page.getByText(provider.loggedOutText, { exact: false }).count(),
+    page.getByRole("button", { name: provider.loggedOutText, exact: true }).count(),
+    page.getByRole("link", { name: provider.loggedOutText, exact: true }).count(),
   ]);
-  return hasInput > 0 && loggedOutCount === 0;
+  return hasInput > 0 && loggedOutButtons === 0 && loggedOutLinks === 0;
 }
 
 async function waitForLogin(
@@ -158,28 +175,70 @@ async function throwIfChatRateLimited(
   }
 }
 
-async function waitForStableReply(
+interface ReplyWaitOptions {
+  now?: () => number;
+  pollMs?: number;
+  stableMs?: number;
+  stableWithoutGenerationMs?: number;
+}
+
+async function generationInProgress(
   page: Page,
-  selector: string,
+  selector: string | undefined,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  if (!selector) return false;
+  const controls = page.locator(selector);
+  if (await raceChatAbort(controls.count(), signal) === 0) return false;
+  return raceChatAbort(controls.first().isVisible(), signal);
+}
+
+export async function waitForStableReply(
+  page: Page,
+  provider: Pick<Provider, "response" | "generationInProgress">,
   timeoutMs: number,
   signal?: AbortSignal,
+  options: ReplyWaitOptions = {},
 ): Promise<string> {
-  const deadline = Date.now() + timeoutMs;
+  const now = options.now ?? Date.now;
+  const pollMs = options.pollMs ?? 500;
+  const stableMs = options.stableMs ?? 1500;
+  const stableWithoutGenerationMs = options.stableWithoutGenerationMs ?? 8000;
+  const deadline = now() + timeoutMs;
   let last = "";
-  let stableSince = 0;
-  while (Date.now() < deadline) {
+  let stableSince: number | undefined;
+  let sawGeneration = false;
+  while (now() < deadline) {
     signal?.throwIfAborted();
     await throwIfChatRateLimited(page, signal);
-    const bubbles = await raceChatAbort(page.locator(selector).allTextContents(), signal);
+    const generating = await generationInProgress(
+      page,
+      provider.generationInProgress,
+      signal,
+    );
+    sawGeneration ||= generating;
+    const bubbles = await raceChatAbort(
+      page.locator(provider.response).allTextContents(),
+      signal,
+    );
     const text = bubbles.at(-1)?.trim() ?? "";
     if (text && text === last) {
-      if (stableSince === 0) stableSince = Date.now();
-      if (Date.now() - stableSince > 1500 && text.length >= MIN_STABLE_REPLY_LENGTH) return text;
+      stableSince ??= now();
+      const requiredStableMs = provider.generationInProgress && !sawGeneration
+        ? stableWithoutGenerationMs
+        : stableMs;
+      if (
+        !generating
+        && now() - stableSince > requiredStableMs
+        && text.length >= MIN_STABLE_REPLY_LENGTH
+      ) {
+        return text;
+      }
     } else {
-      stableSince = 0;
+      stableSince = undefined;
     }
     last = text;
-    await raceChatAbort(page.waitForTimeout(500), signal);
+    await raceChatAbort(page.waitForTimeout(pollMs), signal);
   }
   return last;
 }
@@ -188,22 +247,35 @@ async function waitForStableReply(
 // (observed live: the upload was still settling when Enter was pressed, and nothing
 // happened — no assistant bubble ever appeared). Confirm the textbox actually cleared,
 // and retry the send if it didn't, rather than trusting a fixed delay.
-async function sendPrompt(
+export async function sendPrompt(
   page: Page,
   input: import("playwright").Locator,
   prompt: string,
   signal?: AbortSignal,
+  submitButton?: string,
 ): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
     signal?.throwIfAborted();
-    await raceChatAbort(input.click(), signal);
+    // `fill()` focuses editable controls without a pointer click. That matters on
+    // Gemini, where the attachment header can overlap the long composer and make
+    // an otherwise editable textbox fail every click as "outside of viewport".
     await raceChatAbort(input.fill(prompt), signal);
-    await raceChatAbort(input.press("Enter"), signal);
+    if (submitButton) {
+      await raceChatAbort(
+        page.locator(submitButton).evaluate((button) => {
+          (button as HTMLElement).click();
+        }),
+        signal,
+      );
+    } else {
+      await raceChatAbort(input.press("Enter"), signal);
+    }
     await raceChatAbort(page.waitForTimeout(1500), signal);
     await throwIfChatRateLimited(page, signal);
     const remaining = (await raceChatAbort(input.textContent(), signal))?.trim() ?? "";
     if (remaining === "") return; // textbox cleared — message was accepted
   }
+  throw new Error("Prompt was not submitted after 3 attempts");
 }
 
 export interface ChatAttachment {
@@ -226,33 +298,64 @@ export interface ChatSession {
   close(): Promise<void>;
 }
 
+export async function recycleChatPage(page: Page): Promise<Page> {
+  // Create the replacement first so closing the last tab never tears down a
+  // user-owned CDP browser window. A fresh renderer also releases the image and
+  // conversation heap accumulated by long-running screenshot-analysis lanes.
+  const replacement = await page.context().newPage();
+  await page.close().catch(() => {});
+  return replacement;
+}
+
 // Shared by both the single-session and pooled APIs below — the only difference between
 // them is how many `Page`s share the same authenticated context, and who closes it.
 function bindSession(page: Page, providerName: string, provider: Provider, onClose: () => Promise<void>): ChatSession {
+  let activePage = page;
+  let hasAsked = false;
   return {
     async ask(prompt, filePath, options) {
       const signal = options?.signal;
       signal?.throwIfAborted();
+      if (hasAsked) activePage = await recycleChatPage(activePage);
+      hasAsked = true;
+      const requestPage = activePage;
       await raceChatAbort(
-        page.goto(provider.url, { waitUntil: "domcontentloaded" }),
+        requestPage.goto(provider.url, { waitUntil: "domcontentloaded" }),
         signal,
       );
       // ChatGPT (at least) briefly renders a logged-out shell before hydrating into the
       // authenticated UI — wait for the real (and actually logged-in) input, don't guess a delay.
-      await waitForCount(page, provider.textInput, 15_000, signal);
+      await waitForCount(requestPage, provider.textInput, 15_000, signal);
       // Image uploads are login-gated by the provider itself, so only require real login
       // when this call actually attaches a file — a guest session's working (but upload-less)
       // textarea is enough for a text-only prompt.
       signal?.throwIfAborted();
-      if (filePath && !(await isLoggedIn(page, provider))) {
+      if (filePath && !(await isLoggedIn(requestPage, provider))) {
         throw new Error(`Logged out of ${providerName} mid-run — log back in and re-run to pick up where this left off.`);
       }
       if (filePath) {
         signal?.throwIfAborted();
-        await raceChatAbort(
-          page.locator(provider.fileInput).setInputFiles(filePath),
-          signal,
-        );
+        if (provider.uploadMenuButtonName && provider.uploadMenuItemName) {
+          const menuButton = requestPage.getByRole("button", {
+            name: provider.uploadMenuButtonName,
+            exact: true,
+          });
+          await raceChatAbort(menuButton.click(), signal);
+          const uploadItem = requestPage.getByRole("menuitem", {
+            name: provider.uploadMenuItemName,
+            exact: false,
+          });
+          const [chooser] = await Promise.all([
+            raceChatAbort(requestPage.waitForEvent("filechooser", { timeout: 10_000 }), signal),
+            raceChatAbort(uploadItem.click(), signal),
+          ]);
+          await raceChatAbort(chooser.setFiles(filePath), signal);
+        } else {
+          await raceChatAbort(
+            requestPage.locator(provider.fileInput).setInputFiles(filePath),
+            signal,
+          );
+        }
         // A thumbnail (`form img`) renders immediately as a local preview, well before the
         // file has actually finished uploading — sending while it's still a spinner-covered
         // placeholder silently drops the attachment. Where we know the send button's selector,
@@ -260,7 +363,7 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
         if (provider.sendButton) {
           try {
             await raceChatAbort(
-              page.waitForFunction(
+              requestPage.waitForFunction(
                 (sel) => {
                   const btn = document.querySelector(sel) as HTMLButtonElement | null;
                   return !!btn && !btn.disabled;
@@ -274,18 +377,24 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
             if (signal?.aborted) throw signal.reason;
             throw new Error(`Attachment never finished uploading for ${filePath}`);
           }
-        } else if (!(await waitForCount(page, "form img", 10_000, signal))) {
+        } else if (!(await waitForCount(requestPage, "form img", 10_000, signal))) {
           throw new Error(`Attachment never appeared for ${filePath}`);
         }
       }
-      const input = page.locator(provider.textInput);
-      await sendPrompt(page, input, prompt, signal);
+      const input = requestPage.locator(provider.textInput);
+      await sendPrompt(
+        requestPage,
+        input,
+        prompt,
+        signal,
+        provider.submitWithButton ? provider.sendButton : undefined,
+      );
 
       // A detailed vision prompt under "Extra High" reasoning effort can run 3-4+ minutes
       // before the reply even starts, let alone settles — 60s was cutting these off cold.
       const reply = await waitForStableReply(
-        page,
-        provider.response,
+        requestPage,
+        provider,
         6 * 60_000,
         signal,
       );
@@ -323,18 +432,57 @@ export function chatSessionHeadless(env: Record<string, string | undefined> = pr
   return env.HEADLESS === "true";
 }
 
+export function resolveChatCdpUrl(
+  providerName: string,
+  env: Record<string, string | undefined> = process.env,
+): string | undefined {
+  const providerUrl = env[`${providerName.toUpperCase()}_CDP_URL`]?.trim();
+  return providerUrl || env.CHAT_CDP_URL?.trim() || undefined;
+}
+
+async function openChatContext(
+  providerName: string,
+): Promise<{ context: BrowserContext; close: () => Promise<void> }> {
+  const cdpUrl = resolveChatCdpUrl(providerName);
+  if (cdpUrl) {
+    const browser = await chromium.connectOverCDP(cdpUrl);
+    const context = browser.contexts()[0];
+    if (!context) {
+      await browser.close();
+      throw new Error(`No browser context is available at ${cdpUrl}`);
+    }
+    // CDP browsers are user-owned, long-lived provider sessions. Closing the
+    // Playwright Browser here also closes the visible Chrome window, which made
+    // every rate-limit cycle tear down and reopen ChatGPT/Gemini. Worker tabs
+    // are closed by `startChatPool`; leave the external browser itself running.
+    return { context, close: async () => {} };
+  }
+
+  const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
+    headless: chatSessionHeadless(),
+  });
+  return { context, close: () => context.close() };
+}
+
+function matchingProviderPage(context: BrowserContext, provider: Provider): Page | undefined {
+  const origin = new URL(provider.url).origin;
+  return context.pages().find((page) => page.url().startsWith(origin));
+}
+
 export async function startChatSession(
   providerName: string,
   options: { requireLogin?: boolean } = {},
 ): Promise<ChatSession> {
   const provider = getProvider(providerName);
 
-  const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
-    headless: chatSessionHeadless(),
-  });
-  const page = context.pages()[0] ?? (await context.newPage());
+  const { context, close } = await openChatContext(providerName);
+  const page = matchingProviderPage(context, provider)
+    ?? context.pages()[0]
+    ?? (await context.newPage());
   await page.bringToFront(); // make sure the window isn't missed behind others
-  await page.goto(provider.url, { waitUntil: "domcontentloaded" });
+  if (!page.url().startsWith(new URL(provider.url).origin)) {
+    await page.goto(provider.url, { waitUntil: "domcontentloaded" });
+  }
   // Guest mode still renders a working (upload-less) textarea, so a caller that only
   // needs text prompts can skip waiting on a login that may never come — `ask()` only
   // enforces real login itself when a call actually attaches a file.
@@ -344,7 +492,7 @@ export async function startChatSession(
     await waitForCount(page, provider.textInput, 15_000);
   }
 
-  return bindSession(page, providerName, provider, () => context.close());
+  return bindSession(page, providerName, provider, close);
 }
 
 // Multiple tabs sharing one authenticated context (same login cookies), so N images can be
@@ -355,12 +503,14 @@ export async function startChatPool(
 ): Promise<{ sessions: ChatSession[]; closeAll: () => Promise<void> }> {
   const provider = getProvider(providerName);
 
-  const context = await chromium.launchPersistentContext(resolveChatProfileDir(providerName), {
-    headless: chatSessionHeadless(),
-  });
-  const firstPage = context.pages()[0] ?? (await context.newPage());
+  const { context, close } = await openChatContext(providerName);
+  const firstPage = matchingProviderPage(context, provider)
+    ?? context.pages()[0]
+    ?? (await context.newPage());
   await firstPage.bringToFront();
-  await firstPage.goto(provider.url, { waitUntil: "domcontentloaded" });
+  if (!firstPage.url().startsWith(new URL(provider.url).origin)) {
+    await firstPage.goto(provider.url, { waitUntil: "domcontentloaded" });
+  }
   await waitForLogin(firstPage, provider, LOGIN_WAIT_MS);
 
   const extraPages = await Promise.all(
@@ -369,5 +519,11 @@ export async function startChatPool(
   const pages = [firstPage, ...extraPages];
   const sessions = pages.map((page) => bindSession(page, providerName, provider, async () => {}));
 
-  return { sessions, closeAll: () => context.close() };
+  return {
+    sessions,
+    closeAll: async () => {
+      await Promise.all(extraPages.map((page) => page.close().catch(() => {})));
+      await close();
+    },
+  };
 }

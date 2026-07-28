@@ -558,13 +558,32 @@ async function analyzeRenderedPage(
     const documentHeight = Math.min(
       maximumHeight,
       Math.max(
+        viewport.height,
         document.documentElement.scrollHeight,
         document.body?.scrollHeight ?? 0,
       ),
     );
+    const pageWidth = Math.min(
+      viewport.width,
+      Math.max(
+        document.documentElement.scrollWidth,
+        document.body?.scrollWidth ?? 0,
+      ),
+    );
     const semanticRoots = [...document.querySelectorAll(
-      "nav,header,main>section,main>article,main>div,body>section,body>article,body>div,[role=region],footer",
+      "nav,header,main>section,main>article,main>div,main section,main article,main [role=region],body>section,body>article,body>div,[role=region],footer",
     )];
+    const identifiedRoots = [...document.querySelectorAll(
+      "main [id],main [data-section],main [data-testid]",
+    )].filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return (
+        visible(element) &&
+        !overlay(element) &&
+        rect.height >= 160 &&
+        element.querySelectorAll("h1,h2,h3").length <= 6
+      );
+    });
     const headingRoots: Element[] = [];
     for (const heading of document.querySelectorAll("h1,h2,h3")) {
       let current = heading.parentElement;
@@ -601,31 +620,17 @@ async function analyzeRenderedPage(
       }
       if (best) headingRoots.push(best);
     }
-    const rawRoots = [...new Set([...semanticRoots, ...headingRoots])]
+    const rawRoots = [...new Set([
+      ...semanticRoots,
+      ...identifiedRoots,
+      ...headingRoots,
+    ])]
       .filter((element) => visible(element) && !overlay(element));
-    const roots = rawRoots.filter((element) => {
-      const rect = element.getBoundingClientRect();
-      const coversPage = rect.height >= documentHeight * 0.85;
-      const nestedAlternatives = rawRoots.filter((candidate) =>
-        candidate !== element && element.contains(candidate)
-      );
-      const nestedBandStarts = nestedAlternatives
-        .map((candidate) => Math.round(candidate.getBoundingClientRect().top + window.scrollY))
-        .sort((left, right) => left - right)
-        .filter((top, index, values) =>
-          index === 0 || top - values[index - 1]! >= viewport.height * 0.25
-        );
-      const spansNestedBands = nestedBandStarts.length >= 2;
-      return !nestedAlternatives.length ||
-        (!coversPage && !spansNestedBands);
-    });
-    const captureRoots = roots.length > 0
-      ? roots
-      : rawRoots.length > 0
-      ? rawRoots.slice(0, 1)
+    const captureRoots = rawRoots.length > 0
+      ? rawRoots
       : document.body
-      ? [document.body]
-      : [];
+        ? [document.body]
+        : [];
     const candidates = captureRoots.map((element) => {
       const rect = element.getBoundingClientRect();
       const heading = element.matches("h1,h2,h3")
@@ -634,58 +639,141 @@ async function analyzeRenderedPage(
       const headingText = heading instanceof HTMLElement
         ? heading.innerText
         : heading?.textContent;
+      const style = getComputedStyle(element);
+      const elementX = Math.max(
+        0,
+        Math.min(pageWidth - 1, Math.round(rect.left + window.scrollX)),
+      );
+      const elementY = Math.max(
+        0,
+        Math.min(documentHeight - 1, Math.round(rect.top + window.scrollY)),
+      );
+      const elementBounds = {
+        x: elementX,
+        y: elementY,
+        width: Math.max(1, Math.min(pageWidth - elementX, Math.round(rect.width))),
+        height: Math.max(
+          1,
+          Math.min(
+            documentHeight - elementY,
+            Math.round(rect.height),
+          ),
+        ),
+      };
+      const anchor = clean(element.id, 160);
+      const classNames = [...element.classList]
+        .map((value) => clean(value, 120))
+        .filter(Boolean)
+        .slice(0, 20);
       return {
         selector: selectorFor(element),
         tagName: element.tagName.toLowerCase(),
         role: clean(element.getAttribute("role"), 100) || undefined,
         heading: headingLabel(clean(headingText, 200)) || undefined,
+        headingLevel: heading?.tagName.toLowerCase(),
+        anchor: anchor || undefined,
+        classNames,
         text: clean(element.textContent, 1_000),
-        bounds: {
-          x: Math.max(0, Math.round(rect.left + window.scrollX)),
-          y: Math.max(0, Math.round(rect.top + window.scrollY)),
-          width: Math.max(1, Math.round(rect.width)),
-          height: Math.max(1, Math.round(rect.height)),
+        elementBounds,
+        style: {
+          display: clean(style.display, 80) || "block",
+          position: clean(style.position, 80) || "static",
+          flexDirection: clean(style.flexDirection, 80) || undefined,
+          gridTemplateColumns: clean(style.gridTemplateColumns, 240) || undefined,
+          maxWidth: clean(style.maxWidth, 80) || undefined,
+          padding: clean(style.padding, 240) || undefined,
+          gap: clean(style.gap, 80) || undefined,
+          backgroundColor: clean(style.backgroundColor, 120) || undefined,
+          color: clean(style.color, 120) || undefined,
+        },
+        content: {
+          links: Math.min(10_000, element.querySelectorAll("a[href]").length),
+          buttons: Math.min(10_000, element.querySelectorAll("button,[role=button]").length),
+          images: Math.min(10_000, element.querySelectorAll("img,picture,svg").length),
+          videos: Math.min(10_000, element.querySelectorAll("video").length),
+          forms: Math.min(10_000, element.querySelectorAll("form").length),
         },
       };
     }).sort((left, right) =>
-      left.bounds.y - right.bounds.y ||
-      right.bounds.height - left.bounds.height ||
-      left.bounds.x - right.bounds.x
+      left.elementBounds.y - right.elementBounds.y ||
+      left.elementBounds.height - right.elementBounds.height ||
+      left.elementBounds.x - right.elementBounds.x
     );
-    const sections: typeof candidates = [];
+    const [score] = [(candidate: (typeof candidates)[number]) => {
+      const landmark = /^(?:nav|header|footer)$/.test(candidate.tagName);
+      const semantic = /^(?:section|article)$/.test(candidate.tagName) ||
+        candidate.role === "region";
+      return (landmark ? 100 : 0) +
+        (candidate.heading ? 50 : 0) +
+        (semantic ? 20 : 0) +
+        (candidate.anchor ? 5 : 0) -
+        Math.min(10, candidate.elementBounds.height / Math.max(1, documentHeight));
+    }] as const;
+    const startCandidates: typeof candidates = [];
     for (const candidate of candidates) {
-      const prior = sections.at(-1);
-      if (prior && candidate.bounds.y < prior.bounds.y + prior.bounds.height) {
-        const priorBottom = prior.bounds.y + prior.bounds.height;
-        const candidateBottom = candidate.bounds.y + candidate.bounds.height;
-        if (candidateBottom <= priorBottom) continue;
-        candidate.bounds.height = candidateBottom - priorBottom;
-        candidate.bounds.y = priorBottom;
+      if (candidate.elementBounds.y >= maximumHeight) continue;
+      const prior = startCandidates.at(-1);
+      if (
+        prior &&
+        candidate.elementBounds.y - prior.elementBounds.y < 64
+      ) {
+        if (score(candidate) > score(prior)) {
+          startCandidates[startCandidates.length - 1] = candidate;
+        }
+        continue;
       }
-      if (candidate.bounds.height >= 60) sections.push(candidate);
+      startCandidates.push(candidate);
     }
-    const capturedSections = sections
-      .filter((section) => section.bounds.y < maximumHeight)
-      .slice(0, 200);
-    const pageWidth = Math.min(
-      viewport.width,
-      Math.max(
-        document.documentElement.scrollWidth,
-        document.body?.scrollWidth ?? 0,
-      ),
-    );
-    const bandStarts = capturedSections.map((section, position) => {
+    const fallbackRoot = document.body ?? document.documentElement;
+    const fallbackStyle = getComputedStyle(fallbackRoot);
+    const normalizedSections = startCandidates.length > 0
+      ? startCandidates.slice(0, 200)
+      : [{
+          selector: selectorFor(fallbackRoot),
+          tagName: fallbackRoot.tagName.toLowerCase(),
+          role: clean(fallbackRoot.getAttribute("role"), 100) || undefined,
+          heading: undefined,
+          headingLevel: undefined,
+          anchor: clean(fallbackRoot.id, 160) || undefined,
+          classNames: [...fallbackRoot.classList].slice(0, 20),
+          text: clean(fallbackRoot.textContent, 1_000),
+          elementBounds: {
+            x: 0,
+            y: 0,
+            width: pageWidth,
+            height: documentHeight,
+          },
+          style: {
+            display: clean(fallbackStyle.display, 80) || "block",
+            position: clean(fallbackStyle.position, 80) || "static",
+            flexDirection: clean(fallbackStyle.flexDirection, 80) || undefined,
+            gridTemplateColumns: clean(fallbackStyle.gridTemplateColumns, 240) || undefined,
+            maxWidth: clean(fallbackStyle.maxWidth, 80) || undefined,
+            padding: clean(fallbackStyle.padding, 240) || undefined,
+            gap: clean(fallbackStyle.gap, 80) || undefined,
+            backgroundColor: clean(fallbackStyle.backgroundColor, 120) || undefined,
+            color: clean(fallbackStyle.color, 120) || undefined,
+          },
+          content: {
+            links: Math.min(10_000, fallbackRoot.querySelectorAll("a[href]").length),
+            buttons: Math.min(10_000, fallbackRoot.querySelectorAll("button,[role=button]").length),
+            images: Math.min(10_000, fallbackRoot.querySelectorAll("img,picture,svg").length),
+            videos: Math.min(10_000, fallbackRoot.querySelectorAll("video").length),
+            forms: Math.min(10_000, fallbackRoot.querySelectorAll("form").length),
+          },
+        }];
+    const bandStarts = normalizedSections.map((section, position) => {
       if (position === 0) return 0;
-      const previous = capturedSections[position - 1]!;
+      const previous = normalizedSections[position - 1]!;
       if (previous.tagName === "nav" || previous.tagName === "header") {
         return Math.min(
-          section.bounds.y,
-          previous.bounds.y + previous.bounds.height,
+          section.elementBounds.y,
+          previous.elementBounds.y + previous.elementBounds.height,
         );
       }
-      return section.bounds.y;
+      return section.elementBounds.y;
     });
-    const sectionBands = capturedSections.map((section, position) => {
+    const sectionBands = normalizedSections.map((section, position) => {
       const y = bandStarts[position]!;
       const nextY = bandStarts[position + 1] ?? documentHeight;
       return {

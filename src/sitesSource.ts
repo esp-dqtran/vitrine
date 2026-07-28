@@ -107,6 +107,7 @@ function mapCapturedSitesRoot(
     url: string;
     fullPageImageUrl: string;
     sourcePageImageUrl?: string;
+    lastSourceDisplayOrder: number;
     sections: SiteSection[];
   }> = [];
   const pageIndexes = new Map<string, number>();
@@ -125,6 +126,7 @@ function mapCapturedSitesRoot(
       optionalString(sourceSection.page_url),
       options.sourceUrl,
     );
+    const sourceDisplayOrder = integer(sourceSection.display_order);
     const pageUrl = capturedPageUrl ?? options.sourceUrl;
     if (!pageUrl) throw new MobbinSitesSourceError();
     let pageIndex = pageIndexes.get(pageId);
@@ -140,6 +142,7 @@ function mapCapturedSitesRoot(
           optionalString(sourceSection.page_video_url) ??
           RENDERED_MEDIA_PLACEHOLDER,
         ...(sourcePageImageUrl ? { sourcePageImageUrl } : {}),
+        lastSourceDisplayOrder: sourceDisplayOrder,
         sections: [],
       });
     } else if (activePageId !== pageId) {
@@ -157,11 +160,12 @@ function mapCapturedSitesRoot(
     }
     if (
       pageUrl !== page.url ||
-      integer(sourceSection.display_order) !== page.sections.length
+      (page.sections.length > 0 && sourceDisplayOrder <= page.lastSourceDisplayOrder)
     ) {
       throw new MobbinSitesSourceError();
     }
-    page.sections.push(mapSection(sourceSection));
+    page.lastSourceDisplayOrder = sourceDisplayOrder;
+    page.sections.push(mapSection(sourceSection, page.sections.length));
   }
 
   const firstVideo = sourceSections.find(
@@ -217,10 +221,9 @@ function mapCapturedSitesRoot(
   };
 }
 
-function mapSection(source: SourceObject): SiteSection {
+function mapSection(source: SourceObject, position: number): SiteSection {
   const type = string(source.type);
   const sourceId = string(source.id);
-  const position = integer(source.display_order);
   const patterns = sectionPatterns(source);
   if (type === "page_image" || type === "custom_image") {
     const metadata =

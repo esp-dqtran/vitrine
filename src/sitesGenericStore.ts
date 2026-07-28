@@ -104,33 +104,68 @@ export function createGenericSitesStoreMethods(
         .slice(0, 120) || "website";
 
       return runTransaction(async (tx) => {
-        const site = await tx(
-          `INSERT INTO sites
+        const matchingSite = await tx(
+          `SELECT id
+           FROM sites
+           WHERE regexp_replace(lower(source_url), '/+$', '') =
+                 regexp_replace(lower($1), '/+$', '')
+           ORDER BY id
+           LIMIT 1
+           FOR UPDATE`,
+          [identity.canonicalUrl],
+        );
+        const existingSiteId = matchingSite.rows[0]
+          ? positiveId(matchingSite.rows[0].id)
+          : undefined;
+        const site = existingSiteId
+          ? await tx(
+            `UPDATE sites
+             SET name = $2,
+                 source_url = $3,
+                 description = $4,
+                 logo_url = $5,
+                 categories = $6::jsonb,
+                 styles = $7::jsonb,
+                 updated_at = now()
+             WHERE id = $1
+             RETURNING id`,
+            [
+              existingSiteId,
+              name,
+              identity.canonicalUrl,
+              description || null,
+              iconUrl,
+              JSON.stringify(categories),
+              JSON.stringify(styles),
+            ],
+          )
+          : await tx(
+            `INSERT INTO sites
              (source_site_id, source_kind, slug, name, source_url, description,
               logo_url, categories, styles, popularity)
-           VALUES ($1, 'public-page', $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, 0)
-           ON CONFLICT (source_site_id) DO UPDATE SET
-             source_kind = 'public-page',
-             slug = EXCLUDED.slug,
-             name = EXCLUDED.name,
-             source_url = EXCLUDED.source_url,
-             description = EXCLUDED.description,
-             logo_url = EXCLUDED.logo_url,
-             categories = EXCLUDED.categories,
-             styles = EXCLUDED.styles,
-             updated_at = now()
-           RETURNING id`,
-          [
-            identity.sourceSiteId,
-            slug,
-            name,
-            identity.canonicalUrl,
-            description || null,
-            iconUrl,
-            JSON.stringify(categories),
-            JSON.stringify(styles),
-          ],
-        );
+             VALUES ($1, 'public-page', $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, 0)
+             ON CONFLICT (source_site_id) DO UPDATE SET
+               source_kind = 'public-page',
+               slug = EXCLUDED.slug,
+               name = EXCLUDED.name,
+               source_url = EXCLUDED.source_url,
+               description = EXCLUDED.description,
+               logo_url = EXCLUDED.logo_url,
+               categories = EXCLUDED.categories,
+               styles = EXCLUDED.styles,
+               updated_at = now()
+             RETURNING id`,
+            [
+              identity.sourceSiteId,
+              slug,
+              name,
+              identity.canonicalUrl,
+              description || null,
+              iconUrl,
+              JSON.stringify(categories),
+              JSON.stringify(styles),
+            ],
+          );
         const siteId = positiveId(site.rows[0]?.id);
         const version = await tx(
           `INSERT INTO site_versions
@@ -198,11 +233,9 @@ export function createGenericSitesStoreMethods(
            JOIN site_versions sv ON sv.site_id = s.id
            WHERE s.id = $1
              AND sv.id = $2
-             AND s.source_kind = 'public-page'
-             AND s.source_site_id = $3
-             AND sv.canonical_url = $4
+             AND sv.canonical_url = $3
            FOR UPDATE`,
-          [siteId, versionId, identity.sourceSiteId, identity.canonicalUrl],
+          [siteId, versionId, identity.canonicalUrl],
         );
         const row = locked.rows[0];
         if (!row) throw new Error("Generic Site import was not initialized");
@@ -317,9 +350,8 @@ export function createGenericSitesStoreMethods(
       await runQuery(
         `UPDATE site_versions sv
          SET status = 'failed', failure_message = $2, updated_at = now()
-         FROM sites s
+           FROM sites s
          WHERE sv.site_id = s.id
-           AND s.source_kind = 'public-page'
            AND sv.canonical_url = $1
            AND sv.status <> 'ready'`,
         [identity.canonicalUrl, failureMessage(message)],

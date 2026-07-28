@@ -141,6 +141,63 @@ test('shows only Apps that contain the active platform', () => {
   }
 });
 
+test('accepts a Flow-search platform handoff as the selected App platform', () => {
+  const html = renderToStaticMarkup(
+    <AppsDiscoveryPage
+      apps={[makeApp({ platforms: ['ios'] })]}
+      isAdmin
+      query=""
+      facet={{ group: 'flows', value: 'Logging in' }}
+      initialPlatform="ios"
+      onFacetChange={() => undefined}
+      onOpenSearch={() => undefined}
+      searchMode="legacy"
+      onOpenApp={() => undefined}
+      onRetry={() => undefined}
+      totalApps={1}
+      hasMore={false}
+      loadingMore={false}
+    />,
+  );
+
+  assert.match(
+    html.slice(
+      html.indexOf('aria-label="App platform"'),
+      html.indexOf('aria-label="App ordering"'),
+    ),
+    /aria-checked="true"[^>]*>.*?iOS/s,
+  );
+});
+
+test('shows an active Flow as a quiet filter context instead of a search-header pill', () => {
+  const html = renderToStaticMarkup(
+    <AppsDiscoveryPage
+      apps={[makeApp()]}
+      isAdmin={false}
+      query=""
+      facet={{ group: 'flows', value: 'Logging in' }}
+      onFacetChange={() => undefined}
+      onOpenSearch={() => undefined}
+      searchMode="legacy"
+      activeFilterCount={3}
+      onOpenApp={() => undefined}
+      onRetry={() => undefined}
+      totalApps={1}
+      hasMore={false}
+      loadingMore={false}
+    />,
+  );
+
+  assert.match(html, /aria-label="Active App filter"/);
+  assert.match(html, />Filtered by</);
+  assert.match(html, />Flow</);
+  assert.match(html, /Logging in/);
+  assert.match(html, /aria-label="Clear Flow filter"/);
+  assert.match(html, /Search on Web\.\.\./);
+  assert.doesNotMatch(html, /reference-search-trigger__category/);
+  assert.doesNotMatch(html, /3 filters/);
+});
+
 test('preserves server order for Latest and orders Most popular by coverage', () => {
   const apps = [
     makeApp({ id: 'older', lastCapturedAt: '2026-07-01T00:00:00.000Z', totalScreens: 8 }),
@@ -247,7 +304,7 @@ test('renders the Mobbin Apps taxonomy, controls, grid, and media-first card', (
   assert.match(html, /aria-label="Open Linear"/);
 });
 
-test('renders six App card skeletons while the initial page loads', () => {
+test('renders a calm shared loading state while the initial App page loads', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={null}
@@ -265,11 +322,12 @@ test('renders six App card skeletons while the initial page loads', () => {
     />,
   );
 
-  assert.equal((html.match(/data-app-card-skeleton="true"/g) ?? []).length, 6);
+  assert.match(html, /data-reference-catalog-loading="true"/);
   assert.match(html, /aria-label="Loading Apps"/);
+  assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
 });
 
-test('appends three App card skeletons while loading another page', () => {
+test('keeps App cards stable and shows compact progress while loading another page', () => {
   const html = renderToStaticMarkup(
     <AppsDiscoveryPage
       apps={[makeApp()]}
@@ -287,8 +345,10 @@ test('appends three App card skeletons while loading another page', () => {
     />,
   );
 
-  assert.equal((html.match(/data-app-card-skeleton="true"/g) ?? []).length, 3);
-  assert.match(html, /role="status"[^>]*>Loading more Apps</);
+  assert.match(html, /data-app-discovery-card="true"/);
+  assert.match(html, /reference-catalog-loading--compact/);
+  assert.match(html, /aria-label="Loading more Apps"/);
+  assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
 });
 
 test('composes Apps through the shared reference discovery shell', async () => {
@@ -336,8 +396,8 @@ test('styles Apps as a three-column Mobbin discovery layout with responsive fall
   assert.match(mediaRule, /aspect-ratio:\s*16\s*\/\s*10/);
   assert.match(cardRule, /border-radius:\s*24px/);
   assert.doesNotMatch(css, /\.apps-discovery__count\s*\{/);
-  assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery__grid,\s*[\s\S]*\.apps-discovery__loading\s*\{[\s\S]*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid\s*\{[\s\S]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*\.apps-discovery__grid\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 });
 
 test('renders App media directly through the shared discovery frame', async () => {

@@ -25,9 +25,36 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
+  assert.doesNotMatch(html, /aria-label="Overview"/);
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
   assert.match(html, /aria-label="Design System"/);
+  assert.doesNotMatch(html, /aria-label="Review"/);
   assert.doesNotMatch(html, /Crawler/);
+});
+
+test('falls back removed Review selections to Screens', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
+      initialSection="review"
+      app={{
+        id: 'linear',
+        app: 'Linear',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
+        accent: '#5E6AD2',
+        totalScreens: 0,
+        totalUiElements: 0,
+        totalFlows: 0,
+      }}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /aria-label="Review"/);
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
 });
 
 test('does not expose capture version controls in app detail', () => {
@@ -197,12 +224,13 @@ test('renders Screens and UI Elements through the shared gallery section and gri
   assert.match(source, /section === 'flows'\s*\?\s*<FlowsPanel[\s\S]*flows=\{flows\}/);
 });
 
-test('renders metadata-only aggregate counts on Overview', () => {
+test('falls back legacy Overview selections to Screens without rendering an Overview tab', () => {
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
       onCollectionsChange={() => undefined}
       role="admin"
+      initialSection="overview"
       app={{
         id: 'claude', app: 'Claude', categories: [{ id: 3, name: 'AI', slug: 'ai' }], accent: '#d97757',
         totalScreens: 120, totalUiElements: 31, totalFlows: 7,
@@ -211,12 +239,10 @@ test('renders metadata-only aggregate counts on Overview', () => {
       onBack={() => undefined}
     />
   );
-  assert.match(html, /120/);
-  assert.match(html, /31/);
-  assert.match(html, /7/);
-  assert.match(html, /115 analyzed/);
-  assert.doesNotMatch(html, /Capture versions/);
-  assert.doesNotMatch(html, /Complete observed design system/);
+  assert.doesNotMatch(html, /aria-label="Overview"/);
+  assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
+  assert.doesNotMatch(html, /App overview/);
+  assert.doesNotMatch(html, /115 analyzed/);
 });
 
 test('shows every platform reported by app metadata even when the first screen page is web-only', () => {
@@ -333,41 +359,41 @@ test('renders App section totals at the readable navigation scale', () => {
   assert.match(source, /tabTrailing=\{<span style=\{\{ fontSize: 16,/);
 });
 
-test('uses a compact App-only detail header without promoting a content section', () => {
+test('uses the shared compact detail header without promoting a content section', () => {
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
   assert.match(
     css,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero\s*\{[^}]*min-height:\s*auto;/,
+    /\.reference-detail__hero\s*\{[^}]*min-height:\s*auto;/,
   );
   assert.match(
     css,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero-inner\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*80px minmax\(0,\s*1fr\) auto;[^}]*grid-template-areas:\s*"logo heading actions"\s*"logo metadata actions";/,
+    /\.reference-detail__hero-inner\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*80px minmax\(0,\s*1fr\) auto;[^}]*grid-template-areas:\s*"logo heading actions"\s*"logo metadata actions";/,
   );
   assert.match(
     css,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__logo\s*\{[^}]*grid-area:\s*logo;[^}]*width:\s*80px;[^}]*height:\s*80px;[^}]*margin-bottom:\s*0;/,
+    /\.reference-detail__logo\s*\{[^}]*grid-area:\s*logo;[^}]*width:\s*80px;[^}]*height:\s*80px;[^}]*margin-bottom:\s*0;/,
   );
   assert.match(
     css,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata\s*\{[^}]*grid-area:\s*metadata;[^}]*gap:\s*32px;[^}]*padding-top:\s*0;/,
+    /\.reference-detail__metadata\s*\{[^}]*grid-area:\s*metadata;[^}]*gap:\s*32px;[^}]*padding-top:\s*0;/,
   );
   assert.match(
     css,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions\s*\{[^}]*grid-area:\s*actions;[^}]*align-self:\s*center;[^}]*padding:\s*0;/,
+    /\.reference-detail__actions\s*\{[^}]*grid-area:\s*actions;[^}]*align-self:\s*center;[^}]*padding:\s*0;/,
   );
   assert.match(
     css,
-    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__hero-inner\s*\{[^}]*display:\s*flex;[^}]*padding-top:\s*24px;[^}]*padding-bottom:\s*20px;/,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail__hero-inner\s*\{[^}]*display:\s*flex;[^}]*padding-top:\s*24px;[^}]*padding-bottom:\s*20px;/,
   );
   assert.match(
     css,
-    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata\s*\{[^}]*width:\s*100%;[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail__metadata\s*\{[^}]*width:\s*100%;[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/,
   );
   assert.match(
     css,
-    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail\[data-reference-detail='app'\] \.reference-detail__actions\s*\{[^}]*width:\s*100%;[^}]*padding:\s*18px 0 0;/,
+    /@media \(max-width:\s*720px\)[\s\S]*\.reference-detail__actions\s*\{[^}]*width:\s*100%;[^}]*padding:\s*18px 0 0;/,
   );
   assert.doesNotMatch(css, /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__tabs > button:nth-child/);
-  assert.doesNotMatch(css, /\.reference-detail\[data-reference-detail='site'\] \.reference-detail__hero\s*\{/);
+  assert.doesNotMatch(css, /\.reference-detail\[data-reference-detail='(?:app|site)'\] \.reference-detail__hero\s*\{/);
 });

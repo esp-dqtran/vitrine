@@ -403,34 +403,63 @@ export function createSitesStore(
     async beginImport(identity, graphValue) {
       const { checkedIdentity, graph } = checkedImport(identity, graphValue);
       return runTransaction(async (tx) => {
-        const site = await tx(
-          `INSERT INTO sites
+        const matchingSite = await tx(
+          `SELECT id
+           FROM sites
+           WHERE regexp_replace(lower(source_url), '/+$', '') =
+                 regexp_replace(lower($1), '/+$', '')
+           ORDER BY id
+           LIMIT 1
+           FOR UPDATE`,
+          [graph.site.sourceUrl],
+        );
+        const existingSiteId = matchingSite.rows[0]
+          ? positiveId(matchingSite.rows[0].id)
+          : undefined;
+        const site = existingSiteId
+          ? await tx(
+            `UPDATE sites
+             SET categories = $2::jsonb,
+                 styles = $3::jsonb,
+                 popularity = $4,
+                 updated_at = now()
+             WHERE id = $1
+             RETURNING id`,
+            [
+              existingSiteId,
+              JSON.stringify(graph.site.categories ?? []),
+              JSON.stringify(graph.site.styles ?? []),
+              graph.site.popularity ?? 0,
+            ],
+          )
+          : await tx(
+            `INSERT INTO sites
              (source_site_id, slug, name, source_url, description, logo_url,
               categories, styles, popularity)
-           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9)
-           ON CONFLICT (source_site_id) DO UPDATE SET
-             slug = EXCLUDED.slug,
-             name = EXCLUDED.name,
-             source_url = EXCLUDED.source_url,
-             description = EXCLUDED.description,
-             logo_url = EXCLUDED.logo_url,
-             categories = EXCLUDED.categories,
-             styles = EXCLUDED.styles,
-             popularity = EXCLUDED.popularity,
-             updated_at = now()
-           RETURNING id`,
-          [
-            checkedIdentity.sourceSiteId,
-            graph.site.slug,
-            graph.site.name,
-            graph.site.sourceUrl,
-            graph.site.description ?? null,
-            graph.site.logoUrl ?? null,
-            JSON.stringify(graph.site.categories ?? []),
-            JSON.stringify(graph.site.styles ?? []),
-            graph.site.popularity ?? 0,
-          ],
-        );
+             VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9)
+             ON CONFLICT (source_site_id) DO UPDATE SET
+               slug = EXCLUDED.slug,
+               name = EXCLUDED.name,
+               source_url = EXCLUDED.source_url,
+               description = EXCLUDED.description,
+               logo_url = EXCLUDED.logo_url,
+               categories = EXCLUDED.categories,
+               styles = EXCLUDED.styles,
+               popularity = EXCLUDED.popularity,
+               updated_at = now()
+             RETURNING id`,
+            [
+              checkedIdentity.sourceSiteId,
+              graph.site.slug,
+              graph.site.name,
+              graph.site.sourceUrl,
+              graph.site.description ?? null,
+              graph.site.logoUrl ?? null,
+              JSON.stringify(graph.site.categories ?? []),
+              JSON.stringify(graph.site.styles ?? []),
+              graph.site.popularity ?? 0,
+            ],
+          );
         const siteId = positiveId(site.rows[0]?.id);
         const version = await tx(
           `INSERT INTO site_versions
@@ -570,10 +599,17 @@ export function createSitesStore(
           throw new Error("Persisted Site graph count mismatch");
         }
 
+        await tx(
+          `UPDATE site_versions
+           SET is_latest = false
+           WHERE site_id = $1 AND id <> $2`,
+          [siteId, versionId],
+        );
         const ready = await tx(
           `UPDATE site_versions
            SET source_object_key = $2,
                preview_object_key = $3,
+               is_latest = true,
                status = 'ready',
                failure_message = NULL,
                updated_at = now()

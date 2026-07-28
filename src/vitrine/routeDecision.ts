@@ -42,6 +42,7 @@ export function decideRootRoute(
         : { kind: 'redirect', route: { name: 'apps' } };
     case 'apps':
     case 'sites':
+    case 'flows':
       return { kind: 'application' };
     case 'billing-success':
       return context.auth === 'guest'

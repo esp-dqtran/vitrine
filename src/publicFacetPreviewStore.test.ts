@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
+  parsePublicCatalogFacet,
   parsePublicFacet,
   type PublicFacetInput,
 } from "./publicFacetPreview.ts";
@@ -27,6 +28,33 @@ test("accepts only the public Apps taxonomy and supported platforms", () => {
   );
   assert.equal(
     parsePublicFacet({ group: "categories", value: "   ", platform: "web" }),
+    null,
+  );
+});
+
+test("accepts Android for catalog filtering without enabling Android hover previews", () => {
+  assert.deepEqual(
+    parsePublicCatalogFacet({ group: "flows", value: "Setting Up", platform: "android" }),
+    { group: "flows", value: "Setting Up", platform: "android" },
+  );
+  assert.deepEqual(
+    parsePublicCatalogFacet({
+      group: "flows",
+      value: "Logging in (saved login info)",
+      platform: "android",
+    }),
+    {
+      group: "flows",
+      value: "Logging in (saved login info)",
+      platform: "android",
+    },
+  );
+  assert.equal(
+    parsePublicFacet({
+      group: "flows",
+      value: "Logging in (saved login info)",
+      platform: "web",
+    }),
     null,
   );
 });

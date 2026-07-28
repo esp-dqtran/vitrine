@@ -10,6 +10,7 @@ import {
   legacyImageReference,
   imageObjectById,
   publishedFacetPreviewObject,
+  publishedFlowCatalogPreviewObject,
   publishedPreviewObject,
   type DatabaseQuery,
 } from "./objectStoreDb.ts";
@@ -399,6 +400,58 @@ test("facet preview lookup rejects ranks outside its declared media bound", asyn
         return result();
       },
     ),
+    /rank/i,
+  );
+  assert.equal(calls, 0);
+});
+
+test("Flow catalog preview resolves ordered evidence from one published Flow", async () => {
+  let sql = "";
+  let values: readonly unknown[] | undefined;
+  const found = await publishedFlowCatalogPreviewObject(
+    {
+      app: "linear",
+      platform: "web",
+      versionId: 7,
+      versionFlowId: 71,
+      rank: 2,
+    },
+    async (nextSql, nextValues) => {
+      sql = nextSql;
+      values = nextValues;
+      return result([{
+        object_key: metadata.key,
+        sha256: metadata.sha256,
+        byte_size: metadata.byteSize,
+        content_type: metadata.contentType,
+        access_class: metadata.accessClass,
+      }]);
+    },
+  );
+
+  assert.deepEqual(found, metadata);
+  assert.deepEqual(values, ["linear", "web", 7, 71, 2]);
+  assert.match(sql, /jsonb_array_elements\(afv\.steps\)/);
+  assert.match(sql, /av\.status = 'published'/);
+  assert.match(sql, /afv\.id = \$4/);
+  assert.match(sql, /version_images vi/);
+  assert.match(sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
+});
+
+test("Flow catalog preview rejects ranks outside one to six without querying", async () => {
+  let calls = 0;
+  const query: DatabaseQuery = async () => {
+    calls += 1;
+    return result();
+  };
+  await assert.rejects(
+    publishedFlowCatalogPreviewObject({
+      app: "linear",
+      platform: "web",
+      versionId: 7,
+      versionFlowId: 71,
+      rank: 7,
+    }, query),
     /rank/i,
   );
   assert.equal(calls, 0);

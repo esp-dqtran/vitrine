@@ -24,14 +24,40 @@ export interface PublicPageBounds {
   height: number;
 }
 
+export interface PublicPageSectionStyle {
+  display: string;
+  position: string;
+  flexDirection?: string;
+  gridTemplateColumns?: string;
+  maxWidth?: string;
+  padding?: string;
+  gap?: string;
+  backgroundColor?: string;
+  color?: string;
+}
+
+export interface PublicPageSectionContent {
+  links: number;
+  buttons: number;
+  images: number;
+  videos: number;
+  forms: number;
+}
+
 export interface PublicPageSection {
   position: number;
   selector: string;
   tagName: string;
   role?: string;
   heading?: string;
+  headingLevel?: string;
+  anchor?: string;
+  classNames?: string[];
   text: string;
   bounds: PublicPageBounds;
+  elementBounds?: PublicPageBounds;
+  style?: PublicPageSectionStyle;
+  content?: PublicPageSectionContent;
 }
 
 export interface PublicPageCapture {
@@ -123,14 +149,35 @@ export function parsePublicPageCapture(value: unknown): PublicPageCapture {
     }
     const role = optionalText(section.role, 100);
     const heading = optionalText(section.heading, 200);
+    const headingLevel = optionalText(section.headingLevel, 10)?.toLowerCase();
+    if (headingLevel && !/^h[1-6]$/.test(headingLevel)) {
+      throw new PublicPageValidationError("Public page section heading level is invalid");
+    }
+    const anchor = optionalText(section.anchor, 160);
+    const classNames = optionalStringArray(section.classNames, 20, 120);
+    const elementBounds = section.elementBounds === undefined
+      ? undefined
+      : checkedBounds(section.elementBounds, width, height);
+    const style = section.style === undefined
+      ? undefined
+      : checkedSectionStyle(section.style);
+    const content = section.content === undefined
+      ? undefined
+      : checkedSectionContent(section.content);
     return {
       position: index,
       selector: text(section.selector, 1_024),
       tagName,
       ...(role ? { role } : {}),
       ...(heading ? { heading } : {}),
+      ...(headingLevel ? { headingLevel } : {}),
+      ...(anchor ? { anchor } : {}),
+      ...(classNames.length ? { classNames } : {}),
       text: text(section.text, 1_000, false),
       bounds,
+      ...(elementBounds ? { elementBounds } : {}),
+      ...(style ? { style } : {}),
+      ...(content ? { content } : {}),
     };
   });
 
@@ -176,6 +223,71 @@ function text(value: unknown, max: number, required = true): string {
 function optionalText(value: unknown, max: number): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
   return text(value, max);
+}
+
+function optionalStringArray(value: unknown, maximumItems: number, maximumLength: number): string[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || value.length > maximumItems) {
+    throw new PublicPageValidationError();
+  }
+  return value.map((item) => text(item, maximumLength));
+}
+
+function checkedBounds(
+  value: unknown,
+  documentWidth: number,
+  documentHeight: number,
+): PublicPageBounds {
+  const input = record(value);
+  const bounds = {
+    x: boundedNumber(input.x, 0, documentWidth),
+    y: boundedNumber(input.y, 0, documentHeight),
+    width: boundedNumber(input.width, 1, documentWidth),
+    height: boundedNumber(input.height, 1, documentHeight),
+  };
+  if (
+    bounds.x + bounds.width > documentWidth ||
+    bounds.y + bounds.height > documentHeight
+  ) {
+    throw new PublicPageValidationError("Public page section element geometry is invalid");
+  }
+  return bounds;
+}
+
+function checkedSectionStyle(value: unknown): PublicPageSectionStyle {
+  const input = record(value);
+  const display = text(input.display, 80);
+  const position = text(input.position, 80);
+  const optional = (key: string, maximum = 240) => optionalText(input[key], maximum);
+  const flexDirection = optional("flexDirection", 80);
+  const gridTemplateColumns = optional("gridTemplateColumns");
+  const maxWidth = optional("maxWidth", 80);
+  const padding = optional("padding");
+  const gap = optional("gap", 80);
+  const backgroundColor = optional("backgroundColor", 120);
+  const color = optional("color", 120);
+  return {
+    display,
+    position,
+    ...(flexDirection ? { flexDirection } : {}),
+    ...(gridTemplateColumns ? { gridTemplateColumns } : {}),
+    ...(maxWidth ? { maxWidth } : {}),
+    ...(padding ? { padding } : {}),
+    ...(gap ? { gap } : {}),
+    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(color ? { color } : {}),
+  };
+}
+
+function checkedSectionContent(value: unknown): PublicPageSectionContent {
+  const input = record(value);
+  return {
+    links: boundedInteger(input.links, 0, 10_000),
+    buttons: boundedInteger(input.buttons, 0, 10_000),
+    images: boundedInteger(input.images, 0, 10_000),
+    videos: boundedInteger(input.videos, 0, 10_000),
+    forms: boundedInteger(input.forms, 0, 10_000),
+  };
 }
 
 function boundedInteger(value: unknown, min: number, max: number): number {

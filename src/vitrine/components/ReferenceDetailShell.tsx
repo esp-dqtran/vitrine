@@ -104,9 +104,9 @@ export function ReferenceDetailShell<T extends string>({
               ? (
                   <>
                     <picture className="reference-detail__logo-picture">
-                      <source media="(min-width: 601px)" srcSet={identityImageUrl} />
                       <img
                         alt=""
+                        src={identityImageUrl}
                         loading="eager"
                         fetchPriority="high"
                         width={88}

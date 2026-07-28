@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRoutePath, routeToPath } from './router.ts';
-import { getSiteVersion, listSites, listSitesPage } from './sitesApi.ts';
+import { getSiteVersion, getSiteVersionBySlug, listSites, listSitesPage } from './sitesApi.ts';
 
 const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview';
 
 test('maps list and positive Site version routes', () => {
   assert.deepEqual(parseRoutePath('/sites'), { name: 'sites' });
+  assert.deepEqual(parseRoutePath('/sites/v-7'), { name: 'site-version', siteSlug: 'v-7' });
   assert.deepEqual(parseRoutePath('/sites/1/versions/2'), { name: 'site-version', siteId: 1, versionId: 2 });
   assert.deepEqual(parseRoutePath('/sites/0/versions/2'), {
     name: 'not-found',
     pathname: '/sites/0/versions/2',
   });
   assert.equal(routeToPath({ name: 'sites' }), '/sites');
+  assert.equal(routeToPath({ name: 'site-version', siteSlug: 'v-7' }), '/sites/v-7');
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
 });
 
@@ -24,7 +26,7 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     const url = String(input);
     urls.push(url);
     if (url === '/api/sites') return Response.json([{
-      siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
+      siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
       label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
       previewMediaKind: 'image',
       previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
@@ -34,7 +36,7 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
       ],
     }]);
     return Response.json({
-      siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
+      siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
       canonicalUrl: approvedUrl, label: 'Jul 2026', isLatest: true,
       previewMediaKind: 'image',
       previewUrl: '/api/sites/1/versions/2/media/preview',
@@ -110,6 +112,9 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
 
   const sites = await listSites();
   const detail = await getSiteVersion(1, 2);
+  const namedDetail = await getSiteVersionBySlug('v7');
+  const selectedNamedDetail = await getSiteVersionBySlug('v7', 2);
+  const legacyNamedDetail = await getSiteVersionBySlug('v7-2');
   assert.equal(sites[0].id, 1);
   assert.equal(sites[0].previewMediaKind, 'image');
   assert.deepEqual(sites[0].previews, [
@@ -123,7 +128,16 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
   assert.equal(detail.analysisStatus, 'ready');
   assert.equal(detail.analysis?.technology[0]?.name, 'GSAP');
   assert.equal(detail.mobilePageUrl, '/api/sites/1/versions/2/media/mobile');
-  assert.deepEqual(urls, ['/api/sites', '/api/sites/1/versions/2']);
+  assert.equal(namedDetail.site.name, 'V7');
+  assert.equal(selectedNamedDetail.version.id, 2);
+  assert.equal(legacyNamedDetail.routeSlug, 'v7');
+  assert.deepEqual(urls, [
+    '/api/sites',
+    '/api/sites/1/versions/2',
+    '/api/sites/v7',
+    '/api/sites/v7?version=2',
+    '/api/sites/v7-2',
+  ]);
   assert.ok(urls.every((url) => url !== '/api/jobs'));
 });
 
@@ -135,7 +149,7 @@ test('requests a bounded Site page for related detail references', async (t) => 
     urls.push(String(input));
     return Response.json({
       sites: [{
-        siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/',
+        siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
         label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
         previewMediaKind: 'image',
         previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',

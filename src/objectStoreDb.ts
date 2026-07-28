@@ -335,6 +335,70 @@ export async function publishedFacetPreviewObject(
   return metadataFrom(result.rows[0] as MetadataRow | undefined);
 }
 
+export async function publishedFlowCatalogPreviewObject(
+  input: {
+    app: string;
+    platform: string;
+    versionId: number;
+    versionFlowId: number;
+    rank: number;
+  },
+  runQuery: DatabaseQuery = query,
+): Promise<ObjectMetadata | undefined> {
+  if (!Number.isInteger(input.rank) || input.rank < 1 || input.rank > 6) {
+    throw new Error("Flow catalog preview rank is outside its declared media bound");
+  }
+  const result = await runQuery(
+    `WITH observed_steps AS (
+       SELECT
+         step.position AS step_position,
+         (
+           SELECT evidence.value::integer
+           FROM jsonb_array_elements_text(
+             COALESCE(step.value->'evidence', '[]'::jsonb)
+           ) WITH ORDINALITY AS evidence(value, position)
+           WHERE evidence.value ~ '^[1-9][0-9]*$'
+           ORDER BY evidence.position
+           LIMIT 1
+         ) AS image_id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       JOIN app_flow_versions afv ON afv.version_id = av.id
+       CROSS JOIN LATERAL jsonb_array_elements(afv.steps)
+         WITH ORDINALITY AS step(value, position)
+       WHERE a.name = $1
+         AND av.platform = $2
+         AND av.id = $3
+         AND av.status = 'published'
+         AND afv.id = $4
+     ), ranked AS (
+       SELECT
+         image_id,
+         ROW_NUMBER() OVER (ORDER BY step_position) AS preview_rank
+       FROM observed_steps
+       WHERE image_id IS NOT NULL
+     )
+     SELECT ${METADATA_COLUMNS}
+     FROM ranked
+     JOIN version_images vi
+       ON vi.version_id = $3
+      AND vi.image_id = ranked.image_id
+     JOIN images i ON i.id = ranked.image_id
+     JOIN stored_objects so ON ${imageObjectJoin("thumb")}
+     WHERE ranked.preview_rank = $5
+       AND so.access_class IN ('protected', 'public-preview')
+     LIMIT 1`,
+    [
+      input.app,
+      input.platform,
+      input.versionId,
+      input.versionFlowId,
+      input.rank,
+    ],
+  );
+  return metadataFrom(result.rows[0] as MetadataRow | undefined);
+}
+
 export async function legacyImageReference(
   input: { app: string; hash: string; publishedOnly?: boolean },
   runQuery: DatabaseQuery = query,

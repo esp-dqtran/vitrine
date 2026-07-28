@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Button, ClickableCard, Dialog, Icon, IconButton, Spinner, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
 import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem } from '../../catalogResearch';
 import type { ResearchCollection } from '../../db';
-import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { Platform } from '../../platformFromUrl';
 import type { App } from '../types';
+import { loadFlowCatalogPage, type FlowCatalogItem } from '../flowCatalogApi.ts';
 import { compareCatalogApps, searchRelatedCatalog } from '../researchApi';
 import { groupInspirationResults, moveSelection } from '../inspirationSearch';
-import { loadDesignSystem } from '../useDesignSystem';
 import { InspirationComparison } from './InspirationComparison';
 import { InspirationPreview } from './InspirationPreview';
 import { InspirationPrompts } from './InspirationPrompts';
@@ -27,6 +26,16 @@ const NAV_ITEMS: Array<{ id: Nav; label: string; icon: IconName }> = [
 const SECTION_LABEL: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)', margin: '22px 0 12px' };
 const TILE_GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 14 };
 
+export function flowIdFromSearchResult(item: CatalogSearchResultItem): string | undefined {
+  if (item.kind !== 'flow') return undefined;
+  return flowIdFromCatalogResultId(item.app, item.id);
+}
+
+export function flowIdFromCatalogResultId(appId: string, resultId: string): string | undefined {
+  const prefix = `flow:${appId}:`;
+  return resultId.startsWith(prefix) ? resultId.slice(prefix.length) || undefined : undefined;
+}
+
 function AppTile({ app, onSelect }: { app: App; onSelect: () => void }) {
   return (
     <ClickableCard
@@ -35,8 +44,10 @@ function AppTile({ app, onSelect }: { app: App; onSelect: () => void }) {
       padding={3}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, borderRadius: 12, background: 'transparent', border: 'none' }}
     >
-      <div style={{ width: 56, height: 56, borderRadius: 16, background: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{app.app[0]}</span>
+      <div style={{ width: 56, height: 56, borderRadius: 16, background: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        {app.iconUrl
+          ? <img src={app.iconUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{app.app[0]}</span>}
       </div>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-primary)', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{app.app}</span>
     </ClickableCard>
@@ -77,7 +88,8 @@ interface CommandPaletteProps {
   onSelectApp: (appId: string) => void;
   onSelectScreen: (appId: string, evidenceId?: number) => void;
   onSelectCategory: (categoryName: string) => void;
-  onSelectFlow: (appId: string) => void;
+  onSelectFlow: (appId: string, flowId?: string) => void;
+  onSearchFlow: (flowTitle: string, platform: Platform) => void;
 }
 
 export function CommandPalette({
@@ -98,6 +110,7 @@ export function CommandPalette({
   onSelectScreen,
   onSelectCategory,
   onSelectFlow,
+  onSearchFlow,
 }: CommandPaletteProps) {
   const [nav, setNav] = useState<Nav>('trending');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,8 +128,16 @@ export function CommandPalette({
   const [comparison, setComparison] = useState<CatalogComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState('');
-  const [flowsByApp, setFlowsByApp] = useState<Record<string, DesignFlow<EvidenceView>[]> | null>(null);
+  const [platform, setPlatform] = useState<Platform>('web');
+  const [flowItems, setFlowItems] = useState<FlowCatalogItem[]>([]);
+  const [flowCursor, setFlowCursor] = useState<string | null>(null);
   const [flowsLoading, setFlowsLoading] = useState(false);
+  const [flowsError, setFlowsError] = useState('');
+  const [flowRetry, setFlowRetry] = useState(0);
+  const [flowQuery, setFlowQuery] = useState('');
+  const [activeFlowIndex, setActiveFlowIndex] = useState(0);
+  const flowSentinelRef = useRef<HTMLDivElement>(null);
+  const flowRequestRef = useRef(0);
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -151,6 +172,15 @@ export function CommandPalette({
     });
   }, [apps, query]);
   const visibleItems = useMemo(() => groupInspirationResults(result?.items ?? []).flatMap((group) => group.items), [result]);
+  const flowGroups = useMemo(() => {
+    const groups = new Map<string, FlowCatalogItem[]>();
+    for (const item of flowItems) {
+      const group = groups.get(item.category) ?? [];
+      group.push(item);
+      groups.set(item.category, group);
+    }
+    return Array.from(groups.entries());
+  }, [flowItems]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => inputRef.current?.focus(), 30);
@@ -158,19 +188,72 @@ export function CommandPalette({
   }, []);
 
   useEffect(() => { setActiveIndex(0); }, [result]);
+  useEffect(() => { setActiveFlowIndex(0); }, [flowItems]);
 
   useEffect(() => {
-    if (plan !== 'pro' || nav !== 'flows' || flowsByApp || flowsLoading) return;
+    if (plan !== 'pro' || nav !== 'flows') return;
+    const request = ++flowRequestRef.current;
+    const controller = new AbortController();
+    const normalizedQuery = flowQuery.trim();
+    setFlowItems([]);
+    setFlowCursor(null);
+    setFlowsError('');
     setFlowsLoading(true);
-    Promise.all(apps.map((app) => {
-      const platform = (app.screens.find((screen) => screen.platform === 'ios' || screen.platform === 'android' || screen.platform === 'web')?.platform ?? 'web') as Platform;
-      return loadDesignSystem(app.id, platform)
-        .then((snapshot) => [app.id, snapshot?.flows ?? []] as const)
-        .catch(() => [app.id, []] as const);
-    }))
-      .then((pairs) => setFlowsByApp(Object.fromEntries(pairs)))
-      .finally(() => setFlowsLoading(false));
-  }, [nav, apps, flowsByApp, flowsLoading, plan]);
+    const timer = window.setTimeout(() => {
+      loadFlowCatalogPage({ platform, query: normalizedQuery || undefined }, controller.signal)
+        .then((page) => {
+          if (request !== flowRequestRef.current) return;
+          setFlowItems(page.items);
+          setFlowCursor(page.nextCursor);
+        })
+        .catch((error: Error) => {
+          if (error.name !== 'AbortError' && request === flowRequestRef.current) {
+            setFlowsError(error.message);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted && request === flowRequestRef.current) {
+            setFlowsLoading(false);
+          }
+        });
+    }, normalizedQuery ? 160 : 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [flowQuery, flowRetry, nav, plan, platform]);
+
+  const loadMoreFlows = useCallback(async () => {
+    if (!flowCursor || flowsLoading) return;
+    const request = flowRequestRef.current;
+    setFlowsLoading(true);
+    setFlowsError('');
+    try {
+      const page = await loadFlowCatalogPage({
+        platform,
+        query: flowQuery.trim() || undefined,
+        cursor: flowCursor,
+      });
+      if (request !== flowRequestRef.current) return;
+      setFlowItems((current) => [...current, ...page.items]);
+      setFlowCursor(page.nextCursor);
+    } catch (error) {
+      if (request === flowRequestRef.current) setFlowsError((error as Error).message);
+    } finally {
+      if (request === flowRequestRef.current) setFlowsLoading(false);
+    }
+  }, [flowCursor, flowQuery, flowsLoading, platform]);
+
+  useEffect(() => {
+    const sentinel = flowSentinelRef.current;
+    const root = resultsScrollRef.current;
+    if (nav !== 'flows' || !flowCursor || flowsLoading || !sentinel || !root) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some(({ isIntersecting }) => isIntersecting)) void loadMoreFlows();
+    }, { root, rootMargin: '360px 0px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [flowCursor, flowsLoading, loadMoreFlows, nav]);
 
   useEffect(() => {
     if (plan !== 'pro' || !selected) return;
@@ -212,7 +295,7 @@ export function CommandPalette({
 
   const openResult = (item: CatalogSearchResultItem) => {
     if (item.kind === 'screen') requestClose(() => onSelectScreen(item.app, item.evidenceIds[0]));
-    else if (item.kind === 'flow') requestClose(() => onSelectFlow(item.app));
+    else if (item.kind === 'flow') requestClose(() => onSelectFlow(item.app, flowIdFromSearchResult(item)));
     else requestClose(() => onSelectApp(item.app));
   };
 
@@ -247,7 +330,26 @@ export function CommandPalette({
       backToResults();
       return;
     }
-    if (selected || comparison || !visibleItems.length) return;
+    if (selected || comparison) return;
+    if (nav === 'flows' && flowItems.length) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        setActiveFlowIndex((index) => moveSelection(
+          index,
+          event.key === 'ArrowDown' ? 1 : -1,
+          flowItems.length,
+        ));
+      }
+      if (event.key === 'Enter') {
+        const item = flowItems[activeFlowIndex];
+        if (item) {
+          event.preventDefault();
+          requestClose(() => onSearchFlow(item.title, platform));
+        }
+      }
+      return;
+    }
+    if (!visibleItems.length) return;
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       setActiveIndex((index) => moveSelection(index, event.key === 'ArrowDown' ? 1 : -1, visibleItems.length));
@@ -265,7 +367,19 @@ export function CommandPalette({
     setSelected(null);
     setComparison(null);
     setCompareApps([]);
-    onQueryChange(value);
+    if (nav === 'flows') {
+      setFlowQuery(value);
+    } else {
+      onQueryChange(value);
+    }
+  };
+  const selectNav = (nextNav: Nav) => {
+    setNav(nextNav);
+    setSelected(null);
+    setComparison(null);
+    setCompareApps([]);
+    setFlowQuery('');
+    onQueryChange('');
   };
 
   const selectApp = (appId: string) => requestClose(() => onSelectApp(appId));
@@ -274,7 +388,9 @@ export function CommandPalette({
     onQueryChange('');
     requestClose(() => onSelectCategory(categoryName));
   };
-  const selectFlow = (appId: string) => requestClose(() => onSelectFlow(appId));
+  const selectFlowFacet = (title: string) => {
+    requestClose(() => onSearchFlow(title, platform));
+  };
 
   const browseContent = nav === 'categories' ? (
     <>
@@ -309,26 +425,47 @@ export function CommandPalette({
       </div>
     </>
   ) : nav === 'flows' ? (
-    <>
-      <div style={SECTION_LABEL}>Flows</div>
-      {flowsLoading ? (
-        <Spinner size="sm" aria-label="Loading flows" />
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {Object.entries(flowsByApp ?? {}).flatMap(([appId, flows]) => flows.map((flow) => (
-            <Button
-              key={`${appId}-${flow.id}`}
-              label={flow.title}
-              size="sm"
-              onClick={() => selectFlow(appId)}
-              endContent={<span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{flow.steps.length} steps</span>}
-              style={{ width: '100%', justifyContent: 'space-between', borderRadius: 10 }}
-            />
-          )))}
-          {flowsByApp && Object.values(flowsByApp).every((flows) => flows.length === 0) ? <div style={{ color: 'var(--color-text-disabled)', fontSize: 14 }}>No flows observed yet.</div> : null}
+    <div className="command-palette-flow-browser">
+      {flowGroups.map(([category, items]) => (
+        <section key={category} className="command-palette-flow-group">
+          <h2>{category}</h2>
+          <div>
+            {items.map((item) => {
+              const itemIndex = flowItems.indexOf(item);
+              return (
+              <button
+                key={`${category}:${item.title}`}
+                type="button"
+                className="command-palette-flow-row"
+                data-highlighted={itemIndex === activeFlowIndex ? 'true' : undefined}
+                onMouseEnter={() => setActiveFlowIndex(itemIndex)}
+                onClick={() => selectFlowFacet(item.title)}
+              >
+                <span>{item.title}</span>
+                <span>{item.count.toLocaleString()}</span>
+              </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      {flowsLoading && flowItems.length === 0
+        ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Loading flows" /></div>
+        : null}
+      {!flowsLoading && !flowsError && flowItems.length === 0
+        ? <div className="command-palette-flow-state">No flows observed yet.</div>
+        : null}
+      {flowsError ? (
+        <div className="command-palette-flow-state" role="alert">
+          <span>Could not load flows.</span>
+          <Button label="Retry" size="sm" onClick={() => setFlowRetry((value) => value + 1)} />
         </div>
-      )}
-    </>
+      ) : null}
+      {flowCursor ? <div ref={flowSentinelRef} className="command-palette-flow-sentinel" aria-hidden="true" /> : null}
+      {flowsLoading && flowItems.length > 0
+        ? <div className="command-palette-flow-state"><Spinner size="sm" aria-label="Loading more flows" /></div>
+        : null}
+    </div>
   ) : null;
 
   return (
@@ -339,57 +476,82 @@ export function CommandPalette({
       onAnimationEnd={(event) => { if (closing && event.animationName === 'vitrine-command-palette-out') finishClose(); }}
       onOpenChange={(open) => { if (!open) requestClose(); }}
       purpose="info"
-      width="min(1040px, calc(100vw - 40px))"
-      maxHeight="82vh"
+      width="min(816px, calc(100vw - 40px))"
+      maxHeight="min(594px, calc(100dvh - 48px))"
       padding={0}
     >
       <div
         className="command-palette-shell"
+        data-nav={nav}
+        data-querying={nav === 'flows' && Boolean(flowQuery.trim()) ? 'true' : undefined}
         onMouseDown={(event) => event.stopPropagation()}
         onKeyDownCapture={onPaletteKeyDown}
-        style={{ width: '100%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', background: 'var(--color-background-surface)', border: '1px solid var(--color-border)', borderRadius: 20, boxShadow: 'var(--shadow-high)', overflow: 'hidden' }}
       >
-        <div className="command-palette-header" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 22px', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ flex: 1 }}>
+        <div className="command-palette-header">
+          <div className="command-palette-search">
             <TextInput
               ref={inputRef}
               label="Search catalog"
               isLabelHidden
-              value={query}
+              value={nav === 'flows' ? flowQuery : query}
               onChange={handleQueryChange}
-              placeholder="Search apps, screens, UI elements, flows or keywords…"
-              startIcon={<Icon icon="search" size="sm" />}
-              hasClear={Boolean(query)}
+              placeholder="Web Apps, Screens, UI Elements, Flows or Keywords…"
+              hasClear={Boolean(nav === 'flows' ? flowQuery : query)}
               width="100%"
               isDisabled={plan === 'free' && !publicBrowse}
             />
           </div>
-          <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 7px' }}>Esc</span>
-          <IconButton label="Close" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
+          <div className="command-palette-platforms" aria-label="Search platform">
+            {(['ios', 'web', 'android'] as Platform[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-label={value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
+                aria-pressed={platform === value}
+                onClick={() => setPlatform(value)}
+              >
+                {value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
+              </button>
+            ))}
+          </div>
+          <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
         </div>
 
-        <div className="command-palette-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <div className="command-palette-sidebar" style={{ width: 200, flex: '0 0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 2, borderRight: '1px solid var(--color-border)', overflowY: 'auto' }}>
+        <div className="command-palette-app-chips" aria-label="Popular apps">
+          {apps.slice(0, 6).map((app) => (
+            <button key={app.id} type="button" onClick={() => selectApp(app.id)}>
+              <span className="command-palette-app-logo" style={{ background: app.accent }}>
+                {app.iconUrl
+                  ? <img src={app.iconUrl} alt="" />
+                  : <span aria-hidden="true">{app.app.slice(0, 1)}</span>}
+              </span>
+              <span>{app.app}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="command-palette-body">
+          <div className="command-palette-sidebar">
             {NAV_ITEMS.filter((item) => plan === 'pro' || item.id === 'trending' || item.id === 'categories').map((item) => (
               <ToggleButton
                 key={item.id}
                 label={item.label}
                 icon={<Icon icon={item.icon} size="sm" />}
                 isPressed={nav === item.id}
-                onPressedChange={() => { setNav(item.id); handleQueryChange(''); }}
+                onPressedChange={() => selectNav(item.id)}
                 size="sm"
-                style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 9 }}
+                style={{ width: '100%', justifyContent: 'flex-start' }}
               />
             ))}
-            <div style={{ flex: 1 }} />
-            <div style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: '16px 14px', textAlign: 'center' }}>
-              <span style={{ display: 'inline-block', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-emphasized)', borderRadius: 999, padding: '3px 9px', marginBottom: 10 }}>NEW</span>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35 }}>Every result cites its source</div>
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>Screens and elements link back to the exact captured evidence.</div>
+            <div className="command-palette-sidebar-spacer" />
+            <div className="command-palette-promo">
+              <span>NEW</span>
+              <strong>AI Search is now<br />Deep Search</strong>
+              <p>Deep Search is automatically selected for longer, more complex queries</p>
             </div>
           </div>
 
-          <div ref={resultsScrollRef} className="inspiration-modal-content" style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 24px 28px' }}>
+          <div ref={resultsScrollRef} className="inspiration-modal-content command-palette-content">
             {publicBrowse ? (
               nav === 'categories' ? browseContent : (
                 <>

@@ -2,13 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-test('keeps Overview free of section and design-system activation', async () => {
+test('removes Overview and defaults invalid App sections to Screens', async () => {
   const [detail, sectionHook] = await Promise.all([
     readFile(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./useAppSectionData.ts', import.meta.url), 'utf8').catch(() => ''),
   ]);
-  assert.match(detail, /<AppOverviewPanel app=\{app\}/);
-  assert.match(sectionHook, /case 'overview': return \[\]/);
+  assert.doesNotMatch(detail, /AppOverviewPanel|id: 'overview'|label: 'Overview'/);
+  assert.doesNotMatch(sectionHook, /'overview'|case 'overview'/);
+  assert.match(detail, /:\s*'screens';/);
   assert.doesNotMatch(detail, /initialNextCursor|app\.screens/);
 });
 

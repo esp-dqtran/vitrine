@@ -231,8 +231,14 @@ test("persists readable headings and reusable section taxonomy", async () => {
       selector: "main > section",
       tagName: "section",
       heading: "The product development system for teams and agents",
+      headingLevel: "h1",
+      anchor: "hero",
+      classNames: ["hero", "dark"],
       text: "Plan and build products. Customers can review pricing and updates.",
       bounds: { x: 0, y: 80, width: 1_440, height: 920 },
+      elementBounds: { x: 80, y: 120, width: 1_280, height: 760 },
+      style: { display: "grid", position: "relative", gap: "24px" },
+      content: { links: 2, buttons: 1, images: 1, videos: 0, forms: 0 },
     },
   ];
   const state = harness({ capture });
@@ -249,6 +255,22 @@ test("persists readable headings and reusable section taxonomy", async () => {
       ],
     ],
   );
+  assert.deepEqual(state.completed?.sections[1]?.sourceMetadata, {
+    selector: "main > section",
+    tagName: "section",
+    heading: "The product development system for teams and agents",
+    headingLevel: "h1",
+    anchor: "hero",
+    classNames: ["hero", "dark"],
+    text: "Plan and build products. Customers can review pricing and updates.",
+    elementBounds: { x: 80, y: 120, width: 1_280, height: 760 },
+    style: { display: "grid", position: "relative", gap: "24px" },
+    content: { links: 2, buttons: 1, images: 1, videos: 0, forms: 0 },
+    patterns: [
+      "The product development system for teams and agents",
+      "Hero Section",
+    ],
+  });
 });
 
 test("labels headingless Webflow bands without failing the import", async () => {

@@ -4,10 +4,20 @@ import type { SiteTechnologyFinding } from '../../siteAnalysis.ts';
 import type { SiteVersionDetail } from '../types.ts';
 
 const ICON_BASE_URL = 'https://www.wappalyzer.com/images/icons/';
+const HIDDEN_TECHNOLOGIES = new Set(['css keyframes']);
+const NATIVE_TECHNOLOGY_ICON_URLS: Record<string, string> = {
+  'custom javascript motion': 'https://cdn.simpleicons.org/javascript',
+  'next.js': 'https://cdn.simpleicons.org/nextdotjs',
+  turbopack: 'https://cdn.simpleicons.org/turborepo',
+  'web animations api': 'https://cdn.simpleicons.org/javascript',
+};
 
 export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
   const detected = (detail.analysis?.technology ?? [])
-    .filter((finding) => finding.state !== 'not-detected')
+    .filter((finding) =>
+      finding.state !== 'not-detected'
+      && !HIDDEN_TECHNOLOGIES.has(finding.name.toLowerCase())
+    )
     .sort((left, right) =>
       right.confidence - left.confidence || left.name.localeCompare(right.name)
     );
@@ -20,7 +30,6 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
     <section className="site-technology" aria-labelledby="site-technology-title">
       <header className="site-technology__header">
         <div>
-          <p>Detected technology</p>
           <h2 id="site-technology-title">Technology</h2>
           <span>Frameworks, libraries, services, and platforms used by this page.</span>
         </div>
@@ -63,7 +72,7 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
 function TechnologyCard({ finding }: { finding: SiteTechnologyFinding }) {
   return (
     <article className="site-technology__card">
-      <TechnologyIcon icon={finding.icon} />
+      <TechnologyIcon finding={finding} />
       <div className="site-technology__card-copy">
         <strong>
           {finding.name}
@@ -79,9 +88,9 @@ function TechnologyCard({ finding }: { finding: SiteTechnologyFinding }) {
   );
 }
 
-function TechnologyIcon({ icon }: { icon: string | undefined }) {
+function TechnologyIcon({ finding }: { finding: SiteTechnologyFinding }) {
   const [failed, setFailed] = useState(false);
-  const url = failed ? undefined : wappalyzerIconUrl(icon);
+  const url = failed ? undefined : technologyIconUrl(finding);
   return url ? (
     <img
       className="site-technology__icon"
@@ -94,9 +103,16 @@ function TechnologyIcon({ icon }: { icon: string | undefined }) {
     />
   ) : (
     <span className="site-technology__icon-fallback" aria-hidden="true">
-      &lt;/&gt;
+      {finding.name.trim().charAt(0).toUpperCase()}
     </span>
   );
+}
+
+export function technologyIconUrl(
+  finding: Pick<SiteTechnologyFinding, 'icon' | 'name'>,
+): string | undefined {
+  return wappalyzerIconUrl(finding.icon)
+    ?? NATIVE_TECHNOLOGY_ICON_URLS[finding.name.toLowerCase()];
 }
 
 export function wappalyzerIconUrl(icon: string | undefined): string | undefined {

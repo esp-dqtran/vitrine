@@ -9,7 +9,7 @@ const source = readFileSync(
   'utf8',
 );
 
-test('renders App detail loading through the shared detail shell boundary', () => {
+test('renders calm App detail loading beneath the persistent navigation', () => {
   const html = renderToStaticMarkup(
     <AppDetailLoadingPage
       accountControls={<button type="button">Account</button>}
@@ -17,13 +17,11 @@ test('renders App detail loading through the shared detail shell boundary', () =
     />,
   );
 
-  assert.match(html, /data-app-detail-loading="true"/);
-  assert.match(html, /data-reference-detail="app"/);
+  assert.match(html, /data-reference-detail-loading="app"/);
   assert.match(html, /apps-top-nav/);
-  assert.match(html, /reference-detail__hero/);
-  assert.match(html, /reference-detail__tabs/);
-  assert.match(html, /app-detail-loading__overview/);
+  assert.match(html, /aria-label="Loading App details"/);
+  assert.doesNotMatch(html, /Skeleton|reference-detail__hero|reference-detail__tabs/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
   assert.doesNotMatch(html, /Import App/);
-  assert.doesNotMatch(source, /label: 'Analysis'/);
+  assert.doesNotMatch(source, /Skeleton|loadingTabs|ReferenceDetailShell/);
 });

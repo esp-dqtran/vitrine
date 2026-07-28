@@ -81,6 +81,9 @@ test("selects published Apps globally by Updated At and emits a snapshot cursor"
     "2026-07-26T04:00:00.000Z",
     null,
     null,
+    null,
+    null,
+    null,
     3,
   ]);
   assert.match(calls[0]?.sql ?? "", /ORDER BY updated_at DESC,\s*app_id DESC/);
@@ -135,7 +138,7 @@ test("selects one extra Updated At identity before reading bounded catalog metad
   assert.equal(page.apps.length, 24);
   assert.equal(page.previews.length, 24);
   assert.equal(decodeUpdatedCatalogCursor(page.nextCursor!).appId, 24);
-  assert.match(calls[0]?.sql ?? "", /LIMIT \$4/);
+  assert.match(calls[0]?.sql ?? "", /LIMIT \$7/);
   assert.match(calls[1]?.sql ?? "", /ANY\(\$1::integer\[\]\)/);
   assert.match(calls[2]?.sql ?? "", /preview_rank <= 3/);
   assert.match(calls[2]?.sql ?? "", /DISTINCT ON \(a\.id, latest\.platform, i\.id\)/);
@@ -163,8 +166,53 @@ test("reuses the Updated At snapshot cursor and clamps the page size", async () 
     "2026-07-26T04:00:00.000Z",
     "2026-07-26T03:03:57.624Z",
     42,
+    null,
+    null,
+    null,
     25,
   ]);
+});
+
+test("filters catalog identities by category and platform before pagination", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result();
+  };
+
+  await publishedCatalogPage({
+    facet: { group: "categories", value: "CRM", platform: "web" },
+  }, query);
+
+  assert.deepEqual(calls[0]?.values?.slice(3), ["categories", "CRM", "web", 25]);
+  assert.match(calls[0]?.sql ?? "", /JOIN categories c/);
+  assert.match(calls[0]?.sql ?? "", /lower\(c\.name\) = lower\(\$5\)/);
+  assert.match(calls[0]?.sql ?? "", /platform_latest\.platform = \$6/);
+});
+
+test("filters catalog identities through normalized Flow mappings", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    return result();
+  };
+
+  await publishedCatalogPage({
+    facet: {
+      group: "flows",
+      value: "Logging in (saved login info)",
+      platform: "android",
+    },
+  }, query);
+
+  assert.deepEqual(
+    calls[0]?.values?.slice(3),
+    ["flows", "Logging in (saved login info)", "android", 25],
+  );
+  assert.match(calls[0]?.sql ?? "", /JOIN app_flow_versions afv/);
+  assert.match(calls[0]?.sql ?? "", /JOIN app_flow_version_mappings mapping/);
+  assert.match(calls[0]?.sql ?? "", /JOIN flows canonical/);
+  assert.match(calls[0]?.sql ?? "", /lower\(canonical\.name\) = lower\(\$5\)/);
 });
 
 test("rejects malformed Updated At cursors", async () => {

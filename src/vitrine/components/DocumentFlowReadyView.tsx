@@ -1,5 +1,5 @@
 import { Button } from '@astryxdesign/core';
-import type { FeatureClaimKind, FeatureDocumentRevisionView } from '../../featureDocument.ts';
+import type { FeatureDocumentRevisionView } from '../../featureDocument.ts';
 import type {
   DocumentFlowEvidenceLink,
   DocumentFlowPresentation,
@@ -15,13 +15,6 @@ export interface DocumentFlowReadyViewProps {
   onSectionChange(section: DocumentFlowSection): void;
   onOpenVisualStep(stepNumber: number): void;
 }
-
-const statusLabel: Record<FeatureClaimKind, string> = {
-  observed: 'Observed',
-  inferred: 'Inferred',
-  proposed: 'Proposed',
-  unknown: 'Missing',
-};
 
 function EvidenceCard({
   evidence,
@@ -222,9 +215,6 @@ export function DocumentFlowReadyView({
                     </p>
                     <h4 id={`document-requirement-${requirement.id}`}>{requirement.text}</h4>
                   </div>
-                  <span className={`document-flow__status is-${requirement.kind}`}>
-                    {statusLabel[requirement.kind]}
-                  </span>
                 </header>
                 {requirement.userStory && (
                   <p className="document-flow__user-story">

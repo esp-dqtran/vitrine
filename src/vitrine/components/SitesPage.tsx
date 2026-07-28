@@ -7,6 +7,7 @@ import { listSites } from '../sitesApi.ts';
 import type { SiteSummary } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
 import { SiteCard } from './SiteCard.tsx';
+import { ReferenceCatalogLoading } from './ReferenceCatalogLoading.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
 import { ReferenceDiscoveryToolbar } from './ReferenceDiscoveryToolbar.tsx';
@@ -237,7 +238,7 @@ export function SitesPageView({
   searchMode = 'legacy',
   activeFilterCount = 0,
   onRefresh,
-  onOpen = (site) => navigate({ name: 'site-version', siteId: site.id, versionId: site.versionId }),
+  onOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
   memberControls,
 }: SitesPageViewProps) {
   const [sort, setSort] = useState<SiteSort>('latest');
@@ -384,15 +385,7 @@ export function SitesPageView({
       )}
     >
       {loading ? (
-          <div
-            className="reference-discovery__loading sites-discovery__loading"
-            role="status"
-            aria-label="Loading Sites"
-          >
-            {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} data-sites-discovery-skeleton="true" />
-            ))}
-          </div>
+          <ReferenceCatalogLoading label="Loading Sites" />
       ) : state ? (
           <div className="reference-discovery__state sites-discovery__state" role={state.role}>
             <EmptyState title={state.title} description={state.description} actions={state.actions} />

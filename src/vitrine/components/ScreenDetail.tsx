@@ -11,9 +11,7 @@ import { resolveAppSectionTotals } from '../appSectionTotals';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
-import { AppOverviewPanel } from './AppOverviewPanel';
 import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
-import { CuratorReviewPanel } from './CuratorReviewPanel';
 import { ExportPanel } from './ExportPanel';
 import { FlowsPanel } from './FlowsPanel';
 import { FlowsWorkspaceLoading } from './FlowsWorkspace.tsx';
@@ -32,14 +30,14 @@ const DesignSystemPanel = lazy(() =>
 );
 
 type LightboxState = { index: number } | null;
-const SECTIONS: DetailSection[] = ['overview', 'screens', 'elements', 'flows', 'design-system', 'export', 'review'];
+const SECTIONS: DetailSection[] = ['screens', 'elements', 'flows', 'design-system', 'export'];
 const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows'];
 
 const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
   const allowed = role === 'admin' ? SECTIONS : MEMBER_SECTIONS;
   return allowed.includes(initialSection as DetailSection)
     ? initialSection as DetailSection
-    : role === 'admin' ? 'overview' : 'screens';
+    : 'screens';
 };
 
 const formatCapturedAt = (value: string) => new Intl.DateTimeFormat('en', {
@@ -114,7 +112,7 @@ export function ScreenDetail({
     platform: selectedPlatform,
     selectedVersion,
   });
-  const needsDesignSystem = section === 'design-system' || section === 'export' || section === 'review';
+  const needsDesignSystem = section === 'design-system' || section === 'export';
   const {
     snapshot,
     status: designSystemStatus,
@@ -277,13 +275,11 @@ export function ScreenDetail({
     />
   );
   const adminTabs = [
-    { id: 'overview' as const, label: 'Overview' },
     { id: 'screens' as const, label: 'Screens' },
     { id: 'elements' as const, label: 'UI Elements' },
     { id: 'flows' as const, label: 'Flows' },
     { id: 'design-system' as const, label: 'Design System' },
     { id: 'export' as const, label: 'Export' },
-    ...(role === 'admin' ? [{ id: 'review' as const, label: 'Review' }] : []),
   ];
   const memberTabs = [
     { id: 'screens' as const, label: 'Screens' },
@@ -337,14 +333,12 @@ export function ScreenDetail({
         bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>
-          {section === 'overview' ? <AppOverviewPanel app={app} />
-            : sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
+          {sectionError || (needsDesignSystem && designSystemStatus === 'error') ? <div role="alert"><EmptyState title="Could not load this section" description={sectionError?.message ?? designSystemError?.message} actions={<Button label="Retry" clickAction={() => void (sectionError ? sectionData.retry() : retryDesignSystem())} />} /></div>
               : sectionLoading
                 ? section === 'flows'
                   ? <FlowsWorkspaceLoading />
                   : <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
-                : section === 'review' ? <CuratorReviewPanel app={app.id} platform={selectedPlatform} version={sectionData.resolvedVersion} snapshot={snapshot} />
-                  : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
+                : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
                       : section === 'flows' ? <FlowsPanel
                           flows={flows}

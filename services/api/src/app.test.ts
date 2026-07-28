@@ -356,6 +356,60 @@ test("serves ordered published Categories publicly", async (t) => {
   assert.deepEqual(await response.json(), { categories });
 });
 
+test("serves paginated normalized Flow facets publicly", async (t) => {
+  const inputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    publishedFlowCatalogPage: async (input: unknown) => {
+      inputs.push(input);
+      return {
+        items: [{
+          category: "Account Management",
+          title: "Editing Profile",
+          count: 1081,
+        }],
+        nextCursor: "next",
+      };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/catalog/flows?platform=web&query=profile&limit=40`,
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    items: [{
+      category: "Account Management",
+      title: "Editing Profile",
+      count: 1081,
+    }],
+    nextCursor: "next",
+  });
+  assert.deepEqual(inputs, [{
+    platform: "web",
+    cursor: undefined,
+    limit: 40,
+    query: "profile",
+    order: "grouped",
+  }]);
+});
+
+test("rejects invalid Flow catalog queries before reading the database", async (t) => {
+  let calls = 0;
+  const { base, server } = await serve(createApiApp({
+    publishedFlowCatalogPage: async () => {
+      calls += 1;
+      return { items: [], nextCursor: null };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(`${base}/catalog/flows?platform=desktop`)).status, 400);
+  assert.equal((await fetch(`${base}/catalog/flows?platform=web&query=${"x".repeat(121)}`)).status, 400);
+  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=unknown`)).status, 400);
+  assert.equal(calls, 0);
+});
+
 test("manages Categories and App assignments through admin-only endpoints", async (t) => {
   const calls: unknown[] = [];
   const category = { id: 7, name: "Productivity", slug: "productivity" };
@@ -1919,6 +1973,37 @@ test("returns 400 for an invalid public catalog cursor", async (t) => {
   assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
 });
 
+test("passes valid category and flow facets to public catalog pagination", async (t) => {
+  const inputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async (input: unknown) => {
+      inputs.push(input);
+      return { apps: [], previews: [], nextCursor: null };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  assert.equal((await fetch(
+    `${base}/catalog?group=categories&value=CRM&platform=web`,
+  )).status, 200);
+  assert.equal((await fetch(
+    `${base}/catalog?group=flows&value=Setting%20Up&platform=android`,
+  )).status, 200);
+  assert.deepEqual(inputs, [
+    { cursor: undefined, limit: undefined, facet: { group: "categories", value: "CRM", platform: "web" } },
+    { cursor: undefined, limit: undefined, facet: { group: "flows", value: "Setting Up", platform: "android" } },
+  ]);
+});
+
+test("rejects incomplete public catalog facets", async (t) => {
+  const { base, server } = await serve(createApiApp());
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog?group=flows&value=Setting%20Up`);
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: "invalid catalog facet" });
+});
+
 test("keeps the catalog public and every App detail endpoint private", async (t) => {
   const { base, server } = await serve(createApiApp({
     publishedCatalogPage: async () => catalogPageRecord,
@@ -2101,6 +2186,37 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
     platform: "web",
     rank: 2,
   }]);
+});
+
+test("serves bounded public Flow catalog media without an App detail request", async (t) => {
+  const inputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    publishedFlowCatalogPreviewObject: async (input: unknown) => {
+      inputs.push(input);
+      return previewMetadata;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const media = await fetch(
+    `${base}/catalog/flow-media/linear/web/7/71/2`,
+  );
+  assert.equal(media.status, 200);
+  assert.equal(media.headers.get("content-type"), "image/webp");
+  assert.equal(await media.text(), "image");
+  assert.deepEqual(inputs, [{
+    app: "linear",
+    platform: "web",
+    versionId: 7,
+    versionFlowId: 71,
+    rank: 2,
+  }]);
+
+  assert.equal((await fetch(
+    `${base}/catalog/flow-media/linear/web/7/71/7`,
+  )).status, 400);
+  assert.equal(inputs.length, 1);
 });
 
 test("rejects unknown taxonomy preview inputs before dependencies run", async (t) => {

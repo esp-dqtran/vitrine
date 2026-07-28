@@ -40,12 +40,45 @@ export async function listSitesPage(limit: number, offset: number): Promise<Site
 
 export async function getSiteVersion(siteId: number, versionId: number): Promise<SiteVersionDetail> {
   if (!positiveId(siteId) || !positiveId(versionId)) throw new Error('Invalid Site version reference');
-  const response = await fetch(`/api/sites/${siteId}/versions/${versionId}`);
+  return requestSiteVersion(`/api/sites/${siteId}/versions/${versionId}`, { siteId, versionId });
+}
+
+export async function getSiteVersionBySlug(
+  siteSlug: string,
+  versionId?: number,
+): Promise<SiteVersionDetail> {
+  if (!siteSlug || siteSlug.length > 240 || siteSlug.includes('/')) {
+    throw new Error('Invalid Site name');
+  }
+  if (versionId !== undefined && !positiveId(versionId)) {
+    throw new Error('Invalid Site version reference');
+  }
+  const versionQuery = versionId ? `?version=${versionId}` : '';
+  return requestSiteVersion(
+    `/api/sites/${encodeURIComponent(siteSlug)}${versionQuery}`,
+    { siteSlug, ...(versionId ? { versionId } : {}) },
+  );
+}
+
+async function requestSiteVersion(
+  path: string,
+  expected: { siteId: number; versionId: number } | { siteSlug: string; versionId?: number },
+): Promise<SiteVersionDetail> {
+  const response = await fetch(path);
   const body = await responseBody(response);
   if (!response.ok) throw new Error(errorMessage(body, `Site version returned ${response.status}`));
-  if (!isRecord(body) || body.siteId !== siteId || body.versionId !== versionId) {
+  if (!isRecord(body) || !positiveId(body.siteId) || !positiveId(body.versionId)) {
     throw new Error('Site version returned an invalid response');
   }
+  const siteId = body.siteId;
+  const versionId = body.versionId;
+  if (
+    ('siteId' in expected
+      && (siteId !== expected.siteId || versionId !== expected.versionId))
+    || ('siteSlug' in expected
+      && (!isCanonicalOrLegacyDuplicateSlug(expected.siteSlug, body.routeSlug)
+        || (expected.versionId !== undefined && versionId !== expected.versionId)))
+  ) throw new Error('Site version returned an invalid response');
   const name = requiredText(body.name);
   const slug = requiredText(body.slug);
   const sourceUrl = requiredText(body.sourceUrl);
@@ -79,6 +112,7 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
     };
   });
   return {
+    routeSlug: requiredText(body.routeSlug),
     site: {
       id: siteId,
       name,
@@ -111,6 +145,16 @@ export async function getSiteVersion(siteId: number, versionId: number): Promise
   };
 }
 
+function isCanonicalOrLegacyDuplicateSlug(
+  requestedSlug: string,
+  responseSlug: unknown,
+): boolean {
+  if (typeof responseSlug !== 'string') return false;
+  if (responseSlug === requestedSlug) return true;
+  const match = requestedSlug.match(/^(.+)-([2-9]\d*)$/);
+  return Boolean(match && responseSlug === match[1]);
+}
+
 function parseSummary(value: unknown): SiteSummary {
   if (!isRecord(value) || !positiveId(value.siteId) || !positiveId(value.versionId)) {
     throw new Error('Sites returned an invalid response');
@@ -135,6 +179,7 @@ function parseSummary(value: unknown): SiteSummary {
     versionId: value.versionId,
     name: requiredText(value.name),
     slug: requiredText(value.slug),
+    routeSlug: requiredText(value.routeSlug),
     sourceUrl: requiredText(value.sourceUrl),
     ...optionalTextField(value, 'description'),
     ...optionalNullableTextField(value, 'logoUrl'),

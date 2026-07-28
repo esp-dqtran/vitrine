@@ -102,6 +102,7 @@ test("serves only ready Site summaries and version details", async (t) => {
   assert.equal(sites.status, 200);
   const [summary] = await sites.json();
   assert.equal(summary.pageCount, 16);
+  assert.equal(summary.routeSlug, "v7");
   assert.deepEqual(summary.previews, [
     { id: 10, title: "Home", position: 0, url: "/api/sites/1/versions/2/pages/10/media" },
     { id: 11, title: "Pricing", position: 1, url: "/api/sites/1/versions/2/pages/11/media" },
@@ -112,6 +113,54 @@ test("serves only ready Site summaries and version details", async (t) => {
   const versionBody = await version.json();
   assert.equal(versionBody.canonicalUrl, detail.canonicalUrl);
   assert.deepEqual(versionBody.versions, detail.versions);
+
+  const namedVersion = await fetch(`${base}/sites/v7`);
+  assert.equal(namedVersion.status, 200);
+  const namedVersionBody = await namedVersion.json();
+  assert.equal(namedVersionBody.routeSlug, "v7");
+  assert.equal(namedVersionBody.siteId, 1);
+});
+
+test("selects a ready Site version by date-time route query", async (t) => {
+  const reads: Array<[number, number]> = [];
+  const { base, server } = await serve(fakeStore({
+    readyVersionDetail: async (siteId, versionId) => {
+      reads.push([siteId, versionId]);
+      return { ...detail, siteId, versionId };
+    },
+  }));
+  t.after(() => close(server));
+
+  const selected = await fetch(`${base}/sites/v7?version=1`);
+  assert.equal(selected.status, 200);
+  assert.deepEqual(reads, [[1, 1]]);
+  assert.equal((await selected.json()).versionId, 1);
+
+  const invalid = await fetch(`${base}/sites/v7?version=old`);
+  assert.equal(invalid.status, 400);
+
+  const legacyDuplicate = await fetch(`${base}/sites/v7-2`);
+  assert.equal(legacyDuplicate.status, 200);
+  assert.equal((await legacyDuplicate.json()).routeSlug, "v7");
+});
+
+test("creates stable readable Site routes and suffixes duplicate names", async () => {
+  const { withRouteSlugs } = await import("./sites.ts");
+  const summary = (await fakeStore().listReadySites())[0];
+  const routed = withRouteSlugs([
+    { ...summary, siteId: 9, name: "PayPal" },
+    { ...summary, siteId: 3, name: "Clay" },
+    { ...summary, siteId: 7, name: "Clay" },
+  ]);
+
+  assert.deepEqual(
+    routed.map(({ siteId, routeSlug }) => ({ siteId, routeSlug })),
+    [
+      { siteId: 9, routeSlug: "paypal" },
+      { siteId: 3, routeSlug: "clay" },
+      { siteId: 7, routeSlug: "clay-2" },
+    ],
+  );
 });
 
 test("compacts Site OCR geometry into searchable text for detail clients", async (t) => {
@@ -134,7 +183,17 @@ test("compacts Site OCR geometry into searchable text for detail clients", async
           { x: 0, y: 0, width: 100, height: 20, text: "Private equity" },
           { x: 0, y: 24, width: 100, height: 20, text: "workflow" },
         ],
-        sourceMetadata: { patterns: ["Hero"], sourceType: "mobbin" },
+        sourceMetadata: {
+          patterns: ["Hero"],
+          sourceType: "public-page",
+          heading: "Build with AI",
+          selector: "main > section",
+          tagName: "section",
+          text: "Build with AI Start now",
+          classNames: ["hero", "dark"],
+          style: { display: "grid", gap: "24px", unsafe: "drop me" },
+          content: { links: 1, buttons: 1, unsafe: 99 },
+        },
       }],
     }],
   };
@@ -148,7 +207,16 @@ test("compacts Site OCR geometry into searchable text for detail clients", async
   const body = await response.json();
   assert.equal(body.pages[0].sections[0].searchText, "Private equity workflow");
   assert.deepEqual(body.pages[0].sections[0].ocrBoxes, []);
-  assert.deepEqual(body.pages[0].sections[0].sourceMetadata, { patterns: ["Hero"] });
+  assert.deepEqual(body.pages[0].sections[0].sourceMetadata, {
+    patterns: ["Hero"],
+    selector: "main > section",
+    tagName: "section",
+    heading: "Build with AI",
+    text: "Build with AI Start now",
+    classNames: ["hero", "dark"],
+    style: { display: "grid", gap: "24px" },
+    content: { links: 1, buttons: 1 },
+  });
 });
 
 test("validates positive Site route IDs before store reads", async (t) => {
