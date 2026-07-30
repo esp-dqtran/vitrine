@@ -1,4 +1,5 @@
-import { Icon, IconButton } from '@astryxdesign/core';
+import { useState } from 'react';
+import { Button, Icon, IconButton } from '@astryxdesign/core';
 import { copyShareLink } from '../screenActions.ts';
 import { ArrowButton } from './ArrowButton.tsx';
 import { AstryxModal, AstryxModalSurface } from './AstryxModal.tsx';
@@ -42,6 +43,7 @@ export function SiteSectionInspector({
   onClose,
   onNavigate,
 }: SiteSectionInspectorProps) {
+  const [saved, setSaved] = useState(false);
   const selectedView = view === 'section' ? 'Section' : 'Full page';
   const fullPage = view === 'full-page';
   const mediaUrl = fullPage ? item.fullPageUrl : item.sectionUrl;
@@ -89,19 +91,20 @@ export function SiteSectionInspector({
             />
           </div>
           <div className="site-section-inspector__actions">
-            <a
-              className="site-section-inspector__save"
-              href={mediaUrl}
-              download
-            >
-              Save
-            </a>
+            <Button
+              label={saved ? 'Saved' : 'Save'}
+              variant="primary"
+              size="sm"
+              className="flow-preview-dialog__save"
+              onClick={() => setSaved((value) => !value)}
+            />
             <CopyButton
               label="Copy link"
               successMessage="Section link copied"
               action={copySectionLink}
-              variant="ghost"
+              variant="secondary"
               size="sm"
+              className="flow-preview-dialog__copy"
             />
             <IconButton
               label="Close"

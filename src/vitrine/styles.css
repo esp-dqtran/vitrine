@@ -1709,30 +1709,20 @@ body {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
-.site-section-inspector__actions button,
-.site-section-inspector__actions a {
+.site-section-inspector__actions > button:last-child {
   border-radius: 10px !important;
 }
 
-.site-section-inspector__save {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  color: var(--color-text-primary);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  text-decoration: none;
-  transition: background-color 120ms ease;
-}
-
-.site-section-inspector__save:hover {
-  background: var(--color-background-hover);
+.site-section-inspector__actions > button:not(:last-child) {
+  height: 44px !important;
+  border-radius: 999px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: .2px !important;
+  line-height: 22px !important;
 }
 
 .site-section-inspector__viewport {
@@ -3554,19 +3544,6 @@ body {
 
   .site-section-inspector__switcher {
     justify-self: start;
-  }
-
-  .site-section-inspector__actions > button:not(:last-child) {
-    min-width: 40px !important;
-    padding-inline: 10px !important;
-  }
-
-  .site-section-inspector__actions > button:first-child {
-    display: none !important;
-  }
-
-  .site-section-inspector__actions > button:not(:last-child) span {
-    font-size: 12px !important;
   }
 
   .site-section-inspector__viewport {

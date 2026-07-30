@@ -48,7 +48,12 @@ test('renders the focused Site section with context controls', () => {
   assert.doesNotMatch(html, /main &gt; section/);
   assert.doesNotMatch(html, /2 links · 1 button · 3 images/);
   assert.doesNotMatch(html, /Home · v7labs\.com/);
-  assert.match(html, /class="site-section-inspector__save" href="\/api\/sites\/1\/versions\/2\/sections\/12\/media" download="">Save<\/a>.*>Copy link</);
+  const saveButton = html.match(/<button[^>]*flow-preview-dialog__save[^>]*>[\s\S]*?<\/button>/)?.[0] ?? '';
+  const copyButton = html.match(/<button[^>]*flow-preview-dialog__copy[^>]*>[\s\S]*?<\/button>/)?.[0] ?? '';
+  assert.match(saveButton, /data-variant="primary"/);
+  assert.match(saveButton, />Save</);
+  assert.match(copyButton, /data-variant="secondary"/);
+  assert.match(copyButton, />Copy link</);
   assert.match(html, />Copy link</);
   assert.doesNotMatch(html, /Download/);
   assert.doesNotMatch(html, />Saved</);

@@ -371,6 +371,57 @@ The latest completed build review is **Site section inspector header actions —
 
 final result: passed
 
+# Site section inspector shared Flow actions — 2026-07-30
+
+## Visual truth and normalization
+
+- Source visual truth:
+  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-actions-header-2026-07-30/after.jpg`.
+- Browser-rendered implementation:
+  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-shared-flow-actions-2026-07-30/after.jpg`.
+- Combined side-by-side comparison:
+  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-shared-flow-actions-2026-07-30/comparison.jpg`.
+- Source and implementation are 642 × 863 CSS pixels and 642 × 863 image
+  pixels at 1× density.
+- State: authenticated Vercel section inspector, Section mode, item 5 of 8.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in the requested action group.
+
+- Fonts and typography: the controls now inherit the same compact button
+  typography used by Flow-card actions.
+- Spacing and layout rhythm: Save and Copy link share the Flow action height,
+  full pill radius, and eight-pixel action gap.
+- Colors and visual tokens: Save uses the existing white primary treatment;
+  Copy link uses the existing dark secondary treatment.
+- Image quality and asset fidelity: the section capture remains unchanged.
+- Copy and content: the labels remain Save and Copy link, with the shared copy
+  icon supplied by `CopyButton`.
+- The side-by-side full-view comparison keeps the complete action group
+  readable, so a separate focused crop was unnecessary.
+
+## Interaction and runtime verification
+
+- Save still initiates a download of the active section/full-page media.
+- Copy link retains shared loading and toast feedback.
+- Section/Full page switching and Close remain available.
+- No browser console errors were captured.
+- Focused shared-action tests: 22 passed.
+- Production build: passed.
+
+## Comparison history
+
+- Pass 1 identified P2 visual drift: the custom text actions did not match the
+  established image/Flow primary and secondary pills.
+- Fix: replaced the custom Save link with the design-system Button, reused the
+  Flow save/copy classes, and switched CopyButton to the shared secondary
+  treatment.
+- Post-fix evidence: the final comparison shows the same white Save pill and
+  dark icon-bearing Copy pill used by existing Flow actions.
+
+final result: passed
+
 # App detail Export primary action — 2026-07-30
 
 ## Reference set
