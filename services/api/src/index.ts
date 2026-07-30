@@ -18,6 +18,7 @@ import { advancedSearchConfigFromEnv } from "../../../src/searchConfig.ts";
 import { OpenAICompatibleSearchEmbeddingProvider } from "../../../src/searchEmbedding.ts";
 import { PostgresSearchStore } from "../../../src/searchStore.ts";
 import { createSearchService } from "./search.ts";
+import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -44,6 +45,23 @@ await startApi({
         markStripeEventProcessed,
       },
     });
+    const flowWarmups = await Promise.allSettled(
+      (["web", "ios", "android"] as const).map((platform) =>
+        publishedFlowCatalogPage({
+          platform,
+          limit: 12,
+          sort: "popular",
+          includeFacets: false,
+          cursorSecret: config.mediaSigningSecret,
+        })
+      ),
+    );
+    const failedFlowWarmups = flowWarmups.filter(
+      (result) => result.status === "rejected",
+    ).length;
+    if (failedFlowWarmups > 0) {
+      console.warn(`[api] ${failedFlowWarmups} Flow catalog warmup(s) failed`);
+    }
     createApiApp({
       billing,
       objectStore,

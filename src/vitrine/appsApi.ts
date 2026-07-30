@@ -32,6 +32,26 @@ export interface FlowSectionResult {
   version: AppVersion | null;
 }
 
+export interface UiElementSummaryItem {
+  type: string;
+  group: string;
+  count: number;
+  imageId: number;
+  imageUrl: string;
+  thumbnailUrl: string;
+  description: string | null;
+  purpose: string | null;
+  visibleStates: string[];
+}
+
+export interface UiElementSummaryResult {
+  items: UiElementSummaryItem[];
+  totalOccurrences: number;
+  totalTypes: number;
+  platform: Platform;
+  version: AppVersion | null;
+}
+
 async function responseJson<T>(response: Response, endpoint: string): Promise<T> {
   if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
   return response.json() as Promise<T>;
@@ -81,6 +101,19 @@ export function fetchAppUiElements(
   request: Requester = fetch,
 ): Promise<EvidenceSectionPage> {
   return fetchEvidenceSection(appId, 'ui-elements', input, request);
+}
+
+export async function fetchAppUiElementSummary(
+  appId: string,
+  input: Omit<EvidenceSectionRequest, 'cursor'>,
+  request: Requester = fetch,
+): Promise<UiElementSummaryResult> {
+  const params = new URLSearchParams({ platform: input.platform });
+  if (input.version !== undefined) params.set('version', String(input.version));
+  params.set('limit', String(input.limit ?? 12));
+  const endpoint = `/api/apps/${encodeURIComponent(appId)}/ui-element-summary?${params.toString()}`;
+  const response = await request(endpoint, { signal: input.signal });
+  return responseJson<UiElementSummaryResult>(response, endpoint);
 }
 
 export async function fetchAppFlows(

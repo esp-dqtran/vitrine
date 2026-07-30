@@ -1,7 +1,7 @@
 import type { PoolClient, QueryResult } from "pg";
 import { query as databaseQuery } from "./db.ts";
 import { validateObjectMetadata, type ObjectAccessClass, type ObjectMetadata, type StoredContentType } from "./objectStore.ts";
-import type { PublicFacetInput } from "./publicFacetPreview.ts";
+import type { PublicCatalogFacetInput } from "./publicFacetPreview.ts";
 
 export type DatabaseQuery = (
   sql: string,
@@ -296,7 +296,7 @@ export async function publishedPreviewObject(
 }
 
 export async function publishedFacetPreviewObject(
-  input: PublicFacetInput & { app: string; rank: number },
+  input: PublicCatalogFacetInput & { app: string; rank: number },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
   const maxRank = input.group === "flows" ? 3 : 1;
@@ -342,6 +342,7 @@ export async function publishedFlowCatalogPreviewObject(
     versionId: number;
     versionFlowId: number;
     rank: number;
+    variant?: "full" | "thumb";
   },
   runQuery: DatabaseQuery = query,
 ): Promise<ObjectMetadata | undefined> {
@@ -384,7 +385,7 @@ export async function publishedFlowCatalogPreviewObject(
        ON vi.version_id = $3
       AND vi.image_id = ranked.image_id
      JOIN images i ON i.id = ranked.image_id
-     JOIN stored_objects so ON ${imageObjectJoin("thumb")}
+     JOIN stored_objects so ON ${imageObjectJoin(input.variant ?? "full")}
      WHERE ranked.preview_rank = $5
        AND so.access_class IN ('protected', 'public-preview')
      LIMIT 1`,

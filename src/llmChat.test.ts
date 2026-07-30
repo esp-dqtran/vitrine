@@ -106,7 +106,10 @@ test("dismisses ChatGPT's recoverable conversation-limit modal", async () => {
       page: {
         getByRole(role: string, options: { name: string; exact: boolean }): {
           count(): Promise<number>;
-          first(): { isVisible(): Promise<boolean>; click(): Promise<void> };
+          first(): {
+            isVisible(): Promise<boolean>;
+            evaluate(callback: (element: { click(): void }) => void): Promise<void>;
+          };
         };
       },
     ) => Promise<boolean>;
@@ -122,7 +125,9 @@ test("dismisses ChatGPT's recoverable conversation-limit modal", async () => {
         count: async () => 1,
         first: () => ({
           isVisible: async () => true,
-          click: async () => { clicks += 1; },
+          evaluate: async (callback: (element: { click(): void }) => void) => {
+            callback({ click: () => { clicks += 1; } });
+          },
         }),
       };
     },
@@ -132,15 +137,21 @@ test("dismisses ChatGPT's recoverable conversation-limit modal", async () => {
   assert.equal(clicks, 1);
 });
 
-test("ChatSession keeps existing callers compatible while accepting request options", () => {
+test("ChatSession keeps existing callers compatible and accepts multiple attachments", async () => {
+  let received = 0;
   const session: ChatSession = {
-    ask: async (_prompt, _attachment, options) => {
+    ask: async (_prompt, attachment, options) => {
+      received = Array.isArray(attachment) ? attachment.length : attachment ? 1 : 0;
       options?.signal?.throwIfAborted();
       return "reply";
     },
     close: async () => {},
   };
-  assert.equal(typeof session.ask, "function");
+  assert.equal(await session.ask("Analyze", [
+    { name: "sheet-01.png", mimeType: "image/png", buffer: Buffer.from("one") },
+    { name: "sheet-02.png", mimeType: "image/png", buffer: Buffer.from("two") },
+  ]), "reply");
+  assert.equal(received, 2);
 });
 
 test("recycles a worker page without closing the browser context", async () => {
@@ -181,6 +192,7 @@ test("prompt submission fills without a pointer click", async () => {
     textContent: async () => value,
   };
   const page = {
+    url: () => "https://chatgpt.com/",
     waitForTimeout: async () => {},
     getByText: () => ({ allTextContents: async () => [] }),
   };
@@ -203,6 +215,7 @@ test("prompt submission fails immediately when the composer never clears", async
     textContent: async () => "still waiting",
   };
   const page = {
+    url: () => "https://chatgpt.com/",
     waitForTimeout: async () => {},
     getByText: () => ({ allTextContents: async () => [] }),
   };
@@ -214,6 +227,87 @@ test("prompt submission fails immediately when the composer never clears", async
   assert.equal(fills, 3);
 });
 
+test("prompt submission accepts generation before the composer clears", async () => {
+  let fills = 0;
+  const input = {
+    fill: async () => { fills += 1; },
+    press: async () => {},
+    textContent: async () => "clearing slowly",
+  };
+  const page = {
+    url: () => "https://chatgpt.com/",
+    waitForTimeout: async () => {},
+    getByText: () => ({ allTextContents: async () => [] }),
+    locator: (selector: string) => {
+      assert.equal(selector, '[data-testid="stop-button"]');
+      return { count: async () => 1 };
+    },
+  };
+
+  await sendPrompt(
+    page as never,
+    input as never,
+    "Analyze",
+    undefined,
+    undefined,
+    '[data-testid="stop-button"]',
+  );
+
+  assert.equal(fills, 1);
+});
+
+test("prompt submission accepts ChatGPT conversation navigation", async () => {
+  let url = "https://chatgpt.com/";
+  let fills = 0;
+  const input = {
+    fill: async () => { fills += 1; },
+    press: async () => { url = "https://chatgpt.com/c/test-conversation"; },
+    textContent: async () => "clearing slowly",
+  };
+  const page = {
+    url: () => url,
+    waitForTimeout: async () => {},
+    getByText: () => ({ allTextContents: async () => [] }),
+  };
+
+  await sendPrompt(page as never, input as never, "Analyze");
+
+  assert.equal(fills, 1);
+});
+
+test("blocked prompt submission enters rate-limit cooldown after dismissing the popup", async () => {
+  let dismissed = 0;
+  const input = {
+    fill: async () => {},
+    press: async () => {},
+    textContent: async () => "not submitted",
+  };
+  const page = {
+    url: () => "https://chatgpt.com/",
+    waitForTimeout: async () => {},
+    getByText: () => ({
+      allTextContents: async () => [
+        "You’re making requests too quickly. Please wait a few minutes before trying again.",
+      ],
+    }),
+    getByRole: () => ({
+      count: async () => 1,
+      first: () => ({
+        isVisible: async () => true,
+        evaluate: async (callback: (element: { click(): void }) => void) => {
+          callback({ click: () => { dismissed += 1; } });
+        },
+      }),
+    }),
+  };
+
+  await assert.rejects(
+    () => sendPrompt(page as never, input as never, "Analyze"),
+    (error: unknown) => error instanceof ChatRateLimitError,
+  );
+  assert.equal(dismissed, 1);
+});
+
 test("Gemini prompt submission uses the send button without pressing Enter", async () => {
   let value = "";
   let buttonClicks = 0;
@@ -223,6 +317,7 @@ test("Gemini prompt submission uses the send button without pressing Enter", asy
     textContent: async () => value,
   };
   const page = {
+    url: () => "https://gemini.google.com/app",
     locator(selector: string) {
       assert.equal(selector, 'button[aria-label="Send message"]');
       return {

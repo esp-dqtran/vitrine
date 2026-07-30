@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import { Button, EmptyState, Icon } from '@astryxdesign/core';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Button, EmptyState, Icon, IconButton, Selector } from '@astryxdesign/core';
 import { navigate, routeToPath, updateLocation } from '../router.ts';
 import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from '../sitesApi.ts';
+import { useSlidingIndicator } from '../useSlidingIndicator.ts';
 import type {
   SiteSectionView,
   SiteSummary,
@@ -11,12 +12,16 @@ import type {
 } from '../types.ts';
 import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
-import { ReferenceDetailShell } from './ReferenceDetailShell.tsx';
+import { AstryxDropdown, AstryxDropdownItem } from './AstryxDropdown.tsx';
+import {
+  ReferenceDetailNavigation,
+  ReferenceDetailPage,
+} from './ReferenceDetailPage.tsx';
 import { ReferenceDetailLoading } from './ReferenceDetailLoading.tsx';
+import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
-import { SitesTopNav } from './SitesTopNav.tsx';
 import {
   SiteSectionInspector,
   type SiteInspectorItem,
@@ -53,117 +58,36 @@ export function SiteVersionPicker({
   selectedVersionId: number;
   onChange: (versionId: number) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-  const selected = versions.find(({ id }) => id === selectedVersionId) ?? versions[0];
-
-  useEffect(() => {
-    setOpen(false);
-  }, [selectedVersionId]);
-
-  useEffect(() => {
-    if (!open) return;
-    const closeOnOutsidePress = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setOpen(false);
-      triggerRef.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    document.addEventListener('keydown', closeOnEscape);
-    requestAnimationFrame(() => {
-      menuRef.current
-        ?.querySelector<HTMLButtonElement>('[aria-checked="true"]')
-        ?.focus();
-    });
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePress);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [open]);
-
-  const moveMenuFocus = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const items = [...(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]') ?? [])];
-    if (!items.length) return;
-    const current = items.indexOf(document.activeElement as HTMLButtonElement);
-    const next = event.key === 'Home'
-      ? 0
-      : event.key === 'End'
-        ? items.length - 1
-        : event.key === 'ArrowDown'
-          ? (current + 1 + items.length) % items.length
-          : (current - 1 + items.length) % items.length;
-    items[next]?.focus();
-  };
-
-  if (!selected) return null;
-
   return (
-    <div ref={rootRef} className="site-version-picker" data-open={open || undefined}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="site-version-picker__trigger"
-        aria-label="Site version"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span>{formatSiteVersionDateTime(selected.updatedAt)}</span>
-        <span className="site-version-picker__chevron" aria-hidden="true">
-          <Icon icon="chevronDown" size="sm" />
-        </span>
-      </button>
-      <div
-        ref={menuRef}
-        id={menuId}
-        role="menu"
-        aria-label="Available Site versions"
-        className="site-version-picker__menu"
-        hidden={!open}
-        onKeyDown={moveMenuFocus}
-      >
-        {versions.map((version) => {
-          const isSelected = version.id === selectedVersionId;
-          return (
-            <button
-              key={version.id}
-              type="button"
-              role="menuitemradio"
-              aria-checked={isSelected}
-              className="site-version-picker__option"
-              onClick={() => {
-                setOpen(false);
-                triggerRef.current?.focus();
-                if (!isSelected) onChange(version.id);
-              }}
-            >
-              <span>{formatSiteVersionDateTime(version.updatedAt)}</span>
-              {version.isLatest ? <span className="site-version-picker__latest">Latest</span> : null}
-              {isSelected ? (
-                <span className="site-version-picker__check" aria-hidden="true">
-                  <Icon icon="check" size="md" />
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <Selector
+      label="Site version"
+      isLabelHidden
+      size="sm"
+      placement="below"
+      className="reference-detail__version-selector"
+      value={String(selectedVersionId)}
+      options={versions.map((version) => ({
+        value: String(version.id),
+        label: version.isLatest
+          ? 'Latest'
+          : formatSiteVersionDateTime(version.updatedAt),
+      }))}
+      onChange={(value) => {
+        const versionId = Number(value);
+        if (Number.isSafeInteger(versionId) && versionId !== selectedVersionId) {
+          onChange(versionId);
+        }
+      }}
+    />
   );
 }
 
 interface SiteVersionViewProps {
   detail: SiteVersionDetail;
   isAdmin: boolean;
+  searchLabel?: string;
+  accountControls?: ReactNode;
+  onOpenSearch?: () => void;
   section?: string;
   initialSectionId?: number;
   relatedSites?: SiteSummary[];
@@ -179,6 +103,24 @@ interface SectionItem {
   item: SiteSectionView;
   index: number;
   patterns: string[];
+}
+
+function sectionType({ page, patterns }: SectionItem) {
+  return patterns.find((pattern) => /\bsection$/i.test(pattern.trim()))
+    ?? patterns[0]
+    ?? page.title;
+}
+
+function sectionTypeLabel(value: string) {
+  return value.replace(/\s+section$/i, '').trim() || value;
+}
+
+function sectionDisplayPriority(section: SectionItem) {
+  const type = sectionTypeLabel(sectionType(section)).toLocaleLowerCase();
+  if (type === 'hero') return 0;
+  if (type === 'navigation') return 2;
+  if (type === 'footer') return 3;
+  return 1;
 }
 
 type SiteInspectorState = {
@@ -197,6 +139,9 @@ export function restoreInspectorFocus(
 export function SiteVersionView({
   detail,
   isAdmin,
+  searchLabel = 'Search on Web...',
+  accountControls,
+  onOpenSearch,
   section,
   initialSectionId,
   relatedSites = [],
@@ -284,7 +229,6 @@ export function SiteVersionView({
   }, [inspector]);
 
   const categories = detail.site.categories ?? [];
-  const description = detail.site.description || `A captured website reference from ${safeHostname(detail.site.sourceUrl)}.`;
   const updatedAt = detail.versionOptions.find(({ id }) => id === detail.version.id)?.updatedAt;
   const formatUpdatedAt = (value: string) => new Intl.DateTimeFormat('en', {
     month: 'short',
@@ -307,6 +251,7 @@ export function SiteVersionView({
     ...(isAdmin ? [{ id: 'technology' as const, label: 'Technology' }] : []),
   ];
   const metadata = [
+    { label: 'Platform', value: 'Web' },
     ...(categories.length ? [{
       label: 'Category',
       value: categories.join(', '),
@@ -320,23 +265,29 @@ export function SiteVersionView({
         </div>
       ),
     }] : []),
-    { label: 'Pages', value: String(pages.length) },
     { label: 'Sections', value: String(sectionCount) },
     ...(updatedAt ? [{ label: 'Last updated', value: formatUpdatedAt(updatedAt) }] : []),
   ];
+  const sectionTotal = activeSection === 'preview'
+    ? `${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`
+    : activeSection === 'sections'
+      ? `${sectionCount} ${sectionCount === 1 ? 'section' : 'sections'}`
+      : `${detail.analysis?.technology?.length ?? 0} technologies`;
   return (
     <>
-      <ReferenceDetailShell
-        dataDetailKind="site"
+      <ReferenceDetailPage
+        kind="site"
+        searchLabel={searchLabel}
+        accountControls={accountControls}
+        onOpenSearch={onOpenSearch}
         className="site-detail"
         title={detail.site.name}
-        description={description}
         identityKey={`site-icon-${detail.site.id}`}
         identityLabel={detail.site.name.slice(0, 1).toUpperCase()}
         identityImageUrl={detail.site.logoUrl}
         onBack={onBack}
         metadata={metadata}
-        actions={<HeroButton onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}
+        actions={<HeroButton primary onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit Site</HeroButton>}
         tabs={tabs}
         activeTab={activeSection}
         onTabChange={onSectionChange}
@@ -347,6 +298,12 @@ export function SiteVersionView({
             onChange={onVersionChange}
           />
         ) : undefined}
+        tabTrailing={activeSection === 'sections' ? undefined : (
+          <span className="reference-detail__section-total">
+            <span>Showing</span>
+            <strong>{sectionTotal}</strong>
+          </span>
+        )}
         bodyPadding={activeSection === 'sections' ? '32px 32px 120px' : '0 32px 120px'}
       >
         <div className={`site-detail__content site-detail__content--${activeSection}`}>
@@ -354,23 +311,22 @@ export function SiteVersionView({
           {relatedSites.length ? (
             <section className="site-detail__related" aria-labelledby="related-sites-title">
               <div>
-                <p>Continue exploring</p>
-                <h2 id="related-sites-title">More website references</h2>
+                <h2 id="related-sites-title">More like {detail.site.name}</h2>
               </div>
               <div className="site-detail__related-grid">
-                {relatedSites.slice(0, 3).map((site) => (
+                {relatedSites.slice(0, 6).map((site) => (
                   <SiteCard
                     key={`${site.id}:${site.versionId}`}
                     site={site}
                     onOpen={() => onRelatedOpen(site)}
-                    deferMediaUntilIntent
+                    showMetadata={false}
                   />
                 ))}
               </div>
             </section>
           ) : null}
         </div>
-      </ReferenceDetailShell>
+      </ReferenceDetailPage>
       {inspector && inspector.items[inspector.index] && (
         <SiteSectionInspector
           item={inspector.items[inspector.index]}
@@ -388,20 +344,120 @@ export function SiteVersionView({
 
 function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sectionCount: number }) {
   void sectionCount;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isVideo = detail.version.previewMediaKind !== 'image';
+  const fullPageImageUrl = detail.pages[0]?.fullPageImageUrl;
+  const [activeMode, setActiveMode] = useState<'video' | 'full-screen'>(
+    isVideo ? 'video' : 'full-screen',
+  );
+  const {
+    indicatorRef: modeIndicatorRef,
+    registerItem: registerMode,
+  } = useSlidingIndicator(activeMode);
+  const playPreview = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    void video.play().catch(() => undefined);
+  };
+  const stopPreview = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    video.currentTime = 0;
+  };
+
   return (
     <section className="site-preview">
-      <div data-site-preview-stage="true" className="site-preview__stage">
-        {detail.version.previewMediaKind === 'image'
-          ? <img src={detail.version.previewUrl} alt={`${detail.site.name} website preview`} />
-          : (
-              <video
+      <div
+        data-site-preview-stage="true"
+        className="site-preview__stage"
+      >
+        <article className="site-preview-player">
+          <header className="flow-preview-dialog__header site-preview-player__header">
+            <div className="flow-preview-dialog__identity">
+              <h2>{detail.site.name}</h2>
+            </div>
+
+            <div
+              className="flow-preview-dialog__modes"
+              role="tablist"
+              aria-label="Site preview mode"
+              data-active-mode={activeMode}
+            >
+              <span
+                ref={modeIndicatorRef}
+                className="flow-preview-dialog__mode-indicator"
+                aria-hidden="true"
+              />
+              <Button
+                ref={registerMode('video')}
+                label="Video"
+                variant="ghost"
+                role="tab"
+                aria-label="Video"
+                aria-selected={activeMode === 'video'}
+                disabled={!isVideo}
+                onClick={() => setActiveMode('video')}
+              />
+              <Button
+                ref={registerMode('full-screen')}
+                label="Full screen"
+                variant="ghost"
+                role="tab"
+                aria-label="Full screen"
+                aria-selected={activeMode === 'full-screen'}
+                disabled={!fullPageImageUrl}
+                onClick={() => {
+                  stopPreview();
+                  setActiveMode('full-screen');
+                }}
+              />
+            </div>
+
+            <span
+              className="flow-preview-dialog__header-actions site-preview-player__header-spacer"
+              aria-hidden="true"
+            />
+          </header>
+
+          <div
+            className={`site-preview-player__body site-preview-player__body--${activeMode}`}
+            role="tabpanel"
+            aria-label={activeMode === 'video' ? 'Site preview video' : 'Full page preview'}
+          >
+            {activeMode === 'video' && isVideo ? (
+              <div
+                className="site-preview-player__video"
+                tabIndex={0}
+                aria-label={`${detail.site.name} website video; plays on hover or focus`}
+                onMouseEnter={playPreview}
+                onMouseLeave={stopPreview}
+                onFocus={playPreview}
+                onBlur={stopPreview}
+              >
+                <video
+                  ref={videoRef}
+                  data-site-preview-video="true"
+                  src={detail.version.previewUrl}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                />
+              </div>
+            ) : fullPageImageUrl ? (
+              <img
+                src={fullPageImageUrl}
+                alt={`${detail.site.name} full page preview`}
+              />
+            ) : (
+              <img
                 src={detail.version.previewUrl}
-                controls
-                muted
-                playsInline
-                preload="metadata"
+                alt={`${detail.site.name} website preview`}
               />
             )}
+          </div>
+        </article>
       </div>
     </section>
   );
@@ -414,21 +470,106 @@ function SectionsPanel({
   sections: SectionItem[];
   onOpen: (index: number) => void;
 }) {
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState('all');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const sectionTypes = useMemo(
+    () => [...new Set(sections.map(sectionType))],
+    [sections],
+  );
+  const indexedSections = useMemo(
+    () => sections
+      .map((section, inspectorIndex) => ({ section, inspectorIndex }))
+      .sort((left, right) => (
+        sectionDisplayPriority(left.section) - sectionDisplayPriority(right.section)
+        || left.inspectorIndex - right.inspectorIndex
+      )),
+    [sections],
+  );
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleSections = indexedSections.filter(({ section }) => {
+    if (selectedType !== 'all' && sectionType(section) !== selectedType) return false;
+    if (!normalizedQuery) return true;
+    const heading = typeof section.item.sourceMetadata.heading === 'string'
+      ? section.item.sourceMetadata.heading
+      : '';
+    return [
+      section.page.title,
+      heading,
+      ...section.patterns,
+    ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
+  });
+  const countLabel = selectedType === 'all' && !normalizedQuery
+    ? `${sections.length} ${sections.length === 1 ? 'section' : 'sections'}`
+    : `${visibleSections.length} of ${sections.length} sections`;
+
   return (
     <section className="site-sections">
-      <header className="site-sections__header">
-        <h2>{sections.length} sections</h2>
-        <p>Open a capture to inspect the section, full-page context, and reconstruction details.</p>
+      <header className="site-sections__toolbar">
+        <div className="site-sections__controls">
+          <AstryxDropdown
+            label={selectedType === 'all' ? 'Sections' : sectionTypeLabel(selectedType)}
+            ariaLabel="Filter sections by type"
+            open={typeMenuOpen}
+            triggerClassName="site-sections__type-trigger"
+            menuWidth={220}
+            onOpenChange={setTypeMenuOpen}
+          >
+            <AstryxDropdownItem
+              label="All sections"
+              selected={selectedType === 'all'}
+              onSelect={() => {
+                setSelectedType('all');
+                setTypeMenuOpen(false);
+              }}
+            />
+            {sectionTypes.map((type) => (
+              <AstryxDropdownItem
+                key={type}
+                label={sectionTypeLabel(type)}
+                selected={selectedType === type}
+                onSelect={() => {
+                  setSelectedType(type);
+                  setTypeMenuOpen(false);
+                }}
+              />
+            ))}
+          </AstryxDropdown>
+          <IconButton
+            label="Search sections"
+            icon={<Icon icon="search" size="sm" />}
+            variant="ghost"
+            size="sm"
+            className="site-sections__search-toggle"
+            aria-pressed={searchOpen}
+            onClick={() => {
+              setSearchOpen((open) => !open);
+              if (searchOpen) setQuery('');
+            }}
+          />
+        </div>
+        <span className="site-sections__count" aria-live="polite">{countLabel}</span>
       </header>
-      {sections.length ? (
+      {searchOpen ? (
+        <div className="site-sections__search">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Search sections..."
+          />
+        </div>
+      ) : null}
+      {visibleSections.length ? (
         <ol data-site-sections-grid="true" className="site-sections__grid">
-          {sections.map(({ page, item, patterns }, visibleIndex) => {
+          {visibleSections.map(({ section: { page, item, patterns }, inspectorIndex }, visibleIndex) => {
             const heading = typeof item.sourceMetadata.heading === 'string'
               ? item.sourceMetadata.heading.trim()
               : '';
-            const sectionName = patterns.find((pattern) => /\bsection$/i.test(pattern.trim()))
-              ?? patterns[0];
-            const label = `Open ${sectionName} from ${page.title}`;
+            const sectionName = sectionType({ page, item, patterns, index: visibleIndex });
+            const sectionLabel = sectionTypeLabel(sectionName);
+            const cardTitle = heading || sectionLabel || page.title;
+            const label = `Open ${cardTitle} from ${page.title}`;
             const delay = Math.min(visibleIndex * 0.04, 0.32);
             return (
               <li key={item.id} className="site-section-tile">
@@ -440,7 +581,7 @@ function SectionsPanel({
                       posterUrl={item.posterUrl}
                       delay={delay}
                       deferMedia
-                      onOpen={() => onOpen(visibleIndex)}
+                      onOpen={() => onOpen(inspectorIndex)}
                     />
                   ) : (
                     <MediaGridCard
@@ -448,21 +589,30 @@ function SectionsPanel({
                       kind="image"
                       url={item.mediaUrl}
                       imageFit="contain"
+                      preserveNaturalAspectRatio
                       delay={delay}
                       deferMedia
-                      onOpen={() => onOpen(visibleIndex)}
+                      onOpen={() => onOpen(inspectorIndex)}
                     />
                   )}
                 </div>
                 <span className="site-section-tile__label">
-                  <strong>{sectionName}</strong>
-                  <small>{heading ? `${heading} · ` : ''}{page.title}</small>
+                  <strong>{cardTitle}</strong>
+                  <small>{heading ? `${sectionLabel} · ` : ''}{page.title}</small>
                 </span>
               </li>
             );
           })}
         </ol>
-      ) : <EmptyState title="No sections available" description="This Site capture does not contain any sections." isCompact />}
+      ) : (
+        <EmptyState
+          title={sections.length ? 'No matching sections' : 'No sections available'}
+          description={sections.length
+            ? 'Try another section type or search.'
+            : 'This Site capture does not contain any sections.'}
+          isCompact
+        />
+      )}
     </section>
   );
 }
@@ -509,7 +659,7 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
       siteSlug
         ? getSiteVersionBySlug(siteSlug, selectedVersionId)
         : getSiteVersion(siteId as number, versionId as number),
-      listSitesPage(4, 0).then(({ sites }) => sites).catch(() => []),
+      listSitesPage(7, 0).then(({ sites }) => sites).catch(() => []),
     ])
       .then(([value, sites]) => {
         if (!active) return;
@@ -531,38 +681,34 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
   }, [detail, initialSection, initialSectionId, selectedVersionId, siteSlug]);
 
   const onBack = () => navigate({ name: 'sites' });
-  const topNav = (
-    <SitesTopNav
+  const navigation = (
+    <ReferenceDetailNavigation
+      kind="site"
       searchLabel={query || 'Search on Web...'}
-      activeCategory={null}
-      onClearCategory={() => undefined}
-      onOpenSearch={() => undefined}
-      searchMode="legacy"
       accountControls={accountControls}
     />
   );
-  if (error && !detail) return <>{topNav}<SiteVersionFailure message={error} onBack={onBack} onRetry={() => setRevision((value) => value + 1)} /></>;
-  if (!detail) return <>{topNav}<SiteVersionLoading /></>;
+  if (error && !detail) return <>{navigation}<SiteVersionFailure message={error} onBack={onBack} onRetry={() => setRevision((value) => value + 1)} /></>;
+  if (!detail) return <>{navigation}<SiteVersionLoading /></>;
   return (
-    <>
-      {topNav}
-      <SiteVersionView
-        detail={detail}
-        relatedSites={relatedSites}
-        isAdmin={isAdmin}
-        section={initialSection}
-        initialSectionId={initialSectionId}
-        onSectionChange={onSectionChange ?? (() => undefined)}
-        onInspectorChange={onInspectorChange}
-        onVersionChange={(nextVersionId) => navigate({
-          name: 'site-version',
-          siteSlug: detail.routeSlug,
-          version: nextVersionId,
-          ...(initialSection ? { section: initialSection } : {}),
-        })}
-        onBack={onBack}
-      />
-    </>
+    <SiteVersionView
+      detail={detail}
+      relatedSites={relatedSites}
+      isAdmin={isAdmin}
+      searchLabel={query || 'Search on Web...'}
+      accountControls={accountControls}
+      section={initialSection}
+      initialSectionId={initialSectionId}
+      onSectionChange={onSectionChange ?? (() => undefined)}
+      onInspectorChange={onInspectorChange}
+      onVersionChange={(nextVersionId) => navigate({
+        name: 'site-version',
+        siteSlug: detail.routeSlug,
+        version: nextVersionId,
+        ...(initialSection ? { section: initialSection } : {}),
+      })}
+      onBack={onBack}
+    />
   );
 }
 
@@ -579,12 +725,4 @@ function SiteVersionFailure({ message, onBack, onRetry }: { message: string; onB
       </div>
     </main>
   );
-}
-
-function safeHostname(value: string): string {
-  try {
-    return new URL(value).hostname.replace(/^www\./, '');
-  } catch {
-    return value;
-  }
 }

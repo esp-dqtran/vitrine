@@ -1,7 +1,18 @@
 import type { QueryResult } from "pg";
 import { query as databaseQuery } from "./db.ts";
 import type { DesignFlow, EvidenceView } from "./designSystem.ts";
+import {
+  decodeFlowCatalogCursor,
+  encodeFlowCatalogCursor,
+  flowCatalogQueryIdentity,
+  FlowCatalogCursorError,
+  type FlowCatalogCursor,
+  type FlowCatalogSort,
+} from "./flowCatalogCursor.ts";
 import type { Platform } from "./platformFromUrl.ts";
+import type { DiscoveryFacet } from "./vitrine/discoveryTypes.ts";
+
+export { FlowCatalogCursorError } from "./flowCatalogCursor.ts";
 
 export interface FlowCatalogItem {
   category: string;
@@ -11,6 +22,8 @@ export interface FlowCatalogItem {
     appId: string;
     appName: string;
     appIconUrl: string | null;
+    version: number;
+    sourceFlowId: string;
     screenCount: number;
     flow: DesignFlow<EvidenceView>;
   };
@@ -19,6 +32,8 @@ export interface FlowCatalogItem {
 export interface FlowCatalogPage {
   items: FlowCatalogItem[];
   nextCursor: string | null;
+  totalCount: number;
+  facets: DiscoveryFacet[];
 }
 
 export type FlowCatalogQuery = (
@@ -26,15 +41,176 @@ export type FlowCatalogQuery = (
   values?: readonly unknown[],
 ) => Promise<QueryResult<any>>;
 
-export class FlowCatalogCursorError extends Error {
-  constructor() {
-    super("invalid Flow catalog cursor");
+interface FacetMetadata {
+  totalCount: number;
+  facets: DiscoveryFacet[];
+}
+
+interface FacetCacheEntry {
+  expiresAt: number;
+  value: FacetMetadata;
+}
+
+interface PageCacheEntry {
+  expiresAt: number;
+  staleExpiresAt: number;
+  value: FlowCatalogPage;
+}
+
+export class FlowCatalogPageCache {
+  readonly #entries = new Map<string, PageCacheEntry>();
+  readonly #loads = new Map<string, Promise<FlowCatalogPage>>();
+  readonly #maxEntries: number;
+  readonly #staleTtlMs: number;
+  readonly #ttlMs: number;
+  readonly #now: () => number;
+
+  constructor(input: {
+    maxEntries?: number;
+    staleTtlMs?: number;
+    ttlMs?: number;
+    now?: () => number;
+  } = {}) {
+    this.#maxEntries = Math.max(1, Math.trunc(input.maxEntries ?? 128));
+    this.#ttlMs = Math.max(1, Math.trunc(input.ttlMs ?? 300_000));
+    this.#staleTtlMs = Math.max(
+      this.#ttlMs,
+      Math.trunc(input.staleTtlMs ?? 1_800_000),
+    );
+    this.#now = input.now ?? Date.now;
+  }
+
+  get size(): number {
+    this.#prune();
+    return this.#entries.size;
+  }
+
+  get(key: string): FlowCatalogPage | undefined {
+    const entry = this.#entries.get(key);
+    if (!entry) return undefined;
+    if (entry.expiresAt <= this.#now()) {
+      return undefined;
+    }
+    this.#touch(key, entry);
+    return entry.value;
+  }
+
+  getStale(key: string): FlowCatalogPage | undefined {
+    const entry = this.#entries.get(key);
+    if (!entry) return undefined;
+    if (entry.staleExpiresAt <= this.#now()) {
+      this.#entries.delete(key);
+      return undefined;
+    }
+    this.#touch(key, entry);
+    return entry.value;
+  }
+
+  load(
+    key: string,
+    loader: () => Promise<FlowCatalogPage>,
+  ): Promise<FlowCatalogPage> {
+    const pending = this.#loads.get(key);
+    if (pending) return pending;
+    const operation = loader()
+      .then((value) => {
+        this.set(key, value);
+        return value;
+      })
+      .finally(() => {
+        this.#loads.delete(key);
+      });
+    this.#loads.set(key, operation);
+    return operation;
+  }
+
+  #touch(key: string, entry: PageCacheEntry): void {
+    this.#entries.delete(key);
+    this.#entries.set(key, entry);
+  }
+
+  set(key: string, value: FlowCatalogPage): void {
+    this.#prune();
+    this.#entries.delete(key);
+    this.#entries.set(key, {
+      expiresAt: this.#now() + this.#ttlMs,
+      staleExpiresAt: this.#now() + this.#staleTtlMs,
+      value,
+    });
+    while (this.#entries.size > this.#maxEntries) {
+      const oldest = this.#entries.keys().next().value;
+      if (oldest === undefined) break;
+      this.#entries.delete(oldest);
+    }
+  }
+
+  #prune(): void {
+    const now = this.#now();
+    for (const [key, entry] of this.#entries) {
+      if (entry.staleExpiresAt <= now) this.#entries.delete(key);
+    }
+  }
+}
+
+export class FlowCatalogFacetCache {
+  readonly #entries = new Map<string, FacetCacheEntry>();
+  readonly #maxEntries: number;
+  readonly #ttlMs: number;
+  readonly #now: () => number;
+
+  constructor(input: {
+    maxEntries?: number;
+    ttlMs?: number;
+    now?: () => number;
+  } = {}) {
+    this.#maxEntries = Math.max(1, Math.trunc(input.maxEntries ?? 128));
+    this.#ttlMs = Math.max(1, Math.trunc(input.ttlMs ?? 300_000));
+    this.#now = input.now ?? Date.now;
+  }
+
+  get size(): number {
+    this.#prune();
+    return this.#entries.size;
+  }
+
+  get(key: string): FacetMetadata | undefined {
+    const entry = this.#entries.get(key);
+    if (!entry) return undefined;
+    if (entry.expiresAt <= this.#now()) {
+      this.#entries.delete(key);
+      return undefined;
+    }
+    this.#entries.delete(key);
+    this.#entries.set(key, entry);
+    return entry.value;
+  }
+
+  set(key: string, value: FacetMetadata): void {
+    this.#prune();
+    this.#entries.delete(key);
+    this.#entries.set(key, {
+      expiresAt: this.#now() + this.#ttlMs,
+      value,
+    });
+    while (this.#entries.size > this.#maxEntries) {
+      const oldest = this.#entries.keys().next().value;
+      if (oldest === undefined) break;
+      this.#entries.delete(oldest);
+    }
+  }
+
+  #prune(): void {
+    const now = this.#now();
+    for (const [key, entry] of this.#entries) {
+      if (entry.expiresAt <= now) this.#entries.delete(key);
+    }
   }
 }
 
 const query: FlowCatalogQuery = (sql, values) =>
   databaseQuery(sql, values ? [...values] : undefined);
-
+const defaultFacetCache = new FlowCatalogFacetCache();
+const defaultPageCache = new FlowCatalogPageCache();
 const FLOW_PREVIEW_LIMIT = 6;
 
 function pageLimit(requested = 80): number {
@@ -42,231 +218,480 @@ function pageLimit(requested = 80): number {
   return Math.min(Math.max(Math.trunc(requested), 1), 100);
 }
 
-function encodeCursor(offset: number): string {
-  return Buffer.from(JSON.stringify({ offset }), "utf8").toString("base64url");
+export function normalizeFlowCatalogText(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase("en-US")
+    .replaceAll("&", " and ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function decodeCursor(cursor?: string): number {
-  if (!cursor) return 0;
-  try {
-    const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as {
-      offset?: unknown;
+function normalizedGroups(values: readonly string[] | undefined): string[] {
+  return [...new Set((values ?? [])
+    .map(normalizeFlowCatalogText)
+    .filter(Boolean))]
+    .sort();
+}
+
+function commonCtes(): string {
+  const parentName = "COALESCE(parent.name, 'Other Flows')";
+  const parentKey = "COALESCE(parent.normalized_name, 'other flows')";
+  const titleKey = "canonical.normalized_name";
+  return `latest AS MATERIALIZED (
+      SELECT DISTINCT ON (av.app_id)
+        av.id AS version_id,
+        av.app_id,
+        av.version_number
+      FROM app_versions av
+      WHERE av.platform = $1
+        AND av.published_at IS NOT NULL
+        AND av.published_at <= $2::timestamptz
+      ORDER BY av.app_id, av.published_at DESC, av.version_number DESC, av.id DESC
+    ), instances AS (
+      SELECT
+        latest.app_id,
+        canonical.id AS flow_id,
+        COALESCE(parent.id, 0)::bigint AS category_id,
+        ${parentName} AS category,
+        ${parentKey} AS category_key,
+        canonical.name AS title,
+        ${titleKey} AS title_key,
+        afv.id AS version_flow_id
+      FROM latest
+      JOIN app_flow_versions afv ON afv.version_id = latest.version_id
+      JOIN app_flow_version_mappings mapping
+        ON mapping.app_flow_version_id = afv.id
+      JOIN flows canonical ON canonical.id = mapping.flow_id
+      LEFT JOIN flows parent ON parent.id = canonical.parent_id
+      WHERE canonical.created_at <= $2::timestamptz
+        AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
+        AND (
+          $3 = ''
+          OR ${titleKey} LIKE '%' || $3 || '%'
+          OR ${parentKey} LIKE '%' || $3 || '%'
+          OR replace(${titleKey}, ' and ', ' ')
+            LIKE '%' || replace($3, ' and ', ' ') || '%'
+          OR replace(${parentKey}, ' and ', ' ')
+            LIKE '%' || replace($3, ' and ', ' ') || '%'
+        )
+    ), grouped_all AS (
+      SELECT
+        flow_id,
+        category_id,
+        category,
+        category_key,
+        title,
+        title_key,
+        COUNT(DISTINCT app_id)::int AS count
+      FROM instances
+      GROUP BY flow_id, category_id, category, category_key, title, title_key
+    ), filtered_items AS (
+      SELECT *
+      FROM grouped_all
+      WHERE NOT $5::boolean OR category_key = ANY($4::text[])
+    )`;
+}
+
+function keyset(
+  sort: FlowCatalogSort,
+  cursor: FlowCatalogCursor | undefined,
+): { sql: string; values: unknown[] } {
+  if (!cursor) return { sql: "", values: [] };
+  const key = cursor.key;
+  if (sort === "popular" && cursor.sort === "popular") {
+    const popularKey = cursor.key;
+    return {
+      sql: `WHERE ROW(
+          ranked.other_rank,
+          ranked.category_rank,
+          -ranked.category_count,
+          ranked.category_sort,
+          ranked.category_id,
+          -ranked.count,
+          ranked.title_sort,
+          ranked.flow_id
+        ) > ROW(
+          $7::int, $8::int, -$9::int, $10::text,
+          $11::bigint, -$12::int, $13::text, $14::bigint
+        )`,
+      values: [
+        popularKey.other,
+        popularKey.categoryRank,
+        popularKey.categoryCount,
+        popularKey.category,
+        popularKey.categoryId,
+        popularKey.count,
+        popularKey.title,
+        popularKey.flowId,
+      ],
     };
-    if (!Number.isInteger(parsed.offset) || Number(parsed.offset) < 0) {
-      throw new FlowCatalogCursorError();
-    }
-    return Number(parsed.offset);
-  } catch (error) {
-    if (error instanceof FlowCatalogCursorError) throw error;
-    throw new FlowCatalogCursorError();
   }
+  return {
+    sql: `WHERE ROW(
+        ranked.other_rank,
+        -ranked.category_count,
+        ranked.category_sort,
+        ranked.category_id,
+        -ranked.count,
+        ranked.title_sort,
+        ranked.flow_id
+      ) > ROW(
+        $7::int, -$8::int, $9::text,
+        $10::bigint, -$11::int, $12::text, $13::bigint
+      )`,
+    values: [
+      key.other,
+      key.categoryCount,
+      key.category,
+      key.categoryId,
+      key.count,
+      key.title,
+      key.flowId,
+    ],
+  };
 }
 
-export async function publishedFlowCatalogPage(
-  input: {
+function pageSql(sort: FlowCatalogSort, after: string): string {
+  const order = sort === "popular"
+    ? `ranked.other_rank,
+       ranked.category_rank,
+       ranked.category_count DESC,
+       ranked.category_sort,
+       ranked.category_id,
+       ranked.count DESC,
+       ranked.title_sort,
+       ranked.flow_id`
+    : `ranked.other_rank,
+       ranked.category_count DESC,
+       ranked.category_sort,
+       ranked.category_id,
+       ranked.count DESC,
+       ranked.title_sort,
+       ranked.flow_id`;
+  return `WITH ${commonCtes()},
+    ranked AS (
+      SELECT
+        filtered_items.*,
+        left(category_key, 120) AS category_sort,
+        left(title_key, 120) AS title_sort,
+        CASE WHEN category = 'Other Flows' THEN 1 ELSE 0 END::int AS other_rank,
+        (SUM(count) OVER (PARTITION BY category_id, category_key))::int AS category_count,
+        (SELECT COUNT(*)::int FROM filtered_items) AS page_total,
+        (ROW_NUMBER() OVER (
+          PARTITION BY category_id, category_key
+          ORDER BY count DESC, left(title_key, 120), flow_id
+        ))::int AS category_rank
+      FROM filtered_items
+    ), paged AS (
+      SELECT *
+      FROM ranked
+      ${after}
+      ORDER BY ${order}
+      LIMIT $6
+    ), representatives AS (
+      SELECT DISTINCT ON (instances.flow_id)
+        instances.flow_id,
+        latest.version_id,
+        latest.version_number,
+        a.name AS app,
+        COALESCE(a.display_name, initcap(replace(a.name, '-', ' '))) AS app_name,
+        a.icon_url AS app_icon_url,
+        afv.id AS version_flow_id,
+        afv.source_flow_id,
+        afv.description,
+        afv.tags,
+        afv.steps
+      FROM instances
+      JOIN paged ON paged.flow_id = instances.flow_id
+      JOIN latest ON latest.app_id = instances.app_id
+      JOIN apps a ON a.id = instances.app_id
+      JOIN app_flow_versions afv
+        ON afv.id = instances.version_flow_id
+       AND afv.version_id = latest.version_id
+      ORDER BY
+        instances.flow_id,
+        (
+          SELECT COUNT(*)
+          FROM jsonb_array_elements(afv.steps) AS step(value)
+          WHERE jsonb_array_length(COALESCE(step.value->'evidence', '[]'::jsonb)) > 0
+        ) DESC,
+        jsonb_array_length(afv.steps) DESC,
+        lower(a.name),
+        afv.id
+    )
+    SELECT
+      paged.flow_id,
+      paged.category_id,
+      paged.category,
+      paged.category_key,
+      paged.category_sort,
+      paged.title,
+      paged.title_key,
+      paged.title_sort,
+      paged.count,
+      paged.category_count,
+      paged.category_rank,
+      paged.other_rank,
+      paged.page_total,
+      representatives.version_id,
+      representatives.version_number,
+      representatives.app,
+      representatives.app_name,
+      representatives.app_icon_url,
+      representatives.version_flow_id,
+      representatives.source_flow_id,
+      representatives.description,
+      representatives.tags,
+      representatives.steps
+    FROM paged
+    JOIN representatives ON representatives.flow_id = paged.flow_id
+    ORDER BY ${order.replaceAll("ranked.", "paged.")}`;
+}
+
+const metadataSql = `WITH ${commonCtes()},
+  facet_items AS (
+    SELECT category, category_key, COUNT(*)::int AS count
+    FROM grouped_all
+    GROUP BY category, category_key
+  )
+  SELECT
+    (SELECT COUNT(*)::int FROM filtered_items) AS total_count,
+    COALESCE((
+      SELECT jsonb_agg(
+        jsonb_build_object(
+          'group', 'flowGroups',
+          'value', category,
+          'count', count
+        )
+        ORDER BY
+          CASE WHEN category = 'Other Flows' THEN 1 ELSE 0 END,
+          count DESC,
+          category_key
+      )
+      FROM facet_items
+    ), '[]'::jsonb) AS facets`;
+
+function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCatalogItem {
+  const appId = String(row.app);
+  const versionId = Number(row.version_id);
+  const version = Number(row.version_number);
+  const versionFlowId = Number(row.version_flow_id);
+  const rawSteps = Array.isArray(row.steps) ? row.steps : [];
+  const observedSteps = rawSteps.filter((step) =>
+    step
+    && typeof step === "object"
+    && Array.isArray((step as { evidence?: unknown }).evidence)
+    && (step as { evidence: unknown[] }).evidence.length > 0
+  );
+  const steps = observedSteps.slice(0, FLOW_PREVIEW_LIMIT).map((step, index) => {
+    const label = typeof (step as { label?: unknown }).label === "string"
+      ? String((step as { label: string }).label)
+      : `Step ${index + 1}`;
+    const mediaUrl = `/api/catalog/flow-media/${encodeURIComponent(appId)}/${platform}/${versionId}/${versionFlowId}/${index + 1}`;
+    return {
+      label,
+      evidence: [{
+        imageId: index + 1,
+        imageUrl: `${mediaUrl}?variant=full`,
+        thumbnailUrl: `${mediaUrl}?variant=thumb`,
+        description: label,
+      }],
+    };
+  });
+  return {
+    category: String(row.category),
+    title: String(row.title),
+    count: Number(row.count),
+    preview: {
+      appId,
+      appName: String(row.app_name),
+      appIconUrl: typeof row.app_icon_url === "string" ? row.app_icon_url : null,
+      version,
+      sourceFlowId: String(row.source_flow_id),
+      screenCount: observedSteps.length,
+      flow: {
+        id: `${appId}:${versionFlowId}`,
+        title: String(row.title),
+        category: String(row.category),
+        description: typeof row.description === "string" ? row.description : "",
+        tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
+        steps,
+      },
+    },
+  };
+}
+
+function cursorFromRow(
+  row: Record<string, unknown>,
+  base: {
+    sort: FlowCatalogSort;
     platform: Platform;
-    query?: string;
-    cursor?: string;
-    limit?: number;
-    order?: "grouped" | "browse";
+    snapshotAt: string;
+    identity: string;
   },
+): FlowCatalogCursor {
+  const key = {
+    other: Number(row.other_rank) as 0 | 1,
+    categoryCount: Number(row.category_count),
+    category: String(row.category_sort),
+    categoryId: String(row.category_id),
+    count: Number(row.count),
+    title: String(row.title_sort),
+    flowId: String(row.flow_id),
+  };
+  return base.sort === "popular"
+    ? { v: 1, ...base, sort: "popular", key: { ...key, categoryRank: Number(row.category_rank) } }
+    : { v: 1, ...base, sort: "grouped", key };
+}
+
+interface PublishedFlowCatalogPageInput {
+  platform: Platform;
+  query?: string;
+  cursor?: string;
+  limit?: number;
+  sort?: FlowCatalogSort;
+  flowGroups?: readonly string[];
+  cursorSecret: string;
+  facetCache?: FlowCatalogFacetCache;
+  includeFacets?: boolean;
+  pageCache?: FlowCatalogPageCache;
+  now?: () => Date;
+}
+
+function pageCacheKey(input: PublishedFlowCatalogPageInput): string {
+  const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
+  const flowGroups = normalizedGroups(input.flowGroups);
+  const identity = flowCatalogQueryIdentity({ query: search, flowGroups });
+  return [
+    flowCatalogQueryIdentity({ query: input.cursorSecret }),
+    input.platform,
+    input.sort ?? "popular",
+    String(pageLimit(input.limit)),
+    identity,
+    input.includeFacets === false ? "summary" : "full",
+  ].join("\0");
+}
+
+async function loadPublishedFlowCatalogPage(
+  input: PublishedFlowCatalogPageInput,
   runQuery: FlowCatalogQuery = query,
 ): Promise<FlowCatalogPage> {
   const limit = pageLimit(input.limit);
-  const offset = decodeCursor(input.cursor);
-  const search = input.query?.trim().slice(0, 120) ?? "";
-  const result = await runQuery(
-     `WITH latest AS MATERIALIZED (
-       SELECT DISTINCT ON (av.app_id)
-         av.id AS version_id,
-         av.app_id,
-         av.version_number
-       FROM app_versions av
-       WHERE av.status = 'published'
-         AND av.platform = $1
-       ORDER BY av.app_id, av.version_number DESC
-     ), instances AS MATERIALIZED (
-       SELECT
-         latest.app_id,
-         latest.version_id,
-         a.name AS app,
-         COALESCE(a.display_name, initcap(replace(a.name, '-', ' '))) AS app_name,
-         a.icon_url AS app_icon_url,
-         COALESCE(parent.name, 'Other Flows') AS category,
-         canonical.name AS title,
-         afv.id AS version_flow_id,
-         afv.source_flow_id,
-         afv.description,
-         afv.tags,
-         afv.steps
-       FROM latest
-       JOIN apps a ON a.id = latest.app_id
-       JOIN app_flow_versions afv ON afv.version_id = latest.version_id
-       JOIN app_flow_version_mappings mapping
-         ON mapping.app_flow_version_id = afv.id
-       JOIN flows canonical ON canonical.id = mapping.flow_id
-       LEFT JOIN flows parent ON parent.id = canonical.parent_id
-       WHERE (
-         $2 = ''
-         OR canonical.normalized_name LIKE '%' || lower($2) || '%'
-         OR lower(COALESCE(parent.name, 'Other Flows')) LIKE '%' || lower($2) || '%'
-       )
-     ), matches AS MATERIALIZED (
-       SELECT DISTINCT app_id, category, title
-       FROM instances
-     ), by_category AS (
-       SELECT
-         category,
-       title,
-       COUNT(*)::int AS count
-       FROM matches
-       GROUP BY category, title
-     ), totals AS (
-       SELECT title, COUNT(DISTINCT app_id)::int AS count
-       FROM matches
-       GROUP BY title
-     ), grouped AS (
-       SELECT
-         (
-           ARRAY_AGG(
-             by_category.category
-             ORDER BY
-               CASE WHEN by_category.category = 'Other Flows' THEN 1 ELSE 0 END,
-               by_category.count DESC,
-               lower(by_category.category)
-           )
-         )[1] AS category,
-         totals.title,
-         totals.count
-       FROM by_category
-       JOIN totals ON totals.title = by_category.title
-       GROUP BY totals.title, totals.count
-     ), ranked AS (
-       SELECT
-         category,
-         title,
-         count,
-         SUM(count) OVER (PARTITION BY category) AS category_count,
-         ROW_NUMBER() OVER (
-           PARTITION BY category
-           ORDER BY count DESC, lower(title)
-         ) AS category_rank
-       FROM grouped
-     ), paged AS (
-       SELECT
-         ranked.*,
-         ROW_NUMBER() OVER (
-           ORDER BY
-             CASE WHEN ranked.category = 'Other Flows' THEN 1 ELSE 0 END,
-             CASE WHEN $5 = 'browse' THEN ranked.category_rank ELSE 0 END,
-             ranked.category_count DESC,
-             lower(ranked.category),
-             ranked.count DESC,
-             lower(ranked.title)
-         ) AS page_order
-       FROM ranked
-       ORDER BY
-         CASE WHEN ranked.category = 'Other Flows' THEN 1 ELSE 0 END,
-         CASE WHEN $5 = 'browse' THEN ranked.category_rank ELSE 0 END,
-         ranked.category_count DESC,
-         lower(ranked.category),
-         ranked.count DESC,
-         lower(ranked.title)
-       OFFSET $3
-       LIMIT $4
-     ), representatives AS (
-       SELECT DISTINCT ON (instances.title)
-         instances.title,
-         instances.version_id,
-         instances.app,
-         instances.app_name,
-         instances.app_icon_url,
-         instances.version_flow_id,
-         instances.source_flow_id,
-         instances.description,
-         instances.tags,
-         instances.steps
-       FROM instances
-       JOIN paged
-         ON paged.title = instances.title
-        AND paged.category = instances.category
-       ORDER BY
-         instances.title,
-         (
-           SELECT COUNT(*)
-           FROM jsonb_array_elements(instances.steps) AS step(value)
-           WHERE jsonb_array_length(COALESCE(step.value->'evidence', '[]'::jsonb)) > 0
-         ) DESC,
-         jsonb_array_length(instances.steps) DESC,
-         lower(instances.app)
-     )
-     SELECT
-       paged.category,
-       paged.title,
-       paged.count,
-       representatives.version_id,
-       representatives.app,
-       representatives.app_name,
-       representatives.app_icon_url,
-       representatives.version_flow_id,
-       representatives.source_flow_id,
-       representatives.description,
-       representatives.tags,
-       representatives.steps
-     FROM paged
-     JOIN representatives ON representatives.title = paged.title
-     ORDER BY paged.page_order`,
-    [input.platform, search, offset, limit + 1, input.order === "browse" ? "browse" : "grouped"],
-  );
-  const rows = result.rows.map((row) => {
-    const appId = String(row.app);
-    const versionId = Number(row.version_id);
-    const versionFlowId = Number(row.version_flow_id);
-    const rawSteps = Array.isArray(row.steps) ? row.steps : [];
-    const observedSteps = rawSteps.filter((step) =>
-      step
-      && typeof step === "object"
-      && Array.isArray((step as { evidence?: unknown }).evidence)
-      && (step as { evidence: unknown[] }).evidence.length > 0
-    );
-    const steps = observedSteps.slice(0, FLOW_PREVIEW_LIMIT).map((step, index) => {
-      const label = typeof (step as { label?: unknown }).label === "string"
-        ? String((step as { label: string }).label)
-        : `Step ${index + 1}`;
-      const mediaUrl = `/api/catalog/flow-media/${encodeURIComponent(appId)}/${input.platform}/${versionId}/${versionFlowId}/${index + 1}`;
-      return {
-        label,
-        evidence: [{
-          imageId: index + 1,
-          imageUrl: mediaUrl,
-          thumbnailUrl: mediaUrl,
-          description: label,
-        }],
-      };
-    });
-    return {
-      category: String(row.category),
-      title: String(row.title),
-      count: Number(row.count),
-      preview: {
-        appId,
-        appName: String(row.app_name),
-        appIconUrl: typeof row.app_icon_url === "string" ? row.app_icon_url : null,
-        screenCount: observedSteps.length,
-        flow: {
-          id: `${appId}:${versionFlowId}`,
-          title: String(row.title),
-          category: String(row.category),
-          description: typeof row.description === "string" ? row.description : "",
-          tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
-          steps,
-        },
-      },
-    };
-  });
+  const sort = input.sort ?? "popular";
+  const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
+  const flowGroups = normalizedGroups(input.flowGroups);
+  const identity = flowCatalogQueryIdentity({ query: search, flowGroups });
+  const cursor = input.cursor
+    ? decodeFlowCatalogCursor(input.cursor, {
+        sort,
+        platform: input.platform,
+        identity,
+      }, input.cursorSecret)
+    : undefined;
+  const snapshotAt = cursor?.snapshotAt
+    ?? (input.now ?? (() => new Date()))().toISOString();
+  const after = keyset(sort, cursor);
+  const values = [
+    input.platform,
+    snapshotAt,
+    search,
+    flowGroups,
+    flowGroups.length > 0,
+    limit + 1,
+    ...after.values,
+  ];
+  const cache = input.facetCache
+    ?? (runQuery === query ? defaultFacetCache : new FlowCatalogFacetCache());
+  const cacheKey = `${input.platform}\0${sort}\0${identity}`;
+  let metadata = input.includeFacets === false ? undefined : cache.get(cacheKey);
+  const pageResultPromise = runQuery(pageSql(sort, after.sql), values);
+  const metadataResultPromise = input.includeFacets === false || metadata
+    ? null
+    : runQuery(metadataSql, values.slice(0, 5));
+  const [result, metadataResult] = await Promise.all([
+    pageResultPromise,
+    metadataResultPromise,
+  ]);
+  const rows = result.rows as Record<string, unknown>[];
   const hasMore = rows.length > limit;
-  return {
-    items: rows.slice(0, limit),
-    nextCursor: hasMore ? encodeCursor(offset + limit) : null,
+  const visibleRows = rows.slice(0, limit);
+
+  if (!metadata && metadataResult) {
+    const metadataRow = metadataResult.rows[0] as Record<string, unknown> | undefined;
+    metadata = {
+      totalCount: Number(metadataRow?.total_count ?? 0),
+      facets: Array.isArray(metadataRow?.facets)
+        ? metadataRow.facets.map((facet) => ({
+            group: String((facet as Record<string, unknown>).group),
+            value: String((facet as Record<string, unknown>).value),
+            count: Number((facet as Record<string, unknown>).count),
+          }))
+        : [],
+    };
+    cache.set(cacheKey, metadata);
+  }
+  if (input.includeFacets === false) {
+    const facets = new Map<string, DiscoveryFacet>();
+    for (const row of visibleRows) {
+      const value = String(row.category);
+      if (!facets.has(value)) {
+        facets.set(value, {
+          group: "flowGroups",
+          value,
+          count: Number(row.category_count ?? 0),
+        });
+      }
+    }
+    metadata = {
+      totalCount: Number(rows[0]?.page_total ?? 0),
+      facets: [...facets.values()],
+    };
+  }
+  metadata ??= { totalCount: 0, facets: [] };
+
+  const page = {
+    items: visibleRows.map((row) => itemFromRow(row, input.platform)),
+    nextCursor: hasMore && visibleRows.length > 0
+      ? encodeFlowCatalogCursor(cursorFromRow(visibleRows.at(-1)!, {
+          sort,
+          platform: input.platform,
+          snapshotAt,
+          identity,
+        }), input.cursorSecret)
+      : null,
+    totalCount: metadata.totalCount,
+    facets: metadata.facets,
   };
+  return page;
+}
+
+export async function publishedFlowCatalogPage(
+  input: PublishedFlowCatalogPageInput,
+  runQuery: FlowCatalogQuery = query,
+): Promise<FlowCatalogPage> {
+  if (input.cursor) {
+    return loadPublishedFlowCatalogPage(input, runQuery);
+  }
+  const pageCache = input.pageCache
+    ?? (runQuery === query ? defaultPageCache : undefined);
+  if (!pageCache) {
+    return loadPublishedFlowCatalogPage(input, runQuery);
+  }
+  const key = pageCacheKey(input);
+  const fresh = pageCache.get(key);
+  if (fresh) return fresh;
+  const stale = pageCache.getStale(key);
+  if (stale) {
+    void pageCache.load(
+      key,
+      () => loadPublishedFlowCatalogPage(input, runQuery),
+    ).catch(() => undefined);
+    return stale;
+  }
+  return pageCache.load(
+    key,
+    () => loadPublishedFlowCatalogPage(input, runQuery),
+  );
 }

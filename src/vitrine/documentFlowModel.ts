@@ -24,7 +24,7 @@ export interface DocumentFlowScenario {
 
 export interface DocumentFlowRequirementCard {
   id: string;
-  priority: 'must' | 'should' | 'could' | 'later';
+  priority: 'must' | 'should' | 'could' | 'later' | 'unranked';
   kind: FeatureClaimKind;
   text: string;
   userStory: string;
@@ -43,6 +43,9 @@ export interface DocumentFlowPresentation {
     acceptanceCriteriaCount: number;
     supportedRequirementCount: number;
     openQuestionCount: number;
+    captureType?: NonNullable<FeatureDocumentRevisionView['content']['sourceAssessment']>['captureType'];
+    completeness?: NonNullable<FeatureDocumentRevisionView['content']['sourceAssessment']>['completeness'];
+    captureRationale?: string;
   };
   requirements: DocumentFlowRequirementCard[];
   openQuestions: FeatureClaim[];
@@ -138,6 +141,13 @@ export function buildDocumentFlowPresentation(
         ({ evidence }) => evidence.length > 0,
       ).length,
       openQuestionCount: openQuestions.length,
+      ...(content.sourceAssessment
+        ? {
+            captureType: content.sourceAssessment.captureType,
+            completeness: content.sourceAssessment.completeness,
+            captureRationale: content.sourceAssessment.rationale,
+          }
+        : {}),
     },
     requirements,
     openQuestions,

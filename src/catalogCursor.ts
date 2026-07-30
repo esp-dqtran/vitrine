@@ -6,6 +6,25 @@ export interface UpdatedCatalogCursor {
   appId: number;
 }
 
+export type CatalogSort = "latest" | "trending";
+
+export type CatalogCursor =
+  | {
+      v: 2;
+      sort: "latest";
+      snapshotAt: string;
+      updatedAt: string;
+      appId: number;
+    }
+  | {
+      v: 2;
+      sort: "trending";
+      snapshotAt: string;
+      updatedAt: string;
+      totalScreens: number;
+      appId: number;
+    };
+
 export class CatalogCursorError extends RangeError {
   constructor(message = "invalid catalog cursor") {
     super(message);
@@ -50,4 +69,54 @@ export function decodeUpdatedCatalogCursor(value: string): UpdatedCatalogCursor 
     throw new CatalogCursorError();
   }
   return item as unknown as UpdatedCatalogCursor;
+}
+
+export function encodeCatalogCursor(cursor: CatalogCursor): string {
+  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+}
+
+export function decodeCatalogCursor(
+  value: string,
+  expectedSort: CatalogSort,
+): CatalogCursor {
+  let legacy: UpdatedCatalogCursor | undefined;
+  try {
+    legacy = decodeUpdatedCatalogCursor(value);
+  } catch {
+    // Continue with the v2 parser.
+  }
+  if (legacy) {
+    if (expectedSort !== "latest") throw new CatalogCursorError();
+    return {
+      v: 2,
+      sort: "latest",
+      snapshotAt: legacy.snapshotAt,
+      updatedAt: legacy.updatedAt,
+      appId: legacy.appId,
+    };
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new CatalogCursorError();
+  const bytes = Buffer.from(value, "base64url");
+  if (bytes.toString("base64url") !== value) throw new CatalogCursorError();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(bytes.toString("utf8"));
+  } catch {
+    throw new CatalogCursorError();
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new CatalogCursorError();
+  }
+  const item = parsed as Record<string, unknown>;
+  const validBase = item.v === 2
+    && item.sort === expectedSort
+    && (item.sort === "latest" || item.sort === "trending")
+    && canonicalIso(item.snapshotAt)
+    && canonicalIso(item.updatedAt)
+    && Number.isSafeInteger(item.appId)
+    && Number(item.appId) > 0;
+  const validMetric = item.sort !== "trending"
+    || (Number.isSafeInteger(item.totalScreens) && Number(item.totalScreens) >= 0);
+  if (!validBase || !validMetric) throw new CatalogCursorError();
+  return item as unknown as CatalogCursor;
 }

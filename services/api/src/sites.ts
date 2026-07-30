@@ -1,9 +1,16 @@
 import type express from "express";
 import type { ObjectMetadata } from "../../../src/objectStore.ts";
 import type { SiteVersionDetail, SitesStore } from "../../../src/sitesStore.ts";
+import { SitesCursorError } from "../../../src/sitesCursor.ts";
+import type { DiscoveryFilter } from "../../../src/vitrine/discoveryTypes.ts";
+import { searchDiscoveryFacets } from "../../../src/discoveryFacetSearch.ts";
 
 export interface SitesRouteDependencies {
-  store: Pick<SitesStore, "listReadySites" | "readyVersionDetail" | "siteMediaObject">;
+  store: Pick<
+    SitesStore,
+    "listReadySites" | "listReadySitesPage" | "readyVersionDetail" | "siteMediaObject"
+  >;
+  cursorSecret: string;
   sendObject(metadata: ObjectMetadata, res: express.Response): Promise<void>;
 }
 
@@ -11,7 +18,7 @@ export function mountSitesRoutes(
   app: express.Express,
   dependencies: SitesRouteDependencies,
 ): void {
-  mountReadySitesList(app, dependencies, false);
+  mountLegacyReadySitesList(app, dependencies);
   mountPrivateSitesRoutes(app, dependencies);
 }
 
@@ -19,7 +26,7 @@ export function mountPublicSitesRoutes(
   app: express.Express,
   dependencies: SitesRouteDependencies,
 ): void {
-  mountReadySitesList(app, dependencies, true);
+  mountPublicReadySitesList(app, dependencies);
 
   app.get(
     "/sites/:siteId/versions/:versionId/catalog-media/preview",
@@ -210,17 +217,88 @@ function textRecord(
   return Object.keys(result).length ? result : undefined;
 }
 
-function mountReadySitesList(
+function mountPublicReadySitesList(
   app: express.Express,
   dependencies: SitesRouteDependencies,
-  publicCatalogMedia: boolean,
+): void {
+  app.get("/sites", async (req, res) => {
+    const request = canonicalSitesPageRequest(req.query);
+    if (!request) {
+      res.status(400).json({ error: "invalid Sites discovery query" });
+      return;
+    }
+    try {
+      const page = await dependencies.store.listReadySitesPage({
+        ...request,
+        cursorSecret: dependencies.cursorSecret,
+      });
+      const items = withRouteSlugs(page.items).map(publicSiteSummary);
+      res.setHeader(
+        "Cache-Control",
+        req.query.refresh === "1"
+          ? "no-store"
+          : "public, max-age=60, stale-while-revalidate=240",
+      );
+      res.json({
+        items,
+        nextCursor: page.nextCursor,
+        totalCount: page.totalCount,
+        facets: page.facets,
+      });
+    } catch (error) {
+      if (error instanceof SitesCursorError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  app.get("/sites/facets", async (req, res) => {
+    const request = canonicalSitesPageRequest({
+      ...req.query,
+      facets: undefined,
+      cursor: undefined,
+      limit: "1",
+      refresh: undefined,
+    });
+    const group = typeof req.query.group === "string" ? req.query.group : "";
+    const facetQuery = typeof req.query.facet_query === "string"
+      && req.query.facet_query.length <= 120
+      ? req.query.facet_query.trim()
+      : req.query.facet_query === undefined
+        ? ""
+        : null;
+    const selected = queryTextValues(req.query.selected);
+    if (!request || !SITE_FILTER_GROUPS.has(group) || facetQuery === null || selected === null) {
+      res.status(400).json({ error: "invalid Sites facet query" });
+      return;
+    }
+    const page = await dependencies.store.listReadySitesPage({
+      ...request,
+      includeFacets: true,
+      cursorSecret: dependencies.cursorSecret,
+    });
+    res.setHeader("Cache-Control", "public, max-age=280");
+    res.json({
+      facets: searchDiscoveryFacets(page.facets, {
+        group,
+        ...(facetQuery ? { query: facetQuery } : {}),
+        selected,
+      }),
+    });
+  });
+}
+
+function mountLegacyReadySitesList(
+  app: express.Express,
+  dependencies: SitesRouteDependencies,
 ): void {
   app.get("/sites", async (req, res) => {
     const sites = withRouteSlugs(await dependencies.store.listReadySites());
-    const summaries = publicCatalogMedia ? sites.map(publicSiteSummary) : sites;
     const requestedPage = req.query.limit !== undefined || req.query.offset !== undefined;
     if (!requestedPage) {
-      res.json(summaries);
+      res.json(sites);
       return;
     }
     const limit = boundedQueryInteger(req.query.limit, 1, 48);
@@ -229,14 +307,99 @@ function mountReadySitesList(
       res.status(400).json({ error: "invalid Site catalog page" });
       return;
     }
-    const nextOffset = offset + limit < summaries.length ? offset + limit : null;
-    res.setHeader("Cache-Control", "public, max-age=60");
+    const nextOffset = offset + limit < sites.length ? offset + limit : null;
     res.json({
-      sites: summaries.slice(offset, offset + limit),
+      sites: sites.slice(offset, offset + limit),
       nextOffset,
-      total: summaries.length,
+      total: sites.length,
     });
   });
+}
+
+const SITE_FILTER_GROUPS = new Set(["categories", "sections", "styles"]);
+
+function canonicalSitesPageRequest(query: express.Request["query"]): {
+  cursor?: string;
+  limit?: number;
+  platform: "web";
+  sort: "latest" | "popular";
+  query?: string;
+  filters: DiscoveryFilter[];
+  includeFacets?: false;
+} | null {
+  if (query.offset !== undefined) return null;
+  const cursor = query.cursor === undefined
+    ? undefined
+    : typeof query.cursor === "string"
+      && query.cursor.length > 0
+      && query.cursor.length <= 2_048
+      ? query.cursor
+      : null;
+  const limit = query.limit === undefined
+    ? undefined
+    : boundedQueryInteger(query.limit, 1, 48);
+  const platform = query.platform === undefined ? "web" : query.platform;
+  const sort = query.sort === undefined ? "latest" : query.sort;
+  const search = query.query === undefined
+    ? undefined
+    : typeof query.query === "string" && query.query.length <= 120
+      ? query.query.trim() || undefined
+      : null;
+  const filters = siteFilters(query.filter);
+  const validRefresh = query.refresh === undefined || query.refresh === "1";
+  const includeFacets = query.facets !== "summary";
+  if (cursor === null
+    || (query.limit !== undefined && limit === undefined)
+    || platform !== "web"
+    || (sort !== "latest" && sort !== "popular")
+    || search === null
+    || filters === null
+    || (query.facets !== undefined && query.facets !== "summary")
+    || !validRefresh) {
+    return null;
+  }
+  return {
+    ...(cursor ? { cursor } : {}),
+    ...(limit ? { limit } : {}),
+    platform,
+    sort,
+    ...(search ? { query: search } : {}),
+    filters,
+    ...(includeFacets ? {} : { includeFacets: false as const }),
+  };
+}
+
+function siteFilters(value: unknown): DiscoveryFilter[] | null {
+  const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  if (tokens.length > 40) return null;
+  const filters: DiscoveryFilter[] = [];
+  for (const token of tokens) {
+    if (typeof token !== "string") return null;
+    const separator = token.indexOf(".");
+    const group = token.slice(0, separator).trim();
+    const filterValue = token.slice(separator + 1).trim();
+    if (separator < 1
+      || !SITE_FILTER_GROUPS.has(group)
+      || !filterValue
+      || filterValue.length > 120) {
+      return null;
+    }
+    filters.push({ group, value: filterValue });
+  }
+  return filters;
+}
+
+function queryTextValues(value: unknown): string[] | null {
+  const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  if (tokens.length > 40) return null;
+  const values: string[] = [];
+  for (const token of tokens) {
+    if (typeof token !== "string") return null;
+    const trimmed = token.trim();
+    if (!trimmed || trimmed.length > 120) return null;
+    values.push(trimmed);
+  }
+  return values;
 }
 
 type ReadySite = Awaited<ReturnType<SitesStore["listReadySites"]>>[number];

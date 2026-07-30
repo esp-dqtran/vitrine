@@ -415,6 +415,7 @@ test("Flow catalog preview resolves ordered evidence from one published Flow", a
       versionId: 7,
       versionFlowId: 71,
       rank: 2,
+      variant: "full",
     },
     async (nextSql, nextValues) => {
       sql = nextSql;
@@ -435,7 +436,7 @@ test("Flow catalog preview resolves ordered evidence from one published Flow", a
   assert.match(sql, /av\.status = 'published'/);
   assert.match(sql, /afv\.id = \$4/);
   assert.match(sql, /version_images vi/);
-  assert.match(sql, /COALESCE\(i\.thumbnail_object_key, i\.object_key\)/);
+  assert.match(sql, /so\.object_key = i\.object_key/);
 });
 
 test("Flow catalog preview rejects ranks outside one to six without querying", async () => {

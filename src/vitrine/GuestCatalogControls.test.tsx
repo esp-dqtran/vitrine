@@ -14,6 +14,8 @@ test('renders labelled public catalog authentication actions', async () => {
   assert.equal((html.match(/<button /g) ?? []).length, 1);
   assert.match(html, />Login</);
   assert.match(html, /data-variant="primary"/);
+  assert.match(html, /data-size="md"/);
+  assert.match(html, /guest-catalog-controls__login/);
   assert.doesNotMatch(html, /Log in|Get started/);
   assert.doesNotMatch(html, /Account|Collections|Settings|Log out/);
 });

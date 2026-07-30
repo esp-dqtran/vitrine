@@ -23,5 +23,6 @@ test('renders calm App detail loading beneath the persistent navigation', () => 
   assert.doesNotMatch(html, /Skeleton|reference-detail__hero|reference-detail__tabs/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
   assert.doesNotMatch(html, /Import App/);
+  assert.match(source, /ReferenceDetailNavigation/);
   assert.doesNotMatch(source, /Skeleton|loadingTabs|ReferenceDetailShell/);
 });

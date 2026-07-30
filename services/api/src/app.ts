@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -41,6 +42,7 @@ import {
   listPublishedFlowSets,
   appMetadata,
   appEvidencePage,
+  appUiElementSummary,
   appKnowledgeEvidenceSource,
   getVersionFlows,
   flowEvidenceImages,
@@ -72,12 +74,15 @@ import { readProgress, requestCancel, subscribeProgress } from "../../../src/pro
 import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
 import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
-import { publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
+import { adminCatalogPage, publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import {
-  parsePublicCatalogFacet,
   parsePublicFacet,
+  type PublicCatalogFacetInput,
+  type PublicFacetGroup,
 } from "../../../src/publicFacetPreview.ts";
+import type { DiscoveryFilter } from "../../../src/vitrine/discoveryTypes.ts";
+import { searchDiscoveryFacets } from "../../../src/discoveryFacetSearch.ts";
 import { publishedFacetPreviews } from "../../../src/publicFacetPreviewStore.ts";
 import {
   FlowCatalogCursorError,
@@ -153,6 +158,7 @@ import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestio
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
+import { kiroCliFeatureDocumentProviderModelFromEnvironment } from "../../../src/kiroCliFeatureDocumentProvider.ts";
 import { getImportedCurrentDesignSystem } from "../../../src/getdesignImportStore.ts";
 import {
   mountFeatureDocumentRoutes,
@@ -332,6 +338,7 @@ const defaults = {
   query,
   allImages,
   adminAppPage,
+  adminCatalogPage,
   createJob,
   listJobs,
   getJob,
@@ -369,6 +376,7 @@ const defaults = {
   listPublishedFlowSets,
   appMetadata,
   appEvidencePage,
+  appUiElementSummary,
   getVersionFlows,
   flowEvidenceImages,
   createExport,
@@ -466,8 +474,8 @@ const defaults = {
   sitesStore: apiSitesStore,
   publicPageStore: apiPublicPageStore,
   featureDocumentStore: createFeatureDocumentStore(),
-  featureDocumentProviderModel: process.env.RESEARCH_LLM_MODEL?.trim() ?? "",
-  featureDocumentPromptVersion: 2,
+  featureDocumentProviderModel: kiroCliFeatureDocumentProviderModelFromEnvironment(process.env),
+  featureDocumentPromptVersion: 6,
   acquireFeatureDocumentNotificationClient: async () => pool.connect() as unknown as FeatureDocumentNotificationClient,
   appKnowledgeStore: createAppKnowledgeStore(),
   appKnowledgeProviderModel: appKnowledgeProviderModelFromEnvironment(),
@@ -535,6 +543,85 @@ function optionalQuery(value: unknown): string | undefined {
 
 function platformQuery(value: unknown): Platform | undefined {
   return typeof value === "string" && isPlatform(value) ? value : undefined;
+}
+
+const catalogFilterGroups = new Set<PublicFacetGroup>([
+  "categories",
+  "screens",
+  "elements",
+  "flows",
+]);
+
+function catalogFacetMedia(input: {
+  group?: unknown;
+  value?: unknown;
+  platform?: unknown;
+}): PublicCatalogFacetInput | null {
+  const staticFacet = parsePublicFacet(input);
+  if (staticFacet) return staticFacet;
+  if (
+    (input.group !== "screens" && input.group !== "elements")
+    || typeof input.value !== "string"
+    || typeof input.platform !== "string"
+    || !isPlatform(input.platform)
+  ) {
+    return null;
+  }
+  const value = input.value.trim();
+  if (!value || value.length > 120) return null;
+  return { group: input.group, value, platform: input.platform };
+}
+
+function catalogFilters(value: unknown): DiscoveryFilter[] | null {
+  const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  if (tokens.length > 40) return null;
+  const filters: DiscoveryFilter[] = [];
+  for (const raw of tokens) {
+    if (typeof raw !== "string") return null;
+    const separator = raw.indexOf(".");
+    if (separator < 1) return null;
+    const group = raw.slice(0, separator).trim();
+    const filterValue = raw.slice(separator + 1).trim();
+    if (!catalogFilterGroups.has(group as PublicFacetGroup)
+      || !filterValue
+      || filterValue.length > 120) {
+      return null;
+    }
+    filters.push({ group, value: filterValue });
+  }
+  return filters;
+}
+
+function flowCatalogFilters(value: unknown): string[] | null {
+  const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  if (tokens.length > 40) return null;
+  const values: string[] = [];
+  for (const raw of tokens) {
+    if (typeof raw !== "string" || !raw.startsWith("flowGroups.")) return null;
+    const filterValue = raw.slice("flowGroups.".length).trim();
+    if (!filterValue || filterValue.length > 120) return null;
+    values.push(filterValue);
+  }
+  return values;
+}
+
+function facetSearchValues(value: unknown, maximumItems = 40): string[] | null {
+  const tokens = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  if (tokens.length > maximumItems) return null;
+  const values: string[] = [];
+  for (const token of tokens) {
+    if (typeof token !== "string") return null;
+    const trimmed = token.trim();
+    if (!trimmed || trimmed.length > 120) return null;
+    values.push(trimmed);
+  }
+  return values;
+}
+
+function facetSearchText(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.length > 120) return null;
+  return value.trim();
 }
 
 function positiveId(value: string): number | undefined {
@@ -709,6 +796,7 @@ async function sendStoredObject(
   store: ObjectStore,
   metadata: ObjectMetadata,
   res: express.Response,
+  forceBody = false,
 ): Promise<void> {
   res.setHeader("Content-Type", metadata.contentType);
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -716,7 +804,9 @@ async function sendStoredObject(
   // limit, not just a default) — matching it here lets the redirect itself be cached for
   // nearly that long. Content is immutable per hash, so repeat views/reloads within the
   // window reuse the cached redirect instead of re-signing and re-fetching from scratch.
-  const signed = metadata.accessClass === "internal" ? undefined : await store.signedGetUrl(metadata.key, 300);
+  const signed = forceBody || metadata.accessClass === "internal"
+    ? undefined
+    : await store.signedGetUrl(metadata.key, 300);
   if (signed) {
     res.setHeader("Cache-Control", "private, max-age=280");
     res.status(302).setHeader("Location", signed).end();
@@ -776,6 +866,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     proposeRepair,
   });
   const app = express();
+  app.use(compression());
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
   const mediaLimiter = createFixedWindowLimiter({ limit: deps.mediaRateLimit, windowMs: 10 * 60_000 });
   const traversalLimiter = createDistinctValueLimiter({ limit: deps.appTraversalLimit, windowMs: 10 * 60_000 });
@@ -915,28 +1006,60 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/catalog", async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const hasFacet = req.query.group !== undefined
-      || req.query.value !== undefined
-      || req.query.platform !== undefined;
-    const facet = hasFacet
-      ? parsePublicCatalogFacet({
-          group: req.query.group,
-          value: req.query.value,
-          platform: req.query.platform,
-        })
-      : null;
-    if (hasFacet && !facet) {
+    const platform = req.query.platform === undefined
+      ? undefined
+      : platformQuery(req.query.platform);
+    const search = req.query.query === undefined
+      ? undefined
+      : typeof req.query.query === "string" && req.query.query.length <= 120
+        ? req.query.query.trim() || undefined
+        : null;
+    const sort = req.query.sort === undefined ? "latest" : req.query.sort;
+    const includeFacets = req.query.facets !== "summary";
+    const hasCanonicalFilters = req.query.filter !== undefined;
+    let filters = hasCanonicalFilters ? catalogFilters(req.query.filter) : [];
+    const hasLegacyFacet = !hasCanonicalFilters
+      && (req.query.group !== undefined || req.query.value !== undefined);
+    if (hasLegacyFacet) {
+      const legacy = catalogFilters(
+        typeof req.query.group === "string" && typeof req.query.value === "string"
+          ? `${req.query.group}.${req.query.value}`
+          : null,
+      );
+      filters = legacy;
+    }
+    const invalidLegacyFacet = hasLegacyFacet
+      && (filters === null || platform === undefined);
+    if (invalidLegacyFacet) {
       res.status(400).json({ error: "invalid catalog facet" });
+      return;
+    }
+    if (platform === undefined && req.query.platform !== undefined
+      || search === null
+      || (sort !== "latest" && sort !== "trending")
+      || (req.query.facets !== undefined && req.query.facets !== "summary")
+      || filters === null) {
+      res.status(400).json({ error: "invalid catalog query" });
       return;
     }
     try {
       const page = await deps.publishedCatalogPage({
         cursor,
         limit,
-        ...(facet ? { facet } : {}),
+        filters,
+        ...(includeFacets ? {} : { includeFacets: false }),
+        ...(platform ? { platform } : {}),
+        ...(search ? { query: search } : {}),
+        sort,
       });
       res.setHeader("Cache-Control", "private, max-age=280");
-      res.json(buildPublishedCatalogPage(page));
+      const catalog = buildPublishedCatalogPage(page);
+      res.json({
+        items: catalog.apps,
+        nextCursor: page.nextCursor,
+        totalCount: page.totalCount ?? catalog.apps.length,
+        facets: page.facets ?? [],
+      });
     } catch (error) {
       if (error instanceof CatalogCursorError) {
         res.status(400).json({ error: error.message });
@@ -944,6 +1067,44 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
       throw error;
     }
+  });
+
+  app.get("/catalog/facets", async (req, res) => {
+    const platform = req.query.platform === undefined
+      ? undefined
+      : platformQuery(req.query.platform);
+    const group = typeof req.query.group === "string" ? req.query.group : "";
+    const search = facetSearchText(req.query.query);
+    const facetQuery = facetSearchText(req.query.facet_query);
+    const filters = catalogFilters(req.query.filter);
+    const selected = facetSearchValues(req.query.selected);
+    if (
+      (platform === undefined && req.query.platform !== undefined)
+      || !catalogFilterGroups.has(group as PublicFacetGroup)
+      || search === null
+      || facetQuery === null
+      || filters === null
+      || selected === null
+    ) {
+      res.status(400).json({ error: "invalid catalog facet query" });
+      return;
+    }
+    const page = await deps.publishedCatalogPage({
+      limit: 1,
+      filters,
+      facetGroups: [group as PublicFacetGroup],
+      includeFacets: true,
+      ...(platform ? { platform } : {}),
+      ...(search ? { query: search } : {}),
+    });
+    res.setHeader("Cache-Control", "private, max-age=280");
+    res.json({
+      facets: searchDiscoveryFacets(page.facets ?? [], {
+        group,
+        ...(facetQuery ? { query: facetQuery } : {}),
+        selected,
+      }),
+    });
   });
 
   app.get("/catalog/stats", async (_req, res) => {
@@ -958,13 +1119,44 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   app.get("/catalog/flows", async (req, res) => {
     const platform = platformQuery(req.query.platform);
-    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
-    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const search = typeof req.query.query === "string" ? req.query.query : undefined;
-    const view = typeof req.query.view === "string" ? req.query.view : undefined;
+    const cursor = req.query.cursor === undefined
+      ? undefined
+      : typeof req.query.cursor === "string"
+        ? req.query.cursor
+        : null;
+    const limit = req.query.limit === undefined
+      ? undefined
+      : typeof req.query.limit === "string" && /^[1-9]\d*$/.test(req.query.limit)
+        ? Number(req.query.limit)
+        : null;
+    const search = req.query.query === undefined
+      ? undefined
+      : typeof req.query.query === "string"
+        ? req.query.query.trim()
+        : null;
+    const requestedSort = req.query.sort;
+    const legacyView = req.query.view;
+    const flowGroups = flowCatalogFilters(req.query.filter);
+    const sort = requestedSort === undefined
+      ? legacyView === "grouped"
+        ? "grouped"
+        : "popular"
+      : requestedSort;
+    const includeFacets = req.query.facets !== "summary";
     if (!platform
+      || cursor === null
+      || (cursor !== undefined && cursor.length > 2_048)
+      || limit === null
+      || (limit !== undefined && limit > 100)
+      || search === null
       || (search !== undefined && search.length > 120)
-      || (view !== undefined && view !== "browse")) {
+      || flowGroups === null
+      || (req.query.facets !== undefined && req.query.facets !== "summary")
+      || (sort !== "popular" && sort !== "grouped")
+      || (legacyView !== undefined
+        && (typeof legacyView !== "string"
+          || (legacyView !== "browse" && legacyView !== "grouped")))
+      || (requestedSort !== undefined && legacyView !== undefined)) {
       res.status(400).json({ error: "invalid Flow catalog query" });
       return;
     }
@@ -973,11 +1165,19 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         platform,
         cursor,
         limit,
-        query: search,
-        order: view === "browse" ? "browse" : "grouped",
+        ...(includeFacets ? {} : { includeFacets: false }),
+        ...(search ? { query: search } : {}),
+        sort,
+        flowGroups,
+        cursorSecret: deps.mediaSigningSecret,
       });
       res.setHeader("Cache-Control", "public, max-age=300");
-      res.json(page);
+      res.json({
+        items: page.items,
+        nextCursor: page.nextCursor,
+        totalCount: page.totalCount,
+        facets: page.facets,
+      });
     } catch (error) {
       if (error instanceof FlowCatalogCursorError) {
         res.status(400).json({ error: error.message });
@@ -987,11 +1187,44 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.get("/catalog/flow-groups", async (req, res) => {
+    const platform = platformQuery(req.query.platform);
+    const search = facetSearchText(req.query.query);
+    const facetQuery = facetSearchText(req.query.facet_query);
+    const flowGroups = flowCatalogFilters(req.query.filter);
+    const selected = facetSearchValues(req.query.selected);
+    if (!platform
+      || search === null
+      || facetQuery === null
+      || flowGroups === null
+      || selected === null) {
+      res.status(400).json({ error: "invalid Flow facet query" });
+      return;
+    }
+    const page = await deps.publishedFlowCatalogPage({
+      platform,
+      limit: 1,
+      ...(search ? { query: search } : {}),
+      flowGroups,
+      includeFacets: true,
+      cursorSecret: deps.mediaSigningSecret,
+    });
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.json({
+      facets: searchDiscoveryFacets(page.facets, {
+        group: "flowGroups",
+        ...(facetQuery ? { query: facetQuery } : {}),
+        selected,
+      }),
+    });
+  });
+
   app.get("/catalog/flow-media/:app/:platform/:versionId/:versionFlowId/:rank", async (req, res) => {
     const platform = platformQuery(req.params.platform);
     const versionId = positiveId(req.params.versionId);
     const versionFlowId = positiveId(req.params.versionFlowId);
     const rank = Number(req.params.rank);
+    const variant = req.query.variant === "thumb" ? "thumb" : "full";
     if (
       !isAppSlug(req.params.app)
       || !platform
@@ -1014,6 +1247,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       versionId,
       versionFlowId,
       rank,
+      variant,
     });
     if (!metadata) {
       res.status(404).json({ error: "Flow catalog preview not found" });
@@ -1061,7 +1295,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   });
 
   app.get("/catalog/facet-media/:app/:group/:value/:platform/:rank", async (req, res) => {
-    const facet = parsePublicFacet({
+    const facet = catalogFacetMedia({
       group: req.params.group,
       value: req.params.value,
       platform: req.params.platform,
@@ -1132,6 +1366,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
 
   const sitesRouteDependencies = {
     store: deps.sitesStore,
+    cursorSecret: deps.mediaSigningSecret,
     sendObject: async (metadata: ObjectMetadata, res: express.Response) => {
       if (!deps.objectStore) throw new Error("Object storage is unavailable");
       await sendStoredObject(deps.objectStore, metadata, res);
@@ -1189,6 +1424,44 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
     next();
   };
+
+  app.get("/admin/catalog/facets", requireAdmin, async (req, res) => {
+    const platform = req.query.platform === undefined
+      ? undefined
+      : platformQuery(req.query.platform);
+    const group = typeof req.query.group === "string" ? req.query.group : "";
+    const search = facetSearchText(req.query.query);
+    const facetQuery = facetSearchText(req.query.facet_query);
+    const filters = catalogFilters(req.query.filter);
+    const selected = facetSearchValues(req.query.selected);
+    if (
+      (platform === undefined && req.query.platform !== undefined)
+      || !catalogFilterGroups.has(group as PublicFacetGroup)
+      || search === null
+      || facetQuery === null
+      || filters === null
+      || selected === null
+    ) {
+      res.status(400).json({ error: "invalid admin catalog facet query" });
+      return;
+    }
+    const page = await deps.adminCatalogPage({
+      limit: 1,
+      filters,
+      facetGroups: [group as PublicFacetGroup],
+      includeFacets: true,
+      ...(platform ? { platform } : {}),
+      ...(search ? { query: search } : {}),
+    });
+    res.setHeader("Cache-Control", "private, max-age=280");
+    res.json({
+      facets: searchDiscoveryFacets(page.facets ?? [], {
+        group,
+        ...(facetQuery ? { query: facetQuery } : {}),
+        selected,
+      }),
+    });
+  });
 
   const sendCategoryError = (res: express.Response, error: unknown): void => {
     if (error instanceof CategoryValidationError) {
@@ -2675,6 +2948,45 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
+  app.get("/apps/:app/ui-element-summary", async (req, res) => {
+    if (!await authorizeAppDetail(req, res)) return;
+    if (Object.keys(req.query).some((key) => !["platform", "version", "limit"].includes(key))) {
+      res.status(400).json({ error: "invalid UI element summary query" });
+      return;
+    }
+    const section = await resolveAppSection(req, res);
+    if (!section) return;
+    const limit = req.query.limit === undefined ? 12 : Number(req.query.limit);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      res.status(400).json({ error: "invalid summary limit" });
+      return;
+    }
+    const summary = await deps.appUiElementSummary({
+      app: req.params.app,
+      platform: section.platform,
+      versionNumber: section.version?.version_number,
+      publishedOnly: section.publishedOnly,
+      limit,
+    });
+    await recordAppDetailSuccess(req, res);
+    res.json({
+      ...summary,
+      items: summary.items.map((item) => ({
+        type: item.component_type,
+        group: item.component_group,
+        count: item.occurrence_count,
+        imageId: item.image_id,
+        imageUrl: publicImageUrl(req.params.app, item.image_url),
+        thumbnailUrl: publicImageUrl(req.params.app, item.image_url, "thumb"),
+        description: item.description,
+        purpose: item.purpose,
+        visibleStates: item.visible_states,
+      })),
+      platform: section.platform,
+      version: section.version ?? null,
+    });
+  });
+
   app.get("/apps/:app/flows", async (req, res) => {
     if (!await authorizeAppDetail(req, res)) return;
     if (Object.keys(req.query).some((key) => !["platform", "version"].includes(key))) {
@@ -2754,7 +3066,58 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/apps", requireAdmin, async (req, res) => {
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+    const discovery = req.query.platform !== undefined
+      || req.query.query !== undefined
+      || req.query.sort !== undefined
+      || req.query.facets !== undefined
+      || req.query.filter !== undefined;
     try {
+      if (discovery) {
+        const platform = req.query.platform === undefined
+          ? undefined
+          : platformQuery(req.query.platform);
+        const search = req.query.query === undefined
+          ? undefined
+          : typeof req.query.query === "string" && req.query.query.length <= 120
+            ? req.query.query.trim() || undefined
+            : null;
+        const sort = req.query.sort === undefined ? "latest" : req.query.sort;
+        const includeFacets = req.query.facets !== "summary";
+        const filters = req.query.filter === undefined
+          ? []
+          : catalogFilters(req.query.filter);
+        if (platform === undefined && req.query.platform !== undefined
+          || search === null
+          || (sort !== "latest" && sort !== "trending")
+          || (req.query.facets !== undefined && req.query.facets !== "summary")
+          || filters === null) {
+          res.status(400).json({ error: "invalid admin Apps discovery query" });
+          return;
+        }
+        const page = await deps.adminCatalogPage({
+          cursor,
+          limit,
+          filters,
+          ...(includeFacets ? {} : { includeFacets: false }),
+          ...(platform ? { platform } : {}),
+          ...(search ? { query: search } : {}),
+          sort,
+        });
+        const catalog = buildPublishedCatalogPage(page);
+        res.json({
+          apps: catalog.apps.map(({ previewScreens, ...app }) => ({
+            ...app,
+            screens: previewScreens.filter(
+              (screen): screen is typeof screen & { url: string } =>
+                typeof screen.url === "string",
+            ),
+          })),
+          nextCursor: page.nextCursor,
+          total: page.totalCount ?? catalog.apps.length,
+          facets: page.facets ?? [],
+        });
+        return;
+      }
       const page = await deps.adminAppPage({ cursor, limit });
       res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor, total: page.total });
     } catch (error) {
@@ -3163,7 +3526,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: ref, variant });
       if (metadata) {
         try {
-          await sendStoredObject(deps.objectStore, metadata, res);
+          await sendStoredObject(
+            deps.objectStore,
+            metadata,
+            res,
+            req.query.delivery === "inline",
+          );
         } catch {
           res.status(503).json({ error: "media storage unavailable" });
         }

@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ResearchProjectsView } from "./components/ResearchProjectsPage.tsx";
+import {
+  sortProjects,
+  ResearchProjectsView,
+} from "./components/ResearchProjectsPage.tsx";
 import { DecisionCanvas, type DecisionCanvasActions } from "./components/DecisionCanvas.tsx";
 import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import { EvidenceDrawer } from "./components/EvidenceDrawer.tsx";
@@ -11,15 +14,17 @@ import { ProjectInsightsPanel, type ProjectInsightsActions } from "./components/
 const actions = {
   open: () => {},
   create: async () => {},
+  rename: async () => {},
+  setPinned: async () => {},
   duplicate: async () => {},
   remove: async () => {},
 };
 
-test("renders empty and populated project states", () => {
+test("renders a personal projects workspace without project status", () => {
   const empty = renderToStaticMarkup(
     <ResearchProjectsView projects={[]} loading={false} error="" actions={actions} />,
   );
-  assert.match(empty, /No research projects yet/);
+  assert.match(empty, /Create your first project/);
 
   const populated = renderToStaticMarkup(<ResearchProjectsView
     projects={[{
@@ -27,6 +32,8 @@ test("renders empty and populated project states", () => {
       title: "SSO onboarding",
       question: "How should SSO be introduced?",
       platformFilter: "web",
+      pinned: true,
+      revision: 3,
       evidenceCount: 6,
       synthesisState: "stale",
       updatedAt: "2026-07-17T00:00:00.000Z",
@@ -36,8 +43,40 @@ test("renders empty and populated project states", () => {
     actions={actions}
   />);
   assert.match(populated, /SSO onboarding/);
-  assert.match(populated, /6 evidence/);
-  assert.match(populated, /Synthesis stale/);
+  assert.match(populated, /Pinned/);
+  assert.match(populated, /Rename/);
+  assert.match(populated, /data-app-discovery-card="true"/);
+  assert.match(populated, /aria-label="Sort: Last updated"/);
+  assert.doesNotMatch(populated, /Filter projects/);
+  assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
+});
+
+test("sorts projects without mutating the source list", () => {
+  const projects = [{
+    id: 1,
+    title: "Wallet",
+    question: "Payment flow",
+    platformFilter: "all" as const,
+    pinned: false,
+    revision: 1,
+    evidenceCount: 0,
+    synthesisState: "none" as const,
+    updatedAt: "2026-07-01T00:00:00.000Z",
+  }, {
+    id: 2,
+    title: "Accounts",
+    question: "",
+    platformFilter: "all" as const,
+    pinned: true,
+    revision: 2,
+    evidenceCount: 0,
+    synthesisState: "none" as const,
+    updatedAt: "2026-07-20T00:00:00.000Z",
+  }];
+
+  assert.deepEqual(sortProjects(projects, "updated").map(({ id }) => id), [2, 1]);
+  assert.deepEqual(sortProjects(projects, "name").map(({ id }) => id), [2, 1]);
+  assert.deepEqual(projects.map(({ id }) => id), [1, 2]);
 });
 
 const workspaceFixture = (): ResearchProjectWorkspace => ({
@@ -45,6 +84,7 @@ const workspaceFixture = (): ResearchProjectWorkspace => ({
   title: "SSO",
   question: "How should SSO work?",
   platformFilter: "web",
+  pinned: false,
   constraints: "",
   decision: "",
   rationale: "",

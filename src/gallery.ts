@@ -29,6 +29,12 @@ export interface CatalogScreen {
   capturedAt: string | null;
   stateContext: string | null;
   confidence: number | null;
+  matchedFacets?: Array<{ group: string; value: string }>;
+  sourceScreen?: {
+    id: number;
+    url: string;
+    thumbnailUrl: string;
+  };
 }
 
 export interface CatalogApp {
@@ -37,6 +43,7 @@ export interface CatalogApp {
   categories: Category[];
   accent: string;
   totalScreens: number;
+  analyzedScreens?: number;
   platforms: string[];
   lastCapturedAt?: string | null;
   previewScreens: CatalogScreen[];
@@ -105,7 +112,20 @@ function screen(
   imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
 ): CatalogScreen {
   const hash = bulkImageHash(image.image_url);
-  const previewUrl = hash ? `/api/preview-media/${app}/${previewRank}` : null;
+  const exactFacet = image.matched_facets?.find(({ group }) =>
+    group === "screens" || group === "elements");
+  const exactPreviewUrl = exactFacet
+    ? [
+        "/api/catalog/facet-media",
+        encodeURIComponent(app),
+        encodeURIComponent(exactFacet.group),
+        encodeURIComponent(exactFacet.value),
+        encodeURIComponent(image.platform),
+        "1",
+      ].join("/")
+    : null;
+  const previewUrl = exactPreviewUrl
+    ?? (hash ? `/api/preview-media/${app}/${previewRank}` : null);
   return {
     id: image.id,
     type: image.analysis?.pageType ?? "Unclassified",
@@ -121,6 +141,18 @@ function screen(
     capturedAt: image.captured_at ?? null,
     stateContext: image.state_context ?? null,
     confidence: image.analysis?.confidence ?? null,
+    ...(image.matched_facets?.length
+      ? { matchedFacets: image.matched_facets }
+      : {}),
+    ...(image.source_screen_id && image.source_screen_image_url
+      ? {
+          sourceScreen: {
+            id: image.source_screen_id,
+            url: imageUrl(app, image.source_screen_image_url),
+            thumbnailUrl: imageUrl(app, image.source_screen_image_url, "thumb"),
+          },
+        }
+      : {}),
     url: previewRank && previewUrl ? `${previewUrl}?variant=full` : imageUrl(app, image.image_url),
     thumbnailUrl: previewRank ? previewUrl : imageUrl(app, image.image_url, "thumb"),
   };
@@ -228,6 +260,9 @@ export function buildPublishedCatalogPage(
         categories: row.categories,
         accent: row.accent_color ?? meta.accent,
         totalScreens: row.total_screens,
+        ...(row.analyzed_screens === undefined
+          ? {}
+          : { analyzedScreens: row.analyzed_screens }),
         platforms: row.available_platforms,
         lastCapturedAt: row.last_captured_at,
         previewScreens: (previewsByApp.get(row.app) ?? [])

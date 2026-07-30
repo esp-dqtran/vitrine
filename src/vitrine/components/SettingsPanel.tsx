@@ -9,8 +9,10 @@ import {
   loadReferralSummary,
   type ReferralSummaryView,
 } from '../referralApi';
+import { copyShareLink } from '../screenActions.ts';
 import { useThemeMode, type ThemeMode } from '../theme';
-import { useSlidePanel } from '../useSlidePanel';
+import { AstryxModal } from './AstryxModal.tsx';
+import { CopyButton } from './CopyButton.tsx';
 
 interface SettingsPanelProps {
   user: AuthUser;
@@ -82,7 +84,7 @@ export function ReferralSettings({
   summary: ReferralSummaryView;
   currentPro: boolean;
   activationExpiresAt: string;
-  onCopy: () => void;
+  onCopy: () => Promise<void>;
   onActivate: () => void;
   busy?: boolean;
   error?: string;
@@ -101,7 +103,14 @@ export function ReferralSettings({
       </div>
       {summary.campaign.active && (
         <div style={{ marginTop: 12 }}>
-          <Button label="Copy referral link" size="sm" variant="secondary" isDisabled={busy} clickAction={onCopy} />
+          <CopyButton
+            label="Copy referral link"
+            successMessage="Referral link copied"
+            size="sm"
+            variant="secondary"
+            isDisabled={busy}
+            action={onCopy}
+          />
         </div>
       )}
       <div style={{ marginTop: 14, display: 'grid', gap: 6, fontSize: 12.5 }}>
@@ -131,13 +140,6 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
   const [referralBusy, setReferralBusy] = useState(false);
   const [referralError, setReferralError] = useState('');
   const { mode: themeMode, setMode: setThemeMode } = useThemeMode();
-  const { overlayRef, panelRef } = useSlidePanel();
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
 
   useEffect(() => {
     if (user.role !== 'user') return;
@@ -181,9 +183,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
     setReferralError('');
     try {
       const { url } = await createReferralLink();
-      await navigator.clipboard.writeText(url);
-    } catch (reason) {
-      setReferralError((reason as Error).message);
+      await copyShareLink(url);
     } finally {
       setReferralBusy(false);
     }
@@ -206,8 +206,19 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
   };
 
   return (
-    <div ref={overlayRef} onMouseDown={onClose} style={{ position: 'fixed', inset: 0, zIndex: 44, background: 'var(--color-background-overlay)' }}>
-      <aside ref={panelRef} role="dialog" aria-label="Account settings" onMouseDown={(event) => event.stopPropagation()} style={{ position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 45, width: 'min(420px, 100vw)', overflowY: 'auto', background: 'var(--color-background-surface)', borderLeft: '1px solid var(--color-border)', boxShadow: 'var(--shadow-high)', padding: 22 }}>
+    <AstryxModal
+      isOpen
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      purpose="info"
+      width="min(420px, 100vw)"
+      maxHeight="100vh"
+      position={{ top: 0, right: 0, bottom: 0 }}
+      padding={0}
+      presentation="drawer-right"
+      aria-label="Account settings"
+      className="settings-panel-dialog"
+    >
+      <div style={{ height: '100%', overflowY: 'auto', padding: 22, boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <h2 style={{ flex: 1, margin: 0 }}>Settings</h2>
           <Button label="Close" size="sm" onClick={onClose} />
@@ -226,7 +237,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
             summary={referralSummary}
             currentPro={subscription?.plan === 'pro'}
             activationExpiresAt={activationExpiresAt}
-            onCopy={() => void copyReferralLink()}
+            onCopy={copyReferralLink}
             onActivate={() => void activateReferralMonth()}
             busy={referralBusy}
             error={referralError}
@@ -264,7 +275,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
           {error && <div role="alert" style={{ color: 'var(--color-text-danger)', fontSize: 12, marginTop: 8 }}>{error}</div>}
           {success && <div style={{ color: 'var(--color-text-success)', fontSize: 12, marginTop: 8 }}>Password updated.</div>}
         </section>
-      </aside>
-    </div>
+      </div>
+    </AstryxModal>
   );
 }

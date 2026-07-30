@@ -1,10 +1,9 @@
-import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Button, DropdownMenu, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState, Spinner } from '@astryxdesign/core';
 import { useAuth } from './AuthProvider';
 import { ProgressBanner } from './components/ProgressBanner';
-import { CommandPalette, flowIdFromCatalogResultId } from './components/CommandPalette';
-import { SearchResults } from './components/SearchResults';
+import { CommandPalette } from './components/CommandPalette';
 import { CollectionsPanel } from './components/CollectionsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { UnlockModal } from './components/UnlockModal';
@@ -14,12 +13,26 @@ import { GuestCatalogControls } from './components/GuestCatalogControls.tsx';
 import { LoginDialog } from './components/LoginDialog.tsx';
 import { AppDetailLoadingPage } from './components/AppDetailLoadingPage.tsx';
 import { ApplicationSurface } from './components/ApplicationSurface.tsx';
+import {
+  AstryxDropdown,
+  AstryxDropdownDivider,
+  AstryxDropdownItem,
+} from './components/AstryxDropdown.tsx';
 import { AppsDiscoveryPage } from './components/AppsDiscoveryPage.tsx';
 import { FlowsPage } from './components/FlowsPage.tsx';
+import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
+import { SearchTrigger } from './components/SearchTrigger.tsx';
 import { ScreenDetail } from './components/ScreenDetail';
 import { SitesPage } from './components/SitesPage.tsx';
 import { SiteVersionPage } from './components/SiteVersionPage';
 import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
+import { createAppsDiscoveryAdapter } from './appsDiscoveryAdapter.ts';
+import {
+  createFlowsDiscoveryAdapter,
+  selectedFlowDiscoverySearch,
+} from './flowsDiscoveryAdapter.ts';
+import { createSitesDiscoveryAdapter } from './sitesDiscoveryAdapter.ts';
+import type { DiscoveryFilter } from './discoveryTypes.ts';
 import { useApps } from './useApps';
 import { useAppDetail } from './useAppDetail';
 import { useCollections } from './useCollections';
@@ -42,6 +55,12 @@ export function App() {
   const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
   const route = useRoute();
+  const [flowsDiscoveryAdapter] = useState(() => createFlowsDiscoveryAdapter());
+  const flowDiscoveryState = route.name === 'flows'
+    ? flowsDiscoveryAdapter.parse(
+        typeof window === 'undefined' ? '' : window.location.search,
+      )
+    : null;
   const isAdmin = user?.role === 'admin';
   const [loginOpen, setLoginOpen] = useState(false);
   const [appFacet, setAppFacet] = useState<AppsFacet | null>(null);
@@ -61,6 +80,7 @@ export function App() {
   const { collections, loaded: collectionsLoaded, ensureCollections, setCollections } = useCollections();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [searchSession] = useState(() => createSearchSession({
     ...defaultSearchState,
     query: q,
@@ -77,7 +97,6 @@ export function App() {
   const [entitlementsError, setEntitlementsError] = useState('');
   const [entitlementsRevision, setEntitlementsRevision] = useState(0);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
-  const appsSentinelRef = useRef<HTMLDivElement>(null);
   const researchProjectsEnabled = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
   const advancedSearchEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
@@ -97,17 +116,12 @@ export function App() {
     user?.role !== 'admin' && entitlements?.plan === 'free' && !entitlements.freeUnlocks.includes(appId);
   const detailGateLoading = route.name === 'app' && !entitlementsResolved;
   const detailLocked = route.name === 'app' && isFreeGated(route.appId);
-  const {
-    apps,
-    totalApps,
-    loading: appsLoading,
-    loadingMore,
-    hasMore,
-    error: appsError,
-    loadMoreError,
-    refresh: refreshApps,
-    loadMore,
-  } = useApps(user?.role, route.name === 'apps');
+  // The Apps page owns its catalog request through the discovery controller.
+  // Keep this legacy list lazy and isolated to the legacy command palette.
+  const { apps } = useApps(
+    user?.role,
+    searchSnapshot.open && (!canUseAdvancedSearch || route.name === 'flows'),
+  );
   const { detail, loading: detailLoading, error: detailError } = useAppDetail(
     route.name === 'app' ? route.appId : undefined,
     route.name === 'app' && !detailGateLoading && !entitlementsError && !detailLocked,
@@ -181,17 +195,6 @@ export function App() {
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [advancedSearchEnabled, canUseProResearch, q, filters, searchRetry]);
 
-  useEffect(() => {
-    if (route.name === 'app' || !hasMore || loadingMore) return;
-    const sentinel = appsSentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void loadMore();
-    }, { rootMargin: '900px 0px' });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, loadingMore, route.name]);
-
   const openApp = async (appId: string) => {
     closeDiscoveryOverlays();
     if (isFreeGated(appId)) {
@@ -221,17 +224,45 @@ export function App() {
   }, [route.name, route.name === 'app' ? route.appId : undefined, entitlements]);
   const accountControls = user ? (
     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
-      <DropdownMenu
-        button={{ label: user.email, size: 'sm', variant: 'ghost' }}
-        hasChevron
-        items={[
-          ...(researchProjectsEnabled ? [{ label: 'Research projects', onClick: () => navigate({ name: 'projects' }) }] : []),
-          { label: `Collections${collectionsLoaded && collections.length ? ` (${collections.length})` : ''}`, onClick: () => void openCollections() },
-          { label: 'Settings', onClick: () => setSettingsOpen(true) },
-          { type: 'divider' },
-          { label: 'Log out', onClick: logout },
-        ]}
-      />
+      <AstryxDropdown
+        label={user.email}
+        ariaLabel={`Account menu: ${user.email}`}
+        open={accountMenuOpen}
+        menuWidth={220}
+        onOpenChange={setAccountMenuOpen}
+      >
+        {researchProjectsEnabled ? (
+          <AstryxDropdownItem
+            label="Research projects"
+            onSelect={() => {
+              setAccountMenuOpen(false);
+              navigate({ name: 'projects' });
+            }}
+          />
+        ) : null}
+        <AstryxDropdownItem
+          label={`Collections${collectionsLoaded && collections.length ? ` (${collections.length})` : ''}`}
+          onSelect={() => {
+            setAccountMenuOpen(false);
+            void openCollections();
+          }}
+        />
+        <AstryxDropdownItem
+          label="Settings"
+          onSelect={() => {
+            setAccountMenuOpen(false);
+            setSettingsOpen(true);
+          }}
+        />
+        <AstryxDropdownDivider />
+        <AstryxDropdownItem
+          label="Log out"
+          onSelect={() => {
+            setAccountMenuOpen(false);
+            logout();
+          }}
+        />
+      </AstryxDropdown>
     </div>
   ) : (
     <GuestCatalogControls onLogin={() => setLoginOpen(true)} />
@@ -251,7 +282,7 @@ export function App() {
       {user && collectionsOpen && <CollectionsPanel collections={collections} plan={customerPlan} onUpgrade={openPricing} onChange={setCollections} onClose={() => setCollectionsOpen(false)} onOpenApp={(appId) => void openApp(appId)} />}
       {(settingsOpen || route.name === 'settings-billing') && user && <SettingsPanel user={user} subscription={entitlements} onUpgrade={() => { setSettingsOpen(false); navigate({ name: 'pricing' }); }} onEntitlementsChanged={retryEntitlements} onClose={closeSettings} />}
       {searchSnapshot.open && (
-        canUseAdvancedSearch ? (
+        canUseAdvancedSearch && route.name !== 'flows' ? (
           <QuickSearch
             state={searchSnapshot.state}
             recent={typeof window === 'undefined' ? [] : readRecentSearches(window.localStorage)}
@@ -277,6 +308,13 @@ export function App() {
             collections={paletteCollections}
             plan={palettePlan}
             publicBrowse={isGuest}
+            initialNav={route.name === 'flows' ? 'flows' : undefined}
+            initialFlowQuery={route.name === 'flows'
+              ? flowDiscoveryState?.query ?? ''
+              : undefined}
+            initialPlatform={route.name === 'flows'
+              ? flowDiscoveryState?.platform ?? 'web'
+              : undefined}
             onUpgrade={paletteUpgrade}
             onCollectionsChange={user ? setCollections : () => undefined}
             onQueryChange={setQ}
@@ -297,6 +335,16 @@ export function App() {
               });
             }}
             onSearchFlow={(flowTitle, platform) => {
+              if (route.name === 'flows') {
+                const nextSearch = selectedFlowDiscoverySearch(
+                  window.location.search,
+                  flowTitle,
+                  platform,
+                );
+                closeDiscoveryOverlays();
+                updateLocation(`/flows?${nextSearch}`);
+                return;
+              }
               setQ('');
               setFilters({ kind: 'all' });
               setAppFacet({ group: 'flows', value: flowTitle });
@@ -324,6 +372,41 @@ export function App() {
     </AnimatePresence>
   );
 
+  const discoveryRoute = route.name === 'apps'
+    || route.name === 'sites'
+    || route.name === 'flows'
+    || route.name === 'projects'
+    ? route.name
+    : null;
+  const discoveryLocationSearch = typeof window === 'undefined' ? '' : window.location.search;
+  const appsDiscoveryHeaderState = route.name === 'apps'
+    ? createAppsDiscoveryAdapter({
+        platform: appPlatform,
+        facet: appFacet,
+        source: isAdmin ? 'admin' : 'catalog',
+      }).parse(discoveryLocationSearch)
+    : null;
+  const sitesDiscoveryHeaderState = route.name === 'sites'
+    ? createSitesDiscoveryAdapter({ query: siteQuery }).parse(discoveryLocationSearch)
+    : null;
+  const discoverySearchSeed: Partial<AdvancedSearchFilters> = appsDiscoveryHeaderState
+    ? {
+        platform: [appsDiscoveryHeaderState.platform],
+        ...searchSeedFromDiscoveryFilters(appsDiscoveryHeaderState.filters, {
+          categories: 'appCategory',
+          screens: 'pageType',
+          elements: 'component',
+          flows: 'flow',
+        }),
+      }
+    : sitesDiscoveryHeaderState
+      ? searchSeedFromDiscoveryFilters(sitesDiscoveryHeaderState.filters, {
+          categories: 'appCategory',
+          sections: 'siteSection',
+          styles: 'siteStyle',
+        })
+      : {};
+
   let page: ReactNode;
 
   switch (route.name) {
@@ -342,6 +425,7 @@ export function App() {
           }}
           onSelectApp={(appId) => void openApp(appId)}
           accountControls={accountControls}
+          userRole={isAdmin ? 'admin' : 'user'}
         />
       );
       break;
@@ -469,6 +553,14 @@ export function App() {
                 platform,
                 version,
               })}
+              onEvidenceChange={(evidence, section, platform, version) => navigate({
+                name: 'app',
+                appId: detail.id,
+                section,
+                platform,
+                version,
+                ...(evidence ? { evidence } : {}),
+              })}
               onFlowChange={(flow, step, flowView, platform, version) => navigate({
                 name: 'app',
                 appId: detail.id,
@@ -492,9 +584,7 @@ export function App() {
     case 'apps':
       page = (
         <AppsDiscoveryPage
-          apps={appsLoading ? null : apps}
           isAdmin={isAdmin}
-          query={q}
           facet={appFacet}
           initialPlatform={appPlatform}
           onFacetChange={setAppFacet}
@@ -502,14 +592,6 @@ export function App() {
           searchMode={canUseAdvancedSearch ? 'advanced' : 'legacy'}
           activeFilterCount={activeFilterCount(searchSnapshot.state.filters)}
           onOpenApp={(appId) => void openApp(appId)}
-          onRetry={() => void refreshApps()}
-          totalApps={totalApps}
-          error={appsError}
-          loadMoreError={loadMoreError}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
-          onRetryLoadMore={() => void loadMore()}
-          sentinelRef={appsSentinelRef}
           accountControls={accountControls}
           beforeGrid={(
             <>
@@ -517,24 +599,6 @@ export function App() {
               {searchError
                 ? <div role="alert" className="apps-discovery__search-error">{searchError}</div>
                 : null}
-              {q.trim() && searchResult ? (
-                <SearchResults
-                  result={searchResult}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  onOpen={(appId, resultId) => {
-                    const flow = flowIdFromCatalogResultId(appId, resultId);
-                    if (flow) {
-                      closeDiscoveryOverlays();
-                      navigate({ name: 'app', appId, section: 'flows', flow });
-                      return;
-                    }
-                    void openApp(appId);
-                  }}
-                  collections={collections}
-                  onCollectionsChange={setCollections}
-                />
-              ) : null}
             </>
           )}
         />
@@ -575,9 +639,51 @@ export function App() {
     </>
   );
 
+  const pageWithPersistentDiscoveryHeader = discoveryRoute ? (
+    <div data-persistent-discovery-frame="true" style={{ display: 'contents' }}>
+      <ReferenceDiscoveryTopNav
+        active={discoveryRoute}
+        className="apps-top-nav"
+        search={(
+          <SearchTrigger
+            label={discoveryRoute === 'apps'
+              ? 'Search Apps…'
+              : discoveryRoute === 'projects'
+                ? 'Search references…'
+                : 'Search on Web...'}
+            activeCategory={discoveryRoute === 'flows'
+              ? flowDiscoveryState?.query || null
+              : null}
+            onOpen={() => void openPalette(
+              discoveryRoute === 'sites' ? 'sites' : 'apps',
+              discoverySearchSeed,
+            )}
+            onClearCategory={() => {
+              if (discoveryRoute !== 'flows' || !flowDiscoveryState) return;
+              updateLocation(`/flows?${flowsDiscoveryAdapter.serialize({
+                ...flowDiscoveryState,
+                query: '',
+              })}`);
+            }}
+            mode={discoveryRoute === 'flows' || !canUseAdvancedSearch ? 'legacy' : 'advanced'}
+            activeFilterCount={discoveryRoute === 'flows'
+              ? 0
+              : activeFilterCount(searchSnapshot.state.filters)}
+          />
+        )}
+        accountControls={accountControls}
+      />
+      {page}
+    </div>
+  ) : page;
+
   return (
     <ApplicationSurface
-      page={<Suspense fallback={<ApplicationPageSpinner />}>{page}</Suspense>}
+      page={(
+        <Suspense fallback={<ApplicationPageSpinner />}>
+          {pageWithPersistentDiscoveryHeader}
+        </Suspense>
+      )}
       overlays={discoveryOverlays}
       dialogs={dialogs}
     />
@@ -621,4 +727,20 @@ function ApplicationStatusPage({
 
 function assertNeverRoute(value: never): never {
   throw new Error(`Unhandled application route: ${JSON.stringify(value)}`);
+}
+
+function searchSeedFromDiscoveryFilters(
+  filters: readonly DiscoveryFilter[],
+  groups: Record<string, keyof AdvancedSearchFilters>,
+): Partial<AdvancedSearchFilters> {
+  const seed: Partial<AdvancedSearchFilters> = {};
+  for (const [group, target] of Object.entries(groups)) {
+    const values = filters
+      .filter((filter) => filter.group === group)
+      .map(({ value }) => value);
+    if (values.length > 0) {
+      Object.assign(seed, { [target]: values });
+    }
+  }
+  return seed;
 }

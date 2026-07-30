@@ -1,12 +1,13 @@
 import { ToggleButton } from '@astryxdesign/core';
 import { navigate } from '../router.ts';
 
-export type ReferenceType = 'apps' | 'sites' | 'flows';
+export type ReferenceType = 'apps' | 'sites' | 'flows' | 'projects';
 
 interface ReferenceTypeTabsProps {
   active: ReferenceType;
   onChange?: (value: ReferenceType) => void;
   className?: string;
+  values?: readonly ReferenceType[];
 }
 
 export function ReferenceTypeTabs({
@@ -16,9 +17,12 @@ export function ReferenceTypeTabs({
       ? { name: 'apps' }
       : value === 'sites'
         ? { name: 'sites' }
-        : { name: 'flows' },
+        : value === 'flows'
+          ? { name: 'flows' }
+          : { name: 'projects' },
   ),
   className,
+  values = ['apps', 'sites', 'flows'],
 }: ReferenceTypeTabsProps) {
   return (
     <div
@@ -27,10 +31,14 @@ export function ReferenceTypeTabs({
       className={className}
       style={className ? undefined : { display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 0 14px' }}
     >
-      {(['apps', 'sites', 'flows'] as const).map((value) => (
+      {values.map((value) => (
         <ToggleButton
           key={value}
-          label={value === 'apps' ? 'Apps' : value === 'sites' ? 'Sites' : 'Flows'}
+          label={value === 'apps'
+            ? 'Apps'
+            : value === 'sites'
+              ? 'Sites'
+              : value === 'flows' ? 'Flows' : 'Projects'}
           isPressed={active === value}
           onPressedChange={() => onChange(value)}
           role="tab"

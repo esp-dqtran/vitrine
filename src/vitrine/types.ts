@@ -20,6 +20,12 @@ export interface Screen {
   capturedAt?: string | null;
   stateContext?: string | null;
   confidence?: number | null;
+  matchedFacets?: Array<{ group: string; value: string }>;
+  sourceScreen?: {
+    id: number;
+    url: string;
+    thumbnailUrl: string;
+  };
 }
 
 export interface Category {

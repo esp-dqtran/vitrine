@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pg from "pg";
-import sharp, { type OverlayOptions } from "sharp";
 import {
   ChatRateLimitError,
   startChatPool,
@@ -32,6 +31,17 @@ import {
   flowRunConfig,
   type FlowAnalysisProvider,
 } from "./runner-config.ts";
+import {
+  createContactSheets,
+  type ContactSheet,
+  type FlowEvidenceItem,
+} from "./contact-sheets.ts";
+import {
+  loadAppResearchKnowledge,
+  researchContextForFlow,
+  researchPromptBlock,
+  type AppResearchKnowledge,
+} from "./research-knowledge.ts";
 
 type Platform = "android" | "ios" | "web";
 
@@ -129,6 +139,8 @@ const MARKDOWN_DIR = join(ROOT, "markdown");
 const RAW_DIR = join(ROOT, "raw");
 const PROGRESS_PATH = join(ROOT, "progress.json");
 const LOG_PATH = join(ROOT, "run.log");
+const RESEARCH_KNOWLEDGE_PATH = process.env.FLOW_RESEARCH_KNOWLEDGE_PATH?.trim()
+  || join(process.cwd(), "research", "app-knowledge", `${APP}.json`);
 const FLOW_LIMIT = Number(process.env.FLOW_LIMIT ?? "0");
 const PLATFORM = process.env.PLATFORM?.trim() as Platform | undefined;
 const FLOW_TITLE = process.env.FLOW_TITLE?.trim();
@@ -206,15 +218,8 @@ async function atomicJson(path: string, value: unknown): Promise<void> {
   await rename(temporary, path);
 }
 
-function allEvidence(record: FlowRecord): Array<{
-  imageId: number;
-  evidenceId: string;
-  stepIndex: number;
-  imageIndex: number;
-  stepLabel: string;
-  interaction?: string;
-}> {
-  const result: ReturnType<typeof allEvidence> = [];
+function allEvidence(record: FlowRecord): FlowEvidenceItem[] {
+  const result: FlowEvidenceItem[] = [];
   let ordinal = 0;
   for (const [stepIndex, step] of record.flow.steps.entries()) {
     for (const [imageIndex, imageId] of step.evidence.entries()) {
@@ -283,71 +288,42 @@ async function loadImages(client: pg.Client, records: FlowRecord[]): Promise<Map
   }]));
 }
 
-function sheetLayout(platform: Platform): { cellWidth: number; cellHeight: number; columns: number; gap: number } {
-  return platform === "web"
-    ? { cellWidth: 480, cellHeight: 300, columns: 3, gap: 12 }
-    : { cellWidth: 280, cellHeight: 560, columns: 5, gap: 12 };
+function mappedEvidence(sheets: ContactSheet[]): Array<FlowEvidenceItem & {
+  sheetNumber: number;
+  attachmentName: string;
+  row: number;
+  column: number;
+}> {
+  return sheets.flatMap((sheet) => sheet.evidence.map((item, index) => ({
+    ...item,
+    sheetNumber: sheet.sheetNumber,
+    attachmentName: sheet.path.split("/").at(-1)!,
+    row: Math.floor(index / sheet.columns) + 1,
+    column: (index % sheet.columns) + 1,
+  })));
 }
 
-async function contactSheet(
+function prompt(
   record: FlowRecord,
-  images: Map<number, ImageRecord>,
-  store: ObjectStore,
-): Promise<{ path: string; buffer: Buffer; evidence: ReturnType<typeof allEvidence> }> {
-  const evidence = allEvidence(record);
-  const outputPath = join(CONTACT_SHEETS, `${identity(record)}.jpg`);
-  try {
-    return { path: outputPath, buffer: await readFile(outputPath), evidence };
-  } catch {}
-
-  const layout = sheetLayout(record.platform);
-  const rows = Math.ceil(evidence.length / layout.columns);
-  const width = layout.columns * layout.cellWidth + (layout.columns - 1) * layout.gap;
-  const height = rows * layout.cellHeight + Math.max(0, rows - 1) * layout.gap;
-  const composites: OverlayOptions[] = [];
-
-  for (const [index, item] of evidence.entries()) {
-    const metadata = images.get(item.imageId);
-    if (!metadata) throw new Error(`Missing metadata for image ${item.imageId}`);
-    const object = await store.get(metadata.key);
-    const thumbnail = await sharp(object.body)
-      .rotate()
-      .resize({
-        width: layout.cellWidth,
-        height: layout.cellHeight,
-        fit: "contain",
-        background: { r: 246, g: 247, b: 249, alpha: 1 },
-      })
-      .jpeg({ quality: 88, mozjpeg: true })
-      .toBuffer();
-    const column = index % layout.columns;
-    const row = Math.floor(index / layout.columns);
-    composites.push({
-      input: thumbnail,
-      left: column * (layout.cellWidth + layout.gap),
-      top: row * (layout.cellHeight + layout.gap),
-    });
-  }
-
-  const buffer = await sharp({
-    create: {
-      width,
-      height,
-      channels: 3,
-      background: { r: 229, g: 231, b: 235 },
+  sheets: ContactSheet[],
+  researchKnowledge?: AppResearchKnowledge,
+): string {
+  const evidence = mappedEvidence(sheets);
+  const research = researchPromptBlock(researchContextForFlow(
+    researchKnowledge,
+    {
+      platform: record.platform,
+      title: record.flow.title,
+      category: record.flow.category,
+      tags: record.flow.tags,
     },
-  })
-    .composite(composites)
-    .jpeg({ quality: 90, mozjpeg: true })
-    .toBuffer();
-  await writeFile(outputPath, buffer);
-  return { path: outputPath, buffer, evidence };
-}
-
-function prompt(record: FlowRecord, evidence: ReturnType<typeof allEvidence>): string {
+  ));
   const evidenceMap = evidence.map((item) => ({
     evidenceId: item.evidenceId,
-    contactSheetPosition: "left-to-right, then top-to-bottom",
+    attachmentName: item.attachmentName,
+    sheetNumber: item.sheetNumber,
+    row: item.row,
+    column: item.column,
     stepNumber: item.stepIndex + 1,
     imageWithinStep: item.imageIndex + 1,
     stepLabel: item.stepLabel,
@@ -356,8 +332,9 @@ function prompt(record: FlowRecord, evidence: ReturnType<typeof allEvidence>): s
   }));
   return [
     "Return JSON only. Do not use Markdown fences.",
-    "Analyze the attached contact sheet as one complete product flow.",
-    "It contains every ordered screenshot for this flow, arranged left-to-right and then top-to-bottom.",
+    "Analyze all attached contact sheets as one complete product flow.",
+    "Every sheet is required. Read sheets by sheet number, then each sheet left-to-right and top-to-bottom.",
+    "Each screenshot has its evidence ID printed in the dark label directly above it.",
     "Inspect each screenshot. Do not omit a screenshot, invent hidden behavior, or claim unseen error/permission states.",
     "Use only evidence IDs supplied below. Observed claims require evidence. Clearly separate observation, inference, proposal, and unknowns.",
     "",
@@ -368,6 +345,7 @@ function prompt(record: FlowRecord, evidence: ReturnType<typeof allEvidence>): s
     `Category: ${record.flow.category ?? ""}`,
     `Tags: ${(record.flow.tags ?? []).join(", ")}`,
     `Evidence map: ${JSON.stringify(evidenceMap)}`,
+    ...(research ? ["", research] : []),
     "",
     "Return exactly this top-level JSON shape:",
     JSON.stringify({
@@ -456,7 +434,7 @@ function parseChatObject(raw: string): Record<string, unknown> {
 function renderMarkdown(
   record: FlowRecord,
   feature: FeatureDescription,
-  sheetPath: string,
+  sheetPaths: string[],
   analysis: {
     provider: FlowAnalysisProvider;
     model: string;
@@ -475,7 +453,10 @@ function renderMarkdown(
     `- Analysis provider: ${analysis.provider}`,
     `- Provider model: ${analysis.model}`,
     `- Quality score: ${analysis.qualityScore}`,
-    `- Contact sheet: [${sheetPath.split("/").at(-1)}](../contact-sheets/${sheetPath.split("/").at(-1)})`,
+    `- Contact sheets: ${sheetPaths.map((sheetPath, index) => {
+      const fileName = sheetPath.split("/").at(-1);
+      return `[${index + 1} · ${fileName}](../contact-sheets/${fileName})`;
+    }).join(" · ")}`,
     ...(analysis.qualityWarnings.length
       ? [`- Quality warnings: ${analysis.qualityWarnings.join("; ")}`]
       : []),
@@ -564,17 +545,35 @@ async function analyze(
   record: FlowRecord,
   images: Map<number, ImageRecord>,
   store: ObjectStore,
+  researchKnowledge?: AppResearchKnowledge,
 ): Promise<{ score: number; warnings: string[] }> {
-  const sheet = await contactSheet(record, images, store);
-  const attachment: ChatAttachment = {
-    name: `${identity(record)}.jpg`,
-    mimeType: "image/jpeg",
+  const sheets = await createContactSheets({
+    baseName: identity(record),
+    outputDirectory: CONTACT_SHEETS,
+    platform: record.platform,
+    evidence: allEvidence(record),
+    images,
+    store,
+  });
+  const attachments: ChatAttachment[] = sheets.map((sheet) => ({
+    name: sheet.path.split("/").at(-1)!,
+    mimeType: "image/png",
     buffer: sheet.buffer,
-  };
+  }));
+  const evidence = mappedEvidence(sheets);
+  const researchContext = researchContextForFlow(researchKnowledge, {
+    platform: record.platform,
+    title: record.flow.title,
+    category: record.flow.category,
+    tags: record.flow.tags,
+  });
   let lastError: unknown;
   for (let attempt = 1; attempt <= RETRIES + 1; attempt += 1) {
     try {
-      const raw = await session.ask(prompt(record, sheet.evidence), attachment);
+      const raw = await session.ask(
+        prompt(record, sheets, researchKnowledge),
+        attachments,
+      );
       await writeFile(
         join(RAW_DIR, `${identity(record)}-${provider}-attempt-${attempt}.txt`),
         raw,
@@ -583,7 +582,7 @@ async function analyze(
       const parsed = parseChatObject(raw);
       const { feature, quality } = validateFeature(
         parsed,
-        sheet.evidence.map(({ evidenceId }) => evidenceId),
+        evidence.map(({ evidenceId }) => evidenceId),
       );
       const base = identity(record);
       const analysis = {
@@ -591,6 +590,17 @@ async function analyze(
         model: providerModel(provider),
         qualityScore: quality.score,
         qualityWarnings: quality.warnings,
+        ...(researchContext
+          ? {
+            researchContext: {
+              knowledgeGeneratedAt: researchContext.knowledgeGeneratedAt,
+              claimIds: researchContext.claims.map(({ id }) => id),
+              sourceIds: [...new Set(researchContext.claims.flatMap(
+                ({ sourceIds }) => sourceIds,
+              ))],
+            },
+          }
+          : {}),
       };
       await atomicJson(join(JSON_DIR, `${base}.json`), {
         generatedAt: now(),
@@ -603,13 +613,13 @@ async function analyze(
           description: record.flow.description ?? "",
           category: record.flow.category ?? "",
           tags: record.flow.tags ?? [],
-          evidence: sheet.evidence,
+          evidence,
         },
         feature,
       });
       await writeFile(
         join(MARKDOWN_DIR, `${base}.md`),
-        renderMarkdown(record, feature, sheet.path, analysis),
+        renderMarkdown(record, feature, sheets.map(({ path }) => path), analysis),
         "utf8",
       );
       return quality;
@@ -661,6 +671,14 @@ async function main(): Promise<void> {
     mkdir(MARKDOWN_DIR, { recursive: true }),
     mkdir(RAW_DIR, { recursive: true }),
   ]);
+  const researchKnowledge = await loadAppResearchKnowledge(
+    RESEARCH_KNOWLEDGE_PATH,
+  );
+  if (researchKnowledge && researchKnowledge.app !== APP) {
+    throw new Error(
+      `Research knowledge app ${researchKnowledge.app} does not match ${APP}`,
+    );
+  }
   const client = new pg.Client({
     connectionString: process.env.DATABASE_URL,
     statement_timeout: 60_000,
@@ -709,6 +727,12 @@ async function main(): Promise<void> {
     `Starting ${records.length} flow(s); ${progress.skipped} already complete; `
     + `providers ${ANALYSIS_PROVIDERS.join(", ")}`,
   );
+  if (researchKnowledge) {
+    await appendLog(
+      `Loaded ${researchKnowledge.claims.length} documented research claim(s) `
+      + `from ${RESEARCH_KNOWLEDGE_PATH}`,
+    );
+  }
   if (progress.completed === progress.total) {
     progress.status = "done";
     progress.updatedAt = now();
@@ -780,7 +804,14 @@ async function main(): Promise<void> {
                 let failure: unknown;
                 let quality: { score: number; warnings: string[] } | undefined;
                 try {
-                  quality = await analyze(session, provider, record, images, store);
+                  quality = await analyze(
+                    session,
+                    provider,
+                    record,
+                    images,
+                    store,
+                    researchKnowledge,
+                  );
                 } catch (error) {
                   failure = error;
                 }

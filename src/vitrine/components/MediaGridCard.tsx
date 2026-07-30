@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Badge, Card, ClickableCard } from '@astryxdesign/core';
+import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
+import { Badge, ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
 
 interface MediaGridCardProps {
@@ -11,21 +11,14 @@ interface MediaGridCardProps {
   accent?: string;
   aspectRatio?: string | number;
   imageFit?: 'cover' | 'contain';
+  preserveNaturalAspectRatio?: boolean;
   preferFullImage?: boolean;
   deferMedia?: boolean;
   badges?: string[];
   title?: string;
+  overlay?: ReactNode;
   delay?: number;
   onOpen: () => void;
-}
-
-export function handleMediaCardKeyDown(
-  event: { key: string; preventDefault: () => void },
-  onOpen: () => void,
-) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  onOpen();
 }
 
 export function MediaGridCard({
@@ -37,18 +30,20 @@ export function MediaGridCard({
   accent,
   aspectRatio = '16 / 10',
   imageFit = 'cover',
+  preserveNaturalAspectRatio = false,
   preferFullImage = false,
   deferMedia = false,
   badges = [],
   title,
+  overlay,
   delay = 0,
   onOpen,
 }: MediaGridCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
+  const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
   const imageSrc = preferFullImage ? url : thumbnailUrl ?? url;
   const imageSrcSet = !preferFullImage && thumbnailUrl && url && thumbnailUrl !== url
     ? `${thumbnailUrl} 1x,${url} 2x`
@@ -65,12 +60,20 @@ export function MediaGridCard({
   }, [deferMedia, mediaActive]);
 
   const activateMedia = () => {
-    setFocused(true);
     setMediaActive(true);
+  };
+  const captureNaturalAspectRatio = (event: SyntheticEvent<HTMLImageElement>) => {
+    if (!preserveNaturalAspectRatio) return;
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      setNaturalAspectRatio(naturalWidth / naturalHeight);
+    }
   };
   const cardStyle = {
     position: 'relative' as const,
-    aspectRatio,
+    aspectRatio: preserveNaturalAspectRatio && naturalAspectRatio
+      ? naturalAspectRatio
+      : aspectRatio,
     overflow: 'hidden',
     boxShadow: hovered ? 'var(--shadow-med)' : 'var(--shadow-low)',
     animation: `vtFadeUp .45s cubic-bezier(.16,1,.3,1) ${delay}s both`,
@@ -104,6 +107,7 @@ export function MediaGridCard({
           alt=""
           loading="lazy"
           decoding="async"
+          onLoad={captureNaturalAspectRatio}
           onError={() => setMediaFailed(true)}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: imageFit, background: accent ? `${accent}22` : 'var(--color-background-muted)', transform: hovered && imageFit === 'cover' ? 'scale(1.04)' : 'scale(1)', transition: 'transform .3s cubic-bezier(.16,1,.3,1)' }}
         />
@@ -131,44 +135,28 @@ export function MediaGridCard({
       <div style={{ position: 'absolute', left: 10, right: 10, ...(title ? { top: 8, justifyContent: 'flex-end' } : { bottom: 10 }), zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
         {badges.filter(Boolean).map((badge) => <Badge key={badge} label={badge} variant="neutral" style={{ background: 'rgba(24,24,27,.72)', color: '#fff', backdropFilter: 'blur(4px)' }} />)}
       </div>
+      {overlay}
     </>
   );
 
   if (kind === 'image') {
     return (
-      <Card ref={cardRef} padding={0} variant="muted" style={cardStyle}>
-        <button
-          type="button"
-          aria-label={label}
-          onClick={onOpen}
-          onKeyDown={(event) => handleMediaCardKeyDown(event, onOpen)}
-          onMouseEnter={() => {
-            setHovered(true);
-            setMediaActive(true);
-          }}
-          onMouseLeave={() => setHovered(false)}
-          onFocus={activateMedia}
-          onBlur={() => setFocused(false)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            padding: 0,
-            border: 0,
-            borderRadius: 'inherit',
-            background: 'transparent',
-            color: 'inherit',
-            cursor: 'pointer',
-            font: 'inherit',
-            textAlign: 'left',
-            outline: focused ? '2px solid var(--color-accent)' : 'none',
-            outlineOffset: -2,
-          }}
-        >
-          {contents}
-        </button>
-      </Card>
+      <ClickableCard
+        ref={cardRef}
+        label={label}
+        onClick={onOpen}
+        padding={0}
+        variant="muted"
+        onMouseEnter={() => {
+          setHovered(true);
+          setMediaActive(true);
+        }}
+        onMouseLeave={() => setHovered(false)}
+        onFocus={activateMedia}
+        style={cardStyle}
+      >
+        {contents}
+      </ClickableCard>
     );
   }
 
@@ -185,7 +173,6 @@ export function MediaGridCard({
       }}
       onMouseLeave={() => setHovered(false)}
       onFocus={activateMedia}
-      onBlur={() => setFocused(false)}
       style={cardStyle}
     >
       {contents}

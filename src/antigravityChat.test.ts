@@ -160,8 +160,8 @@ test("drives a fresh Antigravity conversation with a genuine image attachment", 
           event.preventDefault();
           const prompt = editor.textContent;
           editor.textContent = '';
-          const file = document.querySelector('input[type=file]').files[0];
-          const bytes = file ? await file.text() : '';
+          const files = Array.from(document.querySelector('input[type=file]').files);
+          const bytes = await Promise.all(files.map((file) => file.text()));
           const loading = document.querySelector('[data-testid="agent-loading"]');
           loading.hidden = false;
           setTimeout(() => {
@@ -170,7 +170,7 @@ test("drives a fresh Antigravity conversation with a genuine image attachment", 
           }, 10);
           setTimeout(() => {
             document.querySelector('.leading-relaxed').textContent =
-              JSON.stringify({ prompt, fileName: file?.name, bytes });
+              JSON.stringify({ prompt, fileNames: files.map((file) => file.name), bytes });
             loading.remove();
           }, 450);
         });
@@ -182,16 +182,23 @@ test("drives a fresh Antigravity conversation with a genuine image attachment", 
       stableMs: 20,
       close: async () => { closed += 1; },
     });
-    const reply = await session.ask("analyze SCREEN-1", {
-      name: "screen.png",
-      mimeType: "image/png",
-      buffer: Buffer.from("image-bytes"),
-    } satisfies ChatAttachment);
+    const reply = await session.ask("analyze SCREEN-1 and SCREEN-2", [
+      {
+        name: "screen-1.png",
+        mimeType: "image/png",
+        buffer: Buffer.from("image-bytes-1"),
+      },
+      {
+        name: "screen-2.png",
+        mimeType: "image/png",
+        buffer: Buffer.from("image-bytes-2"),
+      },
+    ] satisfies ChatAttachment[]);
 
     assert.deepEqual(JSON.parse(reply), {
-      prompt: "analyze SCREEN-1",
-      fileName: "screen.png",
-      bytes: "image-bytes",
+      prompt: "analyze SCREEN-1 and SCREEN-2",
+      fileNames: ["screen-1.png", "screen-2.png"],
+      bytes: ["image-bytes-1", "image-bytes-2"],
     });
     assert.equal(await page.locator("body").getAttribute("data-fresh-conversation"), "true");
     await session.close();

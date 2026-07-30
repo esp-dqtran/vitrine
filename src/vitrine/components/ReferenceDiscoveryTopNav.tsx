@@ -19,8 +19,14 @@ export function ReferenceDiscoveryTopNav({
     ? { name: 'apps' } as const
     : active === 'sites'
       ? { name: 'sites' } as const
-      : { name: 'flows' } as const;
-  const activeLabel = active === 'apps' ? 'Apps' : active === 'sites' ? 'Sites' : 'Flows';
+      : active === 'flows'
+        ? { name: 'flows' } as const
+        : { name: 'projects' } as const;
+  const activeLabel = active === 'apps'
+    ? 'Apps'
+    : active === 'sites'
+      ? 'Sites'
+      : active === 'flows' ? 'Flows' : 'Projects';
   return (
     <header
       data-reference-component="top-nav"
@@ -42,6 +48,7 @@ export function ReferenceDiscoveryTopNav({
         <ReferenceTypeTabs
           active={active}
           className={`reference-discovery-nav__types ${className}__types`}
+          values={active === 'projects' ? ['projects'] : undefined}
         />
       </div>
       <div className={`reference-discovery-nav__search ${className}__search`}>{search}</div>

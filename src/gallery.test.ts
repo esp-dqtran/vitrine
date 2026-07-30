@@ -49,11 +49,18 @@ test("builds an evidence page without re-paginating it", () => {
       platform: "ios",
       image_url: "mobbin-bulk:0000000000000002",
       description: "Composer",
+      source_screen_id: 41,
+      source_screen_image_url: "mobbin-bulk:0000000000000041",
     }],
     nextCursor: "Mg",
   });
 
   assert.deepEqual(page.screens.map(({ id }) => id), [2]);
+  assert.deepEqual(page.screens[0].sourceScreen, {
+    id: 41,
+    url: "/api/media/claude/0000000000000041",
+    thumbnailUrl: "/api/media/claude/0000000000000041?variant=thumb",
+  });
   assert.equal(page.nextCursor, "Mg");
 });
 
@@ -217,7 +224,11 @@ test("builds the existing public catalog contract from bounded app records", () 
       last_captured_at: "2026-07-26T03:14:54.618Z",
     }],
     previews: [
-      { ...image, preview_rank: 1 },
+      {
+        ...image,
+        matched_facets: [{ group: "screens", value: "Dashboard" }],
+        preview_rank: 1,
+      },
       { ...image, id: 2, preview_rank: 2 },
     ],
     nextCursor: "next",
@@ -227,8 +238,14 @@ test("builds the existing public catalog contract from bounded app records", () 
   assert.deepEqual(page.apps[0]?.platforms, ["web", "ios"]);
   assert.deepEqual(
     page.apps[0]?.previewScreens.map(({ url }) => url),
-    ["/api/preview-media/linear/1?variant=full", "/api/preview-media/linear/2?variant=full"],
+    [
+      "/api/catalog/facet-media/linear/screens/Dashboard/web/1?variant=full",
+      "/api/preview-media/linear/2?variant=full",
+    ],
   );
+  assert.deepEqual(page.apps[0]?.previewScreens[0]?.matchedFacets, [
+    { group: "screens", value: "Dashboard" },
+  ]);
   assert.equal(page.apps[0]?.iconUrl, "https://linear.app/icon.png");
   assert.equal(page.apps[0]?.lastCapturedAt, "2026-07-26T03:14:54.618Z");
   assert.deepEqual(page.apps[0]?.categories, [productivity]);

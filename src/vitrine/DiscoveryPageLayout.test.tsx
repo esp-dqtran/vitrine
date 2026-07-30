@@ -1,0 +1,138 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import { createRef, type ComponentProps } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { DiscoveryFilterBar } from './components/AppsFilterBar.tsx';
+import { DiscoveryPageLayout } from './components/DiscoveryPageLayout.tsx';
+
+function renderLayout(overrides: Partial<ComponentProps<typeof DiscoveryPageLayout>> = {}) {
+  const { children = <article data-layout-part="result">Result</article>, ...props } = overrides;
+
+  return renderToStaticMarkup(
+    <DiscoveryPageLayout
+      kind="sites"
+      header={<header data-layout-part="header">Header</header>}
+      taxonomyLabel="Site discovery filters"
+      taxonomy={<nav data-layout-part="taxonomy">Taxonomy</nav>}
+      toolbar={<div data-layout-part="toolbar">Toolbar</div>}
+      resultLabel="sites"
+      singularResultLabel="site"
+      totalCount={1}
+      renderedCount={1}
+      loading={false}
+      error={null}
+      loadMoreError={null}
+      onRetry={() => undefined}
+      onRetryLoadMore={() => undefined}
+      sentinelRef={createRef<HTMLDivElement>()}
+      {...props}
+    >
+      {children}
+    </DiscoveryPageLayout>,
+  );
+}
+
+test('composes discovery content in the stable header, taxonomy, toolbar, meta, result, sentinel order', () => {
+  const html = renderLayout();
+  const ordered = [
+    'data-layout-part="header"',
+    'data-layout-part="taxonomy"',
+    'data-layout-part="toolbar"',
+    'reference-discovery__result-meta',
+    'data-layout-part="result"',
+    'discovery-page-layout__sentinel',
+  ];
+  const offsets = ordered.map((part) => html.indexOf(part));
+
+  assert.ok(offsets.every((offset) => offset >= 0), `Missing layout marker: ${ordered.join(', ')}`);
+  assert.deepEqual([...offsets].sort((a, b) => a - b), offsets);
+  assert.match(html, /data-reference-gallery-shell="sites"/);
+  assert.match(html, /class="[^"]*reference-discovery--sites[^"]*sites-discovery/);
+  assert.match(html, /data-discovery-page-layout="sites"/);
+  assert.match(html, /1 site/);
+  assert.equal((html.match(/1 site/g) ?? []).length, 1);
+});
+
+test('right-aligns the shared result count for Apps, Sites, and Flows', async () => {
+  const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+
+  assert.match(
+    css,
+    /\.reference-discovery__result-meta\s*\{[^}]*text-align:\s*right/,
+  );
+});
+
+test('keeps kind-specific shell classes and data attributes for every discovery kind', () => {
+  for (const kind of ['apps', 'sites', 'flows'] as const) {
+    const html = renderLayout({ kind });
+
+    assert.match(html, new RegExp(`data-reference-gallery-shell="${kind}"`));
+    assert.match(html, new RegExp(`reference-discovery--${kind}`));
+    assert.match(html, new RegExp(`data-${kind}-discovery="true"`));
+    assert.match(html, new RegExp(`data-discovery-page-layout="${kind}"`));
+  }
+});
+
+test('uses explicit renderedCount for initial loading, error, and empty state precedence', () => {
+  const loading = renderLayout({ loading: true, renderedCount: 0, children: <></> });
+  const error = renderLayout({ error: 'Network failed' });
+  const empty = renderLayout({ totalCount: 0, renderedCount: 0, children: <></> });
+
+  assert.match(loading, /role="status"[^>]*aria-label="Loading sites"/);
+  assert.match(error, /role="alert"/);
+  assert.match(error, /Network failed/);
+  assert.match(error, />Retry</);
+  assert.doesNotMatch(error, /data-layout-part="result"/);
+  assert.match(empty, /role="status"/);
+  assert.match(empty, /No sites found/);
+});
+
+test('keeps loaded children when loading more fails and places the sentinel last', () => {
+  const html = renderLayout({ loadMoreError: 'Timed out' });
+  const result = html.indexOf('data-layout-part="result"');
+  const loadMoreError = html.indexOf('discovery-page-layout__load-more-error');
+  const sentinel = html.indexOf('discovery-page-layout__sentinel');
+
+  assert.ok(result >= 0);
+  assert.ok(loadMoreError > result);
+  assert.ok(sentinel > loadMoreError);
+  assert.match(html, /Could not load more sites: Timed out/);
+  assert.match(html, /data-discovery-sentinel="sites"/);
+  assert.match(html, /data-discovery-sentinel="sites"[^>]*aria-hidden="true"/);
+  assert.doesNotMatch(html, /aria-label="Load more sites"/);
+});
+
+test('uses renderedCount rather than empty children to preserve inline load-more errors', () => {
+  const html = renderLayout({
+    renderedCount: 1,
+    loadMoreError: 'Timed out',
+    children: <></>,
+  });
+
+  assert.match(html, /Could not load more sites: Timed out/);
+  assert.doesNotMatch(html, /No sites found/);
+});
+
+test('owns one result count when the shared filter toolbar is composed into the layout', () => {
+  const html = renderLayout({
+    toolbar: (
+      <DiscoveryFilterBar
+        kind="sites"
+        ariaLabel="Site discovery controls"
+        platform={{ value: 'web', ariaLabel: 'Site platform', onChange: () => undefined }}
+        filters={[]}
+        resultCount={1}
+        resultLabels={['site', 'sites']}
+        sort="latest"
+        sortOptions={[{ value: 'latest', label: 'Latest' }]}
+        onSortChange={() => undefined}
+        onToggleFilter={() => undefined}
+        onClearFilter={() => undefined}
+      />
+    ),
+  });
+
+  assert.equal((html.match(/1 site/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /apps-filterbar__count/);
+});

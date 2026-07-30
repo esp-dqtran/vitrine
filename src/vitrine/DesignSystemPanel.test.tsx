@@ -11,6 +11,36 @@ test('keeps empty design-system headings sequential under the detail title', () 
 
   assert.match(html, /<h2[^>]*>No design system yet<\/h2>/);
 });
+
+test('renders analyzed component crops as a design-system overview without a synthesized snapshot', () => {
+  const html = renderToStaticMarkup(
+    <DesignSystemPanel
+      snapshot={null}
+      status="missing"
+      appName="shopee"
+      totalComponentOccurrences={5967}
+      totalComponentTypes={42}
+      componentCrops={[{
+        type: 'Top Navigation Bar',
+        group: 'Navigation',
+        count: 971,
+        imageId: 1872010,
+        imageUrl: '/api/media/shopee/navigation',
+        thumbnailUrl: '/api/media/shopee/navigation?variant=thumb',
+        description: 'Account and Security navigation',
+        purpose: 'Navigate back',
+        visibleStates: ['Default'],
+      }]}
+    />,
+  );
+
+  assert.match(html, /Shopee · Component Crop Results/);
+  assert.match(html, /1 representative type from|1 representative types from/);
+  assert.match(html, /5,967 extracted components/);
+  assert.match(html, /Top Navigation Bar/);
+  assert.match(html, /971/);
+  assert.doesNotMatch(html, /No design system yet/);
+});
 import type { DesignSystemGenerationView } from './useDesignSystemGeneration.ts';
 
 function generation(

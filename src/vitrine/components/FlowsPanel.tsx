@@ -17,6 +17,8 @@ export function FlowsPanel({
   selectedFlowView,
   onSelectionChange = () => undefined,
   userRole = 'user',
+  sourceAppName,
+  sourceAppIconUrl,
 }: {
   flows: DesignFlow<EvidenceView>[];
   app?: string;
@@ -27,6 +29,8 @@ export function FlowsPanel({
   selectedFlowView?: FlowRepresentation;
   onSelectionChange?(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
   userRole?: 'admin' | 'user';
+  sourceAppName?: string;
+  sourceAppIconUrl?: string | null;
 }) {
   const groups = useMemo(() => buildFlowTreeGroups(flows), [flows]);
   const selectedFlow = selectedFlowId
@@ -56,6 +60,8 @@ export function FlowsPanel({
       platform={platform}
       version={version}
       userRole={userRole}
+      sourceAppName={sourceAppName}
+      sourceAppIconUrl={sourceAppIconUrl}
       onSelectionChange={onSelectionChange}
     />
   );

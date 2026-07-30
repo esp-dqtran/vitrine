@@ -1,17 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
+import type { DiscoveryFacet } from './discoveryTypes.ts';
+import {
+  parseAdminAppsPage,
+  parseCatalogDiscoveryPage,
+  type AdminAppsResponse,
+  type CatalogDiscoveryResponse,
+} from './catalogPageParser.ts';
 import type { App } from './types';
 
-export interface CatalogResponse {
-  apps: Array<Omit<App, 'screens'> & { previewScreens: App['screens'] }>;
-  nextCursor: string | null;
-}
+export type CatalogResponse = CatalogDiscoveryResponse;
 
-interface AdminAppsResponse {
+interface CatalogPage {
   apps: App[];
   nextCursor: string | null;
-  total: number;
+  totalCount: number;
+  facets: DiscoveryFacet[];
 }
+
+const CATALOG_PAGE_CACHE_MS = 280_000;
+const catalogPageCache = new Map<string, {
+  expiresAt: number;
+  page: CatalogPage;
+}>();
 
 export function appendUniqueApps(current: App[], next: App[]): App[] {
   const seen = new Set(current.map(({ id }) => id));
@@ -19,112 +29,54 @@ export function appendUniqueApps(current: App[], next: App[]): App[] {
 }
 
 const catalogApps = (page: CatalogResponse): App[] =>
-  page.apps.map(({ previewScreens, ...app }) => ({ ...app, screens: previewScreens }));
+  page.items.map(({ previewScreens, ...app }) => ({
+    ...app,
+    screens: previewScreens.filter(
+      (screen): screen is App['screens'][number] => typeof screen.url === 'string',
+    ),
+  }));
 
-export function catalogFacetPath(
-  facet: AppsFacet,
-  platform: AppsPlatform,
-  cursor?: string,
-): string {
-  const params = new URLSearchParams({
-    group: facet.group,
-    value: facet.value,
-    platform,
-  });
-  if (cursor) params.set('cursor', cursor);
-  return `/api/catalog?${params.toString()}`;
+function cachedCatalogPage(endpoint: string): CatalogPage | null {
+  const cached = catalogPageCache.get(endpoint);
+  if (!cached) return null;
+  if (cached.expiresAt > Date.now()) return cached.page;
+  catalogPageCache.delete(endpoint);
+  return null;
 }
 
-async function fetchCatalogPage(
+export async function fetchCatalogPage(
   endpoint: string,
   signal?: AbortSignal,
-): Promise<{ apps: App[]; nextCursor: string | null }> {
-  const response = await fetch(endpoint, { signal });
+  options: { bypassCache?: boolean } = {},
+): Promise<CatalogPage> {
+  if (!options.bypassCache) {
+    const cached = cachedCatalogPage(endpoint);
+    if (cached) return cached;
+  }
+  const response = await fetch(endpoint, {
+    signal,
+    ...(options.bypassCache ? { cache: 'no-store' as const } : {}),
+  });
   if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
-  const page = await response.json() as CatalogResponse;
-  return { apps: catalogApps(page), nextCursor: page.nextCursor };
+  const page = parseCatalogDiscoveryPage(await response.json());
+  const result = {
+    apps: catalogApps(page),
+    nextCursor: page.nextCursor,
+    totalCount: page.totalCount,
+    facets: page.facets,
+  };
+  catalogPageCache.set(endpoint, {
+    expiresAt: Date.now() + CATALOG_PAGE_CACHE_MS,
+    page: result,
+  });
+  return result;
 }
 
-export function useCatalogFacetApps(
-  facet: AppsFacet | null,
-  platform: AppsPlatform,
-  enabled: boolean,
-) {
-  const [apps, setApps] = useState<App[] | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [retry, setRetry] = useState(0);
-  const [resultKey, setResultKey] = useState<string | null>(null);
-  const generationRef = useRef(0);
-  const loadingMoreRef = useRef(false);
-  const group = facet?.group;
-  const value = facet?.value;
-  const facetKey = enabled && group && value
-    ? `${platform}:${group}:${value}`
-    : null;
-
-  useEffect(() => {
-    const generation = ++generationRef.current;
-    loadingMoreRef.current = false;
-    setLoadingMore(false);
-    setError(null);
-    setLoadMoreError(null);
-    setApps(null);
-    setNextCursor(null);
-    setResultKey(facetKey);
-    if (!enabled || !group || !value) return;
-
-    const controller = new AbortController();
-    void fetchCatalogPage(
-      catalogFacetPath({ group, value }, platform),
-      controller.signal,
-    ).then((page) => {
-      if (generation !== generationRef.current) return;
-      setApps(page.apps);
-      setNextCursor(page.nextCursor);
-    }).catch((reason: Error) => {
-      if (reason.name !== 'AbortError' && generation === generationRef.current) {
-        setError(reason.message);
-        setApps([]);
-      }
-    });
-    return () => controller.abort();
-  }, [enabled, facetKey, group, platform, retry, value]);
-
-  const loadMore = useCallback(async () => {
-    if (!enabled || !group || !value || !nextCursor || loadingMoreRef.current) return;
-    const generation = generationRef.current;
-    loadingMoreRef.current = true;
-    setLoadingMore(true);
-    setLoadMoreError(null);
-    try {
-      const page = await fetchCatalogPage(
-        catalogFacetPath({ group, value }, platform, nextCursor),
-      );
-      if (generation !== generationRef.current) return;
-      setApps((current) => appendUniqueApps(current ?? [], page.apps));
-      setNextCursor(page.nextCursor);
-    } catch (reason) {
-      if (generation === generationRef.current) setLoadMoreError((reason as Error).message);
-    } finally {
-      if (generation === generationRef.current) {
-        loadingMoreRef.current = false;
-        setLoadingMore(false);
-      }
-    }
-  }, [enabled, group, nextCursor, platform, value]);
-
-  return {
-    apps: resultKey === facetKey ? apps : null,
-    error: resultKey === facetKey ? error : null,
-    loadMoreError: resultKey === facetKey ? loadMoreError : null,
-    hasMore: resultKey === facetKey && nextCursor !== null,
-    loadingMore: resultKey === facetKey && loadingMore,
-    loadMore,
-    retry: () => setRetry((value) => value + 1),
-  };
+export function refreshCatalogPage(
+  endpoint: string,
+  signal?: AbortSignal,
+): Promise<CatalogPage> {
+  return fetchCatalogPage(endpoint, signal, { bypassCache: true });
 }
 
 export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
@@ -136,8 +88,11 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
   const requestGenerationRef = useRef(0);
+  const loadMoreControllerRef = useRef<AbortController | null>(null);
 
   const refresh = useCallback((signal?: AbortSignal) => {
+    loadMoreControllerRef.current?.abort();
+    loadMoreControllerRef.current = null;
     const generation = ++requestGenerationRef.current;
     loadingMoreRef.current = false;
     setLoadingMore(false);
@@ -147,19 +102,19 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       if (role === 'admin') {
         const response = await fetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
-        const page = await response.json() as AdminAppsResponse;
+        const page = parseAdminAppsPage(await response.json());
         if (generation !== requestGenerationRef.current) return;
         setApps(page.apps);
         setNextCursor(page.nextCursor);
         setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
         return;
       }
-      const page = await fetchCatalogPage('/api/catalog', signal);
+      const page = await refreshCatalogPage('/api/catalog', signal);
       const firstPage = page.apps;
       if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
       setNextCursor(page.nextCursor);
-      setTotalApps(firstPage.length);
+      setTotalApps(page.totalCount);
     })().catch((err: Error) => {
         if (err.name !== 'AbortError' && generation === requestGenerationRef.current) {
           setError(err.message);
@@ -167,25 +122,45 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       });
   }, [role]);
 
+  useEffect(() => () => {
+    loadMoreControllerRef.current?.abort();
+    loadMoreControllerRef.current = null;
+    requestGenerationRef.current += 1;
+  }, []);
+
   useEffect(() => {
-    if (!enabled || apps !== null) return;
     const controller = new AbortController();
+    loadMoreControllerRef.current?.abort();
+    loadMoreControllerRef.current = null;
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
+    setError(null);
+    setLoadMoreError(null);
+    setApps(null);
+    setNextCursor(null);
+    setTotalApps(null);
+    if (!enabled) return () => controller.abort();
     void refresh(controller.signal);
     return () => controller.abort();
-  }, [apps, enabled, refresh]);
+  }, [enabled, refresh]);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMoreRef.current) return;
     const generation = requestGenerationRef.current;
     loadingMoreRef.current = true;
+    loadMoreControllerRef.current?.abort();
+    const controller = new AbortController();
+    loadMoreControllerRef.current = controller;
     setLoadingMore(true);
     setLoadMoreError(null);
     try {
       const endpoint = role === 'admin' ? `/api/apps?cursor=${encodeURIComponent(nextCursor)}`
         : `/api/catalog?cursor=${encodeURIComponent(nextCursor)}`;
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, { signal: controller.signal });
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
-      const page = await response.json() as AdminAppsResponse | CatalogResponse;
+      const page = role === 'admin'
+        ? parseAdminAppsPage(await response.json())
+        : parseCatalogDiscoveryPage(await response.json());
       const nextApps = role === 'admin'
         ? (page as AdminAppsResponse).apps
         : catalogApps(page as CatalogResponse);
@@ -194,13 +169,19 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
       setNextCursor(page.nextCursor);
       if (role === 'admin' && Number.isFinite((page as AdminAppsResponse).total)) {
         setTotalApps((page as AdminAppsResponse).total);
+      } else if (role !== 'admin' && Number.isFinite((page as CatalogResponse).totalCount)) {
+        setTotalApps((page as CatalogResponse).totalCount);
       }
     } catch (err) {
-      if (generation === requestGenerationRef.current) {
+      if ((err as Error).name !== 'AbortError'
+        && generation === requestGenerationRef.current) {
         setLoadMoreError((err as Error).message);
       }
     } finally {
       if (generation === requestGenerationRef.current) {
+        if (loadMoreControllerRef.current === controller) {
+          loadMoreControllerRef.current = null;
+        }
         loadingMoreRef.current = false;
         setLoadingMore(false);
       }

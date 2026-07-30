@@ -21,6 +21,24 @@
       ],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "astryx-animated-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "animated-sites/astryx"],
+      "port": 8080
+    },
+    {
+      "name": "astryx-v3-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "animated-sites/astryx-v3"],
+      "port": 8090
+    },
+    {
+      "name": "astryx-descent-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8100", "--directory", "animated-sites/astryx-descent"],
+      "port": 8100
     }
   ]
 }

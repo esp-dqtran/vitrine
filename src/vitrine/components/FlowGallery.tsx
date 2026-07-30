@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+} from 'react';
+import type { Platform } from '../../platformFromUrl.ts';
 import type { FlowTreeGroup } from '../flowTree.ts';
 import { FlowCard } from './FlowCard.tsx';
 import { ReferenceGallerySection } from './ReferenceGallerySection.tsx';
@@ -10,6 +16,17 @@ export interface ActiveFlowIntersection {
   isIntersecting: boolean;
   top: number;
 }
+
+type FlowGalleryCardProps = Partial<Pick<
+  ComponentProps<typeof FlowCard>,
+  | 'screenCount'
+  | 'metaLabel'
+  | 'contextLabel'
+  | 'sourceAppName'
+  | 'sourceAppIconUrl'
+  | 'documentSource'
+  | 'onOpenSourceApp'
+>>;
 
 export function activeFlowIdFromEntries(
   entries: ActiveFlowIntersection[],
@@ -32,12 +49,32 @@ export function FlowGallery({
   scrollTargetFlowId,
   onScrollTargetHandled,
   onActiveFlowChange,
+  app,
+  platform,
+  version,
+  userRole = 'user',
+  sourceAppName,
+  sourceAppIconUrl,
+  ariaLabel,
+  paginate = true,
+  cardPropsForFlow,
 }: {
   groups: FlowTreeGroup[];
   onSelectFlow(flowId: string): void;
   scrollTargetFlowId?: string;
   onScrollTargetHandled?(): void;
   onActiveFlowChange?(flowId: string): void;
+  app?: string;
+  platform?: Platform;
+  version?: number;
+  userRole?: 'admin' | 'user';
+  sourceAppName?: string;
+  sourceAppIconUrl?: string | null;
+  ariaLabel?: string;
+  paginate?: boolean;
+  cardPropsForFlow?: (
+    flow: FlowTreeGroup['flows'][number],
+  ) => FlowGalleryCardProps | undefined;
 }) {
   const ordered = groups.flatMap(({ flows }) => flows);
   const scrollTargetIndex = scrollTargetFlowId
@@ -50,8 +87,9 @@ export function FlowGallery({
     () => Math.max(FLOW_BATCH_SIZE, requiredVisibleCount),
   );
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const renderedCount = paginate ? visibleCount : ordered.length;
   const visibleIds = new Set(
-    ordered.slice(0, visibleCount).map(({ id }) => id),
+    ordered.slice(0, renderedCount).map(({ id }) => id),
   );
   const visibleGroups = groups.flatMap((group) => {
     const visibleFlows = group.flows.filter(({ id }) => visibleIds.has(id));
@@ -59,11 +97,13 @@ export function FlowGallery({
       ? [{ ...group, flows: visibleFlows, totalCount: group.flows.length }]
       : [];
   });
-  const hasMore = visibleCount < ordered.length;
+  const hasMore = paginate && renderedCount < ordered.length;
 
-  useEffect(() => setVisibleCount(FLOW_BATCH_SIZE), [groups]);
   useEffect(() => {
-    const sentinel = sentinelRef.current;
+    if (paginate) setVisibleCount(FLOW_BATCH_SIZE);
+  }, [groups, paginate]);
+  useEffect(() => {
+    const sentinel = paginate ? sentinelRef.current : null;
     if (!sentinel || !hasMore || typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
@@ -74,10 +114,10 @@ export function FlowGallery({
     }, { rootMargin: '600px 0px' });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, ordered.length]);
+  }, [hasMore, ordered.length, paginate]);
   useEffect(() => {
     if (!scrollTargetFlowId || scrollTargetIndex < 0) return;
-    if (visibleCount < requiredVisibleCount) {
+    if (renderedCount < requiredVisibleCount) {
       setVisibleCount(requiredVisibleCount);
       return;
     }
@@ -94,7 +134,7 @@ export function FlowGallery({
     requiredVisibleCount,
     scrollTargetFlowId,
     scrollTargetIndex,
-    visibleCount,
+    renderedCount,
   ]);
   useEffect(() => {
     if (
@@ -140,7 +180,7 @@ export function FlowGallery({
     onActiveFlowChange,
     onScrollTargetHandled,
     scrollTargetFlowId,
-    visibleCount,
+    renderedCount,
   ]);
 
   return (
@@ -149,24 +189,35 @@ export function FlowGallery({
         ? <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
         : undefined}
     >
-      <div className="flow-gallery">
+      <div className="flow-gallery" aria-label={ariaLabel}>
         {visibleGroups.map((group) => (
           <section className="flow-gallery__group" key={group.id}>
-            {!group.standalone && (
-              <div className="flow-gallery__heading">
-                <span>{group.label}</span>
-                <span>{group.totalCount}</span>
-              </div>
-            )}
             <div className="flow-gallery__strips">
-              {group.flows.map((flow) => (
-                <FlowCard
-                  key={flow.id}
-                  flow={flow}
-                  anchorId={`flow-gallery-${flow.id}`}
-                  onOpen={() => onSelectFlow(flow.id)}
-                />
-              ))}
+              {group.flows.map((flow) => {
+                const cardProps = cardPropsForFlow?.(flow);
+                return (
+                  <FlowCard
+                    key={flow.id}
+                    flow={flow}
+                    anchorId={`flow-gallery-${flow.id}`}
+                    screenCount={cardProps?.screenCount}
+                    metaLabel={cardProps?.metaLabel}
+                    contextLabel={cardProps?.contextLabel
+                      ?? (group.standalone ? undefined : group.label)}
+                    platform={platform}
+                    documentSource={cardProps?.documentSource
+                      ?? (app && platform && version !== undefined
+                        ? { app, platform, version, flowId: flow.id }
+                        : undefined)}
+                    userRole={userRole}
+                    sourceAppName={cardProps?.sourceAppName ?? sourceAppName}
+                    sourceAppIconUrl={cardProps?.sourceAppIconUrl ?? sourceAppIconUrl}
+                    onOpenSourceApp={cardProps?.onOpenSourceApp}
+                    syncPreviewUrl={app === undefined}
+                    onOpen={() => onSelectFlow(flow.id)}
+                  />
+                );
+              })}
             </div>
           </section>
         ))}

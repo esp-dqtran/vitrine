@@ -8,6 +8,13 @@ export const FLOW_ANALYSIS_PROVIDERS = [
 
 export type FlowAnalysisProvider = typeof FLOW_ANALYSIS_PROVIDERS[number];
 
+const CHATGPT_DISABLED_MESSAGE =
+  "ChatGPT flow analysis is disabled; use the Kiro CLI flow analyzer";
+
+function rejectDisabledChatGpt(values: readonly string[]): void {
+  if (values.includes("chatgpt")) throw new Error(CHATGPT_DISABLED_MESSAGE);
+}
+
 function providers(
   environment: Record<string, string | undefined>,
 ): FlowAnalysisProvider[] {
@@ -24,6 +31,7 @@ function providers(
   ) {
     throw new Error("Invalid FLOW_ANALYSIS_PROVIDERS");
   }
+  rejectDisabledChatGpt(unique);
   return unique as FlowAnalysisProvider[];
 }
 
@@ -43,6 +51,7 @@ function reanalyzeProviders(
   ) {
     throw new Error("Invalid FLOW_REANALYZE_PROVIDERS");
   }
+  rejectDisabledChatGpt(unique);
   return unique as FlowAnalysisProvider[];
 }
 

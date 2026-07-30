@@ -1,6 +1,7 @@
 import { Button } from "@astryxdesign/core";
 import type { SearchFacets, SearchFilters } from "../../searchTypes.ts";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
+import { AstryxModal, AstryxModalSurface } from "./AstryxModal.tsx";
 
 export function AdvancedSearchFilterDrawer({
   open,
@@ -19,12 +20,21 @@ export function AdvancedSearchFilterDrawer({
 }) {
   if (!open) return null;
   return (
-    <div className="advanced-search-drawer" role="dialog" aria-modal="true" aria-label="Search filters">
-      <header><h2>Filters</h2><Button label="Close" variant="ghost" onClick={onClose} /></header>
-      <AdvancedSearchFilters filters={filters} facets={facets} keys={keys} onChange={onChange} />
-      <footer>
-        <Button label="Done" variant="primary" onClick={onClose} />
-      </footer>
-    </div>
+    <AstryxModal
+      isOpen
+      onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}
+      variant="fullscreen"
+      purpose="info"
+      padding={0}
+      aria-label="Search filters"
+    >
+      <AstryxModalSurface className="advanced-search-drawer">
+        <header><h2>Filters</h2><Button label="Close" variant="ghost" onClick={onClose} /></header>
+        <AdvancedSearchFilters filters={filters} facets={facets} keys={keys} onChange={onChange} />
+        <footer>
+          <Button label="Done" variant="primary" onClick={onClose} />
+        </footer>
+      </AstryxModalSurface>
+    </AstryxModal>
   );
 }

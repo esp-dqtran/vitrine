@@ -27,10 +27,12 @@ export function SiteCard({
   site,
   onOpen,
   deferMediaUntilIntent = false,
+  showMetadata = true,
 }: {
   site: SiteSummary;
   onOpen: () => void;
   deferMediaUntilIntent?: boolean;
+  showMetadata?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const shouldPlayRef = useRef(false);
@@ -69,6 +71,7 @@ export function SiteCard({
     const video = videoRef.current;
     if (!video) return;
     video.pause();
+    video.currentTime = 0;
   };
 
   return (
@@ -113,7 +116,7 @@ export function SiteCard({
         : site.name.slice(0, 1).toUpperCase()}
       title={site.name}
       description={description}
-      metadata={<>{site.label} · {site.sectionCount} sections</>}
+      metadata={showMetadata ? <>{site.label} · {site.sectionCount} sections</> : undefined}
     />
   );
 }

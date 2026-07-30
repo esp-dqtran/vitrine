@@ -295,11 +295,18 @@ export async function replaceVersionFlows(
   input: { versionId: number; flows: DesignFlow[] },
 ): Promise<void> {
   validateIncomingFlows(input.flows);
-  const locked = await client.query(
-    "SELECT id FROM app_versions WHERE id = $1 FOR UPDATE",
+  const locked = await client.query<{
+    id: number;
+    status: string;
+    published_at: string | null;
+  }>(
+    "SELECT id, status, published_at FROM app_versions WHERE id = $1 FOR UPDATE",
     [input.versionId],
   );
   if (!locked.rowCount) throw new Error("Flow target version was not found");
+  if (locked.rows[0]?.published_at != null || locked.rows[0]?.status === "published") {
+    throw new Error("Published Flow versions are immutable; publish a new App version");
+  }
 
   const current = await client.query<{ max_position: number }>(
     `SELECT COALESCE(max(position), 0)::int AS max_position

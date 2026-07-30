@@ -2,143 +2,440 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { QueryResult } from "pg";
 import {
-  FlowCatalogCursorError,
+  FlowCatalogFacetCache,
+  FlowCatalogPageCache,
   publishedFlowCatalogPage,
   type FlowCatalogQuery,
 } from "./flowCatalogStore.ts";
+
+const secret = "flow-store-secret-0123456789abcdef";
+const timestamp = "2026-07-29T06:00:00.000Z";
 
 function result(rows: Record<string, unknown>[] = []): QueryResult<any> {
   return { rows, rowCount: rows.length, command: "SELECT", oid: 0, fields: [] };
 }
 
-test("returns grouped normalized Flow counts with bounded pagination", async () => {
-  let capturedSql = "";
-  let capturedValues: readonly unknown[] | undefined;
-  const query: FlowCatalogQuery = async (sql, values) => {
-    capturedSql = sql;
-    capturedValues = values;
-    return result([
-      {
-        category: "Account Management",
-        title: "Editing Profile",
-        count: 1081,
-        version_id: 7,
-        app: "linear",
-        app_name: "Linear",
-        app_icon_url: "https://cdn.example.com/linear.png",
-        version_flow_id: 71,
-        source_flow_id: "editing-profile",
-        description: "",
-        tags: [],
-        steps: [{ label: "Open profile", evidence: [10] }],
-      },
-      {
-        category: "Account Management",
-        title: "Logging In",
-        count: 744,
-        version_id: 7,
-        app: "linear",
-        app_name: "Linear",
-        app_icon_url: "https://cdn.example.com/linear.png",
-        version_flow_id: 72,
-        source_flow_id: "logging-in",
-        description: "",
-        tags: [],
-        steps: [{ label: "Submit", evidence: [11] }],
-      },
-      {
-        category: "Commerce & Finance",
-        title: "Checkout",
-        count: 620,
-        version_id: 8,
-        app: "stripe",
-        app_name: "Stripe",
-        app_icon_url: null,
-        version_flow_id: 80,
-        source_flow_id: "checkout",
-        description: "",
-        tags: [],
-        steps: [{ label: "Pay", evidence: [12] }],
-      },
-    ]);
-  };
-
-  const page = await publishedFlowCatalogPage({
-    platform: "web",
-    query: "account",
-    limit: 2,
-  }, query);
-
-  assert.equal(page.items.length, 2);
-  assert.deepEqual(
-    page.items.map(({ category, title, count }) => ({ category, title, count })),
-    [
-      { category: "Account Management", title: "Editing Profile", count: 1081 },
-      { category: "Account Management", title: "Logging In", count: 744 },
-    ],
-  );
-  assert.deepEqual(page.items[0]?.preview, {
-    appId: "linear",
-    appName: "Linear",
-    appIconUrl: "https://cdn.example.com/linear.png",
-    screenCount: 1,
-    flow: {
-      id: "linear:71",
-      title: "Editing Profile",
-      category: "Account Management",
-      description: "",
-      tags: [],
-      steps: [{
-        label: "Open profile",
-        evidence: [{
-          imageId: 1,
-          imageUrl: "/api/catalog/flow-media/linear/web/7/71/1",
-          thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/1",
-          description: "Open profile",
-        }],
-      }],
-    },
-  });
-  assert.ok(page.nextCursor);
-  assert.deepEqual(capturedValues, ["web", "account", 0, 3, "grouped"]);
-  assert.match(capturedSql, /JOIN app_flow_version_mappings mapping/);
-  assert.match(capturedSql, /JOIN flows canonical/);
-  assert.match(capturedSql, /LEFT JOIN flows parent/);
-  assert.match(capturedSql, /COUNT\(\*\)::int AS count/);
-  assert.match(capturedSql, /SELECT DISTINCT app_id, category, title/);
-  assert.match(capturedSql, /COUNT\(DISTINCT app_id\)::int AS count/);
-  assert.match(capturedSql, /ARRAY_AGG/);
-  assert.match(capturedSql, /SUM\(count\) OVER \(PARTITION BY category\)/);
-  assert.match(capturedSql, /ROW_NUMBER\(\) OVER/);
-  assert.match(capturedSql, /representatives AS/);
+const row = (overrides: Record<string, unknown> = {}) => ({
+  flow_id: "41",
+  category_id: "7",
+  category: "Account Management",
+  category_key: "account management",
+  category_sort: "account management",
+  title: "Editing Profile",
+  title_key: "editing profile",
+  title_sort: "editing profile",
+  count: 1081,
+  category_count: 1825,
+  category_rank: 1,
+  other_rank: 0,
+  version_id: 7,
+  version_number: 3,
+  app: "linear",
+  app_name: "Linear",
+  app_icon_url: "https://cdn.example.com/linear.png",
+  version_flow_id: 71,
+  source_flow_id: "editing-profile",
+  description: "",
+  tags: [],
+  steps: [{ label: "Open profile", evidence: [10] }],
+  ...overrides,
 });
 
-test("continues from an opaque cursor and rejects malformed cursors", async () => {
-  let cursor = "";
-  const first = await publishedFlowCatalogPage(
-    { platform: "ios", limit: 1 },
-    async () => result([
-      { category: "Onboarding", title: "Creating Account", count: 727 },
-      { category: "Onboarding", title: "Browsing Tutorial", count: 217 },
-    ]),
-  );
-  cursor = first.nextCursor ?? "";
+test("freezes published App versions and canonical taxonomy at one snapshot", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql, values) => {
+    calls.push({ sql, values });
+    return result(calls.length === 1 ? [row()] : [{
+      total_count: 1,
+      facets: [{ group: "flowGroups", value: "Account Management", count: 1 }],
+    }]);
+  });
 
-  let values: readonly unknown[] | undefined;
-  await publishedFlowCatalogPage(
-    { platform: "ios", cursor, limit: 1 },
-    async (_sql, nextValues) => {
-      values = nextValues;
-      return result();
-    },
-  );
+  assert.equal(calls.length, 2);
+  assert.match(calls[0]!.sql, /av\.published_at <= \$2::timestamptz/);
+  assert.doesNotMatch(calls[0]!.sql, /av\.status = 'published'/);
+  assert.match(calls[0]!.sql, /canonical\.created_at <= \$2::timestamptz/);
+  assert.match(calls[0]!.sql, /parent\.created_at <= \$2::timestamptz/);
+  assert.match(calls[0]!.sql, /ORDER BY av\.app_id, av\.published_at DESC, av\.version_number DESC, av\.id DESC/);
+  assert.equal(calls[0]!.values?.[1], timestamp);
+});
 
-  assert.deepEqual(values, ["ios", "", 1, 2, "grouped"]);
-  await assert.rejects(
-    () => publishedFlowCatalogPage(
-      { platform: "web", cursor: "***" },
-      async () => result(),
-    ),
-    FlowCatalogCursorError,
+test("keeps heavyweight Flow preview JSON out of the catalog-wide materialized CTEs", async () => {
+  const statements: string[] = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "popular",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql) => {
+    statements.push(sql);
+    return result(/total_count/.test(sql)
+      ? [{ total_count: 1, facets: [] }]
+      : [row()]);
+  });
+
+  const pageStatement = statements.find((sql) => !/total_count/.test(sql));
+  assert.ok(pageStatement);
+  const beforePaged = pageStatement.slice(0, pageStatement.indexOf("paged AS"));
+  assert.doesNotMatch(beforePaged, /\b(?:description|tags|steps)\b/);
+  assert.doesNotMatch(beforePaged, /\bapp_icon_url\b/);
+  assert.doesNotMatch(beforePaged, /regexp_replace/);
+  assert.doesNotMatch(beforePaged, /matches AS MATERIALIZED/);
+  assert.doesNotMatch(
+    beforePaged,
+    /(?:instances|grouped_all|filtered_items|ranked) AS MATERIALIZED/,
   );
+  assert.match(pageStatement, /representatives AS \([\s\S]*JOIN app_flow_versions/);
+  assert.match(pageStatement, /representatives AS \([\s\S]*\bsteps\b/);
+});
+
+test("starts the independent first-page and facet metadata queries concurrently", async () => {
+  let pageStarted = false;
+  let metadataStarted = false;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const operation = publishedFlowCatalogPage({
+    platform: "web",
+    sort: "popular",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql) => {
+    if (/total_count/.test(sql)) metadataStarted = true;
+    else pageStarted = true;
+    await gate;
+    return result(/total_count/.test(sql)
+      ? [{ total_count: 1, facets: [] }]
+      : [row()]);
+  });
+
+  try {
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.equal(pageStarted, true);
+    assert.equal(metadataStarted, true);
+  } finally {
+    release();
+  }
+  await operation;
+});
+
+test("uses mixed-direction keyset tuples for popular and grouped pages without OFFSET", async () => {
+  for (const sort of ["popular", "grouped"] as const) {
+    const cache = new FlowCatalogFacetCache({ maxEntries: 4, ttlMs: 60_000 });
+    const firstRows = [
+      row(),
+      row({
+        flow_id: "42",
+        title: "Logging In",
+        title_key: "logging in",
+        count: 744,
+        category_rank: 2,
+        version_flow_id: 72,
+        source_flow_id: "logging-in",
+      }),
+      row({
+        flow_id: "73",
+        category: "Commerce & Finance",
+        category_key: "commerce & finance",
+        title: "Checkout",
+        title_key: "checkout",
+        count: 620,
+        category_count: 620,
+        category_rank: 1,
+      }),
+    ];
+    let calls = 0;
+    const sql: string[] = [];
+    const query: FlowCatalogQuery = async (statement) => {
+      sql.push(statement);
+      calls += 1;
+      if (calls === 1) return result(firstRows);
+      if (calls === 2) return result([{ total_count: 3, facets: [] }]);
+      return result([firstRows[2]!]);
+    };
+    const first = await publishedFlowCatalogPage({
+      platform: "web",
+      sort,
+      limit: 2,
+      cursorSecret: secret,
+      facetCache: cache,
+      now: () => new Date(timestamp),
+    }, query);
+    assert.deepEqual(first.items.map(({ title }) => title), ["Editing Profile", "Logging In"]);
+    assert.ok(first.nextCursor);
+
+    const second = await publishedFlowCatalogPage({
+      platform: "web",
+      sort,
+      limit: 2,
+      cursor: first.nextCursor!,
+      cursorSecret: secret,
+      facetCache: cache,
+    }, query);
+    assert.deepEqual(second.items.map(({ title }) => title), ["Checkout"]);
+    assert.equal(calls, 3, "cursor page reuses cached facets");
+    assert.ok(sql.every((statement) => !/\bOFFSET\b/i.test(statement)));
+    assert.match(sql[2]!, /ROW\([\s\S]*\) > ROW\(/);
+    if (sort === "popular") assert.match(sql[2]!, /category_rank/);
+  }
+});
+
+test("continues after 800-character stored category and title names with bounded SQL keys", async () => {
+  const longCategory = `account ${"management ".repeat(80)}`.trim();
+  const longTitle = `editing ${"profile ".repeat(100)}`.trim();
+  assert.ok(longCategory.length > 800);
+  assert.ok(longTitle.length > 800);
+  const cache = new FlowCatalogFacetCache({ maxEntries: 2, ttlMs: 60_000 });
+  let call = 0;
+  const statements: string[] = [];
+  const query: FlowCatalogQuery = async (sql) => {
+    statements.push(sql);
+    call += 1;
+    if (call === 1) {
+      return result([
+        row({
+          category: longCategory,
+          category_key: longCategory,
+          category_sort: longCategory.slice(0, 120),
+          title: longTitle,
+          title_key: longTitle,
+          title_sort: longTitle.slice(0, 120),
+          flow_id: "91",
+        }),
+        row({ title: "Next", title_key: "next", flow_id: "92" }),
+      ]);
+    }
+    if (/total_count/.test(sql)) {
+      return result([{ total_count: 2, facets: [] }]);
+    }
+    return result([row({ title: "Next", title_key: "next", flow_id: "92" })]);
+  };
+  const first = await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    limit: 1,
+    cursorSecret: secret,
+    facetCache: cache,
+    now: () => new Date(timestamp),
+  }, query);
+  assert.equal(first.items[0]?.title, longTitle);
+  assert.equal(first.items[0]?.category, longCategory);
+  assert.ok(first.nextCursor);
+  assert.ok(first.nextCursor!.length <= 2_048);
+  const second = await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    limit: 1,
+    cursor: first.nextCursor!,
+    cursorSecret: secret,
+    facetCache: cache,
+  }, query);
+  assert.equal(second.items[0]?.title, "Next");
+  assert.match(statements[0]!, /left\([\s\S]*category_key[\s\S]*120\)[\s\S]*AS category_sort/i);
+  assert.match(statements[0]!, /left\([\s\S]*title_key[\s\S]*120\)[\s\S]*AS title_sort/i);
+  assert.match(statements[0]!, /ORDER BY[\s\S]*category_sort[\s\S]*category_id[\s\S]*title_sort[\s\S]*flow_id/i);
+  assert.match(statements[2]!, /ROW\([\s\S]*category_sort[\s\S]*category_id[\s\S]*title_sort[\s\S]*flow_id[\s\S]*\) > ROW\(/i);
+});
+
+test("normalizes child and parent search variants and applies OR group filters", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const page = await publishedFlowCatalogPage({
+    platform: "ios",
+    sort: "popular",
+    query: "  Billing & Payments! ",
+    flowGroups: ["Account & Profile", "Commerce"],
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql, values) => {
+    calls.push({ sql, values });
+    return result(calls.length === 1 ? [row()] : [{
+      total_count: 1,
+      facets: [
+        { group: "flowGroups", value: "Account Management", count: 2 },
+        { group: "flowGroups", value: "Commerce & Finance", count: 1 },
+      ],
+    }]);
+  });
+
+  assert.equal(calls[0]!.values?.[2], "billing and payments");
+  assert.deepEqual(calls[0]!.values?.[3], ["account and profile", "commerce"]);
+  assert.match(calls[0]!.sql, /canonical\.normalized_name/);
+  assert.match(calls[0]!.sql, /parent\.normalized_name/);
+  assert.match(calls[0]!.sql, /replace\(canonical\.normalized_name, ' and ', ' '\)/);
+  assert.match(calls[0]!.sql, /ANY\(\$4::text\[\]\)/);
+  assert.equal(page.totalCount, 1);
+  assert.deepEqual(page.facets.map(({ value, count }) => ({ value, count })), [
+    { value: "Account Management", count: 2 },
+    { value: "Commerce & Finance", count: 1 },
+  ]);
+});
+
+test("facets omit their own Flow-group filter while totalCount keeps it", async () => {
+  let metadataSql = "";
+  const page = await publishedFlowCatalogPage({
+    platform: "android",
+    sort: "grouped",
+    flowGroups: ["Onboarding"],
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql) => {
+    if (/total_count/.test(sql)) {
+      metadataSql = sql;
+      return result([{
+        total_count: 4,
+        facets: [
+          { group: "flowGroups", value: "Onboarding", count: 4 },
+          { group: "flowGroups", value: "Checkout", count: 3 },
+        ],
+      }]);
+    }
+    return result([row()]);
+  });
+  assert.match(metadataSql, /filtered_items/);
+  assert.match(metadataSql, /facet_items/);
+  assert.equal(page.totalCount, 4);
+  assert.equal(page.facets.length, 2);
+});
+
+test("facet cache is TTL bounded, LRU, and isolated by complete query identity", () => {
+  let now = 1_000;
+  const cache = new FlowCatalogFacetCache({
+    maxEntries: 2,
+    ttlMs: 100,
+    now: () => now,
+  });
+  const value = { totalCount: 1, facets: [] };
+  cache.set("web:a", value);
+  cache.set("ios:a", { totalCount: 2, facets: [] });
+  assert.equal(cache.get("web:a")?.totalCount, 1);
+  cache.set("web:b", { totalCount: 3, facets: [] });
+  assert.equal(cache.get("ios:a"), undefined, "least recently used entry was evicted");
+  assert.equal(cache.get("web:a")?.totalCount, 1);
+  assert.equal(cache.get("web:b")?.totalCount, 3);
+  now += 101;
+  assert.equal(cache.get("web:a"), undefined);
+  assert.equal(cache.size, 0);
+});
+
+test("reuses one complete, snapshot-consistent first page for a warm query", async () => {
+  const pageCache = new FlowCatalogPageCache({ maxEntries: 4, ttlMs: 60_000 });
+  let calls = 0;
+  const runQuery: FlowCatalogQuery = async (sql) => {
+    calls += 1;
+    return result(/total_count/.test(sql)
+      ? [{
+          total_count: 1,
+          facets: [{ group: "flowGroups", value: "Account Management", count: 1 }],
+        }]
+      : [row()]);
+  };
+  const input = {
+    platform: "web" as const,
+    sort: "popular" as const,
+    limit: 12,
+    cursorSecret: secret,
+    pageCache,
+  };
+
+  const first = await publishedFlowCatalogPage(input, runQuery);
+  const second = await publishedFlowCatalogPage(input, runQuery);
+
+  assert.deepEqual(second, first);
+  assert.equal(calls, 2, "the warm page performs no database query");
+  assert.equal(pageCache.size, 1);
+
+  await publishedFlowCatalogPage({
+    ...input,
+    flowGroups: ["Settings"],
+  }, runQuery);
+  assert.equal(calls, 4, "filter identity has an independent cache entry");
+  assert.equal(pageCache.size, 2);
+});
+
+test("serves a stale first page immediately while one background refresh runs", async () => {
+  let now = 1_000;
+  const pageCache = new FlowCatalogPageCache({
+    maxEntries: 4,
+    ttlMs: 100,
+    staleTtlMs: 1_000,
+    now: () => now,
+  });
+  let calls = 0;
+  let releaseRefresh!: () => void;
+  const refreshGate = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  const runQuery: FlowCatalogQuery = async () => {
+    calls += 1;
+    if (calls === 1) {
+      return result([row({ title: "Cached", page_total: 1 })]);
+    }
+    await refreshGate;
+    return result([row({ title: "Refreshed", page_total: 1 })]);
+  };
+  const input = {
+    platform: "web" as const,
+    sort: "popular" as const,
+    limit: 12,
+    cursorSecret: secret,
+    includeFacets: false,
+    pageCache,
+  };
+
+  const initial = await publishedFlowCatalogPage(input, runQuery);
+  assert.equal(initial.items[0]?.title, "Cached");
+  now += 101;
+
+  const firstStale = await publishedFlowCatalogPage(input, runQuery);
+  const secondStale = await publishedFlowCatalogPage(input, runQuery);
+  assert.equal(firstStale.items[0]?.title, "Cached");
+  assert.equal(secondStale.items[0]?.title, "Cached");
+  assert.equal(calls, 2, "stale requests share one background refresh");
+
+  releaseRefresh();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  const refreshed = await publishedFlowCatalogPage(input, runQuery);
+  assert.equal(refreshed.items[0]?.title, "Refreshed");
+  assert.equal(calls, 2);
+});
+
+test("drops a Flow page only after its stale retention window", () => {
+  let now = 1_000;
+  const cache = new FlowCatalogPageCache({
+    ttlMs: 100,
+    staleTtlMs: 500,
+    now: () => now,
+  });
+  const page = { items: [], nextCursor: null, totalCount: 0, facets: [] };
+  cache.set("web", page);
+  now += 101;
+  assert.equal(cache.get("web"), undefined);
+  assert.equal(cache.getStale("web"), page);
+  assert.equal(cache.size, 1);
+  now += 400;
+  assert.equal(cache.getStale("web"), undefined);
+  assert.equal(cache.size, 0);
+});
+
+test("preserves the bounded Flow card and media structure", async () => {
+  const page = await publishedFlowCatalogPage({
+    platform: "web",
+    sort: "grouped",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql) => result(/total_count/.test(sql)
+    ? [{ total_count: 1, facets: [] }]
+    : [row()]));
+  assert.deepEqual(page.items[0]?.preview.flow.steps[0]?.evidence[0], {
+    imageId: 1,
+    imageUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=full",
+    thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=thumb",
+    description: "Open profile",
+  });
 });

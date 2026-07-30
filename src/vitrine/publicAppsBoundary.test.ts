@@ -9,7 +9,10 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
   assert.match(source, /const canUseAdvancedSearch = advancedSearchEnabled && user !== null/);
   assert.match(source, /if \(user\) await ensureCollections\(\)/);
   assert.match(source, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
-  assert.match(source, /canUseAdvancedSearch \? \(\s*<QuickSearch/);
+  assert.match(
+    source,
+    /canUseAdvancedSearch && route\.name !== 'flows' \? \(\s*<QuickSearch/,
+  );
   assert.match(source, /\{user && collectionsOpen && <CollectionsPanel/);
   assert.match(source, /\{canUseAdvancedSearch && advancedPreview \?/);
 });
@@ -49,6 +52,22 @@ test('lets guests search the public catalog without enabling member research', a
 
   assert.match(app, /publicBrowse=\{isGuest\}/);
   assert.match(palette, /publicBrowse\?: boolean/);
-  assert.match(palette, /isDisabled=\{plan === 'free' && !publicBrowse\}/);
+  assert.match(
+    palette,
+    /isDisabled=\{plan === 'free' && !publicBrowse && !flowModeEnabled\}/,
+  );
+  assert.match(
+    palette,
+    /const flowModeEnabled = plan === 'pro' \|\| initialNav === 'flows'/,
+  );
+  assert.match(
+    palette,
+    /plan === 'pro'[\s\S]*item\.id === 'trending'[\s\S]*item\.id === 'categories'[\s\S]*initialNav === 'flows' && item\.id === 'flows'/,
+  );
+  assert.doesNotMatch(palette, /flowModeEnabled \|\| item\.id/);
+  assert.match(
+    palette,
+    /nav === 'flows' && flowModeEnabled \? browseContent/,
+  );
   assert.match(palette, /publicBrowse \? \(/);
 });

@@ -28,6 +28,7 @@ import {
   CategoryConflictError,
   CategoryNotFoundError,
 } from "../../../src/categoryStore.ts";
+import { buildPublishedCatalogPage } from "../../../src/gallery.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
 const user = { id: 2, email: "user@example.com", role: "user" as const };
@@ -356,8 +357,9 @@ test("serves ordered published Categories publicly", async (t) => {
   assert.deepEqual(await response.json(), { categories });
 });
 
-test("serves paginated normalized Flow facets publicly", async (t) => {
+test("serves the exact canonical Flow discovery envelope", async (t) => {
   const inputs: unknown[] = [];
+  const facets = [{ group: "flowGroups", value: "Account Management", count: 12 }];
   const { base, server } = await serve(createApiApp({
     publishedFlowCatalogPage: async (input: unknown) => {
       inputs.push(input);
@@ -368,13 +370,17 @@ test("serves paginated normalized Flow facets publicly", async (t) => {
           count: 1081,
         }],
         nextCursor: "next",
+        totalCount: 27,
+        facets,
       };
     },
+    mediaSigningSecret: "flow-route-secret-0123456789abcdef",
   } as never));
   t.after(() => close(server));
 
   const response = await fetch(
-    `${base}/catalog/flows?platform=web&query=profile&limit=40`,
+    `${base}/catalog/flows?platform=web&query=profile&sort=grouped`
+      + `&filter=flowGroups.Account%20Management&filter=flowGroups.Security&limit=40`,
   );
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), {
@@ -384,30 +390,54 @@ test("serves paginated normalized Flow facets publicly", async (t) => {
       count: 1081,
     }],
     nextCursor: "next",
+    totalCount: 27,
+    facets,
   });
   assert.deepEqual(inputs, [{
     platform: "web",
     cursor: undefined,
     limit: 40,
     query: "profile",
-    order: "grouped",
+    sort: "grouped",
+    flowGroups: ["Account Management", "Security"],
+    cursorSecret: "flow-route-secret-0123456789abcdef",
   }]);
 });
 
-test("rejects invalid Flow catalog queries before reading the database", async (t) => {
+test("maps only transition Flow views and rejects invalid queries before the store", async (t) => {
+  const inputs: unknown[] = [];
   let calls = 0;
   const { base, server } = await serve(createApiApp({
-    publishedFlowCatalogPage: async () => {
+    publishedFlowCatalogPage: async (input: unknown) => {
       calls += 1;
-      return { items: [], nextCursor: null };
+      inputs.push(input);
+      return { items: [], nextCursor: null, totalCount: 0, facets: [] };
     },
+    mediaSigningSecret: "flow-route-secret-0123456789abcdef",
   } as never));
   t.after(() => close(server));
 
-  assert.equal((await fetch(`${base}/catalog/flows?platform=desktop`)).status, 400);
-  assert.equal((await fetch(`${base}/catalog/flows?platform=web&query=${"x".repeat(121)}`)).status, 400);
-  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=unknown`)).status, 400);
-  assert.equal(calls, 0);
+  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=browse`)).status, 200);
+  assert.equal((await fetch(`${base}/catalog/flows?platform=web&view=grouped`)).status, 200);
+  assert.equal((inputs[0] as { sort: string }).sort, "popular");
+  assert.equal((inputs[1] as { sort: string }).sort, "grouped");
+
+  const invalid = [
+    "platform=desktop",
+    `platform=web&query=${"x".repeat(121)}`,
+    "platform=web&view=unknown",
+    "platform=web&sort=latest",
+    "platform=web&sort=popular&view=browse",
+    "platform=web&filter=flows.Onboarding",
+    "platform=web&filter=flowGroups.",
+    `platform=web&filter=${Array.from({ length: 41 }, (_, index) => `flowGroups.G${index}`).join("&filter=")}`,
+    "platform=web&limit=101",
+    "platform=web&limit=1.5",
+  ];
+  for (const query of invalid) {
+    assert.equal((await fetch(`${base}/catalog/flows?${query}`)).status, 400);
+  }
+  assert.equal(calls, 2);
 });
 
 test("manages Categories and App assignments through admin-only endpoints", async (t) => {
@@ -1751,7 +1781,7 @@ test("serves imported current design when the published version has only an empt
     canAccessApp: async () => true,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: placeholder, flows: [] }),
     getImportedCurrentDesignSystem: async () => imported,
-    getAppFlows: async () => [], appImages: async () => [],
+    getAppFlows: async () => [], appImages: async () => [], versionImages: async () => [],
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { cookie: "astryx_session=user" } });
@@ -1767,6 +1797,7 @@ test("never uses imported-current fallback for an explicit version", async (t) =
     resolveSession: async () => admin,
     canAccessApp: async () => true,
     getVersionDesignSystem: async () => undefined,
+    getDesignSystem: async () => undefined,
     getImportedCurrentDesignSystem: async () => { fallbackReads += 1; return undefined; },
     getAppFlows: async () => [], appImages: async () => [],
   }));
@@ -1957,8 +1988,13 @@ test("keeps liveness up but fails readiness when object storage is unavailable",
   const response = await fetch(`${base}/catalog?cursor=${validCursor}&limit=3`);
   assert.equal(response.status, 200);
   const body = await response.json();
-  assert.deepEqual(input, { cursor: validCursor, limit: 3 });
-  assert.equal(body.apps[0].previewScreens.length, 1);
+  assert.deepEqual(input, {
+    cursor: validCursor,
+    limit: 3,
+    filters: [],
+    sort: "latest",
+  });
+  assert.equal(body.items[0].previewScreens.length, 1);
   assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
 });
 
@@ -1990,8 +2026,20 @@ test("passes valid category and flow facets to public catalog pagination", async
     `${base}/catalog?group=flows&value=Setting%20Up&platform=android`,
   )).status, 200);
   assert.deepEqual(inputs, [
-    { cursor: undefined, limit: undefined, facet: { group: "categories", value: "CRM", platform: "web" } },
-    { cursor: undefined, limit: undefined, facet: { group: "flows", value: "Setting Up", platform: "android" } },
+    {
+      cursor: undefined,
+      limit: undefined,
+      filters: [{ group: "categories", value: "CRM" }],
+      platform: "web",
+      sort: "latest",
+    },
+    {
+      cursor: undefined,
+      limit: undefined,
+      filters: [{ group: "flows", value: "Setting Up" }],
+      platform: "android",
+      sort: "latest",
+    },
   ]);
 });
 
@@ -2002,6 +2050,95 @@ test("rejects incomplete public catalog facets", async (t) => {
   const response = await fetch(`${base}/catalog?group=flows&value=Setting%20Up`);
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "invalid catalog facet" });
+});
+
+test("serves one exact discovery envelope for repeated canonical catalog filters", async (t) => {
+  const inputs: unknown[] = [];
+  const facets = [
+    { group: "categories", value: "CRM", count: 12 },
+    { group: "flows", value: "Setting Up", count: 4 },
+  ];
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async (input: unknown) => {
+      inputs.push(input);
+      return { ...catalogPageRecord, totalCount: 27, facets };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/catalog?filter=categories.CRM&filter=categories.Sales`
+      + `&filter=flows.Setting%20Up&platform=web&query=linear&sort=trending&limit=3`,
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(inputs, [{
+    cursor: undefined,
+    limit: 3,
+    filters: [
+      { group: "categories", value: "CRM" },
+      { group: "categories", value: "Sales" },
+      { group: "flows", value: "Setting Up" },
+    ],
+    platform: "web",
+    query: "linear",
+    sort: "trending",
+  }]);
+  const body = await response.json();
+  assert.deepEqual(Object.keys(body), ["items", "nextCursor", "totalCount", "facets"]);
+  assert.equal(body.items[0].previewScreens.length, 1);
+  assert.equal(body.totalCount, 27);
+  assert.deepEqual(body.facets, facets);
+  assert.doesNotMatch(JSON.stringify(body), /mobbin-bulk|image_url/);
+});
+
+test("compresses a large catalog envelope without dropping complete facets", async (t) => {
+  const facets = Array.from({ length: 4_000 }, (_, index) => ({
+    group: "flows",
+    value: `Flow ${index}`,
+    count: index + 1,
+  }));
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => ({
+      ...catalogPageRecord,
+      totalCount: 1,
+      facets,
+    }),
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog?platform=web`, {
+    headers: { "accept-encoding": "gzip" },
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-encoding"), "gzip");
+  assert.deepEqual((await response.json() as { facets: unknown[] }).facets, facets);
+});
+
+test("rejects invalid repeated canonical catalog filters before reading the store", async (t) => {
+  let calls = 0;
+  const { base, server } = await serve(createApiApp({
+    publishedCatalogPage: async () => {
+      calls += 1;
+      return { ...catalogPageRecord, totalCount: 1, facets: [] };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const invalid = [
+    "filter=unknown.Value",
+    "filter=flows.",
+    `filter=categories.${"x".repeat(121)}`,
+    "filter=flows.Setting%20Up&platform=desktop",
+    `filter=${Array.from({ length: 41 }, (_, index) => `categories.C${index}`).join("&filter=")}`,
+    `query=${"q".repeat(121)}`,
+    "sort=popular",
+  ];
+  for (const query of invalid) {
+    assert.equal((await fetch(`${base}/catalog?${query}`)).status, 400);
+  }
+  assert.equal(calls, 0);
 });
 
 test("keeps the catalog public and every App detail endpoint private", async (t) => {
@@ -2030,28 +2167,33 @@ test("keeps the catalog public and every App detail endpoint private", async (t)
 
 test("keeps the Sites catalog public and every Site detail endpoint private", async (t) => {
   const sitesStore = {
-    listReadySites: async () => [{
-      siteId: 1,
-      versionId: 2,
-      name: "V7",
-      slug: "v-7",
-      sourceUrl: "https://v7labs.com/",
-      categories: [],
-      styles: [],
-      popularity: 1,
-      label: "Jul 2026",
-      isLatest: true,
-      pageCount: 1,
-      sectionCount: 1,
-      previewUrl: "/api/sites/1/versions/2/media/preview",
-      previews: [{
-        id: 10,
-        title: "Home",
-        position: 0,
-        url: "/api/sites/1/versions/2/pages/10/media",
+    listReadySitesPage: async () => ({
+      items: [{
+        siteId: 1,
+        versionId: 2,
+        name: "V7",
+        slug: "v-7",
+        sourceUrl: "https://v7labs.com/",
+        categories: [],
+        styles: [],
+        popularity: 1,
+        label: "Jul 2026",
+        isLatest: true,
+        pageCount: 1,
+        sectionCount: 1,
+        previewUrl: "/api/sites/1/versions/2/media/preview",
+        previews: [{
+          id: 10,
+          title: "Home",
+          position: 0,
+          url: "/api/sites/1/versions/2/pages/10/media",
+        }],
+        updatedAt: "2026-07-20T00:00:00.000Z",
       }],
-      updatedAt: "2026-07-20T00:00:00.000Z",
-    }],
+      nextCursor: null,
+      totalCount: 1,
+      facets: [],
+    }),
     siteMediaObject: async () => previewMetadata,
   };
   const { base, server } = await serve(createApiApp({
@@ -2188,6 +2330,60 @@ test("serves allowlisted public taxonomy previews and protected media", async (t
   }]);
 });
 
+test("serves dynamic Screen-pattern media and quick previews from the normalized taxonomy", async (t) => {
+  const mediaInputs: unknown[] = [];
+  const exactPage = buildPublishedCatalogPage({
+    apps: [catalogPageRecord.apps[0]!],
+    previews: [{
+      ...catalogImages[0],
+      matched_facets: [{ group: "screens", value: "Dashboard" }],
+      preview_rank: 1,
+    }],
+    nextCursor: null,
+  });
+  const exactUrl = exactPage.apps[0]?.previewScreens[0]?.url;
+  assert.ok(exactUrl);
+
+  const { base, server } = await serve(createApiApp({
+    objectStore: localObjectStore,
+    publishedFacetPreviews: async () => [{
+      kind: "screen",
+      app: "linear",
+      label: "Dashboard",
+      iconUrl: null,
+      mediaCount: 1,
+    }],
+    publishedFacetPreviewObject: async (input: unknown) => {
+      mediaInputs.push(input);
+      const facet = input as { value?: string };
+      return facet.value === "Dashboard" ? previewMetadata : undefined;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const exact = await fetch(`${base}${exactUrl.replace(/^\/api/, "")}`);
+  assert.equal(exact.status, 200);
+  assert.equal(await exact.text(), "image");
+  assert.deepEqual(mediaInputs[0], {
+    app: "linear",
+    group: "screens",
+    value: "Dashboard",
+    platform: "web",
+    rank: 1,
+  });
+
+  assert.equal((await fetch(
+    `${base}/catalog/facet-media/linear/screens/Does%20Not%20Exist/web/1`,
+  )).status, 404);
+  assert.equal((await fetch(
+    `${base}/catalog/facet-media/linear/screens/${"x".repeat(121)}/web/1`,
+  )).status, 400);
+  assert.equal((await fetch(
+    `${base}/catalog/facet-preview?group=screens&value=Dashboard&platform=web`,
+  )).status, 200);
+  assert.equal(mediaInputs.length, 2);
+});
+
 test("serves bounded public Flow catalog media without an App detail request", async (t) => {
   const inputs: unknown[] = [];
   const { base, server } = await serve(createApiApp({
@@ -2211,12 +2407,26 @@ test("serves bounded public Flow catalog media without an App detail request", a
     versionId: 7,
     versionFlowId: 71,
     rank: 2,
+    variant: "full",
   }]);
+
+  const thumbnail = await fetch(
+    `${base}/catalog/flow-media/linear/web/7/71/2?variant=thumb`,
+  );
+  assert.equal(thumbnail.status, 200);
+  assert.deepEqual(inputs[1], {
+    app: "linear",
+    platform: "web",
+    versionId: 7,
+    versionFlowId: 71,
+    rank: 2,
+    variant: "thumb",
+  });
 
   assert.equal((await fetch(
     `${base}/catalog/flow-media/linear/web/7/71/7`,
   )).status, 400);
-  assert.equal(inputs.length, 1);
+  assert.equal(inputs.length, 2);
 });
 
 test("rejects unknown taxonomy preview inputs before dependencies run", async (t) => {
@@ -2282,6 +2492,36 @@ test("passes the thumb variant through to the object lookup, defaulting to full 
   await fetch(`${base}/media/linear/0123456789abcdef?variant=thumb`, { headers: adminCookie, redirect: "manual" });
   await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminCookie, redirect: "manual" });
   assert.deepEqual(seenVariants, ["thumb", "full"]);
+});
+
+test("streams protected media through the API when inline delivery is requested", async (t) => {
+  let signedRequests = 0;
+  const protectedMetadata = { ...previewMetadata, accessClass: "protected" as const };
+  const objectStore: ObjectStore = {
+    ...localObjectStore,
+    get: async () => ({ metadata: protectedMetadata, body: Buffer.from("image") }),
+    signedGetUrl: async () => {
+      signedRequests += 1;
+      return "https://objects.example/signed";
+    },
+  };
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    objectStore,
+    adminImageObject: async () => protectedMetadata,
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/media/linear/0123456789abcdef?delivery=inline`,
+    { headers: adminCookie, redirect: "manual" },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("location"), null);
+  assert.equal(response.headers.get("content-type"), "image/webp");
+  assert.equal(await response.text(), "image");
+  assert.equal(signedRequests, 0);
 });
 
 test("gates customer app detail and unlocks a Free app", async (t) => {
@@ -2462,6 +2702,58 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
+test("summarizes analyzed UI element crops for the Design System", async (t) => {
+  let requested: {
+    app: string;
+    platform: string;
+    versionNumber?: number | null;
+    limit?: number;
+  } | undefined;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    canAccessApp: async () => true,
+    appPlatforms: async () => ["ios"],
+    resolveAppVersion: async () => ({ ...publishedVersion, app: "shopee", platform: "ios" }),
+    appUiElementSummary: async (input) => {
+      requested = input;
+      return {
+        totalOccurrences: 5967,
+        totalTypes: 42,
+        items: [{
+          component_type: "Top Navigation Bar",
+          component_group: "Navigation",
+          occurrence_count: 971,
+          image_id: 1872010,
+          image_url: "mobbin-bulk:0123456789abcdef",
+          description: "Account and Security navigation",
+          purpose: "Navigate back",
+          visible_states: ["Default"],
+        }],
+      };
+    },
+    recordAccessEvent: async () => {},
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/apps/shopee/ui-element-summary?platform=ios&version=1&limit=12`,
+    { headers: adminCookie },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(requested, {
+    app: "shopee",
+    platform: "ios",
+    versionNumber: 1,
+    publishedOnly: false,
+    limit: 12,
+  });
+  const body = await response.json();
+  assert.equal(body.totalOccurrences, 5967);
+  assert.equal(body.items[0].type, "Top Navigation Bar");
+  assert.equal(body.items[0].count, 971);
+  assert.match(body.items[0].imageUrl, /\/api\/media\/shopee\//);
+});
+
 test("loads flows without loading a design-system snapshot", async (t) => {
   let evidenceIds: number[] = [];
   const { base, server } = await serve(createApiApp({
@@ -2568,6 +2860,71 @@ test("paginates the admin app gallery without loading every image", async (t) =>
   assert.equal(body.apps[0].screens.length, 1);
   assert.equal(body.nextCursor, validCursor);
   assert.equal(body.total, 562);
+});
+
+test("serves canonical filtered admin Apps discovery with progress and facets", async (t) => {
+  const inputs: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    adminAppPage: async () => { throw new Error("legacy admin page must not run"); },
+    adminCatalogPage: async (input: unknown) => {
+      inputs.push(input);
+      return {
+        ...catalogPageRecord,
+        apps: catalogPageRecord.apps.map((app) => ({
+          ...app,
+          analyzed_screens: 3,
+        })),
+        totalCount: 7,
+        facets: [{ group: "screens", value: "Dashboard", count: 4 }],
+      };
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/apps?platform=web&query=linear&sort=trending`
+      + `&filter=categories.Business&filter=screens.Dashboard&limit=3`,
+    { headers: adminCookie },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(inputs, [{
+    cursor: undefined,
+    limit: 3,
+    filters: [
+      { group: "categories", value: "Business" },
+      { group: "screens", value: "Dashboard" },
+    ],
+    platform: "web",
+    query: "linear",
+    sort: "trending",
+  }]);
+  const body = await response.json();
+  assert.equal(body.apps[0].analyzedScreens, 3);
+  assert.equal(body.total, 7);
+  assert.deepEqual(body.facets, [
+    { group: "screens", value: "Dashboard", count: 4 },
+  ]);
+});
+
+test("rejects invalid canonical admin Apps discovery before reading stores", async (t) => {
+  let calls = 0;
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => admin,
+    adminCatalogPage: async () => {
+      calls += 1;
+      return catalogPageRecord;
+    },
+  } as never));
+  t.after(() => close(server));
+
+  const response = await fetch(
+    `${base}/apps?platform=desktop&sort=trending&filter=screens.Dashboard`,
+    { headers: adminCookie },
+  );
+  assert.equal(response.status, 400);
+  assert.equal(calls, 0);
 });
 
 test("returns 400 for an invalid admin Apps cursor", async (t) => {

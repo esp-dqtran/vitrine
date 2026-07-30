@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('keeps the search dialog mounted through its close animation', async () => {
-  const [source, styles, flowApi] = await Promise.all([
+  const [source, styles, flowApi, flowLifecycle] = await Promise.all([
     readFile(new URL('./components/CommandPalette.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./styles.css', import.meta.url), 'utf8'),
     readFile(new URL('./flowCatalogApi.ts', import.meta.url), 'utf8'),
+    readFile(new URL('./useCommandPaletteFlowCatalog.ts', import.meta.url), 'utf8'),
   ]);
 
   assert.match(source, /data-closing=/);
@@ -19,7 +20,12 @@ test('keeps the search dialog mounted through its close animation', async () => 
   assert.match(source, /InspirationResults/);
   assert.match(source, /InspirationPreview/);
   assert.match(source, /searchRelatedCatalog/);
-  assert.match(source, /loadFlowCatalogPage/);
+  assert.match(source, /useCommandPaletteFlowCatalog/);
+  assert.match(source, /cancel:\s*cancelFlowRequests/);
+  assert.match(source, /const requestClose[\s\S]*cancelFlowRequests\(\)[\s\S]*setClosing\(true\)/);
+  assert.match(flowLifecycle, /initialRequestRef\.current\?\.controller\.abort\(\)/);
+  assert.match(flowLifecycle, /cursorRequestRef\.current\?\.controller\.abort\(\)/);
+  assert.match(flowLifecycle, /observerRef\.current\?\.disconnect\(\)/);
   assert.match(flowApi, /\/api\/catalog\/flows/);
   assert.doesNotMatch(source, /loadDesignSystem/);
   assert.doesNotMatch(source, /Promise\.all\(apps\.map/);

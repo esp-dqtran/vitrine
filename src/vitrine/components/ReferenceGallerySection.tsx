@@ -3,22 +3,27 @@ import type { ReactNode } from 'react';
 export function ReferenceGalleryGrid({
   minCardWidth,
   columns,
+  layout,
   children,
 }: {
   minCardWidth: number;
   columns?: number;
+  layout?: 'mobile-screens' | 'web-screens';
   children: ReactNode;
 }) {
   return (
     <div
       data-reference-gallery="grid"
       data-reference-gallery-columns={columns}
+      data-reference-gallery-layout={layout}
       style={{
         display: 'grid',
-        gridTemplateColumns: columns
+        gridTemplateColumns: layout
+          ? undefined
+          : columns
           ? `repeat(${columns},minmax(0,1fr))`
           : `repeat(auto-fill,minmax(${minCardWidth}px,1fr))`,
-        gap: 20,
+        gap: layout ? undefined : 20,
       }}
     >
       {children}

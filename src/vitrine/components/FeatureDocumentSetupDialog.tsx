@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Button, Dialog, Heading, Text, TextArea } from '@astryxdesign/core';
+import { Button, Heading, Text, TextArea } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import { createFeatureDocument } from '../featureDocumentsApi.ts';
 import { navigate } from '../router.ts';
+import { AstryxModal } from './AstryxModal.tsx';
 
 export function FeatureDocumentSetupDialog({
   isOpen,
@@ -53,7 +54,7 @@ export function FeatureDocumentSetupDialog({
   };
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) close(); }} purpose="form" width={520}>
+    <AstryxModal isOpen={isOpen} onOpenChange={(open) => { if (!open) close(); }} purpose="form" width={520}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Heading level={3}>Create Feature Document</Heading>
         <Text color="secondary">Analyze {flow.title} as structured product evidence and generate requirements with traceable citations.</Text>
@@ -81,6 +82,6 @@ export function FeatureDocumentSetupDialog({
           <Button label="Analyze Flow" variant="primary" isDisabled={busy || missingSteps.length > 0 || imageCount === 0} isLoading={busy} clickAction={analyze} />
         </div>
       </div>
-    </Dialog>
+    </AstryxModal>
   );
 }

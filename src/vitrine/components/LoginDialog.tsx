@@ -1,6 +1,6 @@
-import { Dialog } from '@astryxdesign/core';
 import type { AuthUser } from '../authApi.ts';
 import { SignIn } from '../SignIn.tsx';
+import { AstryxModal } from './AstryxModal.tsx';
 
 interface LoginDialogProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export function LoginDialog({
   };
 
   return (
-    <Dialog
+    <AstryxModal
       isOpen={isOpen}
       onOpenChange={(open) => { if (!open) onClose(); }}
       purpose="info"
@@ -44,6 +44,6 @@ export function LoginDialog({
           onSignedIn={complete}
         />
       </div>
-    </Dialog>
+    </AstryxModal>
   );
 }

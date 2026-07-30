@@ -10,6 +10,7 @@ export interface FeatureClaim {
 
 export interface FeatureAcceptanceCriterion {
   id: string;
+  kind?: FeatureClaimKind;
   given: string;
   when: string;
   then: string;
@@ -18,12 +19,51 @@ export interface FeatureAcceptanceCriterion {
 
 export interface FeatureRequirement extends FeatureClaim {
   userStory: string;
-  priority: "must" | "should" | "could" | "later";
+  priority: "must" | "should" | "could" | "later" | "unranked";
   preconditions: string[];
   acceptanceCriteria: FeatureAcceptanceCriterion[];
 }
 
+export interface FeatureSourceAssessment {
+  captureType: "complete-journey" | "partial-journey" | "static-screen" | "state-gallery" | "content-scroll";
+  completeness: "complete" | "partial";
+  rationale: string;
+  evidenceIds: string[];
+}
+
+export interface FeatureUnscopedEvidence {
+  evidenceId: string;
+  reason: string;
+}
+
+export interface FeatureOfficialDocumentationSource {
+  id: string;
+  title: string;
+  url: string;
+  retrievedAt: string;
+  platform: "ios" | "android" | "web" | "all";
+  region: string;
+}
+
+export interface FeatureDocumentedClaim {
+  id: string;
+  text: string;
+  sourceIds: string[];
+  relationship: "supports" | "extends" | "conflicts" | "unrelated";
+  visualEvidenceIds: string[];
+  unresolved: boolean;
+}
+
+export interface FeatureDocumentedContext {
+  status: "researched" | "not-found";
+  sources: FeatureOfficialDocumentationSource[];
+  claims: FeatureDocumentedClaim[];
+}
+
 export interface FeatureDocumentContent {
+  sourceAssessment?: FeatureSourceAssessment;
+  unscopedEvidence?: FeatureUnscopedEvidence[];
+  documentedContext?: FeatureDocumentedContext;
   executiveSummary: {
     purpose: FeatureClaim;
     userValue: FeatureClaim;
@@ -195,9 +235,36 @@ export function featureEvidenceManifestSha256(manifest: FeatureEvidenceManifestI
 export interface FeatureSynthesisPrompt {
   source: FeatureSourceFlow;
   focusInstruction: string;
+  evidenceManifest: FeatureEvidenceManifestItem[];
   analyses: FeatureStepAnalysis[];
   allowedEvidenceIds: string[];
   validationError?: string;
+}
+
+export interface FeatureFlowPrompt {
+  source: FeatureSourceFlow;
+  focusInstruction: string;
+  evidenceManifest: FeatureEvidenceManifestItem[];
+  allowedEvidenceIds: string[];
+  validationError?: string;
+}
+
+export interface FeatureDocumentValidationOptions {
+  evidenceBacked?: boolean;
+  evidenceManifest?: FeatureEvidenceManifestItem[];
+  analyses?: FeatureStepAnalysis[];
+  officialDocumentationRequired?: boolean;
+  officialDocumentationDomains?: readonly string[];
+}
+
+export function featureDocumentClaimBudget(evidenceCount: number): number {
+  if (!Number.isSafeInteger(evidenceCount) || evidenceCount < 1) {
+    throw new Error("feature document evidence count must be a positive integer");
+  }
+  if (evidenceCount <= 2) return 24;
+  if (evidenceCount <= 4) return 32;
+  if (evidenceCount <= 6) return 38;
+  return Math.min(50, 26 + evidenceCount * 2);
 }
 
 type JsonObject = Record<string, unknown>;
@@ -236,6 +303,134 @@ function evidenceIds(value: unknown, allowed: ReadonlySet<string>, label: string
   const unknown = ids.find((id) => !allowed.has(id));
   if (unknown) throw new Error(`${label} cites unknown evidence: ${unknown}`);
   return ids;
+}
+
+function officialDocumentationHostAllowed(
+  hostname: string,
+  domains: readonly string[],
+): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/, "");
+  return domains.some((domain) =>
+    normalized === domain || normalized.endsWith(`.${domain}`)
+  );
+}
+
+function documentedContext(
+  value: unknown,
+  allowedEvidenceIds: ReadonlySet<string>,
+  identities: Set<string>,
+  allowedDomains: readonly string[],
+): FeatureDocumentedContext {
+  const root = object(value, "documentedContext");
+  const status = root.status;
+  if (status !== "researched" && status !== "not-found") {
+    throw new Error("documentedContext.status is invalid");
+  }
+  const sourceIdentities = new Set<string>();
+  const sources = list(root.sources, "documentedContext.sources", 12).map(
+    (value, index): FeatureOfficialDocumentationSource => {
+      const source = object(value, `documentedContext.sources[${index}]`);
+      const id = text(source.id, `documentedContext.sources[${index}].id`, 160);
+      if (sourceIdentities.has(id)) throw new Error(`duplicate documented source: ${id}`);
+      sourceIdentities.add(id);
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(text(source.url, `documentedContext.sources[${index}].url`, 2_000));
+      } catch {
+        throw new Error("documentedContext source URL is invalid");
+      }
+      if (parsedUrl.protocol !== "https:") {
+        throw new Error("documentedContext source URL must use HTTPS");
+      }
+      if (
+        allowedDomains.length > 0
+        && !officialDocumentationHostAllowed(parsedUrl.hostname, allowedDomains)
+      ) {
+        throw new Error("documentedContext source domain is not allowed");
+      }
+      const retrievedAt = text(
+        source.retrievedAt,
+        `documentedContext.sources[${index}].retrievedAt`,
+        80,
+      );
+      if (Number.isNaN(Date.parse(retrievedAt))) {
+        throw new Error("documentedContext source retrieval date is invalid");
+      }
+      const platform = source.platform;
+      if (
+        platform !== "ios"
+        && platform !== "android"
+        && platform !== "web"
+        && platform !== "all"
+      ) {
+        throw new Error("documentedContext source platform is invalid");
+      }
+      return {
+        id,
+        title: text(source.title, `documentedContext.sources[${index}].title`, 1_000),
+        url: parsedUrl.toString(),
+        retrievedAt: new Date(retrievedAt).toISOString(),
+        platform,
+        region: text(source.region, `documentedContext.sources[${index}].region`, 160),
+      };
+    },
+  );
+  const claims = list(root.claims, "documentedContext.claims", 20).map(
+    (value, index): FeatureDocumentedClaim => {
+      const claim = object(value, `documentedContext.claims[${index}]`);
+      const id = text(claim.id, `documentedContext.claims[${index}].id`, 160);
+      if (identities.has(id)) throw new Error(`duplicate feature document id: ${id}`);
+      identities.add(id);
+      const relationship = claim.relationship;
+      if (
+        relationship !== "supports"
+        && relationship !== "extends"
+        && relationship !== "conflicts"
+        && relationship !== "unrelated"
+      ) {
+        throw new Error("documentedContext claim relationship is invalid");
+      }
+      const sourceIds = [...new Set(strings(
+        claim.sourceIds,
+        `documentedContext.claims[${index}].sourceIds`,
+        12,
+      ))];
+      if (sourceIds.length === 0) {
+        throw new Error("documentedContext claim requires a source");
+      }
+      const unknownSource = sourceIds.find((sourceId) => !sourceIdentities.has(sourceId));
+      if (unknownSource) throw new Error(`unknown documented source: ${unknownSource}`);
+      const visualEvidenceIds = evidenceIds(
+        claim.visualEvidenceIds,
+        allowedEvidenceIds,
+        `documentedContext.claims[${index}].visualEvidenceIds`,
+      );
+      if (
+        (relationship === "supports" || relationship === "conflicts")
+        && visualEvidenceIds.length === 0
+      ) {
+        throw new Error(`documentedContext ${relationship} claim requires visual evidence`);
+      }
+      if (typeof claim.unresolved !== "boolean") {
+        throw new Error("documentedContext claim unresolved must be boolean");
+      }
+      return {
+        id,
+        text: text(claim.text, `documentedContext.claims[${index}].text`, 4_000),
+        sourceIds,
+        relationship,
+        visualEvidenceIds,
+        unresolved: claim.unresolved,
+      };
+    },
+  );
+  if (status === "not-found" && (sources.length > 0 || claims.length > 0)) {
+    throw new Error("documentedContext not-found result must be empty");
+  }
+  if (status === "researched" && sources.length === 0) {
+    throw new Error("documentedContext researched result requires a source");
+  }
+  return { status, sources, claims };
 }
 
 function claim(
@@ -279,17 +474,83 @@ function criterion(
   allowed: ReadonlySet<string>,
   label: string,
   identities: Set<string>,
+  options: FeatureDocumentValidationOptions,
 ): FeatureAcceptanceCriterion {
   const item = object(value, label);
   const id = text(item.id, `${label}.id`, 160);
   if (identities.has(id)) throw new Error(`duplicate feature document id: ${id}`);
+  if (options.evidenceBacked && !/^AC-\d{3}$/.test(id)) {
+    throw new Error(`${label}.id must use the AC-001 format`);
+  }
   identities.add(id);
+  const kind = item.kind;
+  if (
+    kind !== undefined
+    && kind !== "observed"
+    && kind !== "inferred"
+    && kind !== "proposed"
+    && kind !== "unknown"
+  ) {
+    throw new Error(`${label}.kind is invalid`);
+  }
+  if (options.evidenceBacked && kind !== "observed" && kind !== "inferred") {
+    throw new Error(`${label}.kind must be observed or inferred`);
+  }
+  const citations = evidenceIds(item.evidenceIds, allowed, label);
+  if (options.evidenceBacked && citations.length === 0) {
+    throw new Error(`${label} requires evidence`);
+  }
+  const given = text(item.given, `${label}.given`, 4_000);
+  const when = text(item.when, `${label}.when`, 4_000);
+  const then = text(item.then, `${label}.then`, 4_000);
+  if (
+    options.evidenceBacked
+    && /\b(clear and discoverable|clearly understandable|easy to (?:find|use|understand)|enough context|intuitive|user-friendly|visually understandable)\b/i.test(
+      `${given} ${when} ${then}`,
+    )
+  ) {
+    throw new Error(`${label} must use objectively testable language`);
+  }
+  const visibleFeedbackEvidence = new Set(
+    (options.analyses ?? [])
+      .filter(({ systemFeedback }) => systemFeedback.length > 0)
+      .map(({ evidenceId }) => evidenceId),
+  );
+  const citedAnalyses = (options.analyses ?? []).filter(({ evidenceId }) =>
+    citations.includes(evidenceId)
+  );
+  const hasLoadingEvidence = citedAnalyses.some((analysis) =>
+    [
+      ...analysis.visibleUi,
+      ...analysis.visibleText,
+      ...analysis.systemFeedback,
+    ].some((entry) => /\b(loading|spinner|progress|skeleton|shimmer)\b/i.test(entry))
+  );
+  if (
+    options.evidenceBacked
+    && /\b(?:finish(?:es|ed)? loading|loading (?:completes?|finishes?)|has loaded)\b/i.test(
+      `${given} ${when} ${then}`,
+    )
+    && !hasLoadingEvidence
+  ) {
+    throw new Error(`${label} cannot claim loading completion without visible loading evidence`);
+  }
+  if (
+    options.evidenceBacked
+    && kind === "observed"
+    && /\b(tap|select|choose|save|apply|submit|confirm|add|remove|update|clear|filter|sort|toggle|change|enter|type)\b/i.test(when)
+    && citations.length < 2
+    && !citations.some((evidenceId) => visibleFeedbackEvidence.has(evidenceId))
+  ) {
+    throw new Error(`${label} needs before/after or visible-feedback evidence for an observed transition`);
+  }
   return {
     id,
-    given: text(item.given, `${label}.given`, 4_000),
-    when: text(item.when, `${label}.when`, 4_000),
-    then: text(item.then, `${label}.then`, 4_000),
-    evidenceIds: evidenceIds(item.evidenceIds, allowed, label),
+    ...(kind === undefined ? {} : { kind }),
+    given,
+    when,
+    then,
+    evidenceIds: citations,
   };
 }
 
@@ -298,17 +559,75 @@ function requirement(
   allowed: ReadonlySet<string>,
   label: string,
   identities: Set<string>,
+  options: FeatureDocumentValidationOptions,
 ): FeatureRequirement {
   const item = object(value, label);
   const base = claim(item, allowed, label, identities);
+  if (options.evidenceBacked && !/^REQ-\d{3}$/.test(base.id)) {
+    throw new Error(`${label}.id must use the REQ-001 format`);
+  }
+  if (options.evidenceBacked && base.kind !== "observed" && base.kind !== "inferred") {
+    throw new Error(`${label}.kind must be observed or inferred`);
+  }
+  if (options.evidenceBacked && base.evidenceIds.length === 0) {
+    throw new Error(`${label} requires evidence`);
+  }
   const priority = item.priority;
-  if (priority !== "must" && priority !== "should" && priority !== "could" && priority !== "later") {
+  if (
+    priority !== "must"
+    && priority !== "should"
+    && priority !== "could"
+    && priority !== "later"
+    && priority !== "unranked"
+  ) {
     throw new Error(`${label}.priority is invalid`);
   }
+  if (options.evidenceBacked && priority !== "unranked") {
+    throw new Error(`${label}.priority must be unranked without product-owner input`);
+  }
+  if (
+    options.evidenceBacked
+    && priority === "unranked"
+    && /\b(must|should|could|required|priority)\b/i.test(base.text)
+  ) {
+    throw new Error(`${label}.text cannot use priority language when priority is unranked`);
+  }
+  const hasExplicitInteraction = (options.evidenceManifest ?? []).some(
+    ({ evidenceId, interaction }) =>
+      base.evidenceIds.includes(evidenceId) && Boolean(interaction?.trim()),
+  );
+  if (
+    options.evidenceBacked
+    && base.kind === "observed"
+    && (
+      /\b(?:supports?|allows?|enables?)\s+(?:the user to\s+)?(?:submit|submission|save|saving|select|selection|navigate|navigation|edit|editing|apply|application|update|updating|persist|persistence)\b/i.test(base.text)
+      || /\b(?:can|will)\s+(?:submit|save|select|navigate|edit|apply|update|persist)\b/i.test(base.text)
+    )
+    && !hasExplicitInteraction
+  ) {
+    throw new Error(`${label}.text cannot claim an observed interaction without interaction metadata`);
+  }
   const acceptanceCriteria = list(item.acceptanceCriteria, `${label}.acceptanceCriteria`, 50)
-    .map((entry, index) => criterion(entry, allowed, `${label}.acceptanceCriteria[${index}]`, identities));
-  if (priority === "must" && acceptanceCriteria.length === 0) {
+    .map((entry, index) => criterion(
+      entry,
+      allowed,
+      `${label}.acceptanceCriteria[${index}]`,
+      identities,
+      options,
+    ));
+  if ((priority === "must" || options.evidenceBacked) && acceptanceCriteria.length === 0) {
     throw new Error(`${label} requires acceptance criteria`);
+  }
+  if (options.evidenceBacked && acceptanceCriteria.length > 4) {
+    throw new Error(`${label} has too many acceptance criteria for an evidence-backed draft`);
+  }
+  if (
+    options.evidenceBacked
+    && acceptanceCriteria.some((entry) =>
+      entry.evidenceIds.some((evidenceId) => !base.evidenceIds.includes(evidenceId))
+    )
+  ) {
+    throw new Error(`${label}.evidenceIds must include all acceptance-criterion evidence`);
   }
   return {
     ...base,
@@ -343,17 +662,110 @@ export function parseFeatureStepAnalysis(value: unknown, evidenceId: string): Fe
 export function parseFeatureDocumentContent(
   value: unknown,
   allowedEvidenceIds: ReadonlySet<string>,
+  options: FeatureDocumentValidationOptions = {},
 ): FeatureDocumentContent {
   const root = object(value, "feature document");
   const identities = new Set<string>();
+  const officialDocumentationDomains = options.officialDocumentationDomains ?? [];
+  let officialDocumentation: FeatureDocumentedContext | undefined;
+  if (
+    root.documentedContext !== undefined
+    || options.officialDocumentationRequired
+    || officialDocumentationDomains.length > 0
+  ) {
+    if (root.documentedContext === undefined) {
+      throw new Error("feature document requires documentedContext");
+    }
+    officialDocumentation = documentedContext(
+      root.documentedContext,
+      allowedEvidenceIds,
+      identities,
+      officialDocumentationDomains,
+    );
+  }
+  let sourceAssessment: FeatureSourceAssessment | undefined;
+  if (root.sourceAssessment !== undefined || options.evidenceBacked) {
+    const assessment = object(root.sourceAssessment, "sourceAssessment");
+    const captureType = assessment.captureType;
+    if (
+      captureType !== "complete-journey"
+      && captureType !== "partial-journey"
+      && captureType !== "static-screen"
+      && captureType !== "state-gallery"
+      && captureType !== "content-scroll"
+    ) {
+      throw new Error("sourceAssessment.captureType is invalid");
+    }
+    const completeness = assessment.completeness;
+    if (completeness !== "complete" && completeness !== "partial") {
+      throw new Error("sourceAssessment.completeness is invalid");
+    }
+    const citations = evidenceIds(
+      assessment.evidenceIds,
+      allowedEvidenceIds,
+      "sourceAssessment",
+    );
+    if (options.evidenceBacked && citations.length === 0) {
+      throw new Error("sourceAssessment requires evidence");
+    }
+    if (
+      options.evidenceBacked
+      && completeness === "complete"
+      && (
+        citations.length < 2
+        || !(options.evidenceManifest ?? []).some(({ interaction }) => Boolean(interaction?.trim()))
+      )
+    ) {
+      throw new Error("sourceAssessment cannot claim completeness without explicit transition evidence");
+    }
+    sourceAssessment = {
+      captureType,
+      completeness,
+      rationale: text(assessment.rationale, "sourceAssessment.rationale", 2_000),
+      evidenceIds: citations,
+    };
+  }
   const executiveSummary = object(root.executiveSummary, "executiveSummary");
   const observedFlow = object(root.observedFlow, "observedFlow");
   const flowAnalysis = object(root.flowAnalysis, "flowAnalysis");
   const proposedFeature = object(root.proposedFeature, "proposedFeature");
+  const unscopedEvidence = root.unscopedEvidence === undefined
+    ? []
+    : list(root.unscopedEvidence, "unscopedEvidence", 100).map((entry, index) => {
+      const item = object(entry, `unscopedEvidence[${index}]`);
+      const [evidenceId] = evidenceIds(
+        [item.evidenceId],
+        allowedEvidenceIds,
+        `unscopedEvidence[${index}]`,
+      );
+      return {
+        evidenceId,
+        reason: text(item.reason, `unscopedEvidence[${index}].reason`, 2_000),
+      };
+    });
+  if (options.evidenceBacked && root.unscopedEvidence === undefined) {
+    throw new Error("feature document requires unscopedEvidence");
+  }
+  if (new Set(unscopedEvidence.map(({ evidenceId }) => evidenceId)).size !== unscopedEvidence.length) {
+    throw new Error("unscopedEvidence contains duplicate evidence IDs");
+  }
   const requirements = list(root.requirements, "requirements", 100)
-    .map((item, index) => requirement(item, allowedEvidenceIds, `requirements[${index}]`, identities));
+    .map((item, index) => requirement(
+      item,
+      allowedEvidenceIds,
+      `requirements[${index}]`,
+      identities,
+      options,
+    ));
   if (requirements.length === 0) throw new Error("feature document requires at least one requirement");
-  return {
+  const maximumRequirements = Math.max(1, Math.min(6, Math.ceil(allowedEvidenceIds.size / 2)));
+  if (options.evidenceBacked && requirements.length > maximumRequirements) {
+    throw new Error(`feature document has too many requirements for ${allowedEvidenceIds.size} evidence items`);
+  }
+  const result: FeatureDocumentContent = {
+    ...(sourceAssessment ? { sourceAssessment } : {}),
+    ...(officialDocumentation ? { documentedContext: officialDocumentation } : {}),
+    unscopedEvidence,
     executiveSummary: {
       purpose: claim(executiveSummary.purpose, allowedEvidenceIds, "executiveSummary.purpose", identities),
       userValue: claim(executiveSummary.userValue, allowedEvidenceIds, "executiveSummary.userValue", identities),
@@ -390,13 +802,90 @@ export function parseFeatureDocumentContent(
     dependencies: claimList(root.dependencies, allowedEvidenceIds, "dependencies", identities),
     openQuestions: claimList(root.openQuestions, allowedEvidenceIds, "openQuestions", identities),
   };
+  if (options.evidenceBacked) {
+    const scopedEvidence = new Set(
+      result.requirements.flatMap((entry) => [
+        ...entry.evidenceIds,
+        ...entry.acceptanceCriteria.flatMap(({ evidenceIds: citations }) => citations),
+      ]),
+    );
+    const explicitlyUnscoped = new Set(unscopedEvidence.map(({ evidenceId }) => evidenceId));
+    const duplicatedScope = [...explicitlyUnscoped].find((evidenceId) => scopedEvidence.has(evidenceId));
+    if (duplicatedScope) {
+      throw new Error(`evidence cannot be both scoped and unscoped: ${duplicatedScope}`);
+    }
+    const uncovered = [...allowedEvidenceIds].find(
+      (evidenceId) => !scopedEvidence.has(evidenceId) && !explicitlyUnscoped.has(evidenceId),
+    );
+    if (uncovered) {
+      throw new Error(`evidence is not covered by requirements or unscopedEvidence: ${uncovered}`);
+    }
+    const observedClaims = [
+      result.observedFlow.userGoal,
+      result.observedFlow.entryPoint,
+      result.observedFlow.completionPoint,
+      ...result.observedFlow.journey,
+      ...result.observedFlow.actors,
+      ...result.observedFlow.visibleStates,
+    ];
+    if (observedClaims.some(({ kind }) => kind === "proposed")) {
+      throw new Error("observedFlow cannot contain proposed behavior");
+    }
+    const proposedClaims = [
+      result.executiveSummary.recommendation,
+      ...result.proposedFeature.goals,
+      ...result.proposedFeature.nonGoals,
+      ...result.proposedFeature.behavior,
+      ...result.proposedFeature.journey,
+    ];
+    if (proposedClaims.some(({ kind }) => kind !== "proposed" && kind !== "unknown")) {
+      throw new Error("proposedFeature recommendations must be proposed or unknown");
+    }
+    if (result.openQuestions.some(({ kind }) => kind !== "unknown")) {
+      throw new Error("openQuestions must be classified as unknown");
+    }
+    const claims = [
+      result.executiveSummary.purpose,
+      result.executiveSummary.userValue,
+      result.executiveSummary.recommendation,
+      result.observedFlow.userGoal,
+      result.observedFlow.entryPoint,
+      result.observedFlow.completionPoint,
+      ...result.observedFlow.journey,
+      ...result.observedFlow.actors,
+      ...result.observedFlow.visibleStates,
+      ...result.flowAnalysis.effectivePatterns,
+      ...result.flowAnalysis.friction,
+      ...result.flowAnalysis.missingStates,
+      ...result.flowAnalysis.inconsistencies,
+      ...result.flowAnalysis.risksAndAssumptions,
+      result.proposedFeature.problem,
+      ...result.proposedFeature.targetUsers,
+      ...result.proposedFeature.goals,
+      ...result.proposedFeature.nonGoals,
+      ...result.proposedFeature.behavior,
+      ...result.proposedFeature.journey,
+      ...result.requirements,
+      ...result.edgeCases,
+      ...result.successMetrics,
+      ...result.guardrailMetrics,
+      ...result.analyticsEvents,
+      ...result.dependencies,
+      ...result.openQuestions,
+    ];
+    const claimBudget = featureDocumentClaimBudget(allowedEvidenceIds.size);
+    if (claims.length > claimBudget) {
+      throw new Error(`feature document exceeds the ${claimBudget}-claim budget`);
+    }
+  }
+  return result;
 }
 
 function heading(value: string): string {
   return value.replace(/[\r\n#]+/g, " ").trim();
 }
 
-function cited(item: FeatureClaim | FeatureAcceptanceCriterion): string {
+function cited(item: { evidenceIds: string[] }): string {
   return item.evidenceIds.length ? ` [${item.evidenceIds.join(", ")}]` : "";
 }
 
@@ -425,6 +914,12 @@ export function renderFeatureDocumentMarkdown(
     "",
     `**Source Flow:** ${heading(metadata.sourceFlowTitle)}`,
     `**Generated:** ${metadata.generatedAt}`,
+    ...(content.sourceAssessment
+      ? [
+        `**Capture:** ${content.sourceAssessment.captureType} · ${content.sourceAssessment.completeness}`,
+        `**Capture assessment:** ${content.sourceAssessment.rationale}${cited(content.sourceAssessment)}`,
+      ]
+      : []),
     "",
     "## Summary",
     "",
@@ -469,6 +964,24 @@ export function renderFeatureDocumentMarkdown(
       );
     }
     lines.push("");
+  }
+  if (content.documentedContext) {
+    lines.push(
+      "## Official documentation",
+      "",
+      ...(content.documentedContext.status === "not-found"
+        ? ["No matching official documentation was found."]
+        : content.documentedContext.sources.map(
+          (source) =>
+            `- [${source.title}](${source.url}) · ${source.platform} · ${source.region} · retrieved ${source.retrievedAt}`,
+        )),
+      "",
+      ...content.documentedContext.claims.map(
+        (item) =>
+          `- **${item.relationship}:** ${item.text} [${item.sourceIds.join(", ")}]`,
+      ),
+      "",
+    );
   }
   lines.push(
     "## Missing evidence",

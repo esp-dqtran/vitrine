@@ -73,6 +73,7 @@ export interface ResearchProjectWorkspace {
   title: string;
   question: string;
   platformFilter: ResearchPlatform;
+  pinned: boolean;
   constraints: string;
   decision: string;
   rationale: string;
@@ -89,6 +90,8 @@ export interface ResearchProjectSummary {
   title: string;
   question: string;
   platformFilter: ResearchPlatform;
+  pinned: boolean;
+  revision: number;
   evidenceCount: number;
   synthesisState: "none" | "current" | "stale";
   updatedAt: string;
@@ -96,14 +99,15 @@ export interface ResearchProjectSummary {
 
 export interface CreateResearchProjectInput {
   title: string;
-  question: string;
-  platformFilter: ResearchPlatform;
+  question?: string;
+  platformFilter?: ResearchPlatform;
 }
 
 export interface ProjectPatch {
   title?: string;
   question?: string;
   platformFilter?: ResearchPlatform;
+  pinned?: boolean;
   constraints?: string;
   decision?: string;
   rationale?: string;

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ScreenDetail } from './components/ScreenDetail.tsx';
+import { flowMatchesFilters, screenMatchesFilters } from './detailFilters.ts';
 
 test('offers the generated design system alongside screens, elements, and flows', () => {
   const html = renderToStaticMarkup(
@@ -28,7 +29,8 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.doesNotMatch(html, /aria-label="Overview"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
-  assert.match(html, /aria-label="Design System"/);
+  assert.match(html, /app-detail__more-selector/);
+  assert.match(html, /Design System/);
   assert.doesNotMatch(html, /aria-label="Review"/);
   assert.doesNotMatch(html, /Crawler/);
 });
@@ -72,6 +74,8 @@ test('removes App Knowledge analysis while preserving route selections', () => {
   assert.match(source, /initialPlatform/);
   assert.match(source, /initialVersion/);
   assert.match(source, /initialEvidence/);
+  assert.match(source, /onEvidenceChange/);
+  assert.match(source, /SCREEN.*screen\.id/);
   assert.match(source, /initialFlow/);
   assert.match(source, /initialStep/);
   assert.match(source, /initialFlowView/);
@@ -103,10 +107,46 @@ test('animates the active platform indicator and platform content', () => {
   assert.match(source, /\}, \[section, selectedPlatform\]\);/);
 });
 
-test('renders Apps through the shared reference detail shell', () => {
+test('renders Apps through the generic reference detail page', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
-  assert.match(source, /import \{ ReferenceDetailShell \} from '.\/ReferenceDetailShell'/);
-  assert.match(source, /<ReferenceDetailShell/);
+  assert.match(source, /import \{ ReferenceDetailPage \} from '.\/ReferenceDetailPage'/);
+  assert.match(source, /<ReferenceDetailPage/);
+  assert.doesNotMatch(source, /<ReferenceDetailShell/);
+  assert.doesNotMatch(source, /<ReferenceDiscoveryTopNav/);
+});
+
+test('renders Export to Figma as the primary App detail action', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  assert.match(
+    source,
+    /<HeroButton primary onClick=\{\(\) => setSection\('export'\)\}>Export to Figma<\/HeroButton>/,
+  );
+});
+
+test('renders Visit Site beside the primary action when the App has a website', () => {
+  const html = renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
+      app={{
+        id: 'linear',
+        app: 'Linear',
+        categories: [{ id: 1, name: 'Productivity', slug: 'productivity' }],
+        accent: '#5E6AD2',
+        totalScreens: 24,
+        totalUiElements: 8,
+        totalFlows: 3,
+        websiteUrl: 'https://linear.app',
+      }}
+      onBack={() => undefined}
+    />,
+  );
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(html, />Export to Figma</);
+  assert.match(html, />Visit Site</);
+  assert.match(source, /window\.open\(app\.websiteUrl!, '_blank', 'noopener,noreferrer'\)/);
 });
 
 test('does not render a Back to all apps button in App detail', () => {
@@ -213,15 +253,31 @@ test('reuses the Apps header on admin App detail', () => {
   assert.match(html, /Account/);
 });
 
+test('keeps the Screens tab to one unlabelled screen gallery', () => {
+  const source = readFileSync(
+    new URL('./components/ScreenDetail.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.doesNotMatch(source, /All screens/);
+  assert.doesNotMatch(source, /loaded ·/);
+  assert.doesNotMatch(source, /app-screen-highlights/);
+  assert.doesNotMatch(source, /Flows using these screens/);
+  assert.doesNotMatch(source, /rankHighlightedScreens/);
+  assert.doesNotMatch(source, /rankFlowsForScreens/);
+});
+
 test('renders Screens and UI Elements through the shared gallery section and grid', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   assert.match(source, /import \{ ReferenceGalleryGrid, ReferenceGallerySection \} from '.\/ReferenceGallerySection'/);
   assert.match(source, /<ReferenceGallerySection/);
   assert.match(source, /<ReferenceGalleryGrid/);
-  assert.match(source, /minCardWidth=\{360\}/);
-  assert.match(source, /columns=\{section === 'screens' \|\| section === 'elements' \? 2 : undefined\}/);
+  assert.match(source, /minCardWidth=\{section === 'screens' \? 240 : 360\}/);
+  assert.match(source, /columns=\{section === 'elements' \? 2 : undefined\}/);
+  assert.match(source, /selectedPlatform === 'web'[\s\S]*?'web-screens'[\s\S]*?'mobile-screens'/);
   assert.match(source, /section === 'screens' \|\| section === 'elements' \|\| section === 'flows'/);
-  assert.match(source, /section === 'flows'\s*\?\s*<FlowsPanel[\s\S]*flows=\{flows\}/);
+  assert.match(source, /section === 'flows'\s*\?\s*\(filteredFlows\.length[\s\S]*?<FlowsPanel[\s\S]*flows=\{filteredFlows\}/);
+  assert.match(source, /foundInFlows=/);
 });
 
 test('falls back legacy Overview selections to Screens without rendering an Overview tab', () => {
@@ -302,6 +358,13 @@ test('shows full metadata totals before paginated Screens, UI Elements, and Flow
   assert.match(renderSection('flows'), />117 flows</);
 });
 
+test('uses selected-version totals in the app hero and platform-specific detail classes', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /\{ label: 'Screens', value: String\(sectionTotals\.screens\) \}/);
+  assert.match(source, /className=\{`app-detail app-detail--\$\{selectedPlatform\}`\}/);
+});
+
 test('exposes UI-element totals with the existing app-version count projection', () => {
   const source = readFileSync(new URL('../db.ts', import.meta.url), 'utf8');
   assert.match(source, /ui_element_count: number/);
@@ -350,13 +413,166 @@ test('renders detail platforms through the Apps platform switcher', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
 
   assert.match(source, /import \{ AppsPlatformSwitcher \} from '.\/AppsPlatformSwitcher'/);
+  assert.match(source, /onSectionChange\?\.\(section, platform\)/);
   assert.match(source, /<AppsPlatformSwitcher/);
 });
 
-test('renders App section totals at the readable navigation scale', () => {
+test('renders the Mobbin-style App detail navigation rail with real version state and totals', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
-  assert.match(source, /tabTrailing=\{<span style=\{\{ fontSize: 16,/);
+  assert.match(source, /label="App version"/);
+  assert.match(source, /label="App version"[\s\S]*?placement="below"/);
+  assert.match(source, /label: version\.version_number === latestVersion\?\.version_number\s*\?\s*'Latest'/);
+  assert.match(source, /className="reference-detail__section-total"/);
+  assert.match(source, /<span>Showing<\/span>/);
+  assert.match(
+    css,
+    /\.reference-detail__navigation\s*\{[^}]*min-height:\s*64px/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__navigation\s*\{[^}]*gap:\s*24px/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__tabs\s*\{[^}]*gap:\s*24px;[^}]*justify-content:\s*flex-start;[^}]*flex:\s*0 1 auto/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__tab-controls\s*\{[^}]*padding-left:\s*24px;[^}]*border-left:\s*1px solid var\(--color-border\)/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__tab-trailing\s*\{[^}]*justify-content:\s*flex-end;[^}]*flex:\s*1 1 auto/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__version-selector\s*\{[^}]*min-height:\s*36px !important;[^}]*padding:\s*0 12px !important;[^}]*border:\s*1px solid var\(--color-border\) !important;[^}]*border-radius:\s*999px !important/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__version-selector > button\s*\{[^}]*min-height:\s*34px !important;[^}]*font-size:\s*14px !important;[^}]*font-weight:\s*500 !important/,
+  );
+  assert.match(
+    css,
+    /\.reference-detail__section-total\s*\{[^}]*text-align:\s*right/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__navigation\s*\{[^}]*grid-template-areas:[^}]*'leading controls'[^}]*'tabs tabs'/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__tabs\s*\{[^}]*gap:\s*24px/,
+  );
+});
+
+test('adds section-specific metadata filters for Screens, UI Elements, and Flows', () => {
+  const renderSection = (initialSection: 'screens' | 'elements' | 'flows') => renderToStaticMarkup(
+    <ScreenDetail
+      collections={[]}
+      onCollectionsChange={() => undefined}
+      role="admin"
+      app={{
+        id: 'shopee',
+        app: 'Shopee',
+        categories: [{ id: 5, name: 'Shopping', slug: 'shopping' }],
+        accent: '#ee4d2d',
+        totalScreens: 1625,
+        totalUiElements: 320,
+        totalFlows: 538,
+        platforms: ['ios'],
+      }}
+      initialSection={initialSection}
+      initialPlatform="ios"
+      initialVersion={1}
+      onBack={() => undefined}
+    />,
+  );
+  const screensHtml = renderSection('screens');
+  const elementsHtml = renderSection('elements');
+  const flowsHtml = renderSection('flows');
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(screensHtml, /class="reference-detail__tab-controls"/);
+  assert.match(screensHtml, /aria-label="Open Screens filters"/);
+  assert.match(elementsHtml, /aria-label="Open UI Elements filters"/);
+  assert.match(flowsHtml, /aria-label="Open Flows filters"/);
+  assert.match(screensHtml, /class="[^"]*apps-filterbar__filter-button/);
+  assert.match(source, /tabControls=\{adminSectionControl \|\| activeMetadataFilter/);
+  assert.match(source, /app-detail__navigation-tools/);
+  assert.match(source, /<DiscoveryFilterMenu/);
+  assert.match(source, /flows=\{filteredFlows\}/);
+  assert.match(source, /No flows match these filters/);
+  assert.match(source, /Found in Flows/);
+  assert.doesNotMatch(source, /toolbar=\{section === 'screens'/);
+  assert.doesNotMatch(source, /app-detail-screen-filter/);
+  assert.doesNotMatch(css, /\.app-detail-screen-filter/);
+  assert.match(css, /\.reference-detail__tab-controls \.astryx-dropdown-panel\s*\{/);
+});
+
+test('combines selections within a metadata group and intersects separate groups', () => {
+  const screen = {
+    id: 1,
+    type: 'Checkout',
+    productArea: 'Commerce',
+    theme: 'light' as const,
+    visibleStates: ['Loading', 'Error'],
+    platform: 'ios',
+    description: null,
+    url: '/checkout.png',
+    layoutPatterns: ['Multi-column'],
+    componentNames: ['Button', 'Text field'],
+  };
+
+  assert.equal(screenMatchesFilters(screen, {
+    types: ['Checkout', 'Account'],
+    layouts: [],
+    components: ['Button'],
+    states: ['Error'],
+  }), true);
+  assert.equal(screenMatchesFilters(screen, {
+    types: ['Checkout'],
+    layouts: ['Single-column'],
+    components: [],
+    states: [],
+  }), false);
+});
+
+test('filters flows by real groups, tags, interactions, and analyzed states', () => {
+  const flow = {
+    id: 'checkout-card',
+    title: 'Pay with card',
+    category: 'Checkout',
+    description: 'Completes checkout with a saved card.',
+    tags: ['Commerce', 'Payment'],
+    steps: [{
+      label: 'Confirm payment',
+      interaction: 'Tap',
+      evidence: [],
+      analysis: {
+        interaction: 'Tap primary action',
+        visibleStates: ['Processing', 'Success'],
+        systemFeedback: ['Progress indicator'],
+        source: 'llm_inferred' as const,
+      },
+    }],
+  };
+
+  assert.equal(flowMatchesFilters(flow, {
+    categories: ['Checkout'],
+    tags: ['Payment', 'Account'],
+    interactions: ['Tap primary action'],
+    states: ['Success'],
+  }), true);
+  assert.equal(flowMatchesFilters(flow, {
+    categories: ['Onboarding'],
+    tags: [],
+    interactions: [],
+    states: [],
+  }), false);
 });
 
 test('uses the shared compact detail header without promoting a content section', () => {

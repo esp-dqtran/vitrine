@@ -57,6 +57,20 @@ test("persists one generic page and its analysis only in Sites tables", async ()
     analysis,
   });
   assert.deepEqual(begin, { reused: false, siteId: 7, versionId: 9 });
+  const versionUpsert = calls.find(({ sql }) => /INSERT INTO site_versions/.test(sql));
+  assert.match(versionUpsert!.sql, /catalog_snapshot/);
+  assert.deepEqual(JSON.parse(String(versionUpsert!.values?.at(-1))), {
+    name: "Example",
+    slug: "example-com",
+    sourceUrl: identity.canonicalUrl,
+    description: "Pricing",
+    logoUrl: "https://example.com/icon.png",
+    categories: ["Business"],
+    categoriesNormalized: ["business"],
+    styles: ["Minimal"],
+    stylesNormalized: ["minimal"],
+    popularity: 0,
+  });
 
   const completion: GenericSiteCompleteInput = {
     identity,

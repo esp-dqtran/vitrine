@@ -15,8 +15,30 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   const evidenceBody = source.slice(evidenceStart, evidenceEnd);
   assert.match(evidenceBody, /requestedLimit \+ 1/);
   assert.match(evidenceBody, /LIMIT \$\d/);
+  assert.match(evidenceBody, /FROM screen_ui_elements occurrence/);
+  assert.match(evidenceBody, /occurrence\.review_status IN \('accepted', 'pending'\)/);
+  assert.match(evidenceBody, /occurrence\.version_id = sv\.id/);
+  assert.match(evidenceBody, /occurrence\.cropped_image_id = i\.id/);
+  assert.doesNotMatch(evidenceBody, /occurrence\.source_image_id = i\.id/);
+  assert.match(evidenceBody, /'pageType', reference\.component_type/);
+  assert.match(evidenceBody, /\$2 <> 'ui_element' OR reference\.component_type IS NOT NULL/);
+  assert.match(evidenceBody, /source_screen_id/);
   assert.doesNotMatch(evidenceBody, /\bappImages\(/);
   assert.doesNotMatch(evidenceBody, /\bversionImages\(/);
+});
+
+test("UI element summaries group reviewed crop occurrences in SQL", () => {
+  const start = source.indexOf("export async function appUiElementSummary(");
+  const end = source.indexOf("\nexport async function", start + 1);
+  const body = source.slice(start, end);
+
+  assert.ok(start >= 0, "appUiElementSummary source was not found");
+  assert.match(body, /FROM screen_ui_elements occurrence/);
+  assert.match(body, /occurrence\.review_status IN \('accepted', 'pending'\)/);
+  assert.match(body, /JOIN images crop ON crop\.id = occurrence\.cropped_image_id/);
+  assert.match(body, /COUNT\(\*\) OVER \(PARTITION BY component_type_id\)/);
+  assert.match(body, /representative_rank = 1/);
+  assert.match(body, /ORDER BY ranked\.occurrence_count DESC/);
 });
 
 test("app metadata aggregates ordered Category records without a scalar read", () => {
@@ -28,6 +50,8 @@ test("app metadata aggregates ordered Category records without a scalar read", (
   assert.match(body, /JOIN categories/);
   assert.match(body, /jsonb_agg/);
   assert.match(body, /ORDER BY lower\(category_rows\.name\), category_rows\.id/);
+  assert.match(body, /occurrence\.cropped_image_id = i\.id/);
+  assert.match(body, /occurrence\.review_status IN \('accepted', 'pending'\)/);
   assert.doesNotMatch(body, /\bt\.category\b/);
 });
 

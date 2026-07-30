@@ -22,6 +22,8 @@ import {
   setFeatureDocumentReviewStatus,
   subscribeFeatureDocumentJob,
 } from '../featureDocumentsApi.ts';
+import { copyShareLink } from '../screenActions.ts';
+import { CopyButton } from './CopyButton.tsx';
 import { FeatureDocumentEditor } from './FeatureDocumentEditor.tsx';
 import { FeatureDocumentEvidencePanel } from './FeatureDocumentEvidencePanel.tsx';
 import { FeatureDocumentProgress } from './FeatureDocumentProgress.tsx';
@@ -447,11 +449,12 @@ export function FeatureDocumentWorkspace({
           </code>
           <span>Expires {new Date(share.expiresAt).toLocaleString()}</span>
           {share.url && (
-            <Button
+            <CopyButton
               label="Copy share URL"
+              successMessage="Share URL copied"
+              action={() => copyShareLink(share.url!)}
               variant="ghost"
               size="sm"
-              clickAction={() => void navigator.clipboard.writeText(share.url!)}
             />
           )}
           {share.url && (

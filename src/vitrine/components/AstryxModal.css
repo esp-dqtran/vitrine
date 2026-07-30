@@ -1,0 +1,65 @@
+dialog.astryx-modal {
+  --astryx-modal-surface: #1f1f1f;
+  --astryx-modal-border: rgb(255 255 255 / 6%);
+  overflow: hidden;
+  border: 1px solid var(--astryx-modal-border) !important;
+  border-radius: 24px !important;
+  background: var(--astryx-modal-surface) !important;
+  color: #f5f5f5 !important;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 48%) !important;
+}
+
+dialog.astryx-modal::backdrop {
+  background: rgb(0 0 0 / 78%);
+  backdrop-filter: blur(8px);
+}
+
+dialog.astryx-modal--fullscreen {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgb(0 0 0 / 78%) !important;
+  box-shadow: none !important;
+}
+
+dialog.astryx-modal--drawer-left {
+  border-radius: 0 24px 24px 0 !important;
+}
+
+dialog.astryx-modal--drawer-right {
+  border-radius: 24px 0 0 24px !important;
+}
+
+dialog.astryx-modal--drawer-left,
+dialog.astryx-modal--drawer-right {
+  height: 100vh;
+  max-height: 100vh !important;
+}
+
+.astryx-modal__surface {
+  overflow: hidden;
+  border: 1px solid var(--astryx-modal-border, rgb(255 255 255 / 6%));
+  border-radius: 24px;
+  background: var(--astryx-modal-surface, #1f1f1f);
+  color: #f5f5f5;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 48%);
+}
+
+@media (max-width: 680px) {
+  dialog.astryx-modal--dialog {
+    max-width: calc(100vw - 24px) !important;
+    border-radius: 20px !important;
+  }
+
+  dialog.astryx-modal--fullscreen .astryx-modal__surface {
+    border: 0;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.astryx-modal,
+  dialog.astryx-modal::backdrop {
+    animation-duration: 1ms !important;
+  }
+}

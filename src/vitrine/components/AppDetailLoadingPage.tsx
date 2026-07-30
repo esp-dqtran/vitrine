@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
+import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
 import { ReferenceDetailLoading } from './ReferenceDetailLoading.tsx';
-import { SearchTrigger } from './SearchTrigger.tsx';
 
 interface AppDetailLoadingPageProps {
   accountControls?: ReactNode;
@@ -14,17 +13,10 @@ export function AppDetailLoadingPage({
 }: AppDetailLoadingPageProps) {
   return (
     <>
-      <ReferenceDiscoveryTopNav
-        active="apps"
-        className="apps-top-nav"
-        search={(
-          <SearchTrigger
-            label="Search on Web..."
-            activeCategory={null}
-            onOpen={onOpenSearch}
-            onClearCategory={() => undefined}
-          />
-        )}
+      <ReferenceDetailNavigation
+        kind="app"
+        searchLabel="Search on Web..."
+        onOpenSearch={onOpenSearch}
         accountControls={accountControls}
       />
       <ReferenceDetailLoading kind="app" label="Loading App details" />

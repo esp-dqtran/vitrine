@@ -1,5 +1,6 @@
-import { Dialog, Icon, IconButton } from '@astryxdesign/core';
+import { Icon, IconButton } from '@astryxdesign/core';
 import { ArrowButton } from './ArrowButton';
+import { AstryxModal } from './AstryxModal.tsx';
 import { PlaceholderImage } from './PlaceholderImage';
 import { screenAspectRatio } from '../screenAspect';
 
@@ -25,7 +26,7 @@ interface LightboxProps {
 
 export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxProps) {
   return (
-    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
+    <AstryxModal isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
       <div style={{ position: 'relative', width: '100%', height: '100%', background: 'color-mix(in srgb, var(--color-background-body) 94%, transparent)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, boxSizing: 'border-box' }}>
       <IconButton
         label="Close"
@@ -68,6 +69,6 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
         {item.caption} — {index + 1} of {total}
       </div>
       </div>
-    </Dialog>
+    </AstryxModal>
   );
 }

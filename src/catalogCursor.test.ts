@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CatalogCursorError,
+  decodeCatalogCursor,
   decodeUpdatedCatalogCursor,
+  encodeCatalogCursor,
   encodeUpdatedCatalogCursor,
 } from "./catalogCursor.ts";
 
@@ -33,4 +35,33 @@ test("rejects malformed, mismatched, and non-canonical cursor values", () => {
   ]) {
     assert.throws(() => decodeUpdatedCatalogCursor(value), CatalogCursorError);
   }
+});
+
+test("round-trips latest and trending catalog cursors and enforces the requested sort", () => {
+  const latest = {
+    v: 2 as const,
+    sort: "latest" as const,
+    snapshotAt: cursor.snapshotAt,
+    updatedAt: cursor.updatedAt,
+    appId: 123,
+  };
+  const trending = {
+    ...latest,
+    sort: "trending" as const,
+    totalScreens: 845,
+  };
+
+  assert.deepEqual(decodeCatalogCursor(encodeCatalogCursor(latest), "latest"), latest);
+  assert.deepEqual(
+    decodeCatalogCursor(encodeCatalogCursor(trending), "trending"),
+    trending,
+  );
+  assert.throws(
+    () => decodeCatalogCursor(encodeCatalogCursor(latest), "trending"),
+    CatalogCursorError,
+  );
+  assert.throws(
+    () => decodeCatalogCursor(encodeCatalogCursor(trending), "latest"),
+    CatalogCursorError,
+  );
 });

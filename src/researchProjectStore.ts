@@ -94,7 +94,7 @@ async function loadWorkspace(
   projectId: number,
 ): Promise<ResearchProjectWorkspace | undefined> {
   const projectResult = await runQuery(
-    `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.constraints,
+    `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.constraints,
             rp.decision, rp.rationale, rp.open_questions, rp.revision,
             rp.created_at, rp.updated_at
      FROM research_projects rp
@@ -146,6 +146,7 @@ async function loadWorkspace(
     title: text(project.title),
     question: text(project.question),
     platformFilter: project.platform_filter as ResearchProjectWorkspace["platformFilter"],
+    pinned: project.pinned === true,
     constraints: text(project.constraints),
     decision: text(project.decision),
     rationale: text(project.rationale),
@@ -202,7 +203,7 @@ export function createResearchProjectStore(
   return {
     async listProjects(userId) {
       const result = await runQuery(
-        `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.revision, rp.updated_at,
+        `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.revision, rp.updated_at,
                 count(DISTINCT i.id)::integer AS evidence_count,
                 max(s.project_revision)::integer AS synthesis_revision
          FROM research_projects rp
@@ -219,6 +220,8 @@ export function createResearchProjectStore(
           title: text(row.title),
           question: text(row.question),
           platformFilter: row.platform_filter as ResearchProjectSummary["platformFilter"],
+          pinned: row.pinned === true,
+          revision: number(row.revision),
           evidenceCount: number(row.evidence_count ?? 0),
           synthesisState: synthesisRevision === undefined
             ? "none"
@@ -235,7 +238,7 @@ export function createResearchProjectStore(
            VALUES ($1, $2, $3, $4)
            RETURNING id, title, question, platform_filter, constraints, decision,
                      rationale, open_questions, revision, created_at, updated_at`,
-          [userId, input.title.trim(), input.question.trim(), input.platformFilter],
+          [userId, input.title.trim(), input.question?.trim() ?? "", input.platformFilter ?? "all"],
         );
         const projectId = number(created.rows[0].id);
         const lanes = defaultResearchLanes();
@@ -280,10 +283,12 @@ export function createResearchProjectStore(
         if (await lockOwnedProject(tx, userId, projectId, expectedRevision) === undefined) return undefined;
         const columns: string[] = [];
         const values: unknown[] = [projectId];
+        let contentChanged = false;
         const names: Array<[keyof ProjectPatch, string]> = [
           ["title", "title"],
           ["question", "question"],
           ["platformFilter", "platform_filter"],
+          ["pinned", "pinned"],
           ["constraints", "constraints"],
           ["decision", "decision"],
           ["rationale", "rationale"],
@@ -293,11 +298,13 @@ export function createResearchProjectStore(
           if (patch[key] === undefined) continue;
           values.push(typeof patch[key] === "string" ? patch[key].trim() : patch[key]);
           columns.push(`${column} = $${values.length}`);
+          if (key !== "pinned") contentChanged = true;
         }
         if (columns.length) {
           await tx(
-            `UPDATE research_projects SET ${columns.join(", ")},
-               revision = revision + 1, updated_at = now() WHERE id = $1`,
+            `UPDATE research_projects SET ${columns.join(", ")}${
+              contentChanged ? ", revision = revision + 1, updated_at = now()" : ""
+            } WHERE id = $1`,
             values,
           );
         }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRoutePath, routeToPath } from './router.ts';
-import { getSiteVersion, getSiteVersionBySlug, listSites, listSitesPage } from './sitesApi.ts';
+import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from './sitesApi.ts';
 
 const approvedUrl = 'https://mobbin.com/sites/v-7-1fbe80df-2586-4a09-aa5c-29aeeb716a09/f4e176f7-aeb6-4f9a-9689-e4379fc357b1/preview';
 
@@ -18,23 +18,13 @@ test('maps list and positive Site version routes', () => {
   assert.equal(routeToPath({ name: 'site-version', siteId: 1, versionId: 2 }), '/sites/1/versions/2');
 });
 
-test('loads Sites only from dedicated list and detail endpoints', async (t) => {
+test('loads Site details only from dedicated detail endpoints', async (t) => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });
   const urls: string[] = [];
   globalThis.fetch = async (input) => {
     const url = String(input);
     urls.push(url);
-    if (url === '/api/sites') return Response.json([{
-      siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
-      label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
-      previewMediaKind: 'image',
-      previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
-      previews: [
-        { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
-        { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
-      ],
-    }]);
     return Response.json({
       siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
       canonicalUrl: approvedUrl, label: 'Jul 2026', isLatest: true,
@@ -110,17 +100,10 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
     });
   };
 
-  const sites = await listSites();
   const detail = await getSiteVersion(1, 2);
   const namedDetail = await getSiteVersionBySlug('v7');
   const selectedNamedDetail = await getSiteVersionBySlug('v7', 2);
   const legacyNamedDetail = await getSiteVersionBySlug('v7-2');
-  assert.equal(sites[0].id, 1);
-  assert.equal(sites[0].previewMediaKind, 'image');
-  assert.deepEqual(sites[0].previews, [
-    { id: 10, title: 'Home', position: 0, url: '/api/sites/1/versions/2/pages/10/media' },
-    { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
-  ]);
   assert.deepEqual(detail.site, { id: 1, name: 'V7', slug: 'v-7', sourceUrl: 'https://v7labs.com/' });
   assert.equal(detail.version.previewMediaKind, 'image');
   assert.deepEqual(detail.versionOptions.map((version) => version.label), ['Jul 2026', 'Nov 2025']);
@@ -132,7 +115,6 @@ test('loads Sites only from dedicated list and detail endpoints', async (t) => {
   assert.equal(selectedNamedDetail.version.id, 2);
   assert.equal(legacyNamedDetail.routeSlug, 'v7');
   assert.deepEqual(urls, [
-    '/api/sites',
     '/api/sites/1/versions/2',
     '/api/sites/v7',
     '/api/sites/v7?version=2',
@@ -148,15 +130,17 @@ test('requests a bounded Site page for related detail references', async (t) => 
   globalThis.fetch = async (input) => {
     urls.push(String(input));
     return Response.json({
-      sites: [{
+      items: [{
         siteId: 1, versionId: 2, name: 'V7', slug: 'v-7', routeSlug: 'v7', sourceUrl: 'https://v7labs.com/',
+        categories: [], styles: [], popularity: 0,
         label: 'Jul 2026', isLatest: true, pageCount: 16, sectionCount: 46,
         previewMediaKind: 'image',
         previewUrl: '/api/sites/1/versions/2/media/preview', updatedAt: '2026-07-20T00:00:00.000Z',
         previews: [],
       }],
-      nextOffset: 4,
-      total: 274,
+      nextCursor: 'next',
+      totalCount: 274,
+      facets: [],
     });
   };
 
@@ -164,5 +148,99 @@ test('requests a bounded Site page for related detail references', async (t) => 
   assert.equal(page.sites[0]?.id, 1);
   assert.equal(page.nextOffset, 4);
   assert.equal(page.total, 274);
-  assert.deepEqual(urls, ['/api/sites?limit=4&offset=0']);
+  assert.deepEqual(urls, ['/api/sites?platform=web&sort=latest&facets=summary&limit=4']);
+});
+
+test('requests one canonical cursor Site page from discovery state', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), init });
+    return Response.json({
+      items: [{
+        siteId: 1, versionId: 2, name: 'Linear', slug: 'linear', routeSlug: 'linear',
+        sourceUrl: 'https://linear.app/', description: 'Plan products', logoUrl: null,
+        categories: ['Business'], styles: ['Minimal'], popularity: 42,
+        label: 'Jul 2026', isLatest: true, pageCount: 8, sectionCount: 20,
+        previewMediaKind: 'image',
+        previewUrl: '/api/sites/1/versions/2/catalog-media/preview',
+        updatedAt: '2026-07-29T03:00:00.000Z',
+        previews: [],
+      }],
+      nextCursor: 'next',
+      totalCount: 37,
+      facets: [{ group: 'sections', value: 'Pricing', count: 8, section: 'Sections' }],
+    });
+  };
+
+  const page = await listSitesPage({
+    platform: 'web',
+    sort: 'popular',
+    query: ' linear ',
+    filters: [
+      { group: 'categories', value: 'Business' },
+      { group: 'categories', value: 'Finance' },
+      { group: 'sections', value: 'Pricing' },
+    ],
+  }, 'opaque', { limit: 12 });
+
+  assert.equal(page.items[0]?.name, 'Linear');
+  assert.equal(page.nextCursor, 'next');
+  assert.equal(page.totalCount, 37);
+  assert.deepEqual(page.facets, [
+    { group: 'sections', value: 'Pricing', count: 8, section: 'Sections' },
+  ]);
+  assert.equal(requests.length, 1);
+  assert.equal(
+    requests[0]?.url,
+    '/api/sites?platform=web&sort=popular&facets=summary&query=linear'
+      + '&filter=categories.Business&filter=categories.Finance'
+      + '&filter=sections.Pricing&cursor=opaque&limit=12',
+  );
+});
+
+test('never caches malformed canonical Site responses and exposes no-store retry', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  let malformed = true;
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), init });
+    if (malformed) {
+      malformed = false;
+      return Response.json({
+        items: [{
+          siteId: 1,
+          versionId: 2,
+          name: 'Broken',
+          isLatest: 'yes',
+        }],
+        nextCursor: null,
+        totalCount: 1,
+        facets: [],
+      });
+    }
+    return Response.json({
+      items: [],
+      nextCursor: null,
+      totalCount: 0,
+      facets: [],
+    });
+  };
+  const state = {
+    platform: 'web' as const,
+    sort: 'latest' as const,
+    query: '',
+    filters: [],
+  };
+
+  await assert.rejects(() => listSitesPage(state), /Sites returned an invalid response/);
+  const uncached = await listSitesPage(state);
+  assert.deepEqual(uncached.items, []);
+  assert.equal(requests.length, 2);
+  const retry = await listSitesPage(state, undefined, { noStore: true });
+  assert.deepEqual(retry.items, []);
+  assert.equal(requests[2]?.url, '/api/sites?platform=web&sort=latest&facets=summary&limit=24&refresh=1');
+  assert.equal(requests[2]?.init?.cache, 'no-store');
 });

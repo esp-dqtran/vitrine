@@ -28,6 +28,14 @@ const stepPrompt: FeatureStepPrompt = {
 const synthesisPrompt: FeatureSynthesisPrompt = {
   source: stepPrompt.source,
   focusInstruction: stepPrompt.focusInstruction,
+  evidenceManifest: [{
+    stepIndex: 0,
+    imageIndex: 0,
+    imageId: 1,
+    evidenceId: "IMAGE-1",
+    stepLabel: "Review cart",
+    description: null,
+  }],
   analyses: [{
     evidenceId: "IMAGE-1",
     visibleUi: ["Cart"],
@@ -95,11 +103,11 @@ test("synthesis sends no image bytes and includes validation repair context", as
 
   assert.doesNotMatch(body, /base64|image_url/);
   assert.match(body, /unknown evidence IMAGE-9/);
-  assert.match(body, /capability-level behavior/);
+  assert.match(body, /capability-level replica behavior/);
   assert.match(body, /BDD scenario/);
   assert.match(body, /Given, When, and Then/);
-  assert.match(body, /2 to 5 acceptance criteria/);
-  assert.match(body, /never invent unsupported scenarios/);
+  assert.match(body, /1 to 3 acceptance criteria/);
+  assert.match(body, /never invent alternate, validation, recovery/);
   assert.match(body, /Do not create one requirement per screen/);
 });
 

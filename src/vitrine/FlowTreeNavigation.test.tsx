@@ -132,9 +132,13 @@ test('renders a selected Flow in the persistent workspace beside its directory',
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
   assert.match(html, /class="selected-flow-workspace"/);
   assert.match(html, /role="tablist"/);
-  assert.match(html, /Screens/);
+  assert.match(
+    html,
+    /<button(?=[^>]*role="tab")(?=[^>]*aria-selected="true")(?=[^>]*aria-controls="flow-trial-visual-panel")/,
+  );
+  assert.match(html, /Visual Flow/);
   assert.match(html, /Document Flow/);
-  assert.doesNotMatch(html, />Visual Flow</);
+  assert.doesNotMatch(html, /Screens/);
   assert.doesNotMatch(html, /Prototype/);
   assert.doesNotMatch(html, /role="dialog"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
@@ -156,7 +160,8 @@ test('keeps invalid routed Flow recovery inside the normal gallery workspace', (
   );
   assert.match(html, /role="status"/);
   assert.match(html, /Flow unavailable/);
-  assert.match(html, /Open Inviting a team member flow/);
+  assert.match(html, /flow-tree__flow-button/);
+  assert.match(html, /Inviting a team member/);
 });
 
 test('renders Flow navigation skeletons beside the existing loading state', () => {
@@ -172,8 +177,10 @@ test('defines the desktop rail and 980px drawer transition', () => {
   assert.match(css, /\.flow-workspace\s*\{[\s\S]*grid-template-columns:\s*280px minmax\(0,\s*1fr\)/);
   assert.doesNotMatch(css, /\.flow-workspace--viewer/);
   assert.match(css, /\.flow-strip-card\s*\{[\s\S]*display:\s*grid/);
-  assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*justify-content:\s*flex-start[\s\S]*overflow-x:\s*auto/);
-  assert.match(css, /\.flow-strip-card__screen\s*\{[\s\S]*flex:\s*0 0 min\(42vw,\s*620px\)/);
+  assert.match(css, /\.flow-strip-card__track\s*\{[\s\S]*height:\s*clamp\(380px,\s*30\.67vw,\s*450px\)[\s\S]*gap:\s*16px[\s\S]*justify-content:\s*flex-start[\s\S]*overflow-x:\s*auto/);
+  assert.match(css, /\.flow-strip-card__screen\s*\{[\s\S]*flex:\s*0 0 auto[\s\S]*aspect-ratio:\s*390 \/ 844[\s\S]*border-radius:\s*24px/);
+  assert.match(css, /\.flow-strip-card__stage\[data-platform='web'\] \.flow-strip-card__track\s*\{[^}]*height:\s*clamp\(240px,\s*22vw,\s*340px\)/);
+  assert.match(css, /\.flow-strip-card__stage\[data-platform='web'\] \.flow-strip-card__screen\s*\{[^}]*aspect-ratio:\s*8 \/ 5;[^}]*border-radius:\s*12px/);
   assert.match(css, /\.flow-strip-card__footer\s*\{[\s\S]*justify-content:\s*space-between/);
   assert.doesNotMatch(css, /\.flow-strip-card__step-label/);
   assert.match(css, /\.visual-flow-panel\s*\{[\s\S]*background:\s*#1f1f1f/);

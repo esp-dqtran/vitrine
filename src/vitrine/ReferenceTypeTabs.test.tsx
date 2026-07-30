@@ -11,5 +11,19 @@ test('renders Apps, Sites, and Flows as accessible reference-type tabs', () => {
   assert.match(html, /Apps/);
   assert.match(html, /Sites/);
   assert.match(html, /Flows/);
+  assert.doesNotMatch(html, /Projects/);
   assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>.*?Flows/s);
+});
+
+test('can render Projects as the only workspace tab', () => {
+  const html = renderToStaticMarkup(
+    <ReferenceTypeTabs
+      active="projects"
+      values={['projects']}
+      onChange={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(html, /Apps|Sites|Flows/);
+  assert.match(html, /role="tab"[^>]+aria-selected="true"[^>]*>.*?Projects/s);
 });

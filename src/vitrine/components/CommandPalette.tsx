@@ -1,21 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Button, ClickableCard, Dialog, Icon, IconButton, Spinner, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { Button, ClickableCard, Icon, IconButton, Spinner, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
 import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem } from '../../catalogResearch';
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';
 import type { App } from '../types';
-import { loadFlowCatalogPage, type FlowCatalogItem } from '../flowCatalogApi.ts';
+import type { FlowCatalogItem } from '../flowCatalogApi.ts';
 import { compareCatalogApps, searchRelatedCatalog } from '../researchApi';
+import { useCommandPaletteFlowCatalog } from '../useCommandPaletteFlowCatalog.ts';
 import { groupInspirationResults, moveSelection } from '../inspirationSearch';
 import { InspirationComparison } from './InspirationComparison';
 import { InspirationPreview } from './InspirationPreview';
 import { InspirationPrompts } from './InspirationPrompts';
 import { InspirationResults } from './InspirationResults';
 import { PlaceholderImage } from './PlaceholderImage';
+import { AstryxModal } from './AstryxModal.tsx';
 
-type Nav = 'trending' | 'categories' | 'screens' | 'elements' | 'flows';
+export type CommandPaletteNav =
+  'trending' | 'categories' | 'screens' | 'elements' | 'flows';
 
-const NAV_ITEMS: Array<{ id: Nav; label: string; icon: IconName }> = [
+const NAV_ITEMS: Array<{ id: CommandPaletteNav; label: string; icon: IconName }> = [
   { id: 'trending', label: 'Trending', icon: 'arrowUp' },
   { id: 'categories', label: 'Categories', icon: 'viewColumns' },
   { id: 'screens', label: 'Screens', icon: 'viewColumns' },
@@ -80,6 +83,9 @@ interface CommandPaletteProps {
   collections: ResearchCollection[];
   plan: 'free' | 'pro';
   publicBrowse?: boolean;
+  initialNav?: CommandPaletteNav;
+  initialFlowQuery?: string;
+  initialPlatform?: Platform;
   onUpgrade: () => void;
   onCollectionsChange: (collections: ResearchCollection[]) => void;
   onQueryChange: (value: string) => void;
@@ -101,6 +107,9 @@ export function CommandPalette({
   collections,
   plan,
   publicBrowse = false,
+  initialNav = 'trending',
+  initialFlowQuery = '',
+  initialPlatform = 'web',
   onUpgrade,
   onCollectionsChange,
   onQueryChange,
@@ -112,7 +121,7 @@ export function CommandPalette({
   onSelectFlow,
   onSearchFlow,
 }: CommandPaletteProps) {
-  const [nav, setNav] = useState<Nav>('trending');
+  const [nav, setNav] = useState<CommandPaletteNav>(initialNav);
   const inputRef = useRef<HTMLInputElement>(null);
   const afterCloseRef = useRef<(() => void) | null>(null);
   const resultsScrollRef = useRef<HTMLDivElement>(null);
@@ -128,16 +137,25 @@ export function CommandPalette({
   const [comparison, setComparison] = useState<CatalogComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState('');
-  const [platform, setPlatform] = useState<Platform>('web');
-  const [flowItems, setFlowItems] = useState<FlowCatalogItem[]>([]);
-  const [flowCursor, setFlowCursor] = useState<string | null>(null);
-  const [flowsLoading, setFlowsLoading] = useState(false);
-  const [flowsError, setFlowsError] = useState('');
-  const [flowRetry, setFlowRetry] = useState(0);
-  const [flowQuery, setFlowQuery] = useState('');
+  const [platform, setPlatform] = useState<Platform>(initialPlatform);
+  const [flowQuery, setFlowQuery] = useState(initialFlowQuery);
   const [activeFlowIndex, setActiveFlowIndex] = useState(0);
   const flowSentinelRef = useRef<HTMLDivElement>(null);
-  const flowRequestRef = useRef(0);
+  const flowModeEnabled = plan === 'pro' || initialNav === 'flows';
+  const {
+    items: flowItems,
+    cursor: flowCursor,
+    loading: flowsLoading,
+    error: flowsError,
+    retry: retryFlows,
+    cancel: cancelFlowRequests,
+  } = useCommandPaletteFlowCatalog({
+    enabled: flowModeEnabled && nav === 'flows',
+    platform,
+    query: flowQuery,
+    rootRef: resultsScrollRef,
+    sentinelRef: flowSentinelRef,
+  });
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -191,71 +209,6 @@ export function CommandPalette({
   useEffect(() => { setActiveFlowIndex(0); }, [flowItems]);
 
   useEffect(() => {
-    if (plan !== 'pro' || nav !== 'flows') return;
-    const request = ++flowRequestRef.current;
-    const controller = new AbortController();
-    const normalizedQuery = flowQuery.trim();
-    setFlowItems([]);
-    setFlowCursor(null);
-    setFlowsError('');
-    setFlowsLoading(true);
-    const timer = window.setTimeout(() => {
-      loadFlowCatalogPage({ platform, query: normalizedQuery || undefined }, controller.signal)
-        .then((page) => {
-          if (request !== flowRequestRef.current) return;
-          setFlowItems(page.items);
-          setFlowCursor(page.nextCursor);
-        })
-        .catch((error: Error) => {
-          if (error.name !== 'AbortError' && request === flowRequestRef.current) {
-            setFlowsError(error.message);
-          }
-        })
-        .finally(() => {
-          if (!controller.signal.aborted && request === flowRequestRef.current) {
-            setFlowsLoading(false);
-          }
-        });
-    }, normalizedQuery ? 160 : 0);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [flowQuery, flowRetry, nav, plan, platform]);
-
-  const loadMoreFlows = useCallback(async () => {
-    if (!flowCursor || flowsLoading) return;
-    const request = flowRequestRef.current;
-    setFlowsLoading(true);
-    setFlowsError('');
-    try {
-      const page = await loadFlowCatalogPage({
-        platform,
-        query: flowQuery.trim() || undefined,
-        cursor: flowCursor,
-      });
-      if (request !== flowRequestRef.current) return;
-      setFlowItems((current) => [...current, ...page.items]);
-      setFlowCursor(page.nextCursor);
-    } catch (error) {
-      if (request === flowRequestRef.current) setFlowsError((error as Error).message);
-    } finally {
-      if (request === flowRequestRef.current) setFlowsLoading(false);
-    }
-  }, [flowCursor, flowQuery, flowsLoading, platform]);
-
-  useEffect(() => {
-    const sentinel = flowSentinelRef.current;
-    const root = resultsScrollRef.current;
-    if (nav !== 'flows' || !flowCursor || flowsLoading || !sentinel || !root) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some(({ isIntersecting }) => isIntersecting)) void loadMoreFlows();
-    }, { root, rootMargin: '360px 0px' });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [flowCursor, flowsLoading, loadMoreFlows, nav]);
-
-  useEffect(() => {
     if (plan !== 'pro' || !selected) return;
     const controller = new AbortController();
     setRelatedLoading(true);
@@ -269,6 +222,7 @@ export function CommandPalette({
 
   const requestClose = (afterClose?: () => void) => {
     if (closing) return;
+    cancelFlowRequests();
     afterCloseRef.current = afterClose ?? null;
     setClosing(true);
   };
@@ -373,7 +327,7 @@ export function CommandPalette({
       onQueryChange(value);
     }
   };
-  const selectNav = (nextNav: Nav) => {
+  const selectNav = (nextNav: CommandPaletteNav) => {
     setNav(nextNav);
     setSelected(null);
     setComparison(null);
@@ -433,17 +387,18 @@ export function CommandPalette({
             {items.map((item) => {
               const itemIndex = flowItems.indexOf(item);
               return (
-              <button
+              <Button
                 key={`${category}:${item.title}`}
-                type="button"
+                label={item.title}
+                variant="ghost"
                 className="command-palette-flow-row"
                 data-highlighted={itemIndex === activeFlowIndex ? 'true' : undefined}
                 onMouseEnter={() => setActiveFlowIndex(itemIndex)}
                 onClick={() => selectFlowFacet(item.title)}
-              >
-                <span>{item.title}</span>
-                <span>{item.count.toLocaleString()}</span>
-              </button>
+                endContent={(
+                  <span data-command-flow-count="true">{item.count.toLocaleString()}</span>
+                )}
+              />
               );
             })}
           </div>
@@ -458,7 +413,7 @@ export function CommandPalette({
       {flowsError ? (
         <div className="command-palette-flow-state" role="alert">
           <span>Could not load flows.</span>
-          <Button label="Retry" size="sm" onClick={() => setFlowRetry((value) => value + 1)} />
+          <Button label="Retry" size="sm" onClick={retryFlows} />
         </div>
       ) : null}
       {flowCursor ? <div ref={flowSentinelRef} className="command-palette-flow-sentinel" aria-hidden="true" /> : null}
@@ -469,7 +424,7 @@ export function CommandPalette({
   ) : null;
 
   return (
-    <Dialog
+    <AstryxModal
       isOpen
       className="command-palette-dialog"
       data-closing={closing ? 'true' : undefined}
@@ -498,20 +453,18 @@ export function CommandPalette({
               placeholder="Web Apps, Screens, UI Elements, Flows or Keywords…"
               hasClear={Boolean(nav === 'flows' ? flowQuery : query)}
               width="100%"
-              isDisabled={plan === 'free' && !publicBrowse}
+              isDisabled={plan === 'free' && !publicBrowse && !flowModeEnabled}
             />
           </div>
           <div className="command-palette-platforms" aria-label="Search platform">
             {(['ios', 'web', 'android'] as Platform[]).map((value) => (
-              <button
+              <ToggleButton
                 key={value}
-                type="button"
-                aria-label={value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
-                aria-pressed={platform === value}
-                onClick={() => setPlatform(value)}
-              >
-                {value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
-              </button>
+                label={value === 'ios' ? 'iOS' : value === 'web' ? 'Web' : 'Android'}
+                isPressed={platform === value}
+                size="sm"
+                onPressedChange={() => setPlatform(value)}
+              />
             ))}
           </div>
           <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
@@ -519,20 +472,28 @@ export function CommandPalette({
 
         <div className="command-palette-app-chips" aria-label="Popular apps">
           {apps.slice(0, 6).map((app) => (
-            <button key={app.id} type="button" onClick={() => selectApp(app.id)}>
-              <span className="command-palette-app-logo" style={{ background: app.accent }}>
+            <Button
+              key={app.id}
+              label={app.app}
+              variant="secondary"
+              onClick={() => selectApp(app.id)}
+              icon={<span className="command-palette-app-logo" style={{ background: app.accent }}>
                 {app.iconUrl
                   ? <img src={app.iconUrl} alt="" />
                   : <span aria-hidden="true">{app.app.slice(0, 1)}</span>}
-              </span>
-              <span>{app.app}</span>
-            </button>
+              </span>}
+            />
           ))}
         </div>
 
         <div className="command-palette-body">
           <div className="command-palette-sidebar">
-            {NAV_ITEMS.filter((item) => plan === 'pro' || item.id === 'trending' || item.id === 'categories').map((item) => (
+            {NAV_ITEMS.filter((item) => (
+              plan === 'pro'
+              || item.id === 'trending'
+              || item.id === 'categories'
+              || initialNav === 'flows' && item.id === 'flows'
+            )).map((item) => (
               <ToggleButton
                 key={item.id}
                 label={item.label}
@@ -552,7 +513,7 @@ export function CommandPalette({
           </div>
 
           <div ref={resultsScrollRef} className="inspiration-modal-content command-palette-content">
-            {publicBrowse ? (
+            {nav === 'flows' && flowModeEnabled ? browseContent : publicBrowse ? (
               nav === 'categories' ? browseContent : (
                 <>
                   <div style={SECTION_LABEL}>{query.trim() ? `${publicApps.length} matching apps` : 'Browse apps'}</div>
@@ -616,6 +577,6 @@ export function CommandPalette({
           </div>
         </div>
       </div>
-    </Dialog>
+    </AstryxModal>
   );
 }

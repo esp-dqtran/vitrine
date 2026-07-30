@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Dialog, Heading, Spinner, Text } from '@astryxdesign/core';
+import { Badge, Button, Heading, Spinner, Text } from '@astryxdesign/core';
 import type { AdminUser, UsageRangeKey, UserFeatureUsage } from '../types.ts';
 import { fetchUserFeatureUsage } from '../usersApi.ts';
 import { formatJoinedDate, userPlanLabel } from '../usersPageModel.ts';
+import { AstryxModal } from './AstryxModal.tsx';
 
 function actionLabel(action: string) {
   return action.replaceAll('_', ' ').replaceAll('-', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -24,7 +25,7 @@ export function UserUsageDialog({ user, range, onClose, loadUsage = fetchUserFea
   }, [loadUsage, range, user]);
 
   return (
-    <Dialog isOpen={Boolean(user)} onOpenChange={(open) => { if (!open) onClose(); }} purpose="info" width={420} maxHeight="100vh" position={{ top: 0, right: 0, bottom: 0 }} className="admin-users-detail-dialog">
+    <AstryxModal isOpen={Boolean(user)} onOpenChange={(open) => { if (!open) onClose(); }} purpose="info" width={420} maxHeight="100vh" position={{ top: 0, right: 0, bottom: 0 }} className="admin-users-detail-dialog" presentation="drawer-right">
       {user && (
         <div className="admin-users-detail">
           <div className="admin-users-detail-header">
@@ -48,6 +49,6 @@ export function UserUsageDialog({ user, range, onClose, loadUsage = fetchUserFea
           )}
         </div>
       )}
-    </Dialog>
+    </AstryxModal>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Button, Dialog, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState, Spinner } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import {
@@ -11,6 +11,7 @@ import {
 import { FlowGallery } from './FlowGallery.tsx';
 import { FlowTree } from './FlowTree.tsx';
 import { SelectedFlowWorkspace } from './SelectedFlowWorkspace.tsx';
+import { AstryxModal } from './AstryxModal.tsx';
 import type { FlowRepresentation } from '../router.ts';
 
 export interface FlowsWorkspaceProps {
@@ -24,6 +25,8 @@ export interface FlowsWorkspaceProps {
   platform?: Platform;
   version?: number;
   userRole?: 'admin' | 'user';
+  sourceAppName?: string;
+  sourceAppIconUrl?: string | null;
   analysisControls?: ReactNode;
   onSelectionChange(flowId?: string, step?: number, flowView?: FlowRepresentation): void;
 }
@@ -61,6 +64,8 @@ export function FlowsWorkspace({
   platform,
   version,
   userRole = 'user',
+  sourceAppName,
+  sourceAppIconUrl,
   analysisControls,
   onSelectionChange,
 }: FlowsWorkspaceProps) {
@@ -163,6 +168,12 @@ export function FlowsWorkspace({
             onScrollTargetHandled={() => setScrollTargetFlowId(undefined)}
             onActiveFlowChange={setActiveTocFlowId}
             onSelectFlow={openFlow}
+            app={app}
+            platform={platform}
+            version={version}
+            userRole={userRole}
+            sourceAppName={sourceAppName}
+            sourceAppIconUrl={sourceAppIconUrl}
           />
         ) : (
           <EmptyState
@@ -172,7 +183,7 @@ export function FlowsWorkspace({
         )}
       </main>
       {drawerOpen && (
-        <Dialog
+        <AstryxModal
           isOpen
           onOpenChange={setDrawerOpen}
           purpose="info"
@@ -181,6 +192,7 @@ export function FlowsWorkspace({
           position={{ top: 0, bottom: 0, left: 0 }}
           padding={0}
           className="flow-tree-drawer"
+          presentation="drawer-left"
         >
           <div className="flow-tree-drawer__header">
             <strong>Flows</strong>
@@ -192,7 +204,7 @@ export function FlowsWorkspace({
             />
           </div>
           <FlowTree idPrefix="drawer" {...treeProps} />
-        </Dialog>
+        </AstryxModal>
       )}
     </div>
   );

@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "app": "amazon-shopping",
+  "generatedAt": "2026-07-29T07:20:00.000Z",
+  "separationPolicy": {
+    "visualEvidenceAuthority": "Screenshots prove only visible UI, visible state, and strongly implied interaction in the captured platform, account, region, and version.",
+    "documentedContextAuthority": "External sources prove only the capability or domain contract stated by that source and do not prove that the captured mobile flow implements it.",
+    "conflictPolicy": "Preserve both claims with their source, platform, region, and retrieval date; keep the conflict unresolved until direct evidence reconciles it."
+  },
+  "sources": [
+    {
+      "id": "amazon-shopping-ios-app-store",
+      "title": "Amazon Shopping App - App Store",
+      "url": "https://apps.apple.com/us/app/amazon-shopping/id297606951",
+      "publisher": "AMZN Mobile LLC via Apple App Store",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "app-store",
+      "scopeNote": "Public US iOS capability and privacy listing; it is not a specification for Android, other regions, experiments, or backend behavior."
+    },
+    {
+      "id": "amazon-sp-api-overview",
+      "title": "What is the Selling Partner API?",
+      "url": "https://developer-docs.amazon.com/amazon-shipping/docs/what-is-the-selling-partner-api",
+      "publisher": "Amazon",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-developer",
+      "scopeNote": "Seller-side API and domain reference; it does not document the private implementation of the Amazon Shopping consumer app."
+    },
+    {
+      "id": "amazon-sp-api-listings",
+      "title": "Manage Product Listings with the Selling Partner API",
+      "url": "https://developer-docs.amazon.com/sp-api/lang-en_EN/docs/manage-product-listings-guide",
+      "publisher": "Amazon",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-developer",
+      "scopeNote": "Seller catalog and listing lifecycle reference; use it to form product-data questions, not to infer consumer-app internals."
+    },
+    {
+      "id": "amazon-sp-api-orders",
+      "title": "Get orders with filtering criteria",
+      "url": "https://developer-docs.amazon.com/sp-api/lang-en_US/docs/get-orders-with-filtering-criteria",
+      "publisher": "Amazon",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-developer",
+      "scopeNote": "Seller order schema reference; it identifies order-domain concepts but does not prove consumer UI state or eligibility rules."
+    },
+    {
+      "id": "amazon-sp-api-fulfillment-sandbox",
+      "title": "Fulfillment Outbound Dynamic Sandbox Guide",
+      "url": "https://developer-docs.amazon.com/sp-api/docs/fulfillment-outbound-dynamic-sandbox-guide",
+      "publisher": "Amazon",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-developer",
+      "scopeNote": "Seller-fulfillment sandbox scenarios; useful for equivalent state-machine design, not proof of Amazon Shopping production behavior."
+    },
+    {
+      "id": "amazon-pay-accepted-methods",
+      "title": "Accepted payment methods",
+      "url": "https://pay.amazon.com/help/201754650",
+      "publisher": "Amazon Pay",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-help",
+      "scopeNote": "Amazon Pay guidance for supported merchants; restrictions may differ from Amazon.com retail checkout."
+    },
+    {
+      "id": "amazon-pay-checkout",
+      "title": "Paying for goods and services",
+      "url": "https://pay.amazon.com/help/201754560",
+      "publisher": "Amazon Pay",
+      "retrievedAt": "2026-07-29T07:15:00.000Z",
+      "sourceType": "official-help",
+      "scopeNote": "Amazon Pay checkout guidance for third-party merchant experiences; use only as a payment-domain reference."
+    }
+  ],
+  "claims": [
+    {
+      "id": "ios-shopping-capabilities",
+      "sourceIds": ["amazon-shopping-ios-app-store"],
+      "kind": "documented-capability",
+      "text": "The US iOS listing documents browsing, product details, reviews, purchasing, delivery tracking, delivery notifications, product scanning, 360-degree product views, and camera-based View in your room.",
+      "topics": ["browse", "product", "reviews", "purchase", "order", "tracking", "delivery", "scan", "camera"],
+      "platforms": ["ios"],
+      "regions": ["US"],
+      "scopeNote": "Capability listing only; availability can vary by version, account, product, permission, and experiment."
+    },
+    {
+      "id": "ios-device-processing-constraint",
+      "sourceIds": ["amazon-shopping-ios-app-store"],
+      "kind": "constraint",
+      "text": "The US iOS listing states that information used by the View in your room camera feature remains on the device and is not otherwise stored, processed, or shared by Amazon.",
+      "topics": ["camera", "view", "room", "privacy", "product"],
+      "platforms": ["ios"],
+      "regions": ["US"],
+      "scopeNote": "Applies only to the specifically described View in your room technology."
+    },
+    {
+      "id": "seller-api-domain-capabilities",
+      "sourceIds": ["amazon-sp-api-overview"],
+      "kind": "domain-reference",
+      "text": "Amazon's seller API documentation exposes orders, shipments, payments, OAuth authorization, SDK generation, and sandbox testing as explicit platform concepts.",
+      "topics": ["order", "shipment", "payment", "authorization", "account", "sandbox"],
+      "platforms": ["all"],
+      "regions": ["global"],
+      "scopeNote": "Use these concepts to identify missing contracts; do not infer that the consumer app calls these APIs."
+    },
+    {
+      "id": "catalog-domain-shape",
+      "sourceIds": ["amazon-sp-api-listings"],
+      "kind": "domain-reference",
+      "text": "Amazon's catalog documentation distinguishes product attributes, identifiers, images, product types, sales ranks, summaries, variations, vendor details, offers, and fulfillment availability.",
+      "topics": ["catalog", "product", "images", "variation", "seller", "offer", "price", "inventory", "fulfillment"],
+      "platforms": ["all"],
+      "regions": ["global"],
+      "scopeNote": "Domain vocabulary for equivalent data modeling, not evidence of fields visible in a captured screen."
+    },
+    {
+      "id": "listing-lifecycle",
+      "sourceIds": ["amazon-sp-api-listings"],
+      "kind": "domain-reference",
+      "text": "Amazon documents listing discovery, creation, maintenance, eligibility, buyability, discoverability, validation issues, pricing, inventory, and notifications as separate lifecycle concerns.",
+      "topics": ["catalog", "listing", "product", "eligibility", "price", "inventory", "notification", "validation"],
+      "platforms": ["all"],
+      "regions": ["global"],
+      "scopeNote": "Seller lifecycle reference; it should generate backend questions rather than consumer-flow observations."
+    },
+    {
+      "id": "order-domain-shape",
+      "sourceIds": ["amazon-sp-api-orders"],
+      "kind": "domain-reference",
+      "text": "Amazon's order schema can separate buyer, recipient, fulfillment, proceeds, expenses, promotions, cancellation, packages, tax, and payment information.",
+      "topics": ["order", "buyer", "recipient", "fulfillment", "promotion", "cancel", "package", "tax", "payment"],
+      "platforms": ["all"],
+      "regions": ["global"],
+      "scopeNote": "Seller API schema reference; exact consumer-app fields and rules remain unverified."
+    },
+    {
+      "id": "fulfillment-state-reference",
+      "sourceIds": ["amazon-sp-api-fulfillment-sandbox"],
+      "kind": "domain-reference",
+      "text": "Amazon's seller-fulfillment sandbox distinguishes order preview, hold versus ship actions, shipment speed, accepted versus rejected requests, tracking, updates, cancellation eligibility, and explicit status transitions.",
+      "topics": ["order", "fulfillment", "delivery", "shipping", "tracking", "cancel", "status", "error", "retry"],
+      "platforms": ["all"],
+      "regions": ["global"],
+      "scopeNote": "Equivalent state-machine reference only; production consumer rules may differ."
+    },
+    {
+      "id": "amazon-pay-method-reference",
+      "sourceIds": ["amazon-pay-accepted-methods"],
+      "kind": "domain-reference",
+      "text": "Amazon Pay documents support for major credit and debit cards, notes that available card types can be restricted in some circumstances, and separates Amazon.com gift-card eligibility from Amazon Pay merchant checkout.",
+      "topics": ["payment", "card", "checkout", "gift", "eligibility"],
+      "platforms": ["all"],
+      "regions": ["US"],
+      "scopeNote": "Amazon Pay merchant guidance; do not apply these restrictions automatically to Amazon.com retail checkout."
+    },
+    {
+      "id": "amazon-pay-checkout-reference",
+      "sourceIds": ["amazon-pay-checkout"],
+      "kind": "domain-reference",
+      "text": "Amazon Pay describes a checkout sequence in which the shopper signs in, chooses a payment method and delivery address, and completes the payment or purchase.",
+      "topics": ["login", "checkout", "payment", "address", "purchase"],
+      "platforms": ["all"],
+      "regions": ["US"],
+      "scopeNote": "Third-party Amazon Pay flow reference; it may support questions but does not prove the Amazon Shopping app sequence."
+    }
+  ]
+}

@@ -4,15 +4,14 @@ import {
   useState,
 } from 'react';
 import {
-  AlertDialog,
   Badge,
   Button,
   Card,
   ClickableCard,
-  Dialog,
   Spinner,
   TextInput,
 } from '@astryxdesign/core';
+import { AstryxAlertModal, AstryxModal } from './AstryxModal.tsx';
 import {
   attachCategoryApp,
   createCategory,
@@ -194,7 +193,7 @@ export function CategoriesPageView(props: CategoriesPageViewProps) {
         </div>
       )}
 
-      <Dialog
+      <AstryxModal
         isOpen={Boolean(props.editing)}
         onOpenChange={(open) => { if (!open) props.onEditingChange(null); }}
         purpose="form"
@@ -228,9 +227,9 @@ export function CategoriesPageView(props: CategoriesPageViewProps) {
             </div>
           </div>
         )}
-      </Dialog>
+      </AstryxModal>
 
-      <AlertDialog
+      <AstryxAlertModal
         isOpen={Boolean(props.deleting)}
         onOpenChange={(open) => { if (!open) props.onDelete(null); }}
         title={props.deleting ? `Delete ${props.deleting.name}?` : 'Delete Category?'}

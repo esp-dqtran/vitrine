@@ -219,26 +219,29 @@ export function bindAntigravityChatSession(
       const editor = page.locator('[aria-label="Message input"][contenteditable="true"]').last();
       await raceChatAbort(editor.waitFor({ state: "visible", timeout: 10_000 }), signal);
 
-      if (file) {
+      const files = Array.isArray(file) ? file : file ? [file] : [];
+      if (files.length > 0) {
         const upload = page.locator('input[type="file"]').last();
         if (!(await raceChatAbort(upload.count(), signal))) {
           throw new Error("Antigravity image upload control was not found");
         }
+        const uploadFiles = typeof files[0] === "string"
+          ? files as string[]
+          : (files as ChatAttachment[]).map((attachment) => ({
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            buffer: attachment.buffer,
+          } satisfies ChatAttachment));
         await raceChatAbort(
-          upload.setInputFiles(typeof file === "string"
-            ? file
-            : {
-              name: file.name,
-              mimeType: file.mimeType,
-              buffer: file.buffer,
-            } satisfies ChatAttachment),
+          upload.setInputFiles(uploadFiles),
           signal,
         );
         await raceChatAbort(
           page.waitForFunction(
-            () => (document.querySelector('input[type="file"]') as HTMLInputElement | null)
-              ?.files?.length === 1,
-            undefined,
+            (expectedCount) =>
+              (document.querySelector('input[type="file"]') as HTMLInputElement | null)
+                ?.files?.length === expectedCount,
+            files.length,
             { timeout: 10_000 },
           ),
           signal,

@@ -42,4 +42,8 @@ test("fresh catalog discovery uses the authenticated headless Mobbin context", (
 
   assert.match(fetchCatalog, /const context = await launchMobbinContext\(\);/);
   assert.doesNotMatch(fetchCatalog, /chromium\.launchPersistentContext/);
+  assert.match(fetchCatalog, /\/api\/search-bar\/fetch-searchable-apps/);
+  assert.match(fetchCatalog, /method: "POST"/);
+  assert.match(fetchCatalog, /\["web", "ios"\]/);
+  assert.doesNotMatch(fetchCatalog, /searchable-apps\/\$\{p\}/);
 });

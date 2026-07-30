@@ -12,6 +12,7 @@ const workspace = {
   title: "SSO",
   question: "How should SSO work?",
   platformFilter: "web" as const,
+  pinned: false,
   constraints: "",
   decision: "",
   rationale: "",
@@ -28,6 +29,8 @@ const store = {
     title: "SSO",
     question: "How should SSO work?",
     platformFilter: "web",
+    pinned: false,
+    revision: 1,
     evidenceCount: 0,
     synthesisState: "none",
     updatedAt: workspace.updatedAt,
@@ -70,7 +73,7 @@ test("lists and creates owner-scoped research projects", async (t) => {
   const created = await fetch(`${base}/research-projects`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ title: "SSO", question: "How should SSO work?", platformFilter: "web" }),
+    body: JSON.stringify({ title: "SSO" }),
   });
   assert.equal(created.status, 201);
   assert.equal((await created.json() as { title: string }).title, "SSO");

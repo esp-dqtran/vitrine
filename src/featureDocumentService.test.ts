@@ -38,6 +38,13 @@ const claim = (id: string, text: string) => ({ id, kind: "proposed" as const, te
 
 function documentFixture(): FeatureDocumentContent {
   return {
+    unscopedEvidence: [],
+    sourceAssessment: {
+      captureType: "partial-journey",
+      completeness: "partial",
+      rationale: "No explicit interactions are recorded.",
+      evidenceIds: [manifest[0].evidenceId],
+    },
     executiveSummary: {
       purpose: claim("purpose", "Improve checkout"),
       userValue: claim("value", "Complete purchases"),
@@ -52,8 +59,40 @@ function documentFixture(): FeatureDocumentContent {
     flowAnalysis: { effectivePatterns: [], friction: [], missingStates: [], inconsistencies: [], risksAndAssumptions: [] },
     proposedFeature: { problem: claim("problem", "Progress can be lost"), targetUsers: [], goals: [], nonGoals: [], behavior: [], journey: [] },
     requirements: [
-      { ...claim("requirement-1", "Preserve cart"), userStory: "As a buyer, I want to resume checkout.", priority: "must", preconditions: ["A cart exists."], acceptanceCriteria: [{ id: "criterion-1", given: "a cart", when: "interrupted", then: "restore it", evidenceIds: [manifest[0].evidenceId] }] },
-      { ...claim("requirement-2", "Resume payment"), userStory: "As a buyer, I want to resume payment.", priority: "should", preconditions: [], acceptanceCriteria: [] },
+      {
+        id: "REQ-001",
+        kind: "observed",
+        text: "Display the cart state",
+        evidenceIds: [manifest[0].evidenceId, manifest[1].evidenceId],
+        userStory: "As a buyer, I can review the cart.",
+        priority: "unranked",
+        preconditions: [],
+        acceptanceCriteria: [{
+          id: "AC-001",
+          kind: "observed",
+          given: "the cart capture is loaded",
+          when: "the cart is viewed",
+          then: "the cart state is visible",
+          evidenceIds: [manifest[0].evidenceId],
+        }],
+      },
+      {
+        id: "REQ-002",
+        kind: "inferred",
+        text: "Present the payment state",
+        evidenceIds: [manifest[2].evidenceId],
+        userStory: "As a buyer, I can identify the payment state.",
+        priority: "unranked",
+        preconditions: [],
+        acceptanceCriteria: [{
+          id: "AC-002",
+          kind: "inferred",
+          given: "the payment capture is available",
+          when: "the payment state is reviewed",
+          then: "payment information is present",
+          evidenceIds: [manifest[2].evidenceId],
+        }],
+      },
     ],
     edgeCases: [], successMetrics: [], guardrailMetrics: [], analyticsEvents: [], dependencies: [], openQuestions: [],
   };
@@ -190,6 +229,59 @@ test("analyzes every ordered image then creates one validated revision", async (
   ]);
 });
 
+test("analyzes every ordered image in one whole-Flow provider call", async () => {
+  const state = setup();
+  const calls: Array<{ evidenceIds: string[]; imageIds: number[] }> = [];
+  const provider: FeatureDocumentProvider = {
+    model: "research-model",
+    async analyzeFlow(prompt, images) {
+      calls.push({
+        evidenceIds: prompt.allowedEvidenceIds,
+        imageIds: images.map(({ evidence }) => evidence.imageId),
+      });
+      return {
+        analyses: images.map(({ evidence }) => analysis(evidence.evidenceId)),
+        document: documentFixture(),
+      };
+    },
+    async analyzeImage() {
+      throw new Error("whole-Flow provider must not analyze images separately");
+    },
+    async synthesize() {
+      throw new Error("whole-Flow provider must not synthesize separately");
+    },
+  };
+  const service = createFeatureDocumentService({
+    store: state.store as unknown as FeatureDocumentStore,
+    provider,
+    objectStore: {
+      get: async (key: string) => {
+        const object = [...state.objects.values()].find((candidate) => candidate.key === key)!;
+        return { metadata: object, body: object.body };
+      },
+    } as unknown as ObjectStore,
+    imageObjectById: async (imageId) => state.objects.get(imageId),
+    currentSourceManifest: async () => ({ sha256: state.store.job.evidenceManifestSha256 }),
+    timeoutMs: 1_000,
+    retryDelayMs: 0,
+  });
+
+  assert.equal(await service.generate(String(state.store.job.id)), "done");
+  assert.deepEqual(calls, [{
+    evidenceIds: manifest.map(({ evidenceId }) => evidenceId),
+    imageIds: manifest.map(({ imageId }) => imageId),
+  }]);
+  assert.deepEqual(
+    state.store.stepAnalyses.map(({ evidenceId }) => evidenceId),
+    manifest.map(({ evidenceId }) => evidenceId),
+  );
+  assert.equal(state.store.completed.length, 1);
+  assert.deepEqual(state.store.progress, [
+    ["preparing", 0], ["analyzing", 0], ["analyzing", 1], ["analyzing", 2], ["analyzing", 3],
+    ["synthesizing", 3], ["validating", 3], ["saving", 3],
+  ]);
+});
+
 test("resumes from persisted analyses and retries only missing images", async () => {
   const store = new FakeStore();
   store.stepAnalyses = [{
@@ -254,7 +346,7 @@ test("repairs one invalid synthesis with the exact validation error", async () =
   await service.generate("27");
 
   assert.equal(state.synthesisCalls.length, 2);
-  assert.match(state.synthesisCalls[1].validationError ?? "", /executiveSummary/);
+  assert.match(state.synthesisCalls[1].validationError ?? "", /sourceAssessment/);
   assert.equal(state.store.completed.length, 1);
 });
 

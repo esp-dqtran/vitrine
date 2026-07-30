@@ -1,26 +1,32 @@
 import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
+  useMemo,
   type ReactNode,
 } from 'react';
-import { Button, EmptyState } from '@astryxdesign/core';
+import { Button } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
 import {
-  loadFlowCatalogPage,
   type FlowCatalogItem,
+  loadFlowCatalogFacets,
 } from '../flowCatalogApi.ts';
-import { AppsPlatformSwitcher } from './AppsPlatformSwitcher.tsx';
-import { FlowCard } from './FlowCard.tsx';
-import { ReferenceCatalogLoading } from './ReferenceCatalogLoading.tsx';
+import {
+  createFlowsDiscoveryAdapter,
+  type FlowsDiscoveryControllerState,
+  type FlowsDiscoverySort,
+} from '../flowsDiscoveryAdapter.ts';
+import { updateLocation, useLocationKey } from '../router.ts';
+import {
+  useDiscoveryController,
+  type DiscoveryController,
+  type DiscoveryObserverFactory,
+} from '../useDiscoveryController.ts';
+import {
+  DiscoveryFilterBar,
+  type DiscoveryFilterGroup,
+} from './AppsFilterBar.tsx';
+import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
+import { FlowGallery } from './FlowGallery.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
-import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
-import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
-import { ReferenceDiscoveryToolbar } from './ReferenceDiscoveryToolbar.tsx';
-import { SearchTrigger } from './SearchTrigger.tsx';
-
-type FlowCatalogOrder = 'browse' | 'grouped';
+import type { FlowTreeGroup } from '../flowTree.ts';
 
 function catalogFlowTitle(item: FlowCatalogItem): string {
   if (
@@ -32,66 +38,90 @@ function catalogFlowTitle(item: FlowCatalogItem): string {
   return `${item.title} from ${item.category}`;
 }
 
+const FLOW_TAXONOMY_OPTION_LIMIT = 15;
+
+function flowTaxonomyOptions(group: DiscoveryFilterGroup) {
+  const defaults = group.options.slice(0, FLOW_TAXONOMY_OPTION_LIMIT);
+  const defaultValues = new Set(defaults.map(({ value }) => value));
+  const deepSelected = group.options.filter(({ value }) =>
+    group.selected.includes(value) && !defaultValues.has(value));
+  return [
+    ...defaults.slice(0, Math.max(0, FLOW_TAXONOMY_OPTION_LIMIT - deepSelected.length)),
+    ...deepSelected.slice(0, FLOW_TAXONOMY_OPTION_LIMIT),
+  ];
+}
+
 interface FlowsPageViewProps {
-  items: FlowCatalogItem[];
-  platform: Platform;
-  query: string;
-  loading: boolean;
-  loadingMore?: boolean;
-  error: string;
-  hasMore: boolean;
-  order: FlowCatalogOrder;
-  onPlatformChange: (platform: Platform) => void;
-  onQueryChange: (value: string) => void;
-  onOrderChange: (value: FlowCatalogOrder) => void;
+  controller: DiscoveryController<
+    FlowCatalogItem,
+    FlowsDiscoverySort,
+    FlowsDiscoveryControllerState
+  >;
   onOpenSearch: () => void;
   onSelectFlow: (title: string, platform: Platform) => void;
   onSelectApp: (appId: string) => void;
-  onRetry: () => void;
-  onLoadMore: () => void;
   accountControls?: ReactNode;
+  userRole?: 'admin' | 'user';
 }
 
 export function FlowsPageView({
-  items,
-  platform,
-  query,
-  loading,
-  loadingMore = false,
-  error,
-  hasMore,
-  order,
-  onPlatformChange,
-  onQueryChange,
-  onOrderChange,
-  onOpenSearch,
+  controller,
   onSelectFlow,
   onSelectApp,
-  onRetry,
-  onLoadMore,
-  accountControls,
+  userRole = 'user',
 }: FlowsPageViewProps) {
-  const groups = [...new Set(items.map(({ category }) => category))].slice(0, 12);
-  const empty = !loading && !error && items.length === 0;
+  const flowGroups = useMemo<DiscoveryFilterGroup>(() => ({
+    id: 'flowGroups',
+    label: 'Flow groups',
+    selected: controller.state.filters
+      .filter(({ group }) => group === 'flowGroups')
+      .map(({ value }) => value),
+    options: controller.facets
+      .filter(({ group }) => group === 'flowGroups')
+      .map((facet) => ({
+        value: facet.value,
+        section: facet.section?.trim() || 'Flow groups',
+        count: facet.count,
+      })),
+    loadOptions: async (query, signal) => {
+      const selected = controller.state.filters
+        .filter(({ group }) => group === 'flowGroups')
+        .map(({ value }) => value);
+      const facets = await loadFlowCatalogFacets({
+        platform: controller.state.platform,
+        query: controller.state.query,
+        flowGroups: selected,
+      }, query, selected, signal);
+      return facets.map((facet) => ({
+        value: facet.value,
+        section: facet.section?.trim() || 'Flow groups',
+        count: facet.count,
+      }));
+    },
+  }), [
+    controller.facets,
+    controller.state.filters,
+    controller.state.platform,
+    controller.state.query,
+  ]);
+  const catalogItemsByFlowId = useMemo(
+    () => new Map(controller.items.map((item) => [item.preview.flow.id, item])),
+    [controller.items],
+  );
+  const catalogGroups = useMemo<FlowTreeGroup[]>(() => [{
+    id: 'flow-catalog',
+    label: 'Flow catalog',
+    standalone: true,
+    flows: controller.items.map((item) => ({
+      ...item.preview.flow,
+      title: catalogFlowTitle(item),
+    })),
+  }], [controller.items]);
 
   return (
-    <ReferenceDiscoveryPageShell
+    <DiscoveryPageLayout
       kind="flows"
-      header={(
-        <ReferenceDiscoveryTopNav
-          active="flows"
-          className="apps-top-nav"
-          search={(
-            <SearchTrigger
-              label={query ? `${items.length} flows · search or filter…` : 'Search on Web...'}
-              activeCategory={null}
-              onOpen={onOpenSearch}
-              onClearCategory={() => onQueryChange('')}
-            />
-          )}
-          accountControls={accountControls}
-        />
-      )}
+      header={null}
       taxonomyLabel="Flow discovery filters"
       taxonomy={(
         <ReferenceDiscoveryFacetGroup
@@ -99,92 +129,87 @@ export function FlowsPageView({
           wide
           className="flows-discovery__facet"
         >
-          {groups.map((group) => (
+          {flowTaxonomyOptions(flowGroups).map((option) => (
             <Button
-              key={group}
-              label={group}
+              key={option.value}
+              label={option.value}
+              data-flow-taxonomy-option="true"
               variant="ghost"
               size="sm"
-              aria-pressed={query === group}
-              onClick={() => onQueryChange(query === group ? '' : group)}
+              aria-pressed={flowGroups.selected.includes(option.value)}
+              onClick={() => controller.toggleFilter({
+                group: flowGroups.id,
+                value: option.value,
+              })}
             />
           ))}
         </ReferenceDiscoveryFacetGroup>
       )}
       preview={null}
       toolbar={(
-        <ReferenceDiscoveryToolbar
-          label="Flow ordering"
-          value={order}
-          options={[
-            { value: 'browse', label: 'Popular' },
+        <DiscoveryFilterBar
+          kind="flows"
+          ariaLabel="Flow discovery controls"
+          platform={{
+            value: controller.state.platform,
+            ariaLabel: 'Flow platform',
+            onChange: controller.setPlatform,
+          }}
+          filters={[flowGroups]}
+          resultCount={controller.items.length}
+          resultLabels={['flow', 'flows']}
+          showResultCount={false}
+          sort={controller.state.sort}
+          sortOptions={[
+            { value: 'popular', label: 'Popular' },
             { value: 'grouped', label: 'Grouped' },
           ]}
-          onChange={onOrderChange}
-          leading={(
-            <AppsPlatformSwitcher
-              value={platform}
-              onChange={onPlatformChange}
-            />
-          )}
+          onSortChange={(value) => controller.setSort(value as FlowsDiscoverySort)}
+          onToggleFilter={(group, value) => controller.toggleFilter({ group, value })}
+          onClearFilter={controller.clearFilterGroup}
         />
       )}
+      resultLabel="flows"
+      singularResultLabel="flow"
+      totalCount={controller.totalCount}
+      renderedCount={controller.items.length}
+      loading={controller.loading}
+      loadingMore={controller.loadingMore}
+      error={controller.error}
+      loadMoreError={controller.loadMoreError}
+      onRetry={controller.retry}
+      onRetryLoadMore={controller.retryLoadMore}
+      sentinelRef={controller.sentinelRef}
     >
-      {loading ? (
-          <ReferenceCatalogLoading label="Loading Flows" />
-        ) : error ? (
-          <div className="flows-discovery__state" role="alert">
-            <EmptyState
-              title="Could not load Flows"
-              description={error}
-              actions={<Button label="Retry" variant="primary" onClick={onRetry} />}
-            />
-          </div>
-        ) : empty ? (
-          <div className="flows-discovery__state" role="status">
-            <EmptyState
-              title={query ? 'No Flows match this search' : 'No Flows available yet'}
-              description={query
-                ? 'Try another Flow name or group.'
-                : 'Published Apps do not contain normalized Flows for this platform yet.'}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="flows-discovery__gallery" aria-label="Flow catalog">
-              {items.map((item) => (
-                <section
-                  key={`${item.category}:${item.title}`}
-                  className="flows-discovery__flow"
-                >
-                  <FlowCard
-                    flow={{
-                      ...item.preview.flow,
-                      title: catalogFlowTitle(item),
-                    }}
-                    screenCount={item.preview.screenCount}
-                    metaLabel={`${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'} · observed in ${item.count} ${item.count === 1 ? 'app' : 'apps'}`}
-                    sourceAppName={item.preview.appName}
-                    sourceAppIconUrl={item.preview.appIconUrl}
-                    onOpenSourceApp={() => onSelectApp(item.preview.appId)}
-                    onOpen={() => onSelectFlow(item.title, platform)}
-                  />
-                </section>
-              ))}
-            </div>
-            {hasMore ? (
-              <div className="flows-discovery__load-more">
-                <Button
-                  label={loadingMore ? 'Loading more…' : 'Load more Flows'}
-                  variant="secondary"
-                  isDisabled={loadingMore}
-                  onClick={onLoadMore}
-                />
-              </div>
-            ) : null}
-          </>
-        )}
-    </ReferenceDiscoveryPageShell>
+      <FlowGallery
+        groups={catalogGroups}
+        ariaLabel="Flow catalog"
+        paginate={false}
+        platform={controller.state.platform}
+        userRole={userRole}
+        cardPropsForFlow={(flow) => {
+          const item = catalogItemsByFlowId.get(flow.id);
+          if (!item) return undefined;
+          return {
+            screenCount: item.preview.screenCount,
+            metaLabel: `${item.preview.screenCount} ${item.preview.screenCount === 1 ? 'screen' : 'screens'} · observed in ${item.count} ${item.count === 1 ? 'app' : 'apps'}`,
+            sourceAppName: item.preview.appName,
+            sourceAppIconUrl: item.preview.appIconUrl,
+            documentSource: {
+              app: item.preview.appId,
+              platform: controller.state.platform,
+              version: item.preview.version,
+              flowId: item.preview.sourceFlowId,
+            },
+            onOpenSourceApp: () => onSelectApp(item.preview.appId),
+          };
+        }}
+        onSelectFlow={(flowId) => {
+          const item = catalogItemsByFlowId.get(flowId);
+          if (item) onSelectFlow(item.title, controller.state.platform);
+        }}
+      />
+    </DiscoveryPageLayout>
   );
 }
 
@@ -193,6 +218,7 @@ interface FlowsPageProps {
   onSelectFlow: (title: string, platform: Platform) => void;
   onSelectApp: (appId: string) => void;
   accountControls?: ReactNode;
+  userRole?: 'admin' | 'user';
 }
 
 export function FlowsPage({
@@ -200,91 +226,47 @@ export function FlowsPage({
   onSelectFlow,
   onSelectApp,
   accountControls,
+  userRole = 'user',
 }: FlowsPageProps) {
-  const [platform, setPlatform] = useState<Platform>('web');
-  const [query, setQuery] = useState('');
-  const [order, setOrder] = useState<FlowCatalogOrder>('browse');
-  const [items, setItems] = useState<FlowCatalogItem[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState('');
-  const [revision, setRevision] = useState(0);
-  const generationRef = useRef(0);
-
-  useEffect(() => {
-    const generation = ++generationRef.current;
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    setNextCursor(null);
-
-    const timer = window.setTimeout(() => {
-      void loadFlowCatalogPage(
-        { platform, query: query.trim() || undefined, limit: 12, order },
-        controller.signal,
-      ).then((page) => {
-        if (generation !== generationRef.current) return;
-        setItems(page.items);
-        setNextCursor(page.nextCursor);
-      }).catch((reason: Error) => {
-        if (reason.name !== 'AbortError' && generation === generationRef.current) {
-          setItems([]);
-          setError(reason.message);
-        }
-      }).finally(() => {
-        if (generation === generationRef.current) setLoading(false);
+  const locationKey = useLocationKey();
+  const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
+  const controller = useFlowsDiscoveryPageController({
+    locationSearch: search,
+    onNavigate: (nextSearch, mode) => {
+      updateLocation(`/flows${nextSearch ? `?${nextSearch}` : ''}`, {
+        replace: mode === 'replace',
       });
-    }, query ? 180 : 0);
-
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [order, platform, query, revision]);
-
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMore) return;
-    const generation = generationRef.current;
-    setLoadingMore(true);
-    setError('');
-    try {
-      const page = await loadFlowCatalogPage({
-        platform,
-        query: query.trim() || undefined,
-        cursor: nextCursor,
-        limit: 12,
-        order,
-      });
-      if (generation !== generationRef.current) return;
-      setItems((current) => [...current, ...page.items]);
-      setNextCursor(page.nextCursor);
-    } catch (reason) {
-      if (generation === generationRef.current) setError((reason as Error).message);
-    } finally {
-      if (generation === generationRef.current) setLoadingMore(false);
-    }
-  }, [loadingMore, nextCursor, order, platform, query]);
+    },
+  });
 
   return (
     <FlowsPageView
-      items={items}
-      platform={platform}
-      query={query}
-      loading={loading}
-      loadingMore={loadingMore}
-      error={error}
-      hasMore={nextCursor !== null}
-      order={order}
-      onPlatformChange={setPlatform}
-      onQueryChange={setQuery}
-      onOrderChange={setOrder}
+      controller={controller}
       onOpenSearch={onOpenSearch}
       onSelectFlow={onSelectFlow}
       onSelectApp={onSelectApp}
-      onRetry={() => setRevision((value) => value + 1)}
-      onLoadMore={() => void loadMore()}
       accountControls={accountControls}
+      userRole={userRole}
     />
   );
+}
+
+interface UseFlowsDiscoveryPageControllerOptions {
+  locationSearch: string;
+  onNavigate(search: string, mode: 'push' | 'replace'): void;
+  observerFactory?: DiscoveryObserverFactory;
+}
+
+export function useFlowsDiscoveryPageController({
+  locationSearch,
+  onNavigate,
+  observerFactory,
+}: UseFlowsDiscoveryPageControllerOptions) {
+  const adapter = useMemo(() => createFlowsDiscoveryAdapter(), []);
+  return useDiscoveryController({
+    adapter,
+    locationSearch,
+    onNavigate,
+    observerFactory,
+  });
 }

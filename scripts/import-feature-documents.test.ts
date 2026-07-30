@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  artifactMatchesFlow,
   catalogDocumentKey,
   featureDescriptionToContent,
   type FeatureDescriptionArtifact,
@@ -45,11 +46,43 @@ test("converts a local flow analysis into a valid catalog Feature Document", () 
   const content = featureDescriptionToContent(artifact);
   const parsed = parseFeatureDocumentContent(content, new Set(["S01", "S02"]));
   assert.equal(parsed.requirements[0].id, "REQ-01");
+  assert.equal(
+    parsed.requirements[0].userStory,
+    "As a user, I need the system to accept a document, so that I can complete the flow goal.",
+  );
   assert.equal(parsed.observedFlow.journey.length, 2);
   assert.equal(parsed.executiveSummary.purpose.kind, "observed");
   assert.equal(parsed.openQuestions[0].kind, "unknown");
 });
 
+test("matches acceptance criteria to requirements by evidence instead of array position", () => {
+  const content = featureDescriptionToContent({
+    ...artifact,
+    feature: {
+      ...artifact.feature,
+      requirements: [
+        { id: "REQ-01", text: "The system must show the first state.", priority: "must", evidenceIds: ["S01"] },
+        { id: "REQ-02", text: "The system must show an intermediate state.", priority: "must", evidenceIds: [] },
+        { id: "REQ-03", text: "The system must show the final state.", priority: "must", evidenceIds: ["S02"] },
+      ],
+      acceptanceCriteria: [
+        { id: "AC-01", given: "First", when: "Opened", then: "First state", evidenceIds: ["S01"] },
+        { id: "AC-02", given: "Final", when: "Confirmed", then: "Final state", evidenceIds: ["S02"] },
+      ],
+    },
+  });
+
+  assert.equal(content.requirements[0].acceptanceCriteria[0].then, "First state");
+  assert.equal(content.requirements[1].acceptanceCriteria[0].then, "The system must show an intermediate state.");
+  assert.equal(content.requirements[2].acceptanceCriteria[0].then, "Final state");
+});
+
 test("uses app, platform, and Flow ID as the stable catalog identity", () => {
   assert.equal(catalogDocumentKey(artifact.source), "binance:web:flow-123");
+});
+
+test("can limit a catalog import to one exact Flow", () => {
+  assert.equal(artifactMatchesFlow(artifact), true);
+  assert.equal(artifactMatchesFlow(artifact, "flow-123"), true);
+  assert.equal(artifactMatchesFlow(artifact, "another-flow"), false);
 });

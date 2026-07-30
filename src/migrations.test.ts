@@ -118,6 +118,86 @@ const migrationDefinitions = [
       /DROP TABLE legacy_app_flows/,
     ],
   },
+  {
+    file: "0036_site_version_catalog_snapshots.sql",
+    patterns: [
+      /ADD COLUMN catalog_snapshot JSONB/,
+      /jsonb_typeof\(catalog_snapshot\) = 'object'/,
+      /CREATE OR REPLACE FUNCTION populate_site_version_catalog_snapshot/,
+      /NEW\.catalog_snapshot IS NULL\s+OR NEW\.catalog_snapshot = '\{\}'::jsonb/,
+      /NOT \(NEW\.catalog_snapshot \?& ARRAY\[/,
+      /BEFORE INSERT OR UPDATE ON site_versions/,
+      /UPDATE site_versions sv/,
+      /jsonb_build_object\(/,
+      /'categoriesNormalized'/,
+      /'stylesNormalized'/,
+      /jsonb_agg\(lower\(value\)/,
+      /'popularity'/,
+      /ALTER COLUMN catalog_snapshot SET NOT NULL/,
+      /ALTER COLUMN catalog_snapshot DROP DEFAULT/,
+      /site_versions_catalog_ready_idx/,
+      /site_versions_catalog_categories_normalized_gin_idx/,
+      /site_versions_catalog_styles_normalized_gin_idx/,
+      /site_pages_version_title_idx/,
+      /site_sections_patterns_gin_idx/,
+    ],
+  },
+  {
+    file: "0037_flow_catalog_snapshot_guards.sql",
+    patterns: [
+      /BEFORE UPDATE OR DELETE ON flows/,
+      /Published Flow taxonomy is append-only/,
+      /BEFORE INSERT OR UPDATE OR DELETE ON app_flow_versions/,
+      /BEFORE INSERT OR UPDATE OR DELETE ON app_flow_version_mappings/,
+      /BEFORE INSERT OR UPDATE OR DELETE ON app_versions/,
+      /Published App versions are immutable/,
+      /Published App versions must use the in-review publication transition/,
+      /app_versions_publication_markers_consistent/,
+      /\(status = 'published'\) = \(published_at IS NOT NULL\)/,
+      /\(NEW\.status = 'published'\) IS DISTINCT FROM \(NEW\.published_at IS NOT NULL\)/,
+      /App version publication status and timestamp must agree/,
+      /OLD\.published_at IS NOT NULL/,
+      /OLD\.status = 'published'/,
+      /OLD\.status <> 'in_review'/,
+      /NEW\.status <> 'published'/,
+      /owner_ids := CASE TG_OP/,
+      /flow_version_ids := CASE TG_OP/,
+      /FOR SHARE/,
+      /FOR SHARE OF av, afv/,
+      /published_at IS NOT NULL/,
+      /publish a new App version/,
+    ],
+  },
+  {
+    file: "0039_screen_pattern_taxonomy.sql",
+    patterns: [
+      /CREATE TABLE screen_pattern_sections/,
+      /CREATE TABLE screen_patterns/,
+      /CREATE TABLE screen_pattern_assignments/,
+      /PRIMARY KEY \(image_id, screen_pattern_id\)/,
+      /source IN \('analysis', 'imported', 'manual'\)/,
+      /INSERT INTO screen_pattern_sections/,
+      /INSERT INTO screen_patterns/,
+      /screen_pattern_matches_analysis/,
+      /refresh_screen_pattern_previews/,
+      /sync_screen_pattern_assignments_from_analysis/,
+      /zz_refresh_screen_patterns_on_publish/,
+    ],
+  },
+  {
+    file: "0040_app_flow_reconciliations.sql",
+    patterns: [
+      /CREATE TABLE app_flow_reconciliations/,
+      /source_fingerprint TEXT NOT NULL/,
+      /visual_analysis_sha256 TEXT NOT NULL/,
+      /research_context_sha256 TEXT NOT NULL/,
+      /result_sha256 TEXT NOT NULL/,
+      /UNIQUE \(app_id, platform, source_flow_id, revision_number\)/,
+      /UNIQUE \(app_id, platform, source_flow_id, source_fingerprint\)/,
+      /CREATE TRIGGER app_flow_reconciliation_immutable/,
+      /App Flow reconciliation evidence is immutable/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -129,6 +209,18 @@ for (const definition of migrationDefinitions) {
     for (const pattern of definition.patterns) assert.match(sql, pattern);
   });
 }
+
+test("normal publication snapshots Flow children before the immutable transition", async () => {
+  const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
+  const start = source.indexOf("export async function publishAppVersion");
+  const end = source.indexOf("export async function getVersionDesignSystem", start);
+  assert.ok(start >= 0 && end > start);
+  const publication = source.slice(start, end);
+  const snapshot = publication.indexOf("await replaceVersionFlows");
+  const transition = publication.indexOf("SET status = 'published', published_at = now()");
+  assert.ok(snapshot >= 0);
+  assert.ok(transition > snapshot);
+});
 
 test("migration verification requires explicit disposable-database opt-in", () => {
   const adminUrl = "postgres://operator:secret@localhost:5432/postgres";
@@ -283,6 +375,9 @@ test("migration verification includes every post-v1 table family", async () => {
   assert.match(source, /"app_knowledge_design_system_chunks"/);
   assert.match(source, /"app_knowledge_snapshots"/);
   assert.match(source, /"public_facet_previews"/);
+  assert.match(source, /"screen_pattern_assignments"/);
+  assert.match(source, /"screen_pattern_sections"/);
+  assert.match(source, /"screen_patterns"/);
   assert.match(source, /"site_search_index_queue"/);
   assert.match(source, /\.\.\.APP_KNOWLEDGE_TABLES/);
 });

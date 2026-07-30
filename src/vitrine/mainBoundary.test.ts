@@ -8,6 +8,13 @@ test('does not replay page-load request effects in development', async () => {
   assert.doesNotMatch(source, /\bStrictMode\b/);
 });
 
+test('provides one shared in-product Toast for application feedback', async () => {
+  const source = await readFile(new URL('./main.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /ApplicationToastProvider/);
+  assert.doesNotMatch(source, /LayerProvider/);
+});
+
 test('delegates public, private, disabled, and redirect decisions to the exhaustive route policy', async () => {
   const source = await readFile(new URL('./main.tsx', import.meta.url), 'utf8');
   assert.match(source, /decideRootRoute\(route,/);

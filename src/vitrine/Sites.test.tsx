@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { filterAndSortSites, SitesPageView } from './components/SitesPage.tsx';
+import { SitesPageView } from './components/SitesPage.tsx';
 import * as SitesPageModule from './components/SitesPage.tsx';
 import * as SiteCardModule from './components/SiteCard.tsx';
 import { SiteVersionView } from './components/SiteVersionPage.tsx';
@@ -15,6 +15,8 @@ import {
   technologyIconUrl,
   wappalyzerIconUrl,
 } from './components/SiteAnalysisPanel.tsx';
+import type { SitesDiscoveryControllerState } from './sitesDiscoveryAdapter.ts';
+import type { DiscoveryController } from './useDiscoveryController.ts';
 import type { SiteSummary, SiteVersionDetail } from './types.ts';
 
 const site: SiteSummary = {
@@ -31,6 +33,47 @@ const site: SiteSummary = {
     { id: 11, title: 'Pricing', position: 1, url: '/api/sites/1/versions/2/pages/11/media' },
   ],
 };
+
+const siteController = (
+  overrides: Partial<DiscoveryController<
+    SiteSummary,
+    SitesDiscoveryControllerState['sort'],
+    SitesDiscoveryControllerState
+  >> = {},
+): DiscoveryController<
+  SiteSummary,
+  SitesDiscoveryControllerState['sort'],
+  SitesDiscoveryControllerState
+> => ({
+  state: {
+    platform: 'web',
+    sort: 'latest',
+    query: '',
+    filters: [],
+  },
+  items: [site],
+  facets: [
+    { group: 'categories', value: 'Business', count: 1, section: 'Categories' },
+    { group: 'sections', value: 'Pricing', count: 1, section: 'Sections' },
+    { group: 'styles', value: 'Minimal', count: 1, section: 'Styles' },
+  ],
+  totalCount: 1,
+  loading: false,
+  loadingMore: false,
+  error: null,
+  loadMoreError: null,
+  hasMore: false,
+  sentinelRef: { current: null },
+  setState: () => undefined,
+  setPlatform: () => undefined,
+  setSort: () => undefined,
+  setQuery: () => undefined,
+  toggleFilter: () => undefined,
+  clearFilterGroup: () => undefined,
+  retry: () => undefined,
+  retryLoadMore: () => undefined,
+  ...overrides,
+});
 
 const detail: SiteVersionDetail = {
   routeSlug: 'v7',
@@ -145,11 +188,10 @@ const detail: SiteVersionDetail = {
 };
 
 test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', () => {
-  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin query="" onQueryChange={() => undefined} onRefresh={() => undefined} />);
+  const html = renderToStaticMarkup(<SitesPageView controller={siteController()} isAdmin />);
   assert.match(html, /data-sites-discovery="true"/);
   assert.match(html, /class="[^"]*reference-discovery[^"]*reference-discovery--sites[^"]*"/);
-  assert.match(html, /class="[^"]*reference-discovery-nav[^"]*sites-top-nav[^"]*"/);
-  assert.match(html, /class="[^"]*reference-search-trigger[^"]*"/);
+  assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
@@ -157,29 +199,26 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /Categories/);
   assert.match(html, /Sections/);
   assert.match(html, /Styles/);
-  assert.match(html, /Portfolio/);
-  assert.match(html, /Lifestyle/);
-  assert.match(html, /How It Works/);
-  assert.match(html, /Social Proof/);
-  assert.match(html, /Photography/);
-  assert.match(html, /Colorful/);
+  assert.match(html, /Business/);
+  assert.match(html, /Pricing/);
+  assert.match(html, /Minimal/);
+  assert.match(html, /data-sites-filterbar="true"/);
+  assert.match(html, /aria-label="Site discovery controls"/);
+  assert.match(html, /aria-label="Site platform: Web"/);
+  assert.doesNotMatch(html, /role="radiogroup"[^>]*aria-label="Site platform"/);
+  assert.match(html, /Open Categories filters/);
+  assert.match(html, /Open Sections filters/);
+  assert.match(html, /Open Styles filters/);
+  assert.match(html, />1 site</);
   assert.match(html, /Latest/);
-  assert.match(html, /Most popular/);
-  assert.match(html, /data-reference-discovery-toolbar="true"/);
-  assert.match(html, /class="reference-discovery-toolbar__sort"/);
-  assert.match(html, /aria-label="Site ordering"/);
+  assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
   assert.match(html, /data-facet-preview="categories"/);
   assert.match(html, /data-facet-preview="sections"/);
   assert.doesNotMatch(html, /data-facet-preview="styles"/);
   assert.match(html, /class="apps-discovery__hover-preview sites-discovery__hover-preview"/);
   assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
-  assert.doesNotMatch(html, />Filter</);
   assert.doesNotMatch(html, /sites-discovery__toolbar-actions/);
   assert.match(html, /V7/);
-  assert.match(html, /Open search and filters/);
-  assert.match(html, /Search on Web\.\.\./);
-  assert.match(html, /⌘K/);
-  assert.doesNotMatch(html, /Search Sites/);
   assert.match(html, /data-discovery-card="true"/);
   assert.match(html, /class="[^"]*reference-discovery__grid[^"]*"/);
   assert.match(html, /class="discovery-card site-discovery-card"/);
@@ -191,15 +230,65 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /<video/);
   assert.match(html, /<a[^>]+href="\/sites\/v7"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
-  assert.doesNotMatch(html, /Showing 1 of 1 sites/);
+  assert.equal((html.match(/Showing/g) ?? []).length, 1);
+  assert.match(html, /<strong>1 site<\/strong>/);
   assert.doesNotMatch(html, /Import Site/);
+});
+
+test('keeps the Sites hero taxonomy curated when the API returns noisy facets', () => {
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({
+        facets: [
+          { group: 'categories', value: 'Business', count: 1, section: 'Categories' },
+          { group: 'sections', value: '000', count: 1, section: 'Sections' },
+          { group: 'sections', value: '7HgfXftRBBqsYtAEYcqjGLQrNJLL6Tww9ek4rE3Apump', count: 1, section: 'Sections' },
+          { group: 'styles', value: 'Minimal', count: 1, section: 'Styles' },
+        ],
+      })}
+      isAdmin
+    />,
+  );
+
+  assert.match(html, />Portfolio</);
+  assert.match(html, />How It Works</);
+  assert.match(html, />Colorful</);
+  assert.doesNotMatch(html, />000</);
+  assert.doesNotMatch(html, />7HgfXftRBBqsYtAEYcqjGLQrNJLL6Tww9ek4rE3Apump</);
+});
+
+test('uses the server total in Sites result metadata while one cursor page is loaded', () => {
+  const sites = Array.from({ length: 24 }, (_, index) => ({
+    ...site,
+    id: index + 1,
+    versionId: index + 101,
+    routeSlug: `site-${index + 1}`,
+  }));
+  const html = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({
+        state: {
+          platform: 'web',
+          sort: 'latest',
+          query: 'pricing',
+          filters: [],
+        },
+        items: sites,
+        totalCount: 100,
+        hasMore: true,
+      })}
+      isAdmin={false}
+    />,
+  );
+
+  assert.equal((html.match(/<strong>100 sites<\/strong>/g) ?? []).length, 1);
 });
 
 test('composes Sites through the shared reference discovery shell', () => {
   const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /import \{ ReferenceDiscoveryPageShell \} from '\.\/ReferenceDiscoveryPageShell\.tsx';/);
-  assert.match(source, /<ReferenceDiscoveryPageShell[\s\S]*kind="sites"/);
+  assert.match(source, /import \{ DiscoveryPageLayout \} from '\.\/DiscoveryPageLayout\.tsx';/);
+  assert.match(source, /<DiscoveryPageLayout[\s\S]*kind="sites"/);
 });
 
 test('builds Site hover previews from matching categories and captured sections', () => {
@@ -252,7 +341,7 @@ test('builds Site hover previews from matching categories and captured sections'
 test('loads Site taxonomy previews only after pointer entry', () => {
   const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /const previewPools = useMemo\(\s*\(\) => buildSiteFacetPreviewPools\(sites\),\s*\[sites\],?\s*\)/);
+  assert.match(source, /const previewPools = useMemo\(\s*\(\) => buildSiteFacetPreviewPools\(controller\.items\),\s*\[controller\.items\],?\s*\)/);
   assert.doesNotMatch(source, /requestIdleCallback/);
   assert.doesNotMatch(source, /prefetchVisibleSiteFacetPreviews/);
   assert.match(source, /siteFacetPreview\([\s\S]*siteFacetImageReady/);
@@ -262,7 +351,7 @@ test('loads Site taxonomy previews only after pointer entry', () => {
   assert.doesNotMatch(source, /siteFacetPreview\(sites,\s*hoverFacet\)/);
 });
 
-test('renders the first 24 Sites before the gallery sentinel advances', () => {
+test('renders every Site page item and only the generic discovery sentinel', () => {
   const sites = Array.from({ length: 30 }, (_, index) => ({
     ...site,
     id: index + 1,
@@ -272,16 +361,14 @@ test('renders the first 24 Sites before the gallery sentinel advances', () => {
   }));
   const html = renderToStaticMarkup(
     <SitesPageView
-      sites={sites}
+      controller={siteController({ items: sites, totalCount: 30, hasMore: true })}
       isAdmin={false}
-      query=""
-      onQueryChange={() => undefined}
-      onRefresh={() => undefined}
     />,
   );
 
-  assert.equal((html.match(/data-site-discovery-card="true"/g) ?? []).length, 24);
-  assert.match(html, /data-sites-gallery-sentinel="true"/);
+  assert.equal((html.match(/data-site-discovery-card="true"/g) ?? []).length, 30);
+  assert.equal((html.match(/data-discovery-sentinel="sites"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /data-sites-gallery-sentinel/);
 });
 
 test('renders image-only Mobbin Site previews without a broken video element', () => {
@@ -291,7 +378,7 @@ test('renders image-only Mobbin Site previews without a broken video element', (
     version: { ...detail.version, previewMediaKind: 'image' },
   };
   const catalog = renderToStaticMarkup(
-    <SitesPageView sites={[imageSite]} isAdmin={false} query="" onQueryChange={() => undefined} onRefresh={() => undefined} />,
+    <SitesPageView controller={siteController({ items: [imageSite] })} isAdmin={false} />,
   );
   const version = renderToStaticMarkup(
     <SiteVersionView detail={imageDetail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
@@ -299,7 +386,7 @@ test('renders image-only Mobbin Site previews without a broken video element', (
 
   assert.match(catalog, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
   assert.doesNotMatch(catalog, /<video/);
-  assert.match(version, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"/);
+  assert.match(version, /<img[^>]+src="\/api\/sites\/1\/versions\/2\/pages\/10\/media"/);
   assert.doesNotMatch(version, /<video/);
 });
 
@@ -337,11 +424,35 @@ test('uses an AA text token for related Site metadata', () => {
   assert.doesNotMatch(rule, /color-text-disabled/);
 });
 
-test('loads only a bounded related Site page on detail routes', () => {
+test('loads a bounded Mobbin-style related Site page on detail routes', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /listSitesPage\(4,\s*0\)/);
+  assert.match(source, /listSitesPage\(7,\s*0\)/);
   assert.doesNotMatch(source, /listSites\(\)/);
-  assert.match(source, /deferMediaUntilIntent/);
+  assert.match(source, /relatedSites\.slice\(0,\s*6\)/);
+  assert.match(source, /More like \{detail\.site\.name\}/);
+  assert.match(source, /showMetadata=\{false\}/);
+  assert.doesNotMatch(source, /Continue exploring/);
+  assert.doesNotMatch(source, /<SiteCard[\s\S]*?deferMediaUntilIntent/);
+});
+
+test('renders related Sites with visible previews and compact identity copy', () => {
+  const relatedSite: SiteSummary = { ...site, previewMediaKind: 'image' };
+  const html = renderToStaticMarkup(
+    <SiteVersionView
+      detail={detail}
+      relatedSites={[relatedSite]}
+      isAdmin={false}
+      section="preview"
+      onSectionChange={() => undefined}
+      onVersionChange={() => undefined}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.match(html, /<h2 id="related-sites-title">More like V7<\/h2>/);
+  assert.match(html, new RegExp(`src="${relatedSite.previewUrl}"`));
+  assert.doesNotMatch(html, /Continue exploring/);
+  assert.doesNotMatch(html, new RegExp(`${relatedSite.label} · ${relatedSite.sectionCount} sections`));
 });
 
 test('activates deferred Site media once near the viewport and disconnects', () => {
@@ -388,104 +499,118 @@ test('activates deferred Site media once near the viewport and disconnects', () 
   assert.equal(disconnectCalls, 2);
 });
 
-test('filters Sites by name, version, and source page title', () => {
-  const html = renderToStaticMarkup(<SitesPageView sites={[site]} isAdmin={false} query="Pricing" onQueryChange={() => undefined} onRefresh={() => undefined} />);
-  assert.match(html, /data-site-discovery-card="true"/);
-  assert.doesNotMatch(html, /Showing 1 of 1 sites/);
+test('delegates query, sort, filters, pagination, and retry state to the generic controller', () => {
+  const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /useDiscoveryController\(/);
+  assert.match(source, /controller\.toggleFilter/);
+  assert.match(source, /controller\.clearFilterGroup/);
+  assert.match(source, /controller\.setSort/);
+  assert.match(source, /sentinelRef=\{controller\.sentinelRef\}/);
+  assert.match(source, /renderedCount=\{controller\.items\.length\}/);
+  assert.doesNotMatch(source, /\blistSites\s*\(/);
+  assert.doesNotMatch(
+    source,
+    /filterAndSortSites|SITE_RENDER_BATCH|setRenderedCount|observeSiteGallerySentinel|new IntersectionObserver/,
+  );
+  assert.doesNotMatch(source, /\brevision\b/);
 });
 
-test('filters Sites by taxonomy and ranks popular references by captured depth', () => {
-  const finance: SiteSummary = {
-    ...site,
-    id: 2,
-    versionId: 3,
-    name: 'Ledger',
-    routeSlug: 'ledger',
-    sourceUrl: 'https://ledger.example/',
-    categories: ['Finance'],
-    styles: ['Photography'],
-    popularity: 30,
-    sectionCount: 70,
-    updatedAt: '2026-07-18T00:00:00.000Z',
-    previews: [{ id: 20, title: 'Pricing', position: 0, url: '/api/sites/2/versions/3/pages/20/media' }],
-  };
-  const newest = filterAndSortSites([finance, site], '', { group: 'styles', value: 'Minimal' }, 'latest');
-  const popular = filterAndSortSites([finance, site], '', null, 'popular');
-  const pricing = filterAndSortSites([finance, site], '', { group: 'sections', value: 'Pricing' }, 'latest');
+test('keeps a stable adapter while bridging external and URL-backed Site queries', () => {
+  const source = readFileSync(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8');
 
-  assert.deepEqual(newest.map((item) => item.name), ['V7']);
-  assert.deepEqual(popular.map((item) => item.name), ['V7', 'Ledger']);
-  assert.deepEqual(pricing.map((item) => item.name), ['V7', 'Ledger']);
+  assert.match(source, /query: string/);
+  assert.match(source, /onQueryChange: \(value: string\) => void/);
+  assert.match(source, /createSitesDiscoveryAdapter\(\{ query:/);
+  assert.match(source, /controller\.setQuery\(query\)/);
+  assert.match(source, /onQueryChangeRef\.current\(controller\.state\.query\)/);
+  assert.doesNotMatch(source, /useMemo\([\s\S]{0,160}\[query\]/);
 });
 
-test('renders member Sites with the Apps gallery identity and account-control slots', () => {
+test('keeps member Sites route content independent from the persistent app header', () => {
   const html = renderToStaticMarkup(
     <SitesPageView
-      sites={[site]}
+      controller={siteController()}
       isAdmin={false}
-      query=""
-      onQueryChange={() => undefined}
-      onRefresh={() => undefined}
       memberControls={<button type="button">Account</button>}
     />,
   );
 
   assert.match(html, /data-reference-gallery-shell="sites"/);
-  assert.match(html, /data-reference-gallery-identity="true"/);
+  assert.doesNotMatch(html, /data-reference-gallery-identity="true"/);
   assert.doesNotMatch(html, /<strong>Vitrine<\/strong>/);
-  assert.match(html, />Account</);
+  assert.doesNotMatch(html, />Account</);
   assert.doesNotMatch(html, /<h1[^>]*>References<\/h1>/);
 });
 
-test('keeps shared Sites chrome visible for errors and no-result searches', () => {
+test('keeps Sites route content visible for errors and no-result searches', () => {
   const error = renderToStaticMarkup(
     <SitesPageView
-      sites={[]}
+      controller={siteController({ items: [], totalCount: null, error: 'network down' })}
       isAdmin
-      error="network down"
-      query=""
-      onQueryChange={() => undefined}
-      onRefresh={() => undefined}
     />,
   );
   const noResults = renderToStaticMarkup(
     <SitesPageView
-      sites={[site]}
+      controller={siteController({
+        state: { platform: 'web', sort: 'latest', query: 'missing', filters: [] },
+        items: [],
+        totalCount: 0,
+      })}
       isAdmin={false}
-      query="missing"
-      onQueryChange={() => undefined}
-      onRefresh={() => undefined}
     />,
   );
 
-  assert.match(error, /aria-label="Reference type"/);
-  assert.match(error, /Could not load Sites/);
+  assert.doesNotMatch(error, /aria-label="Reference type"/);
+  assert.match(error, /Could not load sites/);
   assert.match(error, /network down/);
   assert.match(error, />Retry</);
-  assert.match(noResults, /aria-label="Reference type"/);
-  assert.match(noResults, /No Sites match this search/);
+  assert.doesNotMatch(noResults, /aria-label="Reference type"/);
+  assert.match(noResults, /No sites found/);
 });
 
-test('keeps shared Sites chrome mounted while the catalog loads', () => {
+test('keeps the Sites route shell mounted while the catalog loads', () => {
   const html = renderToStaticMarkup(
     <SitesPageView
-      sites={[]}
-      loading
+      controller={siteController({ items: [], totalCount: null, loading: true })}
       isAdmin={false}
-      query=""
-      onQueryChange={() => undefined}
-      onRefresh={() => undefined}
     />,
   );
 
   assert.match(html, /data-reference-gallery-shell="sites"/);
-  assert.match(html, /aria-label="Reference type"/);
-  assert.match(html, /Open search and filters/);
-  assert.match(html, /Search on Web\.\.\./);
-  assert.match(html, /data-reference-catalog-loading="true"/);
-  assert.match(html, /aria-label="Loading Sites"/);
+  assert.doesNotMatch(html, /aria-label="Reference type"/);
+  assert.match(html, /aria-label="Loading sites"/);
   assert.doesNotMatch(html, /data-sites-discovery-skeleton="true"/);
-  assert.doesNotMatch(html, /No Sites available yet/);
+  assert.doesNotMatch(html, /No sites found/);
+});
+
+test('preserves Site cards through loading-more and load-more retry states', () => {
+  const loadingMore = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({
+        loadingMore: true,
+        hasMore: true,
+        totalCount: 3,
+      })}
+      isAdmin={false}
+    />,
+  );
+  const loadMoreError = renderToStaticMarkup(
+    <SitesPageView
+      controller={siteController({
+        loadMoreError: 'cursor failed',
+        hasMore: true,
+        totalCount: 3,
+      })}
+      isAdmin={false}
+    />,
+  );
+
+  assert.match(loadingMore, /data-site-discovery-card="true"/);
+  assert.match(loadingMore, /aria-label="Loading more sites"/);
+  assert.match(loadMoreError, /data-site-discovery-card="true"/);
+  assert.match(loadMoreError, /Could not load more sites: cursor failed/);
+  assert.match(loadMoreError, />Retry</);
 });
 
 test('replaces Site Analysis with icon-based Wappalyzer Technology results', () => {
@@ -595,38 +720,20 @@ test('renders images and native videos through the shared media primitives', () 
   const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" badges={['Home', 'Video']} onOpen={() => undefined} />);
   const deferredImage = renderToStaticMarkup(<MediaGridCard label="Open deferred Home" kind="image" url="/deferred-home.png" deferMedia onOpen={() => undefined} />);
   assert.match(image, /home\.png/);
-  assert.match(image, /<button[^>]+aria-label="Open Home"[^>]*><img/);
+  assert.match(image, /astryx-clickable-card/);
+  assert.match(image, /<button[^>]+aria-label="Open Home"/);
+  assert.match(image, /<img[^>]+src="\/home\.png"/);
   assert.match(video, /<video/);
   assert.match(video, /controls=""/);
   assert.match(video, /poster="\/hero\.webp"/);
   assert.doesNotMatch(deferredImage, /deferred-home\.png/);
 });
 
-test('opens image media cards only for Enter and Space', () => {
-  const handleMediaCardKeyDown = (
-    MediaGridCardModule as typeof MediaGridCardModule & {
-      handleMediaCardKeyDown?: (
-        event: { key: string; preventDefault: () => void },
-        onOpen: () => void,
-      ) => void;
-    }
-  ).handleMediaCardKeyDown;
-  assert.equal(typeof handleMediaCardKeyDown, 'function');
-  if (!handleMediaCardKeyDown) return;
-
-  let opened = 0;
-  let prevented = 0;
-  for (const key of ['Enter', ' ', 'Escape']) {
-    handleMediaCardKeyDown(
-      { key, preventDefault: () => { prevented += 1; } },
-      () => { opened += 1; },
-    );
-  }
-
-  assert.equal(opened, 2);
-  assert.equal(prevented, 2);
+test('delegates image media-card keyboard activation to ClickableCard', () => {
   const source = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
-  assert.match(source, /onKeyDown=\{\(event\) => handleMediaCardKeyDown\(event, onOpen\)\}/);
+  assert.match(source, /<ClickableCard[\s\S]*label=\{label\}[\s\S]*onClick=\{onOpen\}/);
+  assert.doesNotMatch(source, /<button/);
+  assert.doesNotMatch(source, /handleMediaCardKeyDown/);
 });
 
 test('returns focus to the section card after closing the inspector', () => {
@@ -759,12 +866,16 @@ test('uses the shared neutral tokens for Site media overlays', () => {
   assert.doesNotMatch(source, /#fff|#d4d4d8|rgba\(10,\s*10,\s*11/);
 });
 
-test('renders the Mobbin Site-version hierarchy without Back or tab counts', () => {
+test('renders the shared Site detail hierarchy without a description', () => {
   const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
   assert.match(html, /data-reference-detail="site"/);
   assert.doesNotMatch(html, /Back to Sites/);
-  assert.match(html, /<h1>V7<\/h1><p>AI-powered visual data platform\.<\/p>/);
+  assert.match(html, /<h1>V7<\/h1>/);
+  assert.doesNotMatch(html, /<h1>V7<\/h1><p>/);
+  assert.match(html, /<span>Platform<\/span><strong>Web<\/strong>/);
   assert.match(html, /<span>Category<\/span>/);
+  assert.match(html, /<span>Sections<\/span>/);
+  assert.match(html, /<span>Last updated<\/span>/);
   assert.doesNotMatch(html, /<span>Style<\/span>/);
   assert.match(html, />Latest</);
   assert.match(html, /Preview/);
@@ -773,28 +884,65 @@ test('renders the Mobbin Site-version hierarchy without Back or tab counts', () 
   assert.doesNotMatch(html, />Save</);
   assert.doesNotMatch(html, />Saved</);
   assert.match(html, /Technology/);
-  assert.match(html, /AI-powered visual data platform/);
+  assert.doesNotMatch(html, /AI-powered visual data platform/);
   assert.doesNotMatch(html, /Import Site/);
-  assert.match(html, /Visit site/);
+  assert.match(html, /Visit Site/);
+  assert.match(html, /data-variant="primary"/);
+  assert.match(html, /<span>Showing<\/span><strong>1 page<\/strong>/);
   assert.match(html, /data-site-preview-stage="true"/);
-  assert.match(html, /<video[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+controls=""[^>]+preload="metadata"/);
+  assert.match(html, /<video[^>]+data-site-preview-video="true"[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+loop=""[^>]+preload="metadata"/);
+  assert.doesNotMatch(html, /data-site-preview-video="true"[^>]+controls=/);
+  assert.match(html, /class="site-preview-player"/);
+  assert.match(html, /aria-label="Site preview mode"/);
+  assert.match(html, /aria-label="V7 website video; plays on hover or focus"/);
+  assert.match(html, />Video</);
+  assert.match(html, />Full screen</);
   assert.doesNotMatch(html, />Overview</);
   assert.doesNotMatch(html, /aria-label="Pages"/);
   assert.doesNotMatch(html, /16 pages/);
 });
 
-test('renders Site detail through the shared reference shell', () => {
+test('renders Site detail through the generic reference detail page', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /import \{ ReferenceDetailShell \} from '.\/ReferenceDetailShell/);
-  assert.match(source, /<ReferenceDetailShell/);
+  assert.match(source, /ReferenceDetailPage/);
+  assert.match(source, /<ReferenceDetailPage/);
+  assert.doesNotMatch(source, /<ReferenceDetailShell/);
+  assert.doesNotMatch(source, /<SitesTopNav/);
 });
 
-test('renders all Sections without search or filters and does not dump OCR text', () => {
+test('plays the main Site preview only on hover or keyboard focus', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /onMouseEnter=\{playPreview\}/);
+  assert.match(source, /onMouseLeave=\{stopPreview\}/);
+  assert.match(source, /onFocus=\{playPreview\}/);
+  assert.match(source, /onBlur=\{stopPreview\}/);
+  assert.match(source, /video\.pause\(\);\s*video\.currentTime = 0;/);
+});
+
+test('renders the inline Site preview with the Flow modal UI and two smooth modes', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /className="site-preview-player"/);
+  assert.match(source, /className="flow-preview-dialog__header site-preview-player__header"/);
+  assert.match(source, /aria-label="Site preview mode"/);
+  assert.match(source, /ref=\{registerMode\('video'\)\}/);
+  assert.match(source, /ref=\{registerMode\('full-screen'\)\}/);
+  assert.match(source, /data-site-preview-video="true"/);
+  assert.match(source, /src=\{fullPageImageUrl\}/);
+  assert.match(source, /useSlidingIndicator\(activeMode\)/);
+  assert.doesNotMatch(source, /function SitePreviewDialog|<AstryxModal/);
+});
+
+test('renders Sections with a compact filter toolbar and does not dump OCR text', () => {
   const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
-  assert.doesNotMatch(html, /Search sections/);
-  assert.doesNotMatch(html, /All patterns/);
-  assert.match(html, /Hero Section/);
-  assert.match(html, /Navigation Section/);
+  assert.match(html, /class="site-sections__toolbar"/);
+  assert.match(html, /aria-label="Filter sections by type"/);
+  assert.match(html, /aria-label="Search sections"/);
+  assert.match(html, /class="site-sections__count"[^>]*>2 sections<\/span>/);
+  assert.doesNotMatch(html, /Open a capture to inspect/);
+  assert.match(html, /<strong>Hero<\/strong>/);
+  assert.match(html, /<strong>Navigation<\/strong>/);
+  assert.ok(html.indexOf('<strong>Hero</strong>') < html.indexOf('<strong>Navigation</strong>'));
+  assert.match(html, /<small>Home<\/small>/);
   assert.doesNotMatch(html, /All media/);
   assert.doesNotMatch(html, /Secret visible copy/);
   assert.doesNotMatch(html, /src="\/image"/);
@@ -802,6 +950,16 @@ test('renders all Sections without search or filters and does not dump OCR text'
   assert.match(html, /data-site-sections-grid="true"/);
   assert.doesNotMatch(html, /Select Hero Section|Save selected|site-sections__selection|site-section-tile__select/);
   assert.doesNotMatch(html, />Save</);
+});
+
+test('preserves each Site section capture aspect ratio instead of letterboxing it', () => {
+  const pageSource = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  const imageCardSource = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
+  const videoCardSource = readFileSync(new URL('./components/SiteSectionVideoCard.tsx', import.meta.url), 'utf8');
+
+  assert.match(pageSource, /preserveNaturalAspectRatio/);
+  assert.match(imageCardSource, /onLoad=\{captureNaturalAspectRatio\}/);
+  assert.match(videoCardSource, /onLoadedMetadata=\{captureNaturalAspectRatio\}/);
 });
 
 test('uses the captured page title when a section has no extracted pattern', () => {
@@ -827,17 +985,19 @@ test('falls back legacy and unknown Site detail sections to Preview', () => {
   assert.doesNotMatch(html, /Full-page capture/);
 });
 
-test('renders Site versions as capture date-time options and keeps the section inspector', () => {
+test('reuses the shared compact version selector and keeps the section inspector', () => {
   const html = renderToStaticMarkup(
     <SiteVersionView detail={detail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(html, /aria-label="Site version"/);
+  assert.match(source, /className="reference-detail__version-selector"/);
   assert.match(html, /Jul 20, 2026/);
   assert.match(html, /Nov 20, 2025/);
   assert.match(html, />Latest</);
-  assert.match(html, /role="menuitemradio"/);
-  assert.match(html, /aria-checked="true"/);
+  assert.match(html, /role="combobox"/);
+  assert.match(html, /role="listbox"/);
+  assert.match(html, /role="option"/);
+  assert.match(html, /aria-selected="true"/);
   assert.doesNotMatch(html, /<select/);
   assert.match(source, /versions\.map/);
   assert.match(source, /SiteSectionInspector/);

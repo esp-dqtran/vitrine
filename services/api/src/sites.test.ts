@@ -63,6 +63,12 @@ function fakeStore(overrides: Partial<SitesStore> = {}): SitesStore {
       ],
       updatedAt: "2026-07-20T00:00:00.000Z",
     }],
+    listReadySitesPage: async () => ({
+      items: [],
+      nextCursor: null,
+      totalCount: 0,
+      facets: [],
+    }),
     readyVersionDetail: async () => detail,
     beginImport: async () => ({ siteId: 1, versionId: 2 }),
     completeImport: async () => ({ siteId: 1, versionId: 2 }),
@@ -76,6 +82,7 @@ async function serve(store: SitesStore, sent: ObjectMetadata[] = []) {
   const app = express();
   mountSitesRoutes(app, {
     store,
+    cursorSecret: "private-sites-test-secret-0123456789abcdef",
     sendObject: async (object, res) => {
       sent.push(object);
       res.status(302).setHeader("Location", "https://objects.example/signed").end();
@@ -107,6 +114,10 @@ test("serves only ready Site summaries and version details", async (t) => {
     { id: 10, title: "Home", position: 0, url: "/api/sites/1/versions/2/pages/10/media" },
     { id: 11, title: "Pricing", position: 1, url: "/api/sites/1/versions/2/pages/11/media" },
   ]);
+
+  const legacyPage = await fetch(`${base}/sites?limit=1&offset=0`);
+  assert.equal(legacyPage.status, 200);
+  assert.deepEqual(Object.keys(await legacyPage.json()), ["sites", "nextOffset", "total"]);
 
   const version = await fetch(`${base}/sites/1/versions/2`);
   assert.equal(version.status, 200);

@@ -27,6 +27,8 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
       metadata={[{ label: 'Version', value: 'Jul 2026' }, { label: 'Pages', value: '16' }]}
       actions={<button>Visit site</button>}
       tabLeading={<button>Latest</button>}
+      tabControls={<button>Filter screens</button>}
+      tabTrailing={<span>Showing 16 pages</span>}
       tabs={[{ id: 'overview', label: 'Overview' }, { id: 'pages', label: 'Pages', count: 16 }]}
       activeTab="overview"
       onTabChange={() => undefined}
@@ -41,6 +43,8 @@ test('renders the Apps-style hero, actions, metadata, and accessible tabs', () =
   assert.match(html, /class="vitrine-page reference-detail site-detail"/);
   assert.match(html, /AI-powered visual data platform\./);
   assert.match(html, /reference-detail__tab-leading[^>]*><button>Latest<\/button>/);
+  assert.match(html, /reference-detail__navigation[\s\S]*reference-detail__tab-controls[^>]*><button>Filter screens<\/button>/);
+  assert.match(html, /reference-detail__tab-controls[\s\S]*reference-detail__tab-trailing[^>]*><span>Showing 16 pages<\/span>/);
   assert.match(html, /<div style="min-height:400px">/);
   assert.doesNotMatch(html, /background:[^;"]+;min-height:400px/);
 });
@@ -150,14 +154,17 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(actionsRule, /grid-area:\s*actions/);
   assert.match(actionsRule, /padding:\s*0/);
 
-  assert.match(navigationRule, /min-height:\s*56px/);
+  assert.match(navigationRule, /min-height:\s*64px/);
   assert.match(navigationRule, /border-top:\s*1px solid var\(--color-border-subtle\)/);
-  assert.match(tabsRule, /gap:\s*25px/);
+  assert.match(tabsRule, /gap:\s*24px/);
+  assert.match(tabsRule, /justify-content:\s*flex-start/);
+  assert.match(tabsRule, /flex:\s*0 1 auto/);
   assert.match(tabsRule, /overflow-x:\s*auto/);
   assert.match(tabsRule, /scroll-snap-type:\s*inline proximity/);
   assert.match(tabRule, /min-width:\s*max-content/);
+  assert.match(tabRule, /min-height:\s*64px/);
   assert.match(tabRule, /height:\s*56px/);
-  assert.match(tabRule, /font-size:\s*17px/);
+  assert.match(tabRule, /font-size:\s*16px/);
   assert.match(activeRule, /background:\s*transparent/);
   assert.match(activeRule, /color:\s*var\(--color-text-primary\)/);
   assert.match(indicatorRule, /bottom:\s*0/);

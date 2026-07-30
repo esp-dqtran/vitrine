@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { QueryResult } from "pg";
 import type { ObjectMetadata } from "./objectStore.ts";
-import { createSitesStore, type DatabaseQuery } from "./sitesStore.ts";
+import {
+  createSitesFacetCache,
+  createSitesStore,
+  sitesFacetCacheForQuery,
+  type DatabaseQuery,
+} from "./sitesStore.ts";
+import { decodeSitesCursor } from "./sitesCursor.ts";
+
+const cursorSecret = "sites-store-test-secret-0123456789abcdef";
 
 const identity = {
   canonicalUrl:
@@ -53,6 +61,375 @@ function result(
 ): QueryResult<Record<string, unknown>> {
   return { rows, rowCount, command: "", oid: 0, fields: [] };
 }
+
+function assertPostgresParameterContract(
+  sql: string,
+  values: readonly unknown[],
+): void {
+  const referenced = new Set(
+    [...sql.matchAll(/\$(\d+)/g)].map((match) => Number(match[1])),
+  );
+  for (let index = 1; index <= values.length; index += 1) {
+    assert.equal(
+      referenced.has(index),
+      true,
+      `PostgreSQL cannot infer the type of unused parameter $${index}`,
+    );
+  }
+}
+
+function summaryRow(overrides: Record<string, unknown> = {}) {
+  return {
+    site_id: 1,
+    version_id: 2,
+    name: "V7",
+    slug: graph.site.slug,
+    source_url: graph.site.sourceUrl,
+    description: graph.site.description,
+    logo_url: graph.site.logoUrl,
+    categories: graph.site.categories,
+    styles: graph.site.styles,
+    popularity: graph.site.popularity,
+    label: graph.version.label,
+    is_latest: true,
+    updated_at: new Date("2026-07-29T03:00:00.000Z"),
+    page_count: 16,
+    section_count: 46,
+    preview_content_type: "image/png",
+    page_previews: [],
+    ...overrides,
+  };
+}
+
+test("latest Site discovery emits no untyped PostgreSQL parameter holes", async () => {
+  const query: DatabaseQuery = async (sql, values = []) => {
+    assertPostgresParameterContract(sql, values);
+    return result(sql.includes("totals AS")
+      ? [{
+          site_id: null,
+          version_id: null,
+          updated_at: null,
+          popularity: null,
+          total_count: 0,
+        }]
+      : []);
+  };
+
+  await createSitesStore(query).listReadySitesPage({
+    platform: "web",
+    sort: "latest",
+    now: new Date("2026-07-29T04:00:00.000Z"),
+    cursorSecret,
+  });
+});
+
+test("reuses complete facets inside one stable Site snapshot window", async () => {
+  let facetCalls = 0;
+  const identitySnapshots: unknown[] = [];
+  const query: DatabaseQuery = async (sql, values = []) => {
+    if (sql.includes("totals AS")) {
+      identitySnapshots.push(values[0]);
+      return result([{
+        site_id: null,
+        version_id: null,
+        updated_at: null,
+        popularity: null,
+        total_count: 0,
+      }]);
+    }
+    if (sql.includes("AS facet_group")) {
+      facetCalls += 1;
+      return result([{
+        facet_group: "styles",
+        facet_value: "Minimal",
+        count: 3,
+      }]);
+    }
+    return result();
+  };
+  const store = createSitesStore(query);
+
+  await store.listReadySitesPage({
+    platform: "web",
+    now: new Date("2026-07-29T04:00:10.000Z"),
+    cursorSecret,
+  });
+  await store.listReadySitesPage({
+    platform: "web",
+    now: new Date("2026-07-29T04:00:50.000Z"),
+    cursorSecret,
+  });
+
+  assert.deepEqual(identitySnapshots, [
+    "2026-07-29T04:00:00.000Z",
+    "2026-07-29T04:00:00.000Z",
+  ]);
+  assert.equal(facetCalls, 1);
+});
+
+test("keyset-paginates latest and popular ready Sites without OFFSET", async () => {
+  for (const sort of ["latest", "popular"] as const) {
+    let identityCalls = 0;
+    let facetCalls = 0;
+    const identitySql: string[] = [];
+    const identityValues: Array<readonly unknown[]> = [];
+    const query: DatabaseQuery = async (sql, values = []) => {
+      if (sql.includes("totals AS")) {
+        identityCalls += 1;
+        identitySql.push(sql);
+        identityValues.push(values);
+        const rows = sort === "latest"
+          ? [
+              { site_id: 2, version_id: 20, updated_at: "2026-07-29T03:00:00.000Z", popularity: 5, total_count: 2 },
+              { site_id: 1, version_id: 10, updated_at: "2026-07-29T02:00:00.000Z", popularity: 99, total_count: 2 },
+            ]
+          : [
+              { site_id: 1, version_id: 10, updated_at: "2026-07-29T02:00:00.000Z", popularity: 99, total_count: 2 },
+              { site_id: 2, version_id: 20, updated_at: "2026-07-29T03:00:00.000Z", popularity: 5, total_count: 2 },
+            ];
+        return result(identityCalls === 1 ? rows : [rows[1]!]);
+      }
+      if (sql.includes("AS facet_group")) {
+        facetCalls += 1;
+        return result();
+      }
+      if (sql.includes("page_previews")) {
+        const selectedId = Number((values[0] as number[])[0]);
+        return result([summaryRow({
+          site_id: selectedId,
+          version_id: selectedId === 1 ? 10 : 20,
+          popularity: selectedId === 1 ? 99 : 5,
+          updated_at: selectedId === 1
+            ? new Date("2026-07-29T02:00:00.000Z")
+            : new Date("2026-07-29T03:00:00.000Z"),
+        })]);
+      }
+      return result();
+    };
+    const store = createSitesStore(query);
+    const first = await store.listReadySitesPage({
+      sort,
+      platform: "web",
+      limit: 1,
+      now: new Date("2026-07-29T04:00:00.000Z"),
+      cursorSecret,
+    });
+    const second = await store.listReadySitesPage({
+      sort,
+      platform: "web",
+      limit: 1,
+      cursor: first.nextCursor!,
+      cursorSecret,
+    });
+
+    assert.equal(first.items.length, 1);
+    assert.equal(second.items.length, 1);
+    assert.equal(second.totalCount, 2);
+    assert.equal(facetCalls, 1);
+    assert.equal(identitySql.some((sql) => /\bOFFSET\b/i.test(sql)), false);
+    const decoded = decodeSitesCursor(first.nextCursor!, sort, cursorSecret);
+    assert.equal(decoded.sort, sort);
+    if (decoded.sort === "popular") {
+      assert.equal(decoded.popularity, 99);
+      assert.match(identitySql[0]!, /ORDER BY popularity DESC, updated_at DESC, site_id DESC/);
+      assert.match(identitySql[1]!, /\(popularity, updated_at, site_id\) </);
+      assert.ok(identityValues[1]!.includes(99));
+    } else {
+      assert.match(identitySql[0]!, /ORDER BY updated_at DESC, site_id DESC/);
+      assert.match(identitySql[1]!, /\(updated_at, site_id\) </);
+    }
+  }
+});
+
+test("keeps popular pagination and catalog metadata stable after the mutable Site row changes", async () => {
+  let identityReads = 0;
+  let currentSite = { name: "Original", popularity: 90 };
+  const identitySql: string[] = [];
+  const summarySql: string[] = [];
+  const query: DatabaseQuery = async (sql, values = []) => {
+    if (sql.includes("totals AS")) {
+      identityReads += 1;
+      identitySql.push(sql);
+      if (identityReads === 1) {
+        return result([
+          { site_id: 2, version_id: 20, updated_at: "2026-07-29T03:00:00.000Z", popularity: 100, total_count: 2 },
+          { site_id: 1, version_id: 10, updated_at: "2026-07-29T02:00:00.000Z", popularity: 90, total_count: 2 },
+        ]);
+      }
+      const readsVersionSnapshot = /rv\.catalog_snapshot/.test(sql);
+      return result([readsVersionSnapshot
+        ? { site_id: 1, version_id: 10, updated_at: "2026-07-29T02:00:00.000Z", popularity: 90, total_count: 2 }
+        : { site_id: 2, version_id: 20, updated_at: "2026-07-29T03:00:00.000Z", popularity: currentSite.popularity, total_count: 2 }]);
+    }
+    if (sql.includes("AS facet_group")) return result();
+    if (sql.includes("page_previews")) {
+      summarySql.push(sql);
+      const selectedId = Number((values[0] as number[])[0]);
+      const readsVersionSnapshot = /catalog_snapshot/.test(sql);
+      return result([summaryRow({
+        site_id: selectedId,
+        version_id: selectedId === 2 ? 20 : 10,
+        name: readsVersionSnapshot ? (selectedId === 2 ? "Top" : "Original") : currentSite.name,
+        popularity: readsVersionSnapshot ? (selectedId === 2 ? 100 : 90) : currentSite.popularity,
+        updated_at: selectedId === 2
+          ? new Date("2026-07-29T03:00:00.000Z")
+          : new Date("2026-07-29T02:00:00.000Z"),
+      })]);
+    }
+    return result();
+  };
+  const store = createSitesStore(query);
+  const first = await store.listReadySitesPage({
+    platform: "web",
+    sort: "popular",
+    limit: 1,
+    now: new Date("2026-07-29T04:00:00.000Z"),
+    cursorSecret,
+  });
+  currentSite = { name: "Mutated", popularity: 1_000 };
+  const second = await store.listReadySitesPage({
+    platform: "web",
+    sort: "popular",
+    limit: 1,
+    cursor: first.nextCursor!,
+    cursorSecret,
+  });
+
+  assert.deepEqual(
+    [...first.items, ...second.items].map(({ siteId }) => siteId),
+    [2, 1],
+  );
+  assert.equal(second.items[0]?.name, "Original");
+  assert.equal(second.items[0]?.popularity, 90);
+  assert.ok(identitySql.every((sql) => /rv\.catalog_snapshot/.test(sql)));
+  assert.ok(summarySql.every((sql) => /catalog_snapshot/.test(sql)));
+});
+
+test("builds indexed case-insensitive filters without selecting an older matching version", async () => {
+  const calls: Array<{ sql: string; values: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values = []) => {
+    calls.push({ sql, values });
+    return result(sql.includes("totals AS")
+      ? [{ site_id: null, version_id: null, updated_at: null, popularity: null, total_count: 0 }]
+      : []);
+  };
+  await createSitesStore(query).listReadySitesPage({
+    platform: "web",
+    query: "  Linear  ",
+    filters: [
+      { group: "categories", value: "FINANCE" },
+      { group: "categories", value: "business" },
+      { group: "sections", value: "PRICING" },
+      { group: "styles", value: "MINIMAL" },
+    ],
+    cursorSecret,
+  });
+
+  assert.match(calls[0]!.sql, /sv\.catalog_snapshot->'categoriesNormalized' \?\| \$\d+::text\[\]/);
+  assert.match(calls[0]!.sql, /sv\.catalog_snapshot->'stylesNormalized' \?\| \$\d+::text\[\]/);
+  assert.match(calls[0]!.sql, /lower\(filter_page\.title\) = ANY\(\$\d+::text\[\]\)/);
+  assert.match(calls[0]!.sql, /lower\(section_value\.value\) = ANY\(\$\d+::text\[\]\)/);
+  assert.match(calls[0]!.sql, /NOT EXISTS \([\s\S]+FROM site_versions newer[\s\S]+newer\.site_id = sv\.site_id/);
+  assert.match(calls[0]!.sql, /\(newer\.is_latest, newer\.updated_at, newer\.id\)\s+>\s+\(sv\.is_latest, sv\.updated_at, sv\.id\)/);
+  assert.doesNotMatch(calls[0]!.sql, /AS MATERIALIZED/);
+  assert.doesNotMatch(calls[0]!.sql, /rv\.catalog_snapshot->'(?:categories|styles)Normalized' \?\|/);
+  assert.match(calls[0]!.sql, /rv\.catalog_snapshot->>'name' ILIKE/);
+  assert.ok(calls[0]!.values.some((value) =>
+    Array.isArray(value) && value.join(",") === "finance,business"
+  ));
+  assert.ok(calls[0]!.values.some((value) =>
+    Array.isArray(value) && value.join(",") === "pricing"
+  ));
+  assert.ok(calls[0]!.values.some((value) =>
+    Array.isArray(value) && value.join(",") === "minimal"
+  ));
+  assert.ok(calls[0]!.values.includes("Linear"));
+  assert.doesNotMatch(calls[0]!.sql, /jsonb_build_object/);
+});
+
+test("returns complete own-group-omission Site facets and full filtered total", async () => {
+  const calls: string[] = [];
+  const query: DatabaseQuery = async (sql) => {
+    calls.push(sql);
+    if (sql.includes("totals AS")) {
+      return result([{
+        site_id: null,
+        version_id: null,
+        updated_at: null,
+        popularity: null,
+        total_count: 7,
+      }]);
+    }
+    if (sql.includes("AS facet_group")) {
+      return result([
+        { facet_group: "categories", facet_value: "Business", count: 5 },
+        { facet_group: "sections", facet_value: "Pricing", count: 3 },
+        { facet_group: "styles", facet_value: "Minimal", count: 4 },
+      ]);
+    }
+    return result();
+  };
+  const page = await createSitesStore(query).listReadySitesPage({
+    platform: "web",
+    filters: [
+      { group: "categories", value: "Finance" },
+      { group: "sections", value: "Pricing" },
+      { group: "styles", value: "Minimal" },
+    ],
+    cursorSecret,
+  });
+
+  assert.equal(page.totalCount, 7);
+  assert.deepEqual(page.facets, [
+    { group: "categories", value: "Business", count: 5 },
+    { group: "sections", value: "Pricing", count: 3 },
+    { group: "styles", value: "Minimal", count: 4 },
+  ]);
+  const facetSql = calls.find((sql) => sql.includes("AS facet_group"))!;
+  assert.match(facetSql, /omit:categories/);
+  assert.match(facetSql, /omit:sections/);
+  assert.match(facetSql, /omit:styles/);
+  assert.match(facetSql, /COUNT\(DISTINCT rv\.site_id\)::integer/);
+  assert.match(facetSql, /categories_ready_versions AS \(/);
+  assert.match(facetSql, /sections_ready_versions AS \(/);
+  assert.match(facetSql, /styles_ready_versions AS \(/);
+  assert.match(facetSql, /sv\.catalog_snapshot->'categoriesNormalized' \?\|/);
+  const categoryReadySql = facetSql.match(
+    /categories_ready_versions AS \([\s\S]*?sections_ready_versions AS/,
+  )?.[0] ?? "";
+  assert.doesNotMatch(categoryReadySql, /categoriesNormalized' \?\|/);
+  assert.match(categoryReadySql, /stylesNormalized' \?\|/);
+  const sectionsReadySql = facetSql.match(
+    /sections_ready_versions AS \([\s\S]*?styles_ready_versions AS/,
+  )?.[0] ?? "";
+  assert.match(sectionsReadySql, /categoriesNormalized' \?\|/);
+  assert.match(sectionsReadySql, /stylesNormalized' \?\|/);
+  const stylesReadySql = facetSql.match(
+    /styles_ready_versions AS \([\s\S]*?SELECT 'categories'/,
+  )?.[0] ?? "";
+  assert.match(stylesReadySql, /categoriesNormalized' \?\|/);
+  assert.doesNotMatch(stylesReadySql, /stylesNormalized' \?\|/);
+});
+
+test("Site facet cache has TTL/LRU behavior and is isolated by query identity", () => {
+  let now = 0;
+  const cache = createSitesFacetCache({ ttlMs: 10, maxEntries: 2, now: () => now });
+  const a = [{ group: "styles", value: "A", count: 1 }];
+  const b = [{ group: "styles", value: "B", count: 1 }];
+  const c = [{ group: "styles", value: "C", count: 1 }];
+  cache.set("a", a);
+  cache.set("b", b);
+  assert.deepEqual(cache.get("a"), a);
+  cache.set("c", c);
+  assert.equal(cache.get("b"), undefined);
+  now = 11;
+  assert.equal(cache.get("a"), undefined);
+
+  const first: DatabaseQuery = async () => result();
+  const second: DatabaseQuery = async () => result();
+  assert.equal(sitesFacetCacheForQuery(first), sitesFacetCacheForQuery(first));
+  assert.notEqual(sitesFacetCacheForQuery(first), sitesFacetCacheForQuery(second));
+});
 
 test("loads only ready versions", async () => {
   const capturedSql: string[] = [];
@@ -285,6 +662,22 @@ test("beginImport resets only a non-ready version to importing", async () => {
   const versionUpsert = calls.find((call) => /INSERT INTO site_versions/.test(call.sql));
   assert.match(versionUpsert!.sql, /status = CASE[\s\S]+status = 'ready'/);
   assert.match(versionUpsert!.sql, /ELSE 'importing'/);
+  assert.match(versionUpsert!.sql, /catalog_snapshot/);
+  assert.deepEqual(
+    JSON.parse(String(versionUpsert!.values?.at(-1))),
+    {
+      name: graph.site.name,
+      slug: graph.site.slug,
+      sourceUrl: graph.site.sourceUrl,
+      description: graph.site.description,
+      logoUrl: graph.site.logoUrl,
+      categories: graph.site.categories,
+      categoriesNormalized: [],
+      styles: graph.site.styles,
+      stylesNormalized: ["minimal"],
+      popularity: graph.site.popularity,
+    },
+  );
   const siteUpsert = calls.find((call) => /INSERT INTO sites/.test(call.sql));
   assert.match(siteUpsert!.sql, /description/);
   assert.deepEqual(siteUpsert!.values?.slice(4), [

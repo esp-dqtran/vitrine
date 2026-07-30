@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 
 type ReferenceDiscoveryKind = 'apps' | 'sites' | 'flows';
 
-interface ReferenceDiscoveryPageShellProps {
+export interface ReferenceDiscoveryPageShellProps {
   kind: ReferenceDiscoveryKind;
   header: ReactNode;
   taxonomyLabel: string;
   taxonomy: ReactNode;
-  preview: ReactNode;
+  preview?: ReactNode;
   toolbar: ReactNode;
   children: ReactNode;
 }

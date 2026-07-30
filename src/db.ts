@@ -245,6 +245,9 @@ export interface CrawledImage {
   viewport_height?: number | null;
   state_context?: string | null;
   captured_at?: string | null;
+  matched_facets?: Array<{ group: string; value: string }> | null;
+  source_screen_id?: number | null;
+  source_screen_image_url?: string | null;
 }
 
 export interface AppKnowledgeEvidenceSource {
@@ -386,6 +389,23 @@ export interface AppEvidencePage {
   nextCursor: string | null;
 }
 
+export interface UiElementSummaryItem {
+  component_type: string;
+  component_group: string;
+  occurrence_count: number;
+  image_id: number;
+  image_url: string;
+  description: string | null;
+  purpose: string | null;
+  visible_states: string[];
+}
+
+export interface UiElementSummary {
+  items: UiElementSummaryItem[];
+  totalOccurrences: number;
+  totalTypes: number;
+}
+
 function encodeImageCursor(id: number): string {
   return Buffer.from(String(id), "utf8").toString("base64url");
 }
@@ -412,11 +432,24 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
        SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
        FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
        WHERE $2::boolean = false
+         AND (i.kind <> 'ui_element' OR EXISTS (
+           SELECT 1
+           FROM screen_ui_elements occurrence
+           WHERE occurrence.cropped_image_id = i.id
+             AND occurrence.review_status IN ('accepted', 'pending')
+         ))
        UNION ALL
        SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
        FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
+         AND (i.kind <> 'ui_element' OR EXISTS (
+           SELECT 1
+           FROM screen_ui_elements occurrence
+           WHERE occurrence.version_id = lv.id
+             AND occurrence.cropped_image_id = i.id
+             AND occurrence.review_status IN ('accepted', 'pending')
+         ))
      ), eligible_flows AS (
        SELECT COUNT(af.id)::integer AS flow_count
        FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
@@ -495,11 +528,24 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
        SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
        FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
        WHERE $2::boolean = false
+         AND (i.kind <> 'ui_element' OR EXISTS (
+           SELECT 1
+           FROM screen_ui_elements occurrence
+           WHERE occurrence.cropped_image_id = i.id
+             AND occurrence.review_status IN ('accepted', 'pending')
+         ))
        UNION ALL
        SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
        FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
+         AND (i.kind <> 'ui_element' OR EXISTS (
+           SELECT 1
+           FROM screen_ui_elements occurrence
+           WHERE occurrence.version_id = lv.id
+             AND occurrence.cropped_image_id = i.id
+             AND occurrence.review_status IN ('accepted', 'pending')
+         ))
      ), eligible_flows AS (
        SELECT COUNT(af.id)::integer AS flow_count
        FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
@@ -563,7 +609,20 @@ export async function appEvidencePage(input: {
          AND ($5::boolean = false OR av.status = 'published')
        ORDER BY av.version_number DESC LIMIT 1
      ), eligible AS (
-       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description,
+         CASE WHEN reference.component_type IS NOT NULL THEN jsonb_build_object(
+           'description', COALESCE(i.description, reference.component_type),
+           'purpose', COALESCE(reference.component_purpose, ''),
+           'pageType', reference.component_type,
+           'productArea', reference.component_group,
+           'theme', reference.screen_theme,
+           'visibleStates', to_jsonb(COALESCE(reference.component_visible_states, ARRAY[]::text[])),
+           'componentNames', jsonb_build_array(reference.component_type),
+           'visibleText', '[]'::jsonb,
+           'layoutPatterns', '[]'::jsonb,
+           'responsiveViewport', CASE WHEN p.name IN ('ios', 'android') THEN 'mobile' ELSE 'desktop' END,
+           'confidence', reference.component_confidence
+         ) ELSE i.analysis END AS analysis,
          a.icon_url, COALESCE((
            SELECT jsonb_agg(
              jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
@@ -573,12 +632,45 @@ export async function appEvidencePage(input: {
            WHERE ac.app_id = a.id
          ), '[]'::jsonb) AS categories,
          i.image_url AS capture_url, i.created_at AS captured_at,
-         NULL::integer AS viewport_width, NULL::integer AS viewport_height, NULL::text AS state_context
+         NULL::integer AS viewport_width, NULL::integer AS viewport_height, NULL::text AS state_context,
+         reference.screen_image_id AS source_screen_id,
+         reference.screen_image_url AS source_screen_image_url
        FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
+       LEFT JOIN LATERAL (
+         SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
+           type.name AS component_type, type.group_name AS component_group,
+           occurrence.purpose AS component_purpose,
+           occurrence.visible_states AS component_visible_states,
+           occurrence.confidence AS component_confidence,
+           CASE WHEN screen.analysis->>'theme' IN ('light', 'dark', 'mixed')
+             THEN screen.analysis->>'theme' ELSE 'mixed' END AS screen_theme
+         FROM screen_ui_elements occurrence
+         JOIN images screen ON screen.id = occurrence.screen_image_id
+         JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
+         WHERE occurrence.review_status IN ('accepted', 'pending')
+           AND occurrence.cropped_image_id = i.id
+         ORDER BY (occurrence.review_status = 'accepted') DESC,
+           occurrence.version_id DESC, occurrence.id
+         LIMIT 1
+       ) reference ON i.kind = 'ui_element'
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
+         AND ($2 <> 'ui_element' OR reference.component_type IS NOT NULL)
        UNION ALL
-       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
+       SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description,
+         CASE WHEN reference.component_type IS NOT NULL THEN jsonb_build_object(
+           'description', COALESCE(i.description, reference.component_type),
+           'purpose', COALESCE(reference.component_purpose, ''),
+           'pageType', reference.component_type,
+           'productArea', reference.component_group,
+           'theme', reference.screen_theme,
+           'visibleStates', to_jsonb(COALESCE(reference.component_visible_states, ARRAY[]::text[])),
+           'componentNames', jsonb_build_array(reference.component_type),
+           'visibleText', '[]'::jsonb,
+           'layoutPatterns', '[]'::jsonb,
+           'responsiveViewport', CASE WHEN p.name IN ('ios', 'android') THEN 'mobile' ELSE 'desktop' END,
+           'confidence', reference.component_confidence
+         ) ELSE i.analysis END AS analysis,
          a.icon_url, COALESCE((
            SELECT jsonb_agg(
              jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
@@ -588,11 +680,31 @@ export async function appEvidencePage(input: {
            WHERE ac.app_id = a.id
          ), '[]'::jsonb) AS categories,
          COALESCE(vi.source_url, i.image_url) AS capture_url, vi.captured_at,
-         vi.viewport_width, vi.viewport_height, vi.state_context
+         vi.viewport_width, vi.viewport_height, vi.state_context,
+         reference.screen_image_id AS source_screen_id,
+         reference.screen_image_url AS source_screen_image_url
        FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
        JOIN images i ON i.id = vi.image_id JOIN platforms p ON p.id = i.platform_id
        JOIN apps a ON a.id = p.app_id
+       LEFT JOIN LATERAL (
+         SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
+           type.name AS component_type, type.group_name AS component_group,
+           occurrence.purpose AS component_purpose,
+           occurrence.visible_states AS component_visible_states,
+           occurrence.confidence AS component_confidence,
+           CASE WHEN screen.analysis->>'theme' IN ('light', 'dark', 'mixed')
+             THEN screen.analysis->>'theme' ELSE 'mixed' END AS screen_theme
+         FROM screen_ui_elements occurrence
+         JOIN images screen ON screen.id = occurrence.screen_image_id
+         JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
+         WHERE occurrence.version_id = sv.id
+           AND occurrence.review_status IN ('accepted', 'pending')
+           AND occurrence.cropped_image_id = i.id
+         ORDER BY (occurrence.review_status = 'accepted') DESC, occurrence.id
+         LIMIT 1
+       ) reference ON i.kind = 'ui_element'
        WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
+         AND ($2 <> 'ui_element' OR reference.component_type IS NOT NULL)
      )
      SELECT * FROM eligible
      WHERE ($6::integer IS NULL OR id > $6)
@@ -613,6 +725,96 @@ export async function appEvidencePage(input: {
   return {
     rows,
     nextCursor: hasMore && rows.length ? encodeImageCursor(rows[rows.length - 1].id) : null,
+  };
+}
+
+export async function appUiElementSummary(input: {
+  app: string;
+  platform: string;
+  versionNumber?: number | null;
+  publishedOnly?: boolean;
+  limit?: number;
+}): Promise<UiElementSummary> {
+  const limit = Math.min(Math.max(Math.floor(input.limit ?? 12), 1), 100);
+  const result = await query<UiElementSummaryItem & {
+    total_occurrences: number;
+    total_types: number;
+  }>(
+    `WITH selected_version AS (
+       SELECT av.id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2
+         AND (($3::integer IS NOT NULL AND av.version_number = $3)
+           OR ($3::integer IS NULL AND av.status = 'published'))
+         AND ($4::boolean = false OR av.status = 'published')
+       ORDER BY av.version_number DESC
+       LIMIT 1
+     ), eligible AS (
+       SELECT occurrence.id, occurrence.review_status, occurrence.confidence,
+         occurrence.purpose, occurrence.visible_states,
+         type.id AS component_type_id, type.name AS component_type,
+         type.group_name AS component_group,
+         crop.id AS image_id, crop.image_url, crop.description
+       FROM screen_ui_elements occurrence
+       JOIN images screen ON screen.id = occurrence.screen_image_id
+       JOIN platforms platform ON platform.id = screen.platform_id
+       JOIN apps app ON app.id = platform.app_id
+       JOIN ui_element_types type ON type.id = occurrence.ui_element_type_id
+       JOIN images crop ON crop.id = occurrence.cropped_image_id
+       LEFT JOIN selected_version version ON true
+       WHERE app.name = $1
+         AND platform.name = $2
+         AND occurrence.review_status IN ('accepted', 'pending')
+         AND (
+           ($3::integer IS NULL AND $4::boolean = false)
+           OR occurrence.version_id = version.id
+         )
+     ), totals AS (
+       SELECT COUNT(*)::integer AS total_occurrences,
+         COUNT(DISTINCT component_type_id)::integer AS total_types
+       FROM eligible
+     ), ranked AS (
+       SELECT eligible.*,
+         COUNT(*) OVER (PARTITION BY component_type_id)::integer AS occurrence_count,
+         ROW_NUMBER() OVER (
+           PARTITION BY component_type_id
+           ORDER BY (review_status = 'accepted') DESC,
+             confidence DESC NULLS LAST,
+             image_id
+         ) AS representative_rank
+       FROM eligible
+     )
+     SELECT ranked.component_type, ranked.component_group,
+       ranked.occurrence_count, ranked.image_id, ranked.image_url,
+       ranked.description, ranked.purpose, ranked.visible_states,
+       totals.total_occurrences, totals.total_types
+     FROM ranked
+     CROSS JOIN totals
+     WHERE ranked.representative_rank = 1
+     ORDER BY ranked.occurrence_count DESC, lower(ranked.component_type)
+     LIMIT $5`,
+    [
+      input.app,
+      input.platform,
+      input.versionNumber ?? null,
+      input.publishedOnly ?? false,
+      limit,
+    ],
+  );
+  return {
+    items: result.rows.map((row) => ({
+      component_type: row.component_type,
+      component_group: row.component_group,
+      occurrence_count: row.occurrence_count,
+      image_id: row.image_id,
+      image_url: row.image_url,
+      description: row.description,
+      purpose: row.purpose,
+      visible_states: row.visible_states,
+    })),
+    totalOccurrences: result.rows[0]?.total_occurrences ?? 0,
+    totalTypes: result.rows[0]?.total_types ?? 0,
   };
 }
 
@@ -1079,7 +1281,13 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
     AND platform_identity.name = av.platform
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
-      COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count,
+      COUNT(*) FILTER (WHERE i.kind = 'ui_element' AND EXISTS (
+        SELECT 1
+        FROM screen_ui_elements occurrence
+        WHERE occurrence.version_id = av.id
+          AND occurrence.cropped_image_id = i.id
+          AND occurrence.review_status IN ('accepted', 'pending')
+      ))::int AS ui_element_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
     FROM version_images vi JOIN images i ON i.id = vi.image_id
     WHERE vi.version_id = av.id

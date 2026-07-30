@@ -28,8 +28,28 @@ test('renders only the first eight Flow cards before viewport advancement', () =
   );
 
   assert.equal((html.match(/data-flow-strip-card="true"/g) ?? []).length, 8);
-  assert.match(html, />Flow 8</);
-  assert.doesNotMatch(html, />Flow 9</);
+  assert.equal((html.match(/data-flow-preview-url-sync="true"/g) ?? []).length, 8);
+  assert.match(html, /aria-label="Preview Flow 8 flow screens"/);
+  assert.doesNotMatch(html, /aria-label="Preview Flow 9 flow screens"/);
+});
+
+test('keeps App-detail Flow previews local to the modal', () => {
+  const html = renderToStaticMarkup(
+    <FlowGallery
+      groups={[{
+        id: 'all',
+        label: 'All',
+        standalone: false,
+        flows: [flow(1)],
+      }]}
+      app="aboard"
+      platform="web"
+      version={1}
+      onSelectFlow={() => undefined}
+    />,
+  );
+
+  assert.match(html, /data-flow-preview-url-sync="false"/);
 });
 
 test('renders a table-of-contents target beyond the first batch with a scroll anchor', () => {
@@ -49,7 +69,37 @@ test('renders a table-of-contents target beyond the first batch with a scroll an
   assert.equal((html.match(/data-flow-strip-card="true"/g) ?? []).length, 10);
   assert.match(html, /data-flow-gallery-id="flow-10"/);
   assert.match(html, /id="flow-gallery-flow-10"/);
-  assert.match(html, />Flow 10</);
+  assert.match(html, /aria-label="Preview Flow 10 flow screens"/);
+});
+
+test('renders the complete shared gallery for externally paginated catalog cards', () => {
+  const html = renderToStaticMarkup(
+    <FlowGallery
+      groups={[{
+        id: 'catalog',
+        label: 'Flow catalog',
+        standalone: true,
+        flows: Array.from({ length: 10 }, (_, index) => flow(index + 1)),
+      }]}
+      ariaLabel="Flow catalog"
+      paginate={false}
+      platform="web"
+      cardPropsForFlow={(item) => ({
+        screenCount: 12,
+        metaLabel: '12 screens · observed in 42 apps',
+        sourceAppName: `App ${item.id}`,
+        sourceAppIconUrl: '/app.png',
+        onOpenSourceApp: () => undefined,
+      })}
+      onSelectFlow={() => undefined}
+    />,
+  );
+
+  assert.equal((html.match(/data-flow-strip-card="true"/g) ?? []).length, 10);
+  assert.match(html, /class="flow-gallery" aria-label="Flow catalog"/);
+  assert.match(html, /class="flow-gallery__strips"/);
+  assert.match(html, /12 screens · observed in 42 apps/);
+  assert.match(html, /aria-label="Open App flow-1 app"/);
 });
 
 test('selects the intersecting flow nearest the gallery reading line', () => {

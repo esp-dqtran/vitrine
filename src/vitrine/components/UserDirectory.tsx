@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertDialog, Badge, Button, ClickableCard, DropdownMenu, Icon, Selector, Spinner, TextInput } from '@astryxdesign/core';
+import { Badge, Button, ClickableCard, DropdownMenu, Icon, Selector, Spinner, TextInput } from '@astryxdesign/core';
 import type { AdminUser, UserFilter } from '../types.ts';
 import { formatJoinedDate, USER_FILTER_LABELS, userInitial, userPlanLabel } from '../usersPageModel.ts';
+import { AstryxAlertModal } from './AstryxModal.tsx';
 
 interface UserDirectoryProps {
   users: AdminUser[];
@@ -66,7 +67,7 @@ function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps,
       />
 
       {error && <p className="admin-users-row-error" role="alert">{error}</p>}
-      <AlertDialog
+      <AstryxAlertModal
         isOpen={pendingDisable}
         onOpenChange={setPendingDisable}
         title="Disable this account?"

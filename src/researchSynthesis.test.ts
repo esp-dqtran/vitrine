@@ -23,6 +23,7 @@ const workspaceFixture = (): ResearchProjectWorkspace => ({
   title: "SSO onboarding",
   question: "How should SSO be introduced?",
   platformFilter: "web",
+  pinned: false,
   constraints: "B2B",
   decision: "",
   rationale: "",

@@ -27,3 +27,17 @@ test('can render a fixed column gallery for larger curated cards', async () => {
   assert.match(html, /data-reference-gallery-columns="2"/);
   assert.match(html, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
+
+test('marks platform-aware screen layouts for responsive CSS', async () => {
+  const { ReferenceGalleryGrid } = await import('./components/ReferenceGallerySection.tsx');
+  const mobile = renderToStaticMarkup(
+    <ReferenceGalleryGrid minCardWidth={240} layout="mobile-screens"><article>Mobile</article></ReferenceGalleryGrid>,
+  );
+  const web = renderToStaticMarkup(
+    <ReferenceGalleryGrid minCardWidth={240} layout="web-screens"><article>Web</article></ReferenceGalleryGrid>,
+  );
+
+  assert.match(mobile, /data-reference-gallery-layout="mobile-screens"/);
+  assert.match(web, /data-reference-gallery-layout="web-screens"/);
+  assert.doesNotMatch(web, /grid-template-columns/);
+});

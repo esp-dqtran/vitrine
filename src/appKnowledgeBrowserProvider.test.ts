@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   ChatRateLimitError,
   type ChatAttachment,
+  type ChatAttachments,
   type ChatSession,
 } from "./llmChat.ts";
 import { EvidenceAnalysisError } from "./evidenceAnalysisRuntime.ts";
@@ -61,7 +62,7 @@ test("classifies the ChatGPT conversation limit without exposing its reply", () 
 test("uploads verified bytes and uses no attachment for synthesis", async () => {
   const calls: Array<{
     prompt: string;
-    attachment?: string | ChatAttachment;
+    attachment?: ChatAttachments;
     signal?: AbortSignal;
   }> = [];
   const session: ChatSession = {
@@ -186,7 +187,7 @@ test("Antigravity provider sends real image bytes and records the selected Gemin
   assert.equal(typeof module.createAntigravityBrowserAppKnowledgeProvider, "function");
   const createProvider = module.createAntigravityBrowserAppKnowledgeProvider as
     ((session: ChatSession) => ReturnType<typeof createChatGptBrowserAppKnowledgeProvider>);
-  let uploaded: string | ChatAttachment | undefined;
+  let uploaded: ChatAttachments | undefined;
   const session: ChatSession = {
     async ask(_prompt, file) {
       uploaded = file;

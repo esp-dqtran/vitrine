@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import {
+  parseCatalogDiscoveryPage,
+} from './catalogPageParser.ts';
 import type { Category } from './types.ts';
 
 export interface PreviewScreen {
@@ -15,25 +18,25 @@ export interface PreviewApp {
   screens: PreviewScreen[];
 }
 
-interface CatalogAppShape {
-  id: string;
-  app: string;
-  accent: string;
-  categories: Category[];
-  iconUrl: string | null;
-  previewScreens?: Array<{ url: string | null; type: string }>;
-}
-
 // Pure mapper: only apps with a servable preview screen survive, so callers can
 // fall back to their own placeholders when the result is empty.
-export function toPreviewApps(page: { apps?: CatalogAppShape[] }): PreviewApp[] {
-  return (page.apps ?? [])
+export function toPreviewApps(page: {
+  items?: Array<{
+    id: string;
+    app: string;
+    accent: string;
+    categories: Category[];
+    iconUrl?: string | null;
+    previewScreens?: Array<{ url: string | null; type: string }>;
+  }>;
+}): PreviewApp[] {
+  return (page.items ?? [])
     .map((a) => ({
       id: a.id,
       name: a.app,
       accent: a.accent,
       categories: a.categories,
-      iconUrl: a.iconUrl,
+      iconUrl: a.iconUrl ?? null,
       screens: (a.previewScreens ?? [])
         .filter((s): s is { url: string; type: string } => Boolean(s.url))
         .map((s) => ({ url: s.url, type: s.type })),
@@ -72,7 +75,7 @@ export function useCatalogPreview(limit = 12): PreviewApp[] | null {
     const controller = new AbortController();
     fetch(`/api/catalog?limit=${limit}`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((page) => setApps(toPreviewApps(page)))
+      .then((page) => setApps(toPreviewApps(parseCatalogDiscoveryPage(page))))
       .catch((err: Error) => { if (err.name !== 'AbortError') setApps([]); });
     return () => controller.abort();
   }, [limit]);

@@ -26,6 +26,10 @@ test("accepts only the public Apps taxonomy and supported platforms", () => {
     parsePublicFacet({ group: "categories", value: "New Category", platform: "web" }),
     { group: "categories", value: "New Category", platform: "web" },
   );
+  assert.deepEqual(
+    parsePublicFacet({ group: "screens", value: "Account Setup", platform: "web" }),
+    { group: "screens", value: "Account Setup", platform: "web" },
+  );
   assert.equal(
     parsePublicFacet({ group: "categories", value: "   ", platform: "web" }),
     null,

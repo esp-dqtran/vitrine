@@ -1,28 +1,55 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { Button, EmptyState, Selector, Spinner, ToggleButton } from '@astryxdesign/core';
+import { Button, EmptyState, Selector, Spinner } from '@astryxdesign/core';
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';
 import { PLATFORM_LABEL } from '../../platformFromUrl';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { AppMetadata, Screen } from '../types';
+import type { AppsFilterOption } from '../appsDiscovery.ts';
+import {
+  fetchAppFlows,
+  fetchAppUiElementSummary,
+  type UiElementSummaryResult,
+} from '../appsApi.ts';
 import { resolveAppSectionTotals } from '../appSectionTotals';
+import {
+  EMPTY_FLOW_FILTERS,
+  EMPTY_SCREEN_FILTERS,
+  flowFilterValues,
+  flowMatchesFilters,
+  screenMatchesFilters,
+  type FlowFilterSelections,
+  type ScreenFilterSelections,
+} from '../detailFilters.ts';
+import {
+  buildScreenFlowMembership,
+} from '../screenFlowContext.ts';
+import { copyScreenImagesAsPng } from '../screenActions.ts';
+import type { SaveReference } from '../researchApi.ts';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
 import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
+import { useApplicationToast } from './ApplicationToast.tsx';
+import { CopyButton } from './CopyButton.tsx';
+import { CollectionPicker } from './CollectionPicker.tsx';
+import {
+  DiscoveryFilterMenu,
+  isOutsideAppsFilterMenu,
+  type DiscoveryFilterGroup,
+} from './AppsFilterBar.tsx';
 import { ExportPanel } from './ExportPanel';
 import { FlowsPanel } from './FlowsPanel';
 import { FlowsWorkspaceLoading } from './FlowsWorkspace.tsx';
 import { HeroButton } from './HeroButton';
-import { Lightbox } from './Lightbox';
 import { ScreenGridCard } from './ScreenGridCard';
+import { ScreenPreviewDialog } from './ScreenPreviewDialog.tsx';
 import { ScrollToTopButton } from './ScrollToTopButton';
-import { ReferenceDetailShell } from './ReferenceDetailShell';
-import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav';
+import { ReferenceDetailPage } from './ReferenceDetailPage';
 import { ReferenceGalleryGrid, ReferenceGallerySection } from './ReferenceGallerySection';
-import { SearchTrigger } from './SearchTrigger';
 import type { FlowRepresentation } from '../router.ts';
 
 const DesignSystemPanel = lazy(() =>
@@ -30,6 +57,87 @@ const DesignSystemPanel = lazy(() =>
 );
 
 type LightboxState = { index: number } | null;
+type ScreenFilterGroup = 'types' | 'layouts' | 'components' | 'states';
+type FlowFilterGroup = 'categories' | 'tags' | 'interactions' | 'states';
+
+interface MetadataFilterGroup {
+  id: string;
+  label: string;
+  options: string[];
+  selected: string[];
+}
+
+interface MetadataFilterControlProps {
+  label: string;
+  groups: MetadataFilterGroup[];
+  onToggle: (group: string, value: string, checked: boolean) => void;
+  onClear: () => void;
+}
+
+function MetadataFilterControl({
+  label,
+  onToggle,
+  onClear,
+  groups: sourceGroups,
+}: MetadataFilterControlProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [preview, setPreview] = useState<AppsFilterOption | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const group: DiscoveryFilterGroup = {
+    id: label.toLowerCase().replaceAll(' ', '-'),
+    label,
+    selected: sourceGroups.flatMap(({ selected }) => selected),
+    options: sourceGroups.flatMap(({ label: section, options }) =>
+      options.map((value) => ({ value, section }))),
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (isOutsideAppsFilterMenu(containerRef.current, event.target)) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open]);
+
+  return (
+    <DiscoveryFilterMenu
+      group={group}
+      open={open}
+      query={query}
+      preview={preview}
+      containerRef={containerRef}
+      onToggleOpen={() => {
+        setQuery('');
+        setPreview(null);
+        setOpen((current) => !current);
+      }}
+      onQueryChange={setQuery}
+      onPreview={setPreview}
+      onToggleOption={(option) => {
+        const sourceGroup = sourceGroups.find(({ label: section }) => section === option.section);
+        if (!sourceGroup) return;
+        onToggle(
+          sourceGroup.id,
+          option.value,
+          !sourceGroup.selected.includes(option.value),
+        );
+      }}
+      onClear={onClear}
+    />
+  );
+}
+
 const SECTIONS: DetailSection[] = ['screens', 'elements', 'flows', 'design-system', 'export'];
 const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows'];
 
@@ -60,6 +168,12 @@ interface ScreenDetailProps {
   initialStep?: number;
   initialFlowView?: FlowRepresentation;
   onSectionChange?: (section: DetailSection, platform: Platform, version?: number) => void;
+  onEvidenceChange?: (
+    evidence: string | undefined,
+    section: 'screens' | 'elements',
+    platform: Platform,
+    version?: number,
+  ) => void;
   onFlowChange?: (
     flow: string | undefined,
     step: number | undefined,
@@ -74,6 +188,8 @@ interface ScreenDetailProps {
 export function ScreenDetail({
   app,
   onBack,
+  collections,
+  onCollectionsChange,
   role,
   initialSection,
   initialPlatform,
@@ -83,6 +199,7 @@ export function ScreenDetail({
   initialStep,
   initialFlowView,
   onSectionChange,
+  onEvidenceChange,
   onFlowChange,
   accountControls,
   onOpenSearch,
@@ -150,11 +267,16 @@ export function ScreenDetail({
   );
   const nextCursor = evidence?.nextCursor ?? null;
   const [loadingMore, setLoadingMore] = useState(false);
-  const [typeFilter, setTypeFilter] = useState('All');
-  const [layoutFilter, setLayoutFilter] = useState('All');
-  const [componentFilter, setComponentFilter] = useState('All');
-  const [stateFilter, setStateFilter] = useState('All');
+  const [screenFilters, setScreenFilters] = useState<ScreenFilterSelections>(EMPTY_SCREEN_FILTERS);
+  const [screenFlowFilters, setScreenFlowFilters] = useState<string[]>([]);
+  const [elementFilters, setElementFilters] = useState<ScreenFilterSelections>(EMPTY_SCREEN_FILTERS);
+  const [flowFilters, setFlowFilters] = useState<FlowFilterSelections>(EMPTY_FLOW_FILTERS);
+  const [screenContextFlows, setScreenContextFlows] = useState<DesignFlow<EvidenceView>[]>([]);
+  const [componentCropSummary, setComponentCropSummary] = useState<UiElementSummaryResult | null>(null);
+  const [componentCropSummaryLoading, setComponentCropSummaryLoading] = useState(false);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const [selectedScreenIds, setSelectedScreenIds] = useState<Set<number>>(() => new Set());
+  const showApplicationToast = useApplicationToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -162,16 +284,109 @@ export function ScreenDetail({
   const layouts = [...new Set(screens.flatMap(({ layoutPatterns }) => layoutPatterns ?? []))];
   const screenComponents = [...new Set(screens.flatMap(({ componentNames }) => componentNames ?? []))];
   const states = [...new Set(screens.flatMap(({ visibleStates }) => visibleStates))];
-  const filtered = screens.filter((screen) =>
-    (typeFilter === 'All' || screen.type === typeFilter)
-    && (layoutFilter === 'All' || screen.layoutPatterns?.includes(layoutFilter))
-    && (componentFilter === 'All' || screen.componentNames?.includes(componentFilter))
-    && (stateFilter === 'All' || screen.visibleStates.includes(stateFilter)));
+  const screenFilterOptions: ScreenFilterSelections = {
+    types,
+    layouts,
+    components: screenComponents,
+    states,
+  };
+  const screenFlowMembership = useMemo(
+    () => buildScreenFlowMembership(screenContextFlows),
+    [screenContextFlows],
+  );
+  const filteredScreens = screens.filter((screen) =>
+    screenMatchesFilters(screen, screenFilters)
+    && (!screenFlowFilters.length || screenFlowFilters.some((title) =>
+      screenFlowMembership.get(screen.id)?.some((flow) => flow.title === title))));
+  const filteredElements = screens.filter((screen) => screenMatchesFilters(screen, elementFilters));
+  const flowValues = flows.map(flowFilterValues);
+  const flowFilterOptions: FlowFilterSelections = {
+    categories: [...new Set(flowValues.flatMap(({ categories }) => categories))],
+    tags: [...new Set(flowValues.flatMap(({ tags }) => tags))],
+    interactions: [...new Set(flowValues.flatMap(({ interactions }) => interactions))],
+    states: [...new Set(flowValues.flatMap(({ states: flowStates }) => flowStates))],
+  };
+  const filteredFlows = flows.filter((flow) => flowMatchesFilters(flow, flowFilters));
+  const selectedScreens = screens.filter((screen) => selectedScreenIds.has(screen.id));
+  const selectedScreenReferences = selectedScreens.map((screen): SaveReference => ({
+    kind: 'screen',
+    app: app.id,
+    referenceId: String(screen.id),
+    title: screenFlowMembership.get(screen.id)?.[0]?.title
+      ?? (screen.type !== 'Unclassified'
+        ? screen.type
+        : screen.productArea !== 'Unclassified'
+          ? screen.productArea
+          : `Screen ${screen.id}`),
+  }));
+
+  useEffect(() => {
+    if (section !== 'screens' || sectionData.versionsLoading) return;
+    const controller = new AbortController();
+    void fetchAppFlows(app.id, {
+      platform: selectedPlatform,
+      version: sectionData.resolvedVersion,
+      signal: controller.signal,
+    }).then(({ flows: contextFlows }) => {
+      setScreenContextFlows(contextFlows);
+    }).catch((error: Error) => {
+      if (error.name !== 'AbortError') setScreenContextFlows([]);
+    });
+    return () => controller.abort();
+  }, [
+    app.id,
+    section,
+    sectionData.resolvedVersion,
+    sectionData.versionsLoading,
+    selectedPlatform,
+  ]);
+
+  useEffect(() => {
+    if (section !== 'design-system' || sectionData.versionsLoading) return;
+    const controller = new AbortController();
+    setComponentCropSummary(null);
+    setComponentCropSummaryLoading(true);
+    void fetchAppUiElementSummary(app.id, {
+      platform: selectedPlatform,
+      version: sectionData.resolvedVersion,
+      limit: 100,
+      signal: controller.signal,
+    }).then(setComponentCropSummary).catch((error: Error) => {
+      if (error.name !== 'AbortError') {
+        setComponentCropSummary({
+          items: [],
+          totalOccurrences: 0,
+          totalTypes: 0,
+          platform: selectedPlatform,
+          version: null,
+        });
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setComponentCropSummaryLoading(false);
+    });
+    return () => controller.abort();
+  }, [
+    app.id,
+    section,
+    sectionData.resolvedVersion,
+    sectionData.versionsLoading,
+    selectedPlatform,
+  ]);
+
+  useEffect(() => {
+    if (section !== 'screens') setSelectedScreenIds(new Set());
+  }, [section]);
 
   const selectPlatform = (platform: Platform) => {
     setSelectedPlatform(platform);
     setSelectedVersion(undefined);
+    setScreenFilters(EMPTY_SCREEN_FILTERS);
+    setScreenFlowFilters([]);
+    setElementFilters(EMPTY_SCREEN_FILTERS);
+    setFlowFilters(EMPTY_FLOW_FILTERS);
     setLightbox(null);
+    setSelectedScreenIds(new Set());
+    onSectionChange?.(section, platform);
   };
 
   const loadMore = async () => {
@@ -215,7 +430,43 @@ export function ScreenDetail({
 
   const goLightbox = (index: number) => {
     if (!screens.length) return;
-    setLightbox({ index: ((index % screens.length) + screens.length) % screens.length });
+    const nextIndex = ((index % screens.length) + screens.length) % screens.length;
+    const nextScreen = screens[nextIndex];
+    setLightbox({ index: nextIndex });
+    if (nextScreen && (section === 'screens' || section === 'elements')) {
+      onEvidenceChange?.(
+        `${section === 'elements' ? 'UI-ELEMENT' : 'SCREEN'}-${nextScreen.id}`,
+        section,
+        selectedPlatform,
+        sectionData.resolvedVersion,
+      );
+    }
+  };
+
+  const openLightbox = (screen: Screen) => {
+    const index = screens.indexOf(screen);
+    if (index < 0) return;
+    setLightbox({ index });
+    if (section === 'screens' || section === 'elements') {
+      onEvidenceChange?.(
+        `${section === 'elements' ? 'UI-ELEMENT' : 'SCREEN'}-${screen.id}`,
+        section,
+        selectedPlatform,
+        sectionData.resolvedVersion,
+      );
+    }
+  };
+
+  const closeLightbox = () => {
+    setLightbox(null);
+    if (section === 'screens' || section === 'elements') {
+      onEvidenceChange?.(
+        undefined,
+        section,
+        selectedPlatform,
+        sectionData.resolvedVersion,
+      );
+    }
   };
 
   useEffect(() => {
@@ -230,41 +481,113 @@ export function ScreenDetail({
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox, screens.length, onBack]);
 
+  const setScreenSelected = (screenId: number, selected: boolean) => {
+    setSelectedScreenIds((current) => {
+      const next = new Set(current);
+      if (selected) next.add(screenId);
+      else next.delete(screenId);
+      return next;
+    });
+  };
+
+  const copySelectedScreens = async () => {
+    if (!selectedScreens.length) return;
+    await copyScreenImagesAsPng(selectedScreens.map(({ url }) => url));
+    setSelectedScreenIds(new Set());
+  };
+
   const sectionLoading = sectionData.versionsLoading
     || sectionData.state.status === 'loading'
-    || (needsDesignSystem && designSystemStatus === 'loading' && !snapshot);
+    || (needsDesignSystem && designSystemStatus === 'loading' && !snapshot)
+    || (section === 'design-system' && componentCropSummaryLoading);
   const sectionError = sectionData.state.status === 'error' ? sectionData.state.error : null;
-  const hasScreenFilters = types.length > 1 || layouts.length > 0 || screenComponents.length > 0 || states.length > 0;
-  const screenFilterControls = hasScreenFilters ? (
+  const screenCard = (
+    screen: Screen,
+    index: number,
+  ) => (
+    <ScreenGridCard
+      key={screen.id}
+      screen={screen}
+      accent={app.accent}
+      delay={Math.min(index * 0.04, 0.32)}
+      onOpen={() => openLightbox(screen)}
+      appName={app.app}
+      appId={app.id}
+      collections={collections}
+      onCollectionsChange={onCollectionsChange}
+      plan={role === 'admin' ? 'pro' : 'free'}
+      flowNames={(screenFlowMembership.get(screen.id) ?? []).map(({ title }) => title)}
+      selected={selectedScreenIds.has(screen.id)}
+      onSelectedChange={(selected) => setScreenSelected(screen.id, selected)}
+      onActionStatus={showApplicationToast}
+    />
+  );
+  const renderEvidence = (items: Screen[], emptyTitle: string) => {
+    const visibleItems = section === 'screens'
+      ? filteredScreens
+      : section === 'elements'
+        ? filteredElements
+        : items;
+    return (
+      <ReferenceGallerySection
+        sentinel={nextCursor ? <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div> : undefined}
+      >
+        {visibleItems.length ? (
+          <ReferenceGalleryGrid
+            minCardWidth={section === 'screens' ? 240 : 360}
+            columns={section === 'elements' ? 2 : undefined}
+            layout={section === 'screens'
+              ? selectedPlatform === 'web'
+                ? 'web-screens'
+                : 'mobile-screens'
+              : undefined}
+          >
+            {visibleItems.map((screen, index) => screenCard(screen, index))}
+          </ReferenceGalleryGrid>
+        ) : <EmptyState title={items.length ? `No ${section === 'elements' ? 'UI elements' : 'screens'} match these filters` : emptyTitle} isCompact />}
+      </ReferenceGallerySection>
+    );
+  };
+  const renderScreens = () => renderEvidence(screens, 'No screens captured');
+
+  const screenActionOverlay = (
     <>
-      {types.length > 1 && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{['All', ...types].map((type) => <ToggleButton key={type} label={type} isPressed={typeFilter === type} onPressedChange={() => setTypeFilter(type)} size="sm" />)}</div>}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{([
-        ['Layout', layoutFilter, setLayoutFilter, layouts], ['Component', componentFilter, setComponentFilter, screenComponents], ['State', stateFilter, setStateFilter, states],
-      ] as Array<[string, string, (value: string) => void, string[]]>).map(([label, value, change, options]) => options.length ? <Selector key={label} label={label} size="sm" value={value} onChange={change} options={['All', ...options]} /> : null)}</div>
-    </>
-  ) : undefined;
-  const renderEvidence = (items: Screen[], emptyTitle: string) => (
-    <ReferenceGallerySection
-      toolbar={section === 'screens' ? screenFilterControls : undefined}
-      sentinel={nextCursor ? <div ref={sentinelRef} style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>{loadingMore && <Spinner size="sm" />}</div> : undefined}
-    >
-      {items.length ? (
-        <ReferenceGalleryGrid
-          minCardWidth={360}
-          columns={section === 'screens' || section === 'elements' ? 2 : undefined}
+      {selectedScreens.length ? (
+        <div
+          className="screen-batch-toolbar"
+          role="toolbar"
+          aria-label={`${selectedScreens.length} selected screens`}
         >
-          {(section === 'screens' ? filtered : items).map((screen, index) => (
-            <ScreenGridCard
-              key={screen.id}
-              screen={screen}
-              accent={app.accent}
-              delay={Math.min(index * 0.04, 0.32)}
-              onOpen={() => setLightbox({ index: screens.indexOf(screen) })}
-            />
-          ))}
-        </ReferenceGalleryGrid>
-      ) : <EmptyState title={emptyTitle} isCompact />}
-    </ReferenceGallerySection>
+          <strong>{selectedScreens.length} selected</strong>
+          <Button
+            label="Clear"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedScreenIds(new Set())}
+          />
+          <CopyButton
+            label={selectedScreens.length === 1 ? 'Copy image' : 'Copy images'}
+            successMessage={selectedScreens.length === 1
+              ? 'Image copied as PNG'
+              : `${selectedScreens.length} images copied as PNG`}
+            action={copySelectedScreens}
+            variant="secondary"
+            size="sm"
+          />
+          <CollectionPicker
+            references={selectedScreenReferences}
+            collections={collections}
+            onCollectionsChange={onCollectionsChange}
+            plan={role === 'admin' ? 'pro' : 'free'}
+            dark
+            buttonLabel="Save"
+            buttonClassName="screen-batch-toolbar__save"
+            suppressSavedLabel
+            onStatus={showApplicationToast}
+          />
+        </div>
+      ) : null}
+    </>
   );
 
   const platformControl = (
@@ -274,49 +597,156 @@ export function ScreenDetail({
       onChange={selectPlatform}
     />
   );
-  const adminTabs = [
-    { id: 'screens' as const, label: 'Screens' },
-    { id: 'elements' as const, label: 'UI Elements' },
-    { id: 'flows' as const, label: 'Flows' },
-    { id: 'design-system' as const, label: 'Design System' },
-    { id: 'export' as const, label: 'Export' },
-  ];
   const memberTabs = [
     { id: 'screens' as const, label: 'Screens' },
     { id: 'elements' as const, label: 'UI Elements' },
     { id: 'flows' as const, label: 'Flows' },
   ];
-  const tabs = role === 'admin' ? adminTabs : memberTabs;
+  const tabs = memberTabs;
   const metadata = [
     { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform], content: platformControl },
     { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },
-    { label: 'Screens', value: String(app.totalScreens) },
+    { label: 'Screens', value: String(sectionTotals.screens) },
     ...(app.lastCapturedAt ? [{ label: 'Last updated', value: formatCapturedAt(app.lastCapturedAt) }] : []),
   ];
   const actions = role === 'admin' || app.websiteUrl ? (
     <>
       {role === 'admin' ? <HeroButton primary onClick={() => setSection('export')}>Export to Figma</HeroButton> : null}
-      {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit site</HeroButton>}
+      {app.websiteUrl && <HeroButton onClick={() => window.open(app.websiteUrl!, '_blank', 'noopener,noreferrer')}>Visit Site</HeroButton>}
     </>
   ) : undefined;
+  const versions = sectionData.versions ?? [];
+  const latestVersion = versions.find(({ status }) => status === 'published') ?? versions[0];
+  const versionOptions = versions.length
+    ? versions.map((version) => ({
+        value: String(version.version_number),
+        label: version.version_number === latestVersion?.version_number
+          ? 'Latest'
+          : `Version ${version.version_number}`,
+      }))
+    : [{ value: 'latest', label: 'Latest' }];
+  const selectedVersionValue = sectionData.resolvedVersion
+    && versions.some(({ version_number }) => version_number === sectionData.resolvedVersion)
+    ? String(sectionData.resolvedVersion)
+    : 'latest';
+  const activeFlowFilterCount = Object.values(flowFilters).reduce((total, values) => total + values.length, 0);
+  const sectionTotal = section === 'screens'
+    ? `${sectionTotals.screens} screens`
+    : section === 'elements'
+      ? `${sectionTotals.elements} UI elements`
+      : section === 'flows'
+        ? activeFlowFilterCount
+          ? `${filteredFlows.length} of ${sectionTotals.flows} ${sectionTotals.flows === 1 ? 'flow' : 'flows'}`
+          : `${sectionTotals.flows} flows`
+        : '';
+  const evidenceFilterGroups = (
+    selected: ScreenFilterSelections,
+    typeLabel: string,
+    componentLabel: string,
+    includeFlowContext = false,
+  ): MetadataFilterGroup[] => [
+    { id: 'types', label: typeLabel, options: screenFilterOptions.types, selected: selected.types },
+    { id: 'layouts', label: 'Layouts', options: screenFilterOptions.layouts, selected: selected.layouts },
+    { id: 'components', label: componentLabel, options: screenFilterOptions.components, selected: selected.components },
+    { id: 'states', label: 'States', options: screenFilterOptions.states, selected: selected.states },
+    ...(includeFlowContext ? [{
+      id: 'flowContext',
+      label: 'Found in Flows',
+      options: [...new Set(screenContextFlows.map(({ title }) => title))]
+        .sort((left, right) => left.localeCompare(right)),
+      selected: screenFlowFilters,
+    }] : []),
+  ];
+  const activeMetadataFilter = section === 'screens'
+    ? {
+        label: 'Screens',
+        groups: evidenceFilterGroups(screenFilters, 'Screen types', 'UI elements', true),
+        onToggle: (group: string, value: string, checked: boolean) => {
+          if (group === 'flowContext') {
+            setScreenFlowFilters((current) => checked
+              ? [...new Set([...current, value])]
+              : current.filter((item) => item !== value));
+            return;
+          }
+          const filterGroup = group as ScreenFilterGroup;
+          setScreenFilters((current) => ({
+            ...current,
+            [filterGroup]: checked
+              ? [...new Set([...current[filterGroup], value])]
+              : current[filterGroup].filter((item) => item !== value),
+          }));
+        },
+        onClear: () => {
+          setScreenFilters(EMPTY_SCREEN_FILTERS);
+          setScreenFlowFilters([]);
+        },
+      }
+    : section === 'elements'
+      ? {
+          label: 'UI Elements',
+          groups: evidenceFilterGroups(elementFilters, 'Element types', 'Components'),
+          onToggle: (group: string, value: string, checked: boolean) => {
+            const filterGroup = group as ScreenFilterGroup;
+            setElementFilters((current) => ({
+              ...current,
+              [filterGroup]: checked
+                ? [...new Set([...current[filterGroup], value])]
+                : current[filterGroup].filter((item) => item !== value),
+            }));
+          },
+          onClear: () => setElementFilters(EMPTY_SCREEN_FILTERS),
+        }
+      : section === 'flows'
+        ? {
+            label: 'Flows',
+            groups: [
+              { id: 'categories', label: 'Flow groups', options: flowFilterOptions.categories, selected: flowFilters.categories },
+              { id: 'tags', label: 'Tags', options: flowFilterOptions.tags, selected: flowFilters.tags },
+              { id: 'interactions', label: 'Interactions', options: flowFilterOptions.interactions, selected: flowFilters.interactions },
+              { id: 'states', label: 'States', options: flowFilterOptions.states, selected: flowFilters.states },
+            ],
+            onToggle: (group: string, value: string, checked: boolean) => {
+              const filterGroup = group as FlowFilterGroup;
+              setFlowFilters((current) => ({
+                ...current,
+                [filterGroup]: checked
+                  ? [...new Set([...current[filterGroup], value])]
+                  : current[filterGroup].filter((item) => item !== value),
+              }));
+              onFlowChange?.(undefined, undefined, undefined, selectedPlatform, sectionData.resolvedVersion);
+            },
+            onClear: () => {
+              setFlowFilters(EMPTY_FLOW_FILTERS);
+              onFlowChange?.(undefined, undefined, undefined, selectedPlatform, sectionData.resolvedVersion);
+            },
+          }
+        : null;
+  const adminSectionControl = role === 'admin' ? (
+    <Selector
+      label="More sections"
+      isLabelHidden
+      size="sm"
+      placement="below"
+      className="app-detail__more-selector"
+      value={section === 'design-system' || section === 'export' ? section : 'more'}
+      options={[
+        { value: 'more', label: 'More' },
+        { value: 'design-system', label: 'Design System' },
+        { value: 'export', label: 'Export' },
+      ]}
+      onChange={(value) => {
+        if (value === 'design-system' || value === 'export') setSection(value);
+      }}
+    />
+  ) : null;
   return (
     <>
-      <ReferenceDiscoveryTopNav
-        active="apps"
-        className="apps-top-nav"
-        search={(
-          <SearchTrigger
-            label={`Search on ${PLATFORM_LABEL[selectedPlatform]}...`}
-            activeCategory={null}
-            onOpen={onOpenSearch ?? (() => undefined)}
-            onClearCategory={() => undefined}
-          />
-        )}
+      <ReferenceDetailPage
+        kind="app"
+        searchLabel={`Search on ${PLATFORM_LABEL[selectedPlatform]}...`}
+        onOpenSearch={onOpenSearch}
         accountControls={accountControls}
-      />
-      <ReferenceDetailShell
-        dataDetailKind="app"
-        className="app-detail"
+        className={`app-detail app-detail--${selectedPlatform}`}
         title={app.description ? `${app.app} —` : app.app}
         description={app.description}
         identityKey={`app-icon-${app.id}`}
@@ -329,7 +759,48 @@ export function ScreenDetail({
         tabs={tabs}
         activeTab={section}
         onTabChange={setSection}
-        tabTrailing={<span style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>{section === 'screens' ? `${sectionTotals.screens} screens` : section === 'elements' ? `${sectionTotals.elements} UI elements` : section === 'flows' ? `${sectionTotals.flows} flows` : ''}</span>}
+        tabLeading={(
+          <Selector
+            label="App version"
+            isLabelHidden
+            size="sm"
+            placement="below"
+            className="reference-detail__version-selector"
+            value={selectedVersionValue}
+            options={versionOptions}
+            onChange={(value) => {
+              if (!value || value === 'latest') return;
+              const version = Number(value);
+              setSelectedVersion(version);
+              setScreenFilters(EMPTY_SCREEN_FILTERS);
+              setScreenFlowFilters([]);
+              setElementFilters(EMPTY_SCREEN_FILTERS);
+              setFlowFilters(EMPTY_FLOW_FILTERS);
+              setLightbox(null);
+              onSectionChange?.(section, selectedPlatform, version);
+            }}
+          />
+        )}
+        tabControls={adminSectionControl || activeMetadataFilter ? (
+          <div className="app-detail__navigation-tools">
+            {adminSectionControl}
+            {activeMetadataFilter ? (
+              <MetadataFilterControl
+                key={section}
+                label={activeMetadataFilter.label}
+                groups={activeMetadataFilter.groups}
+                onToggle={activeMetadataFilter.onToggle}
+                onClear={activeMetadataFilter.onClear}
+              />
+            ) : null}
+          </div>
+        ) : null}
+        tabTrailing={sectionTotal ? (
+          <span className="reference-detail__section-total">
+            <span>Showing</span>
+            <strong>{sectionTotal}</strong>
+          </span>
+        ) : null}
         bodyPadding={section === 'screens' || section === 'elements' || section === 'flows' ? '32px 40px 72px' : '8px 40px 80px'}
       >
         <div ref={contentRef}>
@@ -338,14 +809,24 @@ export function ScreenDetail({
                 ? section === 'flows'
                   ? <FlowsWorkspaceLoading />
                   : <div role="status" aria-label="Loading section" style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><Spinner size="lg" /></div>
-                : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel snapshot={snapshot} status={designSystemStatus} generation={designSystemGeneration} /></Suspense>
+                : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel
+                    snapshot={snapshot}
+                    status={designSystemStatus}
+                    generation={designSystemGeneration}
+                    appName={app.app}
+                    componentCrops={componentCropSummary?.items}
+                    totalComponentOccurrences={componentCropSummary?.totalOccurrences}
+                    totalComponentTypes={componentCropSummary?.totalTypes}
+                  /></Suspense>
                     : section === 'export' ? <ExportPanel app={app.id} platform={selectedPlatform} snapshot={snapshot} screens={screens} />
-                      : section === 'flows' ? <FlowsPanel
-                          flows={flows}
+                      : section === 'flows' ? (filteredFlows.length || flows.length === 0 ? <FlowsPanel
+                          flows={filteredFlows}
                           app={app.id}
                           platform={selectedPlatform}
                           version={sectionData.resolvedVersion}
                           userRole={role}
+                          sourceAppName={app.app}
+                          sourceAppIconUrl={app.iconUrl}
                           selectedFlowId={initialFlow}
                           selectedStep={initialStep}
                           selectedFlowView={initialFlowView}
@@ -357,12 +838,33 @@ export function ScreenDetail({
                             sectionData.resolvedVersion,
                           )}
                         />
-                        : renderEvidence(screens, section === 'elements' ? 'No UI elements captured' : 'No screens captured')}
+                        : <ReferenceGallerySection><EmptyState title="No flows match these filters" isCompact /></ReferenceGallerySection>)
+                        : section === 'screens'
+                          ? renderScreens()
+                          : renderEvidence(screens, 'No UI elements captured')}
         </div>
-      </ReferenceDetailShell>
+      </ReferenceDetailPage>
+      {typeof document !== 'undefined'
+        ? createPortal(screenActionOverlay, document.body)
+        : null}
       {lightbox && screens[lightbox.index] && (() => {
         const item = screens[lightbox.index];
-        return <Lightbox item={{ url: item.url, type: item.type, caption: item.description ?? item.type, platform: item.platform }} index={lightbox.index} total={screens.length} onClose={() => setLightbox(null)} onNavigate={goLightbox} />;
+        return (
+          <ScreenPreviewDialog
+            appName={app.app}
+            appIconUrl={app.iconUrl}
+            screen={item}
+            index={lightbox.index}
+            total={screens.length}
+            onClose={closeLightbox}
+            onNavigate={goLightbox}
+            appId={app.id}
+            collections={collections}
+            onCollectionsChange={onCollectionsChange}
+            plan={role === 'admin' ? 'pro' : 'free'}
+            foundInFlows={(screenFlowMembership.get(item.id) ?? []).map(({ title }) => title)}
+          />
+        );
       })()}
       <ScrollToTopButton />
     </>

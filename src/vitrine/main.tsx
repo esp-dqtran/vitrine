@@ -1,13 +1,24 @@
 import { createRoot } from 'react-dom/client';
-import { Button, EmptyState, Spinner, Theme, defineTheme } from '@astryxdesign/core';
+import {
+  Button,
+  EmptyState,
+  Spinner,
+  Theme,
+  defineTheme,
+} from '@astryxdesign/core';
 import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthProvider';
 import { navigate, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
+import { ApplicationToastProvider } from './components/ApplicationToast.tsx';
 import { decideRootRoute } from './routeDecision.ts';
 import type { Route } from './router.ts';
 import './styles.css';
 import './referenceDiscovery.css';
+import './flowPreviewDialog.css';
+import './projectsWorkspace.css';
+import './components/AstryxDropdown.css';
+import './components/AstryxModal.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
@@ -112,11 +123,13 @@ function ThemedRoot() {
   const { mode } = useThemeMode();
   return (
     <Theme theme={appTheme} mode={mode}>
-      <AuthProvider>
-        <Suspense fallback={<FullPageSpinner />}>
-          <Root />
-        </Suspense>
-      </AuthProvider>
+      <ApplicationToastProvider>
+        <AuthProvider>
+          <Suspense fallback={<FullPageSpinner />}>
+            <Root />
+          </Suspense>
+        </AuthProvider>
+      </ApplicationToastProvider>
     </Theme>
   );
 }

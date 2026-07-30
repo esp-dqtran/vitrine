@@ -4,6 +4,7 @@ import {
   parseFeatureDocumentContent,
   parseFeatureStepAnalysis,
   renderFeatureDocumentMarkdown,
+  type FeatureDocumentContent,
 } from "./featureDocument.ts";
 
 const claim = (
@@ -152,6 +153,303 @@ test("rejects duplicate claim and acceptance criterion identities", () => {
     () => parseFeatureDocumentContent(fixture, new Set(["FLOW-STEP-01", "IMAGE-42"])),
     /duplicate feature document id: friction-1/,
   );
+});
+
+function evidenceBackedFixture(): FeatureDocumentContent {
+  const fixture = completeDocumentFixture();
+  return {
+    ...fixture,
+    unscopedEvidence: [],
+    sourceAssessment: {
+      captureType: "partial-journey",
+      completeness: "partial",
+      rationale: "The capture shows visible states but no explicit interaction annotation.",
+      evidenceIds: ["IMAGE-42"],
+    },
+    observedFlow: {
+      ...fixture.observedFlow,
+      journey: [],
+      actors: [],
+      visibleStates: [],
+    },
+    flowAnalysis: {
+      effectivePatterns: [],
+      friction: [],
+      missingStates: [],
+      inconsistencies: [],
+      risksAndAssumptions: [],
+    },
+    proposedFeature: {
+      ...fixture.proposedFeature,
+      targetUsers: [],
+      goals: [],
+      nonGoals: [],
+      behavior: [],
+      journey: [],
+    },
+    requirements: [{
+      ...claim("REQ-001", "The cart displays a continuation control", "inferred", ["IMAGE-42", "FLOW-STEP-01"]),
+      userStory: "As a shopper, I can identify the visible continuation control.",
+      priority: "unranked",
+      preconditions: ["The cart is visible."],
+      acceptanceCriteria: [{
+        id: "AC-001",
+        kind: "inferred",
+        given: "the cart screen is visible",
+        when: "the shopper reviews the available controls",
+        then: "a continuation control is present",
+        evidenceIds: ["IMAGE-42"],
+      }],
+    }],
+    edgeCases: [],
+    successMetrics: [],
+    guardrailMetrics: [],
+    analyticsEvents: [],
+    dependencies: [],
+    openQuestions: [],
+  };
+}
+
+test("accepts an evidence-backed replication document with classified criteria", () => {
+  const parsed = parseFeatureDocumentContent(
+    evidenceBackedFixture(),
+    new Set(["FLOW-STEP-01", "IMAGE-42"]),
+    {
+      evidenceBacked: true,
+      evidenceManifest: [
+        { stepIndex: 0, imageIndex: 0, imageId: 42, evidenceId: "IMAGE-42", stepLabel: "Cart", description: null },
+        { stepIndex: 1, imageIndex: 0, imageId: 43, evidenceId: "FLOW-STEP-01", stepLabel: "Checkout", description: null },
+      ],
+      analyses: [],
+    },
+  );
+
+  assert.equal(parsed.sourceAssessment?.completeness, "partial");
+  assert.equal(parsed.requirements[0].priority, "unranked");
+  assert.equal(parsed.requirements[0].acceptanceCriteria[0].kind, "inferred");
+});
+
+test("keeps official documentation separate from visual evidence", () => {
+  const fixture = {
+    ...evidenceBackedFixture(),
+    documentedContext: {
+      status: "researched",
+      sources: [{
+        id: "DOC-001",
+        title: "Shopee Account and Security",
+        url: "https://help.shopee.co.id/portal/article/official-account-security",
+        retrievedAt: "2026-07-30T00:00:00.000Z",
+        platform: "ios",
+        region: "Indonesia",
+      }],
+      claims: [{
+        id: "DCL-001",
+        text: "Shopee documents account-security controls in its Help Centre.",
+        sourceIds: ["DOC-001"],
+        relationship: "extends",
+        visualEvidenceIds: [],
+        unresolved: true,
+      }],
+    },
+  };
+  const parsed = parseFeatureDocumentContent(
+    fixture,
+    new Set(["FLOW-STEP-01", "IMAGE-42"]),
+    {
+      evidenceBacked: true,
+      evidenceManifest: [
+        { stepIndex: 0, imageIndex: 0, imageId: 42, evidenceId: "IMAGE-42", stepLabel: "Cart", description: null },
+        { stepIndex: 0, imageIndex: 1, imageId: 43, evidenceId: "FLOW-STEP-01", stepLabel: "Cart", description: null },
+      ],
+      analyses: [stepAnalysisFixture()],
+      officialDocumentationDomains: ["shopee.co.id"],
+    },
+  );
+
+  assert.equal(parsed.documentedContext?.status, "researched");
+  assert.equal(parsed.documentedContext?.sources[0]?.id, "DOC-001");
+  assert.equal(parsed.documentedContext?.claims[0]?.relationship, "extends");
+  assert.deepEqual(parsed.documentedContext?.claims[0]?.visualEvidenceIds, []);
+});
+
+test("rejects unofficial and uncited documented context", () => {
+  const fixture = {
+    ...evidenceBackedFixture(),
+    documentedContext: {
+      status: "researched",
+      sources: [{
+        id: "DOC-001",
+        title: "Unofficial guide",
+        url: "https://example.com/shopee-guide",
+        retrievedAt: "2026-07-30T00:00:00.000Z",
+        platform: "ios",
+        region: "Indonesia",
+      }],
+      claims: [{
+        id: "DCL-001",
+        text: "An unsupported claim.",
+        sourceIds: ["DOC-404"],
+        relationship: "supports",
+        visualEvidenceIds: ["IMAGE-42"],
+        unresolved: false,
+      }],
+    },
+  };
+  const options = {
+    evidenceBacked: true,
+    evidenceManifest: [
+      { stepIndex: 0, imageIndex: 0, imageId: 42, evidenceId: "IMAGE-42", stepLabel: "Cart", description: null },
+      { stepIndex: 0, imageIndex: 1, imageId: 43, evidenceId: "FLOW-STEP-01", stepLabel: "Cart", description: null },
+    ],
+    analyses: [stepAnalysisFixture()],
+    officialDocumentationDomains: ["shopee.co.id"],
+  };
+
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      options,
+    ),
+    /documentedContext source domain is not allowed/,
+  );
+  fixture.documentedContext.sources[0]!.url =
+    "https://help.shopee.co.id/portal/article/official-account-security";
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      options,
+    ),
+    /unknown documented source: DOC-404/,
+  );
+});
+
+test("rejects evidence-backed requirements that omit criterion evidence", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].evidenceIds = ["FLOW-STEP-01"];
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /must include all acceptance-criterion evidence/,
+  );
+});
+
+test("rejects an observed state transition without before-after or visible-feedback evidence", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].acceptanceCriteria[0] = {
+    ...fixture.requirements[0].acceptanceCriteria[0],
+    kind: "observed",
+    when: "the shopper taps Save",
+  };
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /needs before\/after or visible-feedback evidence/,
+  );
+});
+
+test("requires every screenshot to be scoped by requirements or explicitly unscoped", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].evidenceIds = ["IMAGE-42"];
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /evidence is not covered by requirements or unscopedEvidence: FLOW-STEP-01/,
+  );
+
+  fixture.unscopedEvidence = [{
+    evidenceId: "FLOW-STEP-01",
+    reason: "This screenshot repeats the same state and adds no implementation behavior.",
+  }];
+  assert.doesNotThrow(() => parseFeatureDocumentContent(
+    fixture,
+    new Set(["FLOW-STEP-01", "IMAGE-42"]),
+    { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+  ));
+});
+
+test("rejects priority wording on an unranked requirement", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].text = "The cart must display a continuation control";
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /cannot use priority language/,
+  );
+});
+
+test("enforces a bounded claim budget for small captures", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.edgeCases = Array.from(
+    { length: 25 },
+    (_, index) => claim(`edge-budget-${index}`, `Proposed edge case ${index}`, "proposed", []),
+  );
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /exceeds the 24-claim budget/,
+  );
+});
+
+test("rejects loading completion without visible loading evidence", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].acceptanceCriteria[0].when = "the view finishes loading";
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /cannot claim loading completion without visible loading evidence/,
+  );
+});
+
+test("requires interaction metadata for observed requirement-level action capabilities", () => {
+  const fixture = evidenceBackedFixture();
+  fixture.requirements[0].kind = "observed";
+  fixture.requirements[0].text = "The cart supports submission of the displayed choice";
+  assert.throws(
+    () => parseFeatureDocumentContent(
+      fixture,
+      new Set(["FLOW-STEP-01", "IMAGE-42"]),
+      { evidenceBacked: true, evidenceManifest: [], analyses: [] },
+    ),
+    /cannot claim an observed interaction without interaction metadata/,
+  );
+
+  assert.doesNotThrow(() => parseFeatureDocumentContent(
+    fixture,
+    new Set(["FLOW-STEP-01", "IMAGE-42"]),
+    {
+      evidenceBacked: true,
+      evidenceManifest: [{
+        stepIndex: 0,
+        imageIndex: 0,
+        imageId: 42,
+        evidenceId: "IMAGE-42",
+        stepLabel: "Submit",
+        interaction: "Tap submit",
+        description: null,
+      }],
+      analyses: [],
+    },
+  ));
 });
 
 test("accepts only one bounded step analysis for its supplied evidence", () => {

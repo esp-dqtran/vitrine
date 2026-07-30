@@ -39,6 +39,7 @@ const PROVIDERS: Record<string, Provider> = {
     response: '[data-message-author-role="assistant"]',
     loggedOutText: "Log in", // logged-out ChatGPT still shows a working textarea (guest mode), just no image upload
     sendButton: '[data-testid="send-button"]',
+    generationInProgress: '[data-testid="stop-button"]',
   },
   claude: {
     url: "https://claude.ai/new",
@@ -156,13 +157,20 @@ export async function dismissChatRateLimitDialog(
   if (await raceChatAbort(button.count(), signal) === 0) return false;
   const first = button.first();
   if (!(await raceChatAbort(first.isVisible(), signal))) return false;
-  await raceChatAbort(first.click(), signal);
+  // This modal can appear while the underlying conversation is still streaming.
+  // Playwright's actionability checks may wait forever for the animated dialog to
+  // become "stable", so invoke the already-visible button directly.
+  await raceChatAbort(
+    first.evaluate((element) => (element as HTMLElement).click()),
+    signal,
+  );
   return true;
 }
 
 async function throwIfChatRateLimited(
   page: Page,
   signal?: AbortSignal,
+  dismissedIsRecoverable = true,
 ): Promise<void> {
   const messages = await raceChatAbort(
     page.getByText(/making requests too quickly|temporarily limited access to your conversations/i)
@@ -170,7 +178,8 @@ async function throwIfChatRateLimited(
     signal,
   );
   if (messages.some(isChatRateLimitText)) {
-    if (await dismissChatRateLimitDialog(page, signal)) return;
+    const dismissed = await dismissChatRateLimitDialog(page, signal);
+    if (dismissed && dismissedIsRecoverable) return;
     throw new ChatRateLimitError();
   }
 }
@@ -253,7 +262,9 @@ export async function sendPrompt(
   prompt: string,
   signal?: AbortSignal,
   submitButton?: string,
+  generationInProgress?: string,
 ): Promise<void> {
+  const submissionUrl = page.url();
   for (let attempt = 0; attempt < 3; attempt++) {
     signal?.throwIfAborted();
     // `fill()` focuses editable controls without a pointer click. That matters on
@@ -270,10 +281,25 @@ export async function sendPrompt(
     } else {
       await raceChatAbort(input.press("Enter"), signal);
     }
-    await raceChatAbort(page.waitForTimeout(1500), signal);
-    await throwIfChatRateLimited(page, signal);
-    const remaining = (await raceChatAbort(input.textContent(), signal))?.trim() ?? "";
-    if (remaining === "") return; // textbox cleared — message was accepted
+    for (let check = 0; check < 10; check++) {
+      await raceChatAbort(page.waitForTimeout(500), signal);
+      const [remaining, generating] = await Promise.all([
+        raceChatAbort(input.textContent(), signal),
+        generationInProgress
+          ? raceChatAbort(page.locator(generationInProgress).count(), signal)
+          : Promise.resolve(0),
+      ]);
+      // ChatGPT creates the /c/... route before its composer always clears or
+      // the stop button appears. Any of these signals proves the message was accepted.
+      if (
+        (remaining?.trim() ?? "") === ""
+        || generating > 0
+        || page.url() !== submissionUrl
+      ) return;
+      // A dismissed limit dialog is recoverable while an accepted conversation
+      // keeps streaming, but not when ChatGPT refused to create a conversation.
+      await throwIfChatRateLimited(page, signal, false);
+    }
   }
   throw new Error("Prompt was not submitted after 3 attempts");
 }
@@ -284,6 +310,12 @@ export interface ChatAttachment {
   buffer: Buffer;
 }
 
+export type ChatAttachments =
+  | string
+  | string[]
+  | ChatAttachment
+  | ChatAttachment[];
+
 export interface ChatAskOptions {
   signal?: AbortSignal;
 }
@@ -292,7 +324,7 @@ export interface ChatSession {
   /** Sends a fresh message (each call starts a clean chat, no history carries over) and returns the reply. */
   ask(
     prompt: string,
-    filePath?: string | ChatAttachment,
+    filePath?: ChatAttachments,
     options?: ChatAskOptions,
   ): Promise<string>;
   close(): Promise<void>;
@@ -315,6 +347,10 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
   return {
     async ask(prompt, filePath, options) {
       const signal = options?.signal;
+      const hasAttachments = Array.isArray(filePath) ? filePath.length > 0 : Boolean(filePath);
+      const attachmentLabel = (Array.isArray(filePath) ? filePath : filePath ? [filePath] : [])
+        .map((item) => typeof item === "string" ? item : item.name)
+        .join(", ");
       signal?.throwIfAborted();
       if (hasAsked) activePage = await recycleChatPage(activePage);
       hasAsked = true;
@@ -330,10 +366,10 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
       // when this call actually attaches a file — a guest session's working (but upload-less)
       // textarea is enough for a text-only prompt.
       signal?.throwIfAborted();
-      if (filePath && !(await isLoggedIn(requestPage, provider))) {
+      if (hasAttachments && !(await isLoggedIn(requestPage, provider))) {
         throw new Error(`Logged out of ${providerName} mid-run — log back in and re-run to pick up where this left off.`);
       }
-      if (filePath) {
+      if (hasAttachments) {
         signal?.throwIfAborted();
         if (provider.uploadMenuButtonName && provider.uploadMenuItemName) {
           const menuButton = requestPage.getByRole("button", {
@@ -349,10 +385,10 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
             raceChatAbort(requestPage.waitForEvent("filechooser", { timeout: 10_000 }), signal),
             raceChatAbort(uploadItem.click(), signal),
           ]);
-          await raceChatAbort(chooser.setFiles(filePath), signal);
+          await raceChatAbort(chooser.setFiles(filePath!), signal);
         } else {
           await raceChatAbort(
-            requestPage.locator(provider.fileInput).setInputFiles(filePath),
+            requestPage.locator(provider.fileInput).setInputFiles(filePath!),
             signal,
           );
         }
@@ -375,10 +411,10 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
             );
           } catch {
             if (signal?.aborted) throw signal.reason;
-            throw new Error(`Attachment never finished uploading for ${filePath}`);
+            throw new Error(`Attachment never finished uploading for ${attachmentLabel}`);
           }
         } else if (!(await waitForCount(requestPage, "form img", 10_000, signal))) {
-          throw new Error(`Attachment never appeared for ${filePath}`);
+          throw new Error(`Attachment never appeared for ${attachmentLabel}`);
         }
       }
       const input = requestPage.locator(provider.textInput);
@@ -388,6 +424,7 @@ function bindSession(page: Page, providerName: string, provider: Provider, onClo
         prompt,
         signal,
         provider.submitWithButton ? provider.sendButton : undefined,
+        provider.generationInProgress,
       );
 
       // A detailed vision prompt under "Extra High" reasoning effort can run 3-4+ minutes
@@ -445,7 +482,7 @@ async function openChatContext(
 ): Promise<{ context: BrowserContext; close: () => Promise<void> }> {
   const cdpUrl = resolveChatCdpUrl(providerName);
   if (cdpUrl) {
-    const browser = await chromium.connectOverCDP(cdpUrl);
+    const browser = await chromium.connectOverCDP(cdpUrl, { noDefaults: true });
     const context = browser.contexts()[0];
     if (!context) {
       await browser.close();

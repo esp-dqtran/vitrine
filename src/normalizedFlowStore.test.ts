@@ -5,6 +5,8 @@ import {
   canonicalFlowPath,
   displayFlowName,
   normalizedFlowName,
+  replaceVersionFlows,
+  type FlowWriteClient,
   validateIncomingFlows,
 } from "./normalizedFlowStore.ts";
 
@@ -76,4 +78,58 @@ test("rejects non-serializable payloads", () => {
 
 test("accepts an empty authoritative replacement", () => {
   assert.doesNotThrow(() => validateIncomingFlows([]));
+});
+
+test("keeps unpublished Flow imports and repairs writable", async () => {
+  const sql: string[] = [];
+  const client = {
+    query: async (statement: string) => {
+      sql.push(statement);
+      if (/SELECT id, status, published_at/.test(statement)) {
+        return { rows: [{ id: 7, status: "draft", published_at: null }], rowCount: 1 };
+      }
+      if (/max_position/.test(statement)) {
+        return { rows: [{ max_position: 0 }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  } as unknown as FlowWriteClient;
+  await replaceVersionFlows(client, { versionId: 7, flows: [] });
+  assert.ok(sql.some((statement) => /UPDATE app_flow_versions/.test(statement)));
+  assert.ok(sql.some((statement) => /DELETE FROM app_flow_versions/.test(statement)));
+});
+
+test("rejects published Flow repairs before any child or mapping mutation", async () => {
+  const sql: string[] = [];
+  const client = {
+    query: async (statement: string) => {
+      sql.push(statement);
+      return {
+        rows: [{
+          id: 7,
+          status: "published",
+          published_at: "2026-07-29T06:00:00.000Z",
+        }],
+        rowCount: 1,
+      };
+    },
+  } as unknown as FlowWriteClient;
+  await assert.rejects(
+    () => replaceVersionFlows(client, { versionId: 7, flows: [] }),
+    /Published Flow versions are immutable; publish a new App version/,
+  );
+  assert.equal(sql.length, 1);
+});
+
+test("rejects inconsistent published status even if published_at is missing", async () => {
+  const client = {
+    query: async () => ({
+      rows: [{ id: 7, status: "published", published_at: null }],
+      rowCount: 1,
+    }),
+  } as unknown as FlowWriteClient;
+  await assert.rejects(
+    () => replaceVersionFlows(client, { versionId: 7, flows: [] }),
+    /Published Flow versions are immutable; publish a new App version/,
+  );
 });

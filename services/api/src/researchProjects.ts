@@ -57,7 +57,7 @@ const revision = (value: unknown): number | undefined => typeof value === "numbe
 
 function parsePatch(body: Record<string, unknown>): ProjectPatch | undefined {
   const patch: ProjectPatch = {};
-  const definitions: Array<[Exclude<keyof ProjectPatch, "platformFilter">, number]> = [
+  const definitions: Array<[Exclude<keyof ProjectPatch, "platformFilter" | "pinned">, number]> = [
     ["title", 120],
     ["question", 1000],
     ["constraints", 4000],
@@ -67,13 +67,17 @@ function parsePatch(body: Record<string, unknown>): ProjectPatch | undefined {
   ];
   for (const [key, max] of definitions) {
     if (body[key] === undefined) continue;
-    const value = boundedText(body[key], max, key === "title" || key === "question");
+    const value = boundedText(body[key], max, key === "title");
     if (value === undefined) return undefined;
     patch[key] = value;
   }
   if (body.platformFilter !== undefined) {
     if (!platforms.has(body.platformFilter as ResearchPlatform)) return undefined;
     patch.platformFilter = body.platformFilter as ResearchPlatform;
+  }
+  if (body.pinned !== undefined) {
+    if (typeof body.pinned !== "boolean") return undefined;
+    patch.pinned = body.pinned;
   }
   return patch;
 }
@@ -111,9 +115,9 @@ export function mountResearchProjectRoutes(
 
   app.post("/research-projects", asyncRoute(async (req, res) => {
     const title = boundedText(req.body?.title, 120, true);
-    const question = boundedText(req.body?.question, 1000, true);
-    const platformFilter = req.body?.platformFilter as ResearchPlatform;
-    if (!title || !question || !platforms.has(platformFilter)) {
+    const question = boundedText(req.body?.question, 1000);
+    const platformFilter = (req.body?.platformFilter ?? "all") as ResearchPlatform;
+    if (!title || question === undefined || !platforms.has(platformFilter)) {
       res.status(400).json({ error: "invalid research project" });
       return;
     }

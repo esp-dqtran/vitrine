@@ -1,6 +1,15 @@
 import type { DesignFlow, EvidenceView } from '../../designSystem';
+import type { Platform } from '../../platformFromUrl.ts';
 import { Button, Icon, IconButton } from '@astryxdesign/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
+import {
+  FlowPreviewDialog,
+  type FlowPreviewDocumentSource,
+  type FlowPreviewMode,
+} from './FlowPreviewDialog.tsx';
+import { copyShareLink, flowShareUrl } from '../screenActions.ts';
+import { CopyButton } from './CopyButton.tsx';
 import { PlaceholderImage } from './PlaceholderImage';
 import {
   flowCarouselEdges,
@@ -32,24 +41,79 @@ function flowTitle(title: string) {
   );
 }
 
+export function flowPreviewIndexFromSearch(
+  search: string,
+  flowId: string,
+  screenCount: number,
+): number | null {
+  if (!screenCount) return null;
+  const params = new URLSearchParams(search);
+  const tab = params.get('tab');
+  if (
+    params.get('flow') !== flowId
+    || (tab !== 'screens' && tab !== 'prototype' && tab !== 'document')
+  ) return null;
+  const parsed = Number(params.get('screen') ?? 0);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed < screenCount ? parsed : 0;
+}
+
+export function flowPreviewModeFromSearch(
+  search: string,
+  flowId: string,
+): FlowPreviewMode {
+  const params = new URLSearchParams(search);
+  if (params.get('flow') !== flowId) return 'screens';
+  const tab = params.get('tab');
+  return tab === 'prototype' || tab === 'document' ? tab : 'screens';
+}
+
+function writeFlowPreviewUrl(flowId: string, screenIndex: number, mode: FlowPreviewMode) {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('flow', flowId);
+  url.searchParams.set('tab', mode);
+  url.searchParams.set('screen', String(screenIndex));
+  window.history.replaceState(window.history.state, '', url);
+}
+
+function clearFlowPreviewUrl(flowId: string) {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get('flow') !== flowId) return;
+  url.searchParams.delete('flow');
+  url.searchParams.delete('tab');
+  url.searchParams.delete('screen');
+  window.history.replaceState(window.history.state, '', url);
+}
+
 export function FlowCard({
   flow,
   onOpen,
   anchorId,
+  platform = 'web',
   screenCount: screenCountOverride,
   metaLabel,
+  contextLabel,
   sourceAppName,
   sourceAppIconUrl,
+  documentSource,
+  userRole = 'user',
   onOpenSourceApp,
+  syncPreviewUrl = true,
 }: {
   flow: DesignFlow<EvidenceView>;
   onOpen: () => void;
   anchorId?: string;
+  platform?: Platform;
   screenCount?: number;
   metaLabel?: string;
+  contextLabel?: string;
   sourceAppName?: string;
   sourceAppIconUrl?: string | null;
+  documentSource?: FlowPreviewDocumentSource;
+  userRole?: 'admin' | 'user';
   onOpenSourceApp?: () => void;
+  syncPreviewUrl?: boolean;
 }) {
   const trackRef = useRef<HTMLButtonElement>(null);
   const [saved, setSaved] = useState(false);
@@ -57,6 +121,16 @@ export function FlowCard({
   const previewItems = screens.length
     ? screens
     : [{ evidence: undefined, label: flow.title, stepNumber: 1 }];
+  const [previewIndex, setPreviewIndex] = useState<number | null>(() => (
+    typeof window === 'undefined' || !syncPreviewUrl
+      ? null
+      : flowPreviewIndexFromSearch(window.location.search, flow.id, screens.length)
+  ));
+  const [previewMode, setPreviewMode] = useState<FlowPreviewMode>(() => (
+    typeof window === 'undefined' || !syncPreviewUrl
+      ? 'screens'
+      : flowPreviewModeFromSearch(window.location.search, flow.id)
+  ));
   const [carouselEdges, setCarouselEdges] = useState({
     canScrollLeft: false,
     canScrollRight: previewItems.length > 1,
@@ -97,65 +171,107 @@ export function FlowCard({
     scrollToAdjacentFlowScreen(track, direction);
   };
 
+  const openPreview = (event: MouseEvent<HTMLButtonElement>) => {
+    const indexedItem = event.target instanceof Element
+      ? event.target.closest<HTMLElement>('[data-flow-preview-index]')
+      : null;
+    const index = Number(indexedItem?.dataset.flowPreviewIndex ?? 0);
+    if (!Number.isInteger(index) || !previewItems[index]?.evidence) {
+      onOpen();
+      return;
+    }
+    setPreviewIndex(index);
+    setPreviewMode('screens');
+    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, index, 'screens');
+  };
+
+  const updatePreviewIndex = (index: number) => {
+    setPreviewIndex(index);
+    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, index, previewMode);
+  };
+
+  const updatePreviewMode = (mode: FlowPreviewMode, index = previewIndex ?? 0) => {
+    const nextIndex = Math.min(Math.max(index, 0), Math.max(0, screens.length - 1));
+    setPreviewIndex(nextIndex);
+    setPreviewMode(mode);
+    if (syncPreviewUrl) writeFlowPreviewUrl(flow.id, nextIndex, mode);
+  };
+
+  const closePreview = () => {
+    if (syncPreviewUrl) clearFlowPreviewUrl(flow.id);
+    setPreviewIndex(null);
+  };
+
+  const copyFlowLink = async () => {
+    if (typeof window === 'undefined') throw new Error('Clipboard is unavailable');
+    await copyShareLink(flowShareUrl(window.location.href, flow.id));
+  };
+
+  const openSourceAppFromPreview = onOpenSourceApp
+    ? () => {
+      if (syncPreviewUrl) clearFlowPreviewUrl(flow.id);
+      onOpenSourceApp();
+    }
+    : undefined;
+
   return (
-    <article
-      className="flow-strip-card"
-      data-flow-strip-card="true"
-      data-flow-gallery-id={flow.id}
-      id={anchorId}
-    >
-      <div className="flow-strip-card__stage">
-        <Button
-          ref={trackRef}
-          label={`Open ${flow.title} flow`}
-          variant="ghost"
-          className="flow-strip-card__track"
-          onClick={onOpen}
-        >
-          {previewItems.map(({ evidence, label, stepNumber }) => (
-            <span
-              className="flow-strip-card__screen"
-              data-flow-carousel-item
-              key={`${flow.id}-${stepNumber}-${evidence?.imageId ?? label}`}
-            >
-              <PlaceholderImage
-                src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
-                srcSet={evidence?.thumbnailUrl && evidence.imageUrl && evidence.thumbnailUrl !== evidence.imageUrl
-                  ? `${evidence.thumbnailUrl} 1x,${evidence.imageUrl} 2x`
-                  : undefined}
-                accent="#111"
-                style={{ objectFit: 'contain', background: '#fff' }}
-              />
-            </span>
-          ))}
-        </Button>
-        {carouselEdges.canScrollLeft ? (
-          <IconButton
-            label="Previous flow screens"
-            icon={<Icon icon="chevronLeft" size="md" />}
-            variant="secondary"
-            className="flow-strip-card__arrow flow-strip-card__arrow--left"
-            onClick={() => scrollTrack(-1)}
-          />
-        ) : null}
-        {carouselEdges.canScrollRight ? (
-          <IconButton
-            label="Next flow screens"
-            icon={<Icon icon="chevronRight" size="md" />}
-            variant="secondary"
-            className="flow-strip-card__arrow flow-strip-card__arrow--right"
-            onClick={() => scrollTrack(1)}
-          />
-        ) : null}
-      </div>
-      <footer className="flow-strip-card__footer">
-        <div className="flow-strip-card__identity">
-          {sourceAppName ? (
-            onOpenSourceApp ? (
-              <button
-                type="button"
+    <>
+      <article
+        className="flow-strip-card"
+        data-flow-strip-card="true"
+        data-flow-gallery-id={flow.id}
+        data-flow-preview-url-sync={syncPreviewUrl ? 'true' : 'false'}
+        id={anchorId}
+      >
+        <div className="flow-strip-card__stage" data-platform={platform}>
+          <Button
+            ref={trackRef}
+            label={`Preview ${flow.title} flow screens`}
+            variant="ghost"
+            className="flow-strip-card__track"
+            onClick={openPreview}
+          >
+            {previewItems.map(({ evidence, label, stepNumber }, index) => (
+              <span
+                className="flow-strip-card__screen"
+                data-flow-carousel-item
+                data-flow-preview-index={index}
+                key={`${flow.id}-${stepNumber}-${evidence?.imageId ?? label}`}
+              >
+                <PlaceholderImage
+                  src={evidence?.imageUrl ?? evidence?.thumbnailUrl}
+                  accent="#111"
+                  style={{ objectFit: platform === 'web' ? 'contain' : 'cover' }}
+                />
+              </span>
+            ))}
+          </Button>
+          {carouselEdges.canScrollLeft ? (
+            <IconButton
+              label="Previous flow screens"
+              icon={<Icon icon="chevronLeft" size="md" />}
+              variant="secondary"
+              className="flow-strip-card__arrow flow-strip-card__arrow--left"
+              onClick={() => scrollTrack(-1)}
+            />
+          ) : null}
+          {carouselEdges.canScrollRight ? (
+            <IconButton
+              label="Next flow screens"
+              icon={<Icon icon="chevronRight" size="md" />}
+              variant="secondary"
+              className="flow-strip-card__arrow flow-strip-card__arrow--right"
+              onClick={() => scrollTrack(1)}
+            />
+          ) : null}
+        </div>
+        <footer className="flow-strip-card__footer">
+          <div className="flow-strip-card__identity">
+            {sourceAppName && onOpenSourceApp ? (
+              <Button
+                label={`Open ${sourceAppName} app`}
+                variant="ghost"
                 className="flow-strip-card__app-icon flow-strip-card__app-icon--interactive"
-                aria-label={`Open ${sourceAppName} app`}
                 onClick={onOpenSourceApp}
               >
                 {sourceAppIconUrl ? (
@@ -163,53 +279,68 @@ export function FlowCard({
                 ) : (
                   <span aria-hidden="true">{sourceAppName.slice(0, 1).toUpperCase()}</span>
                 )}
-              </button>
-            ) : (
-              <span className="flow-strip-card__app-icon">
-                {sourceAppIconUrl ? (
-                  <img
-                    src={sourceAppIconUrl}
-                    alt={`${sourceAppName} app`}
-                    loading="lazy"
-                  />
-                ) : (
-                  <span aria-label={`${sourceAppName} app`}>
-                    {sourceAppName.slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-              </span>
-            )
-          ) : null}
-          <div className="flow-strip-card__meta">
-            <h2>{flowTitle(flow.title)}</h2>
-            <p>{metaLabel ?? countLabel}</p>
+              </Button>
+            ) : null}
+            <div className="flow-strip-card__meta">
+              <h2>
+                {flowTitle(flow.title)}
+                {contextLabel ? (
+                  <>
+                    {' '}
+                    <span className="flow-strip-card__title-connector">from</span>
+                    {' '}
+                    {contextLabel}
+                  </>
+                ) : null}
+              </h2>
+              <p>{metaLabel ?? countLabel}</p>
+            </div>
           </div>
-        </div>
-        <div className="flow-strip-card__actions">
-          <Button
-            label={saved ? 'Saved' : 'Save'}
-            variant="primary"
-            size="sm"
-            className="flow-strip-card__save"
-            clickAction={() => setSaved((value) => !value)}
-          />
-          <Button
-            label="Copy"
-            icon={<Icon icon="copy" size="sm" />}
-            variant="secondary"
-            size="sm"
-            className="flow-strip-card__copy"
-            clickAction={() => undefined}
-          />
-          <IconButton
-            label="More flow actions"
-            icon={<Icon icon="moreHorizontal" size="md" />}
-            variant="secondary"
-            className="flow-strip-card__more"
-            onClick={() => undefined}
-          />
-        </div>
-      </footer>
-    </article>
+          <div className="flow-strip-card__actions">
+            <Button
+              label={saved ? 'Saved' : 'Save'}
+              variant="primary"
+              size="sm"
+              className="flow-strip-card__save"
+              clickAction={() => setSaved((value) => !value)}
+            />
+            <CopyButton
+              label="Copy flow link"
+              successMessage="Flow link copied"
+              action={copyFlowLink}
+              variant="secondary"
+              size="sm"
+              className="flow-strip-card__copy"
+            />
+            <IconButton
+              label="More flow actions"
+              icon={<Icon icon="moreHorizontal" size="md" />}
+              variant="secondary"
+              className="flow-strip-card__more"
+              onClick={() => undefined}
+            />
+          </div>
+        </footer>
+      </article>
+      {previewIndex !== null && screens[previewIndex] ? (
+        <FlowPreviewDialog
+          flowId={flow.id}
+          flowTitle={flow.title}
+          flow={flow}
+          screens={screens}
+          activeIndex={previewIndex}
+          activeMode={previewMode}
+          platform={platform}
+          sourceAppName={sourceAppName}
+          sourceAppIconUrl={sourceAppIconUrl}
+          documentSource={documentSource}
+          userRole={userRole}
+          onActiveIndexChange={updatePreviewIndex}
+          onModeChange={updatePreviewMode}
+          onClose={closePreview}
+          onOpenSourceApp={openSourceAppFromPreview}
+        />
+      ) : null}
+    </>
   );
 }

@@ -5,6 +5,7 @@ import type { SearchResultItem } from "../../searchTypes.ts";
 import { loadRelatedSearchResults } from "../advancedSearchApi.ts";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 import { SearchResearchActions } from "./SearchResearchActions.tsx";
+import { AstryxModal, AstryxModalSurface } from "./AstryxModal.tsx";
 
 export function AdvancedSearchPreview({
   item,
@@ -38,8 +39,16 @@ export function AdvancedSearchPreview({
     return () => { controller.abort(); origin?.focus(); };
   }, [item.sourceId]);
   return (
-    <div className="advanced-search-preview" role="dialog" aria-modal="true" aria-label={`Preview ${item.title}`}>
-      <div className="advanced-search-preview__panel">
+    <AstryxModal
+      isOpen
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      variant="fullscreen"
+      purpose="info"
+      padding={0}
+      aria-label={`Preview ${item.title}`}
+    >
+      <div className="advanced-search-preview">
+      <AstryxModalSurface className="advanced-search-preview__panel">
         <Button ref={close} label="Close preview" variant="ghost" onClick={onClose} />
         <div className="advanced-search-preview__media"><PlaceholderImage src={item.imageUrl} /></div>
         <header><span>{item.catalogName} · {item.platform}</span><h2>{item.title}</h2><p>{item.description}</p></header>
@@ -58,7 +67,8 @@ export function AdvancedSearchPreview({
           {relatedState === "ready" && !related.length ? <p>No related results yet.</p> : null}
           {related.map((candidate) => <span key={candidate.documentId}>{candidate.title}</span>)}
         </section>
+      </AstryxModalSurface>
       </div>
-    </div>
+    </AstryxModal>
   );
 }

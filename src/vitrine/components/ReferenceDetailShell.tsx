@@ -15,7 +15,7 @@ export function resetReferenceDetailScroll(
   scrollTo({ top: 0, left: 0, behavior: 'auto' });
 }
 
-interface ReferenceDetailShellProps<T extends string> {
+export interface ReferenceDetailShellProps<T extends string> {
   title: ReactNode;
   ariaLabel?: string;
   description?: ReactNode;
@@ -160,11 +160,10 @@ export function ReferenceDetailShell<T extends string>({
               />
             ))}
             {!loading ? <div ref={indicatorRef} className="reference-detail__tab-indicator" /> : null}
-            <div style={{ flex: 1 }} />
-            {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
           </div>
+          {tabControls ? <div className="reference-detail__tab-controls">{tabControls}</div> : null}
+          {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
         </div>
-        {tabControls}
       </header>
       <div style={{ minHeight: 400 }}>
         <div className="reference-detail__body-inner" style={{ paddingTop: bodyPadding.split(' ')[0], paddingBottom: bodyPadding.split(' ')[2] ?? bodyPadding.split(' ')[0] }}>

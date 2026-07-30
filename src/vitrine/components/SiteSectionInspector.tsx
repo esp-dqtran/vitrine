@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Badge, Button, Dialog, Icon, IconButton } from '@astryxdesign/core';
+import { Icon, IconButton } from '@astryxdesign/core';
+import { copyShareLink } from '../screenActions.ts';
 import { ArrowButton } from './ArrowButton.tsx';
+import { AstryxModal, AstryxModalSurface } from './AstryxModal.tsx';
+import { CopyButton } from './CopyButton.tsx';
 import { FilterChips } from './FilterChips.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 
@@ -40,48 +42,35 @@ export function SiteSectionInspector({
   onClose,
   onNavigate,
 }: SiteSectionInspectorProps) {
-  const [copied, setCopied] = useState(false);
   const selectedView = view === 'section' ? 'Section' : 'Full page';
   const fullPage = view === 'full-page';
   const mediaUrl = fullPage ? item.fullPageUrl : item.sectionUrl;
   const mediaKind = fullPage ? 'image' : item.kind;
   const metadata = item.metadata ?? {};
   const heading = metadataText(metadata.heading);
-  const selector = metadataText(metadata.selector);
-  const tagName = metadataText(metadata.tagName);
-  const role = metadataText(metadata.role);
-  const text = metadataText(metadata.text);
-  const style = metadataRecord(metadata.style);
-  const content = metadataRecord(metadata.content);
-  const contentSummary = [
-    countLabel(content.links, 'link'),
-    countLabel(content.buttons, 'button'),
-    countLabel(content.images, 'image'),
-    countLabel(content.videos, 'video'),
-    countLabel(content.forms, 'form'),
-  ].filter(Boolean).join(' · ');
-  const layoutSummary = [
-    metadataText(style.display),
-    metadataText(style.flexDirection),
-    metadataText(style.gridTemplateColumns),
-    metadataText(style.gap) ? `gap ${metadataText(style.gap)}` : '',
-  ].filter(Boolean).join(' · ');
   const bounds = metadataRecord(metadata.elementBounds);
   const resolution = [
     numberText(bounds.width),
     numberText(bounds.height),
   ].filter(Boolean).join(' × ');
   const siteName = item.siteName || safeHostname(item.pageUrl);
-  const copySectionLink = () => {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    void navigator.clipboard.writeText(
+  const copySectionLink = async () => {
+    await copyShareLink(
       typeof window === 'undefined' ? item.sectionUrl : window.location.href,
-    ).then(() => setCopied(true));
+    );
   };
 
   return (
-    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} variant="fullscreen" purpose="info" padding={0}>
-      <article className="site-section-inspector" aria-label={`${siteName} section detail`}>
+    <AstryxModal
+      isOpen
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      variant="fullscreen"
+      purpose="info"
+      padding={0}
+      className="flow-preview-dialog-shell site-section-inspector-shell"
+      aria-label={`${siteName} section detail`}
+    >
+      <AstryxModalSurface className="flow-preview-dialog site-section-inspector">
         <header className="site-section-inspector__header">
           <div className="site-section-inspector__identity">
             <span className="site-section-inspector__logo" aria-hidden="true">
@@ -100,12 +89,19 @@ export function SiteSectionInspector({
             />
           </div>
           <div className="site-section-inspector__actions">
-            <Button
-              label={copied ? 'Copied' : 'Copy'}
-              icon={<Icon icon="copy" size="sm" />}
+            <a
+              className="site-section-inspector__save"
+              href={mediaUrl}
+              download
+            >
+              Save
+            </a>
+            <CopyButton
+              label="Copy link"
+              successMessage="Section link copied"
+              action={copySectionLink}
               variant="ghost"
               size="sm"
-              onClick={copySectionLink}
             />
             <IconButton
               label="Close"
@@ -121,7 +117,7 @@ export function SiteSectionInspector({
             ? <video src={mediaUrl} poster={item.posterUrl} controls muted playsInline />
             : fullPage
               ? <img src={mediaUrl} alt={`${siteName} full page capture`} />
-              : <PlaceholderImage src={mediaUrl} style={{ objectFit: 'contain' }} />}
+              : <PlaceholderImage src={mediaUrl} style={{ objectFit: 'contain', background: 'transparent' }} />}
           {total > 1 && <ArrowButton direction="left" visible onClick={() => onNavigate(index - 1)} />}
           {total > 1 && <ArrowButton direction="right" visible onClick={() => onNavigate(index + 1)} />}
         </div>
@@ -132,29 +128,10 @@ export function SiteSectionInspector({
               <strong>{heading || item.patterns[0] || item.caption}</strong>
               <span>{index + 1} of {total}{resolution ? ` · ${resolution}` : ''}</span>
             </div>
-            <div className="site-section-inspector__badges">
-            {(item.patterns.length ? item.patterns : ['Unclassified']).map((pattern) => <Badge key={pattern} label={pattern} variant="neutral" />)}
-              <a href={item.pageUrl} target="_blank" rel="noreferrer">{item.pageTitle} · {safeHostname(item.pageUrl)}</a>
-            </div>
           </div>
-          {!fullPage && (heading || selector || contentSummary || layoutSummary || text) ? (
-            <details className="site-section-inspector__detail">
-              <summary>Reconstruction details</summary>
-              <div>
-                {selector ? (
-                  <code>{[tagName, role ? `role=${role}` : '', selector].filter(Boolean).join(' · ')}</code>
-                ) : null}
-                {layoutSummary || contentSummary ? (
-                  <span>{[layoutSummary, contentSummary].filter(Boolean).join(' · ')}</span>
-                ) : null}
-                {text && text !== heading ? <p>{text}</p> : null}
-              </div>
-            </details>
-          ) : null}
-          <a className="site-section-inspector__download" href={mediaUrl} download>Download</a>
         </footer>
-      </article>
-    </Dialog>
+      </AstryxModalSurface>
+    </AstryxModal>
   );
 }
 
@@ -166,12 +143,6 @@ function metadataRecord(value: unknown): Record<string, unknown> {
 
 function metadataText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
-}
-
-function countLabel(value: unknown, label: string): string {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? `${value} ${label}${value === 1 ? '' : 's'}`
-    : '';
 }
 
 function numberText(value: unknown): string {

@@ -108,10 +108,20 @@ async function fetchCatalog(): Promise<Job[]> {
   await page.waitForTimeout(3000);
 
   const jobs: Job[] = [];
-  for (const platform of ["web", "ios", "android"] as const) {
+  // Mobbin's July 2026 Apps refresh removed the old
+  // GET /api/searchable-apps/:platform endpoint. The replacement is a POST
+  // endpoint and the current Apps UI exposes iOS and Web catalogs only.
+  for (const platform of ["web", "ios"] as const) {
     const apps = await page.evaluate(async (p) => {
-      const res = await fetch(`https://mobbin.com/api/searchable-apps/${p}`);
+      const res = await fetch("https://mobbin.com/api/search-bar/fetch-searchable-apps", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: JSON.stringify({ platform: p }),
+      });
       const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? `Mobbin catalog request failed (${res.status})`);
+      }
       return (json.value ?? []).map((a: { id: string; appName: string }) => ({ id: a.id, appName: a.appName }));
     }, platform);
     for (const app of apps) {

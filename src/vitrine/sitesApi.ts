@@ -5,14 +5,15 @@ import type {
   SiteVersionPage,
 } from './types.ts';
 import { parseSiteAnalysis } from '../siteAnalysis.ts';
-
-export async function listSites(): Promise<SiteSummary[]> {
-  const response = await fetch('/api/sites');
-  const body = await responseBody(response);
-  if (!response.ok) throw new Error(errorMessage(body, `Sites returned ${response.status}`));
-  if (!Array.isArray(body)) throw new Error('Sites returned an invalid response');
-  return body.map(parseSummary);
-}
+import type { DiscoveryPage, DiscoveryState } from './discoveryTypes.ts';
+import {
+  parseSiteSummary as parseDiscoverySiteSummary,
+  parseSitesDiscoveryPage,
+} from './sitesPageParser.ts';
+import {
+  appendFacetSearchParams,
+  loadDiscoveryFacets,
+} from './discoveryFacetsApi.ts';
 
 export interface SitesPageResult {
   sites: SiteSummary[];
@@ -20,22 +21,151 @@ export interface SitesPageResult {
   total: number;
 }
 
-export async function listSitesPage(limit: number, offset: number): Promise<SitesPageResult> {
-  if (!positiveId(limit) || limit > 48 || !Number.isSafeInteger(offset) || offset < 0) {
+export type SitesDiscoverySort = 'latest' | 'popular';
+export type SitesDiscoveryState = DiscoveryState<SitesDiscoverySort>;
+
+export interface SitesPageOptions {
+  limit?: number;
+  noStore?: boolean;
+  signal?: AbortSignal;
+}
+
+export function listSitesPage(
+  state: SitesDiscoveryState,
+  cursor?: string,
+  options?: SitesPageOptions,
+): Promise<DiscoveryPage<SiteSummary>>;
+/** @deprecated Temporary compatibility for detail-page related references. */
+export function listSitesPage(limit: number, offset: number): Promise<SitesPageResult>;
+export async function listSitesPage(
+  stateOrLimit: SitesDiscoveryState | number,
+  cursorOrOffset?: string | number,
+  options: SitesPageOptions = {},
+): Promise<DiscoveryPage<SiteSummary> | SitesPageResult> {
+  if (typeof stateOrLimit === 'number') {
+    const limit = stateOrLimit;
+    const offset = Number(cursorOrOffset);
+    if (!positiveId(limit)
+      || limit > 48
+      || !Number.isSafeInteger(offset)
+      || offset < 0) {
+      throw new Error('Invalid Sites page');
+    }
+    const state: SitesDiscoveryState = {
+      platform: 'web',
+      sort: 'latest',
+      query: '',
+      filters: [],
+    };
+    if (offset === 0) {
+      const page = await requestSitesDiscoveryPage(state, undefined, { limit });
+      return {
+        sites: page.items,
+        nextOffset: page.nextCursor === null ? null : limit,
+        total: page.totalCount,
+      };
+    }
+    const sites: SiteSummary[] = [];
+    const seenCursors = new Set<string>();
+    let cursor: string | undefined;
+    let total = 0;
+    let hasMore = false;
+    for (let pageNumber = 0; pageNumber < 100; pageNumber += 1) {
+      const page = await requestSitesDiscoveryPage(state, cursor, { limit });
+      total = page.totalCount;
+      sites.push(...page.items);
+      hasMore = page.nextCursor !== null;
+      if (sites.length >= offset + limit || page.nextCursor === null) break;
+      if (seenCursors.has(page.nextCursor)) {
+        throw new Error('Sites returned an invalid response');
+      }
+      seenCursors.add(page.nextCursor);
+      cursor = page.nextCursor;
+      if (pageNumber === 99) throw new Error('Sites returned an invalid response');
+    }
+    const pageSites = sites.slice(offset, offset + limit);
+    return {
+      sites: pageSites,
+      nextOffset: hasMore || offset + pageSites.length < total
+        ? offset + limit
+        : null,
+      total,
+    };
+  }
+
+  return requestSitesDiscoveryPage(
+    stateOrLimit,
+    typeof cursorOrOffset === 'string' ? cursorOrOffset : undefined,
+    options,
+  );
+}
+
+async function requestSitesDiscoveryPage(
+  state: SitesDiscoveryState,
+  cursor: string | undefined,
+  options: SitesPageOptions,
+): Promise<DiscoveryPage<SiteSummary>> {
+  const limit = options.limit ?? 24;
+  if (state.platform !== 'web'
+    || (state.sort !== 'latest' && state.sort !== 'popular')
+    || typeof state.query !== 'string'
+    || state.query.length > 120
+    || !Array.isArray(state.filters)
+    || state.filters.length > 40
+    || !positiveId(limit)
+    || limit > 48
+    || (cursor !== undefined
+      && (typeof cursor !== 'string' || !cursor || cursor.length > 2_048))) {
     throw new Error('Invalid Sites page');
   }
-  const response = await fetch(`/api/sites?limit=${limit}&offset=${offset}`);
+  const params = new URLSearchParams({
+    platform: state.platform,
+    sort: state.sort,
+    facets: 'summary',
+  });
+  const query = state.query.trim();
+  if (query) params.set('query', query);
+  for (const filter of state.filters) {
+    if ((filter.group !== 'categories'
+      && filter.group !== 'sections'
+      && filter.group !== 'styles')
+      || typeof filter.value !== 'string'
+      || !filter.value.trim()
+      || filter.value.length > 120) {
+      throw new Error('Invalid Sites page');
+    }
+    params.append('filter', `${filter.group}.${filter.value.trim()}`);
+  }
+  if (cursor) params.set('cursor', cursor);
+  params.set('limit', String(limit));
+  if (options.noStore) params.set('refresh', '1');
+  const response = await fetch(`/api/sites?${params.toString()}`, {
+    ...(options.signal ? { signal: options.signal } : {}),
+    ...(options.noStore ? { cache: 'no-store' as const } : {}),
+  });
   const body = await responseBody(response);
   if (!response.ok) throw new Error(errorMessage(body, `Sites returned ${response.status}`));
-  if (!isRecord(body) || !Array.isArray(body.sites)) {
-    throw new Error('Sites returned an invalid response');
+  return parseSitesDiscoveryPage(body);
+}
+
+export function loadSitesDiscoveryFacets(
+  state: SitesDiscoveryState,
+  group: string,
+  query: string,
+  selected: readonly string[],
+  signal?: AbortSignal,
+) {
+  const params = new URLSearchParams({
+    platform: state.platform,
+    sort: state.sort,
+  });
+  const search = state.query.trim();
+  if (search) params.set('query', search);
+  for (const filter of state.filters) {
+    params.append('filter', `${filter.group}.${filter.value}`);
   }
-  const nextOffset = body.nextOffset === null ? null : nonNegativeInteger(body.nextOffset);
-  return {
-    sites: body.sites.map(parseSummary),
-    nextOffset,
-    total: nonNegativeInteger(body.total),
-  };
+  appendFacetSearchParams(params, { group, query, selected });
+  return loadDiscoveryFacets(`/api/sites/facets?${params.toString()}`, signal);
 }
 
 export async function getSiteVersion(siteId: number, versionId: number): Promise<SiteVersionDetail> {
@@ -153,48 +283,6 @@ function isCanonicalOrLegacyDuplicateSlug(
   if (responseSlug === requestedSlug) return true;
   const match = requestedSlug.match(/^(.+)-([2-9]\d*)$/);
   return Boolean(match && responseSlug === match[1]);
-}
-
-function parseSummary(value: unknown): SiteSummary {
-  if (!isRecord(value) || !positiveId(value.siteId) || !positiveId(value.versionId)) {
-    throw new Error('Sites returned an invalid response');
-  }
-  const pageCount = nonNegativeInteger(value.pageCount);
-  const sectionCount = nonNegativeInteger(value.sectionCount);
-  const updatedAt = requiredText(value.updatedAt);
-  if (Number.isNaN(Date.parse(updatedAt)) || !Array.isArray(value.previews) || value.previews.length > 5) {
-    throw new Error('Sites returned an invalid response');
-  }
-  const previews = value.previews.map((preview) => {
-    if (!isRecord(preview) || !positiveId(preview.id)) throw new Error('Sites returned an invalid response');
-    return {
-      id: preview.id,
-      title: requiredText(preview.title),
-      position: nonNegativeInteger(preview.position),
-      url: apiPath(preview.url),
-    };
-  }).sort((a, b) => a.position - b.position);
-  return {
-    id: value.siteId,
-    versionId: value.versionId,
-    name: requiredText(value.name),
-    slug: requiredText(value.slug),
-    routeSlug: requiredText(value.routeSlug),
-    sourceUrl: requiredText(value.sourceUrl),
-    ...optionalTextField(value, 'description'),
-    ...optionalNullableTextField(value, 'logoUrl'),
-    ...optionalStringArrayField(value, 'categories'),
-    ...optionalStringArrayField(value, 'styles'),
-    ...(value.popularity === undefined ? {} : { popularity: nonNegativeNumber(value.popularity) }),
-    label: requiredText(value.label),
-    isLatest: value.isLatest === true,
-    pageCount,
-    sectionCount,
-    previewUrl: apiPath(value.previewUrl),
-    previewMediaKind: parsePreviewMediaKind(value.previewMediaKind),
-    previews,
-    updatedAt,
-  };
 }
 
 function parsePage(value: unknown): SiteVersionPage {

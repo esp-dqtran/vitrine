@@ -1,0 +1,778 @@
+dialog.flow-preview-dialog-shell {
+  padding: 0 !important;
+  border: 0 !important;
+  background: rgb(0 0 0 / 78%) !important;
+}
+
+dialog.flow-preview-dialog-shell::backdrop {
+  background: rgb(0 0 0 / 78%);
+  backdrop-filter: blur(8px);
+}
+
+.flow-preview-dialog {
+  --flow-preview-surface: #1f1f1f;
+  --flow-preview-muted: #a6a6a6;
+  position: fixed;
+  inset: 24px 32px 32px;
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 4%);
+  border-radius: 24px;
+  background: var(--flow-preview-surface);
+  color: #f5f5f5;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 48%);
+}
+
+.flow-preview-dialog:focus {
+  outline: none;
+}
+
+.flow-preview-dialog__header {
+  position: relative;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+  padding: 0 24px;
+  background: var(--flow-preview-surface);
+}
+
+.flow-preview-dialog__identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+}
+
+.flow-preview-dialog__identity h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(42vw, 540px);
+  margin: 0;
+  overflow: hidden;
+  color: #f5f5f5;
+  font-family: Figtree, system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 26px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-preview-dialog__connector {
+  flex: 0 0 auto;
+  margin-left: 4px;
+  margin-right: 12px;
+  color: var(--flow-preview-muted);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 26px;
+}
+
+.flow-preview-dialog__app {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+.flow-preview-dialog__app--static {
+  cursor: default;
+}
+
+.flow-preview-dialog__app img {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.flow-preview-dialog__app strong {
+  max-width: 190px;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 26px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-preview-dialog__app > span,
+.flow-preview-dialog__app > span > span {
+  display: contents;
+}
+
+.flow-preview-dialog__app:focus-visible,
+.flow-preview-dialog__metadata button:focus-visible,
+.flow-preview-dialog__screen:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.flow-preview-dialog__modes button:focus-visible {
+  outline: 1px solid #777;
+  outline-offset: 2px;
+}
+
+.flow-preview-dialog__modes {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #303030;
+}
+
+.flow-preview-dialog__mode-indicator {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 24%);
+  pointer-events: none;
+}
+
+.flow-preview-dialog__modes button {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6.25px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #7c7c7c;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  line-height: 20px;
+  transition: color 180ms ease;
+}
+
+.flow-preview-dialog__modes button[aria-selected='true'] {
+  background: transparent;
+  color: var(--color-background-primary, #111);
+  box-shadow: none;
+}
+
+.flow-preview-dialog__modes button:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+.flow-preview-dialog__header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-preview-dialog__header-actions > button {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  color: #f5f5f5 !important;
+}
+
+.flow-preview-dialog__header-actions > button:last-child {
+  background: #303030 !important;
+}
+
+.flow-preview-dialog__divider {
+  width: 1px;
+  height: 40px;
+  margin: 0 8px;
+  background: rgb(255 255 255 / 14%);
+}
+
+.flow-preview-dialog__body {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.flow-preview-dialog__body--document {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.flow-preview-dialog__document {
+  min-height: 100%;
+  padding: 32px max(32px, calc((100% - 920px) / 2)) 56px;
+  color: #f5f5f5;
+}
+
+.flow-preview-dialog__document .document-flow {
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a6a6a6;
+  --color-background-surface: #262626;
+  --color-background-muted: #303030;
+  --color-border: rgb(255 255 255 / 10%);
+  --color-border-emphasized: rgb(255 255 255 / 22%);
+  --color-focus: #fff;
+}
+
+.flow-preview-dialog__document .document-flow--missing,
+.flow-preview-dialog__document .document-flow--loading,
+.flow-preview-dialog__document .document-flow--error,
+.flow-preview-dialog__document .document-flow--pending {
+  min-height: calc(100vh - 184px);
+  text-align: center;
+}
+
+.flow-preview-dialog__track {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: safe center;
+  gap: 32px;
+  margin: 0;
+  padding: 16px 32px 106px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline-start: 32px;
+  scrollbar-width: none;
+  list-style: none;
+}
+
+.flow-preview-dialog__track::-webkit-scrollbar {
+  display: none;
+}
+
+.flow-preview-dialog__slide {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: min(582px, 100%);
+  aspect-ratio: 393 / 852;
+  scroll-snap-align: start;
+}
+
+.flow-preview-dialog__screen {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 393 / 852;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 22%);
+  cursor: zoom-in;
+}
+
+.flow-preview-dialog__screen > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.flow-preview-dialog__screen > span,
+.flow-preview-dialog__screen > span > span {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.flow-preview-dialog__screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.flow-preview-dialog--web .flow-preview-dialog__slide,
+.flow-preview-dialog--web .flow-preview-dialog__screen {
+  aspect-ratio: 16 / 10;
+}
+
+.flow-preview-dialog--web .flow-preview-dialog__screen {
+  border-radius: 16px;
+}
+
+.flow-preview-dialog--web .flow-preview-dialog__screen > img,
+.flow-preview-dialog--web .flow-preview-dialog__screen img {
+  object-fit: contain;
+}
+
+.flow-preview-dialog__prototype {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: start center;
+  padding: 16px 120px 106px;
+}
+
+.flow-preview-dialog__prototype-screen {
+  width: auto;
+  height: min(582px, 100%);
+  cursor: default;
+}
+
+.flow-preview-dialog__arrow {
+  position: absolute !important;
+  top: calc(50% - 44px);
+  z-index: 5;
+  width: 56px !important;
+  height: 56px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  transform: translateY(-50%);
+  background: rgb(132 132 132 / 78%) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.flow-preview-dialog__arrow--left {
+  left: 34px;
+}
+
+.flow-preview-dialog__arrow--right {
+  right: 34px;
+}
+
+.flow-preview-dialog__footer-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 31px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.flow-preview-dialog__footer-actions > button {
+  height: 44px !important;
+  border-radius: 999px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: .2px !important;
+  line-height: 22px !important;
+}
+
+.flow-preview-dialog__save {
+  min-width: 67px;
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.flow-preview-dialog__copy {
+  min-width: 98px;
+  background: #303030 !important;
+  color: #f5f5f5 !important;
+}
+
+.flow-preview-dialog__copy svg {
+  order: 2;
+}
+
+.flow-preview-dialog__more {
+  width: 44px !important;
+  min-width: 44px !important;
+  background: #303030 !important;
+  color: #f5f5f5 !important;
+}
+
+.flow-preview-dialog__restart {
+  min-width: 164px;
+  background: #303030 !important;
+  color: #f5f5f5 !important;
+}
+
+.flow-preview-dialog__restart[disabled] {
+  color: #777 !important;
+}
+
+.flow-preview-dialog__metadata {
+  position: absolute;
+  right: 30px;
+  bottom: 32px;
+  z-index: 6;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  color: var(--flow-preview-muted);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.flow-preview-dialog__progress {
+  position: absolute;
+  left: 32px;
+  bottom: 34px;
+  z-index: 6;
+  color: var(--flow-preview-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.flow-preview-dialog__metadata button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f5f5f5;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.flow-preview-dialog__menu,
+.flow-preview-dialog__info {
+  position: absolute;
+  z-index: 8;
+  padding: 10px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 14px;
+  background: #292929;
+  color: #f5f5f5;
+  box-shadow: 0 16px 44px rgb(0 0 0 / 38%);
+}
+
+.flow-preview-dialog__menu {
+  left: 50%;
+  bottom: 88px;
+  width: 190px;
+  transform: translateX(22px);
+}
+
+.flow-preview-dialog__menu a,
+.flow-preview-dialog__menu button {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.flow-preview-dialog__menu a:hover,
+.flow-preview-dialog__menu button:hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+.flow-preview-dialog__info {
+  right: 30px;
+  bottom: 86px;
+  width: min(300px, calc(100vw - 96px));
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+}
+
+.flow-preview-dialog__info strong {
+  font-size: 15px;
+}
+
+.flow-preview-dialog__info span,
+.flow-preview-dialog__info p {
+  margin: 0;
+  color: var(--flow-preview-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.flow-preview-dialog__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app-screen-preview-dialog .flow-preview-dialog__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.app-screen-preview-dialog__stage {
+  padding-bottom: 106px;
+}
+
+.app-screen-preview-dialog__screen {
+  cursor: default;
+}
+
+.app-screen-preview-dialog__context {
+  position: absolute;
+  left: 32px;
+  bottom: 34px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--flow-preview-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.app-screen-preview-dialog__context strong {
+  padding: 5px 10px;
+  border-radius: 9px;
+  background: #303030;
+  color: #f5f5f5;
+  font-weight: 600;
+}
+
+@media (max-width: 980px) {
+  .flow-preview-dialog {
+    inset: 16px;
+    grid-template-rows: 118px minmax(0, 1fr);
+    border-radius: 20px;
+  }
+
+  .flow-preview-dialog__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 58px 48px;
+    gap: 0 12px;
+    padding: 6px 14px;
+  }
+
+  .flow-preview-dialog__identity {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .flow-preview-dialog__identity h2,
+  .flow-preview-dialog__app strong {
+    font-size: 18px;
+  }
+
+  .flow-preview-dialog__connector {
+    font-size: 16px;
+  }
+
+  .flow-preview-dialog__app img {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 9px;
+  }
+
+  .flow-preview-dialog__header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .flow-preview-dialog__modes {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
+
+  .flow-preview-dialog__slide {
+    height: min(450px, 100%);
+  }
+
+  .flow-preview-dialog__track {
+    gap: 16px;
+    padding: 20px 24px 126px;
+    scroll-padding-inline-start: 24px;
+  }
+
+  .flow-preview-dialog__prototype {
+    padding: 20px 80px 126px;
+  }
+
+  .flow-preview-dialog__prototype-screen {
+    height: min(450px, 100%);
+  }
+
+  .flow-preview-dialog__arrow {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .flow-preview-dialog__arrow--left {
+    left: 22px;
+  }
+
+  .flow-preview-dialog__arrow--right {
+    right: 22px;
+  }
+
+  .flow-preview-dialog__document {
+    padding: 24px 18px 40px;
+  }
+
+  .app-screen-preview-dialog {
+    grid-template-rows: 72px minmax(0, 1fr);
+  }
+
+  .app-screen-preview-dialog .flow-preview-dialog__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 72px;
+  }
+}
+
+@media (max-width: 680px) {
+  .flow-preview-dialog {
+    inset: 0;
+    border-radius: 0;
+  }
+
+  .flow-preview-dialog__header {
+    padding-inline: 12px;
+  }
+
+  .flow-preview-dialog__identity h2 {
+    max-width: 34vw;
+  }
+
+  .flow-preview-dialog__app strong {
+    display: none;
+  }
+
+  .flow-preview-dialog__modes button {
+    min-width: 82px;
+    height: 34px;
+    padding-inline: 12px;
+    font-size: 14px;
+  }
+
+  .flow-preview-dialog__mode-indicator {
+    height: 34px;
+  }
+
+  .flow-preview-dialog__header-actions > button {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .flow-preview-dialog__divider {
+    height: 32px;
+    margin-inline: 3px;
+  }
+
+  .flow-preview-dialog__slide {
+    height: min(450px, 100%);
+  }
+
+  .flow-preview-dialog__track {
+    gap: 18px;
+    justify-content: flex-start;
+    padding: 16px 24px 158px;
+  }
+
+  .flow-preview-dialog__prototype {
+    padding: 16px 68px 158px;
+  }
+
+  .flow-preview-dialog__prototype-screen {
+    max-width: calc(100vw - 136px);
+    height: min(450px, 100%);
+  }
+
+  .flow-preview-dialog--web .flow-preview-dialog__slide {
+    width: calc(100vw - 48px);
+    height: auto;
+  }
+
+  .flow-preview-dialog--web .flow-preview-dialog__prototype-screen {
+    width: calc(100vw - 136px);
+    height: auto;
+  }
+
+  .flow-preview-dialog__document {
+    padding: 18px 14px 36px;
+  }
+
+  .flow-preview-dialog__footer-actions {
+    bottom: 72px;
+  }
+
+  .flow-preview-dialog__footer-actions > button {
+    height: 46px !important;
+  }
+
+  .flow-preview-dialog__save {
+    min-width: 84px;
+  }
+
+  .flow-preview-dialog__copy {
+    min-width: 110px;
+  }
+
+  .flow-preview-dialog__more {
+    width: 46px !important;
+    min-width: 46px !important;
+  }
+
+  .flow-preview-dialog__metadata {
+    right: 0;
+    bottom: 18px;
+    width: 100%;
+    justify-items: center;
+  }
+
+  .flow-preview-dialog__progress {
+    left: 16px;
+    bottom: 22px;
+  }
+
+  .flow-preview-dialog__menu {
+    bottom: 124px;
+  }
+
+  .flow-preview-dialog__info {
+    right: 16px;
+    bottom: 64px;
+  }
+
+  .flow-preview-dialog__arrow {
+    top: calc(50% - 72px);
+  }
+
+  .app-screen-preview-dialog__context {
+    left: 16px;
+    bottom: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-preview-dialog__track {
+    scroll-behavior: auto;
+  }
+}

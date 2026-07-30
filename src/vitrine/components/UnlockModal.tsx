@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Dialog, Heading, Text } from '@astryxdesign/core';
+import { Button, Heading, Text } from '@astryxdesign/core';
+import { AstryxModal } from './AstryxModal.tsx';
 
 export function UnlockModal({
   appId,
@@ -27,7 +28,7 @@ export function UnlockModal({
   };
 
   return (
-    <Dialog isOpen onOpenChange={(open) => { if (!open) onClose(); }} purpose="form" width={420}>
+    <AstryxModal isOpen onOpenChange={(open) => { if (!open) onClose(); }} purpose="form" width={420}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {limitReached ? (
           <>
@@ -49,6 +50,6 @@ export function UnlockModal({
           </>
         )}
       </div>
-    </Dialog>
+    </AstryxModal>
   );
 }

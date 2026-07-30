@@ -11,7 +11,13 @@ export function GuestCatalogControls({ onLogin }: { onLogin: () => void }) {
         justifyContent: 'flex-end',
       }}
     >
-      <Button label="Login" variant="primary" size="sm" clickAction={onLogin} />
+      <Button
+        label="Login"
+        variant="primary"
+        size="md"
+        className="guest-catalog-controls__login"
+        clickAction={onLogin}
+      />
     </div>
   );
 }

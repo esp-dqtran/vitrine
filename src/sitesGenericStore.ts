@@ -102,6 +102,18 @@ export function createGenericSitesStoreMethods(
         .replace(/^-+|-+$/g, "")
         .toLowerCase()
         .slice(0, 120) || "website";
+      const catalogSnapshot = JSON.stringify({
+        name,
+        slug,
+        sourceUrl: identity.canonicalUrl,
+        description: description || null,
+        logoUrl: iconUrl,
+        categories,
+        categoriesNormalized: categories.map((value) => value.toLowerCase()),
+        styles,
+        stylesNormalized: styles.map((value) => value.toLowerCase()),
+        popularity: 0,
+      });
 
       return runTransaction(async (tx) => {
         const matchingSite = await tx(
@@ -170,9 +182,9 @@ export function createGenericSitesStoreMethods(
         const version = await tx(
           `INSERT INTO site_versions
              (site_id, source_version_id, canonical_url, label, is_latest,
-              status, content_hash, analysis_status, analysis)
+              status, content_hash, analysis_status, analysis, catalog_snapshot)
            VALUES ($1, $2, $3, 'Captured page', true, 'importing', $2,
-                   $4, $5::jsonb)
+                   $4, $5::jsonb, $6::jsonb)
            ON CONFLICT (site_id, source_version_id) DO UPDATE SET
              status = CASE
                WHEN site_versions.status = 'ready' THEN 'ready'
@@ -190,6 +202,10 @@ export function createGenericSitesStoreMethods(
                WHEN site_versions.status = 'ready' THEN site_versions.analysis
                ELSE EXCLUDED.analysis
              END,
+             catalog_snapshot = CASE
+               WHEN site_versions.status = 'ready' THEN site_versions.catalog_snapshot
+               ELSE EXCLUDED.catalog_snapshot
+             END,
              updated_at = now()
            RETURNING id, status`,
           [
@@ -198,6 +214,7 @@ export function createGenericSitesStoreMethods(
             identity.canonicalUrl,
             analysis.status,
             JSON.stringify(analysis),
+            catalogSnapshot,
           ],
         );
         const row = version.rows[0];

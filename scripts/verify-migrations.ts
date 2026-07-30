@@ -119,12 +119,24 @@ const CATEGORY_TABLES = [
   "categories",
 ] as const;
 
+const SCREEN_PATTERN_TABLES = [
+  "screen_pattern_assignments",
+  "screen_pattern_sections",
+  "screen_patterns",
+] as const;
+
 const FLOW_TABLES = [
   "app_flow_mappings",
   "app_flow_version_mappings",
   "app_flow_versions",
   "app_flows",
   "flows",
+] as const;
+
+const UI_ELEMENT_TABLES = [
+  "screen_ui_elements",
+  "ui_element_extractions",
+  "ui_element_types",
 ] as const;
 
 const AUXILIARY_MIGRATION_TABLES = [
@@ -329,7 +341,9 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...SEARCH_TABLES,
       ...PUBLIC_PREVIEW_TABLES,
       ...CATEGORY_TABLES,
+      ...SCREEN_PATTERN_TABLES,
       ...FLOW_TABLES,
+      ...UI_ELEMENT_TABLES,
       ...AUXILIARY_MIGRATION_TABLES,
       "schema_migrations",
     ].sort();

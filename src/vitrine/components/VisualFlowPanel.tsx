@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Icon, IconButton } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
+import {
+  copyScreenImageAsPng,
+  copyShareLink,
+  flowShareUrl,
+} from '../screenActions.ts';
+import { CopyButton } from './CopyButton.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 import { scrollToAdjacentFlowScreen } from './flowCarousel.ts';
 
@@ -56,11 +62,13 @@ export function VisualFlowPanel({
     scrollToAdjacentFlowScreen(track, direction);
   };
 
-  const copyFlow = () => {
-    const copyText = typeof window !== 'undefined' ? window.location.href : flow.title;
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      void navigator.clipboard.writeText(copyText);
-    }
+  const copyFlowLink = async () => {
+    if (typeof window === 'undefined') throw new Error('Clipboard is unavailable');
+    await copyShareLink(flowShareUrl(
+      window.location.href,
+      flow.id,
+      Math.max(0, (selectedStep ?? 1) - 1),
+    ));
   };
 
   return (
@@ -132,12 +140,15 @@ export function VisualFlowPanel({
               </Button>
               <div className="visual-flow-panel__screen-actions">
                 <Button label="Save" variant="primary" size="sm" clickAction={() => setSaved(true)} />
-                <Button
-                  label="Copy"
-                  icon={<Icon icon="copy" size="sm" />}
+                <CopyButton
+                  label="Copy image"
+                  successMessage="Image copied as PNG"
+                  action={async () => {
+                    if (!evidence?.imageUrl) throw new Error('No screen image is available');
+                    await copyScreenImageAsPng(evidence.imageUrl);
+                  }}
                   variant="secondary"
                   size="sm"
-                  clickAction={copyFlow}
                 />
               </div>
             </article>
@@ -167,13 +178,13 @@ export function VisualFlowPanel({
             className="visual-flow-panel__save"
             clickAction={() => setSaved((value) => !value)}
           />
-          <Button
-            label="Copy"
-            icon={<Icon icon="copy" size="sm" />}
+          <CopyButton
+            label="Copy flow link"
+            successMessage="Flow link copied"
+            action={copyFlowLink}
             variant="secondary"
             size="lg"
             className="visual-flow-panel__copy"
-            clickAction={copyFlow}
           />
         </div>
       </footer>

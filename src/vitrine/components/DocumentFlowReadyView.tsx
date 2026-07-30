@@ -113,6 +113,48 @@ function TechnicalDetails({ revision }: { revision: FeatureDocumentRevisionView 
           ]}
         />
         <TechnicalClaimList title="Dependencies" claims={content.dependencies} />
+        {content.documentedContext && (
+          <section className="document-flow__detail-group">
+            <h3>Official documentation</h3>
+            {content.documentedContext.status === 'not-found'
+              ? <p>No matching official documentation was found.</p>
+              : (
+                  <ul>
+                    {content.documentedContext.sources.map((source) => (
+                      <li key={source.id}>
+                        <a href={source.url} target="_blank" rel="noreferrer">
+                          {source.title}
+                        </a>
+                        {` · ${source.platform} · ${source.region}`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+            {content.documentedContext.claims.length > 0 && (
+              <ul>
+                {content.documentedContext.claims.map((claim) => (
+                  <li key={claim.id}>
+                    <strong>{claim.relationship}</strong>
+                    {`: ${claim.text}`}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+        {content.unscopedEvidence && content.unscopedEvidence.length > 0 && (
+          <section className="document-flow__detail-group">
+            <h3>Unscoped evidence</h3>
+            <ul>
+              {content.unscopedEvidence.map((item) => (
+                <li key={item.evidenceId}>
+                  <strong>{item.evidenceId}</strong>
+                  {`: ${item.reason}`}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="document-flow__detail-group">
           <h3>Generation</h3>
           <p>
@@ -165,6 +207,12 @@ export function DocumentFlowReadyView({
           <h3>{summary.goal}</h3>
           <p><strong>Starts:</strong> {summary.entryPoint}</p>
           <p><strong>Ends:</strong> {summary.completionPoint}</p>
+          {summary.captureType && (
+            <p>
+              <strong>Capture:</strong> {summary.captureType} · {summary.completeness}
+              {summary.captureRationale ? ` — ${summary.captureRationale}` : ''}
+            </p>
+          )}
         </div>
         <dl className="document-flow__counts">
           <div><dt>Requirements</dt><dd>{summary.requirementCount}</dd></div>

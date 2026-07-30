@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, Card, TextArea, TextInput } from '@astryxdesign/core';
 import type { ResearchCollection } from '../../db';
 import { createCollection, deleteCollection, listCollections, removeCollectionItem, updateCollectionItemNotes } from '../researchApi';
-import { useSlidePanel } from '../useSlidePanel';
+import { AstryxModal } from './AstryxModal.tsx';
 
 interface CollectionsPanelProps {
   collections: ResearchCollection[];
@@ -16,7 +16,6 @@ interface CollectionsPanelProps {
 export function CollectionsPanel({ collections, plan, onUpgrade, onChange, onClose, onOpenApp }: CollectionsPanelProps) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
-  const { overlayRef, panelRef } = useSlidePanel();
   const refresh = async () => onChange(await listCollections());
   const create = async () => {
     if (!name.trim()) return;
@@ -26,14 +25,20 @@ export function CollectionsPanel({ collections, plan, onUpgrade, onChange, onClo
       await refresh();
     } catch (reason) { setError((reason as Error).message); }
   };
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
   return (
-    <div ref={overlayRef} onMouseDown={onClose} style={{ position: 'fixed', inset: 0, zIndex: 44, background: 'var(--color-background-overlay)' }}>
-    <aside ref={panelRef} role="dialog" aria-label="Research collections" onMouseDown={(event) => event.stopPropagation()} style={{ position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 45, width: 'min(460px, 100vw)', overflowY: 'auto', background: 'var(--color-background-surface)', borderLeft: '1px solid var(--color-border)', boxShadow: 'var(--shadow-high)', padding: 22 }}>
+    <AstryxModal
+      isOpen
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      purpose="info"
+      width="min(460px, 100vw)"
+      maxHeight="100vh"
+      position={{ top: 0, right: 0, bottom: 0 }}
+      padding={0}
+      presentation="drawer-right"
+      aria-label="Research collections"
+      className="collections-panel-dialog"
+    >
+    <div style={{ height: '100%', overflowY: 'auto', padding: 22, boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}><h2 style={{ margin: 0 }}>Research collections</h2><div style={{ marginTop: 4, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Save evidence and keep product-design notes together.</div></div>
         <Button label="Close" variant="secondary" size="sm" onClick={onClose} />
@@ -71,8 +76,8 @@ export function CollectionsPanel({ collections, plan, onUpgrade, onChange, onClo
           </Card>
         ))}
       </div>
-    </aside>
     </div>
+    </AstryxModal>
   );
 }
 

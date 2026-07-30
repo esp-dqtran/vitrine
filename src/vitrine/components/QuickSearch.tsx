@@ -19,6 +19,7 @@ import { useAdvancedSearch } from "../useAdvancedSearch.ts";
 import type { Route } from "../router.ts";
 import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
 import { QuickSearchFilters } from "./QuickSearchFilters.tsx";
+import { AstryxModal } from "./AstryxModal.tsx";
 
 const labels: Record<SearchEntityType, string> = {
   app: "Apps",
@@ -130,14 +131,17 @@ export function QuickSearch({
   const updateQuery = (query: string) => onStateChange({ ...state, query });
 
   return (
-    <div
-      className="quick-search"
-      role="dialog"
-      aria-modal="true"
+    <AstryxModal
+      isOpen
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      purpose="info"
+      width="min(760px, calc(100vw - 32px))"
+      maxHeight="min(760px, 84vh)"
+      padding={0}
+      className="quick-search-dialog"
       aria-label="Quick Search"
-      onKeyDown={onKeyDown}
     >
-      <div className="quick-search__panel">
+      <div className="quick-search__panel" onKeyDown={onKeyDown}>
         <header>
           <TextInput
             label="Quick Search query"
@@ -222,6 +226,6 @@ export function QuickSearch({
         onChange={(filters) => onStateChange({ ...state, filters })}
         onClose={() => setFiltersOpen(false)}
       />
-    </div>
+    </AstryxModal>
   );
 }

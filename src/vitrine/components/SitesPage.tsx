@@ -1,23 +1,31 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, EmptyState } from '@astryxdesign/core';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Button } from '@astryxdesign/core';
 import type { FacetPreview } from '../facetPreviewApi.ts';
 import type { SearchFilters } from '../../searchTypes.ts';
-import { navigate } from '../router.ts';
-import { listSites } from '../sitesApi.ts';
+import { navigate, updateLocation, useLocationKey } from '../router.ts';
+import {
+  createSitesDiscoveryAdapter,
+  type SitesDiscoveryControllerState,
+} from '../sitesDiscoveryAdapter.ts';
 import type { SiteSummary } from '../types.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
+import {
+  DiscoveryFilterBar,
+  type DiscoveryFilterGroup,
+} from './AppsFilterBar.tsx';
+import { DiscoveryPageLayout } from './DiscoveryPageLayout.tsx';
 import { SiteCard } from './SiteCard.tsx';
-import { ReferenceCatalogLoading } from './ReferenceCatalogLoading.tsx';
 import { ReferenceDiscoveryFacetGroup } from './ReferenceDiscoveryFacetGroup.tsx';
-import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
-import { ReferenceDiscoveryToolbar } from './ReferenceDiscoveryToolbar.tsx';
-import { SitesTopNav } from './SitesTopNav.tsx';
+import {
+  useDiscoveryController,
+  type DiscoveryController,
+} from '../useDiscoveryController.ts';
+import { loadSitesDiscoveryFacets } from '../sitesApi.ts';
 
 export type SiteSort = 'latest' | 'popular';
 export type SiteFacet = { group: 'categories' | 'sections' | 'styles'; value: string };
 export type SiteFacetPreviewPools = Map<string, FacetPreview[]>;
 
-const SITE_RENDER_BATCH = 24;
 const siteFacetImageCache = new Map<string, Promise<void>>();
 const siteFacetImageReady = new Set<string>();
 
@@ -35,45 +43,6 @@ const siteFacetKey = (facet: SiteFacet) => `${facet.group}:${facet.value.toLower
 const siteFacetPreviewUrl = (preview: FacetPreview) => (
   preview.kind === 'icon' ? preview.iconUrl : preview.media[0]
 );
-
-export function filterAndSortSites(
-  sites: SiteSummary[],
-  query: string,
-  facet: SiteFacet | null,
-  sort: SiteSort,
-): SiteSummary[] {
-  const needle = query.trim().toLowerCase();
-  const normalizedFacet = facet?.value.toLowerCase();
-  return sites
-    .filter((site) => {
-      const searchable = [
-        site.name,
-        site.label,
-        site.sourceUrl,
-        site.description ?? '',
-        ...(site.categories ?? []),
-        ...(site.styles ?? []),
-        ...site.previews.map((page) => page.title),
-      ].join(' ').toLowerCase();
-      if (needle && !searchable.includes(needle)) return false;
-      if (!facet || !normalizedFacet) return true;
-      if (facet.group === 'categories') {
-        return (site.categories ?? []).some((value) => value.toLowerCase() === normalizedFacet);
-      }
-      if (facet.group === 'styles') {
-        return (site.styles ?? []).some((value) => value.toLowerCase() === normalizedFacet);
-      }
-      return site.previews.some((page) => page.title.toLowerCase().includes(normalizedFacet));
-    })
-    .sort((a, b) => {
-      if (sort === 'popular') {
-        return (b.popularity ?? b.sectionCount) - (a.popularity ?? a.sectionCount)
-          || b.sectionCount - a.sectionCount
-          || a.name.localeCompare(b.name);
-      }
-      return Date.parse(b.updatedAt) - Date.parse(a.updatedAt) || a.name.localeCompare(b.name);
-    });
-}
 
 export function buildSiteFacetPreviewPools(sites: SiteSummary[]): SiteFacetPreviewPools {
   const pools: SiteFacetPreviewPools = new Map();
@@ -191,146 +160,104 @@ function prefetchNextSiteFacetPreview(pools: SiteFacetPreviewPools, facet: SiteF
   if (next) void prefetchSiteFacetPreview(next);
 }
 
-type GalleryObserver = Pick<IntersectionObserver, 'observe' | 'disconnect'>;
-type GalleryObserverFactory = (
-  callback: IntersectionObserverCallback,
-  options: IntersectionObserverInit,
-) => GalleryObserver;
-
-export function observeSiteGallerySentinel(
-  target: Element,
-  onVisible: () => void,
-  createObserver: GalleryObserverFactory = (callback, options) =>
-    new IntersectionObserver(callback, options),
-) {
-  const observer = createObserver((entries) => {
-    if (!entries.some((entry) => entry.isIntersecting)) return;
-    onVisible();
-    observer.disconnect();
-  }, { rootMargin: '600px 0px', threshold: 0.01 });
-  observer.observe(target);
-  return () => observer.disconnect();
-}
-
 interface SitesPageViewProps {
-  sites: SiteSummary[];
-  loading?: boolean;
+  controller: DiscoveryController<
+    SiteSummary,
+    SitesDiscoveryControllerState['sort'],
+    SitesDiscoveryControllerState
+  >;
   isAdmin: boolean;
-  error?: string;
-  query: string;
-  onQueryChange: (value: string) => void;
   onOpenSearch?: (seed?: Partial<SearchFilters>) => void;
   searchMode?: 'legacy' | 'advanced';
   activeFilterCount?: number;
-  onRefresh: () => void;
   onOpen?: (site: SiteSummary) => void;
   memberControls?: ReactNode;
 }
 
 export function SitesPageView({
-  sites,
-  loading = false,
+  controller,
   isAdmin,
-  error,
-  query,
-  onQueryChange,
-  onOpenSearch = () => undefined,
-  searchMode = 'legacy',
-  activeFilterCount = 0,
-  onRefresh,
   onOpen = (site) => navigate({ name: 'site-version', siteSlug: site.routeSlug }),
-  memberControls,
 }: SitesPageViewProps) {
-  const [sort, setSort] = useState<SiteSort>('latest');
-  const [facet, setFacet] = useState<SiteFacet | null>(null);
-  const [renderedCount, setRenderedCount] = useState(SITE_RENDER_BATCH);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  void isAdmin;
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const previewPools = useMemo(
-    () => buildSiteFacetPreviewPools(sites),
-    [sites],
+    () => buildSiteFacetPreviewPools(controller.items),
+    [controller.items],
   );
-  const visibleSites = useMemo(
-    () => filterAndSortSites(sites, query, facet, sort),
-    [sites, query, facet, sort],
-  );
-  const renderedSites = visibleSites.slice(0, renderedCount);
-  const facetGroups = DISCOVERY_FACETS.map((entry) => ({ ...entry, values: entry.defaults }));
-
-  useEffect(() => {
-    setRenderedCount(SITE_RENDER_BATCH);
-  }, [facet, query, sites, sort]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || renderedCount >= visibleSites.length) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setRenderedCount(visibleSites.length);
-      return;
-    }
-    return observeSiteGallerySentinel(sentinel, () => {
-      setRenderedCount((current) => Math.min(current + SITE_RENDER_BATCH, visibleSites.length));
-    });
-  }, [renderedCount, visibleSites.length]);
-
-  const state = loading
-    ? null
-    : error
-    ? {
-        title: 'Could not load Sites',
-        description: error,
-        actions: <Button variant="primary" label="Retry" clickAction={onRefresh} />,
-        role: 'alert' as const,
-      }
-    : sites.length === 0
-      ? {
-          title: 'No Sites available yet',
-          description: 'No ready website references are available yet.',
-          role: 'status' as const,
-        }
-      : visibleSites.length === 0
-        ? {
-            title: facet ? 'No Sites match these filters' : 'No Sites match this search',
-            description: facet
-              ? 'Try another search, category, section, or style.'
-              : 'Try a Site name, version, or section keyword.',
-            role: 'status' as const,
-          }
-        : null;
-
+  const filterGroups = useMemo<DiscoveryFilterGroup[]>(() =>
+    DISCOVERY_FACETS.map((group) => ({
+      id: group.group,
+      label: group.label,
+      selected: controller.state.filters
+        .filter((filter) => filter.group === group.group)
+        .map(({ value }) => value),
+      options: [
+        ...controller.facets.filter((facet) => facet.group === group.group),
+        ...group.defaults.map((value) => ({
+          group: group.group,
+          value,
+          count: 0,
+          section: group.label,
+        })),
+      ]
+        .filter((facet, index, facets) =>
+          facets.findIndex(({ value }) => value === facet.value) === index)
+        .map((facet) => {
+          const preview = previewPools.get(siteFacetKey({
+            group: group.group,
+            value: facet.value,
+          }))?.[0];
+          return {
+            value: facet.value,
+            section: facet.section?.trim() || group.label,
+            count: facet.count,
+            previewUrl: preview ? siteFacetPreviewUrl(preview) : undefined,
+            previewLabel: preview ? `${preview.app} · ${facet.value}` : facet.value,
+          };
+        }),
+      loadOptions: async (query, signal) => {
+        const selected = controller.state.filters
+          .filter((filter) => filter.group === group.group)
+          .map(({ value }) => value);
+        const facets = await loadSitesDiscoveryFacets(
+          controller.state,
+          group.group,
+          query,
+          selected,
+          signal,
+        );
+        return facets.map((facet) => ({
+          value: facet.value,
+          section: facet.section?.trim() || group.label,
+          count: facet.count,
+        }));
+      },
+    })),
+  [controller.facets, controller.state.filters, previewPools]);
   return (
-    <ReferenceDiscoveryPageShell
+    <DiscoveryPageLayout
       kind="sites"
-      header={(
-        <SitesTopNav
-          searchLabel={query || facet ? `${visibleSites.length} sites · search or filter…` : 'Search on Web...'}
-          activeCategory={facet?.value ?? 'All'}
-          onClearCategory={() => setFacet(null)}
-          onOpenSearch={() => onOpenSearch({
-            ...(facet?.group === 'categories' ? { appCategory: [facet.value] } : {}),
-            ...(facet?.group === 'sections' ? { siteSection: [facet.value] } : {}),
-            ...(facet?.group === 'styles' ? { siteStyle: [facet.value] } : {}),
-          })}
-          searchMode={searchMode}
-          activeFilterCount={activeFilterCount}
-          accountControls={memberControls}
-        />
-      )}
+      header={null}
       taxonomyLabel="Site discovery filters"
       taxonomy={(
         <>
-          {facetGroups.map((group) => (
+          {DISCOVERY_FACETS.map((group) => (
             <ReferenceDiscoveryFacetGroup
               key={group.group}
               label={group.label}
               wide={group.group === 'sections'}
               className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
             >
-              {group.values.map((value) => {
-                const selected = facet?.group === group.group && facet.value === value;
-                const hoverFacet = group.group === 'styles'
-                  ? null
-                  : { group: group.group, value } satisfies SiteFacet;
+              {group.defaults.map((value) => {
+                const facet = {
+                  group: group.group,
+                  value,
+                };
+                const selected = controller.state.filters.some(
+                  (filter) => filter.group === group.group && filter.value === value,
+                );
+                const hoverFacet = facet.group === 'styles' ? null : facet;
                 return (
                   <Button
                     key={value}
@@ -353,7 +280,7 @@ export function SitesPageView({
                       movePreview(event.clientX, event.clientY);
                     } : undefined}
                     onPointerLeave={hoverFacet ? hidePreview : undefined}
-                    onClick={() => setFacet(selected ? null : { group: group.group, value })}
+                    onClick={() => controller.toggleFilter(facet)}
                   />
                 );
               })}
@@ -373,42 +300,50 @@ export function SitesPageView({
         </div>
       )}
       toolbar={(
-        <ReferenceDiscoveryToolbar
-          label="Site ordering"
-          value={sort}
-          options={[
+        <DiscoveryFilterBar
+          kind="sites"
+          ariaLabel="Site discovery controls"
+          platform={{
+            value: controller.state.platform,
+            platforms: ['web'],
+            ariaLabel: 'Site platform',
+            onChange: controller.setPlatform,
+          }}
+          filters={filterGroups}
+          resultCount={controller.items.length}
+          resultLabels={['site', 'sites']}
+          showResultCount={false}
+          sort={controller.state.sort}
+          sortOptions={[
             { value: 'latest', label: 'Latest' },
             { value: 'popular', label: 'Most popular' },
           ]}
-          onChange={setSort}
+          onSortChange={(value) => controller.setSort(value as SiteSort)}
+          onToggleFilter={(group, value) => controller.toggleFilter({ group, value })}
+          onClearFilter={controller.clearFilterGroup}
         />
       )}
+      resultLabel="sites"
+      singularResultLabel="site"
+      totalCount={controller.totalCount}
+      renderedCount={controller.items.length}
+      loading={controller.loading}
+      loadingMore={controller.loadingMore}
+      error={controller.error}
+      loadMoreError={controller.loadMoreError}
+      onRetry={controller.retry}
+      onRetryLoadMore={controller.retryLoadMore}
+      sentinelRef={controller.sentinelRef}
     >
-      {loading ? (
-          <ReferenceCatalogLoading label="Loading Sites" />
-      ) : state ? (
-          <div className="reference-discovery__state sites-discovery__state" role={state.role}>
-            <EmptyState title={state.title} description={state.description} actions={state.actions} />
-          </div>
-      ) : (
-        <div
-          data-reference-gallery-grid="true"
-          className="reference-discovery__grid sites-discovery__grid"
-        >
-          {renderedSites.map((site) => (
-            <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onOpen(site)} />
-          ))}
-          {renderedCount < visibleSites.length ? (
-            <div
-              ref={sentinelRef}
-              className="sites-discovery__sentinel"
-              data-sites-gallery-sentinel="true"
-              aria-hidden="true"
-            />
-          ) : null}
-        </div>
-      )}
-    </ReferenceDiscoveryPageShell>
+      <div
+        data-reference-gallery-grid="true"
+        className="reference-discovery__grid sites-discovery__grid"
+      >
+        {controller.items.map((site) => (
+          <SiteCard key={`${site.id}:${site.versionId}`} site={site} onOpen={() => onOpen(site)} />
+        ))}
+      </div>
+    </DiscoveryPageLayout>
   );
 }
 
@@ -422,6 +357,62 @@ interface SitesPageProps {
   memberControls?: ReactNode;
 }
 
+interface UseSitesDiscoveryPageControllerOptions {
+  query: string;
+  onQueryChange: (value: string) => void;
+  locationSearch: string;
+  onNavigate(search: string, mode: 'push' | 'replace'): void;
+}
+
+export function useSitesDiscoveryPageController({
+  query,
+  onQueryChange,
+  locationSearch,
+  onNavigate,
+}: UseSitesDiscoveryPageControllerOptions) {
+  const initialQueryRef = useRef(query);
+  const adapter = useMemo(
+    () => createSitesDiscoveryAdapter({ query: initialQueryRef.current }),
+    [],
+  );
+  const controller = useDiscoveryController({
+    adapter,
+    locationSearch,
+    onNavigate,
+  });
+  const syncedQueryRef = useRef(query);
+  const pendingExternalQueryRef = useRef<string | null>(null);
+  const locationSearchRef = useRef(locationSearch);
+  const onQueryChangeRef = useRef(onQueryChange);
+  onQueryChangeRef.current = onQueryChange;
+
+  if (locationSearchRef.current !== locationSearch) {
+    locationSearchRef.current = locationSearch;
+    pendingExternalQueryRef.current = null;
+  }
+
+  useEffect(() => {
+    if (query === syncedQueryRef.current) return;
+    syncedQueryRef.current = query;
+    if (query === controller.state.query) return;
+    pendingExternalQueryRef.current = query;
+    controller.setQuery(query);
+  }, [controller, query]);
+
+  useEffect(() => {
+    const pending = pendingExternalQueryRef.current;
+    if (pending !== null) {
+      if (controller.state.query !== pending) return;
+      pendingExternalQueryRef.current = null;
+    }
+    if (controller.state.query === syncedQueryRef.current) return;
+    syncedQueryRef.current = controller.state.query;
+    onQueryChangeRef.current(controller.state.query);
+  }, [controller.state.query]);
+
+  return controller;
+}
+
 export function SitesPage({
   isAdmin,
   query,
@@ -431,33 +422,27 @@ export function SitesPage({
   activeFilterCount,
   memberControls,
 }: SitesPageProps) {
-  const [sites, setSites] = useState<SiteSummary[] | null>(null);
-  const [error, setError] = useState('');
-  const [revision, setRevision] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-    listSites()
-      .then((items) => { if (active) { setSites(items); setError(''); } })
-      .catch((cause: Error) => { if (active) { setSites([]); setError(cause.message); } });
-    return () => { active = false; };
-  }, [revision]);
+  const locationKey = useLocationKey();
+  const search = locationKey.includes('?') ? locationKey.slice(locationKey.indexOf('?')) : '';
+  const controller = useSitesDiscoveryPageController({
+    query,
+    onQueryChange,
+    locationSearch: search,
+    onNavigate: (nextSearch, mode) => {
+      updateLocation(`/sites${nextSearch ? `?${nextSearch}` : ''}`, {
+        replace: mode === 'replace',
+      });
+    },
+  });
 
   return (
-    <>
-      <SitesPageView
-        sites={sites ?? []}
-        loading={sites === null}
-        isAdmin={isAdmin}
-        error={error || undefined}
-        query={query}
-        onQueryChange={onQueryChange}
-        onOpenSearch={onOpenSearch}
-        searchMode={searchMode}
-        activeFilterCount={activeFilterCount}
-        onRefresh={() => setRevision((value) => value + 1)}
-        memberControls={memberControls}
-      />
-    </>
+    <SitesPageView
+      controller={controller}
+      isAdmin={isAdmin}
+      onOpenSearch={onOpenSearch}
+      searchMode={searchMode}
+      activeFilterCount={activeFilterCount}
+      memberControls={memberControls}
+    />
   );
 }

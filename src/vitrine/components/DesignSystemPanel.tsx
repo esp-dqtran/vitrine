@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { Badge, Button, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
 import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
+import type { UiElementSummaryItem } from '../appsApi.ts';
 import type { DesignSystemGenerationView } from '../useDesignSystemGeneration.ts';
 
 const KIND_LABELS: Record<TokenKind, string> = {
@@ -318,11 +319,64 @@ function PatternsSection({ index, rules }: { index: number; rules: NonNullable<S
   );
 }
 
+function ComponentCropOverview(props: {
+  appName: string;
+  items: UiElementSummaryItem[];
+  totalOccurrences: number;
+  totalTypes: number;
+}) {
+  return (
+    <section className="ds-crop-overview" aria-labelledby="component-crop-results">
+      <header className="ds-crop-overview__header">
+        <div>
+          <span className="ds-page__eyebrow">Observed component library</span>
+          <h2 id="component-crop-results">{titleCase(props.appName)} · Component Crop Results</h2>
+          <p>
+            {props.items.length >= props.totalTypes
+              ? `All ${props.totalTypes.toLocaleString()} component types`
+              : `${props.items.length.toLocaleString()} representative types`}
+            {' '}from {props.totalOccurrences.toLocaleString()} extracted components
+          </p>
+        </div>
+        <span className="ds-crop-overview__total">
+          <strong>{props.totalTypes.toLocaleString()}</strong>
+          total types
+        </span>
+      </header>
+      <div className="ds-crop-overview__grid">
+        {props.items.map((item) => (
+          <article className="ds-crop-card" key={item.type}>
+            <header>
+              <strong>{item.type}</strong>
+              <span>{item.count.toLocaleString()}</span>
+            </header>
+            <div className="ds-crop-card__preview">
+              <img
+                src={item.thumbnailUrl || item.imageUrl}
+                alt={`${item.type} representative crop`}
+                loading="lazy"
+              />
+            </div>
+            <footer>
+              <span>{item.group}</span>
+              {item.visibleStates[0] ? <span>{item.visibleStates[0]}</span> : null}
+            </footer>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 interface DesignSystemPanelProps {
   snapshot: Snapshot | null;
   status: 'loading' | 'ready' | 'missing' | 'error';
   generation?: DesignSystemGenerationView | null;
   onRetryGeneration?: () => void;
+  appName?: string;
+  componentCrops?: UiElementSummaryItem[];
+  totalComponentOccurrences?: number;
+  totalComponentTypes?: number;
 }
 
 function GenerationBanner(props: {
@@ -369,12 +423,32 @@ export function DesignSystemPanel({
   status,
   generation,
   onRetryGeneration,
+  appName,
+  componentCrops = [],
+  totalComponentOccurrences = 0,
+  totalComponentTypes = 0,
 }: DesignSystemPanelProps) {
   const [view, setView] = useState<'preview' | 'markdown'>('preview');
   const [stage, setStage] = useState<'light' | 'dark'>('dark');
+  const cropOverview = componentCrops.length ? (
+    <ComponentCropOverview
+      appName={appName ?? snapshot?.app ?? 'App'}
+      items={componentCrops}
+      totalOccurrences={totalComponentOccurrences}
+      totalTypes={totalComponentTypes}
+    />
+  ) : null;
 
-  if (status === 'loading' && !snapshot && !generation) return <Spinner size="lg" />;
+  if (status === 'loading' && !snapshot && !generation && !cropOverview) return <Spinner size="lg" />;
   if (!snapshot) {
+    if (cropOverview) {
+      return (
+        <div className="ds-page">
+          {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
+          {cropOverview}
+        </div>
+      );
+    }
     return (
       <>
         {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
@@ -396,6 +470,7 @@ export function DesignSystemPanel({
   const showcaseVariant = showcaseComponent?.variants[0];
 
   if (!tokenGroups.length && !hasComponents && !hasRules) {
+    if (cropOverview) return <div className="ds-page">{cropOverview}</div>;
     return <EmptyState title="No design system available" description="No design tokens, components, or rules are available for this app." headingLevel={2} />;
   }
 
@@ -415,6 +490,8 @@ export function DesignSystemPanel({
           <span><strong>{usageRules.length}</strong> patterns</span>
         </div>
       </header>
+
+      {cropOverview}
 
       <div className="ds-toolbar">
         <SegmentedControl className="ds-toggle" value={view} onChange={(value) => setView(value as 'preview' | 'markdown')} label="Design system view">

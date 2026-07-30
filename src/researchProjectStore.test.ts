@@ -31,6 +31,7 @@ test("creates a project and two lanes in one transaction", async () => {
       title: "SSO research",
       question: "How should SSO be introduced?",
       platform_filter: "web",
+      pinned: false,
       constraints: "",
       decision: "",
       rationale: "",
@@ -44,6 +45,7 @@ test("creates a project and two lanes in one transaction", async () => {
       title: "SSO research",
       question: "How should SSO be introduced?",
       platform_filter: "web",
+      pinned: false,
       constraints: "",
       decision: "",
       rationale: "",
@@ -80,6 +82,21 @@ test("locks the owned project before a mutation", async () => {
   await createResearchProjectStore(query).updateProject(7, 11, 3, { title: "Updated" });
 
   assert.ok(calls.some((sql) => /user_id\s*=\s*\$2[\s\S]*FOR UPDATE/.test(sql)));
+});
+
+test("pinning is a workspace preference and does not revise project content", async () => {
+  const calls: string[] = [];
+  const query: DatabaseQuery = async (sql) => {
+    calls.push(sql);
+    if (/FOR UPDATE/.test(sql)) return result([{ revision: 3 }]);
+    return result();
+  };
+
+  await createResearchProjectStore(query).updateProject(7, 11, 3, { pinned: true });
+
+  const update = calls.find((sql) => /UPDATE research_projects SET pinned/.test(sql)) ?? "";
+  assert.match(update, /pinned\s*=\s*\$2/);
+  assert.doesNotMatch(update, /revision\s*=|updated_at\s*=/);
 });
 
 test("attaches private object metadata and evidence in one transaction", async () => {
@@ -137,6 +154,7 @@ test("duplicates every evidence source reference", async () => {
     title: "Checkout research",
     question: "Which checkout pattern should we use?",
     platform_filter: "web",
+    pinned: false,
     constraints: "",
     decision: "",
     rationale: "",

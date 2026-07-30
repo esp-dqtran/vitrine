@@ -1,5 +1,5 @@
 export const PUBLIC_APP_STATIC_FACETS = [
-  { group: "screens", label: "Screens", values: ["Filter & Sort", "Chat Bot", "Signup", "Settings & Preferences", "Charts"] },
+  { group: "screens", label: "Screens", values: ["My Account & Profile", "Filter & Sort", "Chat Bot", "Signup", "Settings & Preferences", "Charts"] },
   { group: "elements", label: "UI Elements", values: ["Navigation Menu", "Dialog", "Card", "Dropdown Menu", "Text Field"] },
   { group: "flows", label: "Flows", values: ["Setting Up", "Searching & Finding", "Filtering & Sorting", "Resetting Password", "Reporting"] },
 ] as const;
@@ -35,7 +35,7 @@ export function parsePublicFacet(input: {
 }): PublicFacetInput | null {
   const facet = parsePublicCatalogFacet(input);
   if (!facet || facet.platform === "android") return null;
-  if (facet.group !== "categories") {
+  if (facet.group !== "categories" && facet.group !== "screens") {
     const definition = PUBLIC_APP_STATIC_FACETS.find(
       ({ group }) => group === facet.group,
     );
@@ -53,7 +53,11 @@ export function parsePublicCatalogFacet(input: {
 }): PublicCatalogFacetInput | null {
   if (typeof input.group !== "string" || typeof input.value !== "string") return null;
   if (input.platform !== "ios" && input.platform !== "web" && input.platform !== "android") return null;
-  if (input.group === "categories" || input.group === "flows") {
+  if (
+    input.group === "categories"
+    || input.group === "screens"
+    || input.group === "flows"
+  ) {
     const value = input.value.trim();
     if (!value || value.length > 120) return null;
     return { group: input.group, value, platform: input.platform };
