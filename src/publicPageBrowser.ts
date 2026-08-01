@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
 import { lookup } from "node:dns/promises";
 import { once } from "node:events";
+import { createWriteStream } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { finished } from "node:stream/promises";
 import ffmpegPath from "ffmpeg-static";
 import {
   chromium,
@@ -32,15 +34,19 @@ import {
 
 const VIEWPORT = { width: 1440 as const, height: 900 as const };
 const MOBILE_VIEWPORT = { width: 390 as const, height: 844 as const };
+const PREVIEW_VIDEO_SIZE = { width: 1440 as const, height: 900 as const };
 const PREVIEW_FRAMES_PER_SECOND = 60;
+const TOP_OVERLAY_CAPTURE_MARGIN = 16;
+const STITCH_HIDDEN_FIXED_ATTRIBUTE = "data-astryx-stitch-hidden-fixed";
 const MAXIMUM_CAPTURE_HEIGHT = 100_000;
 const MAXIMUM_CAPTURE_BYTES = 64 * 1_024 * 1_024;
 const MAXIMUM_HTML_BYTES = 2 * 1_024 * 1_024;
 const CONSENT_ACTION_NAME =
-  /^(?:accept(?: all)?(?: cookies)?|allow(?: all)?(?: cookies)?|agree(?: and continue)?|okay|ok|got it)$/i;
+  /^(?:reject(?: all)?(?: cookies)?|decline(?: all)?(?: cookies)?|only necessary(?: cookies)?|necessary only|continue without accepting|accept(?: all)?(?: cookies)?|allow(?: all)?(?: cookies)?|agree(?: and continue)?|okay|ok|got it|close(?: cookie settings)?|dismiss)$/i;
 
 export interface PublicPageBrowserOptions {
   headless?: boolean;
+  disableWebGl?: boolean;
   validateNavigation?: (url: string) => Promise<void>;
   scrollPixelsPerSecond?: number;
   maxScrollDurationMs?: number;
@@ -71,7 +77,12 @@ export async function createPublicPageBrowser(
     proxy = options.validateNavigation
       ? undefined
       : await createPinnedPublicProxy();
-    browser = await chromium.launch({ headless: options.headless ?? true });
+    browser = await chromium.launch({
+      headless: options.headless ?? true,
+      ...(options.disableWebGl
+        ? { args: ["--disable-webgl", "--disable-webgl2"] }
+        : {}),
+    });
   } catch (error) {
     await proxy?.close().catch(() => undefined);
     throw error;
@@ -143,7 +154,8 @@ async function capturePublicPage(
     assertCaptureBytes(pageImage);
     const sectionImages = await cropSections(pageImage, capture.sections);
 
-    const recording = await recordContinuousScroll(page, {
+    const recording = await capturePreviewRecording(context, finalUrl, {
+      validateNavigation: options.validateNavigation,
       pixelsPerSecond: checkedPositive(options.scrollPixelsPerSecond, "scroll speed"),
       maxDurationMs: checkedPositive(options.maxScrollDurationMs, "maximum scroll duration"),
       holdMs: checkedNonNegative(options.holdMs, "scroll hold"),
@@ -183,6 +195,42 @@ async function capturePublicPage(
     };
   } finally {
     await context.close();
+  }
+}
+
+async function capturePreviewRecording(
+  context: BrowserContext,
+  requestedUrl: string,
+  options: {
+    validateNavigation: (url: string) => Promise<void>;
+    pixelsPerSecond: number;
+    maxDurationMs: number;
+    holdMs: number;
+  },
+): Promise<{ body: Buffer; durationMs: number }> {
+  const page = await context.newPage();
+  try {
+    page.on("popup", (popup) => void popup.close().catch(() => undefined));
+    const response = await page.goto(requestedUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+    if (!response || response.status() >= 400) {
+      throw new PublicPageValidationError(
+        "Public page preview did not return a renderable response",
+      );
+    }
+    const finalUrl = canonicalPublicPageUrl(page.url()).requestedUrl;
+    await options.validateNavigation(finalUrl);
+    await lockMainFrameNavigation(page);
+    await settlePage(page);
+    await dismissRecognizedConsent(page);
+    assertPageUrl(page, requestedUrl);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(100);
+    return await recordContinuousScroll(page, options);
+  } finally {
+    await page.close();
   }
 }
 
@@ -343,47 +391,101 @@ async function captureScrolledPagePng(
     }
     return Math.min(Math.round(height * 0.25), bottom);
   }, viewport);
+  const topOverlayInset = Math.min(
+    Math.round(viewport.height * 0.25),
+    topOverlayHeight > 0
+      ? topOverlayHeight + TOP_OVERLAY_CAPTURE_MARGIN
+      : 0,
+  );
   let cursor = clip.y;
-  while (cursor < clipBottom) {
-    const requestedTop = Math.min(
-      maximumScrollTop,
-      cursor === clip.y
-        ? cursor
-        : Math.max(clip.y, cursor - topOverlayHeight),
-    );
-    const actualTop = await page.evaluate(async (top) => {
-      window.scrollTo(0, top);
-      await new Promise<void>((resolve) => requestAnimationFrame(() =>
-        requestAnimationFrame(() => resolve())
-      ));
-      return Math.round(window.scrollY);
-    }, requestedTop);
-    await page.waitForTimeout(100);
-    const screenTop = Math.max(
-      cursor === clip.y ? 0 : topOverlayHeight,
-      cursor - actualTop,
-    );
-    const height = Math.min(
-      viewport.height - screenTop,
-      clipBottom - cursor,
-    );
-    if (height < 1) {
-      throw new PublicPageValidationError(
-        "Public page viewport stitching did not advance",
+  try {
+    while (cursor < clipBottom) {
+      const requestedTop = Math.min(
+        maximumScrollTop,
+        cursor === clip.y
+          ? cursor
+          : Math.max(clip.y, cursor - topOverlayInset),
       );
+      const actualTop = await page.evaluate(async (top) => {
+        window.scrollTo(0, top);
+        await new Promise<void>((resolve) => requestAnimationFrame(() =>
+          requestAnimationFrame(() => resolve())
+        ));
+        return Math.round(window.scrollY);
+      }, requestedTop);
+      await page.waitForTimeout(100);
+      if (tiles.length > 0) {
+        await page.evaluate((attribute) => {
+          const roots: Array<Document | ShadowRoot> = [document];
+          for (let rootIndex = 0; rootIndex < roots.length; rootIndex += 1) {
+            for (const element of roots[rootIndex]!.querySelectorAll("*")) {
+              if (element.shadowRoot) roots.push(element.shadowRoot);
+              if (getComputedStyle(element).position !== "fixed") continue;
+              if (!(element instanceof HTMLElement) && !(element instanceof SVGElement)) continue;
+              if (element.hasAttribute(attribute)) continue;
+              element.setAttribute(attribute, JSON.stringify([
+                element.style.getPropertyValue("visibility"),
+                element.style.getPropertyPriority("visibility"),
+              ]));
+              element.style.setProperty("visibility", "hidden", "important");
+            }
+          }
+        }, STITCH_HIDDEN_FIXED_ATTRIBUTE);
+      }
+      const screenTop = Math.max(
+        cursor === clip.y ? 0 : topOverlayInset,
+        cursor - actualTop,
+      );
+      const height = Math.min(
+        viewport.height - screenTop,
+        clipBottom - cursor,
+      );
+      if (height < 1) {
+        const trailingShrink = requestedTop === maximumScrollTop
+          && actualTop < requestedTop
+          && clipBottom - cursor <= requestedTop - actualTop;
+        if (trailingShrink) break;
+        throw new PublicPageValidationError(
+          `Public page viewport stitching did not advance (${JSON.stringify({
+            cursor,
+            clipBottom,
+            maximumScrollTop,
+            requestedTop,
+            actualTop,
+            screenTop,
+            viewportHeight: viewport.height,
+          })})`,
+        );
+      }
+      const screenshot = Buffer.from(await page.screenshot({ type: "png" }));
+      const input = await sharp(screenshot)
+        .extract({
+          left: clip.x,
+          top: screenTop,
+          width: clip.width,
+          height,
+        })
+        .png()
+        .toBuffer();
+      tiles.push({ input, top: cursor - clip.y, left: 0 });
+      cursor += height;
     }
-    const screenshot = Buffer.from(await page.screenshot({ type: "png" }));
-    const input = await sharp(screenshot)
-      .extract({
-        left: clip.x,
-        top: screenTop,
-        width: clip.width,
-        height,
-      })
-      .png()
-      .toBuffer();
-    tiles.push({ input, top: cursor - clip.y, left: 0 });
-    cursor += height;
+  } finally {
+    await page.evaluate((attribute) => {
+      const roots: Array<Document | ShadowRoot> = [document];
+      for (let rootIndex = 0; rootIndex < roots.length; rootIndex += 1) {
+        for (const element of roots[rootIndex]!.querySelectorAll("*")) {
+          if (element.shadowRoot) roots.push(element.shadowRoot);
+          if (!(element instanceof HTMLElement) && !(element instanceof SVGElement)) continue;
+          const stored = element.getAttribute(attribute);
+          if (stored === null) continue;
+          const [value, priority] = JSON.parse(stored) as [string, string];
+          if (value) element.style.setProperty("visibility", value, priority);
+          else element.style.removeProperty("visibility");
+          element.removeAttribute(attribute);
+        }
+      }
+    }, STITCH_HIDDEN_FIXED_ATTRIBUTE).catch(() => undefined);
   }
   return sharp({
     create: {
@@ -847,21 +949,49 @@ async function recordContinuousScroll(
   options: { pixelsPerSecond: number; maxDurationMs: number; holdMs: number },
 ): Promise<{ body: Buffer; durationMs: number }> {
   const directory = await mkdtemp(path.join(tmpdir(), "astryx-public-page-video-"));
+  const framesPath = path.join(directory, "frames.mjpeg");
   const videoPath = path.join(directory, "preview.webm");
-  const encoder = createPreviewVideoEncoder(videoPath);
-  const frameWrites = createFrameWriteQueue((frame) => encoder.write(frame));
-  let encoderFinished = false;
+  const frames = createWriteStream(framesPath);
+  const writeFrame = async (frame: Buffer): Promise<void> => {
+    if (frames.write(frame)) return;
+    await once(frames, "drain");
+  };
+  const frameWrites = createFrameWriteQueue(writeFrame);
+  let framesFinished = false;
   let nextFrameTimestamp: number | undefined;
+  let scrollControl: Awaited<ReturnType<Page["addStyleTag"]>> | undefined;
   const frameIntervalMs = 1_000 / PREVIEW_FRAMES_PER_SECOND;
   try {
-    await page.evaluate(() => window.scrollTo(0, 0));
+    scrollControl = await page.addStyleTag({
+      content: "html,body{scroll-behavior:auto!important;scroll-snap-type:none!important}",
+    });
+    const scrollTop = await page.evaluate(async () => {
+      window.scrollTo(0, 0);
+      await new Promise<void>((resolve) => requestAnimationFrame(() =>
+        requestAnimationFrame(() => resolve())
+      ));
+      return Math.round(window.scrollY);
+    });
+    if (scrollTop !== 0) {
+      throw new PublicPageValidationError(
+        `Public page preview did not reset to the top (${scrollTop})`,
+      );
+    }
+    const initialFrame = await sharp(await page.screenshot({
+      type: "jpeg",
+      quality: 85,
+    }))
+      .resize(PREVIEW_VIDEO_SIZE.width, PREVIEW_VIDEO_SIZE.height)
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    await writeFrame(initialFrame);
     await page.screencast.start({
-      size: VIEWPORT,
+      size: PREVIEW_VIDEO_SIZE,
       onFrame: ({ data, timestamp }) => {
         if (nextFrameTimestamp === undefined) nextFrameTimestamp = timestamp;
         if (timestamp + 0.001 < nextFrameTimestamp) return;
         while (timestamp + 0.001 >= nextFrameTimestamp) {
-          frameWrites.push(data);
+          frameWrites.push(Buffer.from(data));
           nextFrameTimestamp += frameIntervalMs;
         }
       },
@@ -884,12 +1014,16 @@ async function recordContinuousScroll(
     await page.waitForTimeout(options.holdMs);
     await page.screencast.stop();
     await frameWrites.flush();
-    await encoder.finish();
-    encoderFinished = true;
+    frames.end();
+    await finished(frames);
+    framesFinished = true;
+    await encodePreviewVideo(framesPath, videoPath);
     return { body: await readFile(videoPath), durationMs };
   } finally {
     await page.screencast.stop().catch(() => undefined);
-    if (!encoderFinished) encoder.abort();
+    await scrollControl?.evaluate((node) => node.parentNode?.removeChild(node))
+      .catch(() => undefined);
+    if (!framesFinished) frames.destroy();
     await rm(directory, { recursive: true, force: true });
   }
 }
@@ -909,11 +1043,10 @@ export function createFrameWriteQueue(write: (frame: Buffer) => Promise<void>): 
   };
 }
 
-function createPreviewVideoEncoder(videoPath: string): {
-  write(frame: Buffer): Promise<void>;
-  finish(): Promise<void>;
-  abort(): void;
-} {
+async function encodePreviewVideo(
+  framesPath: string,
+  videoPath: string,
+): Promise<void> {
   if (!ffmpegPath) throw new Error("Public page video encoder is unavailable");
   const encoder = spawn(ffmpegPath, [
     "-y",
@@ -921,38 +1054,33 @@ function createPreviewVideoEncoder(videoPath: string): {
     "-f", "image2pipe",
     "-vcodec", "mjpeg",
     "-framerate", String(PREVIEW_FRAMES_PER_SECOND),
-    "-i", "pipe:0",
+    "-i", framesPath,
     "-an",
     "-c:v", "libvpx-vp9",
     "-deadline", "realtime",
     "-cpu-used", "5",
     "-row-mt", "1",
     "-b:v", "0",
-    "-crf", "32",
+    "-crf", "25",
     "-pix_fmt", "yuv420p",
     videoPath,
-  ], { stdio: ["pipe", "ignore", "pipe"] });
-  const completed = new Promise<void>((resolve, reject) => {
+  ], { stdio: ["ignore", "ignore", "pipe"] });
+  let stderr = "";
+  encoder.stderr.setEncoding("utf8");
+  encoder.stderr.on("data", (chunk: string) => {
+    stderr = `${stderr}${chunk}`.slice(-4_096);
+  });
+  await new Promise<void>((resolve, reject) => {
     encoder.once("error", reject);
     encoder.once("close", (code) => {
       if (code === 0) resolve();
-      else reject(new Error("Public page video encoding failed"));
+      else reject(new Error(
+        stderr.trim()
+          ? `Public page video encoding failed: ${stderr.trim()}`
+          : "Public page video encoding failed",
+      ));
     });
   });
-  return {
-    async write(frame) {
-      if (encoder.stdin.write(frame)) return;
-      await once(encoder.stdin, "drain");
-    },
-    async finish() {
-      encoder.stdin.end();
-      await completed;
-    },
-    abort() {
-      encoder.stdin.destroy();
-      encoder.kill();
-    },
-  };
 }
 
 export function publicPageScrollDurationMs(

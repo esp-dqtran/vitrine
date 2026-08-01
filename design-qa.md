@@ -135,6 +135,412 @@ the same loaded catalog/detail state.
 
 final result: passed
 
+# Project Docs Trash, Import, and BA/PO templates — 2026-07-31
+
+## Visual truth and normalization
+
+- AFFiNE source captures:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-trash-import-templates-2026-07-31/`.
+- Browser-rendered Astryx implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-trash-import-templates/`.
+- Combined source/implementation review:
+  `12-combined-review.png` in the implementation evidence directory.
+- Viewport: 1280 × 720 for the implementation captures. Source and local
+  evidence were normalized to 640px-wide panels for the comparison input.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in this scoped build.
+
+- Trash follows AFFiNE's dedicated management view with centered empty-state
+  copy, while retaining the approved Astryx workspace shell and light design
+  tokens.
+- Import deliberately exposes only formats that are implemented end to end:
+  Markdown and HTML. AFFiNE's additional experimental/unsupported choices are
+  not presented as functional options.
+- Templates extend the AFFiNE entry point with three BA/PO structures:
+  Product brief, Decision record, and Meeting notes. Each contains prompts
+  only and performs no content generation.
+- Permanent deletion is protected by an Astryx design-system confirmation
+  dialog and describes that both Page and Canvas state will be removed.
+- The Trash view hides Docs/Collections/Tags tabs, matching AFFiNE's dedicated
+  management context and reducing unrelated controls.
+
+## Interaction and runtime verification
+
+- Created a Decision record from the template chooser and verified all seeded
+  BlockSuite Page headings, prompts, numbered items, and bullets in the Browser.
+- Imported a Markdown file and an HTML file through the real file chooser and
+  verified their structured content in the Page editor.
+- Moved the disposable Markdown import to Trash, restored it, moved it again,
+  confirmed permanent deletion, and verified that both metadata and the
+  private OctoBase workspace were deleted.
+- Migration `0048_project_document_trash.sql` applied successfully.
+- Focused migration, store, API, OctoBase, client, runtime, and UI tests passed.
+- Production build passed.
+
+final result: passed
+
+# Project Docs Collections and Journals — 2026-07-31
+
+## Visual truth and normalization
+
+- AFFiNE Collections reference:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-journals-collections-2026-07-31/06-collections-list.png`.
+- Astryx Collections implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/05-collections-list.png`.
+- Combined Collections comparison:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/06-collections-comparison.png`.
+- AFFiNE Journals reference:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-journals-collections-2026-07-31/01-journals-empty.png`.
+- Astryx Journals implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/04-journals-empty-clean.png`.
+- Combined Journals comparison:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/07-journals-comparison.png`.
+- Viewport and pixels: source and implementation use 1280 × 720 at normalized
+  1× density.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in this parity slice.
+
+- Collections preserve the AFFiNE model of a manual or rule-driven smart
+  folder, while keeping Astryx navigation, typography, and light design-system
+  tokens.
+- The collection list, detail empty state, document picker, rules editor, and
+  deep links are functional.
+- Journals preserve the AFFiNE seven-day date strip, date heading, empty daily
+  state, and one-click daily-document creation.
+- The sidebar action buttons are icon-only with accessible names, avoiding the
+  visible `actions` copy that appeared during the first browser pass.
+- Rules cover fields that exist in the Astryx Project Document model:
+  favorites, journals, tags, document mode, page width, and created/updated
+  dates. Unsupported AFFiNE-only metadata is not simulated.
+
+## Interaction and runtime verification
+
+- Created the `Product decisions` collection, selected `Product brief`, opened
+  the persisted deep link, and verified the collection shows one document.
+- Opened the rules editor and verified both manual and rules modes plus every
+  supported field.
+- Created the July 31 daily journal as a real BlockSuite/OctoBase-backed
+  Project Document and reopened it from the Journals workspace.
+- Browser verification caught and fixed a calendar-date timezone shift caused
+  by converting PostgreSQL `DATE` values through UTC.
+- Reload persistence now returns the correct journal day and changes the
+  primary action from `Create daily journal` to `Open journal`.
+- Migration 0047 applied successfully.
+- Focused migration, store, API, router, client, and UI tests: 63 passed.
+- Production build: passed.
+
+final result: passed
+
+# Project Docs multi-document workspace — 2026-07-30
+
+## Visual truth and normalization
+
+- Source visual truth:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/affine-reference.png`.
+- Browser-rendered Astryx implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/astryx-implementation.png`.
+- Combined comparison:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/affine-astryx-comparison.jpg`.
+- Source and implementation are both 1280 × 720 CSS pixels and 1280 × 720
+  image pixels at normalized 1× density.
+- Compared state: AFFiNE Page workspace with its document navigation open versus
+  Astryx Project Docs with two persistent documents, one favorite, the active
+  document highlighted, and the Page editor open.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in this multi-document slice.
+
+- Hierarchy: both products keep document discovery in a persistent left rail and
+  reserve the larger right surface for the active block document.
+- Navigation: Astryx now exposes New doc, search, Favorites, All docs, active
+  selection, update dates, and a collapsible sidebar.
+- Editor continuity: the existing BlockSuite Page and Canvas editors remain
+  untouched and mount inside the selected document route.
+- Astryx intentionally retains its global product header, light design-system
+  tokens, and Project-scoped terminology instead of copying AFFiNE branding.
+- Journals, folders, tags, collections, trash, and import remain outside this
+  slice and are ranked follow-up parity work rather than hidden visual controls.
+
+The full-view comparison keeps the navigation, active row, favorite row, editor
+title, content, and global shell legible, so a separate crop was not required.
+
+## Interaction and runtime verification
+
+- Created a second document and received a durable deep link using `?doc=5`.
+- Renamed it to `Product brief`, favorited it, reloaded, and confirmed both
+  metadata values persisted.
+- Search for `Project` reduced the navigation list to `Project notes`.
+- Switched between `Project notes` and `Product brief`; each restored its own
+  BlockSuite document and independent Page/Canvas mode after reload.
+- Collapsed and reopened the document navigation.
+- Loaded a nonexistent document ID and confirmed the recovery state still kept
+  the real project document list available for navigation.
+- Focused Project Docs, routing, API, storage, and sync tests: 45 passed.
+- Production build: passed. Vite reported only its existing large-chunk warning.
+- A broader run that included the repository's source-inspection
+  `App.boundary.test.ts` still has unrelated pending assertions in the existing
+  dirty worktree; none are runtime or build failures for this slice.
+
+## Comparison history
+
+- Pass 1 exposed a P1 workflow gap: one fixed `main` document with no workspace
+  list, create action, search, favorites grouping, or persistent selected route.
+- Fix: added owner-scoped document list/create/reopen APIs, document-aware
+  routing, a design-system sidebar, favorites and search, and per-document
+  runtime mounting without forking BlockSuite.
+- Post-fix evidence: the side-by-side comparison shows the workspace navigation
+  pattern alongside a functioning Astryx implementation, and live Browser
+  testing proves create, select, reload, search, favorite, collapse, and
+  invalid-link recovery states.
+
+final result: passed
+
+# Project Docs folders and tags — 2026-07-31
+
+## Visual truth and normalization
+
+- AFFiNE source states:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-folders-tags-2026-07-31/01-document-info-tags-empty.png`
+  through
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-folders-tags-2026-07-31/06-folder-add-docs-dialog.png`.
+- Final Astryx states:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/02-tags-management.png`,
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/04-folder-add-docs-fixed.png`,
+  and
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/06-document-info-tag-picker-final.png`.
+- Combined source/implementation comparisons:
+  `compare-tags-page.png`, `compare-folder-add-docs.png`, and
+  `compare-info-tag-picker.png` in the same Astryx evidence directory.
+- Viewport and pixels: source and implementation are 1280 × 720 CSS pixels and
+  1280 × 720 image pixels at 1× normalized density.
+- State: authenticated document workspace with two documents, one root folder,
+  one nested folder, and one assigned tag.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in this organization slice.
+
+- Information architecture: Astryx now exposes persistent folders, nested
+  folders, multi-folder document membership, a Tags management view, tag
+  filters, and document-level tag assignment in the library and Info panel.
+- Design system: the new controls use Astryx toolbar, breadcrumbs, buttons,
+  inputs, segmented controls, menus, checkboxes, and modal primitives. The
+  application shell remains the approved Astryx shell rather than copying
+  AFFiNE chrome.
+- Typography and spacing: sidebar counts, nested rows, tag chips, document
+  metadata, pickers, and actions remain compact and readable at the comparison
+  viewport.
+- Colors: folder and tag surfaces follow the existing light document workspace.
+  Tag colors are consistent between the sidebar, library rows, Tags view, and
+  document Info panel.
+- Intentional presentation difference: AFFiNE uses a dark workspace popover for
+  document tags. Astryx uses its accessible form modal to keep the existing
+  design-system interaction contract while preserving the same search,
+  selection, and save behavior.
+
+## Interaction and runtime verification
+
+- Created `Planning`, then created nested `Research` from the folder action
+  menu.
+- Added both `Product brief` and `Research notes` to `Planning`; documents can
+  belong to multiple folders.
+- Folder selection filtered to two documents and now writes a persistent
+  `?folder=1` deep link.
+- Created `Priority`, assigned it to `Product brief`, opened it from the
+  document Info panel, and confirmed `?tag=` and `?view=tags` deep-link routes.
+- Reloading the document preserved folder nesting, memberships, tags, and tag
+  assignments.
+- The selected in-app Browser connector did not expose a console-message
+  stream. No visible error state appeared during the complete interaction run,
+  the API process logged no request errors, and all mutations returned their
+  expected UI state.
+- Focused project-document and route tests: 78 passed.
+- Focused library/workspace render tests: 11 passed.
+- Production build: passed. The existing BlockSuite large-chunk warning
+  remains non-blocking.
+
+## Comparison history
+
+- Pass 1 found a P1 contrast failure: organizer dialogs inherited the global
+  dark modal surface while headings, secondary text, and actions used light
+  workspace colors.
+- Fix: raised the organizer modal override specificity and defined light
+  surface, text, field, input, border, backdrop, and ghost-action colors.
+- Pass 2 confirmed readable folder and tag pickers against the AFFiNE source
+  states. Deep-link navigation was also added after the live folder filter
+  initially changed local state without updating the URL.
+
+final result: passed
+
+## Latest QA checkpoint
+
+The latest completed build review is
+**Project Docs folders and tags — 2026-07-31** in this file.
+
+final result: passed
+
+# Project Docs All docs library — 2026-07-31
+
+## Audit evidence
+
+- AFFiNE All docs:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/01-all-docs.jpg`.
+- AFFiNE Display menu:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/02-display-options.jpg`.
+- AFFiNE Collections empty state:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/03-collections-empty.jpg`.
+- AFFiNE Tags empty state:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/04-tags-empty.jpg`.
+- AFFiNE expanded folder:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/05-folder-expanded.jpg`.
+
+The audited flow is healthy for document discovery: All docs is the central
+library, Display owns grouping and ordering, New doc creates immediately, and
+folders expand inline. Collections and Tags intentionally begin with dedicated
+empty states and clear creation actions. Screenshot evidence cannot confirm
+screen-reader output or every keyboard path.
+
+## Visual truth and normalization
+
+- Source visual truth:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/affine-all-docs-reference.png`.
+- Browser-rendered Astryx implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/astryx-all-docs-implementation.png`.
+- Combined comparison:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/affine-astryx-all-docs-comparison.jpg`.
+- Source and implementation are both 1280 × 720 CSS pixels and 1280 × 720
+  image pixels at normalized 1× density.
+- Compared state: authenticated workspace, All docs selected, three documents,
+  updated-date grouping, list display, no open menus or search query.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in the implemented All docs
+slice.
+
+- Fonts and typography: Astryx keeps its approved product type hierarchy while
+  matching AFFiNE's compact row labels, muted metadata, and small group counts.
+- Spacing and layout rhythm: the 248px persistent document rail, grouped rows,
+  compact toolbar, and open content field align with the reference composition.
+- Colors and visual tokens: Astryx intentionally uses the existing light
+  Project Docs tokens beneath its dark global header instead of copying AFFiNE
+  dark mode. The Display popover is explicitly light and readable.
+- Image quality and asset fidelity: this surface has no raster imagery. All
+  functional icons come from the existing Astryx icon library.
+- Copy and content: labels use the Project-scoped vocabulary already approved:
+  Docs, Project docs, New doc, Favorites, All docs, Display, List, and Grid.
+- Collections, Tags, Journals, folders, Trash, Import, and Template are not
+  represented as fake controls. They remain explicit follow-up features for
+  full workspace parity.
+
+The full-view comparison keeps the navigation, controls, groups, document
+titles, metadata, and favorite states legible, so a separate focused crop was
+not required.
+
+## Interaction and runtime verification
+
+- `/projects/2/docs` opens the library; `?doc=<id>` opens the selected editor.
+- Search reduced three documents to one matching row.
+- List and Grid both rendered the complete filtered collection.
+- Display switched between updated-date groups and one group, and sorting by
+  title changed the live row order.
+- Favorite toggles persisted across reload.
+- New doc created document `6`, opened it, and the title `Discovery notes`
+  persisted back into the library.
+- Opening `Project notes` from the library and choosing All docs returned to the
+  library route.
+- The sidebar can collapse and uses an overlay layout below 760px; static
+  responsive assertions cover 760px and 480px breakpoints.
+- Focused Project Docs, routing, API, storage, and sync tests: 48 passed.
+- Production build: passed. Vite reported only its existing large-chunk warning.
+
+## Comparison history
+
+- Pass 1 found a P1 structural gap: Astryx had only the editor sidebar and no
+  dedicated All docs surface.
+- Fix: made the no-document route a real library with owner-scoped data, search,
+  grouping, sorting, list/grid display, favorites, creation, and editor links.
+- Pass 2 found a P2 popover contrast failure and a P2 composition mismatch
+  because the library omitted persistent document navigation.
+- Fix: forced the library surface and popover to light design-system tokens,
+  separated the heading count, and added the same 248px project document rail
+  used by the editor.
+- Post-fix evidence: the final side-by-side shows matching persistent
+  navigation, compact controls, grouped document rows, and open workspace
+  composition with no unreadable menu state.
+
+final result: passed
+
+## Latest QA checkpoint
+
+The latest completed build review is
+**Project Docs All docs library — 2026-07-31** in this file.
+
+final result: passed
+
+# Project Docs Page editor — 2026-07-30
+
+## Visual truth and normalization
+
+- AFFiNE Page reference: `/tmp/astryx-affine-page-reference.png`.
+- Browser-rendered Astryx implementation:
+  `/tmp/astryx-page-implementation.png`.
+- Combined side-by-side comparison:
+  `/tmp/astryx-affine-page-comparison.jpg`.
+- Viewport and pixels: both captures are 1086 × 863 CSS/image pixels at 1×
+  normalized density.
+- State: AFFiNE Getting Started Page compared with Astryx Project notes in Page
+  mode, with the document properties section collapsed.
+
+## Findings
+
+No actionable P0, P1, or P2 difference remains in the requested Page editor
+surface.
+
+- Fonts and typography: Astryx matches the reference's large editable title,
+  quiet property action, and readable rich-block hierarchy while retaining the
+  existing product font.
+- Spacing and layout rhythm: the Page editor uses a centered 816 px document
+  column, generous top offset, compact page actions, a title/property header,
+  and uninterrupted BlockSuite content below the divider.
+- Colors and visual tokens: the reference's document hierarchy is adapted to
+  Astryx's approved light document surface. The surrounding global header
+  remains Astryx black rather than copying AFFiNE branding or theme.
+- Image quality and asset fidelity: no raster assets are required. Page actions
+  use the existing Astryx design-system icon library.
+- Copy and content: `Project notes` and the existing project blocks remain the
+  authoritative document content. AFFiNE's demo copy, workspace sidebar,
+  sync-warning banner, and share controls were intentionally not copied.
+- Canvas remains the existing full-bleed BlockSuite edgeless workspace rather
+  than being constrained by the Page document column.
+
+## Interaction and runtime verification
+
+- Page icon selection persisted after a full reload.
+- Editing the document title persisted after reload; the temporary verification
+  title was restored to `Project notes`.
+- Info opens the Created, Updated, and View properties and closes again.
+- Switching to Canvas removes the Page shell and provides a 746 px full-bleed
+  editor; switching back restores the Page title and rich document.
+- The editor save indicator remained `Saved` after the interaction pass.
+
+## Comparison history
+
+- Pass 1 found a P2 contrast issue where the document toolbar inherited dark
+  global design tokens on its white surface.
+- Fix: scoped the approved light text, icon, neutral, hover, and accent tokens
+  to the document toolbar while keeping the shared component implementation.
+- Post-fix evidence: the final side-by-side shows a clear breadcrumb, centered
+  view switcher, save state, document title, Info divider, and aligned content
+  column with no blocked or illegible controls.
+
+final result: passed
+
 # Site section inspector footer cleanup — 2026-07-30
 
 ## Visual truth and normalization
@@ -364,10 +770,92 @@ No actionable P0, P1, or P2 differences remain in the requested action area.
 
 final result: passed
 
+# Project Docs Page workspace controls — 2026-07-30
+
+## Visual truth and normalization
+
+- Source visual truth:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-page-reference.jpg`.
+- Browser-rendered implementation:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-implementation.jpg`.
+- Combined comparison input:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-astryx-page-comparison.jpg`.
+- Focused interaction evidence:
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-more-menu.jpg`
+  and
+  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-table-of-contents.jpg`.
+- Source and implementation are both 1086 × 863 image pixels in the same
+  in-app Browser viewport. The Browser connector did not expose device density;
+  no density normalization was needed because both captures have identical
+  pixel dimensions.
+- State: authenticated Page mode, standard width, not favorited, editor scrolled
+  to the document header. AFFiNE is in its dark workspace theme while Astryx
+  intentionally inherits the light Astryx design system.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain in this Page workspace-control
+slice.
+
+- Fonts and typography: the source and implementation preserve the same
+  BlockSuite document hierarchy and readable rich-text density. Astryx shell
+  controls use the existing design-system typography rather than AFFiNE chrome.
+- Spacing and layout rhythm: the document remains centered at standard width,
+  expands through the explicit full-width setting, and the outline occupies a
+  bounded 280px side rail without covering the editor on desktop.
+- Colors and visual tokens: the toolbar, menu, status, focus, property panel,
+  and outline inherit Astryx tokens. The light/dark difference is intentional
+  product-shell ownership, not an unfinished theme clone.
+- Image quality and asset fidelity: the editor uses BlockSuite's real rendered
+  blocks and icons. No placeholder images, CSS drawings, emoji, or handcrafted
+  SVG substitutes were added.
+- Copy and content: Page, Canvas, Favorite, More, Info, Page width, and table of
+  contents labels are concise and independently understandable.
+- Icons and affordances: all new controls use Astryx design-system icons and
+  primitives. Favorite, More, outline, selected mode, save status, and close
+  actions are visibly distinct and semantically labelled.
+- The AFFiNE workspace sidebar and journal header remain different by design:
+  Astryx keeps its existing global Projects header and project-scoped document
+  route. This review judges the Page workspace controls and editor surface.
+
+The full comparison keeps the document typography, Page header, app chrome, and
+toolbar legible. Separate focused evidence was captured for the two dense
+interaction states: the More menu and generated table of contents.
+
+## Interaction and runtime verification
+
+- Favorite and full-width settings were toggled, saved, reloaded, and confirmed
+  from the live Browser DOM; both were then restored to their defaults.
+- The More menu rendered Rename, favorite, Page/Canvas, Info, table of contents,
+  and recovery-export actions.
+- The table of contents derived live BlockSuite headings including
+  `Data-intensive blocks`, `Examples for advanced blocks`,
+  `Continue with the rabbit hole`, and `And one more thing:`.
+- Canvas remained available through the existing Page/Canvas mode control.
+- The Browser showed no visible application error during these interactions.
+  Its current connector did not expose console-log collection; API mutation
+  responses and the final Saved state were verified instead.
+- Focused tests: 31 passed.
+- Production build: passed.
+- Database migration 0045 applied successfully.
+
+## Comparison history
+
+- Initial parity review found four P1/P2 product gaps: no persistent favorite,
+  no persistent Page width, no document More menu, and no navigable outline.
+- Fix: added owner-scoped metadata storage and validation, Astryx
+  design-system controls, and a live outline scanner over untouched BlockSuite
+  heading blocks.
+- Post-fix evidence: the Browser reload retained both settings, the More menu
+  exposed the expected actions, and the outline populated from the real
+  document without modifying or forking BlockSuite.
+
+final result: passed
+
 ## Latest QA checkpoint
 
-The latest completed build review is **Site section inspector header actions —
-2026-07-30** in this file.
+The latest completed build review is
+**Project Docs Page workspace controls — 2026-07-30** in this file.
 
 final result: passed
 
@@ -2207,7 +2695,7 @@ final result: passed
 
 ## Latest QA checkpoint
 
-The latest completed build review is **Site section inspector header actions —
-2026-07-30** in this file.
+The latest completed build review is
+**Project Docs multi-document workspace — 2026-07-30** in this file.
 
 final result: passed

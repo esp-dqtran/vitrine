@@ -19,7 +19,13 @@ import { DecisionCanvas, type DecisionCanvasActions } from './DecisionCanvas.tsx
 import { EvidenceDrawer } from './EvidenceDrawer.tsx';
 import { ProjectInsightsPanel, type ProjectInsightsActions } from './ProjectInsightsPanel.tsx';
 
-export function ResearchProjectPage({ projectId }: { projectId: number }) {
+export function ResearchProjectPage({
+  projectId,
+  projectDocumentsEnabled = false,
+}: {
+  projectId: number;
+  projectDocumentsEnabled?: boolean;
+}) {
   const [workspace, setWorkspace] = useState<ResearchProjectWorkspace>();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -87,7 +93,17 @@ export function ResearchProjectPage({ projectId }: { projectId: number }) {
     <main className="vitrine-page research-project-page">
       <Button label="Projects" variant="ghost" size="sm" onClick={() => navigate({ name: 'projects' })} />
       <header style={{ margin: '18px 0 24px' }}>
-        <h1 style={{ margin: 0, fontSize: 28 }}>{workspace.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <h1 style={{ margin: 0, fontSize: 28 }}>{workspace.title}</h1>
+          {projectDocumentsEnabled ? (
+            <Button
+              label="Experimental Docs"
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate({ name: 'project-document', projectId: workspace.id })}
+            />
+          ) : null}
+        </div>
         <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontSize: 16 }}>{workspace.question}</p>
       </header>
       {message && <p role="alert" style={{ color: 'var(--color-text-danger)' }}>{message}</p>}

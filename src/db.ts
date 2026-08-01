@@ -197,20 +197,18 @@ export async function saveScreenAnalysis(id: number, analysis: ScreenAnalysis): 
   await query("UPDATE version_images SET state_context = $1 WHERE image_id = $2", [analysis.visibleStates.join(", ") || null, id]);
 }
 
-// Store app metadata captured from Mobbin at crawl time. COALESCE only
-// fills a null so a manual/backfilled value isn't clobbered by a later crawl that missed it.
+// Store non-media app metadata captured from Mobbin at crawl time. App icons are resolved
+// independently from the official marketplace or product site and must never come from Mobbin.
 export async function setAppMeta(app: string, meta: {
-  iconUrl?: string | null;
   category?: string | null;
   displayName?: string | null;
 }): Promise<void> {
   await withTransaction(async (client) => {
     const updated = await client.query<{ id: number }>(
-      `UPDATE apps SET icon_url = COALESCE(icon_url, $2),
-         display_name = COALESCE(display_name, $3)
+      `UPDATE apps SET display_name = COALESCE(display_name, $2)
        WHERE name = $1
        RETURNING id`,
-      [app, meta.iconUrl ?? null, meta.displayName ?? null],
+      [app, meta.displayName ?? null],
     );
     const appId = updated.rows[0]?.id;
     if (!appId || !meta.category?.trim()) return;

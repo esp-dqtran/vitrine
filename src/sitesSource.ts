@@ -10,12 +10,13 @@ export class MobbinSitesSourceError extends Error {
 type RscRows = Map<string, unknown>;
 type SourceObject = Record<string, unknown>;
 const RENDERED_MEDIA_PLACEHOLDER = "https://mobbin.com/";
+const MAX_RSC_SOURCE_BYTES = 8 * 1024 * 1024;
 
 export function decodeMobbinSitesSource(
   raw: string,
   options: { sourceUrl?: string } = {},
 ): SiteImport {
-  if (!raw.trim() || raw.length > 2 * 1024 * 1024) {
+  if (!raw.trim() || Buffer.byteLength(raw, "utf8") > MAX_RSC_SOURCE_BYTES) {
     throw new MobbinSitesSourceError();
   }
   try {
@@ -112,6 +113,7 @@ function mapCapturedSitesRoot(
   }> = [];
   const pageIndexes = new Map<string, number>();
   let activePageId: string | undefined;
+  const renderedPageUrl = normalizeCapturedPageUrl(options.sourceUrl, options.sourceUrl);
 
   for (const sourceSection of sourceSections) {
     assertSameVersion(sourceSection, {
@@ -127,7 +129,7 @@ function mapCapturedSitesRoot(
       options.sourceUrl,
     );
     const sourceDisplayOrder = integer(sourceSection.display_order);
-    const pageUrl = capturedPageUrl ?? options.sourceUrl;
+    const pageUrl = capturedPageUrl ?? renderedPageUrl;
     if (!pageUrl) throw new MobbinSitesSourceError();
     let pageIndex = pageIndexes.get(pageId);
     if (pageIndex === undefined) {
@@ -186,7 +188,11 @@ function mapCapturedSitesRoot(
     : optionalString(preview.custom_image_url) ??
       optionalString(preview.page_image_url);
   if (!previewMediaUrl) throw new MobbinSitesSourceError();
-  const sourceUrl = options.sourceUrl ?? new URL(groupedPages[0].url).origin;
+  const sourceUrl = normalizeCapturedPageUrl(
+    options.sourceUrl ?? new URL(groupedPages[0].url).origin,
+    options.sourceUrl,
+  );
+  if (!sourceUrl) throw new MobbinSitesSourceError();
 
   return {
     site: {
@@ -363,22 +369,28 @@ function normalizeCapturedPageUrl(
   value: string | undefined,
   renderedSourceUrl: string | undefined,
 ): string | undefined {
-  if (!value || !renderedSourceUrl) return value;
+  if (!value) return value;
   const captured = new URL(value);
-  const rendered = new URL(renderedSourceUrl);
-  if (
-    captured.protocol === "http:" &&
-    rendered.protocol === "https:" &&
-    normalizedHostname(captured.hostname) === normalizedHostname(rendered.hostname)
-  ) {
+  if (captured.protocol === "http:") {
     captured.protocol = "https:";
-    return captured.toString();
   }
+  if (renderedSourceUrl && !captured.hostname.includes(".")) {
+    const rendered = new URL(renderedSourceUrl);
+    const renderedSiteLabel = rendered.hostname.toLowerCase()
+      .replace(/^www\./, "")
+      .split(".")[0];
+    if (
+      renderedSiteLabel === captured.hostname.toLowerCase() &&
+      rendered.hostname.includes(".") &&
+      !captured.username &&
+      !captured.password
+    ) {
+      captured.hostname = rendered.hostname;
+      captured.port = rendered.port;
+    }
+  }
+  if (captured.toString() !== value) return captured.toString();
   return value;
-}
-
-function normalizedHostname(value: string): string {
-  return value.toLowerCase().replace(/^www\./, "");
 }
 
 function versionLabel(value: string): string {

@@ -366,6 +366,9 @@ function sourcePageUrl(value: unknown): string {
   const parsed = new URL(raw);
   const hash = parsed.hash;
   parsed.hash = "";
+  for (const key of [...parsed.searchParams.keys()]) {
+    if (SENSITIVE_QUERY_KEY.test(key)) parsed.searchParams.delete(key);
+  }
   publicHttpsUrl(parsed.toString());
   parsed.hash = hash;
   return parsed.toString();

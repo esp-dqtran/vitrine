@@ -68,9 +68,7 @@ const migrationDefinitions = [
   },
   {
     file: "0020_drop_flow_documents.sql",
-    patterns: [
-      /DROP TABLE IF EXISTS flow_documents/,
-    ],
+    patterns: [/DROP TABLE IF EXISTS flow_documents/],
   },
   {
     file: "0030_context_aware_search.sql",
@@ -198,6 +196,140 @@ const migrationDefinitions = [
       /App Flow reconciliation evidence is immutable/,
     ],
   },
+  {
+    file: "0043_project_documents.sql",
+    patterns: [
+      /CREATE TABLE project_documents/,
+      /UNIQUE \(project_id, document_key\)/,
+      /last_editor_mode IN \('page', 'edgeless'\)/,
+      /octobase_document_id TEXT NOT NULL UNIQUE/,
+      /project_documents_owner_project_idx/,
+    ],
+  },
+  {
+    file: "0046_project_document_organization.sql",
+    patterns: [
+      /CREATE TABLE project_document_folders/,
+      /parent_folder_id BIGINT REFERENCES project_document_folders/,
+      /CREATE TABLE project_document_folder_memberships/,
+      /PRIMARY KEY \(folder_id, document_id\)/,
+      /CREATE TABLE project_document_tags/,
+      /project_document_tags_owner_project_name_idx/,
+      /CREATE TABLE project_document_tag_assignments/,
+      /PRIMARY KEY \(tag_id, document_id\)/,
+    ],
+  },
+  {
+    file: "0047_project_document_collections_journals.sql",
+    patterns: [
+      /ADD COLUMN journal_date DATE/,
+      /project_documents_owner_project_journal_date_idx/,
+      /CREATE TABLE project_document_collections/,
+      /mode IN \('manual', 'rules'\)/,
+      /rules JSONB NOT NULL DEFAULT '\[\]'::jsonb/,
+      /CREATE TABLE project_document_collection_memberships/,
+      /PRIMARY KEY \(collection_id, document_id\)/,
+    ],
+  },
+  {
+    file: "0048_project_document_trash.sql",
+    patterns: [
+      /ADD COLUMN trashed_at TIMESTAMPTZ/,
+      /project_documents_owner_project_trash_idx/,
+      /WHERE trashed_at IS NOT NULL/,
+    ],
+  },
+  {
+    file: "0049_project_document_links.sql",
+    patterns: [
+      /CREATE TABLE project_document_links/,
+      /PRIMARY KEY \(source_document_id, target_document_id\)/,
+      /CHECK \(source_document_id <> target_document_id\)/,
+      /project_document_links_source_idx/,
+      /project_document_links_target_idx/,
+    ],
+  },
+  {
+    file: "0050_project_document_comments.sql",
+    patterns: [
+      /CREATE TABLE project_document_comments/,
+      /author_user_id BIGINT NOT NULL REFERENCES users\(id\)/,
+      /CHECK \(char_length\(body\) BETWEEN 1 AND 2000\)/,
+      /project_document_comments_document_idx/,
+      /project_document_comments_unresolved_idx/,
+      /WHERE resolved_at IS NULL/,
+    ],
+  },
+  {
+    file: "0051_project_document_shares.sql",
+    patterns: [
+      /CREATE TABLE project_document_shares/,
+      /token_sha256 TEXT NOT NULL UNIQUE/,
+      /CHECK \(token_sha256 ~ '\^\[0-9a-f\]\{64\}\$'\)/,
+      /project_document_shares_document_idx/,
+      /project_document_shares_active_idx/,
+      /WHERE revoked_at IS NULL/,
+    ],
+  },
+  {
+    file: "0053_project_document_comment_anchors.sql",
+    patterns: [
+      /ADD COLUMN block_id TEXT/,
+      /ADD COLUMN quote TEXT/,
+      /project_document_comments_anchor_shape/,
+      /project_document_comments_anchor_idx/,
+      /WHERE block_id IS NOT NULL/,
+    ],
+  },
+  {
+    file: "0054_project_document_versions.sql",
+    patterns: [
+      /CREATE TABLE project_document_versions/,
+      /created_by_user_id BIGINT NOT NULL REFERENCES users\(id\)/,
+      /snapshot BYTEA NOT NULL/,
+      /byte_size BETWEEN 1 AND 8388608/,
+      /octet_length\(snapshot\) = byte_size/,
+      /project_document_versions_document_idx/,
+    ],
+  },
+  {
+    file: "0055_project_document_search.sql",
+    patterns: [
+      /ADD COLUMN search_text TEXT NOT NULL DEFAULT ''/,
+      /char_length\(search_text\) <= 200000/,
+      /USING GIN/,
+      /to_tsvector\(/,
+      /coalesce\(title, ''\) \|\| ' ' \|\| coalesce\(search_text, ''\)/,
+    ],
+  },
+  {
+    file: "0056_project_document_properties.sql",
+    patterns: [
+      /ADD COLUMN properties JSONB NOT NULL DEFAULT '\[\]'::jsonb/,
+      /jsonb_typeof\(properties\) = 'array'/,
+      /jsonb_array_length\(properties\) <= 50/,
+    ],
+  },
+  {
+    file: "0057_project_document_templates.sql",
+    patterns: [
+      /ADD COLUMN is_template BOOLEAN NOT NULL DEFAULT false/,
+      /ADD COLUMN template_snapshot BYTEA/,
+      /octet_length\(template_snapshot\) BETWEEN 1 AND 8388608/,
+      /project_documents_owner_project_templates_idx/,
+      /WHERE is_template = true AND trashed_at IS NULL/,
+    ],
+  },
+  {
+    file: "0058_project_document_edit_attribution.sql",
+    patterns: [
+      /ADD COLUMN created_by_user_id BIGINT REFERENCES users\(id\)/,
+      /ADD COLUMN last_edited_by_user_id BIGINT REFERENCES users\(id\)/,
+      /SET created_by_user_id = document\.owner_user_id/,
+      /ALTER COLUMN last_edited_by_email SET NOT NULL/,
+      /project_documents_attribution_email_length/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -213,11 +345,16 @@ for (const definition of migrationDefinitions) {
 test("normal publication snapshots Flow children before the immutable transition", async () => {
   const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
   const start = source.indexOf("export async function publishAppVersion");
-  const end = source.indexOf("export async function getVersionDesignSystem", start);
+  const end = source.indexOf(
+    "export async function getVersionDesignSystem",
+    start,
+  );
   assert.ok(start >= 0 && end > start);
   const publication = source.slice(start, end);
   const snapshot = publication.indexOf("await replaceVersionFlows");
-  const transition = publication.indexOf("SET status = 'published', published_at = now()");
+  const transition = publication.indexOf(
+    "SET status = 'published', published_at = now()",
+  );
   assert.ok(snapshot >= 0);
   assert.ok(transition > snapshot);
 });
@@ -229,23 +366,27 @@ test("migration verification requires explicit disposable-database opt-in", () =
     /MIGRATION_TEST_DATABASE_URL is required/,
   );
   assert.throws(
-    () => createMigrationVerificationConfig({
-      MIGRATION_TEST_DATABASE_URL: adminUrl,
-    }),
+    () =>
+      createMigrationVerificationConfig({
+        MIGRATION_TEST_DATABASE_URL: adminUrl,
+      }),
     /MIGRATION_TEST_ALLOW_DROP=1 is required/,
   );
 
-  const config = createMigrationVerificationConfig({
-    MIGRATION_TEST_DATABASE_URL: adminUrl,
-    MIGRATION_TEST_ALLOW_DROP: "1",
-  }, ["a".repeat(32), "b".repeat(32)]);
+  const config = createMigrationVerificationConfig(
+    {
+      MIGRATION_TEST_DATABASE_URL: adminUrl,
+      MIGRATION_TEST_ALLOW_DROP: "1",
+    },
+    ["a".repeat(32), "b".repeat(32)],
+  );
 
   assert.deepEqual(config.databaseNames, {
     empty: `astryx_migration_test_${"a".repeat(32)}`,
     upgrade: `astryx_migration_test_${"b".repeat(32)}`,
   });
   assert.doesNotThrow(() =>
-    assertGeneratedMigrationDatabaseName(config.databaseNames.empty)
+    assertGeneratedMigrationDatabaseName(config.databaseNames.empty),
   );
   for (const unsafe of [
     "astryx",
@@ -260,9 +401,9 @@ test("migration verification requires explicit disposable-database opt-in", () =
   }
 });
 
-async function temporaryDirectory(
-  t: { after(fn: () => Promise<void>): void },
-): Promise<string> {
+async function temporaryDirectory(t: {
+  after(fn: () => Promise<void>): void;
+}): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), "astryx-migrations-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   return directory;
@@ -275,16 +416,24 @@ test("discovers contiguous immutable migrations and identifies pending versions"
 
   const files = await discoverMigrations(directory);
 
-  assert.deepEqual(files.map(({ version, name }) => [version, name]), [
-    [1, "base"],
-    [2, "more"],
-  ]);
+  assert.deepEqual(
+    files.map(({ version, name }) => [version, name]),
+    [
+      [1, "base"],
+      [2, "more"],
+    ],
+  );
   assert.match(files[0].checksum, /^[0-9a-f]{64}$/);
-  assert.deepEqual(validateMigrationState(files, [{
-    version: 1,
-    name: "base",
-    checksum: files[0].checksum,
-  }]).pending.map(({ version }) => version), [2]);
+  assert.deepEqual(
+    validateMigrationState(files, [
+      {
+        version: 1,
+        name: "base",
+        checksum: files[0].checksum,
+      },
+    ]).pending.map(({ version }) => version),
+    [2],
+  );
 });
 
 test("rejects invalid names, sequence gaps, and top-level transactions", async (t) => {
@@ -321,26 +470,46 @@ test("rejects changed, missing, and discontinuous applied migrations", async (t)
   await writeFile(join(directory, "0002_more.sql"), "SELECT 2;\n");
   const files = await discoverMigrations(directory);
 
-  assert.throws(() => validateMigrationState(files, [{
-    version: 1,
-    name: "base",
-    checksum: "0".repeat(64),
-  }]), /does not match its immutable file/);
-  assert.throws(() => validateMigrationState([], [{
-    version: 1,
-    name: "missing",
-    checksum: "0".repeat(64),
-  }]), /not present on disk/);
-  assert.throws(() => validateMigrationState(files, [{
-    version: 2,
-    name: "more",
-    checksum: files[1].checksum,
-  }]), /sequence gap at version 2/);
+  assert.throws(
+    () =>
+      validateMigrationState(files, [
+        {
+          version: 1,
+          name: "base",
+          checksum: "0".repeat(64),
+        },
+      ]),
+    /does not match its immutable file/,
+  );
+  assert.throws(
+    () =>
+      validateMigrationState(
+        [],
+        [
+          {
+            version: 1,
+            name: "missing",
+            checksum: "0".repeat(64),
+          },
+        ],
+      ),
+    /not present on disk/,
+  );
+  assert.throws(
+    () =>
+      validateMigrationState(files, [
+        {
+          version: 2,
+          name: "more",
+          checksum: files[1].checksum,
+        },
+      ]),
+    /sequence gap at version 2/,
+  );
 });
 
 test("redacts database URLs and decoded passwords from errors", () => {
-  const databaseUrl =
-    "postgres://operator:p%40ssword@db.internal:5432/astryx";
+  const databaseUrl = "postgres://operator:p%40ssword@db.internal:5432/astryx";
   const message = redactMigrationError(
     new Error(`connection failed for ${databaseUrl} with password p@ssword`),
     databaseUrl,

@@ -26,6 +26,14 @@ test("renders concurrent app progress and hides completed entries", () => {
   assert.doesNotMatch(html, /slack/);
 });
 
+test("labels failed crawls as failed instead of crawling", () => {
+  const html = renderToStaticMarkup(<ProgressBannerView snapshot={{ entries: [snapshot.entries[2]] }} />);
+
+  assert.match(html, /Failed · figma/);
+  assert.match(html, /One flow failed/);
+  assert.doesNotMatch(html, /Crawling · figma/);
+});
+
 test("renders nothing when every progress entry is terminal and hidden", () => {
   const html = renderToStaticMarkup(<ProgressBannerView snapshot={{ entries: [snapshot.entries[3]] }} />);
   assert.equal(html, "");

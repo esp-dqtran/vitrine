@@ -18,6 +18,7 @@ import {
 } from "../../src/featureDocument.ts";
 import { createFeatureDocumentService } from "../../src/featureDocumentService.ts";
 import { createFeatureDocumentStore } from "../../src/featureDocumentStore.ts";
+import { createClaudeCliFeatureDocumentProvider } from "../../src/claudeCliFeatureDocumentProvider.ts";
 import {
   createKiroCliFeatureDocumentProvider,
   runKiroCli,
@@ -26,7 +27,7 @@ import {
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../src/objectStoreConfig.ts";
 import { imageObjectById } from "../../src/objectStoreDb.ts";
 
-const PROMPT_VERSION = 13;
+const PROMPT_VERSION = 14;
 
 type PreparedFlow = {
   flow: DesignFlow;
@@ -216,7 +217,12 @@ async function main(): Promise<void> {
   const workers = positiveInteger(argument("--workers"), 3, "--workers");
   const timeoutMs = positiveInteger(argument("--timeout-ms"), 180_000, "--timeout-ms");
   const requestedFlowIds = commaSeparatedArgument("--flow-ids");
-  const model = argument("--model") ?? "gpt-5.6-terra";
+  const providerName = argument("--provider") ?? "kiro";
+  if (providerName !== "kiro" && providerName !== "claude") {
+    throw new Error("--provider must be kiro or claude");
+  }
+  const model = argument("--model")
+    ?? (providerName === "claude" ? "claude-sonnet-5" : "gpt-5.6-terra");
   const effort = argument("--effort") ?? "high";
   const officialDomains = commaSeparatedDomains("--official-domains");
   const officialDocumentation = process.argv.includes("--official-docs")
@@ -227,15 +233,23 @@ async function main(): Promise<void> {
     measuredCredits += credits(output);
     return output;
   };
-  const provider = createKiroCliFeatureDocumentProvider({
-    ...process.env,
-    KIRO_CLI_FEATURE_DOCUMENT_MODEL: model,
-    KIRO_CLI_FEATURE_DOCUMENT_EFFORT: effort,
-    KIRO_CLI_FEATURE_DOCUMENT_CWD: process.cwd(),
-    KIRO_CLI_FEATURE_DOCUMENT_OFFICIAL_DOCUMENTATION: officialDocumentation ? "true" : "false",
-    KIRO_CLI_FEATURE_DOCUMENT_OFFICIAL_DOMAINS: officialDomains.join(","),
-  }, meteredRunner);
-  if (!provider) throw new Error("Kiro CLI Feature Document provider is disabled");
+  const provider = providerName === "claude"
+    ? createClaudeCliFeatureDocumentProvider({
+      ...process.env,
+      CLAUDE_CLI_FEATURE_DOCUMENT_MODEL: model,
+      CLAUDE_CLI_FEATURE_DOCUMENT_CWD: process.cwd(),
+      CLAUDE_CLI_FEATURE_DOCUMENT_OFFICIAL_DOCUMENTATION: officialDocumentation ? "true" : "false",
+      CLAUDE_CLI_FEATURE_DOCUMENT_OFFICIAL_DOMAINS: officialDomains.join(","),
+    }, meteredRunner)
+    : createKiroCliFeatureDocumentProvider({
+      ...process.env,
+      KIRO_CLI_FEATURE_DOCUMENT_MODEL: model,
+      KIRO_CLI_FEATURE_DOCUMENT_EFFORT: effort,
+      KIRO_CLI_FEATURE_DOCUMENT_CWD: process.cwd(),
+      KIRO_CLI_FEATURE_DOCUMENT_OFFICIAL_DOCUMENTATION: officialDocumentation ? "true" : "false",
+      KIRO_CLI_FEATURE_DOCUMENT_OFFICIAL_DOMAINS: officialDomains.join(","),
+    }, meteredRunner);
+  if (!provider) throw new Error("Feature Document provider is disabled");
   const outputRoot = resolve(
     argument("--output")
       ?? join("data", "feature-descriptions", app, "kiro-feature-documents"),
@@ -249,6 +263,9 @@ async function main(): Promise<void> {
     platform: targetPlatform,
     versionId: version.id,
   });
+  // --any-provider counts a Flow as done when any provider already documented it,
+  // so a sweep adds coverage instead of regenerating another provider's work.
+  const anyProvider = process.argv.includes("--any-provider");
   const existingCatalog = await query<{ source_flow_id: string }>(
     `SELECT d.source_flow_id
      FROM feature_documents d
@@ -256,9 +273,16 @@ async function main(): Promise<void> {
      JOIN apps a ON a.id = d.app_id
      JOIN platforms p ON p.id = d.platform_id
      WHERE d.visibility = 'catalog' AND a.name = $1 AND p.name = $2
-       AND r.source_version_id = $3 AND r.provider_model = $4
-       AND r.prompt_version = $5`,
-    [app, targetPlatform, version.id, provider.model, PROMPT_VERSION],
+       AND r.source_version_id = $3
+       AND ($4::text IS NULL OR r.provider_model = $4)
+       AND ($5::int IS NULL OR r.prompt_version = $5)`,
+    [
+      app,
+      targetPlatform,
+      version.id,
+      anyProvider ? null : provider.model,
+      anyProvider ? null : PROMPT_VERSION,
+    ],
   );
   const completedCatalogFlowIds = new Set(existingCatalog.rows.map(({ source_flow_id }) => source_flow_id));
   const selectedFlows = requestedFlowIds

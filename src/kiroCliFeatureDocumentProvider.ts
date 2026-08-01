@@ -32,6 +32,7 @@ export interface KiroCliInvocation {
   cwd: string;
   signal: AbortSignal;
   maxOutputBytes: number;
+  label?: string;
 }
 
 export type KiroCliRunner = (invocation: KiroCliInvocation) => Promise<string>;
@@ -44,14 +45,14 @@ const IMAGE_EXTENSIONS: Record<RasterImage["contentType"], string> = {
   "image/webp": "webp",
 };
 
-function positiveInteger(value: string | undefined, fallback: number): number {
+export function positiveInteger(value: string | undefined, fallback: number): number {
   if (!value?.trim()) return fallback;
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed < 1) throw new Error("Invalid Kiro CLI output limit");
   return parsed;
 }
 
-function officialDocumentationDomains(value: string | undefined): string[] {
+export function officialDocumentationDomains(value: string | undefined): string[] {
   if (!value?.trim()) return [];
   const domains = [...new Set(
     value.split(",").map((domain) => domain.trim().toLowerCase()).filter(Boolean),
@@ -67,7 +68,7 @@ function officialDocumentationDomains(value: string | undefined): string[] {
   return domains;
 }
 
-function booleanSetting(value: string | undefined, fallback = false): boolean {
+export function booleanSetting(value: string | undefined, fallback = false): boolean {
   if (!value?.trim()) return fallback;
   const normalized = value.trim().toLowerCase();
   if (TRUE_VALUES.has(normalized)) return true;
@@ -112,6 +113,7 @@ export function kiroCliFeatureDocumentProviderModelFromEnvironment(
 export function extractKiroCliJson(
   output: string,
   accept: (candidate: Record<string, unknown>) => boolean = () => true,
+  label = "Kiro CLI",
 ): unknown {
   const text = output.replace(
     // eslint-disable-next-line no-control-regex
@@ -152,12 +154,13 @@ export function extractKiroCliJson(
   for (let index = candidates.length - 1; index >= 0; index -= 1) {
     if (accept(candidates[index])) return candidates[index];
   }
-  throw new Error("Kiro CLI returned invalid JSON");
+  throw new Error(`${label} returned invalid JSON`);
 }
 
 export const runKiroCli: KiroCliRunner = (invocation) => new Promise((resolvePromise, reject) => {
+  const label = invocation.label ?? "Kiro CLI";
   if (invocation.signal.aborted) {
-    reject(new Error("Kiro CLI request aborted"));
+    reject(new Error(`${label} request aborted`));
     return;
   }
   const child = spawn(invocation.binary, invocation.args, {
@@ -175,22 +178,22 @@ export const runKiroCli: KiroCliRunner = (invocation) => new Promise((resolvePro
   };
   const abort = (): void => {
     child.kill("SIGTERM");
-    finish(() => reject(new Error("Kiro CLI request aborted")));
+    finish(() => reject(new Error(`${label} request aborted`)));
   };
   const append = (chunk: Buffer): void => {
     output += chunk.toString("utf8");
     if (output.length > invocation.maxOutputBytes) {
       child.kill("SIGTERM");
-      finish(() => reject(new Error("Kiro CLI output exceeded the configured limit")));
+      finish(() => reject(new Error(`${label} output exceeded the configured limit`)));
     }
   };
   invocation.signal.addEventListener("abort", abort, { once: true });
   child.stdout.on("data", append);
   child.stderr.on("data", append);
-  child.on("error", () => finish(() => reject(new Error("Kiro CLI could not be started"))));
+  child.on("error", () => finish(() => reject(new Error(`${label} could not be started`))));
   child.on("close", (code) => finish(() => {
     if (code === 0) resolvePromise(output);
-    else reject(new Error(`Kiro CLI exited with code ${code ?? 1}`));
+    else reject(new Error(`${label} exited with code ${code ?? 1}`));
   }));
 });
 
@@ -317,6 +320,7 @@ function flowPrompt(
   }>,
   officialDocumentationEnabled: boolean,
   officialDomains: readonly string[],
+  readTool = "fs_read",
 ): string {
   const maximumRequirements = Math.max(
     1,
@@ -340,8 +344,16 @@ function flowPrompt(
     ]
     : [];
   return [
+    // A retry only helps when the model sees why the last attempt was rejected, so state
+    // it up front rather than leaving it buried in the serialized Flow input below.
+    ...(prompt.validationError
+      ? [
+        `The previous attempt was rejected for this exact reason: ${prompt.validationError}`,
+        "Correct that specific problem in this attempt and change nothing else.",
+      ]
+      : []),
     "Analyze this entire Flow from all ordered screenshots in one pass.",
-    "Read every absolute image path below with fs_read before producing the result.",
+    `Read every absolute image path below with ${readTool} before producing the result.`,
     "The array order is authoritative. Compare screenshots directly to identify visible states and differences.",
     "Image order alone does not prove a user action or transition. Treat an action result as observed only when explicit interaction metadata or visible before-and-after evidence supports it.",
     ...(interactionCount === 0
@@ -365,7 +377,7 @@ function flowPrompt(
     "ImplementationBrief is a proposed implementation contract, never an observation. Base it on the evidence and requirements, but do not claim that screenshots prove it.",
     "Do not invent vendor names, API names, database schemas, compliance status, or numerical targets. State dependencies at a capability boundary.",
     "The analytics event is a proposed product event with a stable snake_case name, an exact user-visible trigger, and only decision-useful properties available from the proposed flow.",
-    "The success metric must define a measurable product outcome using a numerator and denominator or a duration boundary. The guardrail metric must define a failure, abandonment, or incorrect-outcome rate. Do not use screenshot coverage, rendering fidelity, replica review, documentation quality, or evidence completeness as product metrics.",
+    "The success metric must define a measurable product outcome using a numerator and denominator or a duration boundary. The guardrail metric must define a measurable product-harm, failure, abandonment, unavailable-outcome, or incorrect-outcome rate. Do not use screenshot coverage, rendering fidelity, replica review, documentation quality, or evidence completeness as product metrics.",
     "Never answer that analytics or metrics are absent, unspecified, unsupported, or not evidenced. These fields are explicitly review-required proposals, not observations.",
     "The behavior and journey must define the minimum happy path. Edge cases must state the highest-priority failure or recovery behavior. The risk must name the most important unresolved implementation decision.",
     "Return only one raw JSON object with this exact wrapper shape:",
@@ -483,13 +495,11 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
   const guardrailIsPlaceholder =
     /\b(?:no|not)\s+(?:guardrail\s+)?metric\s+(?:is\s+)?(?:defined|specified|established|proposed)\b/i
       .test(guardrailMetricDefinition);
-  const guardrailDefinesFailure =
-    /\b(fail|abandon|error|incorrect|mismatch|drop|exit|cancel|timeout|incomplete)\w*\b/i
-      .test(guardrailMetricDefinition)
-    || /\b(?:does|do|did) not (?:reach|complete|succeed)\b/i.test(guardrailMetricDefinition)
-    || /\bwithout (?:reaching|completing|success)\b/i.test(guardrailMetricDefinition);
-  if (guardrailIsPlaceholder || !guardrailDefinesFailure) {
-    throw new Error("invalid response: implementation.guardrailMetric.definition must define a failure or abandonment outcome");
+  const guardrailIsMeasurable =
+    /\b(divided by|numerator|denominator|duration|elapsed|time (?:from|to)|rate)\b/i
+      .test(guardrailMetricDefinition);
+  if (guardrailIsPlaceholder || !guardrailIsMeasurable) {
+    throw new Error("invalid response: implementation.guardrailMetric.definition must define a measurable product-harm rate or duration");
   }
   const analyticsClaim = () => nextClaim({
     text: `Review required: Track ${analyticsName} when ${analyticsTrigger}; properties: ${
@@ -530,6 +540,34 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
       }),
     };
   });
+  // Expansion always adds 18 deterministic claims (summary, flow singles, risk,
+  // proposed feature, metrics, dependencies) on top of the requirements, so the
+  // evidence-backed lists get whatever the claim budget leaves. Models do not reliably
+  // honour the prompt's cap, so trim here instead of failing validation downstream.
+  const evidenceLists = {
+    openQuestions: compactList(flow.openQuestions),
+    missingStates: compactList(flow.missingStates),
+    friction: compactList(flow.friction),
+    transitions: compactList(flow.transitions),
+    states: compactList(flow.states),
+  };
+  const evidenceAllowance = Math.max(
+    0,
+    featureDocumentClaimBudget(prompt.allowedEvidenceIds.length)
+      - 18
+      - requirements.length,
+  );
+  let overflow = Object.values(evidenceLists)
+    .reduce((total, list) => total + list.length, 0) - evidenceAllowance;
+  while (overflow > 0) {
+    // Drop from the longest list first; ties fall to the lowest-priority key.
+    const [longest] = Object.values(evidenceLists)
+      .filter((list) => list.length > 0)
+      .sort((left, right) => right.length - left.length);
+    if (!longest) break;
+    longest.pop();
+    overflow -= 1;
+  }
   const scopedEvidenceIds = new Set(requirements.flatMap((requirement) => [
     ...requirement.evidenceIds,
     ...requirement.acceptanceCriteria.flatMap((criterion) => criterion.evidenceIds),
@@ -580,14 +618,14 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
       userGoal: nextClaim(flow.goal),
       entryPoint: nextClaim(flow.entryPoint),
       completionPoint: nextClaim(flow.completionPoint),
-      journey: claimList(flow.transitions, interactionsExist ? undefined : "inferred"),
+      journey: claimList(evidenceLists.transitions, interactionsExist ? undefined : "inferred"),
       actors: [],
-      visibleStates: claimList(flow.states),
+      visibleStates: claimList(evidenceLists.states),
     },
     flowAnalysis: {
       effectivePatterns: [],
-      friction: claimList(flow.friction),
-      missingStates: claimList(flow.missingStates),
+      friction: claimList(evidenceLists.friction),
+      missingStates: claimList(evidenceLists.missingStates),
       inconsistencies: [],
       risksAndAssumptions: [implementationClaim("risk", "unknown")],
     },
@@ -609,27 +647,54 @@ function expandCompactFlowResult(value: unknown, prompt: FeatureFlowPrompt): unk
     guardrailMetrics: [guardrailMetricClaim()],
     analyticsEvents: [analyticsClaim()],
     dependencies: [implementationClaim("dependency")],
-    openQuestions: claimList(flow.openQuestions),
+    openQuestions: claimList(evidenceLists.openQuestions),
   };
   return { analyses: screens, document };
 }
 
-export function createKiroCliFeatureDocumentProvider(
-  environment: NodeJS.ProcessEnv = process.env,
+export interface CliFeatureDocumentCapabilities {
+  readImages: boolean;
+  webSearch: boolean;
+}
+
+export interface CliFeatureDocumentEngine {
+  providerModel: string;
+  binary: string;
+  cwd: string;
+  maxOutputBytes: number;
+  officialDocumentationEnabled: boolean;
+  officialDocumentationDomains: string[];
+  readTool: string;
+  label: string;
+  argumentsFor: (prompt: string, capabilities: CliFeatureDocumentCapabilities) => string[];
+}
+
+export function createCliFeatureDocumentProvider(
+  engine: CliFeatureDocumentEngine,
   runner: KiroCliRunner = runKiroCli,
-): FeatureDocumentProvider | undefined {
-  const config = kiroCliFeatureDocumentConfigFromEnvironment(environment);
-  if (!config) return undefined;
+): FeatureDocumentProvider {
+  const invoke = (
+    prompt: string,
+    capabilities: CliFeatureDocumentCapabilities,
+    signal: AbortSignal,
+  ): Promise<string> => runner({
+    binary: engine.binary,
+    args: engine.argumentsFor(prompt, capabilities),
+    cwd: engine.cwd,
+    signal,
+    maxOutputBytes: engine.maxOutputBytes,
+    label: engine.label,
+  });
   return {
-    model: config.providerModel,
-    officialDocumentationEnabled: config.officialDocumentationEnabled,
-    officialDocumentationDomains: config.officialDocumentationDomains,
+    model: engine.providerModel,
+    officialDocumentationEnabled: engine.officialDocumentationEnabled,
+    officialDocumentationDomains: engine.officialDocumentationDomains,
     async analyzeFlow(prompt, images, signal) {
       if (images.length < 1) throw new Error("Feature Flow analysis requires images");
       if (images.some(({ image }) => image.bytes.byteLength < 1)) {
         throw new Error("Feature Flow analysis image is empty");
       }
-      const directory = await mkdtemp(join(tmpdir(), "astryx-kiro-flow-"));
+      const directory = await mkdtemp(join(tmpdir(), "astryx-cli-flow-"));
       try {
         const orderedImages = await Promise.all(images.map(async ({ evidence, image }, index) => {
           const imagePath = join(
@@ -646,31 +711,22 @@ export function createKiroCliFeatureDocumentProvider(
             path: imagePath,
           };
         }));
-        const output = await runner({
-          binary: config.binary,
-          args: argumentsFor(
-            config,
-            flowPrompt(
-              prompt,
-              orderedImages,
-              config.officialDocumentationEnabled,
-              config.officialDocumentationDomains,
-            ),
-            [
-              "fs_read",
-              ...(config.officialDocumentationEnabled ? ["web_search"] : []),
-            ],
+        const output = await invoke(
+          flowPrompt(
+            prompt,
+            orderedImages,
+            engine.officialDocumentationEnabled,
+            engine.officialDocumentationDomains,
+            engine.readTool,
           ),
-          cwd: config.cwd,
+          { readImages: true, webSearch: engine.officialDocumentationEnabled },
           signal,
-          maxOutputBytes: config.maxOutputBytes,
-        });
+        );
         const compact = extractKiroCliJson(output, (candidate) =>
           Array.isArray(candidate.screens)
           && candidate.flow !== null
           && typeof candidate.flow === "object"
-          && !Array.isArray(candidate.flow)
-        );
+          && !Array.isArray(candidate.flow), engine.label);
         return expandCompactFlowResult(compact, prompt);
       } finally {
         await rm(directory, { recursive: true, force: true });
@@ -678,47 +734,59 @@ export function createKiroCliFeatureDocumentProvider(
     },
     async analyzeImage(prompt, image, signal) {
       if (image.bytes.byteLength < 1) throw new Error("Feature analysis image is empty");
-      const directory = await mkdtemp(join(tmpdir(), "astryx-kiro-feature-"));
+      const directory = await mkdtemp(join(tmpdir(), "astryx-cli-feature-"));
       const imagePath = join(directory, `evidence.${IMAGE_EXTENSIONS[image.contentType]}`);
       try {
         await writeFile(imagePath, image.bytes, { mode: 0o600 });
-        const output = await runner({
-          binary: config.binary,
-          args: argumentsFor(config, stepPrompt(prompt, imagePath), ["fs_read"]),
-          cwd: config.cwd,
+        const output = await invoke(
+          stepPrompt(prompt, imagePath),
+          { readImages: true, webSearch: false },
           signal,
-          maxOutputBytes: config.maxOutputBytes,
-        });
+        );
         return extractKiroCliJson(output, (candidate) =>
           candidate.evidenceId === prompt.evidenceId
           && Array.isArray(candidate.visibleUi)
-          && Array.isArray(candidate.visibleText)
-        );
+          && Array.isArray(candidate.visibleText), engine.label);
       } finally {
         await rm(directory, { recursive: true, force: true });
       }
     },
     async synthesize(prompt, signal) {
-      const output = await runner({
-        binary: config.binary,
-        args: argumentsFor(
-          config,
-          synthesisPrompt(
-            prompt,
-            config.officialDocumentationEnabled,
-            config.officialDocumentationDomains,
-          ),
-          config.officialDocumentationEnabled ? ["web_search"] : [],
+      const output = await invoke(
+        synthesisPrompt(
+          prompt,
+          engine.officialDocumentationEnabled,
+          engine.officialDocumentationDomains,
         ),
-        cwd: config.cwd,
+        { readImages: false, webSearch: engine.officialDocumentationEnabled },
         signal,
-        maxOutputBytes: config.maxOutputBytes,
-      });
+      );
       return extractKiroCliJson(output, (candidate) =>
         candidate.executiveSummary !== undefined
         && candidate.observedFlow !== undefined
-        && Array.isArray(candidate.requirements)
-      );
+        && Array.isArray(candidate.requirements), engine.label);
     },
   };
+}
+
+export function createKiroCliFeatureDocumentProvider(
+  environment: NodeJS.ProcessEnv = process.env,
+  runner: KiroCliRunner = runKiroCli,
+): FeatureDocumentProvider | undefined {
+  const config = kiroCliFeatureDocumentConfigFromEnvironment(environment);
+  if (!config) return undefined;
+  return createCliFeatureDocumentProvider({
+    providerModel: config.providerModel,
+    binary: config.binary,
+    cwd: config.cwd,
+    maxOutputBytes: config.maxOutputBytes,
+    officialDocumentationEnabled: config.officialDocumentationEnabled,
+    officialDocumentationDomains: config.officialDocumentationDomains,
+    readTool: "fs_read",
+    label: "Kiro CLI",
+    argumentsFor: (prompt, capabilities) => argumentsFor(config, prompt, [
+      ...(capabilities.readImages ? ["fs_read"] : []),
+      ...(capabilities.webSearch ? ["web_search"] : []),
+    ]),
+  }, runner);
 }

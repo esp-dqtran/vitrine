@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { access } from "node:fs/promises";
 import { test } from "node:test";
-import type { FeatureStepPrompt, FeatureSynthesisPrompt } from "./featureDocument.ts";
+import {
+  featureDocumentClaimBudget,
+  type FeatureStepPrompt,
+  type FeatureSynthesisPrompt,
+} from "./featureDocument.ts";
 import {
   createKiroCliFeatureDocumentProvider,
   extractKiroCliJson,
@@ -277,8 +281,8 @@ test("analyzes all ordered Flow screenshots in one Kiro invocation", async () =>
             definition: "checkout entries reaching the captured completion boundary divided by checkout entries",
           },
           guardrailMetric: {
-            name: "checkout transition failure rate",
-            definition: "failed cart-to-checkout transitions divided by cart-to-checkout attempts",
+            name: "checkout_transition_failure_rate",
+            definition: "cart-to-checkout transitions without checkout appearing divided by cart-to-checkout attempts",
           },
         },
         requirements: [{
@@ -352,7 +356,7 @@ test("analyzes all ordered Flow screenshots in one Kiro invocation", async () =>
   assert.equal(document.analyticsEvents[0].kind, "proposed");
   assert.match(document.analyticsEvents[0].text, /checkout_started/);
   assert.match(document.successMetrics[0].text, /numerator|divided by/i);
-  assert.match(document.guardrailMetrics[0].text, /failure rate/i);
+  assert.match(document.guardrailMetrics[0].text, /failure_rate/i);
   assert.match(invocation?.args.at(-1) ?? "", /ImplementationBrief/);
   assert.match(invocation?.args.at(-1) ?? "", /Do not invent vendor names/);
   await Promise.all(imagePaths.map((path) => assert.rejects(() => access(path))));
@@ -383,4 +387,146 @@ test("synthesizes the canonical Feature Document shape without image paths", asy
   assert.match(prompt, /\"kind\":\"observed\"\|\"inferred\"/);
   assert.match(prompt, /FLOW-STEP-01-IMAGE-42/);
   assert.doesNotMatch(prompt, /astryx-kiro-feature-/);
+});
+
+test("trims over-budget evidence claims so any provider stays within the claim budget", async () => {
+  const overflow = (count: number, prefix: string) =>
+    Array.from({ length: count }, (_, index) => ({
+      kind: "observed",
+      text: `${prefix} ${index + 1}`,
+      evidenceIds: [step.evidenceId],
+    }));
+  const provider = createKiroCliFeatureDocumentProvider(environment, async () =>
+    JSON.stringify({
+      screens: [{
+        evidenceId: step.evidenceId,
+        visibleState: "Cart",
+        visibleText: ["Proceed"],
+        availableActions: ["Proceed"],
+        visibleFeedback: [],
+        uncertainty: [],
+        confidence: 0.9,
+      }],
+      flow: {
+        assessment: { captureType: "static-screen", completeness: "partial", rationale: "One capture." },
+        summary: {
+          purpose: { kind: "inferred", text: "Review cart", evidenceIds: [step.evidenceId] },
+          userValue: { kind: "inferred", text: "See totals", evidenceIds: [step.evidenceId] },
+          recommendation: { kind: "proposed", text: "Replicate", evidenceIds: [] },
+        },
+        goal: { kind: "inferred", text: "Review cart", evidenceIds: [step.evidenceId] },
+        entryPoint: { kind: "observed", text: "Cart visible", evidenceIds: [step.evidenceId] },
+        completionPoint: { kind: "unknown", text: "Not shown", evidenceIds: [] },
+        states: overflow(20, "State"),
+        transitions: overflow(20, "Transition"),
+        friction: overflow(20, "Friction"),
+        missingStates: overflow(20, "Missing"),
+        openQuestions: overflow(20, "Question"),
+        replicationProblem: "Replicate the captured cart state.",
+        implementation: {
+          targetUser: "A buyer reviewing a purchase.",
+          goal: "Enable the buyer to review the cart.",
+          nonGoal: "Do not define checkout behavior.",
+          behavior: "Present the cart state.",
+          journey: "The buyer opens the cart.",
+          edgeCases: "Keep the cart recoverable when loading fails.",
+          dependency: "The implementation depends on cart state management.",
+          risk: "The screenshots do not establish persistence.",
+          analyticsEvent: {
+            name: "cart_viewed",
+            trigger: "the buyer opens the cart",
+            properties: ["source_state"],
+          },
+          successMetric: {
+            name: "cart view rate",
+            definition: "cart views divided by sessions",
+          },
+          guardrailMetric: {
+            name: "cart_load_failure_rate",
+            definition: "cart opens without the cart appearing divided by cart opens",
+          },
+        },
+        requirements: [{
+          kind: "observed",
+          text: "Present the cart state",
+          evidenceIds: [step.evidenceId],
+          userStory: "As a buyer, I can review my cart.",
+          criteria: [{
+            kind: "observed",
+            given: "the capture is available",
+            when: "the flow is presented",
+            then: "the cart state is visible",
+            evidenceIds: [step.evidenceId],
+          }],
+        }],
+      },
+    }))!;
+
+  const result = await provider.analyzeFlow!({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: [synthesis.evidenceManifest[0]],
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: Buffer.from("first"), contentType: "image/png" },
+  }], new AbortController().signal);
+
+  const document = (result as { document: Record<string, any> }).document;
+  const claims = [
+    document.executiveSummary.purpose,
+    document.executiveSummary.userValue,
+    document.executiveSummary.recommendation,
+    document.observedFlow.userGoal,
+    document.observedFlow.entryPoint,
+    document.observedFlow.completionPoint,
+    ...document.observedFlow.journey,
+    ...document.observedFlow.actors,
+    ...document.observedFlow.visibleStates,
+    ...document.flowAnalysis.effectivePatterns,
+    ...document.flowAnalysis.friction,
+    ...document.flowAnalysis.missingStates,
+    ...document.flowAnalysis.inconsistencies,
+    ...document.flowAnalysis.risksAndAssumptions,
+    document.proposedFeature.problem,
+    ...document.proposedFeature.targetUsers,
+    ...document.proposedFeature.goals,
+    ...document.proposedFeature.nonGoals,
+    ...document.proposedFeature.behavior,
+    ...document.proposedFeature.journey,
+    ...document.requirements,
+    ...document.edgeCases,
+    ...document.successMetrics,
+    ...document.guardrailMetrics,
+    ...document.analyticsEvents,
+    ...document.dependencies,
+    ...document.openQuestions,
+  ];
+  assert.ok(
+    claims.length <= featureDocumentClaimBudget(1),
+    `expected at most ${featureDocumentClaimBudget(1)} claims, received ${claims.length}`,
+  );
+  assert.equal(new Set(claims.map((claim: { id: string }) => claim.id)).size, claims.length);
+});
+
+test("states the previous validation error at the top of a retry prompt", async () => {
+  let prompt = "";
+  const provider = createKiroCliFeatureDocumentProvider(environment, async (input) => {
+    prompt = input.args.at(-1)!;
+    throw new Error("stop after prompt capture");
+  })!;
+
+  await provider.analyzeFlow!({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: [synthesis.evidenceManifest[0]],
+    allowedEvidenceIds: [step.evidenceId],
+    validationError: "feature document exceeds the 38-claim budget",
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: Buffer.from("first"), contentType: "image/png" },
+  }], new AbortController().signal).catch(() => undefined);
+
+  assert.match(prompt, /^The previous attempt was rejected for this exact reason: feature document exceeds the 38-claim budget/);
+  assert.match(prompt, /Correct that specific problem in this attempt/);
 });

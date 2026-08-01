@@ -83,6 +83,17 @@ test("preserves safe source-page fragments without treating them as media creden
   );
 });
 
+test("redacts sensitive source-page query values while preserving safe campaign context", () => {
+  const sourcePage = structuredClone(validImport);
+  sourcePage.pages[0].url =
+    "https://example.com/offers?source=nav&response_key=secret#plans";
+
+  assert.equal(
+    parseSiteImport(sourcePage).pages[0].url,
+    "https://example.com/offers?source=nav#plans",
+  );
+});
+
 test("accepts a video section when Mobbin omits optional poster and timestamps", () => {
   const videoWithoutOptionalMetadata = structuredClone(validImport);
   videoWithoutOptionalMetadata.pages[0].sections[0] = {

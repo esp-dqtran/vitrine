@@ -33,6 +33,69 @@ test('round-trips authenticated documents and public share routes', () => {
   assert.equal(routeToPath({ name: 'feature-document', documentId: 12 }), '/feature-documents/12');
   assert.deepEqual(parseRoutePath('/feature-document-shares/token_abc'), { name: 'feature-document-share', token: 'token_abc' });
   assert.equal(routeToPath({ name: 'feature-document-share', token: 'token_abc' }), '/feature-document-shares/token_abc');
+  assert.deepEqual(parseRoutePath('/project-document-shares/token_xyz'), { name: 'project-document-share', token: 'token_xyz' });
+  assert.equal(routeToPath({ name: 'project-document-share', token: 'token_xyz' }), '/project-document-shares/token_xyz');
+});
+
+test('round-trips a selected Project Journal date', () => {
+  const route = {
+    name: 'project-document' as const,
+    projectId: 7,
+    workspaceView: 'journals' as const,
+    journalDate: '2026-07-30',
+  };
+  assert.equal(
+    routeToPath(route),
+    '/projects/7/docs?view=journals&date=2026-07-30',
+  );
+  assert.deepEqual(
+    parseRouteLocation(
+      '/projects/7/docs',
+      '?view=journals&date=2026-07-30',
+    ),
+    route,
+  );
+  assert.deepEqual(
+    parseRouteLocation('/projects/7/docs', '?view=docs&date=2026-07-30'),
+    { name: 'project-document', projectId: 7 },
+  );
+});
+
+test('round-trips the Project Document favorites workspace', () => {
+  const route = {
+    name: 'project-document' as const,
+    projectId: 7,
+    workspaceView: 'favorites' as const,
+  };
+  assert.equal(routeToPath(route), '/projects/7/docs?view=favorites');
+  assert.deepEqual(
+    parseRouteLocation('/projects/7/docs', '?view=favorites'),
+    route,
+  );
+});
+
+test('round-trips Project Document management tools', () => {
+  for (const workspaceView of [
+    'import',
+    'templates',
+    'new-folder',
+    'new-tag',
+    'new-collection',
+  ] as const) {
+    const route = {
+      name: 'project-document' as const,
+      projectId: 7,
+      workspaceView,
+    };
+    assert.equal(
+      routeToPath(route),
+      `/projects/7/docs?view=${workspaceView}`,
+    );
+    assert.deepEqual(
+      parseRouteLocation('/projects/7/docs', `?view=${workspaceView}`),
+      route,
+    );
+  }
 });
 
 test('round-trips current and legacy Site detail tabs while keeping the base route stable', () => {

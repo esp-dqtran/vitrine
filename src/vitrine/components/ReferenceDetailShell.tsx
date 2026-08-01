@@ -24,6 +24,7 @@ export interface ReferenceDetailShellProps<T extends string> {
   identityKey: string;
   identityLabel: string;
   identityImageUrl?: string | null;
+  identityImageTone?: 'light' | 'dark';
   identityContent?: ReactNode;
   accent?: string;
   backLabel?: string;
@@ -51,6 +52,7 @@ export function ReferenceDetailShell<T extends string>({
   identityKey,
   identityLabel,
   identityImageUrl,
+  identityImageTone = 'light',
   identityContent,
   accent = 'var(--color-accent)',
   backLabel,
@@ -97,8 +99,8 @@ export function ReferenceDetailShell<T extends string>({
           <motion.div
             layoutId={identityKey}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-            className={`reference-detail__logo${identityImageUrl ? ' reference-detail__logo--image' : ''}${loading ? ' app-detail-loading__logo' : ''}`}
-            style={{ background: identityImageUrl ? 'transparent' : accent }}
+            className={`reference-detail__logo${identityImageUrl ? ` reference-detail__logo--image reference-detail__logo--image-${identityImageTone}` : ''}${loading ? ' app-detail-loading__logo' : ''}`}
+            style={identityImageUrl ? undefined : { background: accent }}
           >
             {identityContent ?? (identityImageUrl
               ? (
@@ -111,7 +113,11 @@ export function ReferenceDetailShell<T extends string>({
                         fetchPriority="high"
                         width={88}
                         height={88}
-                        onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                        onError={(event) => {
+                          event.currentTarget
+                            .closest('.reference-detail__logo')
+                            ?.classList.add('reference-detail__logo--image-failed');
+                        }}
                       />
                     </picture>
                     <span className="reference-detail__logo-fallback" aria-hidden="true">{identityLabel}</span>

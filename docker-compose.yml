@@ -30,6 +30,48 @@ services:
       timeout: 5s
       retries: 10
 
+  octobase-postgres:
+    profiles: ["project-docs"]
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: octobase
+      POSTGRES_USER: octobase
+      POSTGRES_PASSWORD: ${OCTOBASE_DATABASE_PASSWORD:-octobase-local-password}
+    volumes:
+      - octobase-postgres-data:/var/lib/postgresql/data
+      - ./services/octobase/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U octobase -d octobase"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  octobase:
+    profiles: ["project-docs"]
+    build:
+      context: .
+      dockerfile: services/octobase/Dockerfile
+      args:
+        OCTOBASE_COMMIT: 58f3bbdf97f391a535e772d32828a484376c4159
+    environment:
+      DATABASE_URL: postgres://octobase:${OCTOBASE_DATABASE_PASSWORD:-octobase-local-password}@octobase-postgres:5432/octobase
+      SIGN_KEY: ${OCTOBASE_SIGN_KEY:-octobase-local-sign-key}
+      JWST_DEV: "true"
+      FIREBASE_PROJECT_ID: astryx-project-docs
+      MAIL_ACCOUNT: ""
+      MAIL_PASSWORD: ""
+    ports:
+      - "127.0.0.1:${OCTOBASE_HOST_PORT:-3020}:3000"
+    depends_on:
+      octobase-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: on-failure
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -79,6 +121,12 @@ services:
       APP_TRAVERSAL_LIMIT: ${APP_TRAVERSAL_LIMIT:-20}
       APP_KNOWLEDGE_PROVIDER: ${APP_KNOWLEDGE_PROVIDER:-chatgpt-browser}
       APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-1}
+      RESEARCH_PROJECTS_ENABLED: ${RESEARCH_PROJECTS_ENABLED:-false}
+      PROJECT_DOCUMENTS_ENABLED: ${PROJECT_DOCUMENTS_ENABLED:-false}
+      PROJECT_DOCUMENTS_TEST_PROJECT_ID: ${PROJECT_DOCUMENTS_TEST_PROJECT_ID:-}
+      OCTOBASE_URL: ${OCTOBASE_URL:-http://octobase:3000}
+      OCTOBASE_SERVICE_EMAIL: ${OCTOBASE_SERVICE_EMAIL:-astryx-integration@localhost.test}
+      OCTOBASE_SERVICE_PASSWORD: ${OCTOBASE_SERVICE_PASSWORD:-}
       ADVANCED_SEARCH_ENABLED: ${ADVANCED_SEARCH_ENABLED:-false}
       SEARCH_EMBEDDING_BASE_URL: ${SEARCH_EMBEDDING_BASE_URL:-https://api.openai.com/v1}
       SEARCH_EMBEDDING_API_KEY: ${SEARCH_EMBEDDING_API_KEY:-}
@@ -267,6 +315,7 @@ services:
 volumes:
   rabbitmq-data:
   postgres-data:
+  octobase-postgres-data:
   minio-data:
   import-worker-profile:
   import-worker-chat-profile:

@@ -24,10 +24,13 @@ import type {
   GenericSiteCompleteInput,
   GenericSitesStoreMethods,
 } from "./sitesGenericStore.ts";
+import { categoriesForPublicSite } from "./siteCategories.ts";
 
 const MAXIMUM_OBJECT_BYTES = 64 * 1_024 * 1_024;
 const ANALYSIS_TIMEOUT_MS = 60_000;
 const DARK_PAGE_LUMINANCE = 0.4;
+export const GENERIC_SITE_CAPTURE_PIPELINE_VERSION =
+  "desktop-1440x900-60fps-crf25-single-fixed-overlay-v1";
 const MOTION_TECHNOLOGIES = new Set([
   "Anime.js",
   "CSS Keyframes",
@@ -178,12 +181,15 @@ export async function crawlGenericSite(
     capture,
     deps.analysisProvider,
   );
-  const contentHash = captureHash(capture);
+  const contentHash = genericSiteCaptureHash(capture);
   await assertNotCancelled(deps);
-  const categories = unique([
-    capture.capture.metadata.category,
-    ...(analysis.synthesis?.category ? [analysis.synthesis.category] : []),
-  ]).slice(0, 20);
+  const categories = categoriesForPublicSite({
+    url: identity.canonicalUrl,
+    name: capture.capture.metadata.name,
+    description: capture.capture.metadata.description,
+    sourceCategory: capture.capture.metadata.category,
+    analysisCategory: analysis.synthesis?.category,
+  });
   const styles = await genericSiteStyles(capture.pageImage, analysis);
   const begin = await deps.sitesStore.beginGenericImport({
     identity,
@@ -565,8 +571,13 @@ function encoded(value: string): string {
   return bytes.toString("hex");
 }
 
-function captureHash(result: PublicPageBrowserResult): string {
+export function genericSiteCaptureHash(
+  result: PublicPageBrowserResult,
+  pipelineVersion = GENERIC_SITE_CAPTURE_PIPELINE_VERSION,
+): string {
   return createHash("sha256")
+    .update(pipelineVersion)
+    .update("\0")
     .update(result.capture.canonicalUrl)
     .update("\0")
     .update(result.capture.html)

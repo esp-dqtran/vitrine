@@ -11,6 +11,7 @@ const privateRoutes: Route[] = [
   { name: 'site-version', siteSlug: 'linear' },
   { name: 'projects' },
   { name: 'project', projectId: 1 },
+  { name: 'project-document', projectId: 1 },
   { name: 'feature-document', documentId: 1 },
   { name: 'admin' },
 ];
@@ -23,6 +24,7 @@ const publicRoutes: Route[] = [
   { name: 'sites' },
   { name: 'flows' },
   { name: 'feature-document-share', token: 'public-token' },
+  { name: 'project-document-share', token: 'public-token' },
 ];
 
 test('keeps Apps, Sites, and Flows catalogs public while detail and member routes require authentication', async () => {

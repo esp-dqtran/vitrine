@@ -7,18 +7,23 @@ const guest: RootRouteContext = {
   auth: 'guest',
   advancedSearchEnabled: false,
   researchProjectsEnabled: false,
+  projectDocumentsEnabled: false,
 };
 
 const member: RootRouteContext = {
   auth: 'member',
   advancedSearchEnabled: true,
   researchProjectsEnabled: true,
+  projectDocumentsEnabled: true,
+  projectDocumentsTestProjectId: 7,
 };
 
 const admin: RootRouteContext = {
   auth: 'admin',
   advancedSearchEnabled: true,
   researchProjectsEnabled: true,
+  projectDocumentsEnabled: true,
+  projectDocumentsTestProjectId: 7,
 };
 
 test('keeps public pages available while authentication is loading', () => {
@@ -28,6 +33,10 @@ test('keeps public pages available while authentication is loading', () => {
   assert.deepEqual(
     decideRootRoute({ name: 'feature-document-share', token: 'share' }, loading),
     { kind: 'public', page: 'feature-document-share' },
+  );
+  assert.deepEqual(
+    decideRootRoute({ name: 'project-document-share', token: 'share' }, loading),
+    { kind: 'public', page: 'project-document-share' },
   );
   assert.deepEqual(decideRootRoute({ name: 'apps' }, loading), { kind: 'loading' });
 });
@@ -75,6 +84,7 @@ test('uses the same application renderer for members and admins on normal routes
     { name: 'search' },
     { name: 'projects' },
     { name: 'project', projectId: 7 },
+    { name: 'project-document', projectId: 7 },
     { name: 'feature-document', documentId: 9 },
     { name: 'settings-billing' },
   ];
@@ -98,6 +108,17 @@ test('renders an explicit unavailable state for disabled feature routes', () => 
   assert.deepEqual(decideRootRoute({ name: 'project', projectId: 7 }, disabled), {
     kind: 'unavailable',
     title: 'Research projects are unavailable',
+  });
+  assert.deepEqual(decideRootRoute({ name: 'project-document', projectId: 7 }, disabled), {
+    kind: 'unavailable',
+    title: 'Research projects are unavailable',
+  });
+  assert.deepEqual(decideRootRoute(
+    { name: 'project-document', projectId: 8 },
+    member,
+  ), {
+    kind: 'unavailable',
+    title: 'Project Docs are unavailable',
   });
 });
 
@@ -129,8 +150,10 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'projects' },
     { name: 'project', projectId: 7 },
+    { name: 'project-document', projectId: 7 },
     { name: 'feature-document', documentId: 9 },
     { name: 'feature-document-share', token: 'share' },
+    { name: 'project-document-share', token: 'share' },
     { name: 'admin' },
   ];
 

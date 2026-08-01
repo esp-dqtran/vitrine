@@ -890,9 +890,9 @@ test('renders the shared Site detail hierarchy without a description', () => {
   assert.match(html, /data-variant="primary"/);
   assert.match(html, /<span>Showing<\/span><strong>1 page<\/strong>/);
   assert.match(html, /data-site-preview-stage="true"/);
-  assert.match(html, /<video[^>]+data-site-preview-video="true"[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+loop=""[^>]+preload="metadata"/);
+  assert.match(html, /<video[^>]+data-site-preview-video="true"[^>]+src="\/api\/sites\/1\/versions\/2\/media\/preview"[^>]+loop=""[^>]+preload="auto"/);
   assert.doesNotMatch(html, /data-site-preview-video="true"[^>]+controls=/);
-  assert.match(html, /class="site-preview-player"/);
+  assert.match(html, /class="site-preview-player site-preview-player--video"/);
   assert.match(html, /aria-label="Site preview mode"/);
   assert.match(html, /aria-label="V7 website video; plays on hover or focus"/);
   assert.match(html, />Video</);
@@ -900,6 +900,34 @@ test('renders the shared Site detail hierarchy without a description', () => {
   assert.doesNotMatch(html, />Overview</);
   assert.doesNotMatch(html, /aria-label="Pages"/);
   assert.doesNotMatch(html, /16 pages/);
+});
+
+test('renders the Mobbin white identity mark on a black plate', () => {
+  const mobbinDetail: SiteVersionDetail = {
+    ...detail,
+    routeSlug: 'mobbin',
+    site: {
+      ...detail.site,
+      name: 'Mobbin',
+      slug: 'mobbin-catalog-source',
+      logoUrl: 'https://framerusercontent.com/images/oPS7zaP2iinQmw4du221pyfo.svg',
+    },
+  };
+  const html = renderToStaticMarkup(
+    <SiteVersionView
+      detail={mobbinDetail}
+      isAdmin
+      section="preview"
+      onSectionChange={() => undefined}
+      onVersionChange={() => undefined}
+      onBack={() => undefined}
+    />,
+  );
+
+  assert.match(
+    html,
+    /reference-detail__logo--image reference-detail__logo--image-dark/,
+  );
 });
 
 test('renders Site detail through the generic reference detail page', () => {
@@ -910,18 +938,26 @@ test('renders Site detail through the generic reference detail page', () => {
   assert.doesNotMatch(source, /<SitesTopNav/);
 });
 
+test('resets the document scroll when a Site detail opens or changes', () => {
+  const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
+  assert.match(source, /window\.scrollTo\(\{\s*top:\s*0,\s*left:\s*0,\s*behavior:\s*'auto'\s*\}\)/);
+  assert.match(source, /\}, \[siteId, siteSlug\]\);/);
+});
+
 test('plays the main Site preview only on hover or keyboard focus', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
   assert.match(source, /onMouseEnter=\{playPreview\}/);
   assert.match(source, /onMouseLeave=\{stopPreview\}/);
   assert.match(source, /onFocus=\{playPreview\}/);
   assert.match(source, /onBlur=\{stopPreview\}/);
+  assert.match(source, /preload="auto"/);
   assert.match(source, /video\.pause\(\);\s*video\.currentTime = 0;/);
 });
 
 test('renders the inline Site preview with the Flow modal UI and two smooth modes', () => {
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /className="site-preview-player"/);
+  const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+  assert.match(source, /site-preview-player site-preview-player--\$\{activeMode\}/);
   assert.match(source, /className="flow-preview-dialog__header site-preview-player__header"/);
   assert.match(source, /aria-label="Site preview mode"/);
   assert.match(source, /ref=\{registerMode\('video'\)\}/);
@@ -930,6 +966,9 @@ test('renders the inline Site preview with the Flow modal UI and two smooth mode
   assert.match(source, /src=\{fullPageImageUrl\}/);
   assert.match(source, /useSlidingIndicator\(activeMode\)/);
   assert.doesNotMatch(source, /function SitePreviewDialog|<AstryxModal/);
+  assert.match(styles, /max-width:\s*1440px/);
+  assert.match(styles, /aspect-ratio:\s*8\s*\/\s*5/);
+  assert.match(styles, /object-fit:\s*contain/);
 });
 
 test('renders Sections with a compact filter toolbar and does not dump OCR text', () => {
@@ -952,14 +991,16 @@ test('renders Sections with a compact filter toolbar and does not dump OCR text'
   assert.doesNotMatch(html, />Save</);
 });
 
-test('preserves each Site section capture aspect ratio instead of letterboxing it', () => {
+test('uses a consistent 16:10 frame for every Site section capture', () => {
   const pageSource = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
   const imageCardSource = readFileSync(new URL('./components/MediaGridCard.tsx', import.meta.url), 'utf8');
   const videoCardSource = readFileSync(new URL('./components/SiteSectionVideoCard.tsx', import.meta.url), 'utf8');
 
-  assert.match(pageSource, /preserveNaturalAspectRatio/);
-  assert.match(imageCardSource, /onLoad=\{captureNaturalAspectRatio\}/);
-  assert.match(videoCardSource, /onLoadedMetadata=\{captureNaturalAspectRatio\}/);
+  assert.doesNotMatch(pageSource, /preserveNaturalAspectRatio/);
+  assert.match(pageSource, /imageFit="contain"/);
+  assert.match(imageCardSource, /aspectRatio = '16 \/ 10'/);
+  assert.match(videoCardSource, /aspectRatio: '16 \/ 10'/);
+  assert.doesNotMatch(videoCardSource, /captureNaturalAspectRatio|onLoadedMetadata/);
 });
 
 test('uses the captured page title when a section has no extracted pattern', () => {

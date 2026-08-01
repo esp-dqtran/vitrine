@@ -53,14 +53,7 @@ export function SiteSectionVideoCard({
   const [focused, setFocused] = useState(false);
   const [mediaActive, setMediaActive] = useState(!deferMedia);
   const [mediaFailed, setMediaFailed] = useState(false);
-  const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
   const actionVisible = hovered || focused;
-  const captureNaturalAspectRatio = () => {
-    const video = videoRef.current;
-    if (video?.videoWidth && video.videoHeight) {
-      setNaturalAspectRatio(video.videoWidth / video.videoHeight);
-    }
-  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -105,7 +98,7 @@ export function SiteSectionVideoCard({
         onBlur={() => setFocused(false)}
         style={{
           position: 'relative',
-          aspectRatio: naturalAspectRatio ?? '16 / 10',
+          aspectRatio: '16 / 10',
           overflow: 'hidden',
           borderRadius: 8,
           background: 'var(--color-background-muted)',
@@ -138,7 +131,6 @@ export function SiteSectionVideoCard({
             loop
             playsInline
             preload="metadata"
-            onLoadedMetadata={captureNaturalAspectRatio}
             onError={() => setMediaFailed(true)}
             style={{
               position: 'absolute',

@@ -19,6 +19,8 @@ test("shows the active filter count without changing the action name", () => {
   assert.match(html, /aria-label="Search on Web\.\.\. · 3 filters, Open search and filters"/);
   assert.match(html, /class="reference-search-trigger"/);
   assert.match(html, /class="[^"]*reference-search-trigger__button[^"]*"/);
+  assert.match(html, /class="[^"]*astryx-input-text[^"]*"/);
+  assert.match(html, /data-variant="secondary"/);
   assert.doesNotMatch(
     readFileSync(new URL("./components/SearchTrigger.tsx", import.meta.url), "utf8"),
     /maxWidth:\s*420/,

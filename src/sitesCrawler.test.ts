@@ -46,7 +46,7 @@ const rawFixture = await readFile(
 );
 const fixtureImport = decodeMobbinSitesSource(rawFixture);
 
-test("extracts and stores the exact Mobbin Site preview categories", () => {
+test("preserves Mobbin preview categories and adds the AI category", () => {
   const categories = mobbinSiteCategoriesFromHrefs([
     "/search/sites?content_type=sites&sort=publishedAt&filter=categories.Technology",
     "/search/sites?content_type=sites&sort=publishedAt&filter=categories.Finance",
@@ -57,11 +57,18 @@ test("extracts and stores the exact Mobbin Site preview categories", () => {
   assert.deepEqual(categories, ["Technology", "Finance"]);
   assert.deepEqual(
     mergeMobbinSitesPreviewMetadata(fixtureImport, { categories }).site.categories,
-    ["Technology", "Finance"],
+    ["Technology", "Finance", "AI"],
   );
   assert.equal(
     mergeMobbinSitesPreviewMetadata(fixtureImport, { categories }).site.logoUrl,
     "https://cdn.fixture/asset-0039.webp",
+  );
+});
+
+test("fills a missing Mobbin category from the reviewed site taxonomy", () => {
+  assert.deepEqual(
+    mergeMobbinSitesPreviewMetadata(fixtureImport, { categories: [] }).site.categories,
+    ["Finance", "AI"],
   );
 });
 
@@ -202,6 +209,33 @@ test("stores an image-only Site preview using the image media contract", async (
   assert.ok(preview);
   assert.equal(preview.contentType, "image/png");
   assert.match(preview.key, /\.png$/);
+});
+
+test("replaces Mobbin Site artwork only with a validated product-site icon", async () => {
+  const iconUrl = "https://www.v7labs.com/icon-512.png";
+  const harness = crawlerHarness({
+    resolveSiteIcon: async (url, name) => {
+      assert.equal(url, fixtureImport.site.sourceUrl);
+      assert.equal(name, fixtureImport.site.name);
+      return iconUrl;
+    },
+  });
+
+  await crawlMobbinSite(approved, harness.dependencies);
+
+  const begun = harness.beginCalls[0] as { graph: SiteImport };
+  assert.equal(begun.graph.site.logoUrl, iconUrl);
+  const completed = harness.completeCalls[0];
+  assert.equal(completed.input.graph.site.logoUrl, iconUrl);
+});
+
+test("does not persist Mobbin Site artwork when the product site has no valid icon", async () => {
+  const harness = crawlerHarness();
+
+  await crawlMobbinSite(approved, harness.dependencies);
+
+  const begun = harness.beginCalls[0] as { graph: SiteImport };
+  assert.equal(begun.graph.site.logoUrl, undefined);
 });
 
 test("stores normalized source and every required V7 media object before one commit", async () => {

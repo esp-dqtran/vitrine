@@ -17,8 +17,16 @@ export type StoredContentType =
   | "image/webp"
   | "video/mp4"
   | "video/webm"
+  | "video/quicktime"
+  | "audio/mpeg"
+  | "audio/mp4"
+  | "image/gif"
+  | "image/svg+xml"
+  | "application/pdf"
+  | "application/octet-stream"
   | "application/json"
   | "application/zip"
+  | "text/plain"
   | "text/css"
   | "text/javascript"
   | "text/typescript"
@@ -53,8 +61,16 @@ const CONTENT_TYPES = new Set<StoredContentType>([
   "image/webp",
   "video/mp4",
   "video/webm",
+  "video/quicktime",
+  "audio/mpeg",
+  "audio/mp4",
+  "image/gif",
+  "image/svg+xml",
+  "application/pdf",
+  "application/octet-stream",
   "application/json",
   "application/zip",
+  "text/plain",
   "text/css",
   "text/javascript",
   "text/typescript",

@@ -129,7 +129,7 @@ test("treats the React Server Components undefined sentinel as missing metadata"
   assert.equal(image.sourceMetadata?.sourceHeight, undefined);
 });
 
-test("decodes legacy image-only Sites using the rendered source URL", async () => {
+test("decodes legacy image-only Sites using the normalized rendered source URL", async () => {
   const raw = await readFile(fixtureUrl, "utf8");
   const changed = mutateCapturedSections(raw, (sections) => {
     for (const section of sections) {
@@ -144,7 +144,7 @@ test("decodes legacy image-only Sites using the rendered source URL", async () =
   });
 
   const result = decodeMobbinSitesSource(changed, {
-    sourceUrl: "https://legacy.example/",
+    sourceUrl: "http://legacy.example/",
   });
 
   assert.equal(result.site.sourceUrl, "https://legacy.example/");
@@ -191,6 +191,71 @@ test("upgrades legacy HTTP page URLs when Mobbin links to the same HTTPS Site", 
   });
 
   assert.equal(result.pages[0].url, "https://v7labs.com/faqs");
+});
+
+test("upgrades legacy HTTP page URLs after the Site moves to a different HTTPS hostname", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const pageId = sections[0].site_page_id;
+    for (const section of sections) {
+      if (section.site_page_id === pageId) {
+        section.page_url = "http://legacy.example/resources";
+      }
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed, {
+    sourceUrl: "https://current.example/",
+  });
+
+  assert.equal(result.pages[0].url, "https://legacy.example/resources");
+});
+
+test("repairs Mobbin's single-label captured hostname from the rendered Site URL", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const changed = mutateCapturedSections(raw, (sections) => {
+    const pageId = sections[0].site_page_id;
+    for (const section of sections) {
+      if (section.site_page_id === pageId) {
+        section.page_url = "https://v7labs/404";
+      }
+    }
+  });
+
+  const result = decodeMobbinSitesSource(changed, {
+    sourceUrl: "https://www.v7labs.com/",
+  });
+
+  assert.equal(result.pages[0].url, "https://www.v7labs.com/404");
+});
+
+test("upgrades Mobbin's rendered HTTP Site URL before persistence", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const result = decodeMobbinSitesSource(raw, {
+    sourceUrl: "http://v7labs.com/",
+  });
+
+  assert.equal(result.site.sourceUrl, "https://v7labs.com/");
+});
+
+test("accepts bounded Mobbin source payloads larger than the former 2 MiB ceiling", async () => {
+  const raw = await readFile(fixtureUrl, "utf8");
+  const lines = raw.trimEnd().split("\n");
+  const rootIndex = lines.findIndex((line) => line.startsWith("4:"));
+  assert.notEqual(rootIndex, -1);
+  const root = JSON.parse(lines[rootIndex].slice(2)) as [
+    string,
+    unknown,
+    null,
+    Record<string, unknown>,
+  ];
+  root[3].ignoredPadding = "x".repeat(3 * 1024 * 1024);
+  lines[rootIndex] = `4:${JSON.stringify(root)}`;
+
+  const result = decodeMobbinSitesSource(`${lines.join("\n")}\n`);
+
+  assert.equal(result.site.name, "V7");
+  assert.equal(result.pages.length, 16);
 });
 
 test("decodes videos when source media, page image, and timestamps are incomplete", async () => {

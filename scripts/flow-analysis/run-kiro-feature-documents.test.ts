@@ -13,7 +13,7 @@ test("Kiro Feature Document batch runner is exposed as an executable module", as
   assert.match(source, /--limit/);
   assert.match(source, /--workers/);
   assert.match(source, /--flow-ids/);
-  assert.match(source, /PROMPT_VERSION = 13/);
+  assert.match(source, /PROMPT_VERSION = 14/);
   assert.match(source, /analysisMode: provider\.analyzeFlow \? "whole-flow" : "per-image"/);
   assert.match(source, /--official-docs/);
   assert.match(source, /--official-domains/);

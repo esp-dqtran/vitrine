@@ -1,4 +1,5 @@
 import { pool } from "../../../src/db.ts";
+import { resolveAppIcon } from "../../../src/appIconResolver.ts";
 import { createMultimodalJsonProvider } from "../../../src/evidenceAnalysisProvider.ts";
 import { crawlGenericSite } from "../../../src/genericSiteCrawler.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
@@ -73,6 +74,8 @@ const handler = createSitesPipelineHandler({
     try {
       return await crawlMobbinSite(url, {
         captureSource: browser.captureSource,
+        resolveSiteIcon: async (sourceUrl, name) =>
+          (await resolveAppIcon(sourceUrl, name))?.url ?? null,
         download: browser.download,
         objectStore,
         sitesStore,

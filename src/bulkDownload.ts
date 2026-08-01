@@ -556,27 +556,16 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
 
   // Best-effort app metadata from the Mobbin app page, persisted after the app row exists.
   //   name:     the visible heading, kept separate from the UUID-disambiguated route slug.
-  //   icon:     the header <img> whose alt is the app name itself (screens are "<App> screen").
   //   category: Mobbin links the app's category (e.g. "Finance") to a category browse page.
   const pageMeta = await page.evaluate(() => {
     const displayName = (document.querySelector("h1")?.textContent ?? "")
       .split(/\s+[—-]\s+/)[0]
       .trim();
-    const app = displayName.toLowerCase();
-    let iconUrl: string | null = null;
-    if (app) {
-      const icon = Array.from(document.querySelectorAll("img")).find((img) => {
-        const alt = (img.getAttribute("alt") ?? "").trim().toLowerCase();
-        return alt === app || (alt.startsWith(app) && !alt.includes("screen"));
-      });
-      iconUrl = icon ? icon.currentSrc || icon.src || null : null;
-    }
     const catLink = Array.from(document.querySelectorAll("a")).find((a) => /categor/i.test(a.getAttribute("href") ?? ""));
     const category = catLink ? (catLink.textContent ?? "").trim() || null : null;
-    return { displayName, iconUrl, category };
+    return { displayName, category };
   }).catch(() => ({
     displayName: null as string | null,
-    iconUrl: null as string | null,
     category: null as string | null,
   }));
   const discovered = await shownTotalCount(page);
@@ -684,7 +673,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
   }
 
   rmSync(downloadDir, { recursive: true, force: true });
-  if (pageMeta.displayName || pageMeta.iconUrl || pageMeta.category) await setAppMeta(appName, pageMeta).catch(() => {});
+  if (pageMeta.displayName || pageMeta.category) await setAppMeta(appName, pageMeta).catch(() => {});
   const target = catalogCaptureTarget(discovered);
   const captured = capturedIds.size;
   const complete = captured === target;

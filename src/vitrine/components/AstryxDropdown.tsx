@@ -3,8 +3,10 @@ import {
   Button,
   DropdownMenu,
   Icon,
-  type ButtonVariant,
+  type DropdownMenuProps,
 } from '@astryxdesign/core';
+
+export type AstryxDropdownVariant = 'primary' | 'secondary';
 
 export interface AstryxDropdownProps {
   label: string;
@@ -14,11 +16,18 @@ export interface AstryxDropdownProps {
   mode?: 'menu' | 'panel';
   panelAriaLabel?: string;
   triggerClassName?: string;
-  triggerVariant?: ButtonVariant;
+  triggerVariant?: AstryxDropdownVariant;
   triggerEndContent?: ReactNode;
   hasChevron?: boolean;
   menuWidth?: number | string;
   onOpenChange: (open: boolean) => void;
+}
+
+export function AstryxMenu(props: DropdownMenuProps) {
+  const className = ['astryx-dropdown', props.className]
+    .filter(Boolean)
+    .join(' ');
+  return <DropdownMenu {...props} className={className} />;
 }
 
 export function AstryxDropdown({
@@ -29,12 +38,17 @@ export function AstryxDropdown({
   mode = 'menu',
   panelAriaLabel,
   triggerClassName,
-  triggerVariant = 'ghost',
+  triggerVariant = 'secondary',
   triggerEndContent,
   hasChevron = true,
   menuWidth = 184,
   onOpenChange,
 }: AstryxDropdownProps) {
+  const triggerClasses = [
+    'astryx-dropdown-trigger',
+    `astryx-dropdown-trigger--${triggerVariant}`,
+    triggerClassName,
+  ].filter(Boolean).join(' ');
   const panelId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(open);
@@ -58,7 +72,7 @@ export function AstryxDropdown({
           aria-controls={panelId}
           variant={triggerVariant}
           size="sm"
-          className={triggerClassName}
+          className={triggerClasses}
           onClick={() => onOpenChange(!open)}
           endContent={triggerEndContent ?? (hasChevron ? (
             <Icon icon="chevronDown" size="xsm" />
@@ -77,33 +91,34 @@ export function AstryxDropdown({
   }
 
   return (
-    <DropdownMenu
+    <AstryxMenu
       button={{
         label,
         'aria-label': ariaLabel,
         variant: triggerVariant,
         size: 'sm',
-        className: triggerClassName,
+        className: triggerClasses,
         endContent: triggerEndContent,
       }}
       isMenuOpen={open}
       onOpenChange={onOpenChange}
       hasChevron={hasChevron}
       menuWidth={menuWidth}
-      className="astryx-dropdown"
     >
       {children}
-    </DropdownMenu>
+    </AstryxMenu>
   );
 }
 
 export function AstryxDropdownItem({
   label,
   selected = false,
+  tone = 'default',
   onSelect,
 }: {
   label: string;
   selected?: boolean;
+  tone?: 'default' | 'destructive';
   onSelect: () => void;
 }) {
   return (
@@ -114,7 +129,11 @@ export function AstryxDropdownItem({
       tabIndex={-1}
       variant="ghost"
       size="sm"
-      className={`astryx-dropdown__item ${selected ? 'astryx-dropdown__item--selected' : ''}`}
+      className={[
+        'astryx-dropdown__item',
+        selected ? 'astryx-dropdown__item--selected' : '',
+        tone === 'destructive' ? 'astryx-dropdown__item--destructive' : '',
+      ].filter(Boolean).join(' ')}
       onClick={onSelect}
       endContent={selected ? (
         <span className="astryx-dropdown__check" aria-label="Selected">

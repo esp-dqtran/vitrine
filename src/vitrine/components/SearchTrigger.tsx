@@ -1,5 +1,33 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Button, Icon } from '@astryxdesign/core';
+
+interface AstryxInputTextProps {
+  label: string;
+  ariaLabel: string;
+  className?: string;
+  endContent?: ReactNode;
+  onOpen: () => void;
+}
+
+export function AstryxInputText({
+  label,
+  ariaLabel,
+  className,
+  endContent,
+  onOpen,
+}: AstryxInputTextProps) {
+  return (
+    <Button
+      className={['astryx-input-text', className].filter(Boolean).join(' ')}
+      label={label}
+      aria-label={ariaLabel}
+      variant="secondary"
+      onClick={onOpen}
+      icon={<Icon icon="search" size="sm" color="disabled" />}
+      endContent={endContent}
+    />
+  );
+}
 
 interface SearchTriggerProps {
   label: string;
@@ -39,13 +67,11 @@ export function SearchTrigger({
 
   return (
     <div className="reference-search-trigger" data-reference-component="search-trigger">
-      <Button
+      <AstryxInputText
         className="reference-search-trigger__button"
         label={displayLabel}
-        aria-label={actionLabel}
-        variant="secondary"
-        onClick={onOpen}
-        icon={<Icon icon="search" size="sm" color="disabled" />}
+        ariaLabel={actionLabel}
+        onOpen={onOpen}
         endContent={<span className="reference-search-trigger__shortcut">⌘K</span>}
       />
       {activeCategory && activeCategory !== 'All' && (

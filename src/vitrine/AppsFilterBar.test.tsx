@@ -334,7 +334,8 @@ test('uses the Astryx dropdown system for compact selects and searchable facet p
   assert.match(source, /<DiscoveryFilterSearch[\s\S]*label=\{group\.label\}/);
   assert.doesNotMatch(source, /searchLabel=/);
   assert.match(componentSource, /<DropdownMenu/);
-  assert.match(componentSource, /className="astryx-dropdown"/);
+  assert.match(componentSource, /export function AstryxMenu/);
+  assert.match(componentSource, /\['astryx-dropdown',\s*props\.className\]/);
   assert.match(componentCss, /\.astryx-dropdown\s*\{[^}]*max-height:[^}]*padding:\s*6px\s*!important/);
   assert.match(componentCss, /\.astryx-dropdown__item--selected\s*\{/);
 });

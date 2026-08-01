@@ -57,6 +57,9 @@ test('keeps primary catalogs and detail surfaces ready while lazy-loading second
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
   assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
+  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ProjectDocumentWorkspace['"]\)/);
+  assert.match(source, /VITE_PROJECT_DOCUMENTS_ENABLED/);
+  assert.match(source, /case 'project-document':/);
   assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
   assert.match(source, /<ApplicationSurface/);
 });
@@ -293,7 +296,7 @@ test('keeps independent Apps and Sites search state under References', async () 
   );
 });
 
-test('owns one persistent discovery header above Apps, Sites, Flows, and Projects', async () => {
+test('owns one persistent discovery header above galleries and Project Docs', async () => {
   const [source, appsSource, sitesSource, flowsSource, projectsSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
@@ -303,7 +306,9 @@ test('owns one persistent discovery header above Apps, Sites, Flows, and Project
   ]);
 
   assert.match(source, /data-persistent-discovery-frame="true"/);
+  assert.match(source, /data-project-document-frame=\{route\.name === 'project-document'/);
   assert.equal((source.match(/<ReferenceDiscoveryTopNav/g) ?? []).length, 1);
+  assert.match(source, /route\.name === 'project-document'[\s\S]*\? 'projects'/);
   assert.match(source, /route\.name === 'apps'[\s\S]*route\.name === 'sites'[\s\S]*route\.name === 'flows'[\s\S]*route\.name === 'projects'/);
   assert.match(source, /className="apps-top-nav"/);
   assert.match(source, /activeCategory=\{discoveryRoute === 'flows'/);

@@ -52,7 +52,7 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
             <main><h1>Visible page</h1><p>Content behind consent.</p></main>
             <div role="dialog">
               <p>We use cookies to personalize content and analyze traffic.</p>
-              <button onclick="this.closest('[role=dialog]').remove()">Okay</button>
+              <button onclick="this.closest('[role=dialog]').remove()">Only necessary</button>
             </div>
           </body>
         </html>`);
@@ -74,6 +74,7 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
                 background: #000;
                 color: white;
                 z-index: 10;
+                box-shadow: 0 8px 0 #ff00ff;
               }
               .page { width: 100%; }
               .band { width: 100%; min-height: 900px; padding: 80px; }
@@ -104,6 +105,41 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
         </html>`);
       return;
     }
+    if (request.url === "/fixed-overlay-stitch") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(`<!doctype html>
+        <html>
+          <head>
+            <title>Fixed overlay stitch</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; }
+              section { height: 900px; }
+              .first { background: #ff0000; }
+              .second { background: #00ff00; }
+              .third { background: #0000ff; }
+              .floating-modal {
+                position: fixed;
+                right: 20px;
+                bottom: 20px;
+                width: 100px;
+                height: 100px;
+                z-index: 9999;
+                background: #ff00ff;
+              }
+            </style>
+          </head>
+          <body>
+            <main>
+              <section class="first"><h1>First section</h1></section>
+              <section class="second"><h2>Second section</h2></section>
+              <section class="third"><h2>Third section</h2></section>
+            </main>
+            <aside class="floating-modal" aria-label="Floating modal"></aside>
+          </body>
+        </html>`);
+      return;
+    }
     if (request.url === "/fixed-canvas") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(`<!doctype html>
@@ -116,6 +152,51 @@ async function fixtureServer(): Promise<{ server: Server; url: string }> {
             </style>
           </head>
           <body><div id="root"><main><img alt="Interactive map" width="800" height="600"></main></div></body>
+        </html>`);
+      return;
+    }
+    if (request.url === "/shrinking-page") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(`<!doctype html>
+        <html>
+          <head>
+            <title>Shrinking page</title>
+            <style>
+              html, body { margin: 0; min-height: 1800px; background: #abcdef; }
+              body[data-shrunk="true"] { min-height: 1758px; }
+            </style>
+          </head>
+          <body>
+            <main><h1>Content that shrinks near the bottom</h1></main>
+            <script>
+              addEventListener("scroll", () => {
+                if (scrollY > 0) document.body.dataset.shrunk = "true";
+              }, { passive: true });
+            </script>
+          </body>
+        </html>`);
+      return;
+    }
+    if (request.url === "/smooth-scroll-video") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(`<!doctype html>
+        <html>
+          <head>
+            <title>Smooth scroll video</title>
+            <style>
+              html { scroll-behavior: smooth; }
+              body { margin: 0; }
+              .top, .bottom { width: 100%; height: 900px; }
+              .top { background: #ff0000; }
+              .bottom { background: #0000ff; }
+            </style>
+          </head>
+          <body>
+            <main>
+              <section class="top"><h1>Top</h1></section>
+              <section class="bottom"><h2>Bottom</h2></section>
+            </main>
+          </body>
         </html>`);
       return;
     }
@@ -243,6 +324,24 @@ test("captures an unstructured static body as one full-page section", { timeout:
     width: result.capture.document.width,
     height: result.capture.document.height,
   });
+});
+
+test("captures a page with WebGL disabled for graphics-heavy sites", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    disableWebGl: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 10,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(new URL("/static", fixture.url).toString());
+
+  assert.equal(result.capture.metadata.name, "First website");
 });
 
 test("dismisses an explicit cookie consent dialog before desktop and mobile capture", { timeout: 20_000 }, async (t) => {
@@ -375,7 +474,7 @@ test("captures viewport-driven content at its document position", { timeout: 20_
   assert.deepEqual([...secondBandPixel], [0xff, 0x00, 0x00]);
 });
 
-test("does not repeat a fixed top header in stitched page captures", { timeout: 20_000 }, async (t) => {
+test("does not repeat a fixed top header or its shadow in stitched page captures", { timeout: 20_000 }, async (t) => {
   const fixture = await fixtureServer();
   t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
   const browser = await createPublicPageBrowser({
@@ -397,6 +496,92 @@ test("does not repeat a fixed top header in stitched page captures", { timeout: 
     .toBuffer();
 
   assert.deepEqual([...firstStitchPixel], [0x00, 0xff, 0x00]);
+});
+
+test("keeps a fixed overlay only in the first stitched viewport", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 10,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(
+    new URL("/fixed-overlay-stitch", fixture.url).toString(),
+  );
+  const overlayPixels = await sharp(result.pageImage)
+    .extract({ left: 1_350, top: 850, width: 1, height: 901 })
+    .removeAlpha()
+    .raw()
+    .toBuffer();
+
+  assert.deepEqual([...overlayPixels.subarray(0, 3)], [0xff, 0x00, 0xff]);
+  assert.deepEqual([...overlayPixels.subarray(-3)], [0x00, 0xff, 0x00]);
+});
+
+test("finishes a stitched capture when the page only shrinks below the final tile", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 10,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(
+    new URL("/shrinking-page", fixture.url).toString(),
+  );
+  const metadata = await sharp(result.pageImage).metadata();
+
+  assert.deepEqual(
+    { width: metadata.width, height: metadata.height },
+    result.capture.document,
+  );
+});
+
+test("starts preview video at the top of a smooth-scrolling page", { timeout: 20_000 }, async (t) => {
+  const fixture = await fixtureServer();
+  t.after(() => new Promise<void>((resolve) => fixture.server.close(() => resolve())));
+  const browser = await createPublicPageBrowser({
+    headless: true,
+    validateNavigation: async () => undefined,
+    scrollPixelsPerSecond: 10_000,
+    maxScrollDurationMs: 1_000,
+    holdMs: 100,
+  });
+  t.after(() => browser.close());
+
+  const result = await browser.capture(
+    new URL("/smooth-scroll-video", fixture.url).toString(),
+  );
+  const frame = spawnSync(ffmpegPath!, [
+    "-loglevel", "error",
+    "-i", "pipe:0",
+    "-frames:v", "1",
+    "-f", "image2pipe",
+    "-vcodec", "png",
+    "pipe:1",
+  ], {
+    input: result.preview,
+    maxBuffer: 16 * 1_024 * 1_024,
+  });
+  assert.equal(frame.status, 0, frame.stderr.toString());
+  const firstFramePixel = await sharp(frame.stdout)
+    .extract({ left: 480, top: 300, width: 1, height: 1 })
+    .removeAlpha()
+    .raw()
+    .toBuffer();
+
+  assert.ok(firstFramePixel[0]! >= 245);
+  assert.ok(firstFramePixel[1]! <= 10);
+  assert.ok(firstFramePixel[2]! <= 10);
 });
 
 test("serializes preview-frame writes when the encoder applies back-pressure", async () => {
@@ -546,6 +731,7 @@ test("captures ordered HTML sections, crops, metadata, and a continuous WebM pre
     encoding: "utf8",
   });
   assert.equal(inspection.status, 0, inspection.stderr);
+  assert.match(inspection.stderr, /1440x900/);
   assert.match(inspection.stderr, /60 fps/);
   assert.equal(warnings.some((warning) => /MaxListenersExceededWarning/.test(warning.message)), false);
   assert.equal(result.scroll.stops, 0);

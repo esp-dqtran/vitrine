@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { Badge, Button, Divider, DropdownMenu, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
+import { Badge, Button, Divider, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
 import { createCheckout, loadSubscription, type SubscriptionView } from './billingApi';
+import { AstryxMenu } from './components/AstryxDropdown';
 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
 
@@ -232,7 +233,7 @@ export function PricingView({
           <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
-              <DropdownMenu
+              <AstryxMenu
                 button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
                 items={[
                   { label: 'Browse', onClick: onBrowse },

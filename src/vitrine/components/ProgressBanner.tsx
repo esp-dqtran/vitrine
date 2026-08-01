@@ -21,8 +21,13 @@ function compareProgress(left: Progress, right: Progress): number {
 
 function ProgressRow({ progress }: { progress: Progress }) {
   const variant = progress.status === 'error' ? 'error' : progress.status === 'cancelled' ? 'neutral' : 'accent';
+  const activity = progress.status === 'error'
+    ? 'Failed'
+    : progress.status === 'cancelled'
+      ? 'Cancelled'
+      : STAGE_LABEL[progress.stage] ?? progress.stage;
   const label = [
-    `${STAGE_LABEL[progress.stage] ?? progress.stage} · ${progress.app}`,
+    `${activity} · ${progress.app}`,
     progress.message,
     progress.status !== 'running' && !progress.message ? progress.status : undefined,
   ].filter(Boolean).join(' — ');

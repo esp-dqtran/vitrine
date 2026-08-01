@@ -1,25 +1,37 @@
-import { useEffect, useSyncExternalStore } from 'react';
-import type { Platform } from '../platformFromUrl.ts';
+import { useEffect, useSyncExternalStore } from "react";
+import type { Platform } from "../platformFromUrl.ts";
 
-export type FlowRepresentation = 'visual' | 'document';
+export type FlowRepresentation = "visual" | "document";
 
 export type SiteVersionRoute =
-  | { name: 'site-version'; siteSlug: string; version?: number; section?: string; sectionId?: number }
-  | { name: 'site-version'; siteId: number; versionId: number; section?: string; sectionId?: number };
+  | {
+      name: "site-version";
+      siteSlug: string;
+      version?: number;
+      section?: string;
+      sectionId?: number;
+    }
+  | {
+      name: "site-version";
+      siteId: number;
+      versionId: number;
+      section?: string;
+      sectionId?: number;
+    };
 
 export type Route =
-  | { name: 'landing' }
-  | { name: 'not-found'; pathname: string }
-  | { name: 'build-in-public' }
-  | { name: 'pricing' }
-  | { name: 'billing-success' }
-  | { name: 'settings-billing' }
-  | { name: 'signin' }
-  | { name: 'search' }
-  | { name: 'apps' }
-  | { name: 'flows' }
+  | { name: "landing" }
+  | { name: "not-found"; pathname: string }
+  | { name: "build-in-public" }
+  | { name: "pricing" }
+  | { name: "billing-success" }
+  | { name: "settings-billing" }
+  | { name: "signin" }
+  | { name: "search" }
+  | { name: "apps" }
+  | { name: "flows" }
   | {
-      name: 'app';
+      name: "app";
       appId: string;
       section?: string;
       platform?: Platform;
@@ -29,13 +41,34 @@ export type Route =
       step?: number;
       flowView?: FlowRepresentation;
     }
-  | { name: 'sites' }
+  | { name: "sites" }
   | SiteVersionRoute
-  | { name: 'projects' }
-  | { name: 'project'; projectId: number }
-  | { name: 'feature-document'; documentId: number }
-  | { name: 'feature-document-share'; token: string }
-  | { name: 'admin' };
+  | { name: "projects" }
+  | { name: "project"; projectId: number }
+  | {
+      name: "project-document";
+      projectId: number;
+      documentId?: number;
+      folderId?: number;
+      tagId?: number;
+      collectionId?: number;
+      workspaceView?:
+        | "favorites"
+        | "tags"
+        | "collections"
+        | "journals"
+        | "trash"
+        | "import"
+        | "templates"
+        | "new-folder"
+        | "new-tag"
+        | "new-collection";
+      journalDate?: string;
+    }
+  | { name: "feature-document"; documentId: number }
+  | { name: "feature-document-share"; token: string }
+  | { name: "project-document-share"; token: string }
+  | { name: "admin" };
 
 interface LocationTarget {
   location: { pathname: string; search: string };
@@ -52,16 +85,21 @@ export function updateLocation(
 ): void {
   const target = options.target ?? window;
   if (path === `${target.location.pathname}${target.location.search}`) return;
-  target.history[options.replace ? 'replaceState' : 'pushState'](null, '', path);
-  const event = typeof PopStateEvent === 'function'
-    ? new PopStateEvent('popstate')
-    : new Event('popstate');
+  target.history[options.replace ? "replaceState" : "pushState"](
+    null,
+    "",
+    path,
+  );
+  const event =
+    typeof PopStateEvent === "function"
+      ? new PopStateEvent("popstate")
+      : new Event("popstate");
   target.dispatchEvent(event);
 }
 
 function subscribe(fn: () => void) {
-  window.addEventListener('popstate', fn);
-  return () => window.removeEventListener('popstate', fn);
+  window.addEventListener("popstate", fn);
+  return () => window.removeEventListener("popstate", fn);
 }
 
 function browserLocationSnapshot(): string {
@@ -69,92 +107,114 @@ function browserLocationSnapshot(): string {
 }
 
 export function useLocationKey(): string {
-  return useSyncExternalStore(
-    subscribe,
-    browserLocationSnapshot,
-    () => '/',
-  );
+  return useSyncExternalStore(subscribe, browserLocationSnapshot, () => "/");
 }
 
 export function parseRoutePath(pathname: string): Route {
-  const path = pathname.replace(/\/+$/, '') || '/';
-  if (path === '/' || path === '/landing') return { name: 'landing' };
-  if (path === '/build-in-public') return { name: 'build-in-public' };
-  if (path === '/pricing') return { name: 'pricing' };
-  if (path === '/billing/success') return { name: 'billing-success' };
-  if (path === '/settings/billing') return { name: 'settings-billing' };
-  if (path === '/signin') return { name: 'signin' };
-  if (path === '/search') return { name: 'search' };
-  if (path === '/apps') return { name: 'apps' };
-  if (path === '/flows') return { name: 'flows' };
-  if (path === '/sites') return { name: 'sites' };
-  const siteMatch = path.match(/^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/);
+  const path = pathname.replace(/\/+$/, "") || "/";
+  if (path === "/" || path === "/landing") return { name: "landing" };
+  if (path === "/build-in-public") return { name: "build-in-public" };
+  if (path === "/pricing") return { name: "pricing" };
+  if (path === "/billing/success") return { name: "billing-success" };
+  if (path === "/settings/billing") return { name: "settings-billing" };
+  if (path === "/signin") return { name: "signin" };
+  if (path === "/search") return { name: "search" };
+  if (path === "/apps") return { name: "apps" };
+  if (path === "/flows") return { name: "flows" };
+  if (path === "/sites") return { name: "sites" };
+  const siteMatch = path.match(
+    /^\/sites\/([1-9]\d*)\/versions\/([1-9]\d*)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/,
+  );
   if (siteMatch) {
     const siteId = Number(siteMatch[1]);
     const versionId = Number(siteMatch[2]);
     const section = siteMatch[3] ? decodeSegment(siteMatch[3]) : undefined;
     const sectionId = siteMatch[4] ? Number(siteMatch[4]) : undefined;
-    return Number.isSafeInteger(siteId)
-      && Number.isSafeInteger(versionId)
-      && section !== null
-      && (sectionId === undefined || (section === 'sections' && Number.isSafeInteger(sectionId)))
+    return Number.isSafeInteger(siteId) &&
+      Number.isSafeInteger(versionId) &&
+      section !== null &&
+      (sectionId === undefined ||
+        (section === "sections" && Number.isSafeInteger(sectionId)))
       ? {
-          name: 'site-version',
+          name: "site-version",
           siteId,
           versionId,
           ...(section ? { section } : {}),
           ...(sectionId ? { sectionId } : {}),
         }
-      : { name: 'not-found', pathname: path };
+      : { name: "not-found", pathname: path };
   }
-  const namedSiteMatch = path.match(/^\/sites\/([^/]+)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/);
+  const namedSiteMatch = path.match(
+    /^\/sites\/([^/]+)(?:\/([^/]+)(?:\/([1-9]\d*))?)?$/,
+  );
   if (namedSiteMatch) {
     const siteSlug = decodeSegment(namedSiteMatch[1]);
-    const section = namedSiteMatch[2] ? decodeSegment(namedSiteMatch[2]) : undefined;
+    const section = namedSiteMatch[2]
+      ? decodeSegment(namedSiteMatch[2])
+      : undefined;
     const sectionId = namedSiteMatch[3] ? Number(namedSiteMatch[3]) : undefined;
-    return siteSlug
-      && section !== null
-      && (sectionId === undefined || (section === 'sections' && Number.isSafeInteger(sectionId)))
+    return siteSlug &&
+      section !== null &&
+      (sectionId === undefined ||
+        (section === "sections" && Number.isSafeInteger(sectionId)))
       ? {
-          name: 'site-version',
+          name: "site-version",
           siteSlug,
           ...(section ? { section } : {}),
           ...(sectionId ? { sectionId } : {}),
         }
-      : { name: 'not-found', pathname: path };
+      : { name: "not-found", pathname: path };
   }
-  if (path === '/projects') return { name: 'projects' };
+  if (path === "/projects") return { name: "projects" };
+  const projectDocumentMatch = path.match(/^\/projects\/([^/]+)\/docs$/);
+  if (projectDocumentMatch) {
+    const projectId = Number(projectDocumentMatch[1]);
+    return Number.isSafeInteger(projectId) && projectId > 0
+      ? { name: "project-document", projectId }
+      : { name: "not-found", pathname: path };
+  }
   const projectMatch = path.match(/^\/projects\/([^/]+)$/);
   if (projectMatch) {
     const projectId = Number(projectMatch[1]);
     return Number.isSafeInteger(projectId) && projectId > 0
-      ? { name: 'project', projectId }
-      : { name: 'not-found', pathname: path };
+      ? { name: "project", projectId }
+      : { name: "not-found", pathname: path };
   }
   const featureDocumentMatch = path.match(/^\/feature-documents\/([1-9]\d*)$/);
   if (featureDocumentMatch) {
     const documentId = Number(featureDocumentMatch[1]);
     return Number.isSafeInteger(documentId)
-      ? { name: 'feature-document', documentId }
-      : { name: 'not-found', pathname: path };
+      ? { name: "feature-document", documentId }
+      : { name: "not-found", pathname: path };
   }
-  const featureDocumentShareMatch = path.match(/^\/feature-document-shares\/([^/]+)$/);
+  const featureDocumentShareMatch = path.match(
+    /^\/feature-document-shares\/([^/]+)$/,
+  );
   if (featureDocumentShareMatch) {
     const token = decodeSegment(featureDocumentShareMatch[1]);
     return token
-      ? { name: 'feature-document-share', token }
-      : { name: 'not-found', pathname: path };
+      ? { name: "feature-document-share", token }
+      : { name: "not-found", pathname: path };
   }
-  if (path === '/admin') return { name: 'admin' };
+  const projectDocumentShareMatch = path.match(
+    /^\/project-document-shares\/([^/]+)$/,
+  );
+  if (projectDocumentShareMatch) {
+    const token = decodeSegment(projectDocumentShareMatch[1]);
+    return token
+      ? { name: "project-document-share", token }
+      : { name: "not-found", pathname: path };
+  }
+  if (path === "/admin") return { name: "admin" };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
   if (appMatch) {
     const appId = decodeSegment(appMatch[1]);
     const section = appMatch[2] ? decodeSegment(appMatch[2]) : undefined;
     return appId && section !== null
-      ? { name: 'app', appId, ...(section ? { section } : {}) }
-      : { name: 'not-found', pathname: path };
+      ? { name: "app", appId, ...(section ? { section } : {}) }
+      : { name: "not-found", pathname: path };
   }
-  return { name: 'not-found', pathname: path };
+  return { name: "not-found", pathname: path };
 }
 
 function decodeSegment(value: string): string | null {
@@ -171,39 +231,97 @@ function positive(value: string | null): number | undefined {
   return Number.isSafeInteger(parsed) ? parsed : undefined;
 }
 
-function bounded(value: string | null, pattern: RegExp, maximum = 240): string | undefined {
-  return value && value.length <= maximum && pattern.test(value) ? value : undefined;
+function bounded(
+  value: string | null,
+  pattern: RegExp,
+  maximum = 240,
+): string | undefined {
+  return value && value.length <= maximum && pattern.test(value)
+    ? value
+    : undefined;
 }
 
-export function parseRouteLocation(pathname: string, search = ''): Route {
+export function parseRouteLocation(pathname: string, search = ""): Route {
   const route = parseRoutePath(pathname);
-  if (route.name === 'site-version' && 'siteSlug' in route) {
-    const version = positive(new URLSearchParams(search).get('version'));
+  if (route.name === "project-document") {
+    const params = new URLSearchParams(search);
+    const documentId = positive(params.get("doc"));
+    const folderId = positive(params.get("folder"));
+    const tagId = positive(params.get("tag"));
+    const collectionId = positive(params.get("collection"));
+    const rawWorkspaceView = params.get("view");
+    const rawJournalDate = params.get("date");
+    const workspaceView =
+      rawWorkspaceView === "favorites" ||
+      rawWorkspaceView === "tags" ||
+      rawWorkspaceView === "collections" ||
+      rawWorkspaceView === "journals" ||
+      rawWorkspaceView === "trash" ||
+      rawWorkspaceView === "import" ||
+      rawWorkspaceView === "templates" ||
+      rawWorkspaceView === "new-folder" ||
+      rawWorkspaceView === "new-tag" ||
+      rawWorkspaceView === "new-collection"
+        ? rawWorkspaceView
+        : undefined;
+    const journalDate =
+      workspaceView === "journals" &&
+      rawJournalDate !== null &&
+      /^\d{4}-\d{2}-\d{2}$/.test(rawJournalDate)
+        ? rawJournalDate
+        : undefined;
+    return {
+      ...route,
+      ...(documentId ? { documentId } : {}),
+      ...(!documentId && folderId ? { folderId } : {}),
+      ...(!documentId && !folderId && tagId ? { tagId } : {}),
+      ...(!documentId && !folderId && !tagId && collectionId
+        ? { collectionId }
+        : {}),
+      ...(!documentId &&
+      !folderId &&
+      !tagId &&
+      !collectionId &&
+      workspaceView
+        ? { workspaceView }
+        : {}),
+      ...(!documentId &&
+      !folderId &&
+      !tagId &&
+      !collectionId &&
+      workspaceView === "journals" &&
+      journalDate
+        ? { journalDate }
+        : {}),
+    };
+  }
+  if (route.name === "site-version" && "siteSlug" in route) {
+    const version = positive(new URLSearchParams(search).get("version"));
     return {
       ...route,
       ...(version ? { version } : {}),
     };
   }
-  if (route.name !== 'app') return route;
-  const normalizedRoute = route.section === 'overview'
-    ? { ...route, section: 'screens' }
-    : route;
+  if (route.name !== "app") return route;
+  const normalizedRoute =
+    route.section === "overview" ? { ...route, section: "screens" } : route;
   const params = new URLSearchParams(search);
-  const rawPlatform = params.get('platform');
-  const platform = rawPlatform === 'ios' || rawPlatform === 'android' || rawPlatform === 'web'
-    ? rawPlatform
-    : undefined;
-  const version = positive(params.get('version'));
+  const rawPlatform = params.get("platform");
+  const platform =
+    rawPlatform === "ios" || rawPlatform === "android" || rawPlatform === "web"
+      ? rawPlatform
+      : undefined;
+  const version = positive(params.get("version"));
   const evidence = bounded(
-    params.get('evidence'),
+    params.get("evidence"),
     /^(?:SCREEN|FLOW|UI-ELEMENT)-[A-Za-z0-9-]+$/,
     300,
   );
-  const flow = bounded(params.get('flow'), /^[A-Za-z0-9][A-Za-z0-9._:-]*$/);
-  const step = positive(params.get('step'));
-  const rawFlowView = params.get('flowView');
+  const flow = bounded(params.get("flow"), /^[A-Za-z0-9][A-Za-z0-9._:-]*$/);
+  const step = positive(params.get("step"));
+  const rawFlowView = params.get("flowView");
   const flowView: FlowRepresentation | undefined =
-    rawFlowView === 'visual' || rawFlowView === 'document'
+    rawFlowView === "visual" || rawFlowView === "document"
       ? rawFlowView
       : undefined;
   return {
@@ -219,44 +337,82 @@ export function parseRouteLocation(pathname: string, search = ''): Route {
 
 export function routeToPath(route: Route): string {
   switch (route.name) {
-    case 'landing': return '/landing';
-    case 'not-found': return route.pathname;
-    case 'build-in-public': return '/build-in-public';
-    case 'pricing': return '/pricing';
-    case 'billing-success': return '/billing/success';
-    case 'settings-billing': return '/settings/billing';
-    case 'signin': return '/signin';
-    case 'search': return '/search';
-    case 'apps': return '/apps';
-    case 'flows': return '/flows';
-    case 'sites': return '/sites';
-    case 'site-version': {
-      const base = 'siteSlug' in route
-        ? `/sites/${encodeURIComponent(route.siteSlug)}`
-        : `/sites/${route.siteId}/versions/${route.versionId}`;
-      const section = route.section ? `/${encodeURIComponent(route.section)}` : '';
-      const sectionId = route.section === 'sections' && route.sectionId
-        ? `/${route.sectionId}`
-        : '';
-      const version = 'siteSlug' in route && route.version
-        ? `?version=${route.version}`
-        : '';
+    case "landing":
+      return "/landing";
+    case "not-found":
+      return route.pathname;
+    case "build-in-public":
+      return "/build-in-public";
+    case "pricing":
+      return "/pricing";
+    case "billing-success":
+      return "/billing/success";
+    case "settings-billing":
+      return "/settings/billing";
+    case "signin":
+      return "/signin";
+    case "search":
+      return "/search";
+    case "apps":
+      return "/apps";
+    case "flows":
+      return "/flows";
+    case "sites":
+      return "/sites";
+    case "site-version": {
+      const base =
+        "siteSlug" in route
+          ? `/sites/${encodeURIComponent(route.siteSlug)}`
+          : `/sites/${route.siteId}/versions/${route.versionId}`;
+      const section = route.section
+        ? `/${encodeURIComponent(route.section)}`
+        : "";
+      const sectionId =
+        route.section === "sections" && route.sectionId
+          ? `/${route.sectionId}`
+          : "";
+      const version =
+        "siteSlug" in route && route.version ? `?version=${route.version}` : "";
       return `${base}${section}${sectionId}${version}`;
     }
-    case 'projects': return '/projects';
-    case 'project': return `/projects/${route.projectId}`;
-    case 'feature-document': return `/feature-documents/${route.documentId}`;
-    case 'feature-document-share': return `/feature-document-shares/${encodeURIComponent(route.token)}`;
-    case 'admin': return '/admin';
-    case 'app': {
-      const path = `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${encodeURIComponent(route.section)}` : ''}`;
+    case "projects":
+      return "/projects";
+    case "project":
+      return `/projects/${route.projectId}`;
+    case "project-document":
+      {
+        const params = new URLSearchParams();
+        if (route.documentId) params.set("doc", String(route.documentId));
+        else if (route.folderId) params.set("folder", String(route.folderId));
+        else if (route.tagId) params.set("tag", String(route.tagId));
+        else if (route.collectionId)
+          params.set("collection", String(route.collectionId));
+        else if (route.workspaceView) {
+          params.set("view", route.workspaceView);
+          if (route.workspaceView === "journals" && route.journalDate) {
+            params.set("date", route.journalDate);
+          }
+        }
+        const search = params.toString();
+        return `/projects/${route.projectId}/docs${search ? `?${search}` : ""}`;
+      }
+    case "feature-document":
+      return `/feature-documents/${route.documentId}`;
+    case "feature-document-share":
+      return `/feature-document-shares/${encodeURIComponent(route.token)}`;
+    case "project-document-share":
+      return `/project-document-shares/${encodeURIComponent(route.token)}`;
+    case "admin":
+      return "/admin";
+    case "app": {
+      const path = `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${encodeURIComponent(route.section)}` : ""}`;
       const params = new URLSearchParams();
-      if (route.platform) params.set('platform', route.platform);
-      if (route.version) params.set('version', String(route.version));
-      if (route.evidence) params.set('evidence', route.evidence);
-      if (route.flow) params.set('flow', route.flow);
-      if (route.step) params.set('step', String(route.step));
-      if (route.flowView) params.set('flowView', route.flowView);
+      if (route.platform) params.set("platform", route.platform);
+      if (route.version) params.set("version", String(route.version));
+      if (route.evidence) params.set("evidence", route.evidence);
+      if (route.flow) params.set("flow", route.flow);
+      if (route.step) params.set("step", String(route.step));
+      if (route.flowView) params.set("flowView", route.flowView);
       const search = params.toString();
       return search ? `${path}?${search}` : path;
     }
@@ -269,16 +425,18 @@ export function navigate(route: Route) {
 
 export function useRoute(): Route {
   const location = useLocationKey();
-  const split = location.indexOf('?');
+  const split = location.indexOf("?");
   const pathname = split < 0 ? location : location.slice(0, split);
-  const search = split < 0 ? '' : location.slice(split);
+  const search = split < 0 ? "" : location.slice(split);
   const rawRoute = parseRoutePath(pathname);
   const route = parseRouteLocation(pathname, search);
-  const legacyOverviewPath = rawRoute.name === 'app' && rawRoute.section === 'overview'
-    ? routeToPath(route)
-    : null;
+  const legacyOverviewPath =
+    rawRoute.name === "app" && rawRoute.section === "overview"
+      ? routeToPath(route)
+      : null;
   useEffect(() => {
-    if (legacyOverviewPath) updateLocation(legacyOverviewPath, { replace: true });
+    if (legacyOverviewPath)
+      updateLocation(legacyOverviewPath, { replace: true });
   }, [legacyOverviewPath]);
   return route;
 }

@@ -217,3 +217,16 @@ test("labels AI output and preserves designer decisions", () => {
   assert.match(html, /Designer decision/);
   assert.match(html, /Use progressive SSO setup/);
 });
+
+test("keeps Experimental Docs behind its Project-scoped flag", () => {
+  const source = readFileSync(
+    new URL("./components/ResearchProjectPage.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /projectDocumentsEnabled \?/);
+  assert.match(source, /label="Experimental Docs"/);
+  assert.match(
+    source,
+    /navigate\(\{ name: 'project-document', projectId: workspace\.id \}\)/,
+  );
+});

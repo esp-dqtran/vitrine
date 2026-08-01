@@ -27,7 +27,7 @@ import { createAutonomousStore } from "../../../src/autonomousStore.ts";
 import { decryptStorageState, encryptStorageState } from "../../../src/crawlSession.ts";
 import { createProductionAutonomousOrchestrator } from "../../../src/autonomousWorker.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
-import { createKiroCliFeatureDocumentProvider } from "../../../src/kiroCliFeatureDocumentProvider.ts";
+import { createFeatureDocumentProviderFromEnvironment } from "../../../src/claudeCliFeatureDocumentProvider.ts";
 import { createFeatureDocumentService } from "../../../src/featureDocumentService.ts";
 import { createMultimodalJsonProvider } from "../../../src/evidenceAnalysisProvider.ts";
 import { createAppKnowledgeStore } from "../../../src/appKnowledgeStore.ts";
@@ -121,7 +121,7 @@ async function currentFeatureSourceManifest(source: FeatureSourceFlow): Promise<
 }
 
 const multimodalProvider = createMultimodalJsonProvider();
-const featureDocumentProvider = createKiroCliFeatureDocumentProvider();
+const featureDocumentProvider = createFeatureDocumentProviderFromEnvironment();
 const featureDocumentService = featureDocumentProvider ? createFeatureDocumentService({
   store: createFeatureDocumentStore(),
   provider: featureDocumentProvider,

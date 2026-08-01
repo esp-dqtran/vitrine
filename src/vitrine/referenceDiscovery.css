@@ -124,7 +124,7 @@
   gap: 8px;
 }
 
-.reference-search-trigger__button {
+.astryx-input-text {
   min-width: 0 !important;
   height: 48px !important;
   flex: 1 1 auto;
@@ -137,13 +137,13 @@
   box-shadow: none !important;
 }
 
-.reference-search-trigger__button:hover,
-.reference-search-trigger__button:focus-visible {
+.astryx-input-text:hover,
+.astryx-input-text:focus-visible {
   background: #383838 !important;
   color: #999 !important;
 }
 
-.reference-search-trigger__button .astryx-icon {
+.astryx-input-text .astryx-icon {
   width: 20px;
   height: 20px;
   color: #f5f5f5 !important;

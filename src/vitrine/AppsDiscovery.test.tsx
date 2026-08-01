@@ -567,7 +567,7 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /\.reference-discovery-nav__types button\s*\{[^}]*background:\s*transparent\s*!important/);
   assert.match(css, /\.reference-discovery-nav__types button\[aria-selected="true"\]\s*\{/);
   assert.match(css, /\.reference-discovery-nav__search\s+\.reference-search-trigger\s*\{[^}]*max-width:\s*none/);
-  assert.match(css, /\.reference-search-trigger__button\s*\{[^}]*background:\s*#303030\s*!important/);
+  assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*#303030\s*!important/);
   assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.reference-discovery-toolbar\s*\{[^}]*min-height:\s*var\(--reference-toolbar-height\)/);
   assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*var\(--reference-font-family\)/);

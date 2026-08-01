@@ -5,6 +5,7 @@ import type { ObjectMetadata, ObjectStore } from "./objectStore.ts";
 import type { PublicPageBrowserResult } from "./publicPageBrowser.ts";
 import {
   crawlGenericSite,
+  genericSiteCaptureHash,
   GenericSiteImportCancelledError,
   PermanentGenericSiteImportError,
   type GenericSiteCrawlerDependencies,
@@ -24,6 +25,15 @@ const png = await sharp({
   },
 }).png().toBuffer();
 const webm = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 1]);
+
+test("changes the content hash when the capture pipeline changes", () => {
+  const capture = fixtureCapture();
+
+  assert.notEqual(
+    genericSiteCaptureHash(capture, "capture-pipeline-v1"),
+    genericSiteCaptureHash(capture, "capture-pipeline-v2"),
+  );
+});
 
 test("crawls one public page into Sites with mobile and analysis objects", async () => {
   const state = harness();

@@ -17,6 +17,10 @@ import {
 import { decodeMobbinSitesSource } from "./sitesSource.ts";
 import type { CompletedSiteImport, SitesStore } from "./sitesStore.ts";
 import { stripMobbinWatermark } from "./mobbinWatermark.ts";
+import {
+  categoryForPublicSite,
+  withAiSiteCategory,
+} from "./siteCategories.ts";
 
 const MAX_MEDIA_BYTES = 64 * 1024 * 1024;
 const SOURCE_TIMEOUT_MS = 45_000;
@@ -69,6 +73,7 @@ export interface DownloadedSiteAsset {
 
 export interface SitesCrawlerDependencies {
   captureSource(url: string): Promise<SiteImport>;
+  resolveSiteIcon?(url: string, name: string): Promise<string | null | undefined>;
   download(url: string): Promise<DownloadedSiteAsset>;
   objectStore: ObjectStore;
   sitesStore: Pick<SitesStore, "beginImport" | "completeImport" | "failImport">;
@@ -155,11 +160,23 @@ export function mergeMobbinSitesPreviewMetadata(
   graph: SiteImport,
   metadata: { categories: string[] },
 ): SiteImport {
+  const baseCategories = metadata.categories.length > 0
+    ? metadata.categories
+    : [categoryForPublicSite({
+      url: graph.site.sourceUrl,
+      name: graph.site.name,
+      description: graph.site.description ?? "",
+    })];
+  const categories = withAiSiteCategory(baseCategories, {
+    url: graph.site.sourceUrl,
+    name: graph.site.name,
+    description: graph.site.description ?? "",
+  });
   return parseSiteImport({
     ...graph,
     site: {
       ...graph.site,
-      categories: metadata.categories,
+      categories,
     },
   });
 }
@@ -176,7 +193,19 @@ export async function crawlMobbinSite(
   const identity = canonicalMobbinSitesUrl(url);
   await assertNotCancelled(deps);
   await deps.report?.("Inspecting Site");
-  const graph = parseSiteImport(await deps.captureSource(identity.canonicalUrl));
+  const capturedGraph = parseSiteImport(await deps.captureSource(identity.canonicalUrl));
+  const resolvedLogoUrl = await deps.resolveSiteIcon?.(
+    capturedGraph.site.sourceUrl,
+    capturedGraph.site.name,
+  ).catch(() => null);
+  const { logoUrl: _mobbinLogoUrl, ...siteWithoutMobbinLogo } = capturedGraph.site;
+  const graph = parseSiteImport({
+    ...capturedGraph,
+    site: {
+      ...siteWithoutMobbinLogo,
+      ...(resolvedLogoUrl ? { logoUrl: resolvedLogoUrl } : {}),
+    },
+  });
   await assertNotCancelled(deps);
   await deps.sitesStore.beginImport(identity, graph);
 

@@ -66,15 +66,69 @@ test('renders real identity media on mobile with a letter fallback', async () =>
   const fallbackRule = styles.match(
     /\.reference-detail__logo-fallback\s*\{[^}]+\}/,
   )?.[0] ?? '';
+  const imageLogoRule = styles.match(
+    /\.reference-detail__logo--image\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const pictureRule = styles.match(
+    /\.reference-detail__logo-picture\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const imageFallbackRule = styles.match(
+    /\.reference-detail__logo--image \.reference-detail__logo-fallback\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const darkImageLogoRule = styles.match(
+    /\.reference-detail__logo--image-dark\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+  const darkImageFallbackRule = styles.match(
+    /\.reference-detail__logo--image-dark \.reference-detail__logo-fallback\s*\{[^}]+\}/,
+  )?.[0] ?? '';
 
   assert.match(html, /<img[^>]+src="\/quora\.png"[^>]+loading="eager"/);
   assert.doesNotMatch(html, /<source[^>]+media="\(min-width: 601px\)"/);
   assert.match(html, /reference-detail__logo-fallback[^>]*>Q<\/span>/);
+  assert.match(html, /reference-detail__logo--image-light/);
+  assert.doesNotMatch(html, /reference-detail__logo[^>]+style=/);
   assert.match(fallbackRule, /display:\s*grid/);
-  assert.doesNotMatch(styles, /\.reference-detail__logo-picture\s*\{\s*display:\s*none/);
+  assert.match(imageLogoRule, /border:\s*1px solid var\(--color-border-subtle\)/);
+  assert.match(imageLogoRule, /background:\s*#fff/);
+  assert.match(pictureRule, /width:\s*64%/);
+  assert.match(pictureRule, /height:\s*64%/);
+  assert.match(imageFallbackRule, /background:\s*#fff/);
+  assert.match(imageFallbackRule, /opacity:\s*0/);
+  assert.match(darkImageLogoRule, /background:\s*#000/);
+  assert.match(darkImageFallbackRule, /background:\s*#000/);
+  assert.match(darkImageFallbackRule, /color:\s*#fff/);
+  assert.match(
+    styles,
+    /\.reference-detail__logo--image-failed \.reference-detail__logo-picture\s*\{[^}]*display:\s*none/,
+  );
+  assert.match(
+    styles,
+    /\.reference-detail__logo--image-failed \.reference-detail__logo-fallback\s*\{[^}]*opacity:\s*1/,
+  );
   assert.match(html, /fetchPriority="high"/);
   assert.match(html, /width="88"/);
   assert.match(html, /height="88"/);
+});
+
+test('renders a white identity mark on a black plate when requested', () => {
+  const html = renderToStaticMarkup(
+    <ReferenceDetailShell
+      title="Mobbin"
+      identityKey="site-icon-mobbin"
+      identityLabel="M"
+      identityImageUrl="/mobbin.svg"
+      identityImageTone="dark"
+      metadata={[]}
+      tabs={[{ id: 'preview', label: 'Preview' }]}
+      activeTab="preview"
+      onTabChange={() => undefined}
+    >Preview</ReferenceDetailShell>,
+  );
+
+  assert.match(
+    html,
+    /reference-detail__logo--image reference-detail__logo--image-dark/,
+  );
 });
 
 test('renders Vitrine primary actions as white buttons with black content', async () => {

@@ -285,6 +285,7 @@ export function SiteVersionView({
         identityKey={`site-icon-${detail.site.id}`}
         identityLabel={detail.site.name.slice(0, 1).toUpperCase()}
         identityImageUrl={detail.site.logoUrl}
+        identityImageTone={detail.routeSlug === 'mobbin' ? 'dark' : 'light'}
         onBack={onBack}
         metadata={metadata}
         actions={<HeroButton primary onClick={() => window.open(detail.site.sourceUrl, '_blank', 'noopener,noreferrer')}>Visit Site</HeroButton>}
@@ -372,7 +373,7 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
         data-site-preview-stage="true"
         className="site-preview__stage"
       >
-        <article className="site-preview-player">
+        <article className={`site-preview-player site-preview-player--${activeMode}`}>
           <header className="flow-preview-dialog__header site-preview-player__header">
             <div className="flow-preview-dialog__identity">
               <h2>{detail.site.name}</h2>
@@ -442,7 +443,7 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="auto"
                 />
               </div>
             ) : fullPageImageUrl ? (
@@ -589,7 +590,6 @@ function SectionsPanel({
                       kind="image"
                       url={item.mediaUrl}
                       imageFit="contain"
-                      preserveNaturalAspectRatio
                       delay={delay}
                       deferMedia
                       onOpen={() => onOpen(inspectorIndex)}
@@ -651,6 +651,9 @@ export function SiteVersionPage(props: SiteVersionPageProps) {
   const [relatedSites, setRelatedSites] = useState<SiteSummary[]>([]);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [siteId, siteSlug]);
   useEffect(() => {
     let active = true;
     setDetail(null);

@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Button, Divider, DropdownMenu, Heading, Icon, Text, ToggleButton, useMediaQuery } from '@astryxdesign/core';
+import { Button, Divider, Heading, Icon, Text, ToggleButton, useMediaQuery } from '@astryxdesign/core';
 import { PlaceholderImage } from './components/PlaceholderImage';
+import { AstryxMenu } from './components/AstryxDropdown';
 import { useFloatDrift } from './useFloatDrift';
 import { useRevealOnScroll } from './useRevealOnScroll';
 import { useSlidingIndicator } from './useSlidingIndicator';
@@ -322,7 +323,7 @@ export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
       >
         <Button type="button" label="Vitrine" variant="ghost" size="lg" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={24} height={24} style={{ display: 'block' }} />} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
         {isCompactNav ? (
-          <DropdownMenu
+          <AstryxMenu
             button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
             items={[
               { label: 'Browse', onClick: onBrowse },

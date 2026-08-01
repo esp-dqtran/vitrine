@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import {
   Button,
-  DropdownMenu,
   DropdownMenuItem,
   Icon,
   Switch,
   TextArea,
   TextInput,
 } from '@astryxdesign/core';
+import { AstryxMenu } from './AstryxDropdown.tsx';
 import { AstryxAlertModal, AstryxModal } from './AstryxModal.tsx';
 import type { ResearchCollection } from '../../db.ts';
 import {
@@ -201,7 +201,7 @@ export function CollectionPicker({
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <DropdownMenu
+      <AstryxMenu
         isMenuOpen={open}
         onOpenChange={setOpen}
         button={{
@@ -275,7 +275,7 @@ export function CollectionPicker({
             isDisabled={busy}
           />
         )}
-      </DropdownMenu>
+      </AstryxMenu>
 
       <AstryxModal
         isOpen={createOpen}
