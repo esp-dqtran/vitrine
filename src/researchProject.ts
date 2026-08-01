@@ -9,6 +9,18 @@ export const RESEARCH_LIMITS = {
 
 export type ResearchPlatform = "all" | "ios" | "android" | "web";
 export type ResearchSourceKind = "catalog_screen" | "catalog_flow_step" | "private_upload";
+export type ResearchProjectId = string;
+
+const researchProjectIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function normalizeResearchProjectId(
+  value: unknown,
+): ResearchProjectId | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().toLowerCase();
+  return researchProjectIdPattern.test(normalized) ? normalized : undefined;
+}
 
 export interface ResearchEvidenceSnapshot {
   title: string;
@@ -24,7 +36,7 @@ export interface ResearchEvidenceSnapshot {
 
 export interface ResearchProjectItem {
   id: number;
-  projectId: number;
+  projectId: ResearchProjectId;
   laneId: number;
   position: number;
   sourceKind: ResearchSourceKind;
@@ -69,7 +81,7 @@ export interface ResearchSynthesisView {
 }
 
 export interface ResearchProjectWorkspace {
-  id: number;
+  id: ResearchProjectId;
   title: string;
   question: string;
   platformFilter: ResearchPlatform;
@@ -86,7 +98,7 @@ export interface ResearchProjectWorkspace {
 }
 
 export interface ResearchProjectSummary {
-  id: number;
+  id: ResearchProjectId;
   title: string;
   question: string;
   platformFilter: ResearchPlatform;
@@ -115,13 +127,13 @@ export interface ProjectPatch {
 }
 
 export interface CreateLaneInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   expectedRevision: number;
   title: string;
 }
 
 export interface UpdateLaneInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   laneId: number;
   expectedRevision: number;
   title?: string;
@@ -130,13 +142,13 @@ export interface UpdateLaneInput {
 }
 
 export interface DeleteLaneInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   laneId: number;
   expectedRevision: number;
 }
 
 export interface AddResearchItemInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   laneId: number;
   expectedRevision: number;
   sourceKind: ResearchSourceKind;
@@ -152,7 +164,7 @@ export interface AddResearchItemInput {
 }
 
 export interface UpdateResearchItemInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   itemId: number;
   expectedRevision: number;
   stepLabel?: string;
@@ -162,7 +174,7 @@ export interface UpdateResearchItemInput {
 }
 
 export interface MoveResearchItemInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   itemId: number;
   targetLaneId: number;
   targetPosition: number;
@@ -170,13 +182,13 @@ export interface MoveResearchItemInput {
 }
 
 export interface RemoveResearchItemInput {
-  projectId: number;
+  projectId: ResearchProjectId;
   itemId: number;
   expectedRevision: number;
 }
 
 export interface RecordedSynthesis {
-  projectId: number;
+  projectId: ResearchProjectId;
   projectRevision: number;
   status: "complete" | "failed";
   result?: ResearchSynthesisResult;

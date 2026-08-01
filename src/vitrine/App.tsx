@@ -69,9 +69,9 @@ const ResearchProjectPage = lazy(() =>
     default: module.ResearchProjectPage,
   })),
 );
-const ProjectDocumentWorkspace = lazy(() =>
-  import("./components/ProjectDocumentWorkspace").then((module) => ({
-    default: module.ProjectDocumentWorkspace,
+const ProjectPlayground = lazy(() =>
+  import("./components/ProjectPlaygroundPage").then((module) => ({
+    default: module.ProjectPlayground,
   })),
 );
 const FeatureDocumentPage = lazy(() =>
@@ -151,13 +151,6 @@ export function App() {
   const researchProjectsEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env
       ?.VITE_RESEARCH_PROJECTS_ENABLED === "true";
-  const projectDocumentsEnabled =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env
-      ?.VITE_PROJECT_DOCUMENTS_ENABLED === "true";
-  const projectDocumentsTestProjectId = Number(
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env
-      ?.VITE_PROJECT_DOCUMENTS_TEST_PROJECT_ID,
-  );
   const advancedSearchEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env
       ?.VITE_ADVANCED_SEARCH_ENABLED === "true";
@@ -508,7 +501,7 @@ export function App() {
   );
 
   const discoveryRoute =
-    route.name === "project-document"
+    route.name === "project-playground"
       ? "projects"
       : route.name === "apps" ||
           route.name === "sites" ||
@@ -646,34 +639,17 @@ export function App() {
       break;
     case "project":
       page = researchProjectsEnabled ? (
-        <ResearchProjectPage
-          projectId={route.projectId}
-          projectDocumentsEnabled={
-            projectDocumentsEnabled &&
-            route.projectId === projectDocumentsTestProjectId
-          }
-        />
+        <ResearchProjectPage projectId={route.projectId} />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
       break;
-    case "project-document":
-      page =
-        researchProjectsEnabled &&
-        projectDocumentsEnabled &&
-        route.projectId === projectDocumentsTestProjectId ? (
-          <ProjectDocumentWorkspace
-            projectId={route.projectId}
-            documentId={route.documentId}
-            folderId={route.folderId}
-            tagId={route.tagId}
-            collectionId={route.collectionId}
-            workspaceView={route.workspaceView}
-            journalDate={route.journalDate}
-          />
-        ) : (
-          <ApplicationStatusPage title="Project Docs are unavailable" />
-        );
+    case "project-playground":
+      page = researchProjectsEnabled ? (
+        <ProjectPlayground projectId={route.projectId} />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
       break;
     case "feature-document":
       page = <FeatureDocumentPage documentId={route.documentId} />;
@@ -824,7 +800,6 @@ export function App() {
     case "billing-success":
     case "signin":
     case "feature-document-share":
-    case "project-document-share":
       page = (
         <ApplicationStatusPage title="This page is outside the application" />
       );
@@ -858,11 +833,8 @@ export function App() {
   const pageWithPersistentDiscoveryHeader = discoveryRoute ? (
     <div
       data-persistent-discovery-frame="true"
-      data-project-document-frame={
-        route.name === "project-document" ? "true" : undefined
-      }
       style={
-        route.name === "project-document"
+        route.name === "project-playground"
           ? {
               minHeight: "100vh",
               minBlockSize: "100dvh",

@@ -56,10 +56,10 @@ test('keeps primary catalogs and detail surfaces ready while lazy-loading second
   assert.match(source, /import \{ SiteVersionPage \} from ['"]\.\/components\/SiteVersionPage['"]/);
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
-  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
-  assert.match(source, /lazy\(\(\) => import\(['"]\.\/components\/ProjectDocumentWorkspace['"]\)/);
-  assert.match(source, /VITE_PROJECT_DOCUMENTS_ENABLED/);
-  assert.match(source, /case 'project-document':/);
+  assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
+  assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectPlaygroundPage['"]\)/);
+  assert.doesNotMatch(source, /ProjectDocument|VITE_PROJECT_DOCUMENTS_ENABLED/);
+  assert.match(source, /case ['"]project-playground['"]:/);
   assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
   assert.match(source, /<ApplicationSurface/);
 });
@@ -296,7 +296,7 @@ test('keeps independent Apps and Sites search state under References', async () 
   );
 });
 
-test('owns one persistent discovery header above galleries and Project Docs', async () => {
+test('owns one persistent discovery header above galleries and Projects', async () => {
   const [source, appsSource, sitesSource, flowsSource, projectsSource] = await Promise.all([
     readFile(new URL('./App.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
@@ -306,12 +306,12 @@ test('owns one persistent discovery header above galleries and Project Docs', as
   ]);
 
   assert.match(source, /data-persistent-discovery-frame="true"/);
-  assert.match(source, /data-project-document-frame=\{route\.name === 'project-document'/);
+  assert.doesNotMatch(source, /data-project-document-frame/);
   assert.equal((source.match(/<ReferenceDiscoveryTopNav/g) ?? []).length, 1);
-  assert.match(source, /route\.name === 'project-document'[\s\S]*\? 'projects'/);
-  assert.match(source, /route\.name === 'apps'[\s\S]*route\.name === 'sites'[\s\S]*route\.name === 'flows'[\s\S]*route\.name === 'projects'/);
+  assert.match(source, /route\.name === ["']project-playground["'][\s\S]*\? ["']projects["']/);
+  assert.match(source, /route\.name === ["']apps["'][\s\S]*route\.name === ["']sites["'][\s\S]*route\.name === ["']flows["'][\s\S]*route\.name === ["']projects["']/);
   assert.match(source, /className="apps-top-nav"/);
-  assert.match(source, /activeCategory=\{discoveryRoute === 'flows'/);
+  assert.match(source, /activeCategory=\{\s*discoveryRoute === ["']flows["']/);
   assert.doesNotMatch(`${appsSource}\n${sitesSource}\n${flowsSource}\n${projectsSource}`, /<ReferenceDiscoveryTopNav|<SitesTopNav/);
 });
 

@@ -8,6 +8,8 @@ import {
   searchCollectionReference,
 } from "./components/SearchResearchActions.tsx";
 
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
+
 const screenResult: SearchResultItem = {
   documentId: "screen:101", indexVersion: 1, catalogScope: "apps", catalogName: "Linear",
   versionId: 7, appId: 1, appName: "Linear", catalogCategories: [],
@@ -17,7 +19,8 @@ const screenResult: SearchResultItem = {
   mediaImageId: 101, sourcePayload: { versionId: 7, mediaImageId: 101 }, matchedContext: [],
 };
 const project = {
-  id: 3, title: "Research", question: "Why?", platformFilter: "all" as const,
+  id: PROJECT_ID, title: "Research", question: "Why?", platformFilter: "all" as const,
+  pinned: false,
   constraints: "", decision: "", rationale: "", openQuestions: "", revision: 2,
   lanes: [{ id: 8, title: "Evidence", position: 0, conclusion: "", items: [] }],
   createdAt: "", updatedAt: "",

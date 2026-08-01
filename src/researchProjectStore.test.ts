@@ -3,6 +3,9 @@ import { test } from "node:test";
 import type { QueryResult } from "pg";
 import { createResearchProjectStore, type DatabaseQuery } from "./researchProjectStore.ts";
 
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
+const DUPLICATE_PROJECT_ID = "22222222-2222-4222-8222-222222222222";
+
 const result = (rows: Record<string, unknown>[] = []): QueryResult<Record<string, unknown>> => ({
   command: "SELECT",
   rowCount: rows.length,
@@ -18,7 +21,10 @@ test("loads projects through ownership", async () => {
     return result();
   };
 
-  assert.equal(await createResearchProjectStore(query).getProject(7, 11), undefined);
+  assert.equal(
+    await createResearchProjectStore(query).getProject(7, PROJECT_ID),
+    undefined,
+  );
   assert.ok(calls.some((sql) => /research_projects[\s\S]*user_id\s*=\s*\$2/.test(sql)));
 });
 
@@ -28,6 +34,7 @@ test("creates a project and two lanes in one transaction", async () => {
     calls.push(sql);
     if (/INSERT INTO research_projects/.test(sql)) return result([{
       id: 12,
+      public_id: PROJECT_ID,
       title: "SSO research",
       question: "How should SSO be introduced?",
       platform_filter: "web",
@@ -41,7 +48,7 @@ test("creates a project and two lanes in one transaction", async () => {
       updated_at: "2026-07-17T00:00:00.000Z",
     }]);
     if (/FROM research_projects rp/.test(sql)) return result([{
-      id: 12,
+      public_id: PROJECT_ID,
       title: "SSO research",
       question: "How should SSO be introduced?",
       platform_filter: "web",
@@ -75,11 +82,16 @@ test("locks the owned project before a mutation", async () => {
   const calls: string[] = [];
   const query: DatabaseQuery = async (sql) => {
     calls.push(sql);
-    if (/FOR UPDATE/.test(sql)) return result([{ revision: 3 }]);
+    if (/FOR UPDATE/.test(sql)) return result([{ id: 11, revision: 3 }]);
     return result();
   };
 
-  await createResearchProjectStore(query).updateProject(7, 11, 3, { title: "Updated" });
+  await createResearchProjectStore(query).updateProject(
+    7,
+    PROJECT_ID,
+    3,
+    { title: "Updated" },
+  );
 
   assert.ok(calls.some((sql) => /user_id\s*=\s*\$2[\s\S]*FOR UPDATE/.test(sql)));
 });
@@ -88,11 +100,16 @@ test("pinning is a workspace preference and does not revise project content", as
   const calls: string[] = [];
   const query: DatabaseQuery = async (sql) => {
     calls.push(sql);
-    if (/FOR UPDATE/.test(sql)) return result([{ revision: 3 }]);
+    if (/FOR UPDATE/.test(sql)) return result([{ id: 11, revision: 3 }]);
     return result();
   };
 
-  await createResearchProjectStore(query).updateProject(7, 11, 3, { pinned: true });
+  await createResearchProjectStore(query).updateProject(
+    7,
+    PROJECT_ID,
+    3,
+    { pinned: true },
+  );
 
   const update = calls.find((sql) => /UPDATE research_projects SET pinned/.test(sql)) ?? "";
   assert.match(update, /pinned\s*=\s*\$2/);
@@ -103,7 +120,7 @@ test("attaches private object metadata and evidence in one transaction", async (
   const calls: string[] = [];
   const query: DatabaseQuery = async (sql) => {
     calls.push(sql);
-    if (/FOR UPDATE/.test(sql)) return result([{ revision: 1 }]);
+    if (/FOR UPDATE/.test(sql)) return result([{ id: 1, revision: 1 }]);
     if (/SELECT count\(\*\)/.test(sql)) return result([{ total: 0, private_count: 0 }]);
     if (/SELECT id FROM research_project_lanes/.test(sql)) return result([{ id: 2 }]);
     if (/INSERT INTO stored_objects/.test(sql)) return result([{ object_key: "research/7/a.png" }]);
@@ -112,7 +129,7 @@ test("attaches private object metadata and evidence in one transaction", async (
   const store = createResearchProjectStore(query);
 
   await store.addPrivateItem(7, {
-    projectId: 1,
+    projectId: PROJECT_ID,
     laneId: 2,
     expectedRevision: 1,
     sourceKind: "private_upload",
@@ -142,7 +159,11 @@ test("loads private media only through project ownership", async () => {
       access_class: "protected",
     }]);
   };
-  const metadata = await createResearchProjectStore(query).getPrivateObject(7, 1, 2);
+  const metadata = await createResearchProjectStore(query).getPrivateObject(
+    7,
+    PROJECT_ID,
+    2,
+  );
   assert.equal(metadata?.key, "research/7/a.png");
   assert.ok(calls.some((sql) => /rp\.user_id\s*=\s*\$1/.test(sql)));
 });
@@ -150,7 +171,7 @@ test("loads private media only through project ownership", async () => {
 test("duplicates every evidence source reference", async () => {
   const calls: string[] = [];
   const project = {
-    id: 11,
+    public_id: DUPLICATE_PROJECT_ID,
     title: "Checkout research",
     question: "Which checkout pattern should we use?",
     platform_filter: "web",
@@ -165,8 +186,10 @@ test("duplicates every evidence source reference", async () => {
   };
   const query: DatabaseQuery = async (sql) => {
     calls.push(sql);
-    if (/FOR UPDATE/.test(sql)) return result([{ revision: 1 }]);
-    if (/INSERT INTO research_projects/.test(sql)) return result([{ id: 12 }]);
+    if (/FOR UPDATE/.test(sql)) return result([{ id: 11, revision: 1 }]);
+    if (/INSERT INTO research_projects/.test(sql)) {
+      return result([{ id: 12, public_id: DUPLICATE_PROJECT_ID }]);
+    }
     if (/INSERT INTO research_project_lanes/.test(sql)) return result([{ id: 22 }]);
     if (/FROM research_projects rp/.test(sql)) return result([project]);
     if (/FROM research_project_lanes/.test(sql)) {
@@ -189,7 +212,7 @@ test("duplicates every evidence source reference", async () => {
     return result();
   };
 
-  await createResearchProjectStore(query).duplicateProject(7, 11);
+  await createResearchProjectStore(query).duplicateProject(7, PROJECT_ID);
 
   const copiedItem = calls.find((sql) => /INSERT INTO research_project_items/.test(sql)) ?? "";
   for (const column of [
@@ -208,7 +231,9 @@ test("moves evidence without out-of-range sentinel positions", async () => {
   const calls: string[] = [];
   const query: DatabaseQuery = async (sql) => {
     calls.push(sql);
-    if (/FOR UPDATE/.test(sql) && /research_projects/.test(sql)) return result([{ revision: 1 }]);
+    if (/FOR UPDATE/.test(sql) && /research_projects/.test(sql)) {
+      return result([{ id: 11, revision: 1 }]);
+    }
     if (/SELECT lane_id, position/.test(sql)) return result([{ lane_id: 2, position: 0 }]);
     if (/SELECT id FROM research_project_lanes/.test(sql)) return result([{ id: 3 }]);
     if (/SELECT count\(\*\)/.test(sql)) return result([{ count: 1 }]);
@@ -216,7 +241,7 @@ test("moves evidence without out-of-range sentinel positions", async () => {
   };
 
   await createResearchProjectStore(query).moveItem(7, {
-    projectId: 11,
+    projectId: PROJECT_ID,
     itemId: 31,
     targetLaneId: 3,
     targetPosition: 0,

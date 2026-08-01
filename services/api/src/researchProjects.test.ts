@@ -7,8 +7,9 @@ import { createApiApp } from "./app.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
 
 const user = { id: 7, email: "designer@example.com", role: "user" as const };
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
 const workspace = {
-  id: 1,
+  id: PROJECT_ID,
   title: "SSO",
   question: "How should SSO work?",
   platformFilter: "web" as const,
@@ -25,7 +26,7 @@ const workspace = {
 
 const store = {
   listProjects: async () => [{
-    id: 1,
+    id: PROJECT_ID,
     title: "SSO",
     question: "How should SSO work?",
     platformFilter: "web",
@@ -68,7 +69,7 @@ test("lists and creates owner-scoped research projects", async (t) => {
 
   const listed = await fetch(`${base}/research-projects`);
   assert.equal(listed.status, 200);
-  assert.equal((await listed.json() as Array<{ id: number }>)[0].id, 1);
+  assert.equal((await listed.json() as Array<{ id: string }>)[0].id, PROJECT_ID);
 
   const created = await fetch(`${base}/research-projects`, {
     method: "POST",
@@ -100,7 +101,7 @@ test("validates project bodies and identifiers", async (t) => {
 test("rejects non-positive catalog identifiers", async (t) => {
   const { base, server } = await serve();
   t.after(() => close(server));
-  const response = await fetch(`${base}/research-projects/1/items`, {
+  const response = await fetch(`${base}/research-projects/${PROJECT_ID}/items`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -117,7 +118,7 @@ test("rejects non-positive catalog identifiers", async (t) => {
 test("returns the media-specific status for an unsupported upload type", async (t) => {
   const { base, server } = await serve();
   t.after(() => close(server));
-  const response = await fetch(`${base}/research-projects/1/uploads?laneId=1&revision=1`, {
+  const response = await fetch(`${base}/research-projects/${PROJECT_ID}/uploads?laneId=1&revision=1`, {
     method: "POST",
     headers: { "content-type": "text/plain" },
     body: "not an image",

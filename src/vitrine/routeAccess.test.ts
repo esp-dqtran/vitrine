@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Route } from './router.ts';
 
+const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
+
 const privateRoutes: Route[] = [
   { name: 'signin' },
   { name: 'billing-success' },
@@ -10,8 +12,8 @@ const privateRoutes: Route[] = [
   { name: 'app', appId: 'linear' },
   { name: 'site-version', siteSlug: 'linear' },
   { name: 'projects' },
-  { name: 'project', projectId: 1 },
-  { name: 'project-document', projectId: 1 },
+  { name: 'project', projectId: PROJECT_ID },
+  { name: 'project-playground', projectId: PROJECT_ID },
   { name: 'feature-document', documentId: 1 },
   { name: 'admin' },
 ];
@@ -24,7 +26,6 @@ const publicRoutes: Route[] = [
   { name: 'sites' },
   { name: 'flows' },
   { name: 'feature-document-share', token: 'public-token' },
-  { name: 'project-document-share', token: 'public-token' },
 ];
 
 test('keeps Apps, Sites, and Flows catalogs public while detail and member routes require authentication', async () => {

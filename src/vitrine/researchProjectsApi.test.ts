@@ -6,121 +6,29 @@ import {
   listResearchProjects,
 } from "./researchProjectsApi.ts";
 
-test("maps project routes and rejects invalid project ids", () => {
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
+
+test("maps UUID Project routes and rejects incremental project ids", () => {
   assert.equal(routeToPath({ name: "projects" }), "/projects");
-  assert.equal(routeToPath({ name: "project", projectId: 17 }), "/projects/17");
   assert.equal(
-    routeToPath({ name: "project-document", projectId: 17 }),
-    "/projects/17/docs",
+    routeToPath({ name: "project", projectId: PROJECT_ID }),
+    `/projects/${PROJECT_ID}`,
   );
   assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      documentId: 42,
-    }),
-    "/projects/17/docs?doc=42",
+    routeToPath({ name: "project-playground", projectId: PROJECT_ID }),
+    `/projects/${PROJECT_ID}/playground`,
   );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      folderId: 8,
-    }),
-    "/projects/17/docs?folder=8",
-  );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      tagId: 9,
-    }),
-    "/projects/17/docs?tag=9",
-  );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      workspaceView: "tags",
-    }),
-    "/projects/17/docs?view=tags",
-  );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      collectionId: 10,
-    }),
-    "/projects/17/docs?collection=10",
-  );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      workspaceView: "journals",
-    }),
-    "/projects/17/docs?view=journals",
-  );
-  assert.equal(
-    routeToPath({
-      name: "project-document",
-      projectId: 17,
-      workspaceView: "trash",
-    }),
-    "/projects/17/docs?view=trash",
-  );
-  assert.deepEqual(parseRoutePath("/projects/17"), {
+  assert.deepEqual(parseRoutePath(`/projects/${PROJECT_ID}`), {
     name: "project",
-    projectId: 17,
+    projectId: PROJECT_ID,
   });
-  assert.deepEqual(parseRoutePath("/projects/17/docs"), {
-    name: "project-document",
-    projectId: 17,
+  assert.deepEqual(parseRoutePath(`/projects/${PROJECT_ID}/playground`), {
+    name: "project-playground",
+    projectId: PROJECT_ID,
   });
-  assert.deepEqual(parseRouteLocation("/projects/17/docs", "?doc=42"), {
-    name: "project-document",
-    projectId: 17,
-    documentId: 42,
-  });
-  assert.deepEqual(parseRouteLocation("/projects/17/docs", "?folder=8"), {
-    name: "project-document",
-    projectId: 17,
-    folderId: 8,
-  });
-  assert.deepEqual(parseRouteLocation("/projects/17/docs", "?tag=9"), {
-    name: "project-document",
-    projectId: 17,
-    tagId: 9,
-  });
-  assert.deepEqual(parseRouteLocation("/projects/17/docs", "?view=tags"), {
-    name: "project-document",
-    projectId: 17,
-    workspaceView: "tags",
-  });
-  assert.deepEqual(
-    parseRouteLocation("/projects/17/docs", "?collection=10"),
-    {
-      name: "project-document",
-      projectId: 17,
-      collectionId: 10,
-    },
-  );
-  assert.deepEqual(
-    parseRouteLocation("/projects/17/docs", "?view=collections"),
-    {
-      name: "project-document",
-      projectId: 17,
-      workspaceView: "collections",
-    },
-  );
-  assert.deepEqual(parseRouteLocation("/projects/17/docs", "?view=trash"), {
-    name: "project-document",
-    projectId: 17,
-    workspaceView: "trash",
-  });
-  assert.deepEqual(parseRoutePath("/projects/0"), {
+  assert.deepEqual(parseRouteLocation("/projects/7"), {
     name: "not-found",
-    pathname: "/projects/0",
+    pathname: "/projects/7",
   });
 });
 
@@ -134,7 +42,7 @@ test("returns typed API conflicts with the latest project", async (t) => {
       JSON.stringify({
         error: "changed",
         code: "revision_conflict",
-        project: { id: 1, revision: 3 },
+        project: { id: PROJECT_ID, revision: 3 },
       }),
       { status: 409, headers: { "content-type": "application/json" } },
     );

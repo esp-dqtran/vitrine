@@ -32,7 +32,6 @@ const Pricing = lazy(() => import('./Pricing').then((module) => ({ default: modu
 const BillingSuccess = lazy(() => import('./components/BillingSuccess').then((module) => ({ default: module.BillingSuccess })));
 const SignIn = lazy(() => import('./SignIn').then((module) => ({ default: module.SignIn })));
 const FeatureDocumentSharePage = lazy(() => import('./components/FeatureDocumentSharePage.tsx').then((module) => ({ default: module.FeatureDocumentSharePage })));
-const ProjectDocumentSharePage = lazy(() => import('./components/ProjectDocumentSharePage.tsx').then((module) => ({ default: module.ProjectDocumentSharePage })));
 
 const goApps = () => navigate({ name: 'apps' });
 const goHome = () => navigate({ name: 'landing' });
@@ -47,19 +46,10 @@ function Root() {
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
   const researchProjectsEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_RESEARCH_PROJECTS_ENABLED === 'true';
-  const projectDocumentsEnabled =
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_PROJECT_DOCUMENTS_ENABLED === 'true';
-  const projectDocumentsTestProjectId = Number(
-    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_PROJECT_DOCUMENTS_TEST_PROJECT_ID,
-  );
   const decision = decideRootRoute(route, {
     auth: loading ? 'loading' : user?.role === 'admin' ? 'admin' : user ? 'member' : 'guest',
     advancedSearchEnabled,
     researchProjectsEnabled,
-    projectDocumentsEnabled,
-    projectDocumentsTestProjectId: Number.isSafeInteger(projectDocumentsTestProjectId)
-      ? projectDocumentsTestProjectId
-      : undefined,
   });
 
   switch (decision.kind) {
@@ -85,10 +75,6 @@ function Root() {
         case 'feature-document-share':
           return route.name === 'feature-document-share'
             ? <FeatureDocumentSharePage token={route.token} />
-            : <RouteStatusPage title="Share not found" onBack={goHome} />;
-        case 'project-document-share':
-          return route.name === 'project-document-share'
-            ? <ProjectDocumentSharePage token={route.token} />
             : <RouteStatusPage title="Share not found" onBack={goHome} />;
         case 'build-in-public':
           return <BuildInPublicPage onHome={goHome} onBrowse={goApps} onPricing={goPricing} />;

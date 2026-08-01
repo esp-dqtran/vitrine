@@ -41,7 +41,6 @@ test('renders the roadmap before authentication gates', () => {
         auth: 'loading',
         advancedSearchEnabled: false,
         researchProjectsEnabled: false,
-        projectDocumentsEnabled: false,
       },
     ),
     { kind: 'public', page: 'build-in-public' },

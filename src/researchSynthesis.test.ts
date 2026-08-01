@@ -7,6 +7,8 @@ import {
   validateSynthesisResult,
 } from "./researchSynthesis.ts";
 
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
+
 const resultFixture = (overrides: Partial<ResearchSynthesisResult> = {}): ResearchSynthesisResult => ({
   executiveRead: "SSO is introduced after value is established.",
   observations: [{ text: "Both products defer SSO.", evidenceIds: ["e1"] }],
@@ -19,7 +21,7 @@ const resultFixture = (overrides: Partial<ResearchSynthesisResult> = {}): Resear
 });
 
 const workspaceFixture = (): ResearchProjectWorkspace => ({
-  id: 1,
+  id: PROJECT_ID,
   title: "SSO onboarding",
   question: "How should SSO be introduced?",
   platformFilter: "web",
@@ -36,7 +38,7 @@ const workspaceFixture = (): ResearchProjectWorkspace => ({
     conclusion: "Explain first",
     items: [{
       id: 1,
-      projectId: 1,
+      projectId: PROJECT_ID,
       laneId: 10,
       position: 0,
       sourceKind: "catalog_screen",

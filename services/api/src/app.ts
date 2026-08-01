@@ -153,16 +153,10 @@ import type { StepActual, StepFailure } from "../../../src/smartCrawler.ts";
 import { createAutonomousStore } from "../../../src/autonomousStore.ts";
 import { encryptStorageState, type StorageState } from "../../../src/crawlSession.ts";
 import { createResearchProjectStore } from "../../../src/researchProjectStore.ts";
-import { createProjectDocumentStore } from "../../../src/projectDocumentStore.ts";
 import { createOrganizationStore } from "../../../src/organizationStore.ts";
 import { createResearchSynthesisProvider } from "../../../src/researchSynthesisProvider.ts";
 import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
-import {
-  mountProjectDocumentRoutes,
-  mountPublicProjectDocumentRoutes,
-} from "./projectDocuments.ts";
-import type { OctoBaseClient } from "./octobaseClient.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
 import { kiroCliFeatureDocumentProviderModelFromEnvironment } from "../../../src/kiroCliFeatureDocumentProvider.ts";
@@ -341,15 +335,6 @@ const categoryStore = createCategoryStore(
     work((sql, values) => client.query(sql, values ? [...values] : undefined))),
 );
 
-const disabledOctoBaseClient: OctoBaseClient = {
-  async accessToken() {
-    throw new Error("Project documents are disabled");
-  },
-  async createWorkspace() {
-    throw new Error("Project documents are disabled");
-  },
-};
-
 const defaults = {
   query,
   allImages,
@@ -484,10 +469,6 @@ const defaults = {
   researchProjectStore: createResearchProjectStore(),
   researchSynthesisProvider: createResearchSynthesisProvider(),
   researchProjectsEnabled: process.env.RESEARCH_PROJECTS_ENABLED === "true",
-  projectDocumentsEnabled: process.env.PROJECT_DOCUMENTS_ENABLED === "true",
-  projectDocumentsTestProjectId: Number(process.env.PROJECT_DOCUMENTS_TEST_PROJECT_ID),
-  projectDocumentStore: createProjectDocumentStore(),
-  octobaseClient: disabledOctoBaseClient,
   organizationStore: createOrganizationStore(),
   organizationsEnabled: process.env.TEAMS_ENABLED === "true",
   listResearchCandidates: undefined as ((userId: number) => Promise<ResearchSuggestionCandidate[]>) | undefined,
@@ -1368,12 +1349,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       await sendStoredObject(deps.objectStore, metadata, res);
     },
   });
-  mountPublicProjectDocumentRoutes(app, {
-    enabled: deps.projectDocumentsEnabled,
-    store: deps.projectDocumentStore,
-    objectStore: deps.objectStore,
-  });
-
   const sitesRouteDependencies = {
     store: deps.sitesStore,
     cursorSecret: deps.mediaSigningSecret,
@@ -1706,20 +1681,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         versionId,
       }];
     });
-  });
-
-  mountProjectDocumentRoutes(app, {
-    enabled: deps.projectDocumentsEnabled,
-    testProjectId: Number.isSafeInteger(deps.projectDocumentsTestProjectId)
-      ? deps.projectDocumentsTestProjectId
-      : undefined,
-    store: deps.projectDocumentStore,
-    octobaseClient: deps.octobaseClient,
-    objectStore: deps.objectStore,
-    appUrl: deps.appUrl,
-    logOrphan: workspaceId => {
-      console.warn(`[project-documents] orphan OctoBase workspace ${workspaceId}`);
-    },
   });
 
   mountResearchProjectRoutes(app, {

@@ -73,8 +73,6 @@ test('routes product dropdown menus through the shared Astryx menu surface', asy
     './Pricing.tsx',
     './components/CollectionPicker.tsx',
     './components/UserDirectory.tsx',
-    './components/ProjectDocumentLibrary.tsx',
-    './components/ProjectDocumentWorkspace.tsx',
   ];
 
   for (const path of productMenuFiles) {

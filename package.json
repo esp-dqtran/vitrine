@@ -19,7 +19,6 @@
     "db:verify": "node --experimental-strip-types scripts/verify-migrations.ts",
     "db:backup": "node --experimental-strip-types scripts/db-backup.ts",
     "db:restore-verify": "node --experimental-strip-types scripts/db-restore-verify.ts",
-    "verify:blocksuite-octobase": "node --env-file-if-exists=.env --import tsx scripts/verify-blocksuite-octobase.ts",
     "catalog-db:audit": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --dry-run",
     "catalog-db:merge": "node --env-file=.env --import tsx scripts/merge-catalog-databases.ts --apply",
     "catalog:verify": "node --env-file=.env --import tsx scripts/verify-catalog-import.ts",
@@ -86,12 +85,7 @@
     "@astryxdesign/core": "^0.1.4",
     "@aws-sdk/client-s3": "^3.1085.0",
     "@aws-sdk/s3-request-presigner": "^3.1085.0",
-    "@blocksuite/block-std": "0.19.5",
-    "@blocksuite/blocks": "0.19.5",
-    "@blocksuite/presets": "0.19.5",
-    "@blocksuite/store": "0.19.5",
     "@stylexjs/stylex": "^0.18.3",
-    "@toeverything/theme": "1.1.23",
     "amqplib": "^2.0.1",
     "compression": "^1.8.1",
     "express": "^5.2.1",
@@ -100,7 +94,6 @@
     "gsap": "^3.15.0",
     "html2canvas": "^1.4.1",
     "http-proxy": "1.18.1",
-    "lit": "^3.3.3",
     "pg": "^8.22.0",
     "playwright": "^1.49.1",
     "react": "^19.2.7",
@@ -110,13 +103,9 @@
     "remark-gfm": "^4.0.1",
     "sharp": "^0.35.3",
     "stripe": "^22.3.1",
-    "ws": "8.21.1",
-    "y-indexeddb": "9.0.12",
-    "y-websocket": "3.0.0",
-    "yjs": "13.6.31"
+    "ws": "8.21.1"
   },
   "overrides": {
-    "@blocksuite/icons": "2.1.75",
     "file-type": "21.3.4"
   },
   "devDependencies": {

@@ -41,7 +41,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 const jsonHeaders = { 'content-type': 'application/json' };
-const projectPath = (projectId: number) => `/api/research-projects/${projectId}`;
+const projectPath = (projectId: string) => `/api/research-projects/${projectId}`;
 
 export const listResearchProjects = (): Promise<ResearchProjectSummary[]> =>
   request('/api/research-projects');
@@ -51,25 +51,25 @@ export const createResearchProject = (input: CreateResearchProjectInput): Promis
     method: 'POST', headers: jsonHeaders, body: JSON.stringify(input),
   });
 
-export const getResearchProject = (projectId: number): Promise<ResearchProjectWorkspace> =>
+export const getResearchProject = (projectId: string): Promise<ResearchProjectWorkspace> =>
   request(projectPath(projectId));
 
 export const updateResearchProject = (
-  projectId: number,
+  projectId: string,
   expectedRevision: number,
   patch: ProjectPatch,
 ): Promise<ResearchProjectWorkspace> => request(projectPath(projectId), {
   method: 'PATCH', headers: jsonHeaders, body: JSON.stringify({ expectedRevision, ...patch }),
 });
 
-export const duplicateResearchProject = (projectId: number): Promise<ResearchProjectWorkspace> =>
+export const duplicateResearchProject = (projectId: string): Promise<ResearchProjectWorkspace> =>
   request(`${projectPath(projectId)}/duplicate`, { method: 'POST' });
 
-export const deleteResearchProject = (projectId: number): Promise<void> =>
+export const deleteResearchProject = (projectId: string): Promise<void> =>
   request(projectPath(projectId), { method: 'DELETE' });
 
 export const createResearchLane = (
-  projectId: number,
+  projectId: string,
   expectedRevision: number,
   title: string,
 ): Promise<ResearchProjectWorkspace> => request(`${projectPath(projectId)}/lanes`, {
@@ -77,7 +77,7 @@ export const createResearchLane = (
 });
 
 export const updateResearchLane = (
-  projectId: number,
+  projectId: string,
   laneId: number,
   expectedRevision: number,
   patch: { title?: string; conclusion?: string },
@@ -86,7 +86,7 @@ export const updateResearchLane = (
 });
 
 export const deleteResearchLane = (
-  projectId: number,
+  projectId: string,
   laneId: number,
   expectedRevision: number,
 ): Promise<ResearchProjectWorkspace> => request(
@@ -115,7 +115,7 @@ export const updateResearchItem = (
 });
 
 export const moveResearchItem = (
-  projectId: number,
+  projectId: string,
   itemId: number,
   expectedRevision: number,
   targetLaneId: number,
@@ -126,7 +126,7 @@ export const moveResearchItem = (
 });
 
 export const removeResearchItem = (
-  projectId: number,
+  projectId: string,
   itemId: number,
   expectedRevision: number,
 ): Promise<ResearchProjectWorkspace> => request(
@@ -134,11 +134,11 @@ export const removeResearchItem = (
   { method: 'DELETE' },
 );
 
-export const listResearchSuggestions = (projectId: number, query = ''): Promise<ResearchSuggestion[]> =>
+export const listResearchSuggestions = (projectId: string, query = ''): Promise<ResearchSuggestion[]> =>
   request(`${projectPath(projectId)}/suggestions${query ? `?q=${encodeURIComponent(query)}` : ''}`);
 
 export function uploadResearchScreenshot(
-  projectId: number,
+  projectId: string,
   laneId: number,
   expectedRevision: number,
   file: File,
@@ -150,10 +150,10 @@ export function uploadResearchScreenshot(
   });
 }
 
-export const synthesizeResearch = (projectId: number): Promise<ResearchSynthesisView> =>
+export const synthesizeResearch = (projectId: string): Promise<ResearchSynthesisView> =>
   request(`${projectPath(projectId)}/synthesize`, { method: 'POST' });
 
-export async function downloadResearchMarkdown(projectId: number): Promise<{ blob: Blob; filename: string }> {
+export async function downloadResearchMarkdown(projectId: string): Promise<{ blob: Blob; filename: string }> {
   const response = await fetch(`${projectPath(projectId)}/export.md`);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string; code?: string };

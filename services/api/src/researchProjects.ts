@@ -2,9 +2,11 @@ import express from "express";
 import {
   RESEARCH_LIMITS,
   ResearchProjectConflictError,
+  normalizeResearchProjectId,
   type AddResearchItemInput,
   type ProjectPatch,
   type ResearchPlatform,
+  type ResearchProjectId,
   type ResearchProjectWorkspace,
 } from "../../../src/researchProject.ts";
 import type { ResearchProjectStore } from "../../../src/researchProjectStore.ts";
@@ -33,7 +35,7 @@ export interface ResearchProjectRouteDependencies {
   synthesisProvider?: ResearchSynthesisProvider;
   canAccessApp(user: ResearchUser, app: string): Promise<boolean>;
   listPublishedCandidates(userId: number): Promise<ResearchSuggestionCandidate[]>;
-  getPrivateObject?(userId: number, projectId: number, itemId: number): Promise<ObjectMetadata | undefined>;
+  getPrivateObject?(userId: number, projectId: ResearchProjectId, itemId: number): Promise<ObjectMetadata | undefined>;
   recordEvent?(input: { userId: number; featureKey: FeatureKey; action: string; outcome: string; volume?: number }): Promise<void>;
 }
 
@@ -127,7 +129,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.get("/research-projects/:id", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     const project = await deps.store.getProject(res.locals.user.id, projectId);
     if (!project) { res.status(404).json({ error: "research project not found" }); return; }
@@ -141,7 +143,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.patch("/research-projects/:id", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const expectedRevision = revision(req.body?.expectedRevision);
     const body = record(req.body);
     const patch = body ? parsePatch(body) : undefined;
@@ -152,7 +154,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.delete("/research-projects/:id", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     const deleted = await deps.store.deleteProject(res.locals.user.id, projectId);
     if (!deleted.deleted) { res.status(404).json({ error: "research project not found" }); return; }
@@ -161,7 +163,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.post("/research-projects/:id/duplicate", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     const project = await deps.store.duplicateProject(res.locals.user.id, projectId);
     if (!project) res.status(404).json({ error: "research project not found" });
@@ -169,7 +171,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.post("/research-projects/:id/lanes", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const expectedRevision = revision(req.body?.expectedRevision);
     const title = boundedText(req.body?.title, 120, true);
     if (!projectId || !expectedRevision || !title) { res.status(400).json({ error: "invalid lane" }); return; }
@@ -179,7 +181,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.patch("/research-projects/:id/lanes/:laneId", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const laneId = positiveId(req.params.laneId);
     const expectedRevision = revision(req.body?.expectedRevision);
     const title = req.body?.title === undefined ? undefined : boundedText(req.body.title, 120, true);
@@ -196,7 +198,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.delete("/research-projects/:id/lanes/:laneId", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const laneId = positiveId(req.params.laneId);
     const expectedRevision = revision(req.body?.expectedRevision ?? Number(req.query.revision));
     if (!projectId || !laneId || !expectedRevision) { res.status(400).json({ error: "invalid lane delete" }); return; }
@@ -206,7 +208,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.post("/research-projects/:id/items", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const laneId = positiveId(String(req.body?.laneId));
     const expectedRevision = revision(req.body?.expectedRevision);
     const snapshot = record(req.body?.snapshot);
@@ -241,7 +243,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.patch("/research-projects/:id/items/:itemId", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const itemId = positiveId(req.params.itemId);
     const expectedRevision = revision(req.body?.expectedRevision);
     if (!projectId || !itemId || !expectedRevision) { res.status(400).json({ error: "invalid item update" }); return; }
@@ -257,7 +259,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.post("/research-projects/:id/items/:itemId/move", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const itemId = positiveId(req.params.itemId);
     const targetLaneId = positiveId(String(req.body?.targetLaneId));
     const targetPosition = Number(req.body?.targetPosition);
@@ -274,7 +276,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.delete("/research-projects/:id/items/:itemId", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const itemId = positiveId(req.params.itemId);
     const expectedRevision = revision(req.body?.expectedRevision ?? Number(req.query.revision));
     if (!projectId || !itemId || !expectedRevision) { res.status(400).json({ error: "invalid item delete" }); return; }
@@ -287,7 +289,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.get("/research-projects/:id/suggestions", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     const project = await deps.store.getProject(res.locals.user.id, projectId);
     if (!project) { res.status(404).json({ error: "research project not found" }); return; }
@@ -300,7 +302,7 @@ export function mountResearchProjectRoutes(
     "/research-projects/:id/uploads",
     express.raw({ type: ["image/png", "image/jpeg", "image/webp"], limit: RESEARCH_LIMITS.uploadBytesMax }),
     asyncRoute(async (req, res) => {
-      const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
       const laneId = positiveId(String(req.query.laneId));
       const expectedRevision = revision(Number(req.query.revision));
       const contentType = (req.header("content-type") ?? "").split(";", 1)[0].trim().toLowerCase();
@@ -329,7 +331,7 @@ export function mountResearchProjectRoutes(
   );
 
   app.get("/research-projects/:id/private-media/:itemId", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     const itemId = positiveId(req.params.itemId);
     if (!projectId || !itemId) { res.status(400).json({ error: "invalid private media id" }); return; }
     if (!deps.objectStore || !deps.getPrivateObject) { res.status(503).json({ error: "Object storage unavailable" }); return; }
@@ -339,7 +341,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.post("/research-projects/:id/synthesize", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     if (!deps.synthesisProvider) { res.status(503).json({ error: "Research synthesis is not configured" }); return; }
     const project = await deps.store.getProject(res.locals.user.id, projectId);
@@ -358,7 +360,7 @@ export function mountResearchProjectRoutes(
   }));
 
   app.get("/research-projects/:id/export.md", asyncRoute(async (req, res) => {
-    const projectId = positiveId(req.params.id);
+    const projectId = normalizeResearchProjectId(req.params.id);
     if (!projectId) { res.status(400).json({ error: "invalid project id" }); return; }
     const project = await deps.store.getProject(res.locals.user.id, projectId);
     if (!project) { res.status(404).json({ error: "research project not found" }); return; }
@@ -375,7 +377,7 @@ export function mountResearchProjectRoutes(
       return;
     }
     if (error instanceof ResearchProjectConflictError) {
-      const projectId = positiveId(req.params.id ?? "");
+      const projectId = normalizeResearchProjectId(req.params.id ?? "");
       void (projectId ? deps.store.getProject(res.locals.user.id, projectId) : Promise.resolve(undefined))
         .then((project) => res.status(409).json({
           error: "Research project changed in another session",

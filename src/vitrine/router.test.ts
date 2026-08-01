@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseRouteLocation, parseRoutePath, routeToPath } from './router.ts';
 
+const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
+
 test('round-trips the billing success route', () => {
   assert.deepEqual(parseRoutePath('/billing/success'), { name: 'billing-success' });
   assert.equal(routeToPath({ name: 'billing-success' }), '/billing/success');
@@ -28,74 +30,25 @@ test('round-trips the public build-in-public route', () => {
   assert.equal(routeToPath({ name: 'build-in-public' }), '/build-in-public');
 });
 
-test('round-trips authenticated documents and public share routes', () => {
+test('round-trips authenticated feature documents and public share routes', () => {
   assert.deepEqual(parseRoutePath('/feature-documents/12'), { name: 'feature-document', documentId: 12 });
   assert.equal(routeToPath({ name: 'feature-document', documentId: 12 }), '/feature-documents/12');
   assert.deepEqual(parseRoutePath('/feature-document-shares/token_abc'), { name: 'feature-document-share', token: 'token_abc' });
   assert.equal(routeToPath({ name: 'feature-document-share', token: 'token_abc' }), '/feature-document-shares/token_abc');
-  assert.deepEqual(parseRoutePath('/project-document-shares/token_xyz'), { name: 'project-document-share', token: 'token_xyz' });
-  assert.equal(routeToPath({ name: 'project-document-share', token: 'token_xyz' }), '/project-document-shares/token_xyz');
 });
 
-test('round-trips a selected Project Journal date', () => {
-  const route = {
-    name: 'project-document' as const,
-    projectId: 7,
-    workspaceView: 'journals' as const,
-    journalDate: '2026-07-30',
-  };
-  assert.equal(
-    routeToPath(route),
-    '/projects/7/docs?view=journals&date=2026-07-30',
-  );
-  assert.deepEqual(
-    parseRouteLocation(
-      '/projects/7/docs',
-      '?view=journals&date=2026-07-30',
-    ),
-    route,
-  );
-  assert.deepEqual(
-    parseRouteLocation('/projects/7/docs', '?view=docs&date=2026-07-30'),
-    { name: 'project-document', projectId: 7 },
-  );
-});
-
-test('round-trips the Project Document favorites workspace', () => {
-  const route = {
-    name: 'project-document' as const,
-    projectId: 7,
-    workspaceView: 'favorites' as const,
-  };
-  assert.equal(routeToPath(route), '/projects/7/docs?view=favorites');
-  assert.deepEqual(
-    parseRouteLocation('/projects/7/docs', '?view=favorites'),
-    route,
-  );
-});
-
-test('round-trips Project Document management tools', () => {
-  for (const workspaceView of [
-    'import',
-    'templates',
-    'new-folder',
-    'new-tag',
-    'new-collection',
-  ] as const) {
-    const route = {
-      name: 'project-document' as const,
-      projectId: 7,
-      workspaceView,
-    };
-    assert.equal(
-      routeToPath(route),
-      `/projects/7/docs?view=${workspaceView}`,
-    );
-    assert.deepEqual(
-      parseRouteLocation('/projects/7/docs', `?view=${workspaceView}`),
-      route,
-    );
-  }
+test('round-trips the Designer Project Playground with a UUID', () => {
+  const route = { name: 'project-playground' as const, projectId: PROJECT_ID };
+  assert.equal(routeToPath(route), `/projects/${PROJECT_ID}/playground`);
+  assert.deepEqual(parseRoutePath(`/projects/${PROJECT_ID}/playground`), route);
+  assert.deepEqual(parseRoutePath('/projects/7/playground'), {
+    name: 'not-found',
+    pathname: '/projects/7/playground',
+  });
+  assert.deepEqual(parseRoutePath(`/projects/${PROJECT_ID}/docs`), {
+    name: 'not-found',
+    pathname: `/projects/${PROJECT_ID}/docs`,
+  });
 });
 
 test('round-trips current and legacy Site detail tabs while keeping the base route stable', () => {

@@ -1,7 +1,5 @@
-@import '@toeverything/theme/style.css';
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
-@import "./components/ProjectDocumentWorkspace.css";
 
 .vitrine-page {
   min-height: 100vh;
@@ -3983,10 +3981,53 @@ body {
 }
 
 /* Research project workspace */
+.project-workspace-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 16px;
+  background: var(--color-background-surface);
+}
+
+.project-workspace-nav__identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 16px;
+}
+
+.project-workspace-nav__title {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.project-workspace-nav__title h1 {
+  margin: 0;
+}
+
+.project-workspace-nav__areas {
+  width: min(100%, 420px);
+  flex: 0 1 420px;
+}
+
 .research-project-page {
   max-width: 1500px;
   margin: 0 auto;
   padding: 24px 28px 64px;
+}
+
+.project-playground-empty {
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+  margin-top: 24px;
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: 16px;
+  background: var(--color-background-surface);
 }
 
 .research-project-workspace {
@@ -4016,6 +4057,21 @@ body {
 }
 
 @media (max-width: 640px) {
+  .project-workspace-nav {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .project-workspace-nav__identity {
+    align-items: flex-start;
+  }
+
+  .project-workspace-nav__areas {
+    width: 100%;
+    flex-basis: auto;
+  }
+
   .research-project-page {
     padding: 20px 16px 48px;
   }

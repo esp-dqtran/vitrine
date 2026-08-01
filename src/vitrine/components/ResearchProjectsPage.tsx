@@ -26,12 +26,12 @@ import { PageHeader } from './PageHeader.tsx';
 export type ProjectSort = 'updated' | 'name';
 
 export interface ProjectActions {
-  open(projectId: number): void;
+  open(projectId: string): void;
   create(input: CreateResearchProjectInput): Promise<void>;
   rename(project: ResearchProjectSummary, title: string): Promise<void>;
   setPinned(project: ResearchProjectSummary, pinned: boolean): Promise<void>;
-  duplicate(projectId: number): Promise<void>;
-  remove(projectId: number): Promise<void>;
+  duplicate(projectId: string): Promise<void>;
+  remove(projectId: string): Promise<void>;
 }
 
 export function sortProjects(

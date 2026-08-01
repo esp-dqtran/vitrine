@@ -11,6 +11,9 @@ import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import { EvidenceDrawer } from "./components/EvidenceDrawer.tsx";
 import { ProjectInsightsPanel, type ProjectInsightsActions } from "./components/ProjectInsightsPanel.tsx";
 
+const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
+const OTHER_PROJECT_ID = "22222222-2222-4222-8222-222222222222";
+
 const actions = {
   open: () => {},
   create: async () => {},
@@ -28,7 +31,7 @@ test("renders a personal projects workspace without project status", () => {
 
   const populated = renderToStaticMarkup(<ResearchProjectsView
     projects={[{
-      id: 1,
+      id: PROJECT_ID,
       title: "SSO onboarding",
       question: "How should SSO be introduced?",
       platformFilter: "web",
@@ -53,7 +56,7 @@ test("renders a personal projects workspace without project status", () => {
 
 test("sorts projects without mutating the source list", () => {
   const projects = [{
-    id: 1,
+    id: PROJECT_ID,
     title: "Wallet",
     question: "Payment flow",
     platformFilter: "all" as const,
@@ -63,7 +66,7 @@ test("sorts projects without mutating the source list", () => {
     synthesisState: "none" as const,
     updatedAt: "2026-07-01T00:00:00.000Z",
   }, {
-    id: 2,
+    id: OTHER_PROJECT_ID,
     title: "Accounts",
     question: "",
     platformFilter: "all" as const,
@@ -74,13 +77,13 @@ test("sorts projects without mutating the source list", () => {
     updatedAt: "2026-07-20T00:00:00.000Z",
   }];
 
-  assert.deepEqual(sortProjects(projects, "updated").map(({ id }) => id), [2, 1]);
-  assert.deepEqual(sortProjects(projects, "name").map(({ id }) => id), [2, 1]);
-  assert.deepEqual(projects.map(({ id }) => id), [1, 2]);
+  assert.deepEqual(sortProjects(projects, "updated").map(({ id }) => id), [OTHER_PROJECT_ID, PROJECT_ID]);
+  assert.deepEqual(sortProjects(projects, "name").map(({ id }) => id), [OTHER_PROJECT_ID, PROJECT_ID]);
+  assert.deepEqual(projects.map(({ id }) => id), [PROJECT_ID, OTHER_PROJECT_ID]);
 });
 
 const workspaceFixture = (): ResearchProjectWorkspace => ({
-  id: 1,
+  id: PROJECT_ID,
   title: "SSO",
   question: "How should SSO work?",
   platformFilter: "web",
@@ -100,7 +103,7 @@ const workspaceFixture = (): ResearchProjectWorkspace => ({
       conclusion: "",
       items: [{
         id: 100,
-        projectId: 1,
+        projectId: PROJECT_ID,
         laneId: 10,
         position: 0,
         sourceKind: "catalog_screen",
@@ -218,15 +221,11 @@ test("labels AI output and preserves designer decisions", () => {
   assert.match(html, /Use progressive SSO setup/);
 });
 
-test("keeps Experimental Docs behind its Project-scoped flag", () => {
+test("keeps the Designer Playground in the Project workspace", () => {
   const source = readFileSync(
     new URL("./components/ResearchProjectPage.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /projectDocumentsEnabled \?/);
-  assert.match(source, /label="Experimental Docs"/);
-  assert.match(
-    source,
-    /navigate\(\{ name: 'project-document', projectId: workspace\.id \}\)/,
-  );
+  assert.match(source, /<ProjectWorkspaceNav/);
+  assert.doesNotMatch(source, /projectDocumentsEnabled|ProjectDocument/);
 });

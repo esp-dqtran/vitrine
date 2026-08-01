@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { Platform } from "../platformFromUrl.ts";
+import { normalizeResearchProjectId } from "../researchProject.ts";
 
 export type FlowRepresentation = "visual" | "document";
 
@@ -44,30 +45,10 @@ export type Route =
   | { name: "sites" }
   | SiteVersionRoute
   | { name: "projects" }
-  | { name: "project"; projectId: number }
-  | {
-      name: "project-document";
-      projectId: number;
-      documentId?: number;
-      folderId?: number;
-      tagId?: number;
-      collectionId?: number;
-      workspaceView?:
-        | "favorites"
-        | "tags"
-        | "collections"
-        | "journals"
-        | "trash"
-        | "import"
-        | "templates"
-        | "new-folder"
-        | "new-tag"
-        | "new-collection";
-      journalDate?: string;
-    }
+  | { name: "project"; projectId: string }
+  | { name: "project-playground"; projectId: string }
   | { name: "feature-document"; documentId: number }
   | { name: "feature-document-share"; token: string }
-  | { name: "project-document-share"; token: string }
   | { name: "admin" };
 
 interface LocationTarget {
@@ -166,17 +147,19 @@ export function parseRoutePath(pathname: string): Route {
       : { name: "not-found", pathname: path };
   }
   if (path === "/projects") return { name: "projects" };
-  const projectDocumentMatch = path.match(/^\/projects\/([^/]+)\/docs$/);
-  if (projectDocumentMatch) {
-    const projectId = Number(projectDocumentMatch[1]);
-    return Number.isSafeInteger(projectId) && projectId > 0
-      ? { name: "project-document", projectId }
+  const projectPlaygroundMatch = path.match(
+    /^\/projects\/([^/]+)\/playground$/,
+  );
+  if (projectPlaygroundMatch) {
+    const projectId = normalizeResearchProjectId(projectPlaygroundMatch[1]);
+    return projectId
+      ? { name: "project-playground", projectId }
       : { name: "not-found", pathname: path };
   }
   const projectMatch = path.match(/^\/projects\/([^/]+)$/);
   if (projectMatch) {
-    const projectId = Number(projectMatch[1]);
-    return Number.isSafeInteger(projectId) && projectId > 0
+    const projectId = normalizeResearchProjectId(projectMatch[1]);
+    return projectId
       ? { name: "project", projectId }
       : { name: "not-found", pathname: path };
   }
@@ -194,15 +177,6 @@ export function parseRoutePath(pathname: string): Route {
     const token = decodeSegment(featureDocumentShareMatch[1]);
     return token
       ? { name: "feature-document-share", token }
-      : { name: "not-found", pathname: path };
-  }
-  const projectDocumentShareMatch = path.match(
-    /^\/project-document-shares\/([^/]+)$/,
-  );
-  if (projectDocumentShareMatch) {
-    const token = decodeSegment(projectDocumentShareMatch[1]);
-    return token
-      ? { name: "project-document-share", token }
       : { name: "not-found", pathname: path };
   }
   if (path === "/admin") return { name: "admin" };
@@ -243,58 +217,6 @@ function bounded(
 
 export function parseRouteLocation(pathname: string, search = ""): Route {
   const route = parseRoutePath(pathname);
-  if (route.name === "project-document") {
-    const params = new URLSearchParams(search);
-    const documentId = positive(params.get("doc"));
-    const folderId = positive(params.get("folder"));
-    const tagId = positive(params.get("tag"));
-    const collectionId = positive(params.get("collection"));
-    const rawWorkspaceView = params.get("view");
-    const rawJournalDate = params.get("date");
-    const workspaceView =
-      rawWorkspaceView === "favorites" ||
-      rawWorkspaceView === "tags" ||
-      rawWorkspaceView === "collections" ||
-      rawWorkspaceView === "journals" ||
-      rawWorkspaceView === "trash" ||
-      rawWorkspaceView === "import" ||
-      rawWorkspaceView === "templates" ||
-      rawWorkspaceView === "new-folder" ||
-      rawWorkspaceView === "new-tag" ||
-      rawWorkspaceView === "new-collection"
-        ? rawWorkspaceView
-        : undefined;
-    const journalDate =
-      workspaceView === "journals" &&
-      rawJournalDate !== null &&
-      /^\d{4}-\d{2}-\d{2}$/.test(rawJournalDate)
-        ? rawJournalDate
-        : undefined;
-    return {
-      ...route,
-      ...(documentId ? { documentId } : {}),
-      ...(!documentId && folderId ? { folderId } : {}),
-      ...(!documentId && !folderId && tagId ? { tagId } : {}),
-      ...(!documentId && !folderId && !tagId && collectionId
-        ? { collectionId }
-        : {}),
-      ...(!documentId &&
-      !folderId &&
-      !tagId &&
-      !collectionId &&
-      workspaceView
-        ? { workspaceView }
-        : {}),
-      ...(!documentId &&
-      !folderId &&
-      !tagId &&
-      !collectionId &&
-      workspaceView === "journals" &&
-      journalDate
-        ? { journalDate }
-        : {}),
-    };
-  }
   if (route.name === "site-version" && "siteSlug" in route) {
     const version = positive(new URLSearchParams(search).get("version"));
     return {
@@ -379,29 +301,12 @@ export function routeToPath(route: Route): string {
       return "/projects";
     case "project":
       return `/projects/${route.projectId}`;
-    case "project-document":
-      {
-        const params = new URLSearchParams();
-        if (route.documentId) params.set("doc", String(route.documentId));
-        else if (route.folderId) params.set("folder", String(route.folderId));
-        else if (route.tagId) params.set("tag", String(route.tagId));
-        else if (route.collectionId)
-          params.set("collection", String(route.collectionId));
-        else if (route.workspaceView) {
-          params.set("view", route.workspaceView);
-          if (route.workspaceView === "journals" && route.journalDate) {
-            params.set("date", route.journalDate);
-          }
-        }
-        const search = params.toString();
-        return `/projects/${route.projectId}/docs${search ? `?${search}` : ""}`;
-      }
+    case "project-playground":
+      return `/projects/${route.projectId}/playground`;
     case "feature-document":
       return `/feature-documents/${route.documentId}`;
     case "feature-document-share":
       return `/feature-document-shares/${encodeURIComponent(route.token)}`;
-    case "project-document-share":
-      return `/project-document-shares/${encodeURIComponent(route.token)}`;
     case "admin":
       return "/admin";
     case "app": {

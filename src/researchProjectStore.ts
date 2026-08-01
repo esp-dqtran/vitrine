@@ -15,6 +15,7 @@ import {
   type RecordedSynthesis,
   type RemoveResearchItemInput,
   type ResearchProjectItem,
+  type ResearchProjectId,
   type ResearchProjectLane,
   type ResearchProjectSummary,
   type ResearchProjectWorkspace,
@@ -34,11 +35,11 @@ type TransactionRunner = <T>(work: (query: DatabaseQuery) => Promise<T>) => Prom
 export interface ResearchProjectStore {
   listProjects(userId: number): Promise<ResearchProjectSummary[]>;
   createProject(userId: number, input: CreateResearchProjectInput): Promise<ResearchProjectWorkspace>;
-  getProject(userId: number, projectId: number): Promise<ResearchProjectWorkspace | undefined>;
-  getPrivateObject(userId: number, projectId: number, itemId: number): Promise<ObjectMetadata | undefined>;
-  updateProject(userId: number, projectId: number, expectedRevision: number, patch: ProjectPatch): Promise<ResearchProjectWorkspace | undefined>;
-  duplicateProject(userId: number, projectId: number): Promise<ResearchProjectWorkspace | undefined>;
-  deleteProject(userId: number, projectId: number): Promise<{ deleted: boolean; privateObjectKeys: string[] }>;
+  getProject(userId: number, projectId: ResearchProjectId): Promise<ResearchProjectWorkspace | undefined>;
+  getPrivateObject(userId: number, projectId: ResearchProjectId, itemId: number): Promise<ObjectMetadata | undefined>;
+  updateProject(userId: number, projectId: ResearchProjectId, expectedRevision: number, patch: ProjectPatch): Promise<ResearchProjectWorkspace | undefined>;
+  duplicateProject(userId: number, projectId: ResearchProjectId): Promise<ResearchProjectWorkspace | undefined>;
+  deleteProject(userId: number, projectId: ResearchProjectId): Promise<{ deleted: boolean; privateObjectKeys: string[] }>;
   createLane(userId: number, input: CreateLaneInput): Promise<ResearchProjectWorkspace | undefined>;
   updateLane(userId: number, input: UpdateLaneInput): Promise<ResearchProjectWorkspace | undefined>;
   deleteEmptyLane(userId: number, input: DeleteLaneInput): Promise<ResearchProjectWorkspace | undefined>;
@@ -56,7 +57,7 @@ const number = (value: unknown): number => Number(value);
 function itemFromRow(row: Record<string, unknown>): ResearchProjectItem {
   const sourceKind = row.source_kind as ResearchProjectItem["sourceKind"];
   const id = number(row.id);
-  const projectId = number(row.project_id);
+  const projectId = text(row.project_public_id);
   const snapshot = (row.source_snapshot ?? {}) as ResearchProjectItem["snapshot"];
   return {
     id,
@@ -91,14 +92,14 @@ function synthesisFromRow(row: Record<string, unknown> | undefined, revision: nu
 async function loadWorkspace(
   runQuery: DatabaseQuery,
   userId: number,
-  projectId: number,
+  projectId: ResearchProjectId,
 ): Promise<ResearchProjectWorkspace | undefined> {
   const projectResult = await runQuery(
-    `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.constraints,
+    `SELECT rp.public_id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.constraints,
             rp.decision, rp.rationale, rp.open_questions, rp.revision,
             rp.created_at, rp.updated_at
      FROM research_projects rp
-     WHERE rp.id = $1 AND rp.user_id = $2`,
+     WHERE rp.public_id = $1 AND rp.user_id = $2`,
     [projectId, userId],
   );
   const project = projectResult.rows[0];
@@ -109,16 +110,17 @@ async function loadWorkspace(
       `SELECT l.id, l.title, l.position, l.conclusion
        FROM research_project_lanes l
        JOIN research_projects rp ON rp.id = l.project_id
-       WHERE l.project_id = $1 AND rp.user_id = $2
+       WHERE rp.public_id = $1 AND rp.user_id = $2
        ORDER BY l.position`,
       [projectId, userId],
     ),
     runQuery(
-      `SELECT i.id, i.project_id, i.lane_id, i.position, i.source_kind,
+      `SELECT i.id, rp.public_id AS project_public_id,
+              i.lane_id, i.position, i.source_kind,
               i.step_label, i.note, i.tags, i.important, i.source_snapshot
        FROM research_project_items i
        JOIN research_projects rp ON rp.id = i.project_id
-       WHERE i.project_id = $1 AND rp.user_id = $2
+       WHERE rp.public_id = $1 AND rp.user_id = $2
        ORDER BY i.lane_id, i.position`,
       [projectId, userId],
     ),
@@ -126,7 +128,7 @@ async function loadWorkspace(
       `SELECT s.id, s.project_revision, s.status, s.result, s.created_at
        FROM research_project_syntheses s
        JOIN research_projects rp ON rp.id = s.project_id
-       WHERE s.project_id = $1 AND rp.user_id = $2
+       WHERE rp.public_id = $1 AND rp.user_id = $2
        ORDER BY s.created_at DESC, s.id DESC LIMIT 1`,
       [projectId, userId],
     ),
@@ -142,7 +144,7 @@ async function loadWorkspace(
   }));
   const revision = number(project.revision);
   return {
-    id: number(project.id),
+    id: text(project.public_id),
     title: text(project.title),
     question: text(project.question),
     platformFilter: project.platform_filter as ResearchProjectWorkspace["platformFilter"],
@@ -162,12 +164,12 @@ async function loadWorkspace(
 async function lockOwnedProject(
   runQuery: DatabaseQuery,
   userId: number,
-  projectId: number,
+  projectId: ResearchProjectId,
   expectedRevision?: number,
-): Promise<number | undefined> {
+): Promise<{ id: number; revision: number } | undefined> {
   const locked = await runQuery(
-    `SELECT revision FROM research_projects
-     WHERE id = $1 AND user_id = $2
+    `SELECT id, revision FROM research_projects
+     WHERE public_id = $1 AND user_id = $2
      FOR UPDATE`,
     [projectId, userId],
   );
@@ -175,7 +177,7 @@ async function lockOwnedProject(
   if (!row) return undefined;
   const revision = number(row.revision);
   if (expectedRevision !== undefined) assertExpectedRevision(revision, expectedRevision);
-  return revision;
+  return { id: number(row.id), revision };
 }
 
 async function bumpRevision(runQuery: DatabaseQuery, projectId: number): Promise<void> {
@@ -203,7 +205,7 @@ export function createResearchProjectStore(
   return {
     async listProjects(userId) {
       const result = await runQuery(
-        `SELECT rp.id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.revision, rp.updated_at,
+        `SELECT rp.public_id, rp.title, rp.question, rp.platform_filter, rp.pinned, rp.revision, rp.updated_at,
                 count(DISTINCT i.id)::integer AS evidence_count,
                 max(s.project_revision)::integer AS synthesis_revision
          FROM research_projects rp
@@ -216,7 +218,7 @@ export function createResearchProjectStore(
       return result.rows.map((row) => {
         const synthesisRevision = row.synthesis_revision == null ? undefined : number(row.synthesis_revision);
         return {
-          id: number(row.id),
+          id: text(row.public_id),
           title: text(row.title),
           question: text(row.question),
           platformFilter: row.platform_filter as ResearchProjectSummary["platformFilter"],
@@ -236,16 +238,17 @@ export function createResearchProjectStore(
         const created = await tx(
           `INSERT INTO research_projects (user_id, title, question, platform_filter)
            VALUES ($1, $2, $3, $4)
-           RETURNING id, title, question, platform_filter, constraints, decision,
+           RETURNING id, public_id, title, question, platform_filter, constraints, decision,
                      rationale, open_questions, revision, created_at, updated_at`,
           [userId, input.title.trim(), input.question?.trim() ?? "", input.platformFilter ?? "all"],
         );
-        const projectId = number(created.rows[0].id);
+        const internalProjectId = number(created.rows[0].id);
+        const projectId = text(created.rows[0].public_id);
         const lanes = defaultResearchLanes();
         await tx(
           `INSERT INTO research_project_lanes (project_id, title, position)
            VALUES ($1, $2, $3), ($1, $4, $5)`,
-          [projectId, lanes[0].title, lanes[0].position, lanes[1].title, lanes[1].position],
+          [internalProjectId, lanes[0].title, lanes[0].position, lanes[1].title, lanes[1].position],
         );
         return (await loadWorkspace(tx, userId, projectId))!;
       });
@@ -261,7 +264,7 @@ export function createResearchProjectStore(
          FROM research_project_items i
          JOIN research_projects rp ON rp.id = i.project_id
          JOIN stored_objects so ON so.object_key = i.private_object_key
-         WHERE rp.user_id = $1 AND rp.id = $2 AND i.id = $3
+         WHERE rp.user_id = $1 AND rp.public_id = $2 AND i.id = $3
            AND i.source_kind = 'private_upload'`,
         [userId, projectId, itemId],
       );
@@ -280,9 +283,15 @@ export function createResearchProjectStore(
 
     async updateProject(userId, projectId, expectedRevision, patch) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, projectId, expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          projectId,
+          expectedRevision,
+        );
+        if (!locked) return undefined;
         const columns: string[] = [];
-        const values: unknown[] = [projectId];
+        const values: unknown[] = [locked.id];
         let contentChanged = false;
         const names: Array<[keyof ProjectPatch, string]> = [
           ["title", "title"],
@@ -314,23 +323,24 @@ export function createResearchProjectStore(
 
     async duplicateProject(userId, projectId) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, projectId) === undefined) return undefined;
+        if (!(await lockOwnedProject(tx, userId, projectId))) return undefined;
         const source = await loadWorkspace(tx, userId, projectId);
         if (!source) return undefined;
         const created = await tx(
           `INSERT INTO research_projects
              (user_id, title, question, platform_filter, constraints, decision, rationale, open_questions)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-           RETURNING id`,
+           RETURNING id, public_id`,
           [userId, `${source.title} copy`, source.question, source.platformFilter, source.constraints,
             source.decision, source.rationale, source.openQuestions],
         );
-        const duplicateId = number(created.rows[0].id);
+        const duplicateInternalId = number(created.rows[0].id);
+        const duplicateId = text(created.rows[0].public_id);
         for (const lane of source.lanes) {
           const laneResult = await tx(
             `INSERT INTO research_project_lanes (project_id, title, position, conclusion)
              VALUES ($1, $2, $3, $4) RETURNING id`,
-            [duplicateId, lane.title, lane.position, lane.conclusion],
+            [duplicateInternalId, lane.title, lane.position, lane.conclusion],
           );
           const laneId = number(laneResult.rows[0].id);
           for (const item of lane.items) {
@@ -343,7 +353,7 @@ export function createResearchProjectStore(
                       catalog_image_id, catalog_flow_id, catalog_step_index, private_object_key,
                       step_label, note, tags, important, source_snapshot
                FROM research_project_items WHERE id = $4`,
-              [duplicateId, laneId, item.position, item.id],
+              [duplicateInternalId, laneId, item.position, item.id],
             );
           }
         }
@@ -353,7 +363,8 @@ export function createResearchProjectStore(
 
     async deleteProject(userId, projectId) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, projectId) === undefined) {
+        const locked = await lockOwnedProject(tx, userId, projectId);
+        if (!locked) {
           return { deleted: false, privateObjectKeys: [] };
         }
         const keys = await tx(
@@ -364,36 +375,48 @@ export function createResearchProjectStore(
                SELECT 1 FROM research_project_items other
                WHERE other.private_object_key = i.private_object_key AND other.project_id <> $1
              )`,
-          [projectId],
+          [locked.id],
         );
-        await tx("DELETE FROM research_projects WHERE id = $1", [projectId]);
+        await tx("DELETE FROM research_projects WHERE id = $1", [locked.id]);
         return { deleted: true, privateObjectKeys: keys.rows.map((row) => text(row.private_object_key)) };
       });
     },
 
     async createLane(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
         const count = await tx(
           "SELECT count(*)::integer AS count FROM research_project_lanes WHERE project_id = $1",
-          [input.projectId],
+          [locked.id],
         );
         if (number(count.rows[0].count) >= RESEARCH_LIMITS.lanesMax) throw new Error("Research lane limit reached");
         await tx(
           `INSERT INTO research_project_lanes (project_id, title, position)
            SELECT $1, $2, COALESCE(max(position), -1) + 1
            FROM research_project_lanes WHERE project_id = $1`,
-          [input.projectId, input.title.trim()],
+          [locked.id, input.title.trim()],
         );
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });
     },
 
     async updateLane(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
-        const values: unknown[] = [input.laneId, input.projectId];
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
+        const values: unknown[] = [input.laneId, locked.id];
         const updates: string[] = [];
         if (input.title !== undefined) { values.push(input.title.trim()); updates.push(`title = $${values.length}`); }
         if (input.conclusion !== undefined) { values.push(input.conclusion.trim()); updates.push(`conclusion = $${values.length}`); }
@@ -405,7 +428,7 @@ export function createResearchProjectStore(
             values,
           );
           if (!updated.rowCount) return undefined;
-          await bumpRevision(tx, input.projectId);
+          await bumpRevision(tx, locked.id);
         }
         return loadWorkspace(tx, userId, input.projectId);
       });
@@ -413,10 +436,16 @@ export function createResearchProjectStore(
 
     async deleteEmptyLane(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
         const lanes = await tx(
           "SELECT count(*)::integer AS count FROM research_project_lanes WHERE project_id = $1",
-          [input.projectId],
+          [locked.id],
         );
         if (number(lanes.rows[0].count) <= RESEARCH_LIMITS.lanesMin) throw new Error("At least two lanes are required");
         const deleted = await tx(
@@ -424,26 +453,32 @@ export function createResearchProjectStore(
            WHERE l.id = $1 AND l.project_id = $2
              AND NOT EXISTS (SELECT 1 FROM research_project_items i WHERE i.lane_id = l.id)
            RETURNING l.position`,
-          [input.laneId, input.projectId],
+          [input.laneId, locked.id],
         );
         if (!deleted.rowCount) throw new Error("Only empty lanes can be deleted");
         await tx(
           "UPDATE research_project_lanes SET position = position - 1 WHERE project_id = $1 AND position > $2",
-          [input.projectId, deleted.rows[0].position],
+          [locked.id, deleted.rows[0].position],
         );
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });
     },
 
     async addItem(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
         const counts = await tx(
           `SELECT count(*)::integer AS total,
                   count(*) FILTER (WHERE source_kind = 'private_upload')::integer AS private_count
            FROM research_project_items WHERE project_id = $1`,
-          [input.projectId],
+          [locked.id],
         );
         if (number(counts.rows[0].total) >= RESEARCH_LIMITS.itemsMax) throw new Error("Research evidence limit reached");
         if (input.sourceKind === "private_upload"
@@ -452,7 +487,7 @@ export function createResearchProjectStore(
         }
         const lane = await tx(
           "SELECT id FROM research_project_lanes WHERE id = $1 AND project_id = $2",
-          [input.laneId, input.projectId],
+          [input.laneId, locked.id],
         );
         if (!lane.rowCount) return undefined;
         await tx(
@@ -461,12 +496,12 @@ export function createResearchProjectStore(
               catalog_image_id, catalog_flow_id, catalog_step_index, private_object_key, source_snapshot)
            SELECT $1, $2, COALESCE(max(position), -1) + 1, $3, $4, $5, $6, $7, $8, $9, $10::jsonb
            FROM research_project_items WHERE lane_id = $2`,
-          [input.projectId, input.laneId, input.sourceKind, input.catalog?.app ?? null,
+          [locked.id, input.laneId, input.sourceKind, input.catalog?.app ?? null,
             input.catalog?.versionId ?? null, input.catalog?.imageId ?? null,
             input.catalog?.flowId ?? null, input.catalog?.stepIndex ?? null,
             input.privateObjectKey ?? null, JSON.stringify(input.snapshot)],
         );
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });
     },
@@ -477,18 +512,24 @@ export function createResearchProjectStore(
         throw new Error("Invalid private research item");
       }
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
         const counts = await tx(
           `SELECT count(*)::integer AS total,
                   count(*) FILTER (WHERE source_kind = 'private_upload')::integer AS private_count
            FROM research_project_items WHERE project_id = $1`,
-          [input.projectId],
+          [locked.id],
         );
         if (number(counts.rows[0].total) >= RESEARCH_LIMITS.itemsMax) throw new Error("Research evidence limit reached");
         if (number(counts.rows[0].private_count) >= RESEARCH_LIMITS.privateUploadsMax) throw new Error("Private upload limit reached");
         const lane = await tx(
           "SELECT id FROM research_project_lanes WHERE id = $1 AND project_id = $2",
-          [input.laneId, input.projectId],
+          [input.laneId, locked.id],
         );
         if (!lane.rowCount) return undefined;
         const stored = await tx(
@@ -508,17 +549,23 @@ export function createResearchProjectStore(
              (project_id, lane_id, position, source_kind, private_object_key, source_snapshot)
            SELECT $1, $2, COALESCE(max(position), -1) + 1, 'private_upload', $3, $4::jsonb
            FROM research_project_items WHERE lane_id = $2`,
-          [input.projectId, input.laneId, metadata.key, JSON.stringify(input.snapshot)],
+          [locked.id, input.laneId, metadata.key, JSON.stringify(input.snapshot)],
         );
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });
     },
 
     async updateItem(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
-        const values: unknown[] = [input.itemId, input.projectId];
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
+        const values: unknown[] = [input.itemId, locked.id];
         const updates: string[] = [];
         if (input.stepLabel !== undefined) { values.push(input.stepLabel.trim()); updates.push(`step_label = $${values.length}`); }
         if (input.note !== undefined) { values.push(input.note.trim()); updates.push(`note = $${values.length}`); }
@@ -531,7 +578,7 @@ export function createResearchProjectStore(
             values,
           );
           if (!updated.rowCount) return undefined;
-          await bumpRevision(tx, input.projectId);
+          await bumpRevision(tx, locked.id);
         }
         return loadWorkspace(tx, userId, input.projectId);
       });
@@ -539,16 +586,22 @@ export function createResearchProjectStore(
 
     async moveItem(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return undefined;
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
         const itemResult = await tx(
           "SELECT lane_id, position FROM research_project_items WHERE id = $1 AND project_id = $2 FOR UPDATE",
-          [input.itemId, input.projectId],
+          [input.itemId, locked.id],
         );
         const item = itemResult.rows[0];
         if (!item) return undefined;
         const lane = await tx(
           "SELECT id FROM research_project_lanes WHERE id = $1 AND project_id = $2",
-          [input.targetLaneId, input.projectId],
+          [input.targetLaneId, locked.id],
         );
         if (!lane.rowCount) return undefined;
         const sourceLaneId = number(item.lane_id);
@@ -588,19 +641,25 @@ export function createResearchProjectStore(
           "UPDATE research_project_items SET lane_id = $2, position = $3, updated_at = now() WHERE id = $1",
           [input.itemId, input.targetLaneId, targetPosition],
         );
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });
     },
 
     async removeItem(userId, input) {
       return runTransaction(async (tx) => {
-        if (await lockOwnedProject(tx, userId, input.projectId, input.expectedRevision) === undefined) return {};
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return {};
         const removed = await tx(
           `DELETE FROM research_project_items
            WHERE id = $1 AND project_id = $2
            RETURNING lane_id, position, private_object_key`,
-          [input.itemId, input.projectId],
+          [input.itemId, locked.id],
         );
         const row = removed.rows[0];
         if (!row) return {};
@@ -616,7 +675,7 @@ export function createResearchProjectStore(
           );
           if (!refs.rowCount) unreferencedPrivateObjectKey = text(row.private_object_key);
         }
-        await bumpRevision(tx, input.projectId);
+        await bumpRevision(tx, locked.id);
         return {
           project: await loadWorkspace(tx, userId, input.projectId),
           unreferencedPrivateObjectKey,
@@ -626,14 +685,14 @@ export function createResearchProjectStore(
 
     async recordSynthesis(userId, input) {
       return runTransaction(async (tx) => {
-        const revision = await lockOwnedProject(tx, userId, input.projectId);
-        if (revision === undefined || revision !== input.projectRevision) return undefined;
+        const locked = await lockOwnedProject(tx, userId, input.projectId);
+        if (!locked || locked.revision !== input.projectRevision) return undefined;
         const recorded = await tx(
           `INSERT INTO research_project_syntheses
              (project_id, project_revision, status, result, error_code, model, schema_version)
            VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)
            RETURNING id, project_revision, status, result, created_at`,
-          [input.projectId, input.projectRevision, input.status,
+          [locked.id, input.projectRevision, input.status,
             input.result ? JSON.stringify(input.result) : null, input.errorCode ?? null,
             input.model, input.schemaVersion],
         );

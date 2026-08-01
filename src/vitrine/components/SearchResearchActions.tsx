@@ -126,7 +126,7 @@ export function SearchResearchActions({
         placeholder="Choose project"
         options={projects.map((project) => ({ value: String(project.id), label: project.title }))}
         onChange={async (value) => {
-          const next = await getResearchProject(Number(value));
+          const next = await getResearchProject(value);
           setWorkspace(next);
           setLaneId(next.lanes[0]?.id ?? 0);
         }}

@@ -18,14 +18,9 @@ import { navigate } from '../router.ts';
 import { DecisionCanvas, type DecisionCanvasActions } from './DecisionCanvas.tsx';
 import { EvidenceDrawer } from './EvidenceDrawer.tsx';
 import { ProjectInsightsPanel, type ProjectInsightsActions } from './ProjectInsightsPanel.tsx';
+import { ProjectWorkspaceNav } from './ProjectWorkspaceNav.tsx';
 
-export function ResearchProjectPage({
-  projectId,
-  projectDocumentsEnabled = false,
-}: {
-  projectId: number;
-  projectDocumentsEnabled?: boolean;
-}) {
+export function ResearchProjectPage({ projectId }: { projectId: string }) {
   const [workspace, setWorkspace] = useState<ResearchProjectWorkspace>();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -91,21 +86,12 @@ export function ResearchProjectPage({
 
   return (
     <main className="vitrine-page research-project-page">
-      <Button label="Projects" variant="ghost" size="sm" onClick={() => navigate({ name: 'projects' })} />
-      <header style={{ margin: '18px 0 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <h1 style={{ margin: 0, fontSize: 28 }}>{workspace.title}</h1>
-          {projectDocumentsEnabled ? (
-            <Button
-              label="Experimental Docs"
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate({ name: 'project-document', projectId: workspace.id })}
-            />
-          ) : null}
-        </div>
-        <p style={{ margin: '8px 0 0', color: 'var(--color-text-secondary)', fontSize: 16 }}>{workspace.question}</p>
-      </header>
+      <ProjectWorkspaceNav
+        projectId={workspace.id}
+        active="overview"
+        title={workspace.title}
+        description={workspace.question || "Designer research and project decisions."}
+      />
       {message && <p role="alert" style={{ color: 'var(--color-text-danger)' }}>{message}</p>}
       <div className="research-project-workspace">
         <EvidenceDrawer workspace={workspace} disabled={busy} onChange={setWorkspace} />

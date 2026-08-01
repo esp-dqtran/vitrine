@@ -135,46 +135,6 @@ Synthesis is synchronous with a 60-second request limit and retries one invalid 
 
 Research activation metrics record only the user ID, action, numeric volume, and outcome. Questions, notes, filenames, image contents, generated text, and designer decisions are not written to analytics events.
 
-## Experimental Project Docs with BlockSuite and OctoBase
-
-Project Docs is an owner-only BA/PO workspace for gathering and organizing project information in a Notion-style Page or an AFFiNE-style Canvas. It does not generate documents and does not migrate or replace the existing Flow-to-Feature-Document feature.
-
-The integration is disabled by default and is intentionally restricted to one compatibility Project. Enable the same Project ID in both runtimes:
-
-```dotenv
-RESEARCH_PROJECTS_ENABLED=true
-PROJECT_DOCUMENTS_ENABLED=true
-PROJECT_DOCUMENTS_TEST_PROJECT_ID=1
-OCTOBASE_URL=http://127.0.0.1:3020
-OCTOBASE_SERVICE_EMAIL=astryx-integration@localhost.test
-OCTOBASE_SERVICE_PASSWORD=local-compatibility-password
-
-VITE_RESEARCH_PROJECTS_ENABLED=true
-VITE_PROJECT_DOCUMENTS_ENABLED=true
-VITE_PROJECT_DOCUMENTS_TEST_PROJECT_ID=1
-```
-
-Start the pinned OctoBase services, apply the additive Astryx metadata migration, and run the API:
-
-```bash
-docker compose --profile project-docs up -d octobase-postgres octobase
-npm run db:migrate
-npm run service:api
-```
-
-Run the frontend with the same compatibility Project:
-
-```bash
-PORT=5173 \
-VITRINE_API_TARGET=http://127.0.0.1:3010 \
-VITE_RESEARCH_PROJECTS_ENABLED=true \
-VITE_PROJECT_DOCUMENTS_ENABLED=true \
-VITE_PROJECT_DOCUMENTS_TEST_PROJECT_ID=1 \
-npm run dev
-```
-
-Astryx uses unmodified BlockSuite packages and an unmodified, commit-pinned OctoBase image. The API-owned WebSocket gateway authenticates the Astryx session and translates the legacy OctoBase workspace prefix at the protocol boundary. Browser clients receive neither the OctoBase service credential nor its workspace token. See [the integration license notes](docs/licenses/blocksuite-octobase-integration.md) before distribution.
-
 ## Flow-to-Feature-Document workspace for product managers
 
 From an app's **Flows** tab, a product manager can turn one captured Flow into a living Feature Document. The setup preview pins the exact app, platform, version, ordered steps, and every source image before submission. Submission is blocked if any image is missing protected object storage or source metadata.
