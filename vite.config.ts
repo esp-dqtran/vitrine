@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const API_TARGET = process.env.VITRINE_API_TARGET ?? "http://127.0.0.1:3010";
+const PROJECT_DOCUMENT_COLLAB_TARGET = process.env.VITRINE_PROJECT_DOCUMENT_COLLAB_TARGET
+  ?? "http://127.0.0.1:3013";
 
 export default defineConfig({
   plugins: [react()],
@@ -11,6 +13,10 @@ export default defineConfig({
     // than pinning one hostname that'll go stale next time the tunnel is recreated.
     allowedHosts: [".ngrok-free.app"],
     proxy: {
+      "/api/project-document-collaboration": {
+        target: PROJECT_DOCUMENT_COLLAB_TARGET,
+        ws: true,
+      },
       "/api": {
         target: API_TARGET,
         ws: true,

@@ -1,5 +1,6 @@
 import type {
   AddResearchItemInput,
+  AttachResearchFlowInput,
   CreateResearchProjectInput,
   ProjectPatch,
   ResearchProjectSummary,
@@ -104,6 +105,18 @@ export const addResearchItem = (
     expectedRevision: input.expectedRevision,
     sourceKind: input.sourceKind,
     snapshot: input.snapshot,
+    catalog: input.catalog,
+  }),
+});
+
+export const attachResearchFlow = (
+  input: AttachResearchFlowInput,
+): Promise<ResearchProjectWorkspace> => request(`${projectPath(input.projectId)}/flows`, {
+  method: 'POST',
+  headers: jsonHeaders,
+  body: JSON.stringify({
+    laneId: input.laneId,
+    expectedRevision: input.expectedRevision,
     catalog: input.catalog,
   }),
 });

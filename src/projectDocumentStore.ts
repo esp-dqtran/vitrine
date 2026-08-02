@@ -1,0 +1,389 @@
+import { randomUUID } from "node:crypto";
+import type { QueryResult } from "pg";
+
+import { query, withTransaction } from "./db.ts";
+import type { ResearchProjectId } from "./researchProject.ts";
+
+export const PROJECT_DOCUMENT_STATE_BYTES_MAX = 8 * 1024 * 1024;
+export const PROJECT_DOCUMENT_KEY = "project-notes";
+export const PROJECT_DOCUMENT_INTEGRATION_VERSION = "blocknote-yjs-v1";
+
+export type ProjectDocumentRole = "editor" | "viewer";
+export type ProjectDocumentIcon = "none" | "document" | "idea" | "task" | "schedule" | "build";
+export type ProjectDocumentPageWidth = "standard" | "full";
+
+export interface ProjectDocumentPatch {
+  title?: string;
+  icon?: ProjectDocumentIcon;
+  isFavorite?: boolean;
+  pageWidth?: ProjectDocumentPageWidth;
+}
+
+export interface ProjectDocumentView {
+  id: number;
+  projectId: ResearchProjectId;
+  title: string;
+  icon: ProjectDocumentIcon;
+  isFavorite: boolean;
+  pageWidth: ProjectDocumentPageWidth;
+  collaborationDocumentId: string;
+  role: ProjectDocumentRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectDocumentCommentView {
+  id: number;
+  body: string;
+  authorUserId: number;
+  authorEmail: string;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectDocumentAccess {
+  documentId: number;
+  userId: number;
+  role: ProjectDocumentRole;
+}
+
+export interface ProjectDocumentStore {
+  ensureDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
+  getDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
+  updateDocument(userId: number, projectId: ResearchProjectId, patch: ProjectDocumentPatch): Promise<ProjectDocumentView | undefined>;
+  listComments(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentCommentView[] | undefined>;
+  addComment(userId: number, projectId: ResearchProjectId, body: string): Promise<ProjectDocumentCommentView | undefined>;
+  resolveComment(userId: number, projectId: ResearchProjectId, commentId: number, resolved: boolean): Promise<ProjectDocumentCommentView | undefined>;
+  accessDocument(userId: number, collaborationDocumentId: string): Promise<ProjectDocumentAccess | undefined>;
+  loadRealtimeState(collaborationDocumentId: string): Promise<Uint8Array | null>;
+  storeRealtimeState(collaborationDocumentId: string, state: Uint8Array): Promise<void>;
+}
+
+export type ProjectDocumentQuery = (
+  sql: string,
+  values?: readonly unknown[],
+) => Promise<QueryResult<Record<string, unknown>>>;
+
+type ProjectDocumentTransaction = <T>(
+  work: (query: ProjectDocumentQuery) => Promise<T>,
+) => Promise<T>;
+
+interface DocumentRow extends Record<string, unknown> {
+  id: number;
+  project_public_id: string;
+  title: string;
+  icon: ProjectDocumentIcon;
+  is_favorite: boolean;
+  page_width: ProjectDocumentPageWidth;
+  collaboration_document_id: string;
+  role: ProjectDocumentRole;
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
+const dateString = (value: Date | string): string =>
+  value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+
+const view = (row: DocumentRow): ProjectDocumentView => ({
+  id: Number(row.id),
+  projectId: row.project_public_id,
+  title: row.title,
+  icon: row.icon,
+  isFavorite: row.is_favorite,
+  pageWidth: row.page_width,
+  collaborationDocumentId: row.collaboration_document_id,
+  role: row.role,
+  createdAt: dateString(row.created_at),
+  updatedAt: dateString(row.updated_at),
+});
+
+interface CommentRow extends Record<string, unknown> {
+  id: number;
+  body: string;
+  author_user_id: number;
+  author_email: string;
+  resolved_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
+const commentView = (row: CommentRow): ProjectDocumentCommentView => ({
+  id: Number(row.id),
+  body: row.body,
+  authorUserId: Number(row.author_user_id),
+  authorEmail: row.author_email,
+  resolvedAt: row.resolved_at ? dateString(row.resolved_at) : null,
+  createdAt: dateString(row.created_at),
+  updatedAt: dateString(row.updated_at),
+});
+
+const selectDocumentSql = `
+  SELECT document.id,
+         project.public_id::text AS project_public_id,
+         document.title,
+         document.icon,
+         document.is_favorite,
+         document.page_width,
+         document.octobase_document_id AS collaboration_document_id,
+         CASE
+           WHEN document.owner_user_id = $1 THEN 'editor'
+           ELSE collaborator.role
+         END AS role,
+         document.created_at,
+         document.updated_at
+  FROM project_documents document
+  JOIN research_projects project ON project.id = document.project_id
+  LEFT JOIN project_document_collaborators collaborator
+    ON collaborator.project_id = document.project_id
+   AND collaborator.user_id = $1
+  WHERE project.public_id = $2::uuid
+    AND document.document_key = $3
+    AND document.trashed_at IS NULL
+    AND (
+      document.owner_user_id = $1
+      OR collaborator.role IN ('editor', 'viewer')
+    )
+  LIMIT 1`;
+
+export function createProjectDocumentStore(
+  databaseQuery: ProjectDocumentQuery = (sql, values) =>
+    query(sql, values ? [...values] : undefined),
+  transaction: ProjectDocumentTransaction = async (work) =>
+    withTransaction(async (client) =>
+      work((sql, values) => client.query(sql, values ? [...values] : undefined))),
+): ProjectDocumentStore {
+  const getDocument = async (
+    userId: number,
+    projectId: ResearchProjectId,
+  ): Promise<ProjectDocumentView | undefined> => {
+    const result = await databaseQuery(selectDocumentSql, [userId, projectId, PROJECT_DOCUMENT_KEY]);
+    return result.rows[0] ? view(result.rows[0] as DocumentRow) : undefined;
+  };
+
+  return {
+    getDocument,
+
+    async ensureDocument(userId, projectId) {
+      return transaction(async (transactionQuery) => {
+        const existing = await transactionQuery(selectDocumentSql, [userId, projectId, PROJECT_DOCUMENT_KEY]);
+        if (existing.rows[0]) return view(existing.rows[0] as DocumentRow);
+
+        const inserted = await transactionQuery(
+          `INSERT INTO project_documents (
+             project_id,
+             owner_user_id,
+             document_key,
+             title,
+             octobase_document_id,
+             last_editor_mode,
+             integration_version,
+             created_by_user_id,
+             created_by_email,
+             last_edited_by_user_id,
+             last_edited_by_email
+           )
+           SELECT project.id,
+                  project.user_id,
+                  $3,
+                  CASE
+                    WHEN char_length(project.title) <= 108 THEN project.title || ' notes'
+                    ELSE left(project.title, 108) || ' notes'
+                  END,
+                  $4,
+                  'page',
+                  $5,
+                  account.id,
+                  account.email,
+                  account.id,
+                  account.email
+           FROM research_projects project
+           JOIN users account ON account.id = project.user_id
+           WHERE project.public_id = $2::uuid
+             AND project.user_id = $1
+           ON CONFLICT (project_id, document_key) DO NOTHING
+           RETURNING id`,
+          [
+            userId,
+            projectId,
+            PROJECT_DOCUMENT_KEY,
+            randomUUID(),
+            PROJECT_DOCUMENT_INTEGRATION_VERSION,
+          ],
+        );
+        if (!inserted.rowCount) {
+          const conflicted = await transactionQuery(selectDocumentSql, [userId, projectId, PROJECT_DOCUMENT_KEY]);
+          return conflicted.rows[0] ? view(conflicted.rows[0] as DocumentRow) : undefined;
+        }
+        const created = await transactionQuery(selectDocumentSql, [userId, projectId, PROJECT_DOCUMENT_KEY]);
+        return created.rows[0] ? view(created.rows[0] as DocumentRow) : undefined;
+      });
+    },
+
+    async updateDocument(userId, projectId, patch) {
+      const existing = await getDocument(userId, projectId);
+      if (!existing || existing.role !== "editor") return undefined;
+      const updated = await databaseQuery(
+        `UPDATE project_documents
+         SET title = COALESCE($2, title),
+             icon = COALESCE($3, icon),
+             is_favorite = COALESCE($4, is_favorite),
+             page_width = COALESCE($5, page_width),
+             updated_at = now(),
+             last_edited_by_user_id = $6::bigint,
+             last_edited_by_email = (
+               SELECT email FROM users WHERE id = $6::bigint
+             )
+         WHERE id = $1
+         RETURNING id`,
+        [
+          existing.id,
+          patch.title ?? null,
+          patch.icon ?? null,
+          patch.isFavorite ?? null,
+          patch.pageWidth ?? null,
+          userId,
+        ],
+      );
+      if (!updated.rowCount) return undefined;
+      return getDocument(userId, projectId);
+    },
+
+    async listComments(userId, projectId) {
+      const document = await getDocument(userId, projectId);
+      if (!document) return undefined;
+      const comments = await databaseQuery(
+        `SELECT comment.id,
+                comment.body,
+                comment.author_user_id,
+                author.email AS author_email,
+                comment.resolved_at,
+                comment.created_at,
+                comment.updated_at
+         FROM project_document_comments comment
+         JOIN users author ON author.id = comment.author_user_id
+         WHERE comment.document_id = $1
+         ORDER BY comment.resolved_at NULLS FIRST, comment.created_at, comment.id`,
+        [document.id],
+      );
+      return comments.rows.map((row) => commentView(row as CommentRow));
+    },
+
+    async addComment(userId, projectId, body) {
+      const document = await getDocument(userId, projectId);
+      if (!document || document.role !== "editor") return undefined;
+      const inserted = await databaseQuery(
+        `INSERT INTO project_document_comments (
+           project_id, document_id, author_user_id, body
+         )
+         SELECT project_id, id, $2, $3
+         FROM project_documents
+         WHERE id = $1 AND trashed_at IS NULL
+         RETURNING id,
+                   body,
+                   author_user_id,
+                   (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+                   resolved_at,
+                   created_at,
+                   updated_at`,
+        [document.id, userId, body],
+      );
+      return inserted.rows[0]
+        ? commentView(inserted.rows[0] as CommentRow)
+        : undefined;
+    },
+
+    async resolveComment(userId, projectId, commentId, resolved) {
+      const document = await getDocument(userId, projectId);
+      if (!document || document.role !== "editor") return undefined;
+      const updated = await databaseQuery(
+        `UPDATE project_document_comments comment
+         SET resolved_at = CASE WHEN $3 THEN now() ELSE NULL END,
+             updated_at = now()
+         WHERE comment.id = $2 AND comment.document_id = $1
+         RETURNING id,
+                   body,
+                   author_user_id,
+                   (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+                   resolved_at,
+                   created_at,
+                   updated_at`,
+        [document.id, commentId, resolved],
+      );
+      return updated.rows[0]
+        ? commentView(updated.rows[0] as CommentRow)
+        : undefined;
+    },
+
+    async accessDocument(userId, collaborationDocumentId) {
+      const result = await databaseQuery(
+        `SELECT document.id AS document_id,
+                CASE
+                  WHEN document.owner_user_id = $1 THEN 'editor'
+                  ELSE collaborator.role
+                END AS role
+         FROM project_documents document
+         LEFT JOIN project_document_collaborators collaborator
+           ON collaborator.project_id = document.project_id
+          AND collaborator.user_id = $1
+         WHERE document.octobase_document_id = $2
+           AND document.trashed_at IS NULL
+           AND (
+             document.owner_user_id = $1
+             OR collaborator.role IN ('editor', 'viewer')
+           )
+         LIMIT 1`,
+        [userId, collaborationDocumentId],
+      );
+      const row = result.rows[0] as { document_id?: unknown; role?: unknown } | undefined;
+      if (!row || (row.role !== "editor" && row.role !== "viewer")) return undefined;
+      return { documentId: Number(row.document_id), userId, role: row.role };
+    },
+
+    async loadRealtimeState(collaborationDocumentId) {
+      const result = await databaseQuery(
+        `SELECT state.state
+         FROM project_documents document
+         JOIN project_document_realtime_states state ON state.document_id = document.id
+         WHERE document.octobase_document_id = $1
+           AND document.trashed_at IS NULL
+         LIMIT 1`,
+        [collaborationDocumentId],
+      );
+      const stored = result.rows[0]?.state;
+      return stored instanceof Uint8Array ? new Uint8Array(stored) : null;
+    },
+
+    async storeRealtimeState(collaborationDocumentId, state) {
+      if (state.byteLength < 1 || state.byteLength > PROJECT_DOCUMENT_STATE_BYTES_MAX) {
+        throw new Error("Project document realtime state exceeds the supported size");
+      }
+      await transaction(async (transactionQuery) => {
+        const document = await transactionQuery(
+          `SELECT id FROM project_documents
+           WHERE octobase_document_id = $1 AND trashed_at IS NULL
+           FOR UPDATE`,
+          [collaborationDocumentId],
+        );
+        const documentId = Number(document.rows[0]?.id);
+        if (!Number.isSafeInteger(documentId) || documentId < 1) {
+          throw new Error("Project document not found");
+        }
+        const bytes = Buffer.from(state);
+        await transactionQuery(
+          `INSERT INTO project_document_realtime_states (document_id, state, byte_size, updated_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT (document_id) DO UPDATE SET
+             state = EXCLUDED.state,
+             byte_size = EXCLUDED.byte_size,
+             updated_at = now()`,
+          [documentId, bytes, bytes.byteLength],
+        );
+        await transactionQuery(
+          "UPDATE project_documents SET updated_at = now() WHERE id = $1",
+          [documentId],
+        );
+      });
+    },
+  };
+}

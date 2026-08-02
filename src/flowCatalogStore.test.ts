@@ -433,7 +433,7 @@ test("preserves the bounded Flow card and media structure", async () => {
     ? [{ total_count: 1, facets: [] }]
     : [row()]));
   assert.deepEqual(page.items[0]?.preview.flow.steps[0]?.evidence[0], {
-    imageId: 1,
+    imageId: 10,
     imageUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=full",
     thumbnailUrl: "/api/catalog/flow-media/linear/web/7/71/1?variant=thumb",
     description: "Open profile",

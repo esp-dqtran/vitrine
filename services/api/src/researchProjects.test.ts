@@ -23,6 +23,7 @@ const workspace = {
   createdAt: "2026-07-17T00:00:00.000Z",
   updatedAt: "2026-07-17T00:00:00.000Z",
 };
+let attachedFlowInput: unknown;
 
 const store = {
   listProjects: async () => [{
@@ -38,6 +39,10 @@ const store = {
   }],
   createProject: async () => workspace,
   getProject: async () => workspace,
+  attachFlow: async (_userId: number, input: unknown) => {
+    attachedFlowInput = input;
+    return workspace;
+  },
 } as unknown as ResearchProjectStore;
 
 async function serve(enabled = true, recordEvent?: (event: { featureKey?: string; action: string; outcome: string }) => Promise<void>): Promise<{ base: string; server: Server }> {
@@ -113,6 +118,45 @@ test("rejects non-positive catalog identifiers", async (t) => {
     }),
   });
   assert.equal(response.status, 400);
+});
+
+test("attaches a validated catalog flow through one project operation", async (t) => {
+  attachedFlowInput = undefined;
+  const { base, server } = await serve();
+  t.after(() => close(server));
+  const response = await fetch(`${base}/research-projects/${PROJECT_ID}/flows`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      laneId: 21,
+      expectedRevision: 1,
+      catalog: {
+        app: "Linear",
+        appId: "linear",
+        versionId: 3,
+        flowId: "creating-account",
+        platform: "web",
+        title: "Creating an account",
+        description: "Account onboarding",
+      },
+    }),
+  });
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(attachedFlowInput, {
+    projectId: PROJECT_ID,
+    laneId: 21,
+    expectedRevision: 1,
+    catalog: {
+      app: "Linear",
+      appId: "linear",
+      versionId: 3,
+      flowId: "creating-account",
+      platform: "web",
+      title: "Creating an account",
+      description: "Account onboarding",
+    },
+  });
 });
 
 test("returns the media-specific status for an unsupported upload type", async (t) => {

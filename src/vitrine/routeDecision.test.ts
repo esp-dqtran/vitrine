@@ -76,6 +76,7 @@ test('uses the same application renderer for members and admins on normal routes
     { name: 'search' },
     { name: 'projects' },
     { name: 'project', projectId: PROJECT_ID },
+    { name: 'project-document', projectId: PROJECT_ID },
     { name: 'project-playground', projectId: PROJECT_ID },
     { name: 'feature-document', documentId: 9 },
     { name: 'settings-billing' },
@@ -102,6 +103,10 @@ test('renders an explicit unavailable state for disabled feature routes', () => 
     title: 'Research projects are unavailable',
   });
   assert.deepEqual(decideRootRoute({ name: 'project-playground', projectId: PROJECT_ID }, disabled), {
+    kind: 'unavailable',
+    title: 'Research projects are unavailable',
+  });
+  assert.deepEqual(decideRootRoute({ name: 'project-document', projectId: PROJECT_ID }, disabled), {
     kind: 'unavailable',
     title: 'Research projects are unavailable',
   });
@@ -135,6 +140,7 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'projects' },
     { name: 'project', projectId: PROJECT_ID },
+    { name: 'project-document', projectId: PROJECT_ID },
     { name: 'project-playground', projectId: PROJECT_ID },
     { name: 'feature-document', documentId: 9 },
     { name: 'feature-document-share', token: 'share' },

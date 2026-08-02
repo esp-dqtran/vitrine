@@ -9,6 +9,7 @@ const AUTHENTICATED_ROUTE_NAMES = new Set<Route['name']>([
   'site-version',
   'projects',
   'project',
+  'project-document',
   'project-playground',
   'feature-document',
   'admin',

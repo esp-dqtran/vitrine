@@ -53,6 +53,7 @@ export function decideRootRoute(
         : { kind: 'unavailable', title: 'Search is unavailable' };
     case 'projects':
     case 'project':
+    case 'project-document':
     case 'project-playground':
       if (context.auth === 'guest') return { kind: 'signin' };
       return context.researchProjectsEnabled

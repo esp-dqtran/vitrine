@@ -22,6 +22,7 @@ export interface FlowCatalogItem {
     appId: string;
     appName: string;
     appIconUrl: string | null;
+    versionId: number;
     version: number;
     sourceFlowId: string;
     screenCount: number;
@@ -493,7 +494,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
     return {
       label,
       evidence: [{
-        imageId: index + 1,
+        imageId: Number((step as { evidence: unknown[] }).evidence[0]),
         imageUrl: `${mediaUrl}?variant=full`,
         thumbnailUrl: `${mediaUrl}?variant=thumb`,
         description: label,
@@ -508,6 +509,7 @@ function itemFromRow(row: Record<string, unknown>, platform: Platform): FlowCata
       appId,
       appName: String(row.app_name),
       appIconUrl: typeof row.app_icon_url === "string" ? row.app_icon_url : null,
+      versionId,
       version,
       sourceFlowId: String(row.source_flow_id),
       screenCount: observedSteps.length,

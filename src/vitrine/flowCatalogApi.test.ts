@@ -13,6 +13,7 @@ const item = {
     appId: 'linear',
     appName: 'Linear',
     appIconUrl: null,
+    versionId: 7,
     version: 3,
     sourceFlowId: 'creating-account',
     screenCount: 1,

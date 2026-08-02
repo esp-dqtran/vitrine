@@ -58,7 +58,8 @@ test('keeps primary catalogs and detail surfaces ready while lazy-loading second
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
   assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
   assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectPlaygroundPage['"]\)/);
-  assert.doesNotMatch(source, /ProjectDocument|VITE_PROJECT_DOCUMENTS_ENABLED/);
+  assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectDocumentPage['"]\)/);
+  assert.doesNotMatch(source, /VITE_PROJECT_DOCUMENTS_ENABLED/);
   assert.match(source, /case ['"]project-playground['"]:/);
   assert.match(source, /<Suspense fallback=\{<ApplicationPageSpinner \/>}/);
   assert.match(source, /<ApplicationSurface/);

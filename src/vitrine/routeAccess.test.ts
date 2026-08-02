@@ -13,6 +13,7 @@ const privateRoutes: Route[] = [
   { name: 'site-version', siteSlug: 'linear' },
   { name: 'projects' },
   { name: 'project', projectId: PROJECT_ID },
+  { name: 'project-document', projectId: PROJECT_ID },
   { name: 'project-playground', projectId: PROJECT_ID },
   { name: 'feature-document', documentId: 1 },
   { name: 'admin' },

@@ -251,3 +251,70 @@ test("moves evidence without out-of-range sentinel positions", async () => {
   assert.ok(calls.some((sql) => /SET CONSTRAINTS research_project_items_lane_position_unique DEFERRED/.test(sql)));
   assert.equal(calls.some((sql) => /1000|999/.test(sql)), false);
 });
+
+test("attaches every missing catalog flow step and bumps revision once", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const query: DatabaseQuery = async (sql, values) => {
+    calls.push({ sql, values });
+    if (/FOR UPDATE/.test(sql)) return result([{ id: 11, revision: 1 }]);
+    if (/SELECT id FROM research_project_lanes/.test(sql)) return result([{ id: 21 }]);
+    if (/FROM app_flow_versions afv/.test(sql)) {
+      return result([{
+        app_name: "Linear",
+        steps: Array.from({ length: 7 }, (_, index) => ({
+          label: `Step ${index + 1}`,
+          evidence: [41 + index],
+        })),
+      }]);
+    }
+    if (/SELECT catalog_image_id, catalog_step_index/.test(sql)) {
+      return result([{ catalog_image_id: 41, catalog_step_index: 0 }]);
+    }
+    if (/SELECT count\(\*\)::integer AS total/.test(sql)) return result([{ total: 1 }]);
+    if (/SELECT COALESCE\(max\(position\)/.test(sql)) return result([{ position: 0 }]);
+    if (/FROM research_projects rp/.test(sql) && !/research_project_items/.test(sql)) {
+      return result([{
+        public_id: PROJECT_ID,
+        title: "Onboarding research",
+        question: "",
+        platform_filter: "ios",
+        pinned: false,
+        constraints: "",
+        decision: "",
+        rationale: "",
+        open_questions: "",
+        revision: 2,
+        created_at: "2026-08-01T00:00:00.000Z",
+        updated_at: "2026-08-01T00:00:00.000Z",
+      }]);
+    }
+    if (/FROM research_project_lanes/.test(sql)) {
+      return result([{ id: 21, title: "Alternative A", position: 0, conclusion: "" }]);
+    }
+    return result();
+  };
+
+  const workspace = await createResearchProjectStore(query).attachFlow(7, {
+    projectId: PROJECT_ID,
+    laneId: 21,
+    expectedRevision: 1,
+    catalog: {
+      app: "Linear",
+      appId: "linear",
+      versionId: 3,
+      flowId: "creating-account",
+      platform: "ios",
+      title: "Creating an account",
+      description: "Account onboarding",
+    },
+  });
+
+  const inserts = calls.filter(({ sql }) => /INSERT INTO research_project_items/.test(sql));
+  assert.equal(inserts.length, 6, "the backend attaches beyond the six-card preview limit");
+  assert.equal(inserts[0].values?.[2], 1);
+  assert.equal(inserts[0].values?.[6], 42);
+  assert.equal(inserts[5].values?.[2], 6);
+  assert.equal(inserts[5].values?.[6], 47);
+  assert.equal(calls.filter(({ sql }) => /SET revision = revision \+ 1/.test(sql)).length, 1);
+  assert.equal(workspace?.revision, 2);
+});

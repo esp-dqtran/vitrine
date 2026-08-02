@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { parseRouteLocation, parseRoutePath, routeToPath } from "./router.ts";
 import {
   ResearchProjectApiError,
+  attachResearchFlow,
   listResearchProjects,
 } from "./researchProjectsApi.ts";
 
@@ -55,4 +56,43 @@ test("returns typed API conflicts with the latest project", async (t) => {
       error.code === "revision_conflict" &&
       error.project?.revision === 3,
   );
+});
+
+test("posts a whole catalog flow to the project attachment endpoint", async (t) => {
+  const original = globalThis.fetch;
+  let call: { url: string; init?: RequestInit } | undefined;
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (input, init) => {
+    call = { url: String(input), init };
+    return Response.json({ id: PROJECT_ID, revision: 2 });
+  };
+
+  await attachResearchFlow({
+    projectId: PROJECT_ID,
+    laneId: 21,
+    expectedRevision: 1,
+    catalog: {
+      app: "Linear",
+      appId: "linear",
+      versionId: 3,
+      flowId: "creating-account",
+      platform: "web",
+      title: "Creating an account",
+    },
+  });
+
+  assert.equal(call?.url, `/api/research-projects/${PROJECT_ID}/flows`);
+  assert.equal(call?.init?.method, "POST");
+  assert.deepEqual(JSON.parse(String(call?.init?.body)), {
+    laneId: 21,
+    expectedRevision: 1,
+    catalog: {
+      app: "Linear",
+      appId: "linear",
+      versionId: 3,
+      flowId: "creating-account",
+      platform: "web",
+      title: "Creating an account",
+    },
+  });
 });

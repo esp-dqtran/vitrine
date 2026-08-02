@@ -74,6 +74,11 @@ const ProjectPlayground = lazy(() =>
     default: module.ProjectPlayground,
   })),
 );
+const ProjectDocumentPage = lazy(() =>
+  import("./components/ProjectDocumentPage").then((module) => ({
+    default: module.ProjectDocumentPage,
+  })),
+);
 const FeatureDocumentPage = lazy(() =>
   import("./components/FeatureDocumentPage.tsx").then((module) => ({
     default: module.FeatureDocumentPage,
@@ -647,6 +652,16 @@ export function App() {
     case "project-playground":
       page = researchProjectsEnabled ? (
         <ProjectPlayground projectId={route.projectId} />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "project-document":
+      page = researchProjectsEnabled ? (
+        <ProjectDocumentPage
+          projectId={route.projectId}
+          userName={user?.email ?? "Astryx member"}
+        />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );

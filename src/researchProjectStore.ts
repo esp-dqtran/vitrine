@@ -1,5 +1,6 @@
 import type { QueryResult } from "pg";
 import { query as databaseQuery, withTransaction } from "./db.ts";
+import { publicImageUrl } from "./imageSource.ts";
 import { validateObjectMetadata, type ObjectMetadata } from "./objectStore.ts";
 import {
   RESEARCH_LIMITS,
@@ -7,6 +8,7 @@ import {
   defaultResearchLanes,
   normalizeResearchTags,
   type AddResearchItemInput,
+  type AttachResearchFlowInput,
   type CreateLaneInput,
   type CreateResearchProjectInput,
   type DeleteLaneInput,
@@ -44,6 +46,7 @@ export interface ResearchProjectStore {
   updateLane(userId: number, input: UpdateLaneInput): Promise<ResearchProjectWorkspace | undefined>;
   deleteEmptyLane(userId: number, input: DeleteLaneInput): Promise<ResearchProjectWorkspace | undefined>;
   addItem(userId: number, input: AddResearchItemInput): Promise<ResearchProjectWorkspace | undefined>;
+  attachFlow(userId: number, input: AttachResearchFlowInput): Promise<ResearchProjectWorkspace | undefined>;
   addPrivateItem(userId: number, input: AddResearchItemInput, metadata: ObjectMetadata): Promise<ResearchProjectWorkspace | undefined>;
   updateItem(userId: number, input: UpdateResearchItemInput): Promise<ResearchProjectWorkspace | undefined>;
   moveItem(userId: number, input: MoveResearchItemInput): Promise<ResearchProjectWorkspace | undefined>;
@@ -59,6 +62,9 @@ function itemFromRow(row: Record<string, unknown>): ResearchProjectItem {
   const id = number(row.id);
   const projectId = text(row.project_public_id);
   const snapshot = (row.source_snapshot ?? {}) as ResearchProjectItem["snapshot"];
+  const catalogMediaUrl = row.catalog_app && row.catalog_image_url
+    ? publicImageUrl(text(row.catalog_app), text(row.catalog_image_url))
+    : undefined;
   return {
     id,
     projectId,
@@ -74,7 +80,7 @@ function itemFromRow(row: Record<string, unknown>): ResearchProjectItem {
       : snapshot,
     mediaUrl: sourceKind === "private_upload"
       ? `/api/research-projects/${projectId}/private-media/${id}`
-      : row.media_url ? text(row.media_url) : undefined,
+      : catalogMediaUrl || undefined,
   };
 }
 
@@ -117,9 +123,11 @@ async function loadWorkspace(
     runQuery(
       `SELECT i.id, rp.public_id AS project_public_id,
               i.lane_id, i.position, i.source_kind,
-              i.step_label, i.note, i.tags, i.important, i.source_snapshot
+              i.step_label, i.note, i.tags, i.important, i.source_snapshot,
+              i.catalog_app, image.image_url AS catalog_image_url
        FROM research_project_items i
        JOIN research_projects rp ON rp.id = i.project_id
+       LEFT JOIN images image ON image.id = i.catalog_image_id
        WHERE rp.public_id = $1 AND rp.user_id = $2
        ORDER BY i.lane_id, i.position`,
       [projectId, userId],
@@ -501,6 +509,107 @@ export function createResearchProjectStore(
             input.catalog?.flowId ?? null, input.catalog?.stepIndex ?? null,
             input.privateObjectKey ?? null, JSON.stringify(input.snapshot)],
         );
+        await bumpRevision(tx, locked.id);
+        return loadWorkspace(tx, userId, input.projectId);
+      });
+    },
+
+    async attachFlow(userId, input) {
+      return runTransaction(async (tx) => {
+        const locked = await lockOwnedProject(
+          tx,
+          userId,
+          input.projectId,
+          input.expectedRevision,
+        );
+        if (!locked) return undefined;
+        const lane = await tx(
+          "SELECT id FROM research_project_lanes WHERE id = $1 AND project_id = $2",
+          [input.laneId, locked.id],
+        );
+        if (!lane.rowCount) return undefined;
+
+        const source = await tx(
+          `SELECT COALESCE(a.display_name, initcap(replace(a.name, '-', ' '))) AS app_name,
+                  afv.steps
+           FROM app_flow_versions afv
+           JOIN app_versions av ON av.id = afv.version_id
+           JOIN apps a ON a.id = av.app_id
+           WHERE a.name = $1 AND av.id = $2 AND av.platform = $3
+             AND av.published_at IS NOT NULL AND afv.source_flow_id = $4`,
+          [input.catalog.appId, input.catalog.versionId, input.catalog.platform, input.catalog.flowId],
+        );
+        const sourceRow = source.rows[0];
+        if (!sourceRow || !Array.isArray(sourceRow.steps)) {
+          throw new Error("Invalid catalog flow reference");
+        }
+        const steps = sourceRow.steps.flatMap((value, stepIndex) => {
+          if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+          const step = value as { label?: unknown; evidence?: unknown };
+          if (!Array.isArray(step.evidence)) return [];
+          const rawImage = step.evidence[0];
+          const imageId = Number(rawImage && typeof rawImage === "object"
+            ? (rawImage as { imageId?: unknown }).imageId
+            : rawImage);
+          if (!Number.isSafeInteger(imageId) || imageId <= 0) return [];
+          const label = typeof step.label === "string" && step.label.trim()
+            ? step.label.trim().slice(0, 240)
+            : `Step ${stepIndex + 1}`;
+          return [{ imageId, stepIndex, label }];
+        });
+        if (!steps.length) throw new Error("Catalog flow has no attachable steps");
+
+        const existing = await tx(
+          `SELECT catalog_image_id, catalog_step_index
+           FROM research_project_items
+           WHERE project_id = $1 AND source_kind = 'catalog_flow_step'
+             AND catalog_app = $2 AND catalog_version_id = $3 AND catalog_flow_id = $4`,
+          [locked.id, input.catalog.appId, input.catalog.versionId, input.catalog.flowId],
+        );
+        const existingKeys = new Set(existing.rows.map((row) =>
+          `${number(row.catalog_image_id)}:${number(row.catalog_step_index)}`));
+        const uniqueKeys = new Set<string>();
+        const missingSteps = steps.filter((step) => {
+          const key = `${step.imageId}:${step.stepIndex}`;
+          if (existingKeys.has(key) || uniqueKeys.has(key)) return false;
+          uniqueKeys.add(key);
+          return true;
+        });
+        if (!missingSteps.length) return loadWorkspace(tx, userId, input.projectId);
+
+        const counts = await tx(
+          "SELECT count(*)::integer AS total FROM research_project_items WHERE project_id = $1",
+          [locked.id],
+        );
+        if (number(counts.rows[0].total) + missingSteps.length > RESEARCH_LIMITS.itemsMax) {
+          throw new Error("Research evidence limit reached");
+        }
+        const positionResult = await tx(
+          "SELECT COALESCE(max(position), -1)::integer AS position FROM research_project_items WHERE lane_id = $1",
+          [input.laneId],
+        );
+        const firstPosition = number(positionResult.rows[0].position) + 1;
+        for (const [offset, step] of missingSteps.entries()) {
+          const snapshot = {
+            title: step.label,
+            app: text(sourceRow.app_name),
+            platform: input.catalog.platform,
+            flow: input.catalog.title,
+            step: step.label,
+            sourcePath: `flow:${input.catalog.appId}:${input.catalog.flowId}`,
+            description: input.catalog.description || "",
+          };
+          await tx(
+            `INSERT INTO research_project_items
+               (project_id, lane_id, position, source_kind, step_label, catalog_app,
+                catalog_version_id, catalog_image_id, catalog_flow_id, catalog_step_index,
+                source_snapshot)
+             VALUES ($1, $2, $3, 'catalog_flow_step', $4, $5, $6, $7, $8, $9, $10::jsonb)`,
+            [locked.id, input.laneId, firstPosition + offset, step.label,
+              input.catalog.appId, input.catalog.versionId, step.imageId, input.catalog.flowId,
+              step.stepIndex, JSON.stringify(snapshot)],
+          );
+        }
         await bumpRevision(tx, locked.id);
         return loadWorkspace(tx, userId, input.projectId);
       });

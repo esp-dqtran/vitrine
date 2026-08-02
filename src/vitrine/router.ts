@@ -46,6 +46,7 @@ export type Route =
   | SiteVersionRoute
   | { name: "projects" }
   | { name: "project"; projectId: string }
+  | { name: "project-document"; projectId: string }
   | { name: "project-playground"; projectId: string }
   | { name: "feature-document"; documentId: number }
   | { name: "feature-document-share"; token: string }
@@ -154,6 +155,15 @@ export function parseRoutePath(pathname: string): Route {
     const projectId = normalizeResearchProjectId(projectPlaygroundMatch[1]);
     return projectId
       ? { name: "project-playground", projectId }
+      : { name: "not-found", pathname: path };
+  }
+  const projectDocumentMatch = path.match(
+    /^\/projects\/([^/]+)\/document$/,
+  );
+  if (projectDocumentMatch) {
+    const projectId = normalizeResearchProjectId(projectDocumentMatch[1]);
+    return projectId
+      ? { name: "project-document", projectId }
       : { name: "not-found", pathname: path };
   }
   const projectMatch = path.match(/^\/projects\/([^/]+)$/);
@@ -301,6 +311,8 @@ export function routeToPath(route: Route): string {
       return "/projects";
     case "project":
       return `/projects/${route.projectId}`;
+    case "project-document":
+      return `/projects/${route.projectId}/document`;
     case "project-playground":
       return `/projects/${route.projectId}/playground`;
     case "feature-document":

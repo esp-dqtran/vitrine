@@ -101,6 +101,29 @@ services:
       retries: 6
     restart: on-failure
 
+  project-document-collab:
+    profiles: ["research"]
+    build:
+      context: .
+      dockerfile: services/project-document-collab/Dockerfile
+    ports:
+      - "${PROJECT_DOCUMENT_COLLAB_HOST_PORT:-3013}:3013"
+    environment:
+      NODE_ENV: production
+      PORT: 3013
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      APP_URL: ${APP_URL:-http://localhost:5173}
+      PROJECT_DOCUMENT_COLLAB_ALLOWED_ORIGINS: ${PROJECT_DOCUMENT_COLLAB_ALLOWED_ORIGINS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('node:net').connect(3013, '127.0.0.1').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: on-failure
+
   # Not part of the default api/rabbitmq/worker stack. Gated behind the `discover` profile;
   # run with `docker compose --profile discover up discover`.
   discover:

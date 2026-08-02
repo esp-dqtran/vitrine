@@ -123,6 +123,14 @@ RESEARCH_PROJECTS_ENABLED=true
 VITE_RESEARCH_PROJECTS_ENABLED=true
 ```
 
+Each Research Project also has a BlockNote document at
+`/projects/:projectId/document`. Start its Hocuspocus gateway with
+`npm run service:project-document-collab`; it listens on `3013` by default,
+authenticates the existing Astryx session cookie, and stores Yjs state in
+PostgreSQL. In production, set `PROJECT_DOCUMENT_COLLAB_ALLOWED_ORIGINS` to the
+exact app origin and route `/api/project-document-collaboration` to that service
+with WebSocket upgrades enabled.
+
 AI synthesis is optional. Without the three provider variables below, projects, evidence, decisions, uploads, and Markdown export continue to work; only synthesis returns `503`.
 
 ```dotenv

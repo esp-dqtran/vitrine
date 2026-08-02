@@ -8,7 +8,7 @@ import {
 
 import { navigate } from "../router.ts";
 
-export type ProjectWorkspaceArea = "overview" | "playground";
+export type ProjectWorkspaceArea = "overview" | "document" | "playground";
 
 export function ProjectWorkspaceNav({
   projectId,
@@ -28,6 +28,10 @@ export function ProjectWorkspaceNav({
     }
     if (area === "playground") {
       navigate({ name: "project-playground", projectId });
+      return;
+    }
+    if (area === "document") {
+      navigate({ name: "project-document", projectId });
       return;
     }
     navigate({ name: "project-playground", projectId });
@@ -58,6 +62,7 @@ export function ProjectWorkspaceNav({
         className="project-workspace-nav__areas"
       >
         <SegmentedControlItem value="overview" label="Overview" />
+        <SegmentedControlItem value="document" label="Document" />
         <SegmentedControlItem value="playground" label="Playground" />
       </SegmentedControl>
     </header>

@@ -4,6 +4,7 @@ import {
   ResearchProjectConflictError,
   normalizeResearchProjectId,
   type AddResearchItemInput,
+  type AttachResearchFlowInput,
   type ProjectPatch,
   type ResearchPlatform,
   type ResearchProjectId,
@@ -238,6 +239,44 @@ export function mountResearchProjectRoutes(
       res.status(400).json({ error: "invalid catalog evidence" }); return;
     }
     const project = await deps.store.addItem(res.locals.user.id, input);
+    if (!project) res.status(404).json({ error: "research project or lane not found" });
+    else res.status(201).json(project);
+  }));
+
+  app.post("/research-projects/:id/flows", asyncRoute(async (req, res) => {
+    const projectId = normalizeResearchProjectId(req.params.id);
+    const laneId = positiveId(String(req.body?.laneId));
+    const expectedRevision = revision(req.body?.expectedRevision);
+    const catalog = record(req.body?.catalog);
+    const app = boundedText(catalog?.app, 240, true);
+    const appId = boundedText(catalog?.appId, 240, true);
+    const flowId = boundedText(catalog?.flowId, 300, true);
+    const title = boundedText(catalog?.title, 240, true);
+    const description = boundedText(catalog?.description, 4000);
+    const platform = catalog?.platform;
+    const versionId = Number(catalog?.versionId);
+    if (!projectId || !laneId || !expectedRevision || !app || !appId || !flowId || !title
+      || description === undefined || !["ios", "android", "web"].includes(String(platform))
+      || !Number.isSafeInteger(versionId) || versionId <= 0) {
+      res.status(400).json({ error: "invalid catalog flow" }); return;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, appId))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required", app: appId }); return;
+    }
+    const project = await deps.store.attachFlow(res.locals.user.id, {
+      projectId,
+      laneId,
+      expectedRevision,
+      catalog: {
+        app,
+        appId,
+        versionId,
+        flowId,
+        platform: platform as AttachResearchFlowInput["catalog"]["platform"],
+        title,
+        description,
+      },
+    });
     if (!project) res.status(404).json({ error: "research project or lane not found" });
     else res.status(201).json(project);
   }));

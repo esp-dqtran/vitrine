@@ -42,6 +42,7 @@
     "record": "tsx src/index.ts record",
     "repair-flow": "tsx src/index.ts repair-flow",
     "service:api": "tsx services/api/src/index.ts",
+    "service:project-document-collab": "node --env-file-if-exists=.env --import tsx services/project-document-collab/src/index.ts",
     "service:discover": "tsx services/discover/src/index.ts",
     "service:import-worker": "tsx services/import-worker/src/index.ts",
     "service:antigravity-worker:install": "node scripts/antigravity-worker-launch-agent.mjs install",
@@ -73,7 +74,7 @@
     "ui-elements:review": "node --env-file=.env --import tsx scripts/review-ui-element-extraction.ts",
     "ui-elements:test-crops": "node --env-file=.env --import tsx scripts/test-ui-element-crop-quality.ts",
     "ui-elements:reprocess-crops": "node --env-file=.env --import tsx scripts/reprocess-ui-element-crop-quality.ts",
-    "test": "node --experimental-strip-types --test --test-concurrency=1 src/*.test.ts src/vitrine/*.test.ts services/api/src/*.test.ts services/import-worker/src/*.test.ts services/sites-import-worker/src/*.test.ts services/public-page-import-worker/src/*.test.ts && tsx --test src/vitrine/*.test.tsx",
+    "test": "node --experimental-strip-types --test --test-concurrency=1 src/*.test.ts src/vitrine/*.test.ts services/api/src/*.test.ts services/project-document-collab/src/*.test.ts services/import-worker/src/*.test.ts services/sites-import-worker/src/*.test.ts services/public-page-import-worker/src/*.test.ts && tsx --test src/vitrine/*.test.tsx",
     "dev": "vite",
     "build": "vite build",
     "deploy:cloudflare": "npm run build && wrangler deploy",
@@ -85,6 +86,12 @@
     "@astryxdesign/core": "^0.1.4",
     "@aws-sdk/client-s3": "^3.1085.0",
     "@aws-sdk/s3-request-presigner": "^3.1085.0",
+    "@blocknote/core": "^0.52.1",
+    "@blocknote/mantine": "^0.52.1",
+    "@blocknote/react": "^0.52.1",
+    "@hocuspocus/extension-database": "^4.4.0",
+    "@hocuspocus/provider": "^4.4.0",
+    "@hocuspocus/server": "^4.4.0",
     "@stylexjs/stylex": "^0.18.3",
     "amqplib": "^2.0.1",
     "compression": "^1.8.1",
@@ -103,7 +110,10 @@
     "remark-gfm": "^4.0.1",
     "sharp": "^0.35.3",
     "stripe": "^22.3.1",
-    "ws": "8.21.1"
+    "ws": "8.21.1",
+    "y-prosemirror": "^1.3.7",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.27"
   },
   "overrides": {
     "file-type": "21.3.4"

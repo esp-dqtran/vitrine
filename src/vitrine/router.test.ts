@@ -51,6 +51,16 @@ test('round-trips the Designer Project Playground with a UUID', () => {
   });
 });
 
+test('round-trips the collaborative Project Document with a UUID', () => {
+  const route = { name: 'project-document' as const, projectId: PROJECT_ID };
+  assert.equal(routeToPath(route), `/projects/${PROJECT_ID}/document`);
+  assert.deepEqual(parseRoutePath(`/projects/${PROJECT_ID}/document`), route);
+  assert.deepEqual(parseRoutePath('/projects/7/document'), {
+    name: 'not-found',
+    pathname: '/projects/7/document',
+  });
+});
+
 test('round-trips current and legacy Site detail tabs while keeping the base route stable', () => {
   assert.deepEqual(parseRoutePath('/sites/typeform'), {
     name: 'site-version',

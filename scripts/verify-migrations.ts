@@ -92,6 +92,22 @@ const FEATURE_DOCUMENT_TABLES = [
   "feature_documents",
 ] as const;
 
+const PROJECT_DOCUMENT_TABLES = [
+  "project_document_collection_memberships",
+  "project_document_collections",
+  "project_document_collaborators",
+  "project_document_comments",
+  "project_document_folder_memberships",
+  "project_document_folders",
+  "project_document_links",
+  "project_document_realtime_states",
+  "project_document_shares",
+  "project_document_tag_assignments",
+  "project_document_tags",
+  "project_document_versions",
+  "project_documents",
+] as const;
+
 const APP_KNOWLEDGE_TABLES = [
   "app_knowledge_component_crops",
   "app_knowledge_design_system_chunks",
@@ -337,6 +353,7 @@ async function verifyEmptyDatabase(databaseUrlValue: string): Promise<MigrationV
       ...PUBLIC_PAGE_TABLES,
       ...REFERRAL_TABLES,
       ...FEATURE_DOCUMENT_TABLES,
+      ...PROJECT_DOCUMENT_TABLES,
       ...APP_KNOWLEDGE_TABLES,
       ...SEARCH_TABLES,
       ...PUBLIC_PREVIEW_TABLES,

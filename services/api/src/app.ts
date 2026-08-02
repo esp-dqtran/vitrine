@@ -153,10 +153,12 @@ import type { StepActual, StepFailure } from "../../../src/smartCrawler.ts";
 import { createAutonomousStore } from "../../../src/autonomousStore.ts";
 import { encryptStorageState, type StorageState } from "../../../src/crawlSession.ts";
 import { createResearchProjectStore } from "../../../src/researchProjectStore.ts";
+import { createProjectDocumentStore } from "../../../src/projectDocumentStore.ts";
 import { createOrganizationStore } from "../../../src/organizationStore.ts";
 import { createResearchSynthesisProvider } from "../../../src/researchSynthesisProvider.ts";
 import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
+import { mountProjectDocumentRoutes } from "./projectDocuments.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
 import { kiroCliFeatureDocumentProviderModelFromEnvironment } from "../../../src/kiroCliFeatureDocumentProvider.ts";
@@ -467,6 +469,7 @@ const defaults = {
   publishedPreviewObject,
   imageObjectById,
   researchProjectStore: createResearchProjectStore(),
+  projectDocumentStore: createProjectDocumentStore(),
   researchSynthesisProvider: createResearchSynthesisProvider(),
   researchProjectsEnabled: process.env.RESEARCH_PROJECTS_ENABLED === "true",
   organizationStore: createOrganizationStore(),
@@ -1692,6 +1695,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     listPublishedCandidates: listResearchCandidates,
     getPrivateObject: deps.researchProjectStore.getPrivateObject,
     recordEvent: deps.recordAccessEvent,
+  });
+
+  mountProjectDocumentRoutes(app, {
+    store: deps.projectDocumentStore,
+    enabled: deps.researchProjectsEnabled,
   });
 
   mountOrganizationRoutes(app, {

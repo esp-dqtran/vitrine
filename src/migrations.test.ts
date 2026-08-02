@@ -330,6 +330,17 @@ const migrationDefinitions = [
       /project_documents_attribution_email_length/,
     ],
   },
+  {
+    file: "0063_project_document_realtime_state.sql",
+    patterns: [
+      /CREATE TABLE project_document_realtime_states/,
+      /REFERENCES project_documents\(id\) ON DELETE CASCADE/,
+      /state BYTEA NOT NULL/,
+      /byte_size BETWEEN 1 AND 8388608/,
+      /octet_length\(state\) = byte_size/,
+      /project_document_realtime_states_updated_idx/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -540,15 +551,18 @@ test("migration verification includes every post-v1 table family", async () => {
     "utf8",
   );
   assert.match(source, /const APP_KNOWLEDGE_TABLES/);
+  assert.match(source, /const PROJECT_DOCUMENT_TABLES/);
   assert.match(source, /"app_knowledge_component_crops"/);
   assert.match(source, /"app_knowledge_design_system_chunks"/);
   assert.match(source, /"app_knowledge_snapshots"/);
   assert.match(source, /"public_facet_previews"/);
+  assert.match(source, /"project_document_realtime_states"/);
   assert.match(source, /"screen_pattern_assignments"/);
   assert.match(source, /"screen_pattern_sections"/);
   assert.match(source, /"screen_patterns"/);
   assert.match(source, /"site_search_index_queue"/);
   assert.match(source, /\.\.\.APP_KNOWLEDGE_TABLES/);
+  assert.match(source, /\.\.\.PROJECT_DOCUMENT_TABLES/);
 });
 
 test("upgrade hashes exclude derived columns added after the legacy fixture", async () => {

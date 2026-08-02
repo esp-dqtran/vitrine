@@ -14,6 +14,7 @@ export interface FlowCatalogItem {
     appId: string;
     appName: string;
     appIconUrl: string | null;
+    versionId: number;
     version: number;
     sourceFlowId: string;
     screenCount: number;
@@ -116,6 +117,7 @@ function catalogItem(value: unknown, field: string): FlowCatalogItem {
     'screenCount',
     'sourceFlowId',
     'version',
+    'versionId',
   ], `${field}.preview`);
   if (preview.appIconUrl !== null && typeof preview.appIconUrl !== 'string') {
     invalid(`${field}.preview.appIconUrl`);
@@ -128,6 +130,7 @@ function catalogItem(value: unknown, field: string): FlowCatalogItem {
       appId: text(preview.appId, `${field}.preview.appId`),
       appName: text(preview.appName, `${field}.preview.appName`),
       appIconUrl: preview.appIconUrl as string | null,
+      versionId: integer(preview.versionId, `${field}.preview.versionId`, 1),
       version: integer(preview.version, `${field}.preview.version`, 1),
       sourceFlowId: text(preview.sourceFlowId, `${field}.preview.sourceFlowId`),
       screenCount: integer(preview.screenCount, `${field}.preview.screenCount`),

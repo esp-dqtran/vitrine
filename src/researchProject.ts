@@ -163,6 +163,21 @@ export interface AddResearchItemInput {
   privateObjectKey?: string;
 }
 
+export interface AttachResearchFlowInput {
+  projectId: ResearchProjectId;
+  laneId: number;
+  expectedRevision: number;
+  catalog: {
+    app: string;
+    appId: string;
+    versionId: number;
+    flowId: string;
+    platform: Exclude<ResearchPlatform, "all">;
+    title: string;
+    description?: string;
+  };
+}
+
 export interface UpdateResearchItemInput {
   projectId: ResearchProjectId;
   itemId: number;
