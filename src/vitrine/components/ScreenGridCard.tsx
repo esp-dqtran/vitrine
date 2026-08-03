@@ -120,6 +120,7 @@ export function ScreenGridCard({
         {onSelectedChange ? (
           <IconButton
             label={selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`}
+            tooltip={selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`}
             icon={<Icon icon="check" size="sm" />}
             variant="secondary"
             size="sm"

@@ -3,8 +3,13 @@ import { test } from "node:test";
 import { parseRouteLocation, parseRoutePath, routeToPath } from "./router.ts";
 import {
   ResearchProjectApiError,
+  addResearchProjectMember,
   attachResearchFlow,
+  getResearchProjectCanvas,
   listResearchProjects,
+  listResearchProjectMembers,
+  removeResearchProjectMember,
+  saveResearchProjectCanvas,
 } from "./researchProjectsApi.ts";
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
@@ -58,6 +63,33 @@ test("returns typed API conflicts with the latest project", async (t) => {
   );
 });
 
+test("uses the dedicated Excalidraw media type for durable canvas snapshots", async (t) => {
+  const original = globalThis.fetch;
+  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), init });
+    return Response.json({ snapshot: null, revision: 0 });
+  };
+
+  await getResearchProjectCanvas(PROJECT_ID);
+  await saveResearchProjectCanvas(PROJECT_ID, {
+    type: "excalidraw",
+    version: 2,
+    source: "https://astryx.design",
+    elements: [],
+    appState: {},
+    files: {},
+  });
+
+  assert.equal(calls[0].url, `/api/research-projects/${PROJECT_ID}/canvas`);
+  assert.equal(calls[1].init?.method, "PUT");
+  assert.equal(
+    (calls[1].init?.headers as Record<string, string>)["content-type"],
+    "application/vnd.astryx.excalidraw+json",
+  );
+});
+
 test("posts a whole catalog flow to the project attachment endpoint", async (t) => {
   const original = globalThis.fetch;
   let call: { url: string; init?: RequestInit } | undefined;
@@ -95,4 +127,29 @@ test("posts a whole catalog flow to the project attachment endpoint", async (t) 
       title: "Creating an account",
     },
   });
+});
+
+test("uses Project-scoped member endpoints", async (t) => {
+  const original = globalThis.fetch;
+  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), init });
+    return init?.method === "DELETE"
+      ? new Response(null, { status: 204 })
+      : Response.json({ members: [], canManage: true });
+  };
+
+  await listResearchProjectMembers(PROJECT_ID);
+  await addResearchProjectMember(PROJECT_ID, "stakeholder@example.com", "viewer");
+  await removeResearchProjectMember(PROJECT_ID, 9);
+
+  assert.equal(calls[0].url, `/api/research-projects/${PROJECT_ID}/members`);
+  assert.equal(calls[1].init?.method, "POST");
+  assert.deepEqual(JSON.parse(String(calls[1].init?.body)), {
+    email: "stakeholder@example.com",
+    role: "viewer",
+  });
+  assert.equal(calls[2].url, `/api/research-projects/${PROJECT_ID}/members/9`);
+  assert.equal(calls[2].init?.method, "DELETE");
 });

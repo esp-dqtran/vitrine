@@ -11,7 +11,6 @@ import { Button, EmptyState, Spinner } from "@astryxdesign/core";
 import { useAuth } from "./AuthProvider";
 import { ProgressBanner } from "./components/ProgressBanner";
 import { CommandPalette } from "./components/CommandPalette";
-import { CollectionsPanel } from "./components/CollectionsPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { UnlockModal } from "./components/UnlockModal";
 import { AdvancedSearchPreview } from "./components/AdvancedSearchPreview.tsx";
@@ -19,6 +18,10 @@ import { QuickSearch, quickSearchHandoff } from "./components/QuickSearch.tsx";
 import { GuestCatalogControls } from "./components/GuestCatalogControls.tsx";
 import { LoginDialog } from "./components/LoginDialog.tsx";
 import { AppDetailLoadingPage } from "./components/AppDetailLoadingPage.tsx";
+import {
+  PublicAppPreviewModal,
+  PublicAppPreviewPage,
+} from "./components/PublicAppPreviewPage.tsx";
 import { ApplicationSurface } from "./components/ApplicationSurface.tsx";
 import {
   AstryxDropdown,
@@ -42,6 +45,7 @@ import { createSitesDiscoveryAdapter } from "./sitesDiscoveryAdapter.ts";
 import type { DiscoveryFilter } from "./discoveryTypes.ts";
 import { useApps } from "./useApps";
 import { useAppDetail } from "./useAppDetail";
+import { usePublicAppPreview } from "./usePublicAppPreview.ts";
 import { useCollections } from "./useCollections";
 import {
   searchCatalog,
@@ -58,15 +62,21 @@ import type {
 import { defaultSearchState, readRecentSearches } from "./searchState.ts";
 import { createSearchSession } from "./searchSession.ts";
 import { activeFilterCount } from "../searchScope.ts";
+import { trackAppFunnelEvent } from "./publicAppPreviewApi.ts";
 
 const ResearchProjectsPage = lazy(() =>
   import("./components/ResearchProjectsPage").then((module) => ({
     default: module.ResearchProjectsPage,
   })),
 );
-const ResearchProjectPage = lazy(() =>
-  import("./components/ResearchProjectPage").then((module) => ({
-    default: module.ResearchProjectPage,
+const CollectionsWorkspacePage = lazy(() =>
+  import("./components/CollectionsWorkspacePage.tsx").then((module) => ({
+    default: module.CollectionsWorkspacePage,
+  })),
+);
+const SettingsWorkspacePage = lazy(() =>
+  import("./components/SettingsWorkspacePage").then((module) => ({
+    default: module.SettingsWorkspacePage,
   })),
 );
 const ProjectPlayground = lazy(() =>
@@ -79,9 +89,9 @@ const ProjectDocumentPage = lazy(() =>
     default: module.ProjectDocumentPage,
   })),
 );
-const FeatureDocumentPage = lazy(() =>
-  import("./components/FeatureDocumentPage.tsx").then((module) => ({
-    default: module.FeatureDocumentPage,
+const ProjectFilesPage = lazy(() =>
+  import("./components/ProjectFilesPage").then((module) => ({
+    default: module.ProjectFilesPage,
   })),
 );
 const AdvancedSearchPage = lazy(() =>
@@ -129,7 +139,6 @@ export function App() {
     ensureCollections,
     setCollections,
   } = useCollections();
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [searchSession] = useState(() =>
@@ -153,6 +162,7 @@ export function App() {
   const [entitlementsError, setEntitlementsError] = useState("");
   const [entitlementsRevision, setEntitlementsRevision] = useState(0);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<string | null>(null);
   const researchProjectsEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env
       ?.VITE_RESEARCH_PROJECTS_ENABLED === "true";
@@ -179,6 +189,8 @@ export function App() {
     !entitlements.freeUnlocks.includes(appId);
   const detailGateLoading = route.name === "app" && !entitlementsResolved;
   const detailLocked = route.name === "app" && isFreeGated(route.appId);
+  const detailPreview =
+    route.name === "app" && entitlementsResolved && (isGuest || detailLocked);
   // The Apps page owns its catalog request through the discovery controller.
   // Keep this legacy list lazy and isolated to the legacy command palette.
   const { apps } = useApps(
@@ -194,8 +206,21 @@ export function App() {
     route.name === "app" &&
       !detailGateLoading &&
       !entitlementsError &&
-      !detailLocked,
+      !detailPreview,
   );
+  const {
+    preview: publicPreview,
+    loading: publicPreviewLoading,
+    error: publicPreviewError,
+  } = usePublicAppPreview(
+    route.name === "app" ? route.appId : undefined,
+    detailPreview,
+  );
+  const {
+    preview: modalPublicPreview,
+    loading: modalPublicPreviewLoading,
+    error: modalPublicPreviewError,
+  } = usePublicAppPreview(previewTarget ?? undefined, previewTarget !== null);
 
   useEffect(() => {
     if (user?.role !== "user") {
@@ -217,11 +242,6 @@ export function App() {
 
   const retryEntitlements = () => setEntitlementsRevision((value) => value + 1);
 
-  const openCollections = async () => {
-    await ensureCollections().catch(() => []);
-    setCollectionsOpen(true);
-  };
-
   const openPalette = async (
     scope: SearchScope,
     seed: Partial<AdvancedSearchFilters> = {},
@@ -231,10 +251,10 @@ export function App() {
   };
 
   const closeDiscoveryOverlays = () => {
-    setCollectionsOpen(false);
     setSettingsOpen(false);
     setLoginOpen(false);
     setAdvancedPreview(null);
+    setPreviewTarget(null);
     searchSession.close();
   };
 
@@ -280,12 +300,28 @@ export function App() {
 
   const openApp = async (appId: string) => {
     closeDiscoveryOverlays();
-    if (isFreeGated(appId)) {
-      setUnlockTarget(appId);
+    if (isGuest || isFreeGated(appId)) {
+      setPreviewTarget(appId);
+      setUnlockTarget(null);
       return;
     }
     navigate({ name: "app", appId });
     setUnlockTarget(null);
+  };
+
+  const requestFullAppAnalysis = (appId: string) => {
+    setPreviewTarget(null);
+    if (isGuest) {
+      setLoginOpen(true);
+      return;
+    }
+    if (!entitlements || entitlements.plan !== "free") return;
+    const action =
+      entitlements.freeUnlocksRemaining < 1
+        ? "paywall_viewed"
+        : "unlock_clicked";
+    void trackAppFunnelEvent(appId, action).catch(() => undefined);
+    setUnlockTarget(appId);
   };
 
   const confirmUnlock = async () => {
@@ -293,11 +329,34 @@ export function App() {
     const response = await fetch(`/api/apps/${unlockTarget}/unlock`, {
       method: "POST",
     });
-    if (!response.ok) return;
-    const result = (await response.json()) as { remaining: number };
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      throw new Error(body.error ?? `Unlock returned ${response.status}`);
+    }
+    const result = (await response.json()) as {
+      status:
+        | "unlocked"
+        | "already_unlocked"
+        | "limit_reached"
+        | "app_not_found";
+      remaining: number;
+    };
+    if (result.status === "app_not_found")
+      throw new Error("This app is no longer available.");
+    if (result.status === "limit_reached") {
+      setEntitlements({ ...entitlements, freeUnlocksRemaining: 0 });
+      void trackAppFunnelEvent(unlockTarget, "paywall_viewed").catch(
+        () => undefined,
+      );
+      return;
+    }
     setEntitlements({
       ...entitlements,
-      freeUnlocks: [...entitlements.freeUnlocks, unlockTarget],
+      freeUnlocks: entitlements.freeUnlocks.includes(unlockTarget)
+        ? entitlements.freeUnlocks
+        : [...entitlements.freeUnlocks, unlockTarget],
       freeUnlocksRemaining: result.remaining,
     });
     const appId = unlockTarget;
@@ -306,16 +365,6 @@ export function App() {
     navigate({ name: "app", appId });
   };
 
-  // Landing straight on a locked app URL skips the catalog click handler.
-  useEffect(() => {
-    if (route.name === "app" && isFreeGated(route.appId))
-      setUnlockTarget(route.appId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    route.name,
-    route.name === "app" ? route.appId : undefined,
-    entitlements,
-  ]);
   const accountControls = user ? (
     <div
       style={{
@@ -346,7 +395,7 @@ export function App() {
           label={`Collections${collectionsLoaded && collections.length ? ` (${collections.length})` : ""}`}
           onSelect={() => {
             setAccountMenuOpen(false);
-            void openCollections();
+            navigate({ name: "collections" });
           }}
         />
         <AstryxDropdownItem
@@ -381,17 +430,7 @@ export function App() {
 
   const discoveryOverlays = (
     <AnimatePresence>
-      {user && collectionsOpen && (
-        <CollectionsPanel
-          collections={collections}
-          plan={customerPlan}
-          onUpgrade={openPricing}
-          onChange={setCollections}
-          onClose={() => setCollectionsOpen(false)}
-          onOpenApp={(appId) => void openApp(appId)}
-        />
-      )}
-      {(settingsOpen || route.name === "settings-billing") && user && (
+      {settingsOpen && user && (
         <SettingsPanel
           user={user}
           subscription={entitlements}
@@ -507,7 +546,13 @@ export function App() {
   );
 
   const discoveryRoute =
-    route.name === "project-playground"
+    route.name === "project" ||
+    route.name === "project-documents" ||
+    route.name === "project-settings" ||
+    route.name === "project-canvas" ||
+    route.name === "project-document-file" ||
+    route.name === "project-playground" ||
+    route.name === "project-document"
       ? "projects"
       : route.name === "apps" ||
           route.name === "sites" ||
@@ -643,16 +688,72 @@ export function App() {
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
       break;
+    case "collections":
+      page = user ? (
+        <Suspense fallback={<ApplicationPageSpinner />}>
+          <CollectionsWorkspacePage
+            collections={collections}
+            loaded={collectionsLoaded}
+            plan={customerPlan}
+            collectionId={route.collectionId}
+            onLoad={ensureCollections}
+            onChange={setCollections}
+            onUpgrade={openPricing}
+          />
+        </Suspense>
+      ) : null;
+      break;
     case "project":
       page = researchProjectsEnabled ? (
-        <ResearchProjectPage projectId={route.projectId} />
+        <ProjectFilesPage projectId={route.projectId} area="canvas" />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "project-documents":
+      page = researchProjectsEnabled ? (
+        <ProjectFilesPage projectId={route.projectId} area="documents" />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "project-settings":
+      page = researchProjectsEnabled ? (
+        <ProjectFilesPage projectId={route.projectId} area="settings" />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "project-canvas":
+      page = researchProjectsEnabled ? (
+        <ProjectPlayground
+          projectId={route.projectId}
+          canvasId={route.canvasId}
+          userId={user?.id ?? 0}
+          userName={user?.email ?? "Astryx member"}
+        />
+      ) : (
+        <ApplicationStatusPage title="Research projects are unavailable" />
+      );
+      break;
+    case "project-document-file":
+      page = researchProjectsEnabled ? (
+        <ProjectDocumentPage
+          projectId={route.projectId}
+          documentId={route.documentId}
+          userName={user?.email ?? "Astryx member"}
+        />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
       break;
     case "project-playground":
       page = researchProjectsEnabled ? (
-        <ProjectPlayground projectId={route.projectId} />
+        <ProjectPlayground
+          projectId={route.projectId}
+          userId={user?.id ?? 0}
+          userName={user?.email ?? "Astryx member"}
+        />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
@@ -667,9 +768,6 @@ export function App() {
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
       break;
-    case "feature-document":
-      page = <FeatureDocumentPage documentId={route.documentId} />;
-      break;
     case "search":
       page = advancedSearchEnabled ? (
         <AdvancedSearchPage
@@ -682,7 +780,10 @@ export function App() {
       );
       break;
     case "app":
-      if (detailGateLoading || detailLoading) {
+      if (
+        detailGateLoading ||
+        (detailPreview ? publicPreviewLoading : detailLoading)
+      ) {
         page = (
           <AppDetailLoadingPage
             accountControls={accountControls}
@@ -704,18 +805,33 @@ export function App() {
             }
           />
         );
-      } else if (detailLocked) {
+      } else if (detailPreview && publicPreview) {
         page = (
-          <div data-app-detail-locked="true" style={{ minHeight: "100vh" }} />
+          <PublicAppPreviewPage
+            preview={publicPreview}
+            freeUnlocksRemaining={
+              isGuest ? null : (entitlements?.freeUnlocksRemaining ?? null)
+            }
+            isGuest={isGuest}
+            accountControls={accountControls}
+            onOpenSearch={() => void openPalette("apps")}
+            onUnlock={() => requestFullAppAnalysis(route.appId)}
+          />
         );
-      } else if (detailError || !detail) {
+      } else if (
+        (detailPreview && publicPreviewError) ||
+        detailError ||
+        !detail
+      ) {
         page = (
           <ApplicationStatusPage
             title="Could not load app details"
             description={
-              detailError
-                ? `The app could not be loaded: ${detailError}`
-                : "No app detail data was returned."
+              publicPreviewError
+                ? `The public preview could not be loaded: ${publicPreviewError}`
+                : detailError
+                  ? `The app could not be loaded: ${detailError}`
+                  : "No app detail data was returned."
             }
           />
         );
@@ -800,13 +916,18 @@ export function App() {
       );
       break;
     case "settings-billing":
-      page = (
-        <div
-          data-settings-backdrop="true"
-          className="vitrine-page"
-          style={{ minHeight: "100vh" }}
-        />
-      );
+      page = user ? (
+        <Suspense fallback={<ApplicationPageSpinner />}>
+          <SettingsWorkspacePage
+            user={user}
+            subscription={entitlements}
+            onUpgrade={openPricing}
+            onEntitlementsChanged={retryEntitlements}
+            onBack={() => navigate({ name: "projects" })}
+            onSignOut={logout}
+          />
+        </Suspense>
+      ) : null;
       break;
     case "admin":
     case "landing":
@@ -827,6 +948,19 @@ export function App() {
   const dialogs = (
     <>
       {catalogLoginDialog}
+      {previewTarget ? (
+        <PublicAppPreviewModal
+          preview={modalPublicPreview}
+          loading={modalPublicPreviewLoading}
+          error={modalPublicPreviewError}
+          freeUnlocksRemaining={
+            isGuest ? null : (entitlements?.freeUnlocksRemaining ?? null)
+          }
+          isGuest={isGuest}
+          onUnlock={() => requestFullAppAnalysis(previewTarget)}
+          onClose={() => setPreviewTarget(null)}
+        />
+      ) : null}
       {unlockTarget && entitlements ? (
         <UnlockModal
           appId={unlockTarget}
@@ -846,22 +980,21 @@ export function App() {
     </>
   );
 
-  const pageWithPersistentDiscoveryHeader = discoveryRoute ? (
-    <div
-      data-persistent-discovery-frame="true"
-      style={
-        route.name === "project-playground"
-          ? {
-              minHeight: "100vh",
-              minBlockSize: "100dvh",
-              display: "flex",
-              flexDirection: "column",
-            }
-          : { display: "contents" }
-      }
-    >
+  const hasPersistentDiscoveryHeader =
+    discoveryRoute !== null &&
+    route.name !== "projects" &&
+    route.name !== "project" &&
+    route.name !== "project-documents" &&
+    route.name !== "project-document-file" &&
+    route.name !== "project-document" &&
+    route.name !== "project-settings" &&
+    route.name !== "project-playground" &&
+    route.name !== "project-canvas";
+
+  const pageWithPersistentDiscoveryHeader = hasPersistentDiscoveryHeader ? (
+    <div data-persistent-discovery-frame="true" style={{ display: "contents" }}>
       <ReferenceDiscoveryTopNav
-        active={discoveryRoute}
+        active={discoveryRoute ?? "apps"}
         className="apps-top-nav"
         search={
           <SearchTrigger

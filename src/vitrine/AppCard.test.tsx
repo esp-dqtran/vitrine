@@ -30,7 +30,7 @@ const app = (screens: Screen[]): App => ({
   screens,
 });
 
-test('renders only the selected preview for a multi-screen App card', () => {
+test('renders only the selected full preview for a multi-screen App card', () => {
   const html = renderToStaticMarkup(
     <AppCard app={app([screen(1, '/one.png'), screen(2, '/two.png')])} onOpen={() => undefined} />,
   );
@@ -42,7 +42,8 @@ test('renders only the selected preview for a multi-screen App card', () => {
   assert.doesNotMatch(html, /app-discovery-card__preview/);
   assert.doesNotMatch(html, /data-app-card-preview/);
   assert.match(html, /src="\/one\.png"/);
-  assert.match(html, /object-fit:cover/);
+  assert.match(html, /object-fit:contain/);
+  assert.doesNotMatch(html, /object-fit:cover/);
   assert.doesNotMatch(html, /src="\/two\.png"/);
   assert.doesNotMatch(html, /app-discovery-card__overlay/);
   assert.doesNotMatch(html, /<button/);

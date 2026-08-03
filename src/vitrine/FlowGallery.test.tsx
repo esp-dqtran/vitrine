@@ -33,7 +33,7 @@ test('renders only the first eight Flow cards before viewport advancement', () =
   assert.doesNotMatch(html, /aria-label="Preview Flow 9 flow screens"/);
 });
 
-test('keeps App-detail Flow previews local to the modal', () => {
+test('keeps App-detail Flow previews shareable without replacing the gallery', () => {
   const html = renderToStaticMarkup(
     <FlowGallery
       groups={[{
@@ -49,7 +49,7 @@ test('keeps App-detail Flow previews local to the modal', () => {
     />,
   );
 
-  assert.match(html, /data-flow-preview-url-sync="false"/);
+  assert.match(html, /data-flow-preview-url-sync="true"/);
 });
 
 test('renders a table-of-contents target beyond the first batch with a scroll anchor', () => {

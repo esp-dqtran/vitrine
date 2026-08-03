@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import {
   Button,
   DropdownMenu,
@@ -75,7 +75,7 @@ export function AstryxDropdown({
           className={triggerClasses}
           onClick={() => onOpenChange(!open)}
           endContent={triggerEndContent ?? (hasChevron ? (
-            <Icon icon="chevronDown" size="xsm" />
+            <Icon icon="chevronDown" size="sm" />
           ) : undefined)}
         />
         {open ? (
@@ -137,10 +137,55 @@ export function AstryxDropdownItem({
       onClick={onSelect}
       endContent={selected ? (
         <span className="astryx-dropdown__check" aria-label="Selected">
-          <Icon icon="check" size="xsm" />
+          <Icon icon="check" size="sm" />
         </span>
       ) : undefined}
     />
+  );
+}
+
+export function AstryxSingleSelectDropdown({
+  ariaLabel,
+  value,
+  options,
+  triggerClassName,
+  triggerVariant,
+  menuWidth,
+  onChange,
+}: {
+  ariaLabel: string;
+  value: string;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  triggerClassName?: string;
+  triggerVariant?: AstryxDropdownVariant;
+  menuWidth?: number | string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? value;
+
+  return (
+    <AstryxDropdown
+      label={selectedLabel}
+      ariaLabel={`${ariaLabel}: ${selectedLabel}`}
+      open={open}
+      triggerClassName={triggerClassName}
+      triggerVariant={triggerVariant}
+      menuWidth={menuWidth}
+      onOpenChange={setOpen}
+    >
+      {options.map((option) => (
+        <AstryxDropdownItem
+          key={option.value}
+          label={option.label}
+          selected={option.value === value}
+          onSelect={() => {
+            onChange(option.value);
+            setOpen(false);
+          }}
+        />
+      ))}
+    </AstryxDropdown>
   );
 }
 

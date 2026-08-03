@@ -45,6 +45,32 @@ test('marks the effective customer plan and keeps only the valid upgrade action'
   assert.match(proHtml, /Current Pro plan/);
 });
 
+test('personalizes the pricing page with permanent Free unlock usage', () => {
+  const oneUsed: SubscriptionView = {
+    ...free,
+    freeUnlocks: ['linear'],
+    freeUnlocksRemaining: 2,
+  };
+  const html = renderToStaticMarkup(<PricingView user={{ id: 1, email: 'free@example.com', role: 'user' }} subscription={oneUsed} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
+  assert.match(html, /Your Free access/);
+  assert.match(html, /1 of 3 permanent app unlocks used/);
+  assert.match(html, /2 remaining/);
+  assert.match(html, /Browse public previews freely/);
+});
+
+test('turns exhausted Free usage into a full-catalog upsell without removing owned apps', () => {
+  const exhausted: SubscriptionView = {
+    ...free,
+    freeUnlocks: ['linear', 'figma', 'notion'],
+    freeUnlocksRemaining: 0,
+  };
+  const html = renderToStaticMarkup(<PricingView user={{ id: 1, email: 'free@example.com', role: 'user' }} subscription={exhausted} onBrowse={() => undefined} onSignIn={() => undefined} onCheckout={() => undefined} />);
+  assert.match(html, /3 of 3 permanent app unlocks used/);
+  assert.match(html, /All unlocks used/);
+  assert.match(html, /unlocked apps stay available forever/i);
+  assert.match(html, /Open the full catalog/);
+});
+
 test('wires the selected interval to Checkout and exposes billing errors', () => {
   const source = readFileSync(new URL('./Pricing.tsx', import.meta.url), 'utf8');
   assert.match(source, /createCheckout\(yearly \? 'year' : 'month'\)/);

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PublicFeatureDocumentShare } from '../featureDocumentStore.ts';
-import { featureDocumentReviewActions } from './components/FeatureDocumentPage.tsx';
 import { FeatureDocumentSharePage } from './components/FeatureDocumentSharePage.tsx';
 import { createFeatureDocumentShare, downloadFeatureDocumentMarkdown, revokeFeatureDocumentShare } from './featureDocumentsApi.ts';
 
@@ -25,13 +24,6 @@ const share: PublicFeatureDocumentShare = {
     },
   },
 };
-
-test('exposes only valid review transitions', () => {
-  assert.deepEqual(featureDocumentReviewActions('draft'), ['in_review']);
-  assert.deepEqual(featureDocumentReviewActions('in_review'), ['draft', 'approved']);
-  assert.deepEqual(featureDocumentReviewActions('approved'), []);
-  assert.deepEqual(featureDocumentReviewActions('superseded'), []);
-});
 
 test('public share renders canonical content and share-scoped evidence', () => {
   const token = 'a'.repeat(43);

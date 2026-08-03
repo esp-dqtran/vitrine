@@ -32,18 +32,20 @@ function EvidenceCard({
           className="document-flow__evidence-card"
           clickAction={() => onOpenVisualStep(evidence.stepNumber!)}
         >
-          <span className="document-flow__evidence-image">
-            <PlaceholderImage
-              src={evidence.thumbnailUrl ?? evidence.imageUrl}
-              style={{ objectFit: 'contain' }}
-            />
-          </span>
-          <span className="document-flow__evidence-copy">
-            <span className="document-flow__requirement-meta">
-              Step {evidence.stepNumber} · {evidence.evidenceId}
+          <span className="document-flow__evidence-card-content">
+            <span className="document-flow__evidence-image">
+              <PlaceholderImage
+                src={evidence.thumbnailUrl ?? evidence.imageUrl}
+                style={{ objectFit: 'contain' }}
+              />
+              <span className="document-flow__evidence-step">
+                Step {evidence.stepNumber}
+              </span>
             </span>
-            <strong>{evidence.stepLabel ?? evidence.label}</strong>
-            {evidence.description && <span>{evidence.description}</span>}
+            <span className="document-flow__evidence-copy">
+              <strong>{evidence.stepLabel ?? evidence.label}</strong>
+              {evidence.description && <span>{evidence.description}</span>}
+            </span>
           </span>
         </Button>
       );
@@ -61,16 +63,20 @@ function EvidenceList({
   }
   return (
     <section className="document-flow__evidence">
-      <h5>Evidence steps ({evidence.length})</h5>
-      <div className="document-flow__evidence-list" aria-label="Evidence">
+      <header className="document-flow__evidence-header">
+        <h5>Evidence flow ({evidence.length})</h5>
+        <span>Select a screen to open it in Visual Flow</span>
+      </header>
+      <ol className="document-flow__evidence-list" aria-label="Evidence flow">
         {evidence.map((item) => (
-          <EvidenceCard
-            key={item.evidenceId}
-            evidence={item}
-            onOpenVisualStep={onOpenVisualStep}
-          />
+          <li key={item.evidenceId} className="document-flow__evidence-node">
+            <EvidenceCard
+              evidence={item}
+              onOpenVisualStep={onOpenVisualStep}
+            />
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }
@@ -200,31 +206,45 @@ export function DocumentFlowReadyView({
   return (
     <section className="document-flow document-flow--ready" aria-label="Document Flow">
       <header className="document-flow__summary">
-        <div>
-          <p className="document-flow__eyebrow">
-            Feature overview · {summary.reviewStatus}
-          </p>
+        <div className="document-flow__summary-main">
+          <div className="document-flow__summary-heading">
+            <p className="document-flow__eyebrow">Feature brief</p>
+            <span className="document-flow__review-status">{summary.reviewStatus}</span>
+          </div>
           <h3>{summary.goal}</h3>
-          <p><strong>Starts:</strong> {summary.entryPoint}</p>
-          <p><strong>Ends:</strong> {summary.completionPoint}</p>
-          {summary.captureType && (
-            <p>
-              <strong>Capture:</strong> {summary.captureType} · {summary.completeness}
-              {summary.captureRationale ? ` — ${summary.captureRationale}` : ''}
-            </p>
-          )}
+          <dl className="document-flow__counts">
+            <div><dd>{summary.requirementCount}</dd><dt>Requirements</dt></div>
+            <div>
+              <dd>{summary.acceptanceCriteriaCount}</dd>
+              <dt>Acceptance criteria</dt>
+            </div>
+            <div>
+              <dd>{summary.supportedRequirementCount}/{summary.requirementCount}</dd>
+              <dt>Supported</dt>
+            </div>
+          </dl>
         </div>
-        <dl className="document-flow__counts">
-          <div><dt>Requirements</dt><dd>{summary.requirementCount}</dd></div>
+
+        <div className="document-flow__journey" aria-label="Observed journey">
           <div>
-            <dt>Acceptance criteria</dt>
-            <dd>{summary.acceptanceCriteriaCount}</dd>
+            <span>Start</span>
+            <p>{summary.entryPoint}</p>
           </div>
           <div>
-            <dt>Evidence</dt>
-            <dd>{summary.supportedRequirementCount}/{summary.requirementCount} supported</dd>
+            <span>End</span>
+            <p>{summary.completionPoint}</p>
           </div>
-        </dl>
+        </div>
+
+        {summary.captureType && (
+          <details className="document-flow__capture">
+            <summary>
+              <span>Capture quality</span>
+              <strong>{summary.captureType} · {summary.completeness}</strong>
+            </summary>
+            {summary.captureRationale && <p>{summary.captureRationale}</p>}
+          </details>
+        )}
       </header>
 
       <div role="tablist" aria-label="Document Flow sections" className="document-flow__nav">
@@ -258,9 +278,14 @@ export function DocumentFlowReadyView({
               >
                 <header>
                   <div>
-                    <p className="document-flow__requirement-meta">
-                      {requirement.id} · {requirement.priority.toUpperCase()}
-                    </p>
+                    <div className="document-flow__requirement-heading">
+                      <p className="document-flow__requirement-meta">{requirement.id}</p>
+                      {requirement.priority !== 'unranked' && (
+                        <span className="document-flow__priority">
+                          {requirement.priority}
+                        </span>
+                      )}
+                    </div>
                     <h4 id={`document-requirement-${requirement.id}`}>{requirement.text}</h4>
                   </div>
                 </header>
@@ -303,11 +328,21 @@ export function DocumentFlowReadyView({
         {activeSection === 'questions' && (
           presentation.openQuestions.length > 0
             ? (
-                <ul className="document-flow__questions-list">
-                  {presentation.openQuestions.map((claim) => (
-                    <li key={claim.id}>{claim.text}</li>
-                  ))}
-                </ul>
+                <section className="document-flow__questions">
+                  <header>
+                    <p className="document-flow__eyebrow">Evidence gaps</p>
+                    <h3>Questions to validate</h3>
+                    <p>These points are not confirmed by the captured screens.</p>
+                  </header>
+                  <ol className="document-flow__questions-list">
+                    {presentation.openQuestions.map((claim, index) => (
+                      <li key={claim.id}>
+                        <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                        <p>{claim.text}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
               )
             : <p>No open questions identified in this revision.</p>
         )}

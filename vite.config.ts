@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const API_TARGET = process.env.VITRINE_API_TARGET ?? "http://127.0.0.1:3010";
+const CANVAS_COLLAB_TARGET = process.env.VITRINE_CANVAS_COLLAB_TARGET
+  ?? "http://127.0.0.1:3012";
 const PROJECT_DOCUMENT_COLLAB_TARGET = process.env.VITRINE_PROJECT_DOCUMENT_COLLAB_TARGET
   ?? "http://127.0.0.1:3013";
 
@@ -15,6 +17,10 @@ export default defineConfig({
     proxy: {
       "/api/project-document-collaboration": {
         target: PROJECT_DOCUMENT_COLLAB_TARGET,
+        ws: true,
+      },
+      "/api/designer-canvas-collaboration": {
+        target: CANVAS_COLLAB_TARGET,
         ws: true,
       },
       "/api": {

@@ -59,6 +59,7 @@ export function ResearchProjectPage({ projectId }: { projectId: string }) {
     moveItem: (itemId, targetLaneId, targetPosition) => mutate((current) => moveResearchItem(current.id, itemId, current.revision, targetLaneId, targetPosition)),
     removeItem: (itemId) => mutate((current) => removeResearchItem(current.id, itemId, current.revision)),
   };
+  const readOnly = workspace.access?.role === 'viewer';
   const insightActions: ProjectInsightsActions = {
     save: (patch) => mutate((current) => updateResearchProject(current.id, current.revision, patch)),
     synthesize: async () => {
@@ -88,15 +89,17 @@ export function ResearchProjectPage({ projectId }: { projectId: string }) {
     <main className="vitrine-page research-project-page">
       <ProjectWorkspaceNav
         projectId={workspace.id}
-        active="overview"
+        active="canvas"
         title={workspace.title}
         description={workspace.question || "Designer research and project decisions."}
       />
       {message && <p role="alert" style={{ color: 'var(--color-text-danger)' }}>{message}</p>}
       <div className="research-project-workspace">
-        <EvidenceDrawer workspace={workspace} disabled={busy} onChange={setWorkspace} />
-        <DecisionCanvas workspace={workspace} disabled={busy} actions={actions} />
-        <ProjectInsightsPanel key={workspace.revision} workspace={workspace} disabled={busy} actions={insightActions} />
+        <DecisionCanvas workspace={workspace} disabled={busy || readOnly} actions={actions} />
+        <div className="research-project-workspace__rail">
+          <EvidenceDrawer workspace={workspace} disabled={busy || readOnly} onChange={setWorkspace} />
+          <ProjectInsightsPanel key={workspace.revision} workspace={workspace} disabled={busy || readOnly} actions={insightActions} />
+        </div>
       </div>
     </main>
   );

@@ -28,14 +28,10 @@ test('Vitrines exposes a compact seven-step product spacing scale', () => {
   assert.ok(SPACING_SCALE.every(({ use }) => use.length > 0));
 });
 
-test('control sizing stays aligned to the shared component contract', () => {
+test('buttons and dropdown selectors share one standard control height', () => {
   assert.deepEqual(
     CONTROL_SIZE_SCALE.map(({ token, value }) => [token, value]),
-    [
-      ['--size-element-sm', '28px'],
-      ['--size-element-md', '32px'],
-      ['--size-element-lg', '36px'],
-    ],
+    [['--vitrine-control-height', '40px']],
   );
   assert.deepEqual(
     FOUNDATION_TOKEN_CONTRACT.size,
@@ -58,7 +54,8 @@ test('Storybook teaches scale, control sizes, and composition rhythm', async () 
 
   assert.match(story, /FOUNDATION 03 · SPACING & SIZE/);
   assert.match(story, /Seven spacing choices/);
-  assert.match(story, /Control heights/);
+  assert.match(story, /Standard control height/);
+  assert.match(story, /one 40px height/);
   assert.match(story, /Composition rhythm/);
   assert.match(story, /SPACING_SCALE\.map/);
   assert.match(story, /CONTROL_SIZE_SCALE\.map/);

@@ -1,0 +1,148 @@
+export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
+.ds-refero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.ds-refero-reference {
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+
+.ds-refero-hero {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #0d0f12;
+}
+
+.ds-refero-hero img {
+  display: block;
+  width: 100%;
+  max-height: 540px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.ds-refero-source {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.ds-refero-source a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ds-reference-pane {
+  position: sticky;
+  top: 20px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto minmax(360px, 1fr) auto;
+  max-height: calc(100vh - 140px);
+  min-height: 680px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #17191f;
+  color: #e7e9ee;
+  box-shadow: 0 24px 64px rgb(0 0 0 / 18%);
+}
+
+.ds-reference-pane__tabs {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.ds-reference-pane__tabs button {
+  flex: 0 0 auto;
+  padding: 18px 16px 15px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #9298a7;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ds-reference-pane__tabs button.is-active {
+  border-bottom-color: #f2f3f5;
+  color: #f2f3f5;
+}
+
+.ds-reference-pane__toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.ds-reference-pane__toolbar > div {
+  display: flex;
+  gap: 8px;
+}
+
+.ds-reference-pane__code {
+  overflow: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  background: transparent;
+  color: #d8dbe3;
+  font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ds-reference-pane footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  color: #9298a7;
+  font-size: 11px;
+}
+
+.ds-reference-pane footer a {
+  color: #e7e9ee;
+}
+
+@media (max-width: 1120px) {
+  .ds-refero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-reference-pane {
+    position: relative;
+    top: auto;
+    max-height: none;
+    min-height: 620px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ds-reference-pane {
+    min-height: 560px;
+    border-radius: 14px;
+  }
+
+  .ds-reference-pane__tabs button {
+    padding-inline: 12px;
+  }
+}
+`;

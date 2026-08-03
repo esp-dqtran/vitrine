@@ -4,7 +4,7 @@ import { createAppSectionStore, type AppSectionKey } from './appSectionStore.ts'
 
 const version = {
   id: 3, app: 'claude', platform: 'ios', version_number: 4, label: 'v4',
-  source_url: null, status: 'published' as const, notes: '',
+  source_url: null, provider: 'm' as const, status: 'published' as const, notes: '',
   captured_at: '2026-07-21T00:00:00.000Z', submitted_at: null,
   published_at: '2026-07-21T01:00:00.000Z', screen_count: 0,
   analyzed_count: 0, component_count: 0, token_count: 0, flow_count: 0,

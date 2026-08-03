@@ -348,11 +348,6 @@ export function DiscoveryFilterMenu({
     () => discoveryFilterVisibleOptions(options, query, group.selected),
     [group.selected, options, query],
   );
-  const selectedOptions = useMemo(() => {
-    if (query.trim()) return [];
-    const selected = new Set(group.selected);
-    return options.filter(({ value }) => selected.has(value));
-  }, [group.selected, options, query]);
   const groupedOptions = useMemo(() => {
     const groups = new Map<string, DiscoveryFilterOption[]>();
     for (const option of visibleOptions) {
@@ -391,22 +386,6 @@ export function DiscoveryFilterMenu({
             onQueryChange={onQueryChange}
           />
           <div className="apps-filterbar__options" role="group" aria-label={`${group.label} suggestions`}>
-            {selectedOptions.length ? (
-              <>
-                <div className="apps-filterbar__selected-options" aria-label={`Selected ${group.label}`}>
-                  {selectedOptions.map((option) => (
-                    <DiscoveryFilterOptionCheckbox
-                      key={`selected:${option.value}`}
-                      option={option}
-                      selected
-                      onPreview={() => onPreview(option)}
-                      onToggle={() => onToggleOption(option)}
-                    />
-                  ))}
-                </div>
-                <hr className="apps-filterbar__option-divider" />
-              </>
-            ) : null}
             {groupedOptions.map(([section, sectionOptions]) => (
               <section key={section} className="apps-filterbar__option-group">
                 <h3>{section}</h3>
@@ -444,7 +423,7 @@ export function DiscoveryFilterMenu({
       {selectedCount ? (
         <IconButton
           label={`Clear ${group.label} ${selectedCount === 1 ? 'filter' : 'filters'}`}
-          icon={<Icon icon="close" size="xsm" />}
+          icon={<Icon icon="close" size="sm" />}
           variant="ghost"
           size="sm"
           className="apps-filterbar__clear"

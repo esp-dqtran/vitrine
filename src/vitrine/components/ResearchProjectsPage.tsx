@@ -1,29 +1,60 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   EmptyState,
   Heading,
   Icon,
   IconButton,
+  Selector,
   Spinner,
   Text,
   TextInput,
-} from '@astryxdesign/core';
-import { AstryxModal } from './AstryxModal.tsx';
-import type { CreateResearchProjectInput, ResearchProjectSummary } from '../../researchProject.ts';
+} from "@astryxdesign/core";
+import {
+  BellIcon,
+  BookIcon,
+  BookmarkHollowIcon,
+  CogIcon,
+  FolderIcon,
+  GlobeIcon,
+  GridIcon,
+  MenuIcon,
+  PlusIcon,
+  QuestionIcon,
+  SearchIcon,
+  SparkleIcon,
+  UserIcon,
+  UsersIcon,
+} from "@storybook/icons";
+import { AstryxModal } from "./AstryxModal.tsx";
+import type {
+  CreateResearchProjectInput,
+  ResearchProjectSummary,
+} from "../../researchProject.ts";
 import {
   createResearchProject,
   deleteResearchProject,
   duplicateResearchProject,
   listResearchProjects,
   updateResearchProject,
-} from '../researchProjectsApi.ts';
-import { navigate } from '../router.ts';
-import { DiscoveryCard } from './DiscoveryCard.tsx';
-import { DiscoverySortDropdown } from './AppsFilterBar.tsx';
-import { PageHeader } from './PageHeader.tsx';
+} from "../researchProjectsApi.ts";
+import { navigate } from "../router.ts";
+import { DiscoveryCard } from "./DiscoveryCard.tsx";
+import { DiscoverySortDropdown } from "./AppsFilterBar.tsx";
+import {
+  addTeamMember,
+  createTeam,
+  listTeamMembers,
+  listTeams,
+  removeTeamMember,
+  type TeamMember,
+  type TeamSummary,
+} from "../organizationsApi.ts";
+import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
+import { WorkspaceHeader, WorkspaceRail } from "./WorkspaceChrome.tsx";
 
-export type ProjectSort = 'updated' | 'name';
+export type ProjectSort = "updated" | "name";
+export type TeamSection = "projects" | "people" | "settings";
 
 export interface ProjectActions {
   open(projectId: string): void;
@@ -38,23 +69,46 @@ export function sortProjects(
   projects: ResearchProjectSummary[],
   sort: ProjectSort,
 ): ResearchProjectSummary[] {
-  return [...projects].sort((left, right) => sort === 'name'
-    ? left.title.localeCompare(right.title)
-    : Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
+  return [...projects].sort((left, right) =>
+    sort === "name"
+      ? left.title.localeCompare(right.title)
+      : Date.parse(right.updatedAt) - Date.parse(left.updatedAt),
+  );
 }
 
 function formatUpdatedAt(updatedAt: string): string {
   const timestamp = Date.parse(updatedAt);
-  if (Number.isNaN(timestamp)) return '';
+  if (Number.isNaN(timestamp)) return "";
   const elapsedDays = Math.floor((Date.now() - timestamp) / 86_400_000);
-  if (elapsedDays <= 0) return 'Updated today';
-  if (elapsedDays === 1) return 'Updated yesterday';
+  if (elapsedDays <= 0) return "Updated today";
+  if (elapsedDays === 1) return "Updated yesterday";
   if (elapsedDays < 7) return `Updated ${elapsedDays} days ago`;
   return `Updated ${new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: new Date(timestamp).getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+    month: "short",
+    day: "numeric",
+    year:
+      new Date(timestamp).getFullYear() === new Date().getFullYear()
+        ? undefined
+        : "numeric",
   }).format(timestamp)}`;
+}
+
+function projectCardIcon(project: ResearchProjectSummary) {
+  if (project.icon === "folder") return <FolderIcon aria-hidden="true" />;
+  if (project.icon === "grid") return <GridIcon aria-hidden="true" />;
+  if (project.icon === "book") return <BookIcon aria-hidden="true" />;
+  if (project.icon === "sparkle") return <SparkleIcon aria-hidden="true" />;
+  return project.title.trim().charAt(0).toLocaleUpperCase() || "P";
+}
+
+function formatMemberDate(createdAt: string): string {
+  const timestamp = Date.parse(createdAt);
+  if (Number.isNaN(timestamp)) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(timestamp));
 }
 
 function ProjectCard({
@@ -62,21 +116,55 @@ function ProjectCard({
   actions,
   onRename,
   onDelete,
+  onShare,
 }: {
   project: ResearchProjectSummary;
   actions: ProjectActions;
   onRename(project: ResearchProjectSummary): void;
   onDelete(project: ResearchProjectSummary): void;
+  onShare(project: ResearchProjectSummary): void;
 }) {
-  const projectInitial = project.title.trim().charAt(0).toLocaleUpperCase() || 'P';
+  const actionMenuRef = useRef<HTMLDetailsElement>(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const canEdit = project.access?.role !== "viewer";
+  const canManage =
+    project.access?.canManage ??
+    (!project.organization ||
+      project.organization.role === "owner" ||
+      project.organization.role === "admin");
+
+  useEffect(() => {
+    if (!actionMenuOpen) return undefined;
+    const closeFromOutside = (event: PointerEvent) => {
+      if (!actionMenuRef.current?.contains(event.target as Node))
+        setActionMenuOpen(false);
+    };
+    const closeFromEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setActionMenuOpen(false);
+      actionMenuRef.current?.querySelector("summary")?.focus();
+    };
+    document.addEventListener("pointerdown", closeFromOutside);
+    document.addEventListener("keydown", closeFromEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeFromOutside);
+      document.removeEventListener("keydown", closeFromEscape);
+    };
+  }, [actionMenuOpen]);
+
+  const runAction = (action: () => void) => {
+    setActionMenuOpen(false);
+    action();
+  };
+
   return (
     <div className="project-discovery-card">
       <DiscoveryCard
         kind="app"
         ariaLabel={`Open ${project.title}`}
         onOpen={() => actions.open(project.id)}
-        articleProps={{ 'data-project-card': 'true' }}
-        media={(
+        articleProps={{ "data-project-card": "true" }}
+        media={
           <span className="project-discovery-card__cover" aria-hidden="true">
             <span className="project-discovery-card__window">
               <span className="project-discovery-card__topbar" />
@@ -86,34 +174,79 @@ function ProjectCard({
               <span className="project-discovery-card__panel project-discovery-card__panel--tertiary" />
             </span>
           </span>
-        )}
-        logo={projectInitial}
+        }
+        logo={projectCardIcon(project)}
         title={project.title}
-        description={project.question || 'Add modules and flows inside this project'}
-        metadata={formatUpdatedAt(project.updatedAt)}
+        description={
+          project.question || "Add modules and flows inside this project"
+        }
+        metadata={`${project.organization?.name ? `${project.organization.name} · ` : ""}${formatUpdatedAt(project.updatedAt)}`}
       />
       <div className="project-discovery-card__actions">
-        <IconButton
-          label={project.pinned ? `Unpin ${project.title}` : `Pin ${project.title}`}
-          icon={<span aria-hidden="true">{project.pinned ? '★' : '☆'}</span>}
-          variant="ghost"
-          size="sm"
-          clickAction={() => actions.setPinned(project, !project.pinned)}
-        />
-        <details className="projects-workspace__menu">
-          <summary aria-label={`More actions for ${project.title}`}>
+        {canEdit ? (
+          <IconButton
+            label={
+              project.pinned ? `Unpin ${project.title}` : `Pin ${project.title}`
+            }
+            icon={<span aria-hidden="true">{project.pinned ? "★" : "☆"}</span>}
+            variant="ghost"
+            size="sm"
+            clickAction={() => actions.setPinned(project, !project.pinned)}
+          />
+        ) : null}
+        <details
+          ref={actionMenuRef}
+          className="projects-workspace__menu"
+          open={actionMenuOpen}
+          onToggle={(event) => setActionMenuOpen(event.currentTarget.open)}
+        >
+          <summary
+            aria-label={`More actions for ${project.title}`}
+            aria-haspopup="menu"
+          >
             <Icon icon="moreHorizontal" size="md" />
           </summary>
-          <div className="projects-workspace__menu-popover">
-            <Button label="Rename" variant="ghost" size="sm" clickAction={() => onRename(project)} />
-            <Button label="Duplicate" variant="ghost" size="sm" clickAction={() => actions.duplicate(project.id)} />
+          <div
+            className="projects-workspace__menu-popover"
+            role="menu" aria-label={`Actions for ${project.title}`}
+          >
             <Button
-              label="Delete"
+              label="Share"
+              role="menuitem"
               variant="ghost"
               size="sm"
-              className="projects-workspace__menu-danger"
-              clickAction={() => onDelete(project)}
+              clickAction={() => runAction(() => onShare(project))}
             />
+            {canEdit ? (
+              <Button
+                label="Rename"
+                role="menuitem"
+                variant="ghost"
+                size="sm"
+                clickAction={() => runAction(() => onRename(project))}
+              />
+            ) : null}
+            {canEdit ? (
+              <Button
+                label="Duplicate"
+                role="menuitem"
+                variant="ghost"
+                size="sm"
+                clickAction={() =>
+                  runAction(() => actions.duplicate(project.id))
+                }
+              />
+            ) : null}
+            {canManage && (
+              <Button
+                label="Delete"
+                role="menuitem"
+                variant="ghost"
+                size="sm"
+                className="projects-workspace__menu-danger"
+                clickAction={() => runAction(() => onDelete(project))}
+              />
+            )}
           </div>
         </details>
       </div>
@@ -127,12 +260,14 @@ function ProjectGrid({
   actions,
   onRename,
   onDelete,
+  onShare,
 }: {
   title: string;
   projects: ResearchProjectSummary[];
   actions: ProjectActions;
   onRename(project: ResearchProjectSummary): void;
   onDelete(project: ResearchProjectSummary): void;
+  onShare(project: ResearchProjectSummary): void;
 }) {
   if (!projects.length) return null;
   return (
@@ -149,6 +284,7 @@ function ProjectGrid({
             actions={actions}
             onRename={onRename}
             onDelete={onDelete}
+            onShare={onShare}
           />
         ))}
       </div>
@@ -156,44 +292,274 @@ function ProjectGrid({
   );
 }
 
-export function ResearchProjectsView({ projects, loading, error, actions }: {
+export function ResearchProjectsView({
+  projects,
+  teams = [],
+  loading,
+  error,
+  actions,
+}: {
   projects: ResearchProjectSummary[];
+  teams?: TeamSummary[];
   loading: boolean;
   error: string;
   actions: ProjectActions;
 }) {
-  const [sort, setSort] = useState<ProjectSort>('updated');
+  const [teamOptions, setTeamOptions] = useState(teams);
+  const [selectedTeamId, setSelectedTeamId] = useState<number>();
+  const [section, setSection] = useState<TeamSection>("projects");
+  const [sort, setSort] = useState<ProjectSort>("updated");
   const [sortOpen, setSortOpen] = useState(false);
+  const [projectQuery, setProjectQuery] = useState("");
+  const [projectSearchOpen, setProjectSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
+  const [newTitle, setNewTitle] = useState("");
+  const [newProjectScope, setNewProjectScope] = useState("personal");
   const [creating, setCreating] = useState(false);
-  const [renameProject, setRenameProject] = useState<ResearchProjectSummary | null>(null);
-  const [renameTitle, setRenameTitle] = useState('');
+  const [createTeamOpen, setCreateTeamOpen] = useState(false);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [teamError, setTeamError] = useState("");
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberEmail, setMemberEmail] = useState("");
+  const [memberRole, setMemberRole] = useState<"admin" | "member">("member");
+  const [memberBusy, setMemberBusy] = useState(false);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [renameProject, setRenameProject] =
+    useState<ResearchProjectSummary | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
   const [renaming, setRenaming] = useState(false);
-  const [deleteProject, setDeleteProject] = useState<ResearchProjectSummary | null>(null);
+  const [deleteProject, setDeleteProject] =
+    useState<ResearchProjectSummary | null>(null);
+  const [shareProject, setShareProject] =
+    useState<ResearchProjectSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const desktopWorkspaceTriggerRef = useRef<HTMLButtonElement>(null);
+  const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const workspaceMenuRef = useRef<HTMLElement>(null);
+  const projectSearchInputRef = useRef<HTMLInputElement>(null);
 
-  const visibleProjects = useMemo(
-    () => sortProjects(projects, sort),
-    [projects, sort],
-  );
+  useEffect(() => {
+    setTeamOptions(teams);
+  }, [teams]);
+
+  useEffect(() => {
+    if (!workspaceMenuOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setWorkspaceMenuOpen(false);
+      const desktopTrigger = desktopWorkspaceTriggerRef.current;
+      const visibleTrigger =
+        desktopTrigger &&
+        window.getComputedStyle(desktopTrigger).display !== "none"
+          ? desktopTrigger
+          : workspaceMenuTriggerRef.current;
+      visibleTrigger?.focus();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    requestAnimationFrame(() =>
+      workspaceMenuRef.current?.querySelector("button")?.focus(),
+    );
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [workspaceMenuOpen]);
+
+  const selectedTeam = teamOptions.find(({ id }) => id === selectedTeamId);
+  const switchableTeams = teamOptions.filter(({ id }) => id !== selectedTeamId);
+  const canManageTeam =
+    selectedTeam?.role === "owner" || selectedTeam?.role === "admin";
+  const hasProjectQuery = projectQuery.trim().length > 0;
+  const visibleProjects = useMemo(() => {
+    const query = projectQuery.trim().toLocaleLowerCase();
+    return sortProjects(
+      projects.filter((project) => {
+        const belongsToScope = selectedTeamId
+          ? project.organization?.id === selectedTeamId
+          : !project.organization;
+        return (
+          belongsToScope &&
+          (!query ||
+            project.title.toLocaleLowerCase().includes(query) ||
+            project.question.toLocaleLowerCase().includes(query))
+        );
+      }),
+      sort,
+    );
+  }, [projectQuery, projects, selectedTeamId, sort]);
   const pinnedProjects = visibleProjects.filter(({ pinned }) => pinned);
   const otherProjects = visibleProjects.filter(({ pinned }) => !pinned);
+  const visibleMembers = members.filter(({ email }) =>
+    email.toLowerCase().includes(memberSearch.trim().toLowerCase()),
+  );
+  const adminCount = members.filter(
+    ({ role }) => role === "owner" || role === "admin",
+  ).length;
 
+  useEffect(() => {
+    if (!selectedTeamId || section === "projects") return;
+    let active = true;
+    setMembersLoading(true);
+    setTeamError("");
+    void listTeamMembers(selectedTeamId)
+      .then((nextMembers) => {
+        if (active) setMembers(nextMembers);
+      })
+      .catch((cause: Error) => {
+        if (active) setTeamError(cause.message);
+      })
+      .finally(() => {
+        if (active) setMembersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedTeamId, section]);
+
+  const selectPersonal = () => {
+    setSelectedTeamId(undefined);
+    setSection("projects");
+    setNewProjectScope("personal");
+    setWorkspaceMenuOpen(false);
+  };
+  const selectTeam = (teamId: number) => {
+    setSelectedTeamId(teamId);
+    setSection("projects");
+    setNewProjectScope(String(teamId));
+    setWorkspaceMenuOpen(false);
+  };
+  const selectSection = (nextSection: TeamSection) => {
+    setSection(nextSection);
+    setWorkspaceMenuOpen(false);
+  };
+  const workspacePrimaryActionLabel = selectedTeam
+    ? canManageTeam
+      ? "Invite members"
+      : "View Team members"
+    : "Create Team";
+  const runWorkspacePrimaryAction = () => {
+    if (!selectedTeam) {
+      setCreateTeamOpen(true);
+      setWorkspaceMenuOpen(false);
+      return;
+    }
+    setSection("people");
+    if (canManageTeam) setInviteOpen(true);
+    setWorkspaceMenuOpen(false);
+  };
+  const openWorkspaceSettings = () => {
+    if (selectedTeam) {
+      selectSection("settings");
+      return;
+    }
+    setWorkspaceMenuOpen(false);
+    navigate({ name: "settings-billing" });
+  };
+  const openCreate = () => {
+    setNewProjectScope(selectedTeamId ? String(selectedTeamId) : "personal");
+    setCreateOpen(true);
+  };
+  const openProjectSearch = () => {
+    setProjectSearchOpen(true);
+    requestAnimationFrame(() => projectSearchInputRef.current?.focus());
+  };
+  const closeProjectSearch = () => {
+    setProjectSearchOpen(false);
+    setProjectQuery("");
+  };
   const closeCreate = () => {
     if (creating) return;
     setCreateOpen(false);
-    setNewTitle('');
+    setNewTitle("");
   };
   const submitCreate = async () => {
     if (!newTitle.trim() || creating) return;
     setCreating(true);
     try {
-      await actions.create({ title: newTitle.trim() });
+      await actions.create({
+        title: newTitle.trim(),
+        ...(newProjectScope === "personal"
+          ? {}
+          : { organizationId: Number(newProjectScope) }),
+      });
       setCreateOpen(false);
-      setNewTitle('');
+      setNewTitle("");
     } finally {
       setCreating(false);
+    }
+  };
+  const submitTeam = async () => {
+    if (!newTeamName.trim() || creatingTeam) return;
+    setCreatingTeam(true);
+    setTeamError("");
+    try {
+      const created = await createTeam(newTeamName.trim());
+      setTeamOptions((current) => [
+        ...current.filter(({ id }) => id !== created.id),
+        created,
+      ]);
+      setNewTeamName("");
+      setCreateTeamOpen(false);
+      selectTeam(created.id);
+    } catch (cause) {
+      setTeamError((cause as Error).message);
+    } finally {
+      setCreatingTeam(false);
+    }
+  };
+  const submitMember = async () => {
+    if (!selectedTeamId || !memberEmail.trim() || memberBusy) return;
+    setMemberBusy(true);
+    setTeamError("");
+    try {
+      const member = await addTeamMember(
+        selectedTeamId,
+        memberEmail.trim(),
+        memberRole,
+      );
+      setMembers((current) => [
+        ...current.filter(({ userId }) => userId !== member.userId),
+        member,
+      ]);
+      setTeamOptions((current) =>
+        current.map((team) =>
+          team.id === selectedTeamId
+            ? {
+                ...team,
+                memberCount: Math.max(team.memberCount, members.length + 1),
+              }
+            : team,
+        ),
+      );
+      setMemberEmail("");
+      setInviteOpen(false);
+    } catch (cause) {
+      setTeamError((cause as Error).message);
+    } finally {
+      setMemberBusy(false);
+    }
+  };
+  const removeMember = async (member: TeamMember) => {
+    if (!selectedTeamId || memberBusy || member.role === "owner") return;
+    setMemberBusy(true);
+    setTeamError("");
+    try {
+      await removeTeamMember(selectedTeamId, member.userId);
+      setMembers((current) =>
+        current.filter(({ userId }) => userId !== member.userId),
+      );
+      setTeamOptions((current) =>
+        current.map((team) =>
+          team.id === selectedTeamId
+            ? { ...team, memberCount: Math.max(1, team.memberCount - 1) }
+            : team,
+        ),
+      );
+    } catch (cause) {
+      setTeamError((cause as Error).message);
+    } finally {
+      setMemberBusy(false);
     }
   };
   const openRename = (project: ResearchProjectSummary) => {
@@ -221,56 +587,684 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
     }
   };
 
+  const pageTitle =
+    section === "people"
+      ? "People"
+      : section === "settings"
+        ? "Team settings"
+        : selectedTeam
+          ? selectedTeam.name
+          : "Personal projects";
+  const pageDescription =
+    section === "people"
+      ? `Manage who belongs to ${selectedTeam?.name ?? "this Team"} and what they can do.`
+      : section === "settings"
+        ? `Team identity, ownership, and shared project defaults for ${selectedTeam?.name ?? "this Team"}.`
+        : selectedTeam
+          ? `Projects shared with everyone in ${selectedTeam.name}.`
+          : "Private projects that only you can access until you share them.";
+
   return (
     <main className="vitrine-page projects-workspace">
-      <PageHeader
-        title="Projects"
-        description="A personal workspace for the applications, modules, and flows you are designing."
-        action={(
-          <Button
-            variant="primary"
-            label="New project"
-            clickAction={() => setCreateOpen(true)}
-          />
-        )}
+      <WorkspaceRail
+        workspace={{
+          label: "Switch Team",
+          initial: (selectedTeam?.name ?? "Personal").charAt(0).toUpperCase(),
+          expanded: workspaceMenuOpen,
+          buttonRef: desktopWorkspaceTriggerRef,
+          onSelect: () => setWorkspaceMenuOpen((open) => !open),
+        }}
+        quickAction={{
+          label: workspacePrimaryActionLabel,
+          icon: selectedTeam ? (
+            <UsersIcon aria-hidden="true" />
+          ) : (
+            <PlusIcon aria-hidden="true" />
+          ),
+          onSelect: runWorkspacePrimaryAction,
+        }}
+        primaryLabel={`${selectedTeam?.name ?? "Personal"} navigation`}
+        primaryActions={[
+          {
+            label: "Projects",
+            icon: <FolderIcon aria-hidden="true" />,
+            active: section === "projects",
+            onSelect: () => selectSection("projects"),
+          },
+          {
+            label: "Collections",
+            icon: <BookmarkHollowIcon aria-hidden="true" />,
+            onSelect: () => navigate({ name: "collections" }),
+          },
+        ]}
+        secondaryLabel="Vitrine libraries"
+        secondaryActions={[
+          {
+            label: "Apps",
+            href: "/apps",
+            icon: <GridIcon aria-hidden="true" />,
+            onSelect: () => navigate({ name: "apps" }),
+          },
+          {
+            label: "Sites",
+            href: "/sites",
+            icon: <GlobeIcon aria-hidden="true" />,
+            onSelect: () => navigate({ name: "sites" }),
+          },
+        ]}
+        settings={{
+          label: selectedTeam ? "Team settings" : "Account settings",
+          icon: <CogIcon aria-hidden="true" />,
+          active: section === "settings",
+          onSelect: openWorkspaceSettings,
+        }}
       />
 
-      <div className="projects-workspace__toolbar">
-        <DiscoverySortDropdown
-          value={sort}
-          open={sortOpen}
-          onOpenChange={setSortOpen}
-          onChange={(value) => setSort(value as ProjectSort)}
-          options={[
-            { value: 'updated', label: 'Last updated' },
-            { value: 'name', label: 'Name' },
-          ]}
+      <div
+        className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
+        aria-hidden={!workspaceMenuOpen}
+      >
+        <button
+          type="button"
+          className="projects-workspace__drawer-backdrop"
+          aria-label="Close Team menu"
+          tabIndex={workspaceMenuOpen ? 0 : -1}
+          onClick={() => setWorkspaceMenuOpen(false)}
         />
+        <aside
+          ref={workspaceMenuRef}
+          className="projects-team-drawer"
+          role="dialog"
+          aria-label="Team navigation"
+        >
+          <section className="projects-team-switcher__current">
+            <span className="projects-team-rail__avatar" aria-hidden="true">
+              {(selectedTeam?.name ?? "Personal").charAt(0).toUpperCase()}
+            </span>
+            <strong>{selectedTeam?.name ?? "Personal"}</strong>
+            <small>
+              {selectedTeam
+                ? `${selectedTeam.memberCount} ${selectedTeam.memberCount === 1 ? "member" : "members"}`
+                : "Personal workspace"}
+            </small>
+            <div className="projects-team-drawer__actions">
+              <Button
+                label={workspacePrimaryActionLabel}
+                variant="ghost"
+                icon={
+                  selectedTeam ? (
+                    <UsersIcon aria-hidden="true" />
+                  ) : (
+                    <PlusIcon aria-hidden="true" />
+                  )
+                }
+                onClick={runWorkspacePrimaryAction}
+              />
+              <IconButton
+                label={selectedTeam ? "Team settings" : "Account settings"}
+                variant="ghost"
+                icon={<CogIcon aria-hidden="true" />}
+                onClick={openWorkspaceSettings}
+              />
+            </div>
+          </section>
+
+          <section
+            className="projects-team-switcher__spaces"
+            aria-label="Switch workspace"
+          >
+            <span className="projects-team-switcher__label">
+              Personal workspace
+            </span>
+            <button
+              type="button"
+              className={!selectedTeamId ? "is-active" : ""}
+              onClick={selectPersonal}
+            >
+              <UserIcon aria-hidden="true" />
+              <span>
+                <strong>Personal</strong>
+                <small>Your private projects</small>
+              </span>
+            </button>
+            {switchableTeams.length > 0 ? (
+              <span className="projects-team-switcher__label">Teams</span>
+            ) : null}
+            {switchableTeams.map((team) => (
+              <button
+                key={team.id}
+                type="button"
+                className={selectedTeamId === team.id ? "is-active" : ""}
+                onClick={() => selectTeam(team.id)}
+              >
+                <UsersIcon aria-hidden="true" />
+                <span>
+                  <strong>{team.name}</strong>
+                  <small>
+                    {team.memberCount}{" "}
+                    {team.memberCount === 1 ? "member" : "members"}
+                  </small>
+                </span>
+              </button>
+            ))}
+          </section>
+
+          <div className="projects-team-drawer__divider" />
+          <nav
+            className="projects-team-drawer__nav"
+            aria-label={`${selectedTeam?.name ?? "Personal"} sections`}
+          >
+            <button
+              type="button"
+              className={section === "projects" ? "is-active" : ""}
+              onClick={() => selectSection("projects")}
+            >
+              <FolderIcon aria-hidden="true" /> Projects
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate({ name: "collections" })}
+            >
+              <BookmarkHollowIcon aria-hidden="true" /> Collections
+            </button>
+            {selectedTeam ? (
+              <>
+                <button
+                  type="button"
+                  className={section === "people" ? "is-active" : ""}
+                  onClick={() => selectSection("people")}
+                >
+                  <UsersIcon aria-hidden="true" /> People
+                </button>
+                <button
+                  type="button"
+                  className={section === "settings" ? "is-active" : ""}
+                  onClick={() => selectSection("settings")}
+                >
+                  <CogIcon aria-hidden="true" /> Team settings
+                </button>
+              </>
+            ) : null}
+          </nav>
+        </aside>
       </div>
 
-      {error && <p role="alert" className="projects-workspace__error">{error}</p>}
-      {loading ? (
-        <div className="projects-workspace__loading"><Spinner size="lg" /></div>
-      ) : projects.length === 0 ? (
-        <div className="projects-workspace__empty">
-          <EmptyState
-            title="Create your first project"
-            description="Give your application idea a home. You can shape its modules and flows when you open it."
-          />
-          <Button variant="primary" label="New project" clickAction={() => setCreateOpen(true)} />
-        </div>
-      ) : (
-        <div className="projects-workspace__content">
-          <ProjectGrid title="Pinned" projects={pinnedProjects} actions={actions} onRename={openRename} onDelete={setDeleteProject} />
-          <ProjectGrid title={pinnedProjects.length ? 'All projects' : 'Recent projects'} projects={otherProjects} actions={actions} onRename={openRename} onDelete={setDeleteProject} />
-        </div>
-      )}
+      <div className="projects-workspace__shell">
+        <section className="projects-workspace__main">
+          <WorkspaceHeader
+            variant="projects"
+            searching={projectSearchOpen}
+            menu={{
+              label: "Open Team menu — Switch Team",
+              expanded: workspaceMenuOpen,
+              icon: <MenuIcon aria-hidden="true" />,
+              buttonRef: workspaceMenuTriggerRef,
+              onSelect: () => setWorkspaceMenuOpen((open) => !open),
+            }}
+            onBrandSelect={() => navigate({ name: "projects" })}
+            actions={
+              <>
+                <IconButton
+                  className="projects-workspace__search-toggle"
+                  label={
+                    projectSearchOpen
+                      ? "Close project search"
+                      : "Search projects"
+                  }
+                  variant="ghost"
+                  icon={<SearchIcon aria-hidden="true" />}
+                  aria-expanded={projectSearchOpen}
+                  onClick={
+                    projectSearchOpen ? closeProjectSearch : openProjectSearch
+                  }
+                />
+                {selectedTeam && canManageTeam ? (
+                  <Button
+                    className="projects-workspace__invite-action"
+                    label="Invite members"
+                    variant="ghost"
+                    icon={<UserIcon aria-hidden="true" />}
+                    onClick={() => setInviteOpen(true)}
+                  />
+                ) : null}
+                <span
+                  className="projects-workspace__header-divider"
+                  aria-hidden="true"
+                />
+                <IconButton
+                  label="Help"
+                  tooltip="Help"
+                  variant="ghost"
+                  icon={<QuestionIcon aria-hidden="true" />}
+                />
+                <IconButton
+                  label="Notifications"
+                  tooltip="Notifications"
+                  variant="ghost"
+                  icon={<BellIcon aria-hidden="true" />}
+                />
+                <IconButton
+                  label="Account settings"
+                  variant="ghost"
+                  icon={<UserIcon aria-hidden="true" />}
+                  onClick={() => navigate({ name: "settings-billing" })}
+                />
+              </>
+            }
+          >
+            <label className="projects-workspace__header-search">
+              <SearchIcon aria-hidden="true" />
+              <input
+                ref={projectSearchInputRef}
+                type="search"
+                value={projectQuery}
+                aria-label="Search projects"
+                placeholder="Search projects"
+                onChange={(event) => setProjectQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") closeProjectSearch();
+                }}
+              />
+            </label>
+          </WorkspaceHeader>
 
-      <AstryxModal isOpen={createOpen} onOpenChange={(open) => { if (!open) closeCreate(); }} purpose="form" width={460}>
-        <form className="projects-workspace__dialog" onSubmit={(event) => { event.preventDefault(); void submitCreate(); }}>
+          <header className="projects-workspace__page-header">
+            <div>
+              <Heading level={1}>{pageTitle}</Heading>
+              <Text color="secondary">{pageDescription}</Text>
+            </div>
+            {section === "projects" ? (
+              <Button
+                variant="primary"
+                label="New project"
+                clickAction={openCreate}
+              />
+            ) : null}
+          </header>
+
+          {error && (
+            <p role="alert" className="projects-workspace__error">
+              {error}
+            </p>
+          )}
+          {teamError && (
+            <p role="alert" className="projects-workspace__error">
+              {teamError}
+            </p>
+          )}
+
+          {section === "projects" && (
+            <>
+              <div className="projects-workspace__toolbar">
+                <DiscoverySortDropdown
+                  value={sort}
+                  open={sortOpen}
+                  onOpenChange={setSortOpen}
+                  onChange={(value) => setSort(value as ProjectSort)}
+                  options={[
+                    { value: "updated", label: "Last updated" },
+                    { value: "name", label: "Name" },
+                  ]}
+                />
+              </div>
+
+              {loading ? (
+                <div className="projects-workspace__loading">
+                  <Spinner size="lg" />
+                </div>
+              ) : visibleProjects.length === 0 ? (
+                <div className="projects-workspace__empty">
+                  <EmptyState
+                    title={
+                      hasProjectQuery
+                        ? "No projects found"
+                        : selectedTeam
+                          ? `No projects in ${selectedTeam.name} yet`
+                          : "Create your first project"
+                    }
+                    description={
+                      hasProjectQuery
+                        ? `No project matches “${projectQuery.trim()}”. Try a different search.`
+                        : selectedTeam
+                          ? "Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
+                          : "Give your application idea a home. You can shape its modules and flows when you open it."
+                    }
+                  />
+                  {hasProjectQuery ? (
+                    <Button
+                      variant="secondary"
+                      label="Clear search"
+                      clickAction={closeProjectSearch}
+                    />
+                  ) : (
+                    <Button
+                      variant="primary"
+                      label="New project"
+                      clickAction={openCreate}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="projects-workspace__content">
+                  <ProjectGrid
+                    title="Pinned"
+                    projects={pinnedProjects}
+                    actions={actions}
+                    onRename={openRename}
+                    onDelete={setDeleteProject}
+                    onShare={setShareProject}
+                  />
+                  <ProjectGrid
+                    title={
+                      pinnedProjects.length ? "All projects" : "Recent projects"
+                    }
+                    projects={otherProjects}
+                    actions={actions}
+                    onRename={openRename}
+                    onDelete={setDeleteProject}
+                    onShare={setShareProject}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {section === "people" && selectedTeam && (
+            <div className="team-people">
+              <div className="team-people__stats">
+                <article>
+                  <span>Members</span>
+                  <strong>{membersLoading ? "—" : members.length}</strong>
+                </article>
+                <article>
+                  <span>Admins</span>
+                  <strong>{membersLoading ? "—" : adminCount}</strong>
+                </article>
+                <article>
+                  <span>Pending invites</span>
+                  <strong>0</strong>
+                </article>
+                <article>
+                  <span>Your role</span>
+                  <strong className="team-people__role">
+                    {selectedTeam.role}
+                  </strong>
+                </article>
+              </div>
+
+              <div className="team-people__toolbar">
+                <Heading level={2}>Members</Heading>
+                <TextInput
+                  label="Search members"
+                  isLabelHidden
+                  placeholder="Search by email"
+                  value={memberSearch}
+                  onChange={setMemberSearch}
+                  width="100%"
+                />
+                {canManageTeam ? (
+                  <Button
+                    label="Invite members"
+                    variant="primary"
+                    clickAction={() => setInviteOpen(true)}
+                  />
+                ) : null}
+              </div>
+
+              <section
+                className="team-people__list"
+                aria-label={`${selectedTeam.name} members`}
+              >
+                <div className="team-people__list-heading">
+                  <strong>Member</strong>
+                  <span>Role</span>
+                  <span>Joined</span>
+                  <span aria-hidden="true" />
+                </div>
+                {membersLoading ? (
+                  <div className="team-people__loading">
+                    <Spinner size="md" />
+                  </div>
+                ) : (
+                  visibleMembers.map((member) => (
+                    <div className="team-people__member" key={member.userId}>
+                      <span className="team-people__member-profile">
+                        <span
+                          className="team-people__member-avatar"
+                          aria-hidden="true"
+                        >
+                          {member.email.charAt(0).toUpperCase()}
+                        </span>
+                        <span>{member.email}</span>
+                      </span>
+                      <span className="team-people__role">{member.role}</span>
+                      <span>{formatMemberDate(member.createdAt)}</span>
+                      <span>
+                        {canManageTeam && member.role !== "owner" ? (
+                          <Button
+                            label="Remove"
+                            variant="ghost"
+                            size="sm"
+                            isDisabled={memberBusy}
+                            clickAction={() => void removeMember(member)}
+                          />
+                        ) : null}
+                      </span>
+                    </div>
+                  ))
+                )}
+                {!membersLoading && visibleMembers.length === 0 && (
+                  <Text color="secondary">
+                    No Team members match this search.
+                  </Text>
+                )}
+              </section>
+              <footer className="team-people__pagination">
+                <span>
+                  Show <strong>10</strong>
+                </span>
+                <button type="button" disabled aria-label="Previous page">
+                  ‹
+                </button>
+                <button type="button" className="is-active" aria-current="page">
+                  1
+                </button>
+                <button type="button" disabled aria-label="Next page">
+                  ›
+                </button>
+                <span>
+                  Showing {visibleMembers.length ? 1 : 0} to{" "}
+                  {visibleMembers.length} of {visibleMembers.length}{" "}
+                  {visibleMembers.length === 1 ? "entry" : "entries"}
+                </span>
+              </footer>
+            </div>
+          )}
+
+          {section === "settings" && selectedTeam && (
+            <div className="team-settings-view">
+              <Heading level={2}>Team profile</Heading>
+              <section className="team-settings-view__card team-settings-view__card--profile">
+                <div className="team-settings-view__identity">
+                  <span
+                    className="projects-team-rail__avatar"
+                    aria-hidden="true"
+                  >
+                    {selectedTeam.name.charAt(0).toUpperCase()}
+                  </span>
+                  <div>
+                    <Heading level={3}>{selectedTeam.name}</Heading>
+                    <Text color="secondary">
+                      Shared Team profile for projects, flows, and documents.
+                    </Text>
+                  </div>
+                </div>
+                <dl>
+                  <div>
+                    <dt>Members</dt>
+                    <dd>{selectedTeam.memberCount}</dd>
+                  </div>
+                  <div>
+                    <dt>Your role</dt>
+                    <dd className="team-people__role">{selectedTeam.role}</dd>
+                  </div>
+                  <div>
+                    <dt>Created</dt>
+                    <dd>{formatMemberDate(selectedTeam.createdAt)}</dd>
+                  </div>
+                </dl>
+              </section>
+              <Heading level={2}>Project defaults</Heading>
+              <section className="team-settings-view__card">
+                <Heading level={3}>Project ownership</Heading>
+                <Text color="secondary">
+                  Projects created inside this Team are available to every Team
+                  member. Owners and admins can manage membership and project
+                  access.
+                </Text>
+              </section>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <AstryxModal
+        className="projects-workspace__modal"
+        isOpen={createTeamOpen}
+        onOpenChange={(open) => {
+          if (!open && !creatingTeam) setCreateTeamOpen(false);
+        }}
+        purpose="form"
+        width={440}
+      >
+        <form
+          className="projects-workspace__dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitTeam();
+          }}
+        >
+          <div>
+            <Heading level={3}>Create Team</Heading>
+            <Text color="secondary">
+              Bring people and shared Projects into one Team.
+            </Text>
+          </div>
+          <TextInput
+            label="Team name"
+            placeholder="e.g. Product design"
+            value={newTeamName}
+            onChange={setNewTeamName}
+            autoFocus
+            width="100%"
+            isDisabled={creatingTeam}
+          />
+          <div className="projects-workspace__dialog-actions">
+            <Button
+              label="Cancel"
+              variant="ghost"
+              isDisabled={creatingTeam}
+              clickAction={() => setCreateTeamOpen(false)}
+            />
+            <Button
+              label="Create Team"
+              variant="primary"
+              isDisabled={!newTeamName.trim()}
+              isLoading={creatingTeam}
+              clickAction={submitTeam}
+            />
+          </div>
+        </form>
+      </AstryxModal>
+
+      <AstryxModal
+        className="projects-workspace__modal projects-workspace__modal--invite"
+        isOpen={inviteOpen}
+        onOpenChange={(open) => {
+          if (!open && !memberBusy) setInviteOpen(false);
+        }}
+        purpose="form"
+        width={640}
+      >
+        <form
+          className="projects-workspace__dialog projects-workspace__invite-dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitMember();
+          }}
+        >
+          <div className="projects-workspace__dialog-header">
+            <Heading level={3}>Invite members</Heading>
+          </div>
+          <div className="projects-workspace__invite-note">
+            <strong>Invite to {selectedTeam?.name ?? "this Team"}</strong>
+            <span>
+              Members can contribute to shared Projects, Flows, Canvas, and
+              Documents.
+            </span>
+          </div>
+          <div className="projects-workspace__invite-fields">
+            <TextInput
+              label="Email"
+              placeholder="teammate@example.com"
+              value={memberEmail}
+              onChange={setMemberEmail}
+              width="100%"
+              autoFocus
+              isDisabled={memberBusy}
+            />
+            <Selector
+              label="Role"
+              value={memberRole}
+              onChange={(value) => setMemberRole(value as "admin" | "member")}
+              options={[
+                { value: "member", label: "Member" },
+                { value: "admin", label: "Admin" },
+              ]}
+              width="100%"
+              isDisabled={memberBusy}
+            />
+          </div>
+          <div className="projects-workspace__dialog-actions">
+            <Button
+              label="Cancel"
+              variant="ghost"
+              isDisabled={memberBusy}
+              clickAction={() => setInviteOpen(false)}
+            />
+            <Button
+              label="Invite member"
+              variant="primary"
+              isDisabled={!memberEmail.trim()}
+              isLoading={memberBusy}
+              clickAction={submitMember}
+            />
+          </div>
+        </form>
+      </AstryxModal>
+
+      <AstryxModal
+        className="projects-workspace__modal"
+        isOpen={createOpen}
+        onOpenChange={(open) => {
+          if (!open) closeCreate();
+        }}
+        purpose="form"
+        width={460}
+      >
+        <form
+          className="projects-workspace__dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitCreate();
+          }}
+        >
           <div>
             <Heading level={3}>New project</Heading>
-            <Text color="secondary">Start with a name. Add modules, flows, and design context when you open it.</Text>
+            <Text color="secondary">
+              Start with a name. Add modules, flows, and design context when you
+              open it.
+            </Text>
           </div>
           <TextInput
             label="Project name"
@@ -281,15 +1275,64 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
             width="100%"
             isDisabled={creating}
           />
+          {teamOptions.length > 0 && (
+            <Selector
+              label="Team"
+              value={newProjectScope}
+              onChange={setNewProjectScope}
+              options={[
+                { value: "personal", label: "Personal" },
+                ...teamOptions.map((team) => ({
+                  value: String(team.id),
+                  label: team.name,
+                })),
+              ]}
+              width="100%"
+              isDisabled={creating}
+            />
+          )}
           <div className="projects-workspace__dialog-actions">
-            <Button label="Cancel" variant="ghost" isDisabled={creating} clickAction={closeCreate} />
-            <Button label="Create project" variant="primary" isDisabled={!newTitle.trim()} isLoading={creating} clickAction={submitCreate} />
+            <Button
+              label="Cancel"
+              variant="ghost"
+              isDisabled={creating}
+              clickAction={closeCreate}
+            />
+            <Button
+              label="Create project"
+              variant="primary"
+              isDisabled={!newTitle.trim()}
+              isLoading={creating}
+              clickAction={submitCreate}
+            />
           </div>
         </form>
       </AstryxModal>
 
-      <AstryxModal isOpen={Boolean(renameProject)} onOpenChange={(open) => { if (!open && !renaming) setRenameProject(null); }} purpose="form" width={460}>
-        <form className="projects-workspace__dialog" onSubmit={(event) => { event.preventDefault(); void submitRename(); }}>
+      <ProjectAccessDialog
+        project={shareProject}
+        isOpen={Boolean(shareProject)}
+        onOpenChange={(open) => {
+          if (!open) setShareProject(null);
+        }}
+      />
+
+      <AstryxModal
+        className="projects-workspace__modal"
+        isOpen={Boolean(renameProject)}
+        onOpenChange={(open) => {
+          if (!open && !renaming) setRenameProject(null);
+        }}
+        purpose="form"
+        width={460}
+      >
+        <form
+          className="projects-workspace__dialog"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitRename();
+          }}
+        >
           <Heading level={3}>Rename project</Heading>
           <TextInput
             label="Project name"
@@ -300,23 +1343,54 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
             isDisabled={renaming}
           />
           <div className="projects-workspace__dialog-actions">
-            <Button label="Cancel" variant="ghost" isDisabled={renaming} clickAction={() => setRenameProject(null)} />
-            <Button label="Save" variant="primary" isDisabled={!renameTitle.trim()} isLoading={renaming} clickAction={submitRename} />
+            <Button
+              label="Cancel"
+              variant="ghost"
+              isDisabled={renaming}
+              clickAction={() => setRenameProject(null)}
+            />
+            <Button
+              label="Save"
+              variant="primary"
+              isDisabled={!renameTitle.trim()}
+              isLoading={renaming}
+              clickAction={submitRename}
+            />
           </div>
         </form>
       </AstryxModal>
 
-      <AstryxModal isOpen={Boolean(deleteProject)} onOpenChange={(open) => { if (!open && !deleting) setDeleteProject(null); }} purpose="form" width={440}>
+      <AstryxModal
+        className="projects-workspace__modal"
+        isOpen={Boolean(deleteProject)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteProject(null);
+        }}
+        purpose="form"
+        width={440}
+      >
         <div className="projects-workspace__dialog">
           <div>
             <Heading level={3}>Delete project?</Heading>
             <Text color="secondary">
-              {deleteProject ? `“${deleteProject.title}” and everything inside it will be permanently deleted.` : ''}
+              {deleteProject
+                ? `“${deleteProject.title}” and everything inside it will be permanently deleted.`
+                : ""}
             </Text>
           </div>
           <div className="projects-workspace__dialog-actions">
-            <Button label="Cancel" variant="ghost" isDisabled={deleting} clickAction={() => setDeleteProject(null)} />
-            <Button label="Delete project" variant="destructive" isLoading={deleting} clickAction={confirmDelete} />
+            <Button
+              label="Cancel"
+              variant="ghost"
+              isDisabled={deleting}
+              clickAction={() => setDeleteProject(null)}
+            />
+            <Button
+              label="Delete project"
+              variant="destructive"
+              isLoading={deleting}
+              clickAction={confirmDelete}
+            />
           </div>
         </div>
       </AstryxModal>
@@ -326,19 +1400,27 @@ export function ResearchProjectsView({ projects, loading, error, actions }: {
 
 export function ResearchProjectsPage() {
   const [projects, setProjects] = useState<ResearchProjectSummary[]>([]);
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const refresh = useCallback(async () => {
     try {
-      setProjects(await listResearchProjects());
-      setError('');
+      const [nextProjects, nextTeams] = await Promise.all([
+        listResearchProjects(),
+        listTeams().catch(() => []),
+      ]);
+      setProjects(nextProjects);
+      setTeams(nextTeams);
+      setError("");
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
       setLoading(false);
     }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const runAndRefresh = async (operation: () => Promise<unknown>) => {
     try {
@@ -350,19 +1432,31 @@ export function ResearchProjectsPage() {
     }
   };
 
-  return <ResearchProjectsView projects={projects} loading={loading} error={error} actions={{
-    open: (projectId) => navigate({ name: 'project', projectId }),
-    create: async (input) => {
-      const project = await createResearchProject(input);
-      navigate({ name: 'project', projectId: project.id });
-    },
-    rename: (project, title) => runAndRefresh(
-      () => updateResearchProject(project.id, project.revision, { title }),
-    ),
-    setPinned: (project, pinned) => runAndRefresh(
-      () => updateResearchProject(project.id, project.revision, { pinned }),
-    ),
-    duplicate: (projectId) => runAndRefresh(() => duplicateResearchProject(projectId)),
-    remove: (projectId) => runAndRefresh(() => deleteResearchProject(projectId)),
-  }} />;
+  return (
+    <ResearchProjectsView
+      projects={projects}
+      teams={teams}
+      loading={loading}
+      error={error}
+      actions={{
+        open: (projectId) => navigate({ name: "project", projectId }),
+        create: async (input) => {
+          const project = await createResearchProject(input);
+          navigate({ name: "project", projectId: project.id });
+        },
+        rename: (project, title) =>
+          runAndRefresh(() =>
+            updateResearchProject(project.id, project.revision, { title }),
+          ),
+        setPinned: (project, pinned) =>
+          runAndRefresh(() =>
+            updateResearchProject(project.id, project.revision, { pinned }),
+          ),
+        duplicate: (projectId) =>
+          runAndRefresh(() => duplicateResearchProject(projectId)),
+        remove: (projectId) =>
+          runAndRefresh(() => deleteResearchProject(projectId)),
+      }}
+    />
+  );
 }

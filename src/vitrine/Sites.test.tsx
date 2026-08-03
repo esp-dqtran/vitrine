@@ -1031,14 +1031,13 @@ test('reuses the shared compact version selector and keeps the section inspector
     <SiteVersionView detail={detail} isAdmin={false} section="preview" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />,
   );
   const source = readFileSync(new URL('./components/SiteVersionPage.tsx', import.meta.url), 'utf8');
-  assert.match(source, /className="reference-detail__version-selector"/);
-  assert.match(html, /Jul 20, 2026/);
-  assert.match(html, /Nov 20, 2025/);
+  assert.match(source, /triggerClassName="reference-detail__version-selector"/);
+  assert.match(source, /<AstryxSingleSelectDropdown/);
+  assert.match(html, /aria-label="Site version: Latest"/);
   assert.match(html, />Latest</);
-  assert.match(html, /role="combobox"/);
-  assert.match(html, /role="listbox"/);
-  assert.match(html, /role="option"/);
-  assert.match(html, /aria-selected="true"/);
+  assert.doesNotMatch(html, /astryx-selector/);
+  assert.match(html, /role="menuitem"/);
+  assert.match(html, /aria-current="true"/);
   assert.doesNotMatch(html, /<select/);
   assert.match(source, /versions\.map/);
   assert.match(source, /SiteSectionInspector/);

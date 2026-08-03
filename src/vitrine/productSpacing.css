@@ -1,0 +1,300 @@
+/*
+ * Product-screen spacing contract.
+ *
+ * This final application layer maps repeated screen relationships onto the
+ * seven public spacing choices. Detailed evidence, document, preview, and
+ * canvas geometry remains domain-owned.
+ */
+
+:where(
+  [data-application-surface="true"],
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :where(
+    [class$="__actions"],
+    [class*="__actions "],
+    [class$="__controls"],
+    [class*="__controls "],
+    [class$="__tools"],
+    [class*="__tools "]
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  gap: var(--spacing-2) !important;
+}
+
+:where(
+  [data-application-surface="true"],
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :where(
+    [class$="__header"],
+    [class*="__header "],
+    [class$="__toolbar"],
+    [class*="__toolbar "],
+    [class$="__page-header"],
+    [class*="__page-header "]
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  column-gap: var(--spacing-6) !important;
+}
+
+:where(
+  [data-application-surface="true"],
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :where(
+    [class$="__metadata-item"],
+    [class*="__metadata-item "]
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  gap: var(--spacing-1) !important;
+}
+
+:where(
+  [data-application-surface="true"],
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :where(
+    [class$="__intro"],
+    [class*="__intro "],
+    [class$="__copy"],
+    [class*="__copy "],
+    [class$="__identity"],
+    [class*="__identity "],
+    [class$="__empty"],
+    [class*="__empty "]
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  gap: var(--spacing-3) !important;
+}
+
+/* Buttons and dropdown selectors use one product-wide 40px control height. */
+:is(
+  .astryx-button.astryx-button.sm,
+  .astryx-button.astryx-button.md,
+  .astryx-button.astryx-button.lg,
+  .astryx-selector.astryx-selector.sm,
+  .astryx-selector.astryx-selector.md,
+  .astryx-selector.astryx-selector.lg
+):not(
+  .reference-detail__tabs *,
+  .project-document__editor *,
+  .project-canvas-document-editor *,
+  .document-flow *,
+  .flow-workspace *,
+  .flows-discovery *,
+  .flow-preview-dialog *,
+  .excalidraw *
+) {
+  box-sizing: border-box;
+  height: var(--vitrine-control-height) !important;
+  min-height: var(--vitrine-control-height) !important;
+  padding-block: 0 !important;
+}
+
+/* A selected discovery filter is one 40px composite control. */
+.apps-filterbar__filter {
+  height: var(--vitrine-control-height) !important;
+}
+
+.apps-filterbar .apps-filterbar__filter .apps-filterbar__filter-button.apps-filterbar__filter-button {
+  height: calc(var(--vitrine-control-height) - var(--spacing-1)) !important;
+  min-height: calc(var(--vitrine-control-height) - var(--spacing-1)) !important;
+}
+
+.apps-filterbar .apps-filterbar__filter .apps-filterbar__clear.apps-filterbar__clear {
+  width: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
+  min-width: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
+  height: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
+  min-height: calc(var(--vitrine-control-height) - var(--spacing-2)) !important;
+  margin-right: var(--spacing-1);
+}
+
+/* Discovery: 24px gutters, 32px section entry, and 48px major separation. */
+.reference-discovery__content:not(.flows-discovery__content) {
+  padding-inline: var(--spacing-6) !important;
+}
+
+.reference-discovery__taxonomy:not(.flows-discovery__taxonomy) {
+  gap: var(--spacing-12) !important;
+  padding-block: var(--spacing-8) var(--spacing-12) !important;
+}
+
+.reference-discovery__taxonomy:not(.flows-discovery__taxonomy) :where(ul, [role="list"]) {
+  gap: var(--spacing-2);
+}
+
+/* App-card title, category, and metadata read as one compact text group. */
+.apps-discovery .discovery-card__copy {
+  gap: var(--spacing-1) !important;
+}
+
+.apps-discovery .discovery-card__copy small {
+  margin-top: 0;
+}
+
+/* App detail: the measured source rhythm becomes the shared detail contract. */
+.reference-detail__hero-inner {
+  gap: var(--spacing-6) !important;
+  padding: var(--spacing-8) var(--spacing-6) !important;
+}
+
+.reference-detail__metadata {
+  gap: var(--spacing-8) !important;
+}
+
+.reference-detail[data-reference-detail="app"]
+  .reference-detail__metadata-item
+  .apps-platform-switcher
+  button.astryx-button {
+  height: var(--vitrine-control-height) !important;
+  min-height: var(--vitrine-control-height) !important;
+}
+
+.reference-detail__actions {
+  gap: var(--spacing-2) !important;
+}
+
+.reference-detail__navigation {
+  gap: var(--spacing-6) !important;
+  min-height: var(--spacing-12) !important;
+  padding-inline: var(--spacing-6) !important;
+}
+
+.reference-detail__tab-leading,
+.reference-detail__tabs,
+.reference-detail__tabs > button {
+  min-height: var(--spacing-12) !important;
+}
+
+.reference-detail .reference-detail__tabs > button {
+  height: var(--spacing-12) !important;
+  font-size: 15px !important;
+  line-height: 20px !important;
+}
+
+.reference-detail__tab-controls {
+  min-height: var(--vitrine-control-height) !important;
+}
+
+.reference-detail__tab-leading :is(
+  .astryx-button.astryx-button.astryx-button,
+  .astryx-selector.astryx-selector.astryx-selector
+),
+.reference-detail__tab-controls :is(
+  .astryx-button.astryx-button.astryx-button,
+  .astryx-selector.astryx-selector.astryx-selector
+) {
+  height: var(--vitrine-control-height) !important;
+  min-height: var(--vitrine-control-height) !important;
+}
+
+.reference-detail__tabs {
+  gap: var(--spacing-6) !important;
+}
+
+.reference-detail__body-inner {
+  padding: var(--spacing-8) var(--spacing-6) var(--spacing-12) !important;
+}
+
+/* Flow keeps the pre-rollout workspace geometry, including its body edge. */
+.reference-detail__body-inner:has(.flow-workspace) {
+  padding-block: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .reference-detail__navigation {
+    min-height: calc(var(--spacing-12) * 2) !important;
+  }
+
+  .reference-detail__tab-leading,
+  .reference-detail__tab-controls,
+  .reference-detail__tabs,
+  .reference-detail__tabs > button {
+    min-height: var(--spacing-12) !important;
+  }
+
+  .reference-detail .reference-detail__tabs > button {
+    height: var(--spacing-12) !important;
+  }
+}
+
+/* Project, Collection, Settings, and document shells share one page rhythm. */
+.projects-workspace {
+  padding-inline-end: var(--spacing-4) !important;
+  padding-block-end: var(--spacing-12) !important;
+}
+
+.projects-workspace__page-header {
+  gap: var(--spacing-6) !important;
+}
+
+.projects-workspace :where([class$="__grid"], [class*="__grid "]) {
+  gap: var(--spacing-4);
+}
+
+.project-document-page :where(
+  .project-document__topbar,
+  .project-document__header,
+  .project-document__sidebar-header
+) {
+  gap: var(--spacing-4) !important;
+}
+
+.project-document-page :where(
+  .project-document__topbar-actions,
+  .project-document__header-actions,
+  .project-document__sidebar-actions
+) {
+  gap: var(--spacing-2) !important;
+}
+
+/* Admin is outside ApplicationSurface on some routes, so keep an explicit anchor. */
+:where([data-admin-dashboard="true"], .admin-users-state) :where(
+  [class$="__section"],
+  [class*="__section "],
+  [class$="__panel"],
+  [class*="__panel "]
+) {
+  gap: var(--spacing-4);
+}
+
+.admin-users-state {
+  padding: var(--spacing-8);
+}

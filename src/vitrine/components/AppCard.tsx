@@ -54,7 +54,7 @@ export function AppCard({ app, platform, onOpen, status, progressLabel }: AppCar
       accent={app.accent}
       style={{
         background: 'transparent',
-        objectFit: isMobilePreview ? 'contain' : 'cover',
+        objectFit: 'contain',
       }}
     />
   );

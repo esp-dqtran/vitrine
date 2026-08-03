@@ -3,6 +3,9 @@ import type {
   AttachResearchFlowInput,
   CreateResearchProjectInput,
   ProjectPatch,
+  ResearchProjectCanvas,
+  ResearchProjectMemberRole,
+  ResearchProjectMembersView,
   ResearchProjectSummary,
   ResearchProjectWorkspace,
   ResearchSynthesisView,
@@ -54,6 +57,34 @@ export const createResearchProject = (input: CreateResearchProjectInput): Promis
 
 export const getResearchProject = (projectId: string): Promise<ResearchProjectWorkspace> =>
   request(projectPath(projectId));
+
+export const listResearchProjectMembers = (projectId: string): Promise<ResearchProjectMembersView> =>
+  request(`${projectPath(projectId)}/members`);
+
+export const addResearchProjectMember = (
+  projectId: string,
+  email: string,
+  role: ResearchProjectMemberRole,
+): Promise<ResearchProjectMembersView> => request(`${projectPath(projectId)}/members`, {
+  method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, role }),
+});
+
+export const removeResearchProjectMember = (projectId: string, userId: number): Promise<void> =>
+  request(`${projectPath(projectId)}/members/${userId}`, { method: 'DELETE' });
+
+export const getResearchProjectCanvas = (
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<ResearchProjectCanvas> => request(`${projectPath(projectId)}/canvas`, { signal });
+
+export const saveResearchProjectCanvas = (
+  projectId: string,
+  snapshot: Record<string, unknown>,
+): Promise<ResearchProjectCanvas> => request(`${projectPath(projectId)}/canvas`, {
+  method: 'PUT',
+  headers: { 'content-type': 'application/vnd.astryx.excalidraw+json' },
+  body: JSON.stringify({ snapshot }),
+});
 
 export const updateResearchProject = (
   projectId: string,

@@ -102,7 +102,7 @@ test('keeps collapsed category content mounted but out of keyboard focus', () =>
   assert.match(html, /tabindex="-1"/);
 });
 
-test('renders a selected Flow in the persistent workspace beside its directory', () => {
+test('keeps the Flow gallery mounted when URL state selects a modal preview', () => {
   const flows = [
     flow('invite', 'Inviting a team member', 'Onboarding'),
     {
@@ -130,23 +130,14 @@ test('renders a selected Flow in the persistent workspace beside its directory',
   assert.match(html, /class="flow-workspace"/);
   assert.match(html, /<aside class="flow-workspace__rail"/);
   assert.match(html, /aria-current="page"[\s\S]*Starting a trial/);
-  assert.match(html, /class="selected-flow-workspace"/);
-  assert.match(html, /role="tablist"/);
-  assert.match(
-    html,
-    /<button(?=[^>]*role="tab")(?=[^>]*aria-selected="true")(?=[^>]*aria-controls="flow-trial-visual-panel")/,
-  );
-  assert.match(html, /Visual Flow/);
-  assert.match(html, /Document Flow/);
-  assert.doesNotMatch(html, /Screens/);
-  assert.doesNotMatch(html, /Prototype/);
+  assert.doesNotMatch(html, /class="selected-flow-workspace"/);
   assert.doesNotMatch(html, /role="dialog"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
-  assert.doesNotMatch(html, /data-flow-strip-card="true"/);
-  assert.match(html, /Choose a plan/);
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /data-flow-preview-url-sync="true"/);
+  assert.match(html, /src="\/trial\.png"/);
   assert.match(html, /Starting a trial/);
   assert.match(html, /1 screen/);
-  assert.match(html, /Back to flows/);
   assert.match(html, /Browse flows/);
 });
 
@@ -256,6 +247,8 @@ test('styles Document Flow as a responsive requirements workspace', () => {
   assert.match(css, /\.document-flow__requirement\s*\{/);
   assert.match(css, /\.document-flow__scenario dl div\s*\{[\s\S]*grid-template-columns:\s*64px/);
   assert.match(css, /\.document-flow__evidence-chip\s*\{/);
+  assert.match(css, /\.document-flow__evidence-list\s*\{[\s\S]*display:\s*flex[\s\S]*overflow-x:\s*auto/);
+  assert.match(css, /\.document-flow__evidence-node:not\(:last-child\)::after\s*\{/);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.document-flow__summary\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 });
 

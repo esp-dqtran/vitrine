@@ -49,6 +49,7 @@ interface FlowPreviewDialogProps {
   onModeChange: (mode: FlowPreviewMode, index?: number) => void;
   onClose: () => void;
   onOpenSourceApp?: () => void;
+  iconTooltips?: boolean;
 }
 
 type ScreenResolution = { width: number; height: number };
@@ -81,6 +82,7 @@ export function FlowPreviewDialog({
   onModeChange,
   onClose,
   onOpenSourceApp,
+  iconTooltips = false,
 }: FlowPreviewDialogProps) {
   const dialogRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLOListElement>(null);
@@ -355,6 +357,7 @@ export function FlowPreviewDialog({
           <div className="flow-preview-dialog__header-actions">
             <IconButton
               label={linkCopyState === 'copying' ? 'Copying…' : 'Copy link'}
+              tooltip={iconTooltips ? (linkCopyState === 'copying' ? 'Copying…' : 'Copy link') : undefined}
               icon={<Icon icon="externalLink" size="sm" />}
               variant="ghost"
               onClick={() => void copyLink()}
@@ -362,6 +365,7 @@ export function FlowPreviewDialog({
             <span className="flow-preview-dialog__divider" aria-hidden="true" />
             <IconButton
               label="Close Flow preview"
+              tooltip={iconTooltips ? 'Close Flow preview' : undefined}
               icon={<Icon icon="close" size="sm" />}
               variant="ghost"
               onClick={(event) => {
@@ -438,6 +442,7 @@ export function FlowPreviewDialog({
             && activeIndex > 0 ? (
             <IconButton
               label="Previous Flow screen"
+              tooltip={iconTooltips ? 'Previous Flow screen' : undefined}
               icon={<Icon icon="chevronLeft" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--left"
@@ -448,6 +453,7 @@ export function FlowPreviewDialog({
             && activeIndex < screens.length - 1 ? (
             <IconButton
               label="Next Flow screen"
+              tooltip={iconTooltips ? 'Next Flow screen' : undefined}
               icon={<Icon icon="chevronRight" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--right"
@@ -473,6 +479,7 @@ export function FlowPreviewDialog({
             />
             <IconButton
               label="More screen actions"
+              tooltip={iconTooltips ? 'More screen actions' : undefined}
               icon={<Icon icon="moreHorizontal" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__more"
@@ -494,6 +501,7 @@ export function FlowPreviewDialog({
               />
               <IconButton
                 label="More prototype actions"
+                tooltip={iconTooltips ? 'More prototype actions' : undefined}
                 icon={<Icon icon="moreHorizontal" size="md" />}
                 variant="secondary"
                 className="flow-preview-dialog__more"

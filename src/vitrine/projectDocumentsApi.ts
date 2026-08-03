@@ -60,6 +60,80 @@ export async function ensureProjectDocument(
   return response.json() as Promise<ProjectDocumentView>;
 }
 
+const documentsPath = (projectId: string) =>
+  `/api/research-projects/${encodeURIComponent(projectId)}/documents`;
+const documentPath = (projectId: string, documentId: number) =>
+  `${documentsPath(projectId)}/${documentId}`;
+
+export function listProjectDocuments(
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<ProjectDocumentView[]> {
+  return projectDocumentRequest(documentsPath(projectId), { signal });
+}
+
+export function createProjectDocument(
+  projectId: string,
+  title: string,
+): Promise<ProjectDocumentView> {
+  return projectDocumentRequest(documentsPath(projectId), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+}
+
+export function getProjectDocument(
+  projectId: string,
+  documentId: number,
+): Promise<ProjectDocumentView> {
+  return projectDocumentRequest(documentPath(projectId, documentId));
+}
+
+export function updateProjectDocumentById(
+  projectId: string,
+  documentId: number,
+  patch: ProjectDocumentPatch,
+): Promise<ProjectDocumentView> {
+  return projectDocumentRequest(documentPath(projectId, documentId), {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+}
+
+export function listProjectDocumentCommentsById(
+  projectId: string,
+  documentId: number,
+): Promise<ProjectDocumentCommentView[]> {
+  return projectDocumentRequest(`${documentPath(projectId, documentId)}/comments`);
+}
+
+export function addProjectDocumentCommentById(
+  projectId: string,
+  documentId: number,
+  body: string,
+): Promise<ProjectDocumentCommentView> {
+  return projectDocumentRequest(`${documentPath(projectId, documentId)}/comments`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function resolveProjectDocumentCommentById(
+  projectId: string,
+  documentId: number,
+  commentId: number,
+  resolved: boolean,
+): Promise<ProjectDocumentCommentView> {
+  return projectDocumentRequest(`${documentPath(projectId, documentId)}/comments/${commentId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ resolved }),
+  });
+}
+
 async function projectDocumentRequest<T>(
   url: string,
   init?: RequestInit,

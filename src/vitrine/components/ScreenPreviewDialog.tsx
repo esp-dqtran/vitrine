@@ -14,8 +14,9 @@ interface ScreenPreviewDialogProps {
   screen: Screen;
   index: number;
   total: number;
+  canNavigateNext?: boolean;
   onClose: () => void;
-  onNavigate: (index: number) => void;
+  onNavigate: (index: number) => void | Promise<void>;
   appId?: string;
   collections?: ResearchCollection[];
   onCollectionsChange?: (collections: ResearchCollection[]) => void;
@@ -45,6 +46,7 @@ export function ScreenPreviewDialog({
   screen,
   index,
   total,
+  canNavigateNext,
   onClose,
   onNavigate,
   appId,
@@ -56,6 +58,7 @@ export function ScreenPreviewDialog({
   const [savedScreens, setSavedScreens] = useState<Set<number>>(() => new Set());
   const [status, setStatus] = useState('');
   const [mediaFailed, setMediaFailed] = useState(false);
+  const [mediaDimensions, setMediaDimensions] = useState<Record<number, { width: number; height: number }>>({});
   const [moreOpen, setMoreOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const saved = savedScreens.has(screen.id);
@@ -64,6 +67,19 @@ export function ScreenPreviewDialog({
     ?? usefulLabel(screen.type);
   const additionalFlowCount = Math.max(0, foundInFlows.length - 1);
   const resolution = screenResolution(screen);
+  const dimensions = mediaDimensions[screen.id];
+  const showNext = canNavigateNext ?? index < total - 1;
+
+  const registerMediaDimensions = (image: HTMLImageElement) => {
+    if (!image.naturalWidth || !image.naturalHeight) return;
+    setMediaDimensions((current) => ({
+      ...current,
+      [screen.id]: {
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      },
+    }));
+  };
 
   const copyLinkAction = async () => {
     const value = typeof window === 'undefined'
@@ -106,7 +122,7 @@ export function ScreenPreviewDialog({
       aria-label={`${appName} screen ${index + 1} of ${total}`}
     >
       <AstryxModalSurface
-        className="flow-preview-dialog app-screen-preview-dialog"
+        className={`flow-preview-dialog app-screen-preview-dialog${screen.platform === 'web' ? ' flow-preview-dialog--web' : ''}`}
         data-app-screen-preview={screen.id}
       >
         <header className="flow-preview-dialog__header">
@@ -120,6 +136,7 @@ export function ScreenPreviewDialog({
           <div className="flow-preview-dialog__header-actions">
             <IconButton
               label={linkCopyState === 'copying' ? 'Copying…' : 'Copy link'}
+              tooltip={linkCopyState === 'copying' ? 'Copying…' : 'Copy link'}
               icon={<Icon icon="externalLink" size="sm" />}
               variant="ghost"
               onClick={() => void copyLink()}
@@ -127,6 +144,7 @@ export function ScreenPreviewDialog({
             <span className="flow-preview-dialog__divider" aria-hidden="true" />
             <IconButton
               label="Close screen preview"
+              tooltip="Close screen preview"
               icon={<Icon icon="close" size="sm" />}
               variant="ghost"
               onClick={(event) => {
@@ -147,6 +165,9 @@ export function ScreenPreviewDialog({
               className="flow-preview-dialog__screen flow-preview-dialog__prototype-screen app-screen-preview-dialog__screen"
               role="img"
               aria-label={screen.description ?? usefulLabel(screen.type) ?? `${appName} screen ${index + 1}`}
+              style={screen.platform === 'web' && dimensions
+                ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` }
+                : undefined}
             >
               {mediaFailed ? (
                 <PlaceholderImage
@@ -159,6 +180,7 @@ export function ScreenPreviewDialog({
                   src={screen.url}
                   alt=""
                   loading="eager"
+                  onLoad={(event) => registerMediaDimensions(event.currentTarget)}
                   onError={() => setMediaFailed(true)}
                 />
               )}
@@ -168,24 +190,26 @@ export function ScreenPreviewDialog({
           {index > 0 ? (
             <IconButton
               label="Previous screen"
+              tooltip="Previous screen"
               icon={<Icon icon="chevronLeft" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--left"
               onClick={() => {
                 setMediaFailed(false);
-                onNavigate(index - 1);
+                void onNavigate(index - 1);
               }}
             />
           ) : null}
-          {index < total - 1 ? (
+          {showNext ? (
             <IconButton
               label="Next screen"
+              tooltip="Next screen"
               icon={<Icon icon="chevronRight" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__arrow flow-preview-dialog__arrow--right"
               onClick={() => {
                 setMediaFailed(false);
-                onNavigate(index + 1);
+                void onNavigate(index + 1);
               }}
             />
           ) : null}
@@ -236,6 +260,7 @@ export function ScreenPreviewDialog({
             />
             <IconButton
               label="More screen actions"
+              tooltip="More screen actions"
               icon={<Icon icon="moreHorizontal" size="md" />}
               variant="secondary"
               className="flow-preview-dialog__more"

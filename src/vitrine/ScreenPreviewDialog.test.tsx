@@ -42,3 +42,39 @@ test('renders a Mobbin-style app screen viewer with identity, navigation, action
   assert.match(html, /iOS \(393×852\)/);
   assert.match(html, />More info</);
 });
+
+test('shows the complete web capture in the wide preview frame', () => {
+  const html = renderToStaticMarkup(
+    <ScreenPreviewDialog
+      appName="Aboard"
+      screen={{ ...screen, platform: 'web' }}
+      index={0}
+      total={1}
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />,
+  );
+
+  assert.match(
+    html,
+    /flow-preview-dialog app-screen-preview-dialog flow-preview-dialog--web/,
+  );
+});
+
+test('keeps next navigation available when another screen page can be loaded', () => {
+  const html = renderToStaticMarkup(
+    <ScreenPreviewDialog
+      appName="Aboard"
+      screen={{ ...screen, platform: 'web' }}
+      index={15}
+      total={624}
+      canNavigateNext
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />,
+  );
+
+  assert.match(html, /aria-label="Previous screen"/);
+  assert.match(html, /aria-label="Next screen"/);
+  assert.match(html, /aria-label="Aboard screen 16 of 624"/);
+});

@@ -44,11 +44,15 @@ export type Route =
     }
   | { name: "sites" }
   | SiteVersionRoute
+  | { name: "collections"; collectionId?: number }
   | { name: "projects" }
   | { name: "project"; projectId: string }
+  | { name: "project-documents"; projectId: string }
+  | { name: "project-settings"; projectId: string }
+  | { name: "project-canvas"; projectId: string; canvasId: string }
+  | { name: "project-document-file"; projectId: string; documentId: number }
   | { name: "project-document"; projectId: string }
   | { name: "project-playground"; projectId: string }
-  | { name: "feature-document"; documentId: number }
   | { name: "feature-document-share"; token: string }
   | { name: "admin" };
 
@@ -148,6 +152,49 @@ export function parseRoutePath(pathname: string): Route {
       : { name: "not-found", pathname: path };
   }
   if (path === "/projects") return { name: "projects" };
+  const collectionMatch = path.match(/^\/collections(?:\/([1-9]\d*))?$/);
+  if (collectionMatch) {
+    const collectionId = collectionMatch[1]
+      ? Number(collectionMatch[1])
+      : undefined;
+    return {
+      name: "collections",
+      ...(collectionId ? { collectionId } : {}),
+    };
+  }
+  const projectCanvasMatch = path.match(
+    /^\/projects\/([^/]+)\/canvases\/([0-9a-f-]{36})$/i,
+  );
+  if (projectCanvasMatch) {
+    const projectId = normalizeResearchProjectId(projectCanvasMatch[1]);
+    return projectId
+      ? { name: "project-canvas", projectId, canvasId: projectCanvasMatch[2] }
+      : { name: "not-found", pathname: path };
+  }
+  const projectDocumentFileMatch = path.match(
+    /^\/projects\/([^/]+)\/documents\/([1-9]\d*)$/,
+  );
+  if (projectDocumentFileMatch) {
+    const projectId = normalizeResearchProjectId(projectDocumentFileMatch[1]);
+    const documentId = Number(projectDocumentFileMatch[2]);
+    return projectId && Number.isSafeInteger(documentId)
+      ? { name: "project-document-file", projectId, documentId }
+      : { name: "not-found", pathname: path };
+  }
+  const projectDocumentsMatch = path.match(/^\/projects\/([^/]+)\/documents$/);
+  if (projectDocumentsMatch) {
+    const projectId = normalizeResearchProjectId(projectDocumentsMatch[1]);
+    return projectId
+      ? { name: "project-documents", projectId }
+      : { name: "not-found", pathname: path };
+  }
+  const projectSettingsMatch = path.match(/^\/projects\/([^/]+)\/settings$/);
+  if (projectSettingsMatch) {
+    const projectId = normalizeResearchProjectId(projectSettingsMatch[1]);
+    return projectId
+      ? { name: "project-settings", projectId }
+      : { name: "not-found", pathname: path };
+  }
   const projectPlaygroundMatch = path.match(
     /^\/projects\/([^/]+)\/playground$/,
   );
@@ -157,9 +204,7 @@ export function parseRoutePath(pathname: string): Route {
       ? { name: "project-playground", projectId }
       : { name: "not-found", pathname: path };
   }
-  const projectDocumentMatch = path.match(
-    /^\/projects\/([^/]+)\/document$/,
-  );
+  const projectDocumentMatch = path.match(/^\/projects\/([^/]+)\/document$/);
   if (projectDocumentMatch) {
     const projectId = normalizeResearchProjectId(projectDocumentMatch[1]);
     return projectId
@@ -171,13 +216,6 @@ export function parseRoutePath(pathname: string): Route {
     const projectId = normalizeResearchProjectId(projectMatch[1]);
     return projectId
       ? { name: "project", projectId }
-      : { name: "not-found", pathname: path };
-  }
-  const featureDocumentMatch = path.match(/^\/feature-documents\/([1-9]\d*)$/);
-  if (featureDocumentMatch) {
-    const documentId = Number(featureDocumentMatch[1]);
-    return Number.isSafeInteger(documentId)
-      ? { name: "feature-document", documentId }
       : { name: "not-found", pathname: path };
   }
   const featureDocumentShareMatch = path.match(
@@ -307,16 +345,26 @@ export function routeToPath(route: Route): string {
         "siteSlug" in route && route.version ? `?version=${route.version}` : "";
       return `${base}${section}${sectionId}${version}`;
     }
+    case "collections":
+      return route.collectionId
+        ? `/collections/${route.collectionId}`
+        : "/collections";
     case "projects":
       return "/projects";
     case "project":
       return `/projects/${route.projectId}`;
+    case "project-documents":
+      return `/projects/${route.projectId}/documents`;
+    case "project-settings":
+      return `/projects/${route.projectId}/settings`;
+    case "project-canvas":
+      return `/projects/${route.projectId}/canvases/${route.canvasId}`;
+    case "project-document-file":
+      return `/projects/${route.projectId}/documents/${route.documentId}`;
     case "project-document":
       return `/projects/${route.projectId}/document`;
     case "project-playground":
       return `/projects/${route.projectId}/playground`;
-    case "feature-document":
-      return `/feature-documents/${route.documentId}`;
     case "feature-document-share":
       return `/feature-document-shares/${encodeURIComponent(route.token)}`;
     case "admin":

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, EmptyState, Icon, IconButton, Selector } from '@astryxdesign/core';
+import { Button, EmptyState, Icon, IconButton } from '@astryxdesign/core';
 import { navigate, routeToPath, updateLocation } from '../router.ts';
+import { hasDesignSystemContent } from '../designSystemAvailability.ts';
 import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from '../sitesApi.ts';
 import { useSlidingIndicator } from '../useSlidingIndicator.ts';
 import type {
@@ -12,7 +13,11 @@ import type {
 } from '../types.ts';
 import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
-import { AstryxDropdown, AstryxDropdownItem } from './AstryxDropdown.tsx';
+import {
+  AstryxDropdown,
+  AstryxDropdownItem,
+  AstryxSingleSelectDropdown,
+} from './AstryxDropdown.tsx';
 import {
   ReferenceDetailNavigation,
   ReferenceDetailPage,
@@ -20,6 +25,7 @@ import {
 import { ReferenceDetailLoading } from './ReferenceDetailLoading.tsx';
 import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
+import { SiteDesignSystemPanel, siteDesignSystemForDetail } from './SiteDesignSystemPanel.tsx';
 import { SiteCard } from './SiteCard.tsx';
 import { SiteSectionVideoCard } from './SiteSectionVideoCard.tsx';
 import {
@@ -28,10 +34,11 @@ import {
   type SiteInspectorView,
 } from './SiteSectionInspector.tsx';
 
-export type SiteDetailSection = 'preview' | 'sections' | 'technology';
+export type SiteDetailSection = 'preview' | 'sections' | 'design-system' | 'technology';
 
 function resolveSiteSection(value: string | undefined, isAdmin: boolean): SiteDetailSection {
   if (value === 'sections') return 'sections';
+  if (value === 'design-system' || value === 'styles') return 'design-system';
   if ((value === 'technology' || value === 'analysis') && isAdmin) return 'technology';
   return 'preview';
 }
@@ -59,12 +66,10 @@ export function SiteVersionPicker({
   onChange: (versionId: number) => void;
 }) {
   return (
-    <Selector
-      label="Site version"
-      isLabelHidden
-      size="sm"
-      placement="below"
-      className="reference-detail__version-selector"
+    <AstryxSingleSelectDropdown
+      ariaLabel="Site version"
+      triggerClassName="reference-detail__version-selector"
+      menuWidth={220}
       value={String(selectedVersionId)}
       options={versions.map((version) => ({
         value: String(version.id),
@@ -154,7 +159,17 @@ export function SiteVersionView({
   const pages = useMemo(() => [...detail.pages]
     .sort((a, b) => a.position - b.position)
     .map((page) => ({ ...page, sections: [...page.sections].sort((a, b) => a.position - b.position) })), [detail.pages]);
-  const activeSection = resolveSiteSection(section, isAdmin);
+  const siteDesignSystem = useMemo(() => siteDesignSystemForDetail(detail), [detail]);
+  const hasSiteDesignSystem = hasDesignSystemContent(siteDesignSystem);
+  const requestedSection = resolveSiteSection(section, isAdmin);
+  const activeSection = requestedSection === 'design-system' && !hasSiteDesignSystem
+    ? 'preview'
+    : requestedSection;
+  useEffect(() => {
+    if (requestedSection === 'design-system' && !hasSiteDesignSystem) {
+      onSectionChange('preview');
+    }
+  }, [hasSiteDesignSystem, onSectionChange, requestedSection]);
   const sectionCount = pages.reduce((total, page) => total + page.sections.length, 0);
   const [inspector, setInspector] = useState<SiteInspectorState>(null);
   const inspectorTriggerRef = useRef<HTMLElement | null>(null);
@@ -237,6 +252,8 @@ export function SiteVersionView({
   }).format(new Date(value));
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
+    : activeSection === 'design-system'
+    ? <SiteDesignSystemPanel detail={detail} />
     : activeSection === 'technology'
     ? <SiteAnalysisPanel detail={detail} />
     : (
@@ -248,6 +265,9 @@ export function SiteVersionView({
   const tabs = [
     { id: 'preview' as const, label: 'Preview' },
     { id: 'sections' as const, label: 'Sections' },
+    ...(hasSiteDesignSystem
+      ? [{ id: 'design-system' as const, label: 'Design System' }]
+      : []),
     ...(isAdmin ? [{ id: 'technology' as const, label: 'Technology' }] : []),
   ];
   const metadata = [
@@ -272,6 +292,8 @@ export function SiteVersionView({
     ? `${pages.length} ${pages.length === 1 ? 'page' : 'pages'}`
     : activeSection === 'sections'
       ? `${sectionCount} ${sectionCount === 1 ? 'section' : 'sections'}`
+      : activeSection === 'design-system'
+        ? `${siteDesignSystem?.tokens.length ?? 0} tokens · ${siteDesignSystem?.components.length ?? 0} components`
       : `${detail.analysis?.technology?.length ?? 0} technologies`;
   return (
     <>

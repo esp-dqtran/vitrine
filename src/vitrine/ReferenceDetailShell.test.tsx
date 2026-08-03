@@ -90,8 +90,8 @@ test('renders real identity media on mobile with a letter fallback', async () =>
   assert.match(fallbackRule, /display:\s*grid/);
   assert.match(imageLogoRule, /border:\s*1px solid var\(--color-border-subtle\)/);
   assert.match(imageLogoRule, /background:\s*#fff/);
-  assert.match(pictureRule, /width:\s*64%/);
-  assert.match(pictureRule, /height:\s*64%/);
+  assert.match(pictureRule, /width:\s*100%/);
+  assert.match(pictureRule, /height:\s*100%/);
   assert.match(imageFallbackRule, /background:\s*#fff/);
   assert.match(imageFallbackRule, /opacity:\s*0/);
   assert.match(darkImageLogoRule, /background:\s*#000/);
@@ -134,23 +134,23 @@ test('renders a white identity mark on a black plate when requested', () => {
 test('renders Vitrine primary actions as white buttons with black content', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const primaryActionRule = styles.match(
-    /button\[data-variant='primary'\]\s*\{[^}]+\}/,
+    /button\[data-variant=["']primary["']\]\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
-  assert.match(primaryActionRule, /border-color:\s*#fff\s*!important/);
-  assert.match(primaryActionRule, /background:\s*#fff\s*!important/);
-  assert.match(primaryActionRule, /color:\s*#111\s*!important/);
+  assert.match(primaryActionRule, /border-color:\s*var\(--vitrine-color-action-primary\)\s*!important/);
+  assert.match(primaryActionRule, /background:\s*var\(--vitrine-color-action-primary\)\s*!important/);
+  assert.match(primaryActionRule, /color:\s*var\(--vitrine-color-on-action-primary\)\s*!important/);
   assert.match(
     styles,
-    /button\[data-variant='primary'\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*#f1f1f1\s*!important/,
+    /button\[data-variant=["']primary["']\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*#f1f1f1\s*!important/,
   );
   assert.match(
     styles,
-    /button\[data-variant='primary'\]:active:not\(:disabled\)\s*\{[^}]*background:\s*#e5e5e5\s*!important/,
+    /button\[data-variant=["']primary["']\]:active:not\(:disabled\)\s*\{[^}]*background:\s*#e5e5e5\s*!important/,
   );
   assert.doesNotMatch(
     styles,
-    /\.reference-detail\[data-reference-detail='app'\] button\[data-variant='primary'\]/,
+    /\.reference-detail\[data-reference-detail=["']app["']\] button\[data-variant=["']primary["']\]/,
   );
 });
 

@@ -8,12 +8,13 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
   assert.match(source, /const isGuest = user === null/);
   assert.match(source, /const canUseAdvancedSearch = advancedSearchEnabled && user !== null/);
   assert.match(source, /if \(user\) await ensureCollections\(\)/);
-  assert.match(source, /searchMode=\{canUseAdvancedSearch \? 'advanced' : 'legacy'\}/);
+  assert.match(source, /searchMode=\{canUseAdvancedSearch \? ["']advanced["'] : ["']legacy["']\}/);
   assert.match(
     source,
-    /canUseAdvancedSearch && route\.name !== 'flows' \? \(\s*<QuickSearch/,
+    /canUseAdvancedSearch && route\.name !== ["']flows["'] \? \(\s*<QuickSearch/,
   );
-  assert.match(source, /\{user && collectionsOpen && <CollectionsPanel/);
+  assert.match(source, /navigate\(\{ name: ["']collections["'] \}\)/);
+  assert.doesNotMatch(source, /collectionsOpen|<CollectionsPanel/);
   assert.match(source, /\{canUseAdvancedSearch && advancedPreview \?/);
 });
 
@@ -33,7 +34,7 @@ test('keeps Landing implementation outside the public Apps change', async () => 
 test('keeps guest discovery overlays mounted in the persistent application surface', async () => {
   const source = await readFile(new URL('./App.tsx', import.meta.url), 'utf8');
   const overlays = source.indexOf('const discoveryOverlays =');
-  const appsRoute = source.indexOf("case 'apps':");
+  const appsRoute = source.search(/case ["']apps["']:/);
   const surface = source.indexOf('<ApplicationSurface');
 
   assert.notEqual(overlays, -1, 'discovery overlays should be shared');

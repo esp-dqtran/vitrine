@@ -4,8 +4,6 @@ import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import {
   copyScreenImageAsPng,
-  copyShareLink,
-  flowShareUrl,
 } from '../screenActions.ts';
 import { CopyButton } from './CopyButton.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
@@ -43,8 +41,7 @@ export function VisualFlowPanel({
     [flow],
   );
   const trackRef = useRef<HTMLDivElement>(null);
-  const [saved, setSaved] = useState(false);
-  const screenCount = screenItems.length;
+  const [, setSaved] = useState(false);
   const isWeb = platform === 'web';
   const imageBackground = isWeb ? 'transparent' : '#fff';
 
@@ -60,15 +57,6 @@ export function VisualFlowPanel({
     const track = trackRef.current;
     if (!track) return;
     scrollToAdjacentFlowScreen(track, direction);
-  };
-
-  const copyFlowLink = async () => {
-    if (typeof window === 'undefined') throw new Error('Clipboard is unavailable');
-    await copyShareLink(flowShareUrl(
-      window.location.href,
-      flow.id,
-      Math.max(0, (selectedStep ?? 1) - 1),
-    ));
   };
 
   return (
@@ -165,29 +153,6 @@ export function VisualFlowPanel({
         )}
       </div>
 
-      <footer className="visual-flow-panel__footer">
-        <div className="visual-flow-panel__meta">
-          <h3>{flow.title}</h3>
-          <p>{screenCount} {screenCount === 1 ? 'screen' : 'screens'}</p>
-        </div>
-        <div className="visual-flow-panel__actions">
-          <Button
-            label={saved ? 'Saved' : 'Save'}
-            variant="primary"
-            size="lg"
-            className="visual-flow-panel__save"
-            clickAction={() => setSaved((value) => !value)}
-          />
-          <CopyButton
-            label="Copy flow link"
-            successMessage="Flow link copied"
-            action={copyFlowLink}
-            variant="secondary"
-            size="lg"
-            className="visual-flow-panel__copy"
-          />
-        </div>
-      </footer>
     </section>
   );
 }

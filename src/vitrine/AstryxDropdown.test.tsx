@@ -7,6 +7,7 @@ import {
   AstryxDropdownDivider,
   AstryxDropdownItem,
   AstryxDropdownPanel,
+  AstryxSingleSelectDropdown,
 } from './components/AstryxDropdown.tsx';
 
 test('allows the trigger to use the Astryx primary button variant', () => {
@@ -52,6 +53,39 @@ test('renders a compact selected dropdown item with a visible selection affordan
   assert.match(html, /aria-current="true"/);
   assert.match(html, /astryx-dropdown__item--selected/);
   assert.match(html, /aria-label="Selected"/);
+  assert.match(html, /data-size="sm"/);
+});
+
+test('uses the shared dropdown for compact single-select controls', () => {
+  const html = renderToStaticMarkup(
+    <AstryxSingleSelectDropdown
+      ariaLabel="App version"
+      value="latest"
+      options={[
+        { value: 'latest', label: 'Latest' },
+        { value: '1', label: 'Version 1' },
+      ]}
+      onChange={() => undefined}
+    />,
+  );
+
+  assert.match(html, /aria-label="App version: Latest"/);
+  assert.match(html, /astryx-dropdown-trigger/);
+  assert.doesNotMatch(html, /astryx-selector/);
+});
+
+test('routes compact product selectors through the shared single-select dropdown', async () => {
+  const productFiles = [
+    './components/ScreenDetail.tsx',
+    './components/SiteVersionPage.tsx',
+    './components/AdvancedSearchPage.tsx',
+    './components/UserDirectory.tsx',
+  ];
+
+  for (const path of productFiles) {
+    const source = await readFile(new URL(path, import.meta.url), 'utf8');
+    assert.match(source, /<AstryxSingleSelectDropdown(?:\s|>)/, path);
+  }
 });
 
 test('renders destructive menu actions through the shared item treatment', () => {
@@ -144,5 +178,18 @@ test('uses Astryx semantic tokens for the shared dropdown appearance', async () 
   assert.match(
     css,
     /\.astryx-dropdown-panel\s*\{[^}]*background:\s*var\(--color-background-popover\)/s,
+  );
+  assert.match(
+    css,
+    /\.astryx-dropdown-panel\s*\{[^}]*width:\s*min\(288px,\s*calc\(100vw - 48px\)\)[^}]*animation:\s*astryx-dropdown-in 180ms/s,
+  );
+  assert.match(
+    css,
+    /\.astryx-dropdown\s*\{[^}]*animation:\s*astryx-dropdown-in 180ms/s,
+  );
+  assert.match(css, /@keyframes astryx-dropdown-in\s*\{/);
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.astryx-dropdown-panel\s*\{[^}]*animation:\s*none/s,
   );
 });

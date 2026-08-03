@@ -11,6 +11,13 @@
   --vitrine-type-supporting: 400 0.75rem / 1.3333 var(--vitrine-font-family-sans);
   --vitrine-type-micro: 500 0.6875rem / 1.4545 var(--vitrine-font-family-sans);
   --vitrine-type-code: 400 0.8125rem / 1.5385 var(--vitrine-font-family-code);
+  --vitrine-control-height: 40px;
+  --vitrine-icon-size-inline: 16px;
+  --vitrine-icon-size-control: 20px;
+  --vitrine-icon-size-emphasis: 24px;
+  --vitrine-icon-stroke-width: 2;
+  --vitrine-icon-label-gap: var(--spacing-2);
+  --vitrine-icon-button-size: var(--vitrine-control-height);
 
   /* Large editorial hierarchy is a presentation layer, not a product type role. */
   --vitrine-presentation-display: 600 clamp(2rem, 3vw, 2.375rem) / 1.12 var(--vitrine-font-family-sans);
@@ -131,3 +138,13 @@
 .vitrine-type-supporting { font: var(--vitrine-type-supporting); }
 .vitrine-type-micro { font: var(--vitrine-type-micro); }
 .vitrine-type-code { font: var(--vitrine-type-code); }
+
+.vitrine-iconography-preview .astryx-button {
+  gap: var(--vitrine-icon-label-gap);
+}
+
+.vitrine-iconography-preview .astryx-icon svg[stroke]:not([stroke="none"]) {
+  stroke-width: var(--vitrine-icon-stroke-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

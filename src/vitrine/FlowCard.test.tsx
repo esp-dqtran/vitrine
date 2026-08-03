@@ -167,4 +167,16 @@ test('restores a valid Flow preview index from shareable URL state', () => {
     flowPreviewModeFromSearch('?flow=other&tab=document&screen=2', 'login'),
     'screens',
   );
+  assert.equal(
+    flowPreviewIndexFromSearch('?flow=login&flowView=visual&step=1', 'login', 3),
+    0,
+  );
+  assert.equal(
+    flowPreviewIndexFromSearch('?flow=login&flowView=document&step=3', 'login', 3),
+    2,
+  );
+  assert.equal(
+    flowPreviewModeFromSearch('?flow=login&flowView=document&step=3', 'login'),
+    'document',
+  );
 });

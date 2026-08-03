@@ -4,6 +4,8 @@ import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus
 import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
 import type { UiElementSummaryItem } from '../appsApi.ts';
 import type { DesignSystemGenerationView } from '../useDesignSystemGeneration.ts';
+import { DESIGN_SYSTEM_REFERENCE_STYLES } from '../designSystemReferenceStyles.ts';
+import { DesignSystemReferencePane } from './DesignSystemReferencePane.tsx';
 
 const KIND_LABELS: Record<TokenKind, string> = {
   color: 'Colors',
@@ -57,6 +59,8 @@ export function designSystemMarkdown(snapshot: Snapshot): string {
   const lines = [
     `# ${titleCase(snapshot.app)} Design System`,
     '',
+    ...(snapshot.provenance?.northStar ? [`> ${snapshot.provenance.northStar}`, ''] : []),
+    ...(snapshot.provenance?.theme ? [`**Theme:** ${snapshot.provenance.theme}`, ''] : []),
     snapshot.summary ?? 'A design system reconstructed from the available product evidence.',
     '',
   ];
@@ -428,7 +432,6 @@ export function DesignSystemPanel({
   totalComponentOccurrences = 0,
   totalComponentTypes = 0,
 }: DesignSystemPanelProps) {
-  const [view, setView] = useState<'preview' | 'markdown'>('preview');
   const [stage, setStage] = useState<'light' | 'dark'>('dark');
   const cropOverview = componentCrops.length ? (
     <ComponentCropOverview
@@ -475,14 +478,22 @@ export function DesignSystemPanel({
   }
 
   let sectionIndex = 0;
+  const screenshot = snapshot.provenance?.screenshotUrl ?? snapshot.provenance?.thumbnailUrl;
+  const isRefero = snapshot.provenance?.provider === 'refero';
   return (
     <div className="ds-page">
+      <style>{DESIGN_SYSTEM_REFERENCE_STYLES}</style>
       {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
       <header className="ds-page__header">
         <div>
-          <span className="ds-page__eyebrow">Design system analysis</span>
+          <span className="ds-page__eyebrow">{isRefero ? 'Imported style reference' : 'Design system analysis'}</span>
           <h2>{titleCase(snapshot.app)}</h2>
           <p>{snapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}</p>
+          <div className="ds-refero-source">
+            <span>{isRefero ? 'Refero source · External import' : 'Vitrines · Observed evidence'}</span>
+            {snapshot.provenance?.originalUrl ? <a href={snapshot.provenance.originalUrl} target="_blank" rel="noreferrer">Original website</a> : null}
+            {snapshot.provenance?.sourceUrl ? <a href={snapshot.provenance.sourceUrl} target="_blank" rel="noreferrer">Source reference</a> : null}
+          </div>
         </div>
         <div className="ds-page__stats">
           <span><strong>{snapshot.tokens.length}</strong> tokens</span>
@@ -491,31 +502,23 @@ export function DesignSystemPanel({
         </div>
       </header>
 
-      {cropOverview}
-
-      <div className="ds-toolbar">
-        <SegmentedControl className="ds-toggle" value={view} onChange={(value) => setView(value as 'preview' | 'markdown')} label="Design system view">
-          <SegmentedControlItem value="preview" label="Preview" />
-          <SegmentedControlItem value="markdown" label="DESIGN.md" />
-        </SegmentedControl>
-        <SegmentedControl className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
-          <SegmentedControlItem value="light" label="Light" />
-          <SegmentedControlItem value="dark" label="Dark" />
-        </SegmentedControl>
-      </div>
-
-      {view === 'markdown' ? (
-        <section className="ds-markdown" aria-label="DESIGN.md document">
-          <header><span>DESIGN.md</span><small>Generated from the loaded design-system snapshot</small></header>
-          <pre>{designSystemMarkdown(snapshot)}</pre>
-        </section>
-      ) : (
-        <div className={`ds-canvas ds-canvas--${stage}`} data-theme={stage}>
+      <div className="ds-refero-layout">
+        <div className="ds-refero-reference">
+          {screenshot ? <figure className="ds-refero-hero"><img src={screenshot} alt={`${titleCase(snapshot.app)} source website`} /></figure> : null}
+          {cropOverview}
+          <div className="ds-toolbar">
+            <span className="ds-page__eyebrow">Style preview</span>
+            <SegmentedControl className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
+              <SegmentedControlItem value="light" label="Light" />
+              <SegmentedControlItem value="dark" label="Dark" />
+            </SegmentedControl>
+          </div>
+          <div className={`ds-canvas ds-canvas--${stage}`} data-theme={stage}>
           <header className="ds-canvas__intro">
             <div className="ds-canvas__intro-copy">
               <span>Living styleguide</span>
               <h3>{titleCase(snapshot.app)} foundations &amp; components</h3>
-              <p>Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Astryx.</p>
+              <p>Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Vitrines.</p>
             </div>
             {showcaseComponent && showcaseVariant ? (
               <div className="ds-canvas__showcase"><ComponentSample componentName={showcaseComponent.name} variant={showcaseVariant} /></div>
@@ -530,8 +533,10 @@ export function DesignSystemPanel({
           })}
           {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
           {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} /> : null}
+          </div>
         </div>
-      )}
+        <DesignSystemReferencePane snapshot={snapshot} markdown={designSystemMarkdown(snapshot)} />
+      </div>
     </div>
   );
 }

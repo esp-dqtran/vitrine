@@ -9,9 +9,29 @@ export const SPACING_SCALE = [
 ] as const;
 
 export const CONTROL_SIZE_SCALE = [
-  { token: '--size-element-sm', value: '28px', use: 'Dense controls and supporting actions' },
-  { token: '--size-element-md', value: '32px', use: 'Default product controls' },
-  { token: '--size-element-lg', value: '36px', use: 'Prominent controls and search' },
+  {
+    token: '--vitrine-control-height',
+    value: '40px',
+    use: 'Buttons and dropdown selectors across product screens',
+  },
+] as const;
+
+export const ICON_SIZE_SCALE = [
+  {
+    token: '--vitrine-icon-size-inline',
+    value: '16px',
+    use: 'Icons beside labels, checks, close actions, and dropdown chevrons',
+  },
+  {
+    token: '--vitrine-icon-size-control',
+    value: '20px',
+    use: 'Default icon-only controls and gallery navigation',
+  },
+  {
+    token: '--vitrine-icon-size-emphasis',
+    value: '24px',
+    use: 'Navigation landmarks and deliberate visual emphasis',
+  },
 ] as const;
 
 export const FOUNDATION_TOKEN_CONTRACT = {
@@ -45,6 +65,12 @@ export const FOUNDATION_TOKEN_CONTRACT = {
   ],
   spacing: SPACING_SCALE.map(({ token }) => token),
   size: CONTROL_SIZE_SCALE.map(({ token }) => token),
+  iconography: [
+    ...ICON_SIZE_SCALE.map(({ token }) => token),
+    '--vitrine-icon-stroke-width',
+    '--vitrine-icon-label-gap',
+    '--vitrine-icon-button-size',
+  ],
   shape: [
     '--radius-inner',
     '--radius-element',
@@ -90,8 +116,8 @@ export const UI_FOUNDATION_AREAS = [
     intent: 'Build rhythm from the shared scale instead of page-specific measurements.',
     rules: [
       'Use --spacing-* for gaps, padding, and margins. Choose the nearest scale value before adding a new token.',
-      'Use --size-element-* for control height so adjacent actions align.',
-      'Create density through a component size or layout variant, not scattered smaller values.',
+      'Use --vitrine-control-height for standard buttons and dropdown selectors so adjacent actions align.',
+      'Tabs and specialized editor or canvas controls keep their domain-owned geometry.',
     ],
   },
   {
@@ -102,6 +128,16 @@ export const UI_FOUNDATION_AREAS = [
       'Nest radius roles: inner content inside elements, elements inside containers, containers inside pages.',
       'Use borders for ordinary separation and shadows only when an element is visually above another layer.',
       'Use --radius-full only for pills, avatars, and intentionally circular controls.',
+    ],
+  },
+  {
+    id: 'iconography',
+    name: 'Iconography',
+    intent: 'Make actions recognizable without introducing a second visual language.',
+    rules: [
+      'Use the shared outline icon registry with rounded caps and joins; do not mix icon families or substitute emoji.',
+      'Use 16px beside text, 20px for ordinary icon-only controls, and 24px only for navigation or deliberate emphasis.',
+      'Icon-only controls use the standard 40px control size and require both an accessible label and a tooltip.',
     ],
   },
   {
@@ -148,6 +184,9 @@ export const UI_FOUNDATION_STANDARD = {
     'Use Figtree across product UI with the compact App Screen detail roles for hierarchy. Large editorial display type is a presentation layer; imported reference typography and data-canvas labels remain domain evidence.',
   spacingPolicy:
     'Use the seven-step product scale for gaps, padding, and margins, choosing the nearest token before adding a measurement. The full internal scale remains available to shared component internals, not as a product design choice.',
+  iconographySource: 'Vitrines App detail',
+  iconographyPolicy:
+    'Use one outline family with 16px inline, 20px control, and 24px emphasis sizes, a 2px rounded stroke, an 8px label gap, and accessible 40px icon-only controls. Brand marks and captured product evidence are not system icons.',
   specializedColorPolicy:
     'Data visualization, syntax highlighting, and imported-reference palettes are domain implementation details, not product foundation choices.',
   areas: UI_FOUNDATION_AREAS,

@@ -21,9 +21,14 @@ import './styles.css';
 import './referenceDiscovery.css';
 import './flowPreviewDialog.css';
 import './projectsWorkspace.css';
+import './collectionsWorkspace.css';
+import './settingsWorkspace.css';
 import './components/AstryxDropdown.css';
 import './components/AstryxModal.css';
 import './productTypography.css';
+import './productSpacing.css';
+import './productShape.css';
+import './productIconography.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.

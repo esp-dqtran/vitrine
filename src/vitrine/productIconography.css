@@ -1,0 +1,90 @@
+/*
+ * Vitrines iconography contract.
+ *
+ * App Detail is the measured source. Shared discovery chrome now follows the
+ * same gap and rounded 2px stroke while Flow evidence keeps domain ownership.
+ */
+
+:where(
+  .reference-discovery-nav,
+  .reference-discovery:not(.flows-discovery),
+  .reference-detail[data-reference-detail="app"],
+  .app-screen-preview-dialog,
+  .flow-preview-dialog-shell,
+  .screen-batch-toolbar,
+  .app-detail-scroll-to-top
+) .astryx-button {
+  gap: var(--vitrine-icon-label-gap) !important;
+}
+
+.app-detail-scroll-to-top {
+  gap: var(--vitrine-icon-label-gap) !important;
+}
+
+:where(
+  .reference-discovery-nav,
+  .reference-discovery:not(.flows-discovery),
+  .reference-detail[data-reference-detail="app"],
+  .app-screen-preview-dialog,
+  .flow-preview-dialog-shell,
+  .screen-batch-toolbar,
+  .app-detail-scroll-to-top
+) .astryx-button svg[stroke]:not([stroke="none"]) {
+  stroke-width: var(--vitrine-icon-stroke-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.app-detail-scroll-to-top svg[stroke]:not([stroke="none"]) {
+  stroke-width: var(--vitrine-icon-stroke-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reference-detail[data-reference-detail="app"]
+  .astryx-button:not(.flow-strip-card__arrow):not(.flow-strip-card__more)
+  :is(.astryx-icon, svg),
+.screen-batch-toolbar .astryx-button :is(.astryx-icon, svg),
+.flow-preview-dialog__header-actions > button :is(.astryx-icon, svg),
+.flow-preview-dialog__copy :is(.astryx-icon, svg),
+.app-detail-scroll-to-top :is(.astryx-icon, svg) {
+  width: var(--vitrine-icon-size-inline) !important;
+  height: var(--vitrine-icon-size-inline) !important;
+  font-size: var(--vitrine-icon-size-inline) !important;
+}
+
+.reference-detail[data-reference-detail="app"]
+  :is(.flow-strip-card__arrow, .flow-strip-card__more)
+  :is(.astryx-icon, svg),
+:is(.app-screen-preview-dialog, .flow-preview-dialog-shell)
+  :is(.flow-preview-dialog__arrow, .flow-preview-dialog__more)
+  :is(.astryx-icon, svg) {
+  width: var(--vitrine-icon-size-control) !important;
+  height: var(--vitrine-icon-size-control) !important;
+  font-size: var(--vitrine-icon-size-control) !important;
+}
+
+.reference-detail[data-reference-detail="app"] .screen-grid-card__select,
+.flow-preview-dialog__header-actions > button {
+  width: var(--vitrine-icon-button-size) !important;
+  min-width: var(--vitrine-icon-button-size) !important;
+  height: var(--vitrine-icon-button-size) !important;
+  min-height: var(--vitrine-icon-button-size) !important;
+}
+
+.reference-detail[data-reference-detail="app"] .screen-grid-card__select {
+  top: var(--spacing-3);
+  left: var(--spacing-3);
+}
+
+.reference-detail[data-reference-detail="app"]
+  :is(.astryx-dropdown-trigger, .astryx-dropdown__item, .screen-grid-card__actions .astryx-button) {
+  color: inherit;
+}
+
+.reference-detail[data-reference-detail="app"]
+  :is(.astryx-dropdown-trigger, .astryx-dropdown__item)[disabled],
+.reference-detail[data-reference-detail="app"]
+  :is(.astryx-dropdown-trigger, .astryx-dropdown__item)[aria-disabled="true"] {
+  color: var(--vitrine-color-text-disabled) !important;
+}

@@ -214,6 +214,7 @@ export function FlowGallery({
                     sourceAppIconUrl={cardProps?.sourceAppIconUrl ?? sourceAppIconUrl}
                     onOpenSourceApp={cardProps?.onOpenSourceApp}
                     syncPreviewUrl={app === undefined}
+                    iconTooltips={Boolean(app)}
                     onOpen={() => onSelectFlow(flow.id)}
                   />
                 );

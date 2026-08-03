@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, EmptyState, Spinner } from '@astryxdesign/core';
-import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import {
   effectiveExpandedFlowGroupIds,
@@ -10,16 +9,12 @@ import {
 } from '../flowTree.ts';
 import { FlowGallery } from './FlowGallery.tsx';
 import { FlowTree } from './FlowTree.tsx';
-import { SelectedFlowWorkspace } from './SelectedFlowWorkspace.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
 import type { FlowRepresentation } from '../router.ts';
 
 export interface FlowsWorkspaceProps {
   groups: FlowTreeGroup[];
-  selectedFlow?: DesignFlow<EvidenceView>;
   selectedFlowId?: string;
-  selectedStep?: number;
-  selectedFlowView?: FlowRepresentation;
   invalidFlowId?: string;
   app?: string;
   platform?: Platform;
@@ -55,10 +50,7 @@ export function FlowsWorkspaceLoading() {
 
 export function FlowsWorkspace({
   groups,
-  selectedFlow,
   selectedFlowId,
-  selectedStep,
-  selectedFlowView,
   invalidFlowId,
   app,
   platform,
@@ -146,22 +138,7 @@ export function FlowsWorkspace({
             />
           </div>
         )}
-        {selectedFlow ? (
-          <SelectedFlowWorkspace
-            flow={selectedFlow}
-            app={app}
-            platform={platform}
-            version={version}
-            userRole={userRole}
-            view={selectedFlowView ?? 'visual'}
-            selectedStep={selectedStep}
-            onViewChange={(flowView, step) =>
-              onSelectionChange(selectedFlow.id, step, flowView)}
-            onStepChange={(step) =>
-              onSelectionChange(selectedFlow.id, step, selectedFlowView ?? 'visual')}
-            onBack={() => onSelectionChange(undefined, undefined, undefined)}
-          />
-        ) : visibleGroups.length ? (
+        {visibleGroups.length ? (
           <FlowGallery
             groups={visibleGroups}
             scrollTargetFlowId={scrollTargetFlowId}

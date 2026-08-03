@@ -1,16 +1,16 @@
 dialog.astryx-modal {
-  --astryx-modal-surface: #1f1f1f;
-  --astryx-modal-border: rgb(255 255 255 / 6%);
+  --astryx-modal-surface: var(--color-background-popover);
+  --astryx-modal-border: var(--color-border);
   overflow: hidden;
   border: 1px solid var(--astryx-modal-border) !important;
   border-radius: 24px !important;
   background: var(--astryx-modal-surface) !important;
-  color: #f5f5f5 !important;
-  box-shadow: 0 28px 80px rgb(0 0 0 / 48%) !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow) 72%, transparent) !important;
 }
 
 dialog.astryx-modal::backdrop {
-  background: rgb(0 0 0 / 78%);
+  background: color-mix(in srgb, var(--color-overlay) 82%, transparent);
   backdrop-filter: blur(8px);
 }
 
@@ -18,7 +18,7 @@ dialog.astryx-modal--fullscreen {
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background: rgb(0 0 0 / 78%) !important;
+  background: color-mix(in srgb, var(--color-overlay) 82%, transparent) !important;
   box-shadow: none !important;
 }
 
@@ -38,11 +38,11 @@ dialog.astryx-modal--drawer-right {
 
 .astryx-modal__surface {
   overflow: hidden;
-  border: 1px solid var(--astryx-modal-border, rgb(255 255 255 / 6%));
+  border: 1px solid var(--astryx-modal-border, var(--color-border));
   border-radius: 24px;
-  background: var(--astryx-modal-surface, #1f1f1f);
-  color: #f5f5f5;
-  box-shadow: 0 28px 80px rgb(0 0 0 / 48%);
+  background: var(--astryx-modal-surface, var(--color-background-popover));
+  color: var(--color-text-primary);
+  box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow) 72%, transparent);
 }
 
 @media (max-width: 680px) {

@@ -4,17 +4,18 @@ import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { withCollaboration } from "@blocknote/core/yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
-import { Icon, Spinner } from "@astryxdesign/core";
+import { Button, Icon, IconButton, Spinner } from "@astryxdesign/core";
 
 import "@blocknote/mantine/style.css";
 import "./projectDocument.css";
 
 import {
-  addProjectDocumentComment,
+  addProjectDocumentCommentById,
   ensureProjectDocument,
-  listProjectDocumentComments,
-  resolveProjectDocumentComment,
-  updateProjectDocument,
+  getProjectDocument,
+  listProjectDocumentCommentsById,
+  resolveProjectDocumentCommentById,
+  updateProjectDocumentById,
   type ProjectDocumentCommentView,
   type ProjectDocumentIcon,
   type ProjectDocumentPatch,
@@ -26,6 +27,7 @@ import {
   getResearchProject,
 } from "../researchProjectsApi.ts";
 import { navigate } from "../router.ts";
+import { useResolvedThemeMode } from "../theme.tsx";
 import type { Platform } from "../../platformFromUrl.ts";
 import type { ResearchProjectWorkspace } from "../../researchProject.ts";
 import {
@@ -35,6 +37,7 @@ import {
   projectDocumentSlashMenuItems,
   type ProjectDocumentFlowOption,
 } from "./projectDocumentFlowBlock.tsx";
+import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
 
 type ConnectionState = "connecting" | "connected" | "disconnected";
 
@@ -53,20 +56,35 @@ const pageIcons: Array<{ value: ProjectDocumentIcon; label: string }> = [
 ];
 
 const collaboratorColor = (identity: string): string => {
-  const colors = ["#5b67f1", "#0f9f6e", "#d97706", "#db2777", "#7c3aed", "#0284c7"];
+  const colors = [
+    "#5b67f1",
+    "#0f9f6e",
+    "#d97706",
+    "#db2777",
+    "#7c3aed",
+    "#0284c7",
+  ];
   let hash = 0;
-  for (const character of identity) hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
+  for (const character of identity)
+    hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
   return colors[Math.abs(hash) % colors.length];
 };
 
-const collaboratorInitials = (name: string): string => name
-  .split(/[@\s._-]+/)
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((part) => part[0]?.toUpperCase())
-  .join("") || "?";
+const collaboratorInitials = (name: string): string =>
+  name
+    .split(/[@\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "?";
 
-function PageIcon({ icon, size = "md" }: { icon: ProjectDocumentIcon; size?: "md" | "lg" }) {
+function PageIcon({
+  icon,
+  size = "md",
+}: {
+  icon: ProjectDocumentIcon;
+  size?: "md" | "lg";
+}) {
   if (icon === "task") return <Icon icon="check" size={size} />;
   if (icon === "schedule") return <Icon icon="calendar" size={size} />;
   if (icon === "build") return <Icon icon="wrench" size={size} />;
@@ -74,7 +92,9 @@ function PageIcon({ icon, size = "md" }: { icon: ProjectDocumentIcon; size?: "md
   return <Icon icon="viewColumns" size={size} />;
 }
 
-export function projectDocumentCollaborationUrl(location: Location = window.location): string {
+export function projectDocumentCollaborationUrl(
+  location: Location = window.location,
+): string {
   const configured = (
     import.meta as ImportMeta & { env?: Record<string, string | undefined> }
   ).env?.VITE_PROJECT_DOCUMENT_COLLAB_URL?.trim();
@@ -86,19 +106,23 @@ export function projectDocumentCollaborationUrl(location: Location = window.loca
 function DocumentDiscussion({
   comments,
   draft,
+  error,
   loading,
   submitting,
   onClose,
   onDraftChange,
+  onRetry,
   onResolve,
   onSubmit,
 }: {
   comments: ProjectDocumentCommentView[];
   draft: string;
+  error: string;
   loading: boolean;
   submitting: boolean;
   onClose: () => void;
   onDraftChange: (value: string) => void;
+  onRetry: () => void;
   onResolve: (comment: ProjectDocumentCommentView) => void;
   onSubmit: () => void;
 }) {
@@ -115,13 +139,31 @@ function DocumentDiscussion({
           <strong>Page discussion</strong>
           <span>{openComments.length} open</span>
         </div>
-        <button type="button" className="project-document-icon-button" aria-label="Close discussion" onClick={onClose}>
-          <Icon icon="close" size="sm" />
-        </button>
+        <IconButton
+          label="Close discussion"
+          variant="ghost"
+          size="sm"
+          icon={<Icon icon="close" size="sm" />}
+          onClick={onClose}
+        />
       </header>
+      {error ? (
+        <div className="project-document-discussion__error">
+          <p role="alert">{error}</p>
+          <Button
+            label="Retry"
+            variant="ghost"
+            size="sm"
+            onClick={onRetry}
+          />
+        </div>
+      ) : null}
       <form
         className="project-document-discussion__composer"
-        onSubmit={(event) => { event.preventDefault(); onSubmit(); }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
       >
         <textarea
           aria-label="Add a page comment"
@@ -131,9 +173,14 @@ function DocumentDiscussion({
           rows={3}
           maxLength={2000}
         />
-        <button type="submit" disabled={submitting || !draft.trim()}>
-          {submitting ? "Adding…" : "Comment"}
-        </button>
+        <Button
+          type="submit"
+          label="Comment"
+          variant="primary"
+          size="sm"
+          isLoading={submitting}
+          isDisabled={submitting || !draft.trim()}
+        />
       </form>
       <div className="project-document-discussion__list">
         {loading ? <p>Loading discussion…</p> : null}
@@ -146,22 +193,35 @@ function DocumentDiscussion({
         {[...openComments, ...resolvedComments].map((comment) => (
           <article
             key={comment.id}
-            className={comment.resolvedAt ? "project-document-comment project-document-comment--resolved" : "project-document-comment"}
+            className={
+              comment.resolvedAt
+                ? "project-document-comment project-document-comment--resolved"
+                : "project-document-comment"
+            }
           >
-            <div className="project-document-comment__avatar" aria-hidden="true">
+            <div
+              className="project-document-comment__avatar"
+              aria-hidden="true"
+            >
               {collaboratorInitials(comment.authorEmail)}
             </div>
             <div>
               <header>
                 <strong>{comment.authorEmail}</strong>
                 <time dateTime={comment.createdAt}>
-                  {new Date(comment.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  {new Date(comment.createdAt).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </time>
               </header>
               <p>{comment.body}</p>
-              <button type="button" onClick={() => onResolve(comment)}>
-                {comment.resolvedAt ? "Reopen" : "Resolve"}
-              </button>
+              <Button
+                label={comment.resolvedAt ? "Reopen" : "Resolve"}
+                variant="ghost"
+                size="sm"
+                onClick={() => onResolve(comment)}
+              />
             </div>
           </article>
         ))}
@@ -182,9 +242,12 @@ function CollaborativeProjectDocument({
   flows: ProjectDocumentFlowOption[];
   initialPlatform: Platform;
   userName: string;
-  onAttachCatalogFlow: (option: ProjectDocumentFlowOption) => Promise<ProjectDocumentFlowOption>;
+  onAttachCatalogFlow: (
+    option: ProjectDocumentFlowOption,
+  ) => Promise<ProjectDocumentFlowOption>;
   onDocumentChange: (document: ProjectDocumentView) => void;
 }) {
+  const resolvedTheme = useResolvedThemeMode();
   const [connection, setConnection] = useState<ConnectionState>("connecting");
   const [synced, setSynced] = useState(false);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([
@@ -196,39 +259,51 @@ function CollaborativeProjectDocument({
   const [iconMenuOpen, setIconMenuOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [projectAccessOpen, setProjectAccessOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
   const [comments, setComments] = useState<ProjectDocumentCommentView[]>([]);
+  const [discussionError, setDiscussionError] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const cancelTitleCommitRef = useRef(false);
-  const yDocument = useMemo(() => new Y.Doc(), [document.collaborationDocumentId]);
-  const provider = useMemo(() => new HocuspocusProvider({
-    url: projectDocumentCollaborationUrl(),
-    name: document.collaborationDocumentId,
-    document: yDocument,
-    onStatus: ({ status }) => setConnection(status),
-    onSynced: () => setSynced(true),
-    onDisconnect: () => {
-      setConnection("disconnected");
-      setSynced(false);
-    },
-  }), [document.collaborationDocumentId, yDocument]);
-  const editor = useCreateBlockNote(withCollaboration({
-    schema: projectDocumentSchema,
-    defaultStyles: true,
-    collaboration: {
-      provider: { awareness: provider.awareness ?? undefined },
-      fragment: yDocument.getXmlFragment("document-store"),
-      user: {
-        name: userName,
-        color: collaboratorColor(userName),
+  const yDocument = useMemo(
+    () => new Y.Doc(),
+    [document.collaborationDocumentId],
+  );
+  const provider = useMemo(
+    () =>
+      new HocuspocusProvider({
+        url: projectDocumentCollaborationUrl(),
+        name: document.collaborationDocumentId,
+        document: yDocument,
+        onStatus: ({ status }) => setConnection(status),
+        onSynced: () => setSynced(true),
+        onDisconnect: () => {
+          setConnection("disconnected");
+          setSynced(false);
+        },
+      }),
+    [document.collaborationDocumentId, yDocument],
+  );
+  const editor = useCreateBlockNote(
+    withCollaboration({
+      schema: projectDocumentSchema,
+      defaultStyles: true,
+      collaboration: {
+        provider: { awareness: provider.awareness ?? undefined },
+        fragment: yDocument.getXmlFragment("document-store"),
+        user: {
+          name: userName,
+          color: collaboratorColor(userName),
+        },
+        showCursorLabels: "activity",
       },
-      showCursorLabels: "activity",
-    },
-  }), [provider, userName, yDocument]);
+    }),
+    [provider, userName, yDocument],
+  );
 
   useEffect(() => setTitleDraft(document.title), [document.title]);
 
@@ -247,7 +322,8 @@ function CollaborativeProjectDocument({
   useEffect(() => {
     const closeTransientUi = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      const hasOpenLayer = iconMenuOpen || actionsOpen || shareOpen || discussionOpen;
+      const hasOpenLayer =
+        iconMenuOpen || actionsOpen || shareOpen || discussionOpen;
       if (!hasOpenLayer) return;
       event.preventDefault();
       setIconMenuOpen(false);
@@ -256,35 +332,47 @@ function CollaborativeProjectDocument({
       setDiscussionOpen(false);
     };
     window.document.addEventListener("keydown", closeTransientUi);
-    return () => window.document.removeEventListener("keydown", closeTransientUi);
+    return () =>
+      window.document.removeEventListener("keydown", closeTransientUi);
   }, [actionsOpen, discussionOpen, iconMenuOpen, shareOpen]);
 
   useEffect(() => {
     const refreshCollaborators = () => {
       const next = Array.from(provider.awareness?.getStates().values() ?? [])
         .map((state) => (state as { user?: Partial<Collaborator> }).user)
-        .filter((user): user is Collaborator => Boolean(user?.name && user?.color));
-      const unique = Array.from(new Map(next.map((user) => [user.name, user])).values());
-      setCollaborators(unique.length ? unique : [
-        { name: userName, color: collaboratorColor(userName) },
-      ]);
+        .filter((user): user is Collaborator =>
+          Boolean(user?.name && user?.color),
+        );
+      const unique = Array.from(
+        new Map(next.map((user) => [user.name, user])).values(),
+      );
+      setCollaborators(
+        unique.length
+          ? unique
+          : [{ name: userName, color: collaboratorColor(userName) }],
+      );
     };
     provider.awareness?.on("change", refreshCollaborators);
     refreshCollaborators();
     return () => provider.awareness?.off("change", refreshCollaborators);
   }, [provider, userName]);
 
-  useEffect(() => () => {
-    provider.destroy();
-    yDocument.destroy();
-  }, [provider, yDocument]);
+  useEffect(
+    () => () => {
+      provider.destroy();
+      yDocument.destroy();
+    },
+    [provider, yDocument],
+  );
 
   const updateMetadata = async (patch: ProjectDocumentPatch) => {
     if (document.role !== "editor") return;
     setSavingMetadata(true);
     setUiError("");
     try {
-      onDocumentChange(await updateProjectDocument(document.projectId, patch));
+      onDocumentChange(
+        await updateProjectDocumentById(document.projectId, document.id, patch),
+      );
     } catch (cause) {
       setUiError((cause as Error).message);
       setTitleDraft(document.title);
@@ -310,11 +398,13 @@ function CollaborativeProjectDocument({
   const openDiscussion = async () => {
     setDiscussionOpen(true);
     setCommentsLoading(true);
-    setUiError("");
+    setDiscussionError("");
     try {
-      setComments(await listProjectDocumentComments(document.projectId));
+      setComments(
+        await listProjectDocumentCommentsById(document.projectId, document.id),
+      );
     } catch (cause) {
-      setUiError((cause as Error).message);
+      setDiscussionError((cause as Error).message);
     } finally {
       setCommentsLoading(false);
     }
@@ -324,29 +414,36 @@ function CollaborativeProjectDocument({
     const body = commentDraft.trim();
     if (!body) return;
     setCommentSubmitting(true);
-    setUiError("");
+    setDiscussionError("");
     try {
-      const comment = await addProjectDocumentComment(document.projectId, body);
+      const comment = await addProjectDocumentCommentById(
+        document.projectId,
+        document.id,
+        body,
+      );
       setComments((current) => [...current, comment]);
       setCommentDraft("");
     } catch (cause) {
-      setUiError((cause as Error).message);
+      setDiscussionError((cause as Error).message);
     } finally {
       setCommentSubmitting(false);
     }
   };
 
   const toggleComment = async (comment: ProjectDocumentCommentView) => {
-    setUiError("");
+    setDiscussionError("");
     try {
-      const updated = await resolveProjectDocumentComment(
+      const updated = await resolveProjectDocumentCommentById(
         document.projectId,
+        document.id,
         comment.id,
         !comment.resolvedAt,
       );
-      setComments((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setComments((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
     } catch (cause) {
-      setUiError((cause as Error).message);
+      setDiscussionError((cause as Error).message);
     }
   };
 
@@ -361,11 +458,14 @@ function CollaborativeProjectDocument({
     }
   };
 
-  const connectionLabel = connection === "connected" && synced
-    ? (savingMetadata ? "Saving…" : "Saved")
-    : connection === "disconnected"
-      ? "Offline"
-      : "Connecting";
+  const connectionLabel =
+    connection === "connected" && synced
+      ? savingMetadata
+        ? "Saving…"
+        : "Saved"
+      : connection === "disconnected"
+        ? "Offline"
+        : "Connecting";
 
   return (
     <section
@@ -373,10 +473,28 @@ function CollaborativeProjectDocument({
       aria-label="Collaborative project document"
     >
       <header className="project-document-page__topbar">
-        <nav className="project-document-breadcrumb" aria-label="Document breadcrumb">
-          <button type="button" onClick={() => navigate({ name: "projects" })}>Projects</button>
+        <nav
+          className="project-document-breadcrumb"
+          aria-label="Document breadcrumb"
+        >
+          <button
+            type="button"
+            className="project-document-breadcrumb__root"
+            onClick={() => navigate({ name: "projects" })}
+          >
+            <Icon icon="chevronLeft" size="sm" />
+            <span className="project-document-breadcrumb__root-label">
+              Projects
+            </span>
+          </button>
           <span aria-hidden="true">/</span>
-          <button type="button" onClick={() => navigate({ name: "project", projectId: document.projectId })}>
+          <button
+            type="button"
+            className="project-document-breadcrumb__document"
+            onClick={() =>
+              navigate({ name: "project", projectId: document.projectId })
+            }
+          >
             {document.title}
           </button>
         </nav>
@@ -384,10 +502,15 @@ function CollaborativeProjectDocument({
           <span
             className={`project-document__connection project-document__connection--${connection}`}
             data-testid="project-document-connection"
+            role="status"
+            aria-live="polite"
           >
             {connectionLabel}
           </span>
-          <div className="project-document-collaborators" data-testid="project-document-collaborators">
+          <div
+            className="project-document-collaborators"
+            data-testid="project-document-collaborators"
+          >
             {collaborators.slice(0, 4).map((collaborator) => (
               <span
                 key={collaborator.name}
@@ -398,78 +521,135 @@ function CollaborativeProjectDocument({
               </span>
             ))}
             <span className="project-document-collaborators__count">
-              {collaborators.length} {collaborators.length === 1 ? "collaborator" : "collaborators"}
+              {collaborators.length}{" "}
+              {collaborators.length === 1 ? "collaborator" : "collaborators"}
             </span>
           </div>
-          <button
-            type="button"
-            className={document.isFavorite ? "project-document-action is-active" : "project-document-action"}
+          <Button
+            className="project-document-action project-document-action--favorite"
+            label={document.isFavorite ? "Favorited" : "Favorite"}
+            variant={document.isFavorite ? "primary" : "ghost"}
+            size="sm"
             aria-pressed={document.isFavorite}
-            onClick={() => void updateMetadata({ isFavorite: !document.isFavorite })}
-            disabled={document.role !== "editor" || savingMetadata}
-          >
-            {document.isFavorite ? "Favorited" : "Favorite"}
-          </button>
+            onClick={() =>
+              void updateMetadata({ isFavorite: !document.isFavorite })
+            }
+            isDisabled={document.role !== "editor" || savingMetadata}
+          />
           <div className="project-document-popover-anchor">
-            <button
-              type="button"
-              className="project-document-action"
+            <Button
+              className="project-document-action project-document-action--share"
+              label="Share"
+              variant="ghost"
+              size="sm"
               aria-expanded={shareOpen}
               onClick={() => {
                 setShareOpen((open) => !open);
                 setActionsOpen(false);
                 setIconMenuOpen(false);
               }}
-            >
-              Share
-            </button>
+            />
             {shareOpen ? (
-              <div className="project-document-popover project-document-share" role="dialog" aria-label="Share document">
+              <div
+                className="project-document-popover project-document-share"
+                role="dialog"
+                aria-label="Share document"
+              >
                 <strong>Share this page</strong>
-                <p>Anyone who already has access to this project can open this link.</p>
-                <button type="button" onClick={() => void copyLink()}>{copied ? "Copied" : "Copy link"}</button>
+                <p>
+                  Anyone who already has access to this project can open this
+                  link.
+                </p>
+                <Button
+                  label="Manage access"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShareOpen(false);
+                    setProjectAccessOpen(true);
+                  }}
+                />
+                <Button
+                  label={copied ? "Copied" : "Copy link"}
+                  variant="ghost"
+                  size="sm"
+                  clickAction={() => copyLink()}
+                />
               </div>
             ) : null}
           </div>
-          <button type="button" className="project-document-action" aria-label="Copy link" onClick={() => void copyLink()}>
-            {copied ? "Copied" : "Copy link"}
-          </button>
           <div className="project-document-popover-anchor">
-            <button
-              type="button"
-              className="project-document-icon-button"
-              aria-label="Document actions"
+            <IconButton
+              label="Document actions"
+              variant="ghost"
+              size="sm"
+              icon={<Icon icon="moreHorizontal" size="sm" />}
               aria-expanded={actionsOpen}
               onClick={() => {
                 setActionsOpen((open) => !open);
                 setShareOpen(false);
                 setIconMenuOpen(false);
               }}
-            >
-              <Icon icon="moreHorizontal" size="sm" />
-            </button>
+            />
             {actionsOpen ? (
               <div
                 className="project-document-popover project-document-actions-menu"
                 role="menu"
                 aria-label="Document settings"
               >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="project-document-actions-menu__mobile-action"
+                  onClick={() => {
+                    void updateMetadata({ isFavorite: !document.isFavorite });
+                    setActionsOpen(false);
+                  }}
+                  disabled={document.role !== "editor" || savingMetadata}
+                >
+                  {document.isFavorite
+                    ? "Remove from favorites"
+                    : "Add to favorites"}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="project-document-actions-menu__mobile-action"
+                  onClick={() => {
+                    void copyLink();
+                    setActionsOpen(false);
+                  }}
+                >
+                  {copied ? "Copied" : "Copy link"}
+                </button>
                 <span>Page width</span>
                 <button
                   type="button"
                   role="menuitemradio"
                   aria-checked={document.pageWidth === "standard"}
-                  onClick={() => { void updateMetadata({ pageWidth: "standard" }); setActionsOpen(false); }}
+                  onClick={() => {
+                    void updateMetadata({ pageWidth: "standard" });
+                    setActionsOpen(false);
+                  }}
                 >
-                  Standard {document.pageWidth === "standard" ? <Icon icon="check" size="xsm" /> : null}
+                  Standard{" "}
+                  {document.pageWidth === "standard" ? (
+                    <Icon icon="check" size="xsm" />
+                  ) : null}
                 </button>
                 <button
                   type="button"
                   role="menuitemradio"
                   aria-checked={document.pageWidth === "full"}
-                  onClick={() => { void updateMetadata({ pageWidth: "full" }); setActionsOpen(false); }}
+                  onClick={() => {
+                    void updateMetadata({ pageWidth: "full" });
+                    setActionsOpen(false);
+                  }}
                 >
-                  Full width {document.pageWidth === "full" ? <Icon icon="check" size="xsm" /> : null}
+                  Full width{" "}
+                  {document.pageWidth === "full" ? (
+                    <Icon icon="check" size="xsm" />
+                  ) : null}
                 </button>
               </div>
             ) : null}
@@ -477,66 +657,78 @@ function CollaborativeProjectDocument({
         </div>
       </header>
 
-      {uiError ? <p role="alert" className="project-document-page__error">{uiError}</p> : null}
+      {uiError ? (
+        <p role="alert" className="project-document-page__error">
+          {uiError}
+        </p>
+      ) : null}
 
       <div className="project-document__workspace">
         <article className="project-document__page">
-          <div className="project-document__page-controls">
-            <div className="project-document-popover-anchor">
-              <button
-                type="button"
-                aria-expanded={iconMenuOpen}
-                onClick={() => {
-                  setIconMenuOpen((open) => !open);
-                  setActionsOpen(false);
-                  setShareOpen(false);
-                }}
-                disabled={document.role !== "editor"}
-              >
-                {document.icon === "none" ? "Add icon" : "Change icon"}
-              </button>
-              {iconMenuOpen ? (
-                <div className="project-document-popover project-document-icon-menu" role="menu" aria-label="Page icon">
-                  {pageIcons.map((option) => (
-                    <button
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={document.icon === option.value}
-                      key={option.value}
-                      onClick={() => { void updateMetadata({ icon: option.value }); setIconMenuOpen(false); }}
-                    >
-                      {option.value !== "none" ? <PageIcon icon={option.value} /> : null}
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              aria-expanded={discussionOpen}
-              aria-controls="project-document-discussion"
-              onClick={() => void openDiscussion()}
-            >
-              Add comment
-            </button>
-          </div>
-
           {document.icon !== "none" ? (
-            <button
-              type="button"
+            <IconButton
               className="project-document__page-icon"
-              aria-label="Change page icon"
+              label="Change page icon"
+              variant="ghost"
+              icon={<PageIcon icon={document.icon} size="lg" />}
               aria-expanded={iconMenuOpen}
               onClick={() => {
                 setIconMenuOpen((open) => !open);
                 setActionsOpen(false);
                 setShareOpen(false);
               }}
-            >
-              <PageIcon icon={document.icon} size="lg" />
-            </button>
+            />
           ) : null}
+
+          <div className="project-document__page-controls">
+            <div className="project-document-popover-anchor">
+              <Button
+                label={document.icon === "none" ? "Add icon" : "Change icon"}
+                variant="ghost"
+                size="sm"
+                aria-expanded={iconMenuOpen}
+                onClick={() => {
+                  setIconMenuOpen((open) => !open);
+                  setActionsOpen(false);
+                  setShareOpen(false);
+                }}
+                isDisabled={document.role !== "editor"}
+              />
+              {iconMenuOpen ? (
+                <div
+                  className="project-document-popover project-document-icon-menu"
+                  role="menu"
+                  aria-label="Page icon"
+                >
+                  {pageIcons.map((option) => (
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={document.icon === option.value}
+                      key={option.value}
+                      onClick={() => {
+                        void updateMetadata({ icon: option.value });
+                        setIconMenuOpen(false);
+                      }}
+                    >
+                      {option.value !== "none" ? (
+                        <PageIcon icon={option.value} />
+                      ) : null}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <Button
+              label="Add comment"
+              variant="ghost"
+              size="sm"
+              aria-expanded={discussionOpen}
+              aria-controls="project-document-discussion"
+              clickAction={() => openDiscussion()}
+            />
+          </div>
 
           <textarea
             ref={titleInputRef}
@@ -563,7 +755,10 @@ function CollaborativeProjectDocument({
             readOnly={document.role !== "editor"}
           />
 
-          <div className="project-document__editor" data-testid="project-document-editor">
+          <div
+            className="project-document__editor"
+            data-testid="project-document-editor"
+          >
             <ProjectDocumentFlowProvider
               flows={flows}
               initialPlatform={initialPlatform}
@@ -579,11 +774,13 @@ function CollaborativeProjectDocument({
                 filePanel
                 tableHandles
                 emojiPicker
-                theme="light"
+                theme={resolvedTheme}
               >
                 <SuggestionMenuController
                   triggerCharacter="/"
-                  getItems={async (query) => projectDocumentSlashMenuItems(editor, query)}
+                  getItems={async (query) =>
+                    projectDocumentSlashMenuItems(editor, query)
+                  }
                 />
               </BlockNoteView>
             </ProjectDocumentFlowProvider>
@@ -594,24 +791,33 @@ function CollaborativeProjectDocument({
           <DocumentDiscussion
             comments={comments}
             draft={commentDraft}
+            error={discussionError}
             loading={commentsLoading}
             submitting={commentSubmitting}
             onClose={() => setDiscussionOpen(false)}
             onDraftChange={setCommentDraft}
+            onRetry={() => void openDiscussion()}
             onResolve={(comment) => void toggleComment(comment)}
             onSubmit={() => void submitComment()}
           />
         ) : null}
       </div>
+      <ProjectAccessDialog
+        project={{ id: document.projectId, title: document.title }}
+        isOpen={projectAccessOpen}
+        onOpenChange={setProjectAccessOpen}
+      />
     </section>
   );
 }
 
 export function ProjectDocumentPage({
   projectId,
+  documentId,
   userName,
 }: {
   projectId: string;
+  documentId?: number;
   userName: string;
 }) {
   const [document, setDocument] = useState<ProjectDocumentView>();
@@ -619,7 +825,7 @@ export function ProjectDocumentPage({
   const [flowPlatform, setFlowPlatform] = useState<Platform>("web");
   const [error, setError] = useState("");
   const flows = useMemo(
-    () => workspace ? projectDocumentFlowOptions(workspace) : [],
+    () => (workspace ? projectDocumentFlowOptions(workspace) : []),
     [workspace],
   );
 
@@ -630,51 +836,73 @@ export function ProjectDocumentPage({
     setFlowPlatform("web");
     setError("");
     void Promise.all([
-      ensureProjectDocument(projectId),
+      documentId
+        ? getProjectDocument(projectId, documentId)
+        : ensureProjectDocument(projectId),
       getResearchProject(projectId),
     ])
       .then(([nextDocument, workspace]) => {
         if (!active) return;
         setDocument(nextDocument);
         setWorkspace(workspace);
-        setFlowPlatform(workspace.platformFilter === "all" ? "web" : workspace.platformFilter);
+        setFlowPlatform(
+          workspace.platformFilter === "all" ? "web" : workspace.platformFilter,
+        );
       })
-      .catch((cause) => { if (active) setError((cause as Error).message); });
-    return () => { active = false; };
-  }, [projectId]);
-
-  const attachCatalogFlowOption = useCallback(async (
-    option: ProjectDocumentFlowOption,
-  ): Promise<ProjectDocumentFlowOption> => {
-    if (!workspace || !option.catalog) {
-      throw new Error("This catalog flow cannot be attached.");
-    }
-    const attach = (current: ResearchProjectWorkspace) => {
-      const lane = [...current.lanes].sort((left, right) => left.position - right.position)[0];
-      if (!lane) throw new Error("Add a research lane before attaching a flow.");
-      return attachResearchFlow({
-        projectId: current.id,
-        laneId: lane.id,
-        expectedRevision: current.revision,
-        catalog: option.catalog!,
+      .catch((cause) => {
+        if (active) setError((cause as Error).message);
       });
+    return () => {
+      active = false;
     };
+  }, [documentId, projectId]);
 
-    let updated: ResearchProjectWorkspace;
-    try {
-      updated = await attach(workspace);
-    } catch (cause) {
-      if (!(cause instanceof ResearchProjectApiError)
-        || cause.code !== "revision_conflict"
-        || !cause.project) throw cause;
-      updated = await attach(cause.project);
-    }
-    setWorkspace(updated);
-    const attached = projectDocumentFlowOptions(updated).find((candidate) =>
-      candidate.app === option.app && candidate.title === option.title);
-    if (!attached) throw new Error("The flow was attached but its project reference could not be loaded.");
-    return { ...attached, platform: option.platform };
-  }, [workspace]);
+  const attachCatalogFlowOption = useCallback(
+    async (
+      option: ProjectDocumentFlowOption,
+    ): Promise<ProjectDocumentFlowOption> => {
+      if (!workspace || !option.catalog) {
+        throw new Error("This catalog flow cannot be attached.");
+      }
+      const attach = (current: ResearchProjectWorkspace) => {
+        const lane = [...current.lanes].sort(
+          (left, right) => left.position - right.position,
+        )[0];
+        if (!lane)
+          throw new Error("Add a research lane before attaching a flow.");
+        return attachResearchFlow({
+          projectId: current.id,
+          laneId: lane.id,
+          expectedRevision: current.revision,
+          catalog: option.catalog!,
+        });
+      };
+
+      let updated: ResearchProjectWorkspace;
+      try {
+        updated = await attach(workspace);
+      } catch (cause) {
+        if (
+          !(cause instanceof ResearchProjectApiError) ||
+          cause.code !== "revision_conflict" ||
+          !cause.project
+        )
+          throw cause;
+        updated = await attach(cause.project);
+      }
+      setWorkspace(updated);
+      const attached = projectDocumentFlowOptions(updated).find(
+        (candidate) =>
+          candidate.app === option.app && candidate.title === option.title,
+      );
+      if (!attached)
+        throw new Error(
+          "The flow was attached but its project reference could not be loaded.",
+        );
+      return { ...attached, platform: option.platform };
+    },
+    [workspace],
+  );
 
   if (!document && !error) {
     return (
@@ -686,7 +914,11 @@ export function ProjectDocumentPage({
 
   return (
     <main className="vitrine-page project-document-page">
-      {error ? <p role="alert" className="project-document-page__error">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="project-document-page__error">
+          {error}
+        </p>
+      ) : null}
       {document ? (
         <CollaborativeProjectDocument
           document={document}

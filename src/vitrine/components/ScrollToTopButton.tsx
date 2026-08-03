@@ -16,15 +16,17 @@ export function ScrollToTopButton() {
   return (
     <IconButton
       label="Scroll to top"
+      tooltip="Scroll to top"
       icon={<Icon icon="arrowUp" size="sm" color="primary" />}
       variant="secondary"
+      className="app-detail-scroll-to-top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       style={{
         position: 'fixed',
         bottom: 28,
         right: 28,
-        width: 42,
-        height: 42,
+        width: 'var(--vitrine-icon-button-size)',
+        height: 'var(--vitrine-icon-button-size)',
         borderRadius: '50%',
         background: 'var(--color-background-surface)',
         boxShadow: 'var(--shadow-med)',

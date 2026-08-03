@@ -52,6 +52,12 @@ const revision: FeatureDocumentRevisionView = {
   providerModel: 'research-model',
   createdAt: '2026-07-26T00:00:00.000Z',
   content: {
+    sourceAssessment: {
+      captureType: 'partial-journey',
+      completeness: 'partial',
+      rationale: 'The entry action is not captured.',
+      evidenceIds: ['E-42', 'E-43'],
+    },
     executiveSummary: {
       purpose: { id: 'purpose', kind: 'observed', text: 'Complete a purchase', evidenceIds: ['E-42'] },
       userValue: { id: 'value', kind: 'inferred', text: 'Receive an order', evidenceIds: ['E-43'] },
@@ -130,7 +136,7 @@ const featureDocument: FeatureDocumentView = {
   shares: [],
 };
 
-test('selected Flow uses Visual Flow and Document Flow as its only representation tabs', () => {
+test('selected Flow URL keeps the gallery visible for modal preview', () => {
   const html = renderToStaticMarkup(
     <FlowsPanel
       flows={[flow]}
@@ -142,15 +148,11 @@ test('selected Flow uses Visual Flow and Document Flow as its only representatio
     />,
   );
   assert.match(html, /class="flow-workspace__rail"/);
-  assert.match(html, /role="tablist"/);
-  assert.match(html, /role="tabpanel"/);
-  assert.match(html, /aria-controls="flow-checkout-document-panel"/);
-  assert.match(html, />Visual Flow</);
-  assert.match(html, /Document Flow/);
-  assert.doesNotMatch(html, />Screens</);
-  assert.doesNotMatch(html, /Prototype/);
-  assert.equal((html.match(/role="tablist"/g) ?? []).length, 1);
-  assert.match(html, /aria-label="Checkout Visual Flow"/);
+  assert.match(html, /data-flow-strip-card="true"/);
+  assert.match(html, /data-flow-preview-url-sync="true"/);
+  assert.match(html, /Preview Checkout flow screens/);
+  assert.doesNotMatch(html, /class="selected-flow-workspace"/);
+  assert.doesNotMatch(html, /aria-label="Checkout Visual Flow"/);
   assert.doesNotMatch(html, /aria-modal="true"/);
 });
 
@@ -165,10 +167,12 @@ test('renders concise requirements with multiple acceptance criteria and screens
       onOpenVisualStep={() => {}}
     />,
   );
-  assert.match(html, /Feature overview/);
-  assert.match(html, /<dt>Requirements<\/dt><dd>1<\/dd>/);
-  assert.match(html, /<dt>Acceptance criteria<\/dt><dd>2<\/dd>/);
-  assert.match(html, /<dt>Evidence<\/dt><dd>1\/1 supported<\/dd>/);
+  assert.match(html, /Feature brief/);
+  assert.match(html, /<dd>1<\/dd><dt>Requirements<\/dt>/);
+  assert.match(html, /<dd>2<\/dd><dt>Acceptance criteria<\/dt>/);
+  assert.match(html, /<dd>1\/1<\/dd><dt>Supported<\/dt>/);
+  assert.match(html, /aria-label="Observed journey"/);
+  assert.match(html, /<summary><span>Capture quality<\/span><strong>/);
   assert.match(html, /REQ-01/);
   assert.match(html, /The checkout must support card payment/);
   assert.match(html, /User story/);
@@ -186,6 +190,8 @@ test('renders concise requirements with multiple acceptance criteria and screens
   assert.match(html, /THEN/);
   assert.match(html, /the buyer returns to edit the order/);
   assert.match(html, /Open evidence E-42 in Visual Flow/);
+  assert.match(html, /Evidence flow \(2\)/);
+  assert.match(html, /aria-label="Evidence flow"/);
   assert.match(
     html,
     /class="[^"]*astryx-button[^"]*document-flow__evidence-card"/,
@@ -202,6 +208,8 @@ test('renders concise requirements with multiple acceptance criteria and screens
     'document-flow__nav',
     'document-flow__requirement',
     'document-flow__scenario',
+    'document-flow__evidence-node',
+    'document-flow__evidence-step',
     'document-flow__evidence-card',
   ]) {
     assert.match(html, new RegExp(className));
@@ -228,6 +236,9 @@ test('renders deduplicated evidence gaps as open questions', () => {
 
   assert.match(questions, /Declined card state/);
   assert.match(questions, /How is a declined card recovered/);
+  assert.match(questions, /Evidence gaps/);
+  assert.match(questions, /Questions to validate/);
+  assert.match(questions, /These points are not confirmed by the captured screens/);
   assert.doesNotMatch(questions, /Review the cart/);
 });
 

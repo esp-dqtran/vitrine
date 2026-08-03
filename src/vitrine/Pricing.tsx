@@ -135,7 +135,7 @@ function PlanCard({
       style={{
         position: 'relative',
         flex: '1 1 320px',
-        minWidth: 300,
+      minWidth: 'min(300px, 100%)',
         display: 'flex',
         flexDirection: 'column',
         gap: 20,
@@ -188,6 +188,87 @@ function Section({ style, children }: { style?: CSSProperties; children: ReactNo
   return <div style={{ ...wrap, ...style }}>{children}</div>;
 }
 
+function FreeUnlockUsage({
+  subscription,
+  onBrowse,
+  onCheckout,
+  loading,
+}: {
+  subscription: SubscriptionView;
+  onBrowse: () => void;
+  onCheckout: () => void;
+  loading: boolean;
+}) {
+  const limit = subscription.freeUnlocks.length + subscription.freeUnlocksRemaining;
+  const used = subscription.freeUnlocks.length;
+  const exhausted = subscription.freeUnlocksRemaining < 1;
+
+  return (
+    <Section style={{ padding: '8px 32px 24px' }}>
+      <div
+        data-testid="free-unlock-usage"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 24,
+          padding: '22px 24px',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-container)',
+          background: 'linear-gradient(110deg, color-mix(in srgb, var(--color-accent) 10%, var(--color-background-surface)), var(--color-background-surface) 56%)',
+          boxShadow: 'var(--shadow-low)',
+        }}
+      >
+        <div style={{ minWidth: 240, flex: '1 1 420px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <Text type="label" weight="semibold">Your Free access</Text>
+            <Badge
+              variant={exhausted ? 'neutral' : 'blue'}
+              label={exhausted ? 'All unlocks used' : `${subscription.freeUnlocksRemaining} remaining`}
+            />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <Heading level={3}>{`${used} of ${limit} permanent app unlocks used`}</Heading>
+          </div>
+          <div style={{ display: 'flex', gap: 7, marginTop: 14, maxWidth: 360 }} aria-label={`${used} of ${limit} app unlocks used`}>
+            {Array.from({ length: limit }, (_, index) => (
+              <span
+                key={index}
+                aria-hidden="true"
+                style={{
+                  height: 7,
+                  flex: 1,
+                  borderRadius: 999,
+                  background: index < used ? 'var(--color-accent)' : 'var(--color-background-muted)',
+                  border: index < used ? 'none' : '1px solid var(--color-border)',
+                }}
+              />
+            ))}
+          </div>
+          <div style={{ marginTop: 12, maxWidth: 650 }}>
+            <Text type="supporting" color="secondary">
+              {exhausted
+                ? 'Your unlocked apps stay available forever. Pro opens every current and future published app.'
+                : 'Browse public previews freely. An unlock is only used when you confirm full access to an app.'}
+            </Text>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Button variant="secondary" label="Browse apps" clickAction={onBrowse} />
+          <Button
+            variant="primary"
+            label={exhausted ? 'Open the full catalog' : 'Upgrade to Pro'}
+            clickAction={onCheckout}
+            isDisabled={loading}
+            isLoading={loading}
+          />
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 interface PricingViewProps {
   user: AuthUser | null;
   subscription: SubscriptionView | null;
@@ -230,7 +311,7 @@ export function PricingView({
         }}
       >
         <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
               <AstryxMenu
@@ -269,6 +350,15 @@ export function PricingView({
           </SegmentedControl>
         </div>
       </Section>
+
+      {user?.role === 'user' && subscription?.plan === 'free' ? (
+        <FreeUnlockUsage
+          subscription={subscription}
+          onBrowse={onBrowse}
+          onCheckout={onCheckout}
+          loading={loading}
+        />
+      ) : null}
 
       <Section style={{ padding: '24px 32px 64px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'stretch' }}>

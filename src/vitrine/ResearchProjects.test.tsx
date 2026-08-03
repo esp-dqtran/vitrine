@@ -6,10 +6,16 @@ import {
   sortProjects,
   ResearchProjectsView,
 } from "./components/ResearchProjectsPage.tsx";
-import { DecisionCanvas, type DecisionCanvasActions } from "./components/DecisionCanvas.tsx";
+import {
+  DecisionCanvas,
+  type DecisionCanvasActions,
+} from "./components/DecisionCanvas.tsx";
 import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import { EvidenceDrawer } from "./components/EvidenceDrawer.tsx";
-import { ProjectInsightsPanel, type ProjectInsightsActions } from "./components/ProjectInsightsPanel.tsx";
+import {
+  ProjectInsightsPanel,
+  type ProjectInsightsActions,
+} from "./components/ProjectInsightsPanel.tsx";
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
 const OTHER_PROJECT_ID = "22222222-2222-4222-8222-222222222222";
@@ -25,26 +31,35 @@ const actions = {
 
 test("renders a personal projects workspace without project status", () => {
   const empty = renderToStaticMarkup(
-    <ResearchProjectsView projects={[]} loading={false} error="" actions={actions} />,
+    <ResearchProjectsView
+      projects={[]}
+      loading={false}
+      error=""
+      actions={actions}
+    />,
   );
   assert.match(empty, /Create your first project/);
 
-  const populated = renderToStaticMarkup(<ResearchProjectsView
-    projects={[{
-      id: PROJECT_ID,
-      title: "SSO onboarding",
-      question: "How should SSO be introduced?",
-      platformFilter: "web",
-      pinned: true,
-      revision: 3,
-      evidenceCount: 6,
-      synthesisState: "stale",
-      updatedAt: "2026-07-17T00:00:00.000Z",
-    }]}
-    loading={false}
-    error=""
-    actions={actions}
-  />);
+  const populated = renderToStaticMarkup(
+    <ResearchProjectsView
+      projects={[
+        {
+          id: PROJECT_ID,
+          title: "SSO onboarding",
+          question: "How should SSO be introduced?",
+          platformFilter: "web",
+          pinned: true,
+          revision: 3,
+          evidenceCount: 6,
+          synthesisState: "stale",
+          updatedAt: "2026-07-17T00:00:00.000Z",
+        },
+      ]}
+      loading={false}
+      error=""
+      actions={actions}
+    />,
+  );
   assert.match(populated, /SSO onboarding/);
   assert.match(populated, /Pinned/);
   assert.match(populated, /Rename/);
@@ -54,32 +69,228 @@ test("renders a personal projects workspace without project status", () => {
   assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
 });
 
-test("sorts projects without mutating the source list", () => {
-  const projects = [{
-    id: PROJECT_ID,
-    title: "Wallet",
-    question: "Payment flow",
-    platformFilter: "all" as const,
-    pinned: false,
-    revision: 1,
-    evidenceCount: 0,
-    synthesisState: "none" as const,
-    updatedAt: "2026-07-01T00:00:00.000Z",
-  }, {
-    id: OTHER_PROJECT_ID,
-    title: "Accounts",
-    question: "",
-    platformFilter: "all" as const,
-    pinned: true,
-    revision: 2,
-    evidenceCount: 0,
-    synthesisState: "none" as const,
-    updatedAt: "2026-07-20T00:00:00.000Z",
-  }];
+test("organizes Projects around Personal and Team scopes", () => {
+  const html = renderToStaticMarkup(
+    <ResearchProjectsView
+      teams={[
+        {
+          id: 4,
+          name: "Northstar",
+          role: "owner",
+          memberCount: 3,
+          createdAt: "2026-08-01T00:00:00.000Z",
+        },
+      ]}
+      projects={[
+        {
+          id: PROJECT_ID,
+          title: "Checkout redesign",
+          question: "",
+          platformFilter: "web",
+          pinned: false,
+          revision: 1,
+          evidenceCount: 0,
+          synthesisState: "none",
+          updatedAt: "2026-08-01T00:00:00.000Z",
+          organization: { id: 4, name: "Northstar", role: "owner" },
+        },
+      ]}
+      loading={false}
+      error=""
+      actions={actions}
+    />,
+  );
 
-  assert.deepEqual(sortProjects(projects, "updated").map(({ id }) => id), [OTHER_PROJECT_ID, PROJECT_ID]);
-  assert.deepEqual(sortProjects(projects, "name").map(({ id }) => id), [OTHER_PROJECT_ID, PROJECT_ID]);
-  assert.deepEqual(projects.map(({ id }) => id), [PROJECT_ID, OTHER_PROJECT_ID]);
+  assert.match(html, /Switch Team/);
+  assert.match(html, /Northstar/);
+  assert.match(html, /3 members/);
+  assert.match(html, /Create Team/);
+  assert.match(html, /Personal projects/);
+  assert.doesNotMatch(html, /Team workspace/);
+});
+
+test("defines Lumin-style Team dropdowns, modals, and member management layout", () => {
+  const css = readFileSync(
+    new URL("./projectsWorkspace.css", import.meta.url),
+    "utf8",
+  );
+  const source = readFileSync(
+    new URL("./components/ResearchProjectsPage.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /\.projects-team-drawer\s*\{[^}]*width:\s*320px;[^}]*border-radius:\s*16px;[^}]*transition:\s*opacity \.15s, transform \.15s;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*calc\(var\(--projects-header-height\) \+ 1px\);[^}]*max-height:\s*calc\(100dvh - var\(--projects-header-height\) - 16px\);/s,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*700px\)[\s\S]*?\.projects-team-drawer\s*\{[^}]*width:\s*min\(280px, calc\(100vw - 32px\)\);[^}]*transform:\s*translateX\(-100%\);[^}]*transition:\s*transform \.3s;/,
+  );
+  assert.match(
+    css,
+    /dialog\.astryx-modal\.projects-workspace__modal\s*\{[^}]*border-radius:\s*16px\s*!important;[^}]*animation:\s*projects-workspace-modal-in \.25s/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__toolbar \.apps-filterbar__filter\s*\{[^}]*height:\s*40px;[^}]*border-radius:\s*8px;/s,
+  );
+  assert.match(
+    source,
+    /projects-workspace__modal projects-workspace__modal--invite[\s\S]*?width=\{640\}/,
+  );
+  assert.match(
+    source,
+    /role="menu" aria-label=\{`Actions for \$\{project\.title\}`\}/,
+  );
+  assert.match(
+    css,
+    /\.team-people__stats\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/s,
+  );
+  assert.match(
+    css,
+    /\.team-people__list-heading,[\s\S]*?grid-template-columns:\s*minmax\(220px, 1fr\) 120px 140px 90px;/,
+  );
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
+});
+
+test("renders a responsive Lumin-style Projects header", () => {
+  const css = readFileSync(
+    new URL("./projectsWorkspace.css", import.meta.url),
+    "utf8",
+  );
+  const html = renderToStaticMarkup(
+    <ResearchProjectsView
+      projects={[]}
+      loading={false}
+      error=""
+      actions={actions}
+    />,
+  );
+
+  assert.match(html, /aria-label="Vitrine Projects"/);
+  assert.match(html, /aria-label="Search projects"/);
+  assert.match(html, /aria-label="Help"/);
+  assert.match(html, /aria-label="Notifications"/);
+  assert.match(html, /aria-label="Account settings"/);
+  assert.match(html, /aria-label="Workspace navigation"/);
+  assert.match(html, /aria-label="Switch Team"/);
+  assert.match(
+    html,
+    /class="projects-workspace__desktop-quick-action"[^>]*aria-label="Create Team"/,
+  );
+  assert.match(
+    html,
+    /href="\/apps"[^>]*class="projects-workspace__desktop-destination"/,
+  );
+  assert.match(
+    html,
+    /href="\/sites"[^>]*class="projects-workspace__desktop-destination"/,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__context-bar\s*\{[^}]*min-height:\s*var\(--projects-header-height\);[^}]*background:\s*var\(--color-background-surface\);/s,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.projects-workspace__context-bar\s*\{[^}]*border-bottom:/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-rail\s*\{[^}]*width:\s*80px;[^}]*position:\s*fixed;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-rail\s*\{[^}]*border-right:\s*1px solid var\(--color-border\);[^}]*border-bottom:\s*1px solid var\(--color-border\);/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-divider\s*\{[^}]*width:\s*24px;[^}]*height:\s*1px;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-footer\s*\{[^}]*margin-top:\s*auto;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*calc\(var\(--projects-header-height\) \+ 1px\);[^}]*left:\s*20px;[^}]*width:\s*320px;[^}]*gap:\s*0;[^}]*background:\s*var\(--color-background-surface\);/s,
+  );
+  assert.match(
+    css,
+    /\.projects-team-switcher__current,[\s\S]*?\.projects-team-switcher__spaces\s*\{[^}]*border-radius:\s*0;[^}]*background:\s*transparent;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__header-search\s*\{[^}]*width:\s*min\(800px, 100%\);/s,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__search-toggle\s*\{[^}]*display:\s*inline-grid !important;/,
+  );
+});
+
+test("keeps the Projects sort dropdown content-sized", () => {
+  const css = readFileSync(
+    new URL("./projectsWorkspace.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /\.projects-workspace__toolbar\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*flex-start;/s,
+  );
+  assert.match(
+    css,
+    /\.projects-workspace__toolbar \.apps-filterbar__filter\s*\{[^}]*width:\s*fit-content;/s,
+  );
+});
+
+test("sorts projects without mutating the source list", () => {
+  const projects = [
+    {
+      id: PROJECT_ID,
+      title: "Wallet",
+      question: "Payment flow",
+      platformFilter: "all" as const,
+      pinned: false,
+      revision: 1,
+      evidenceCount: 0,
+      synthesisState: "none" as const,
+      updatedAt: "2026-07-01T00:00:00.000Z",
+    },
+    {
+      id: OTHER_PROJECT_ID,
+      title: "Accounts",
+      question: "",
+      platformFilter: "all" as const,
+      pinned: true,
+      revision: 2,
+      evidenceCount: 0,
+      synthesisState: "none" as const,
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    },
+  ];
+
+  assert.deepEqual(
+    sortProjects(projects, "updated").map(({ id }) => id),
+    [OTHER_PROJECT_ID, PROJECT_ID],
+  );
+  assert.deepEqual(
+    sortProjects(projects, "name").map(({ id }) => id),
+    [OTHER_PROJECT_ID, PROJECT_ID],
+  );
+  assert.deepEqual(
+    projects.map(({ id }) => id),
+    [PROJECT_ID, OTHER_PROJECT_ID],
+  );
 });
 
 const workspaceFixture = (): ResearchProjectWorkspace => ({
@@ -101,18 +312,20 @@ const workspaceFixture = (): ResearchProjectWorkspace => ({
       title: "Alternative A",
       position: 0,
       conclusion: "",
-      items: [{
-        id: 100,
-        projectId: PROJECT_ID,
-        laneId: 10,
-        position: 0,
-        sourceKind: "catalog_screen",
-        stepLabel: "Explain SSO",
-        note: "",
-        tags: [],
-        important: false,
-        snapshot: { title: "SSO explainer", app: "Linear" },
-      }],
+      items: [
+        {
+          id: 100,
+          projectId: PROJECT_ID,
+          laneId: 10,
+          position: 0,
+          sourceKind: "catalog_screen",
+          stepLabel: "Explain SSO",
+          note: "",
+          tags: [],
+          important: false,
+          snapshot: { title: "SSO explainer", app: "Linear" },
+        },
+      ],
     },
     { id: 11, title: "Alternative B", position: 1, conclusion: "", items: [] },
   ],
@@ -129,7 +342,11 @@ const canvasActions: DecisionCanvasActions = {
 
 test("offers keyboard-safe evidence movement", () => {
   const html = renderToStaticMarkup(
-    <DecisionCanvas workspace={workspaceFixture()} disabled={false} actions={canvasActions} />,
+    <DecisionCanvas
+      workspace={workspaceFixture()}
+      disabled={false}
+      actions={canvasActions}
+    />,
   );
   assert.match(html, /Move earlier/);
   assert.match(html, /Move later/);
@@ -138,11 +355,18 @@ test("offers keyboard-safe evidence movement", () => {
 
 test("exposes responsive decision-canvas layout hooks", () => {
   const html = renderToStaticMarkup(
-    <DecisionCanvas workspace={workspaceFixture()} disabled={false} actions={canvasActions} />,
+    <DecisionCanvas
+      workspace={workspaceFixture()}
+      disabled={false}
+      actions={canvasActions}
+    />,
   );
 
   assert.match(html, /class="research-decision-canvas"/);
   assert.match(html, /class="research-decision-canvas__lanes"/);
+  assert.match(html, /Compare visual directions/);
+  assert.match(html, /New direction/);
+  assert.doesNotMatch(html, /Delete empty lane/);
 });
 
 test("defines tablet and phone research-canvas layouts", () => {
@@ -150,7 +374,7 @@ test("defines tablet and phone research-canvas layouts", () => {
 
   assert.match(
     css,
-    /\.research-project-workspace\s*\{[^}]*grid-template-columns:\s*280px minmax\(0, 1fr\) 320px;/s,
+    /\.research-project-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 360px;/s,
   );
   assert.match(
     css,
@@ -158,36 +382,45 @@ test("defines tablet and phone research-canvas layouts", () => {
   );
   assert.match(
     css,
-    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.research-decision-canvas__lanes\s*\{[^}]*grid-auto-flow:\s*row;[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*overflow-x:\s*visible;/,
+    /@media \(max-width:\s*800px\)\s*\{[\s\S]*?\.research-project-workspace__rail\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.research-decision-canvas__lanes\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/,
   );
 });
 
 test("shows suggestion reasons and bounded screenshot upload", () => {
-  const html = renderToStaticMarkup(<EvidenceDrawer
-    workspace={workspaceFixture()}
-    disabled={false}
-    onChange={() => {}}
-    initialSuggestions={[{
-      id: "screen:1",
-      kind: "screen",
-      app: "Linear",
-      platform: "web",
-      title: "SSO onboarding",
-      description: "Explains SSO",
-      appCategories: ["Productivity"],
-      tags: [],
-      states: [],
-      components: [],
-      layouts: [],
-      visibleText: [],
-      versionId: 2,
-      imageId: 1,
-      score: 10,
-      matchedFields: ["flow title", "visible text"],
-    }]}
-  />);
+  const html = renderToStaticMarkup(
+    <EvidenceDrawer
+      workspace={workspaceFixture()}
+      disabled={false}
+      onChange={() => {}}
+      initialSuggestions={[
+        {
+          id: "screen:1",
+          kind: "screen",
+          app: "Linear",
+          platform: "web",
+          title: "SSO onboarding",
+          description: "Explains SSO",
+          appCategories: ["Productivity"],
+          tags: [],
+          states: [],
+          components: [],
+          layouts: [],
+          visibleText: [],
+          versionId: 2,
+          imageId: 1,
+          score: 10,
+          matchedFields: ["flow title", "visible text"],
+        },
+      ]}
+    />,
+  );
   assert.match(html, /Matched: flow title, visible text/);
   assert.match(html, /accept="image\/png,image\/jpeg,image\/webp"/);
+  assert.match(html, /Reference library/);
 });
 
 const insightActions: ProjectInsightsActions = {
@@ -206,26 +439,80 @@ test("labels AI output and preserves designer decisions", () => {
     createdAt: "2026-07-17T00:00:00.000Z",
     result: {
       executiveRead: "Progressive setup reduces early complexity.",
-      observations: [{ text: "Products explain SSO first.", evidenceIds: ["e100"] }],
+      observations: [
+        { text: "Products explain SSO first.", evidenceIds: ["e100"] },
+      ],
       differences: [{ text: "Timing differs.", evidenceIds: ["e100"] }],
-      alternatives: [{ title: "Progressive", tradeoff: "More steps", evidenceIds: ["e100"] }],
+      alternatives: [
+        { title: "Progressive", tradeoff: "More steps", evidenceIds: ["e100"] },
+      ],
       recommendation: { text: "Use progressive setup.", evidenceIds: ["e100"] },
       requirements: [{ text: "Explain why.", evidenceIds: ["e100"] }],
       openQuestions: [],
     },
   };
-  const html = renderToStaticMarkup(<ProjectInsightsPanel workspace={workspace} disabled={false} actions={insightActions} />);
+  const html = renderToStaticMarkup(
+    <ProjectInsightsPanel
+      workspace={workspace}
+      disabled={false}
+      actions={insightActions}
+    />,
+  );
   assert.match(html, /AI-generated draft/);
   assert.match(html, /Observed evidence/);
   assert.match(html, /Designer decision/);
   assert.match(html, /Use progressive SSO setup/);
 });
 
-test("keeps the Designer Playground in the Project workspace", () => {
-  const source = readFileSync(
-    new URL("./components/ResearchProjectPage.tsx", import.meta.url),
+test("opens every Designer Project on its Canvas file index", () => {
+  const appSource = readFileSync(new URL("./App.tsx", import.meta.url), "utf8");
+  const filesSource = readFileSync(
+    new URL("./components/ProjectFilesPage.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /<ProjectWorkspaceNav/);
-  assert.doesNotMatch(source, /projectDocumentsEnabled|ProjectDocument/);
+  const navigationSource = readFileSync(
+    new URL("./components/ProjectWorkspaceNav.tsx", import.meta.url),
+    "utf8",
+  );
+  const canvasSource = readFileSync(
+    new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    appSource,
+    /case "project":[\s\S]*?<ProjectFilesPage projectId=\{route\.projectId\} area="canvas"/,
+  );
+  assert.match(
+    appSource,
+    /case "project-playground":[\s\S]*?<ProjectPlayground[\s\S]*?projectId=\{route\.projectId\}/,
+  );
+  assert.match(filesSource, /<WorkspaceRail/);
+  assert.match(filesSource, /<WorkspaceHeader/);
+  assert.match(filesSource, /function CanvasScreenCard/);
+  assert.match(filesSource, /<MediaGridCard/);
+  assert.match(filesSource, /data-canvas-preview="placeholder"/);
+  assert.doesNotMatch(filesSource, /exportToBlob|getDesignerCanvasFile/);
+  assert.doesNotMatch(filesSource, /project-file-index__toolbar/);
+  assert.match(filesSource, /project-file-index__grid--documents/);
+  assert.match(
+    filesSource,
+    /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/,
+  );
+  assert.match(filesSource, /className="project-area-toolbar__action"/);
+  assert.match(filesSource, /area === "settings"/);
+  assert.match(filesSource, /label="Save changes"/);
+  assert.match(navigationSource, /<ToggleButton/);
+  assert.match(navigationSource, /label="Settings"/);
+  assert.match(appSource, /case "project-settings"/);
+  assert.match(navigationSource, /useSlidingIndicator\(active\)/);
+  assert.match(navigationSource, /className="project-area-nav__indicator"/);
+  assert.doesNotMatch(navigationSource, /<Icon/);
+  assert.match(canvasSource, /className="project-canvas-header"/);
+  assert.match(canvasSource, /<Excalidraw/);
+  assert.doesNotMatch(
+    canvasSource,
+    /ProjectWorkspaceNav|SegmentedControl|DecisionCanvas|EvidenceDrawer/,
+  );
+  assert.doesNotMatch(appSource, /components\/ResearchProjectPage/);
 });

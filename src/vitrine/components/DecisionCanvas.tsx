@@ -17,24 +17,57 @@ export function DecisionCanvas({ workspace, disabled, actions }: {
   disabled: boolean;
   actions: DecisionCanvasActions;
 }) {
+  const [addingLane, setAddingLane] = useState(false);
+  const [newLaneTitle, setNewLaneTitle] = useState('');
   const addLane = () => {
-    const title = window.prompt('Lane title')?.trim();
-    if (title) void actions.addLane(title);
+    const title = newLaneTitle.trim();
+    if (!title) return;
+    void actions.addLane(title);
+    setNewLaneTitle('');
+    setAddingLane(false);
   };
   return (
     <section aria-label="Decision canvas" className="research-decision-canvas">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+      <header className="research-decision-canvas__header">
         <div>
-          <strong>Comparison lanes</strong>
-          <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginTop: 3 }}>{workspace.lanes.length} of {RESEARCH_LIMITS.lanesMax} lanes</div>
+          <span className="research-project-kicker">Direction board</span>
+          <h2>Compare visual directions</h2>
+          <p>Organize references into clear alternatives before moving into the Playground.</p>
         </div>
-        <Button label="Add lane" size="sm" isDisabled={disabled || workspace.lanes.length >= RESEARCH_LIMITS.lanesMax} onClick={addLane} />
-      </div>
+        <div className="research-decision-canvas__header-actions">
+          <span>{workspace.lanes.length} of {RESEARCH_LIMITS.lanesMax} directions</span>
+          <Button
+            label="New direction"
+            variant="primary"
+            size="sm"
+            isDisabled={disabled || addingLane || workspace.lanes.length >= RESEARCH_LIMITS.lanesMax}
+            clickAction={() => setAddingLane(true)}
+          />
+        </div>
+      </header>
+      {addingLane && (
+        <form className="research-decision-canvas__add" onSubmit={(event) => { event.preventDefault(); addLane(); }}>
+          <TextInput
+            label="Direction name"
+            isLabelHidden
+            value={newLaneTitle}
+            onChange={setNewLaneTitle}
+            placeholder="e.g. Quiet editorial"
+            width="100%"
+          />
+          <Button label="Cancel" variant="ghost" size="sm" clickAction={() => { setAddingLane(false); setNewLaneTitle(''); }} />
+          <Button label="Add direction" variant="primary" size="sm" isDisabled={!newLaneTitle.trim()} clickAction={addLane} />
+        </form>
+      )}
       <div className="research-decision-canvas__lanes">
         {workspace.lanes.map((lane) => (
-          <Card key={lane.id} padding={3} style={{ display: 'grid', alignContent: 'start', gap: 10 }}>
+          <Card key={lane.id} padding={3} className="research-direction-card">
+            <div className="research-direction-card__meta">
+              <span>Direction {lane.position + 1}</span>
+              <span>{lane.items.length} {lane.items.length === 1 ? 'reference' : 'references'}</span>
+            </div>
             <LaneFields lane={lane} disabled={disabled} update={(patch) => actions.updateLane(lane.id, patch)} />
-            <div style={{ display: 'grid', gap: 9 }}>
+            <div className="research-direction-card__evidence">
               {lane.items.map((item) => (
                 <EvidenceCard key={item.id} item={item} lane={lane} lanes={workspace.lanes} disabled={disabled} actions={{
                   update: (patch) => actions.updateItem(item.id, patch),
@@ -43,8 +76,15 @@ export function DecisionCanvas({ workspace, disabled, actions }: {
                 }} />
               ))}
             </div>
-            {lane.items.length === 0 && <div style={{ border: '1px dashed var(--color-border)', borderRadius: 9, padding: 18, textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 12 }}>Add evidence to compare this alternative.</div>}
-            <Button label="Delete empty lane" variant="destructive" size="sm" isDisabled={disabled || workspace.lanes.length <= RESEARCH_LIMITS.lanesMin || lane.items.length > 0} clickAction={() => actions.deleteLane(lane.id)} />
+            {lane.items.length === 0 && (
+              <div className="research-direction-card__empty">
+                <strong>No references yet</strong>
+                <span>Use the Evidence library to add screens to this direction.</span>
+              </div>
+            )}
+            <div className="research-direction-card__footer">
+              <Button label="Remove direction" variant="destructive" size="sm" isDisabled={disabled || workspace.lanes.length <= RESEARCH_LIMITS.lanesMin || lane.items.length > 0} clickAction={() => actions.deleteLane(lane.id)} />
+            </div>
           </Card>
         ))}
       </div>

@@ -233,7 +233,7 @@ test('shows concise actionable patterns and keeps their full guidance on demand'
   assert.match(html, /<strong>2<\/strong> patterns/);
 });
 
-test('opens imported systems as a specimen-first preview with document and theme controls', () => {
+test('opens imported systems as a Refero-style split reference with agent outputs and theme controls', () => {
   const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
     app: 'binance', generatedAt: '2026-07-22T00:00:00.000Z', summary: 'Bold yellow accents on precise trading surfaces.',
     tokens: [
@@ -248,8 +248,13 @@ test('opens imported systems as a specimen-first preview with document and theme
     flows: [], rules: [],
   }} status="ready" />);
 
-  assert.match(html, /aria-checked="true"[^>]*><span>Preview<\/span>/);
-  assert.match(html, /aria-checked="false"[^>]*><span>DESIGN\.md<\/span>/);
+  assert.match(html, /Agent-ready design system reference/);
+  assert.match(html, /role="tab" aria-selected="true"[^>]*>DESIGN\.md<\/button>/);
+  assert.match(html, /Tailwind v4/);
+  assert.match(html, /CSS Variables/);
+  assert.match(html, /Design Tokens/);
+  assert.match(html, />Compact</);
+  assert.match(html, />Extended</);
   assert.match(html, />Light</);
   assert.match(html, /aria-checked="true"[^>]*><span>Dark<\/span>/);
   assert.match(html, /Color palette/);
@@ -257,6 +262,26 @@ test('opens imported systems as a specimen-first preview with document and theme
   assert.match(html, /Component gallery/);
   assert.match(html, /Start trading/);
   assert.match(html, /Primary action/);
+});
+
+test('labels Refero imports and renders their source screenshot without claiming observed evidence', () => {
+  const html = renderToStaticMarkup(<DesignSystemPanel snapshot={{
+    app: 'linear', generatedAt: '2026-08-03T00:00:00.000Z', summary: 'Midnight precision instrument.',
+    provenance: {
+      provider: 'refero', externalId: 'style-1', theme: 'dark', northStar: 'midnight precision instrument',
+      sourceUrl: 'https://styles.refero.design/style/style-1', originalUrl: 'https://linear.app',
+      screenshotUrl: 'https://images.example/linear.jpg', attribution: 'Imported from Refero Styles',
+    },
+    tokens: [{ id: 'void', kind: 'color', name: 'Void', value: '#08090a', role: 'Canvas', evidence: [], source: 'external_import' }],
+    components: [], flows: [], rules: [],
+  }} status="ready" />);
+
+  assert.match(html, /Imported style reference/);
+  assert.match(html, /Refero source · External import/);
+  assert.match(html, /src="https:\/\/images\.example\/linear\.jpg"/);
+  assert.match(html, /Original website/);
+  assert.match(html, /Source reference/);
+  assert.doesNotMatch(html, /source screen|Observed evidence/);
 });
 
 test('formats the loaded snapshot as a developer-readable DESIGN.md document', () => {

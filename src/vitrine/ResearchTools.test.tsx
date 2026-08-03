@@ -66,8 +66,8 @@ test('does not surface the retired FLOW.md export card', () => {
 
 test('shows capture counts and curator review actions without exposing draft as published', () => {
   const html = renderToStaticMarkup(<VersionPanel app="linear" platform="web" role="admin" versions={[
-    { id: 2, app: 'linear', platform: 'web', version_number: 2, label: 'v2', source_url: null, status: 'draft', notes: '', captured_at: '2026-07-11T00:00:00.000Z', submitted_at: null, published_at: null, screen_count: 12, analyzed_count: 10, component_count: 4, token_count: 8, flow_count: 2 },
-    { id: 1, app: 'linear', platform: 'web', version_number: 1, label: 'v1', source_url: null, status: 'published', notes: '', captured_at: '2026-07-10T00:00:00.000Z', submitted_at: null, published_at: '2026-07-10T01:00:00.000Z', screen_count: 10, analyzed_count: 10, component_count: 3, token_count: 7, flow_count: 1 },
+    { id: 2, app: 'linear', platform: 'web', version_number: 2, label: 'v2', source_url: null, provider: 'm', status: 'draft', notes: '', captured_at: '2026-07-11T00:00:00.000Z', submitted_at: null, published_at: null, screen_count: 12, analyzed_count: 10, component_count: 4, token_count: 8, flow_count: 2 },
+    { id: 1, app: 'linear', platform: 'web', version_number: 1, label: 'v1', source_url: null, provider: 'm', status: 'published', notes: '', captured_at: '2026-07-10T00:00:00.000Z', submitted_at: null, published_at: '2026-07-10T01:00:00.000Z', screen_count: 10, analyzed_count: 10, component_count: 3, token_count: 7, flow_count: 1 },
   ]} onVersionsChange={() => undefined} onSelect={() => undefined} />);
   assert.match(html, /12 screens/);
   assert.match(html, /10 analyzed/);

@@ -2,13 +2,14 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, 
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { Button, EmptyState, Selector, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState, Spinner } from '@astryxdesign/core';
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';
 import { PLATFORM_LABEL } from '../../platformFromUrl';
 import type { DesignFlow, EvidenceView } from '../../designSystem';
 import type { AppMetadata, Screen } from '../types';
 import type { AppsFilterOption } from '../appsDiscovery.ts';
+import { hasDesignSystemContent } from '../designSystemAvailability.ts';
 import {
   fetchAppFlows,
   fetchAppUiElementSummary,
@@ -27,12 +28,16 @@ import {
 import {
   buildScreenFlowMembership,
 } from '../screenFlowContext.ts';
-import { copyScreenImagesAsPng } from '../screenActions.ts';
+import {
+  copyScreenImagesAsPng,
+  type ImageBatchProgress,
+} from '../screenActions.ts';
 import type { SaveReference } from '../researchApi.ts';
 import { useAppSectionData, type DetailSection } from '../useAppSectionData';
 import { useDesignSystem } from '../useDesignSystem';
 import { useDesignSystemGeneration } from '../useDesignSystemGeneration';
 import { AppsPlatformSwitcher } from './AppsPlatformSwitcher';
+import { AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 import { useApplicationToast } from './ApplicationToast.tsx';
 import { CopyButton } from './CopyButton.tsx';
 import { CollectionPicker } from './CollectionPicker.tsx';
@@ -139,7 +144,18 @@ function MetadataFilterControl({
 }
 
 const SECTIONS: DetailSection[] = ['screens', 'elements', 'flows', 'design-system', 'export'];
-const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows'];
+const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows', 'design-system'];
+
+export function appDetailTabs(hasDesignSystem: boolean) {
+  return [
+    { id: 'screens' as const, label: 'Screens' },
+    { id: 'elements' as const, label: 'UI Elements' },
+    { id: 'flows' as const, label: 'Flows' },
+    ...(hasDesignSystem
+      ? [{ id: 'design-system' as const, label: 'Design System' }]
+      : []),
+  ];
+}
 
 const resolveSection = (initialSection: string | undefined, role: 'admin' | 'user'): DetailSection => {
   const allowed = role === 'admin' ? SECTIONS : MEMBER_SECTIONS;
@@ -241,8 +257,22 @@ export function ScreenDetail({
     app.id,
     selectedPlatform,
     sectionData.resolvedVersion,
-    needsDesignSystem && !sectionData.versionsLoading,
+    !sectionData.versionsLoading,
   );
+  const designSystemAvailable = hasDesignSystemContent(snapshot);
+  const designSystemMissing = designSystemStatus === 'missing'
+    || (designSystemStatus === 'ready' && !designSystemAvailable);
+  useEffect(() => {
+    if (section !== 'design-system' || !designSystemMissing) return;
+    setSectionState('screens');
+    onSectionChange?.('screens', selectedPlatform, sectionData.resolvedVersion);
+  }, [
+    designSystemMissing,
+    onSectionChange,
+    section,
+    sectionData.resolvedVersion,
+    selectedPlatform,
+  ]);
   const designSystemGeneration = useDesignSystemGeneration({
     app: app.id,
     platform: selectedPlatform,
@@ -276,6 +306,7 @@ export function ScreenDetail({
   const [componentCropSummaryLoading, setComponentCropSummaryLoading] = useState(false);
   const [lightbox, setLightbox] = useState<LightboxState>(null);
   const [selectedScreenIds, setSelectedScreenIds] = useState<Set<number>>(() => new Set());
+  const [copyProgress, setCopyProgress] = useState<ImageBatchProgress | null>(null);
   const showApplicationToast = useApplicationToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -390,9 +421,10 @@ export function ScreenDetail({
   };
 
   const loadMore = async () => {
-    if (!nextCursor || loadingMore) return;
+    if (!nextCursor || loadingMore) return null;
     setLoadingMore(true);
-    try { await sectionData.loadNext(); }
+    try { return await sectionData.loadNext(); }
+    catch { return null; }
     finally { setLoadingMore(false); }
   };
 
@@ -428,11 +460,10 @@ export function ScreenDetail({
     return () => { tween.kill(); };
   }, [section, selectedPlatform]);
 
-  const goLightbox = (index: number) => {
-    if (!screens.length) return;
-    const nextIndex = ((index % screens.length) + screens.length) % screens.length;
-    const nextScreen = screens[nextIndex];
-    setLightbox({ index: nextIndex });
+  const showLightboxScreen = (index: number, availableScreens: Screen[]) => {
+    const nextScreen = availableScreens[index];
+    if (!nextScreen) return false;
+    setLightbox({ index });
     if (nextScreen && (section === 'screens' || section === 'elements')) {
       onEvidenceChange?.(
         `${section === 'elements' ? 'UI-ELEMENT' : 'SCREEN'}-${nextScreen.id}`,
@@ -441,6 +472,15 @@ export function ScreenDetail({
         sectionData.resolvedVersion,
       );
     }
+    return true;
+  };
+
+  const goLightbox = async (index: number) => {
+    if (index < 0) return;
+    if (showLightboxScreen(index, screens)) return;
+    if (index !== screens.length || !nextCursor || loadingMore) return;
+    const nextPage = await loadMore();
+    if (nextPage && 'screens' in nextPage) showLightboxScreen(index, nextPage.screens);
   };
 
   const openLightbox = (screen: Screen) => {
@@ -473,13 +513,13 @@ export function ScreenDetail({
     const onKey = (event: KeyboardEvent) => {
       if (lightbox) {
         if (event.key === 'Escape') setLightbox(null);
-        else if (event.key === 'ArrowLeft') goLightbox(lightbox.index - 1);
-        else if (event.key === 'ArrowRight') goLightbox(lightbox.index + 1);
+        else if (event.key === 'ArrowLeft') void goLightbox(lightbox.index - 1);
+        else if (event.key === 'ArrowRight') void goLightbox(lightbox.index + 1);
       } else if (event.key === 'Escape') onBack();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox, screens.length, onBack]);
+  }, [lightbox, screens.length, nextCursor, loadingMore, onBack]);
 
   const setScreenSelected = (screenId: number, selected: boolean) => {
     setSelectedScreenIds((current) => {
@@ -492,8 +532,26 @@ export function ScreenDetail({
 
   const copySelectedScreens = async () => {
     if (!selectedScreens.length) return;
-    await copyScreenImagesAsPng(selectedScreens.map(({ url }) => url));
-    setSelectedScreenIds(new Set());
+    setCopyProgress({
+      completed: 0,
+      total: selectedScreens.length,
+      succeeded: 0,
+      failed: 0,
+    });
+    try {
+      const result = await copyScreenImagesAsPng(
+        selectedScreens.map(({ url }) => url),
+        setCopyProgress,
+      );
+      if (result.failures.length) {
+        throw new Error(
+          `Board copied with ${result.succeeded} of ${selectedScreens.length} images; ${result.failures.length} failed`,
+        );
+      }
+      setSelectedScreenIds(new Set());
+    } finally {
+      setCopyProgress(null);
+    }
   };
 
   const sectionLoading = sectionData.versionsLoading
@@ -556,20 +614,28 @@ export function ScreenDetail({
         <div
           className="screen-batch-toolbar"
           role="toolbar"
-          aria-label={`${selectedScreens.length} selected screens`}
+          aria-label={`${selectedScreens.length} selected ${selectedScreens.length === 1 ? 'screen' : 'screens'}`}
         >
-          <strong>{selectedScreens.length} selected</strong>
+          <strong aria-live="polite">
+            {copyProgress
+              ? `Preparing ${copyProgress.completed} of ${copyProgress.total}`
+              : `${selectedScreens.length} selected`}
+          </strong>
           <Button
             label="Clear"
             variant="ghost"
             size="sm"
+            isDisabled={Boolean(copyProgress)}
             onClick={() => setSelectedScreenIds(new Set())}
           />
           <CopyButton
-            label={selectedScreens.length === 1 ? 'Copy image' : 'Copy images'}
+            label={selectedScreens.length === 1 ? 'Copy image' : 'Copy as board'}
             successMessage={selectedScreens.length === 1
               ? 'Image copied as PNG'
-              : `${selectedScreens.length} images copied as PNG`}
+              : `${selectedScreens.length}-image board copied as PNG`}
+            copyingLabel={copyProgress
+              ? `Preparing ${copyProgress.completed} of ${copyProgress.total}`
+              : 'Preparing board…'}
             action={copySelectedScreens}
             variant="secondary"
             size="sm"
@@ -597,12 +663,8 @@ export function ScreenDetail({
       onChange={selectPlatform}
     />
   );
-  const memberTabs = [
-    { id: 'screens' as const, label: 'Screens' },
-    { id: 'elements' as const, label: 'UI Elements' },
-    { id: 'flows' as const, label: 'Flows' },
-  ];
-  const tabs = memberTabs;
+  const tabs = appDetailTabs(designSystemAvailable
+    || (section === 'design-system' && !designSystemMissing));
   const metadata = [
     { label: 'Platform', value: PLATFORM_LABEL[selectedPlatform], content: platformControl },
     { label: 'Category', value: app.categories.map(({ name }) => name).join(', ') },
@@ -721,24 +783,6 @@ export function ScreenDetail({
             },
           }
         : null;
-  const adminSectionControl = role === 'admin' ? (
-    <Selector
-      label="More sections"
-      isLabelHidden
-      size="sm"
-      placement="below"
-      className="app-detail__more-selector"
-      value={section === 'design-system' || section === 'export' ? section : 'more'}
-      options={[
-        { value: 'more', label: 'More' },
-        { value: 'design-system', label: 'Design System' },
-        { value: 'export', label: 'Export' },
-      ]}
-      onChange={(value) => {
-        if (value === 'design-system' || value === 'export') setSection(value);
-      }}
-    />
-  ) : null;
   return (
     <>
       <ReferenceDetailPage
@@ -747,7 +791,7 @@ export function ScreenDetail({
         onOpenSearch={onOpenSearch}
         accountControls={accountControls}
         className={`app-detail app-detail--${selectedPlatform}`}
-        title={app.description ? `${app.app} —` : app.app}
+        title={app.app}
         description={app.description}
         identityKey={`app-icon-${app.id}`}
         identityLabel={app.app[0]}
@@ -760,12 +804,9 @@ export function ScreenDetail({
         activeTab={section}
         onTabChange={setSection}
         tabLeading={(
-          <Selector
-            label="App version"
-            isLabelHidden
-            size="sm"
-            placement="below"
-            className="reference-detail__version-selector"
+          <AstryxSingleSelectDropdown
+            ariaLabel="App version"
+            triggerClassName="reference-detail__version-selector"
             value={selectedVersionValue}
             options={versionOptions}
             onChange={(value) => {
@@ -781,18 +822,15 @@ export function ScreenDetail({
             }}
           />
         )}
-        tabControls={adminSectionControl || activeMetadataFilter ? (
+        tabControls={activeMetadataFilter ? (
           <div className="app-detail__navigation-tools">
-            {adminSectionControl}
-            {activeMetadataFilter ? (
-              <MetadataFilterControl
-                key={section}
-                label={activeMetadataFilter.label}
-                groups={activeMetadataFilter.groups}
-                onToggle={activeMetadataFilter.onToggle}
-                onClear={activeMetadataFilter.onClear}
-              />
-            ) : null}
+            <MetadataFilterControl
+              key={section}
+              label={activeMetadataFilter.label}
+              groups={activeMetadataFilter.groups}
+              onToggle={activeMetadataFilter.onToggle}
+              onClear={activeMetadataFilter.onClear}
+            />
           </div>
         ) : null}
         tabTrailing={sectionTotal ? (
@@ -855,7 +893,8 @@ export function ScreenDetail({
             appIconUrl={app.iconUrl}
             screen={item}
             index={lightbox.index}
-            total={screens.length}
+            total={Math.max(sectionTotals.screens, screens.length)}
+            canNavigateNext={lightbox.index < screens.length - 1 || Boolean(nextCursor)}
             onClose={closeLightbox}
             onNavigate={goLightbox}
             appId={app.id}

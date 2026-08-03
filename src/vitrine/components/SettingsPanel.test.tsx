@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BillingSettings, ReferralSettings } from './SettingsPanel.tsx';
+import { BillingSettings, ReferralSettings, TeamSettings } from './SettingsPanel.tsx';
 import type { SubscriptionView } from '../billingApi.ts';
 
 const free: SubscriptionView = {
@@ -87,4 +87,15 @@ test('keeps a banked month unavailable during current Pro access', () => {
   />);
   assert.match(html, /Available after your current Pro access ends/);
   assert.doesNotMatch(html, /Copy referral link/);
+});
+
+test('introduces Teams without hiding personal account settings', () => {
+  const html = renderToStaticMarkup(<TeamSettings currentUserId={7} />);
+  assert.match(html, /aria-label="Team management"/);
+  assert.match(html, /Your teams/);
+  assert.match(html, /Current team/);
+  assert.match(html, /Members/);
+  assert.match(html, /Create your first Team/);
+  assert.match(html, /Create a new team/);
+  assert.match(html, /Team name/);
 });

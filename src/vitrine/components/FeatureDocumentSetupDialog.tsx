@@ -3,7 +3,6 @@ import { Button, Heading, Text, TextArea } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import { createFeatureDocument } from '../featureDocumentsApi.ts';
-import { navigate } from '../router.ts';
 import { AstryxModal } from './AstryxModal.tsx';
 
 export function FeatureDocumentSetupDialog({
@@ -22,7 +21,7 @@ export function FeatureDocumentSetupDialog({
   app: string;
   platform: Platform;
   version: number;
-  onCreated?: (documentId: number, jobId: number) => void;
+  onCreated: (documentId: number, jobId: number) => void;
   create?: typeof createFeatureDocument;
 }) {
   const [focusInstruction, setFocusInstruction] = useState('');
@@ -43,8 +42,7 @@ export function FeatureDocumentSetupDialog({
     setError('');
     try {
       const result = await create({ app, platform, version, flowId: flow.id, focusInstruction: focusInstruction.trim() });
-      onCreated?.(result.documentId, result.jobId);
-      if (!onCreated) navigate({ name: 'feature-document', documentId: result.documentId });
+      onCreated(result.documentId, result.jobId);
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Feature Document generation failed');

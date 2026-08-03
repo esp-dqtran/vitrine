@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, SegmentedControl, SegmentedControlItem, TextInput } from '@astryxdesign/core';
+import { Button, SegmentedControl, SegmentedControlItem, Selector, TextInput } from '@astryxdesign/core';
 import { changePassword } from '../authApi';
 import type { AuthUser } from '../authApi';
 import { createPortal, type SubscriptionView } from '../billingApi';
@@ -10,8 +10,17 @@ import {
   type ReferralSummaryView,
 } from '../referralApi';
 import { copyShareLink } from '../screenActions.ts';
+import {
+  addTeamMember,
+  createTeam,
+  listTeamMembers,
+  listTeams,
+  removeTeamMember,
+  type TeamMember,
+  type TeamSummary,
+} from '../organizationsApi.ts';
 import { useThemeMode, type ThemeMode } from '../theme';
-import { AstryxModal } from './AstryxModal.tsx';
+import { AstryxAlertModal, AstryxModal } from './AstryxModal.tsx';
 import { CopyButton } from './CopyButton.tsx';
 
 interface SettingsPanelProps {
@@ -128,6 +137,218 @@ export function ReferralSettings({
   );
 }
 
+export function TeamSettings({ currentUserId }: { currentUserId: number }) {
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<number>();
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberRole, setMemberRole] = useState<'admin' | 'member'>('member');
+  const [busy, setBusy] = useState(false);
+  const [available, setAvailable] = useState(true);
+  const [error, setError] = useState('');
+
+  const selectedTeam = teams.find(({ id }) => id === selectedTeamId);
+  const canManage = selectedTeam?.role === 'owner' || selectedTeam?.role === 'admin';
+
+  const refreshTeams = async (preferredId?: number) => {
+    try {
+      const nextTeams = await listTeams();
+      setTeams(nextTeams);
+      setAvailable(true);
+      setSelectedTeamId((current) => preferredId
+        ?? (nextTeams.some(({ id }) => id === current) ? current : nextTeams[0]?.id));
+    } catch (reason) {
+      if ((reason as Error).message === 'Not found') setAvailable(false);
+      else setError((reason as Error).message);
+    }
+  };
+
+  useEffect(() => { void refreshTeams(); }, []);
+  useEffect(() => {
+    if (!selectedTeamId) { setMembers([]); return; }
+    void listTeamMembers(selectedTeamId)
+      .then((nextMembers) => { setMembers(nextMembers); setError(''); })
+      .catch((reason: Error) => setError(reason.message));
+  }, [selectedTeamId]);
+
+  if (!available) return null;
+
+  const submitTeam = async () => {
+    if (!newTeamName.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const created = await createTeam(newTeamName.trim());
+      setNewTeamName('');
+      await refreshTeams(created.id);
+    } catch (reason) {
+      setError((reason as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitMember = async () => {
+    if (!selectedTeamId || !memberEmail.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const member = await addTeamMember(selectedTeamId, memberEmail.trim(), memberRole);
+      setMembers((current) => [...current.filter(({ userId }) => userId !== member.userId), member]);
+      setMemberEmail('');
+      await refreshTeams(selectedTeamId);
+    } catch (reason) {
+      setError((reason as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeMember = async (member: TeamMember) => {
+    if (!selectedTeamId || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await removeTeamMember(selectedTeamId, member.userId);
+      setMembers((current) => current.filter(({ userId }) => userId !== member.userId));
+      await refreshTeams(selectedTeamId);
+    } catch (reason) {
+      setError((reason as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="team-settings" aria-label="Team management">
+      <div className="team-settings__grid">
+        <section className="team-settings__card" aria-labelledby="current-team-heading">
+          <header className="team-settings__card-header">
+            <div>
+              <span className="team-settings__eyebrow">Your teams</span>
+              <h2 id="current-team-heading">Current team</h2>
+              <p>Choose the shared space you want to manage.</p>
+            </div>
+            {selectedTeam ? <span className="team-settings__role-badge">{selectedTeam.role}</span> : null}
+          </header>
+
+          {teams.length ? (
+            <div className="team-settings__selector">
+              <Selector
+                label="Team"
+                value={String(selectedTeamId ?? '')}
+                onChange={(value) => setSelectedTeamId(Number(value))}
+                options={teams.map((team) => ({
+                  value: String(team.id),
+                  label: `${team.name} · ${team.memberCount} ${team.memberCount === 1 ? 'member' : 'members'}`,
+                }))}
+                width="100%"
+              />
+            </div>
+          ) : (
+            <div className="team-settings__empty">
+              <strong>No teams yet</strong>
+              <span>Create your first Team to start sharing work.</span>
+            </div>
+          )}
+
+          {selectedTeam ? (
+            <div className="team-settings__summary">
+              <span className="team-settings__avatar" aria-hidden="true">{selectedTeam.name.charAt(0).toUpperCase()}</span>
+              <div>
+                <strong>{selectedTeam.name}</strong>
+                <span>{selectedTeam.memberCount} {selectedTeam.memberCount === 1 ? 'member' : 'members'}</span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="team-settings__create">
+            <div>
+              <h3>Create a new team</h3>
+              <p>Start a separate space for another product or group.</p>
+            </div>
+            <div className="team-settings__create-form">
+              <TextInput
+                label="Team name"
+                placeholder="e.g. Product design"
+                value={newTeamName}
+                onChange={setNewTeamName}
+                width="100%"
+                isDisabled={busy}
+              />
+              <Button label="Create team" size="sm" variant="secondary" isDisabled={!newTeamName.trim() || busy} clickAction={() => void submitTeam()} />
+            </div>
+          </div>
+        </section>
+
+        <section className="team-settings__card team-settings__members-card" aria-labelledby="team-members-heading">
+          <header className="team-settings__card-header">
+            <div>
+              <span className="team-settings__eyebrow">Access</span>
+              <div className="team-settings__heading-with-count">
+                <h2 id="team-members-heading">Members</h2>
+                {selectedTeam ? <span>{members.length}</span> : null}
+              </div>
+              <p>People who can access projects in this team.</p>
+            </div>
+          </header>
+
+          {selectedTeam ? (
+            <div className="team-settings__member-list" role="list" aria-label="Team members">
+              {members.map((member) => (
+                <div key={member.userId} className="team-settings__member" role="listitem">
+                  <span className="team-settings__avatar" aria-hidden="true">{member.email.charAt(0).toUpperCase()}</span>
+                  <div className="team-settings__member-identity">
+                    <strong>{member.email}</strong>
+                    {member.userId === currentUserId ? <span>You</span> : null}
+                  </div>
+                  <span className="team-settings__role-badge">{member.role}</span>
+                  {canManage && member.role !== 'owner' && member.userId !== currentUserId ? (
+                    <Button label="Remove" size="sm" variant="ghost" isDisabled={busy} clickAction={() => void removeMember(member)} />
+                  ) : null}
+                </div>
+              ))}
+              {!members.length ? <div className="team-settings__empty"><span>No members found for this team.</span></div> : null}
+            </div>
+          ) : (
+            <div className="team-settings__empty"><span>Select or create a team to manage its members.</span></div>
+          )}
+
+          {selectedTeam && canManage ? (
+            <div className="team-settings__invite">
+              <div>
+                <h3>Invite a member</h3>
+                <p>Add an existing Vitrine account and choose their access level.</p>
+              </div>
+              <div className="team-settings__invite-form">
+                <TextInput
+                  label="Member email"
+                  placeholder="name@company.com"
+                  value={memberEmail}
+                  onChange={setMemberEmail}
+                  width="100%"
+                  isDisabled={busy}
+                />
+                <Selector
+                  label="Role"
+                  value={memberRole}
+                  onChange={(value) => setMemberRole(value as 'admin' | 'member')}
+                  options={[{ value: 'member', label: 'Member' }, { value: 'admin', label: 'Admin' }]}
+                  width="100%"
+                />
+                <Button label="Add member" size="sm" variant="primary" isDisabled={!memberEmail.trim() || busy} isLoading={busy} clickAction={() => void submitMember()} />
+              </div>
+            </div>
+          ) : null}
+        </section>
+      </div>
+
+      {error ? <div role="alert" className="team-settings__error">{error}</div> : null}
+    </section>
+  );
+}
+
 export function SettingsPanel({ user, subscription, onUpgrade = () => undefined, onEntitlementsChanged = () => undefined, onClose }: SettingsPanelProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -139,6 +360,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
   const [referralSummary, setReferralSummary] = useState<ReferralSummaryView | null>(null);
   const [referralBusy, setReferralBusy] = useState(false);
   const [referralError, setReferralError] = useState('');
+  const [referralActivationOpen, setReferralActivationOpen] = useState(false);
   const { mode: themeMode, setMode: setThemeMode } = useThemeMode();
 
   useEffect(() => {
@@ -191,7 +413,7 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
 
   const activationExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   const activateReferralMonth = async () => {
-    if (!window.confirm(`Activate one Pro Month now? Access will end ${formatDate(activationExpiresAt)}.`)) return;
+    setReferralActivationOpen(false);
     setReferralBusy(true);
     setReferralError('');
     try {
@@ -206,7 +428,8 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
   };
 
   return (
-    <AstryxModal
+    <>
+      <AstryxModal
       isOpen
       onOpenChange={(open) => { if (!open) onClose(); }}
       purpose="info"
@@ -238,11 +461,13 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
             currentPro={subscription?.plan === 'pro'}
             activationExpiresAt={activationExpiresAt}
             onCopy={copyReferralLink}
-            onActivate={() => void activateReferralMonth()}
+            onActivate={() => setReferralActivationOpen(true)}
             busy={referralBusy}
             error={referralError}
           />
         )}
+
+        <TeamSettings currentUserId={user.id} />
 
         <section style={{ marginTop: 24 }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 13.5 }}>Appearance</h3>
@@ -276,6 +501,16 @@ export function SettingsPanel({ user, subscription, onUpgrade = () => undefined,
           {success && <div style={{ color: 'var(--color-text-success)', fontSize: 12, marginTop: 8 }}>Password updated.</div>}
         </section>
       </div>
-    </AstryxModal>
+      </AstryxModal>
+      <AstryxAlertModal
+        isOpen={referralActivationOpen}
+        onOpenChange={setReferralActivationOpen}
+        title="Activate one Pro Month?"
+        description={`Your Pro access will end ${formatDate(activationExpiresAt)}.`}
+        actionLabel="Activate Pro Month"
+        isActionLoading={referralBusy}
+        onAction={() => void activateReferralMonth()}
+      />
+    </>
   );
 }

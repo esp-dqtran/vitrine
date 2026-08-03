@@ -18,8 +18,8 @@ const PILLARS: readonly PillarData[] = [
   {
     step: '01',
     name: 'Sites + Apps we crawl',
-    color: '#2f64e9',
-    soft: 'rgba(47,100,233,0.12)',
+    color: 'var(--vitrine-color-text-primary)',
+    soft: 'var(--vitrine-color-surface-muted)',
     description: 'Real products captured as evidence, screen by screen.',
     stats: [
       { value: '465', label: 'apps' },
@@ -35,8 +35,8 @@ const PILLARS: readonly PillarData[] = [
   {
     step: '02',
     name: 'Data we analyze',
-    color: '#7a55c5',
-    soft: 'rgba(122,85,197,0.12)',
+    color: 'var(--vitrine-color-text-secondary)',
+    soft: 'var(--vitrine-color-surface-muted)',
     description: 'Raw captures become structured design intelligence: flows, elements, design systems.',
     stats: [
       { value: '647', label: 'UI elements' },
@@ -51,8 +51,8 @@ const PILLARS: readonly PillarData[] = [
   {
     step: '03',
     name: 'Features we build',
-    color: '#16845b',
-    soft: 'rgba(22,132,91,0.12)',
+    color: 'var(--vitrine-color-status-success)',
+    soft: 'var(--vitrine-color-surface-muted)',
     description: 'The evidence surfaces in the product as features you can use today.',
     stats: [
       { value: 'Daily', label: 'shipping cadence' },
@@ -67,8 +67,8 @@ const PILLARS: readonly PillarData[] = [
 ];
 
 const AHEAD = [
-  { label: 'Up next', color: '#b26400', soft: 'rgba(178,100,0,0.12)', title: 'Public launch and feedback loop', description: 'Finish the public-facing experience, validate the launch path, and open a deliberate channel for early users.' },
-  { label: 'Exploring', color: '#7a55c5', soft: 'rgba(122,85,197,0.12)', title: 'Collaborative research and integrations', description: 'Shared evidence comparisons, decision trails, team handoff, and external integrations once the core is stable.' },
+  { label: 'Up next', color: 'var(--vitrine-color-status-warning)', soft: 'var(--vitrine-color-surface-muted)', title: 'Public launch and feedback loop', description: 'Finish the public-facing experience, validate the launch path, and open a deliberate channel for early users.' },
+  { label: 'Exploring', color: 'var(--vitrine-color-text-secondary)', soft: 'var(--vitrine-color-surface-muted)', title: 'Collaborative research and integrations', description: 'Shared evidence comparisons, decision trails, team handoff, and external integrations once the core is stable.' },
 ] as const;
 
 const page: CSSProperties = { minHeight: '100vh', color: 'var(--color-text-primary)', overflowX: 'hidden' };
@@ -137,14 +137,14 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
     <div className="vitrine-page" style={page}>
       <style>{`
         @keyframes bip-fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-        @keyframes bip-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(47,100,233,0.4); } 60% { box-shadow: 0 0 0 7px rgba(47,100,233,0); } }
+        @keyframes bip-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--vitrine-color-text-primary) 40%, transparent); } 60% { box-shadow: 0 0 0 7px transparent; } }
         @keyframes bip-breathe { 0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); } 50% { opacity: 1; transform: translateX(-50%) scale(1.12); } }
         @keyframes bip-drift { to { transform: translate(var(--bip-dx), var(--bip-dy)); } }
         @keyframes bip-travel { 0% { left: -7px; opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { left: calc(100% + 1px); opacity: 0; } }
         @keyframes bip-travel-y { 0% { top: -7px; opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { top: calc(100% + 1px); opacity: 0; } }
         .bip-hero-glow { animation: bip-breathe 7s ease-in-out infinite; }
         .bip-live-dot { animation: bip-pulse 1.8s ease-out infinite; }
-        .bip-particle { position: absolute; border-radius: 999px; background: rgba(59,110,246,0.45); pointer-events: none; animation: bip-drift var(--bip-t) ease-in-out infinite alternate; }
+        .bip-particle { position: absolute; border-radius: 999px; background: color-mix(in srgb, var(--vitrine-color-text-primary) 45%, transparent); pointer-events: none; animation: bip-drift var(--bip-t) ease-in-out infinite alternate; }
         .bip-pillar { animation: bip-fade-up 0.6s ease both; transition: transform 0.25s ease, box-shadow 0.25s ease; }
         .bip-pillar:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(0,0,0,0.14); }
         .bip-flow { display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr; align-items: stretch; }
@@ -170,7 +170,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
 
       <header style={{ ...wrap, paddingTop: 20 }}>
         <nav aria-label="Public navigation" style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '9px 10px 9px 16px', border: '1px solid var(--color-border)', borderRadius: 999, background: 'color-mix(in srgb, var(--color-background-body) 86%, transparent)', backdropFilter: 'blur(18px)', position: 'relative', zIndex: 2 }}>
-          <Button type="button" label="Vitrine" variant="ghost" onClick={onHome} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: '#fff' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrine" variant="ghost" onClick={onHome} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div className="bip-public-nav-secondary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
@@ -182,7 +182,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
 
       <main>
         <section style={{ position: 'relative', padding: '104px 0 72px', textAlign: 'center' }}>
-          <div aria-hidden="true" className="bip-hero-glow" style={{ position: 'absolute', width: 560, height: 360, top: -70, left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(circle, rgba(59,110,246,0.17), transparent 68%)', pointerEvents: 'none' }} />
+          <div aria-hidden="true" className="bip-hero-glow" style={{ position: 'absolute', width: 560, height: 360, top: -70, left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(circle, color-mix(in srgb, var(--vitrine-color-text-primary) 17%, transparent), transparent 68%)', pointerEvents: 'none' }} />
           <div aria-hidden="true">
             <span className="bip-particle" style={{ width: 6, height: 6, top: 60, left: '26%', '--bip-dx': '34px', '--bip-dy': '-26px', '--bip-t': '9s' } as CSSProperties} />
             <span className="bip-particle" style={{ width: 4, height: 4, top: 150, left: '18%', '--bip-dx': '-24px', '--bip-dy': '30px', '--bip-t': '11s' } as CSSProperties} />
@@ -191,7 +191,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
           </div>
           <div style={{ ...wrap, position: 'relative' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 11px', borderRadius: 999, border: '1px solid var(--color-border)', background: 'var(--color-background-surface)', marginBottom: 24 }}>
-              <span aria-hidden="true" className="bip-live-dot" style={{ width: 7, height: 7, borderRadius: 999, background: '#2f64e9' }} />
+              <span aria-hidden="true" className="bip-live-dot" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--vitrine-color-status-success)' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-secondary)' }}>BUILD IN PUBLIC</span>
             </div>
             <Heading level={1} type="display-1">Building the design intelligence workspace in the open</Heading>

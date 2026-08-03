@@ -557,20 +557,22 @@ test('composes Apps through the shared reference discovery shell', async () => {
 test('defines the Apps-led shared discovery design contract', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
 
-  assert.match(css, /--reference-font-family:\s*'Figtree',\s*system-ui,\s*sans-serif/);
+  assert.match(css, /--reference-font-family:\s*var\(--font-family-body\)/);
   assert.match(css, /--reference-nav-height:\s*72px/);
   assert.match(css, /--reference-content-padding:\s*32px/);
   assert.match(css, /--reference-facet-size:\s*24px/);
   assert.match(css, /--reference-card-radius:\s*24px/);
   assert.match(css, /\.reference-discovery-nav\s*\{[^}]*height:\s*var\(--reference-nav-height\)/);
-  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*#111/);
+  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*var\(--reference-chrome-bg\)/);
   assert.match(css, /\.reference-discovery-nav__types button\s*\{[^}]*background:\s*transparent\s*!important/);
   assert.match(css, /\.reference-discovery-nav__types button\[aria-selected="true"\]\s*\{/);
   assert.match(css, /\.reference-discovery-nav__search\s+\.reference-search-trigger\s*\{[^}]*max-width:\s*none/);
-  assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*#303030\s*!important/);
+  assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*var\(--reference-chrome-surface-raised\)\s*!important/);
   assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.reference-discovery-toolbar\s*\{[^}]*min-height:\s*var\(--reference-toolbar-height\)/);
   assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*var\(--reference-font-family\)/);
+  assert.match(css, /\.reference-discovery__facet button\s*\{[^}]*transition:[^}]*transform/);
+  assert.match(css, /\.reference-discovery__facet button:hover,[\s\S]*\.reference-discovery__facet button:focus-visible\s*\{[^}]*transform:\s*translateX\(4px\)/);
   assert.match(css, /\.discovery-card\s*\{[^}]*border-radius:\s*var\(--reference-card-radius\)/);
   assert.match(css, /\.reference-discovery__state\s*\{[^}]*min-height:\s*360px/);
 });
@@ -586,6 +588,7 @@ test('styles Apps as the three-column Mobbin results layout with a mobile fallba
   assert.match(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.doesNotMatch(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*display:\s*none/);
   assert.match(discoveryCss, /\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(discoveryCss, /\.apps-discovery-screen-card__media\s*\{[^}]*position:\s*relative/);
   assert.match(discoveryCss, /@media \(min-width:\s*721px\) and \(max-width:\s*1080px\)[\s\S]*\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(mediaRule, /aspect-ratio:\s*16\s*\/\s*10/);
   assert.match(cardRule, /border-radius:\s*24px/);
@@ -620,9 +623,9 @@ test('shares animated discovery ordering styles without toolbar borders', async 
     assert.doesNotMatch(toolbarRule, /border-bottom/);
   });
   assert.match(css, /\.reference-discovery-toolbar__sort button\s*\{[\s\S]*color:\s*var\(--color-text-secondary\)\s*!important;[\s\S]*transition:\s*color/);
-  assert.match(css, /\.reference-discovery-toolbar__sort button:hover,[\s\S]*\.reference-discovery-toolbar__sort button:focus-visible,[\s\S]*\.reference-discovery-toolbar__sort button\[aria-selected='true'\]\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*color:\s*var\(--color-text-primary\)\s*!important/);
+  assert.match(css, /\.reference-discovery-toolbar__sort button:hover,[\s\S]*\.reference-discovery-toolbar__sort button:focus-visible,[\s\S]*\.reference-discovery-toolbar__sort button\[aria-selected=["']true["']\]\s*\{[\s\S]*background:\s*transparent\s*!important;[\s\S]*color:\s*var\(--color-text-primary\)\s*!important/);
   assert.match(css, /\.reference-discovery-toolbar__sort button::after\s*\{[\s\S]*opacity:\s*0;[\s\S]*transform:\s*scaleX\([\d.]+\);[\s\S]*transition:/);
-  assert.match(css, /\.reference-discovery-toolbar__sort button\[aria-selected='true'\]::after\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*scaleX\(1\)/);
+  assert.match(css, /\.reference-discovery-toolbar__sort button\[aria-selected=["']true["']\]::after\s*\{[\s\S]*opacity:\s*1;[\s\S]*transform:\s*scaleX\(1\)/);
 });
 
 test('animates the Apps platform pill across Web, iOS, and Android', async () => {
@@ -630,7 +633,7 @@ test('animates the Apps platform pill across Web, iOS, and Android', async () =>
 
   assert.match(css, /\.apps-platform-switcher::before\s*\{[\s\S]*width:\s*var\(--apps-platform-indicator-width\);[\s\S]*transform:\s*translateX\(var\(--apps-platform-indicator-shift\)\);[\s\S]*transition:\s*transform/);
   assert.match(css, /\.apps-platform-switcher button\s*\{[\s\S]*width:\s*96px\s*!important;[\s\S]*background:\s*transparent\s*!important;[\s\S]*transition:\s*color/);
-  assert.match(css, /\.apps-platform-switcher button\[aria-checked='true'\]\s*\{[\s\S]*color:\s*var\(--color-background-body\)\s*!important/);
+  assert.match(css, /\.apps-platform-switcher button\[aria-checked=["']true["']\]\s*\{[\s\S]*color:\s*var\(--color-background-body\)\s*!important/);
 });
 
 test('renders the Apps platform as a single-select filter using the shared dropdown shell', async () => {
@@ -648,7 +651,7 @@ test('renders the Apps platform as a single-select filter using the shared dropd
   assert.match(source, /triggerVariant="primary"/);
   assert.match(
     discoveryCss,
-    /\.apps-filterbar__search\s*\{[\s\S]*background:\s*#202020;/,
+    /\.apps-filterbar__search\s*\{[\s\S]*background:\s*var\(--reference-chrome-surface-raised\);/,
   );
 });
 

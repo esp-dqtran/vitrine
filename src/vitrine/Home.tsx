@@ -1,409 +1,1158 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Button, Divider, Heading, Icon, Text, ToggleButton, useMediaQuery } from '@astryxdesign/core';
-import { PlaceholderImage } from './components/PlaceholderImage';
-import { AstryxMenu } from './components/AstryxDropdown';
-import { useFloatDrift } from './useFloatDrift';
-import { useRevealOnScroll } from './useRevealOnScroll';
-import { useSlidingIndicator } from './useSlidingIndicator';
-import { useCatalogPreview, useCatalogStats } from './useCatalogPreview';
+import {
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import {
+  Button,
+  Divider,
+  Heading,
+  Icon,
+  Text,
+  useMediaQuery,
+} from "@astryxdesign/core";
+import { AstryxMenu } from "./components/AstryxDropdown";
+import { useRevealOnScroll } from "./useRevealOnScroll";
+import { useCatalogPreview, useCatalogStats } from "./useCatalogPreview";
 
-const wrap: CSSProperties = { maxWidth: 1160, margin: '0 auto', padding: '0 32px' };
+const wrap: CSSProperties = {
+  maxWidth: 1220,
+  margin: "0 auto",
+  paddingInline: 24,
+};
+const navLink: CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: "var(--color-text-primary)",
+};
 
-function Section({ style, children }: { style?: CSSProperties; children: ReactNode }) {
-  return <div style={{ ...wrap, ...style }}>{children}</div>;
+function Section({
+  style,
+  children,
+}: {
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return <section style={{ ...wrap, ...style }}>{children}</section>;
 }
 
-// ---------- hero icon mark (layered, floating above the headline) ----------
-function HeroIconStack() {
-  const backRef = useRef<HTMLDivElement>(null);
-  const frontRef = useRef<HTMLImageElement>(null);
-  useFloatDrift(backRef, { rotate: -9, dx: 8, dy: 14, rswing: 5, duration: 6.4, delay: -1.6 });
-  useFloatDrift(frontRef, { dx: 8, dy: 14, rswing: 4, duration: 6.4 });
+const FALLBACK_STATS = [
+  { n: "465", label: "apps" },
+  { n: "137K+", label: "screens" },
+  { n: "647", label: "UI elements" },
+];
+
+const STORIES = [
+  {
+    eyebrow: "DISCOVER WITH CONTEXT",
+    title: "Start with the product, not a blank search box.",
+    copy: "Browse a living catalog of real apps, sites, screens, flows, and UI patterns. Filter by platform and category without losing the product around the reference.",
+    action: "Explore the library",
+  },
+  {
+    eyebrow: "TRACE COMPLETE FLOWS",
+    title: "See what happens before and after the perfect screen.",
+    copy: "Follow real journeys step by step. Vitrines keeps the surrounding states visible, so your team understands how a pattern works—not only how it looks.",
+    action: "Browse product flows",
+  },
+  {
+    eyebrow: "BUILD WITH EVIDENCE",
+    title: "Collect the references. Keep the reasoning attached.",
+    copy: "Bring screenshots, flow steps, notes, design tokens, and product observations into one research project. The source stays one click away as ideas turn into decisions.",
+    action: "Start a research project",
+  },
+];
+
+const CAPABILITIES = [
+  {
+    eyebrow: "SEARCH",
+    title: "Apps & sites",
+    copy: "Find product references across web and mobile.",
+  },
+  {
+    eyebrow: "TRACE",
+    title: "Screens & flows",
+    copy: "Move through journeys, states, and edge cases.",
+  },
+  {
+    eyebrow: "INSPECT",
+    title: "UI elements",
+    copy: "Compare reusable patterns in their real context.",
+  },
+  {
+    eyebrow: "ORGANIZE",
+    title: "Research projects",
+    copy: "Keep evidence and observations together.",
+  },
+  {
+    eyebrow: "SYNTHESIZE",
+    title: "Living canvas",
+    copy: "Arrange research, notes, and team feedback.",
+  },
+  {
+    eyebrow: "HAND OFF",
+    title: "Shareable briefs",
+    copy: "Publish decisions with the source still visible.",
+  },
+];
+
+function ProductMedia({
+  src,
+  alt,
+  fit = "contain",
+}: {
+  src: string;
+  alt: string;
+  fit?: "contain" | "cover";
+}) {
   return (
-    <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto', animation: 'hmFadeUp .55s cubic-bezier(.16,1,.3,1) both' }}>
-      <div
-        ref={backRef}
-        style={{ position: 'absolute', inset: 6, borderRadius: 24, background: 'var(--color-background-muted)', willChange: 'transform' }}
-      />
+    <div
+      style={{
+        height: "100%",
+        overflow: "hidden",
+        borderRadius: 18,
+        border: "1px solid var(--color-border)",
+        background: "#111214",
+        boxShadow: "0 28px 80px rgba(0,0,0,.24)",
+      }}
+    >
       <img
-        ref={frontRef}
-        src="/favicon.svg"
-        alt=""
-        aria-hidden="true"
+        src={src}
+        alt={alt}
+        loading="lazy"
         style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          borderRadius: 26,
-          boxShadow: '0 18px 34px rgba(41,85,216,0.28), inset 0 1px 0 rgba(255,255,255,0.25)',
-          display: 'block',
-          willChange: 'transform',
+          display: "block",
+          width: "100%",
+          height: "100%",
+          objectFit: fit,
+          objectPosition: "center",
+          background: "#111214",
         }}
       />
     </div>
   );
 }
 
-// ---------- app icon marquee (original glyphs — no third-party logos) ----------
-function Glyph({ paths, size }: { paths: ReactNode; size: number }) {
+function PromptSearch({
+  onBrowse,
+  compact = false,
+}: {
+  onBrowse: () => void;
+  compact?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+
+  const runSearch = () => {
+    const trimmed = query.trim();
+    if (trimmed) sessionStorage.setItem("astryx:q", trimmed);
+    onBrowse();
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    runSearch();
+  };
+
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#fff" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
-      {paths}
-    </svg>
-  );
-}
-
-// Decorative glyphs — only the six the floating StatsBlock still uses.
-const GLYPHS: Record<string, (s: number) => ReactNode> = {
-  coin: (s) => <Glyph size={s} paths={<><circle cx={12} cy={12} r={7.5} /><path d="M12 8.2v7.6 M9.7 14.3c0 1.1 1 1.7 2.3 1.7s2.3-.6 2.3-1.6-1-1.4-2.3-1.7-2.3-.7-2.3-1.7 1-1.6 2.3-1.6 2.1.5 2.2 1.4" /></>} />,
-  terminal: (s) => <Glyph size={s} paths={<><path d="M6.5 9l3.5 3-3.5 3" /><path d="M13 15h5" /></>} />,
-  swatch: (s) => <Glyph size={s} paths={<><circle cx={9.5} cy={10} r={3.6} /><circle cx={14.8} cy={14} r={3.6} /></>} />,
-  wave: (s) => <Glyph size={s} paths={<path d="M4 13h2.5l2-5 3 10 2.5-13 2 8h3.5" />} />,
-  radar: (s) => <Glyph size={s} paths={<><circle cx={12} cy={12} r={2} /><circle cx={12} cy={12} r={5.5} strokeOpacity={0.55} /><circle cx={12} cy={12} r={9} strokeOpacity={0.3} /></>} />,
-  layers: (s) => <Glyph size={s} paths={<><path d="M12 4.5l7.5 4L12 12.5l-7.5-4z" /><path d="M4.5 12.5L12 16.5l7.5-4" /><path d="M4.5 16.5L12 20.5l7.5-4" /></>} />,
-};
-
-interface IconItem {
-  name: string;
-  color: string;
-  // Simple Icons slug — the SVG is served from jsDelivr and tinted white via CSS.
-  slug: string;
-}
-
-// Real app logos via the Simple Icons CDN (brand marks belong to their owners).
-const FEATURED_ICONS: IconItem[][] = [
-  [
-    { name: 'Linear', color: '#5E6AD2', slug: 'linear' },
-    { name: 'Notion', color: '#000000', slug: 'notion' },
-    { name: 'Spotify', color: '#1DB954', slug: 'spotify' },
-    { name: 'Figma', color: '#F24E1E', slug: 'figma' },
-    { name: 'Slack', color: '#4A154B', slug: 'slack' },
-    { name: 'Airbnb', color: '#FF5A5F', slug: 'airbnb' },
-  ],
-  [
-    { name: 'Netflix', color: '#E50914', slug: 'netflix' },
-    { name: 'Stripe', color: '#635BFF', slug: 'stripe' },
-    { name: 'Discord', color: '#5865F2', slug: 'discord' },
-    { name: 'Duolingo', color: '#58CC02', slug: 'duolingo' },
-    { name: 'Dropbox', color: '#0061FF', slug: 'dropbox' },
-    { name: 'Uber', color: '#000000', slug: 'uber' },
-  ],
-  [
-    { name: 'Pinterest', color: '#BD081C', slug: 'pinterest' },
-    { name: 'Twitch', color: '#9146FF', slug: 'twitch' },
-    { name: 'Reddit', color: '#FF4500', slug: 'reddit' },
-    { name: 'Asana', color: '#F06A6A', slug: 'asana' },
-    { name: 'GitHub', color: '#181717', slug: 'github' },
-    { name: 'Framer', color: '#0055FF', slug: 'framer' },
-  ],
-];
-
-function MarqueeRow({ items, duration, reverse }: { items: IconItem[]; duration: number; reverse?: boolean }) {
-  const doubled = items.concat(items);
-  return (
-    <div style={{ overflow: 'hidden', width: '100%' }}>
-      {/* marginRight (not flex gap) keeps the doubled strip perfectly periodic so translateX(-50%) lands on the seam without a jump */}
-      <div style={{ display: 'flex', width: 'max-content', animation: `hmMarqueeL ${duration}s linear infinite`, animationDirection: reverse ? 'reverse' : 'normal' }}>
-        {doubled.map((it, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '0 0 auto', marginRight: 48 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 16, background: it.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', boxShadow: 'var(--shadow-low)' }}>
-              <img src={`https://cdn.jsdelivr.net/npm/simple-icons@13/icons/${it.slug}.svg`} alt="" width={28} height={28} loading="lazy" style={{ filter: 'brightness(0) invert(1)' }} />
-            </div>
-            <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>{it.name}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function IconMarquee() {
-  return (
-    <div style={{ position: 'relative', WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)', display: 'flex', flexDirection: 'column', gap: 32 }}>
-      <MarqueeRow items={FEATURED_ICONS[0]} duration={34} />
-      <MarqueeRow items={FEATURED_ICONS[1]} duration={40} reverse />
-      <MarqueeRow items={FEATURED_ICONS[2]} duration={30} />
-    </div>
-  );
-}
-
-// ---------- stats block ----------
-// Fallback headline figures, shown until the real catalog counts load (or if the
-// catalog is empty). Home swaps in live counts from /api/catalog/stats when present.
-const STATS = [
-  { n: '465', label: 'apps' },
-  { n: '137K+', label: 'screens' },
-  { n: '647', label: 'UI elements' },
-];
-const STAT_ICONS = [
-  { glyph: 'coin', color: '#3b6ef6', size: 44, top: '4%', left: '8%', dur: 5.6, delay: -1.2, rotate: -6, rswing: 8 },
-  { glyph: 'wave', color: '#d94f4f', size: 34, top: '10%', right: '10%', dur: 4.6, delay: -3.1, rotate: 5, rswing: 7 },
-  { glyph: 'terminal', color: '#18181b', size: 38, top: '62%', left: '4%', dur: 6.2, delay: -2.0, rotate: -4, rswing: 6 },
-  { glyph: 'swatch', color: '#e0518a', size: 36, top: '66%', right: '6%', dur: 5.1, delay: -0.6, rotate: 7, rswing: 9 },
-  { glyph: 'radar', color: '#0891b2', size: 30, top: '36%', left: '16%', dur: 7.0, delay: -4.2, rotate: -8, rswing: 5 },
-  { glyph: 'layers', color: '#7c3aed', size: 32, top: '40%', right: '18%', dur: 5.4, delay: -1.8, rotate: 6, rswing: 8 },
-];
-
-function FloatIcon({ ic }: { ic: (typeof STAT_ICONS)[number] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFloatDrift(ref, { rotate: ic.rotate, dx: Math.round(ic.size * 0.3), dy: 16, rswing: ic.rswing, duration: ic.dur, delay: ic.delay });
-  return (
-    <div
-      ref={ref}
-      style={{ position: 'absolute', top: ic.top, left: ic.left, right: ic.right, width: ic.size, height: ic.size, borderRadius: Math.round(ic.size * 0.28), background: ic.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 22px rgba(0,0,0,0.14)', willChange: 'transform' }}
+    <form
+      aria-label="Search product evidence"
+      onSubmit={submit}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        width: "100%",
+        maxWidth: compact ? 610 : 720,
+        padding: 8,
+        borderRadius: 16,
+        border: "1px solid var(--color-border)",
+        background: "var(--color-background-surface)",
+        boxShadow: "0 24px 70px rgba(0,0,0,.22)",
+      }}
     >
-      {GLYPHS[ic.glyph](Math.round(ic.size * 0.44))}
-    </div>
+      <Icon icon="search" size="md" />
+      <input
+        aria-label="What are you researching?"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          runSearch();
+        }}
+        placeholder="What are you researching?"
+        style={{
+          minWidth: 0,
+          flex: 1,
+          border: 0,
+          outline: 0,
+          padding: "10px 6px",
+          background: "transparent",
+          color: "var(--color-text-primary)",
+          font: "inherit",
+          fontSize: compact ? 15 : 17,
+        }}
+      />
+      <Button
+        type="button"
+        variant="primary"
+        size={compact ? "sm" : "md"}
+        label={compact ? "Search" : "Search evidence"}
+        clickAction={runSearch}
+      />
+    </form>
   );
 }
 
-// Counts up from 0 to the number embedded in `value` (e.g. "160+") the first time
-// it scrolls into view, then leaves the authored string (suffix and all) in place.
-function CountUpNumber({ value }: { value: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const match = value.match(/^(\d+)(.*)$/);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || !match) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const target = parseInt(match[1], 10);
-    const suffix = match[2];
-    const counter = { n: 0 };
-    el.textContent = `0${suffix}`;
-    const trigger = ScrollTrigger.create({
-      trigger: el,
-      start: 'top 90%',
-      once: true,
-      onEnter: () => gsap.to(counter, {
-        n: target,
-        duration: 1.1,
-        ease: 'power2.out',
-        onUpdate: () => { el.textContent = `${Math.round(counter.n)}${suffix}`; },
-      }),
-    });
-    return () => trigger.kill();
-  }, [match?.[0]]);
-
-  return <div ref={ref} style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>{value}</div>;
-}
-
-function StatsBlock({ stats = STATS }: { stats?: { n: string; label: string }[] }) {
-  return (
-    <div style={{ position: 'relative', textAlign: 'center', padding: '32px 20px' }}>
-      {STAT_ICONS.map((ic, i) => <FloatIcon key={i} ic={ic} />)}
-      <div style={{ position: 'relative', zIndex: 2 }}>
-        <Text type="large" color="secondary">A growing library of</Text>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 44, marginTop: 14, flexWrap: 'wrap' }}>
-          {stats.map((s) => (
-            <div key={s.label}>
-              <CountUpNumber value={s.n} />
-              <div style={{ fontSize: 14, color: 'var(--color-text-disabled)', marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------- "find patterns" tabbed feature section ----------
-const PATTERN_TABS = [
-  { key: 'screens', label: 'Screens', desc: 'Every key screen of the app, captured as it actually looks — not a redraw.', images: [{ seed: 'ledgerly-2', placeholder: 'Checkout' }, { seed: 'beacon-1', placeholder: 'Reports' }, { seed: 'palette-1', placeholder: 'Editor' }] },
-  { key: 'elements', label: 'UI elements', desc: 'Buttons, forms, cards and empty states, isolated so you can study them on their own.', images: [{ seed: 'home-el-1', placeholder: 'Primary button' }, { seed: 'home-el-2', placeholder: 'Stat card' }, { seed: 'home-el-3', placeholder: 'Empty state' }] },
-  { key: 'flows', label: 'Flows', desc: 'Full user journeys, step by step — onboarding, checkout, upgrade, and more.', images: [{ seed: 'home-flow-1', placeholder: 'Splash Screen' }, { seed: 'home-flow-2', placeholder: 'Signup' }, { seed: 'home-flow-3', placeholder: 'Home' }] },
-  { key: 'tokens', label: 'Tokens & evidence', desc: 'The color, spacing and type decisions behind the screen, reconstructed and cited.', images: [{ seed: 'home-inside-tokens', placeholder: 'Tokens & evidence' }] },
-];
-
-function PatternTabs({ screenSrc = [] }: { screenSrc?: string[] }) {
-  const [active, setActive] = useState('screens');
-  const tab = PATTERN_TABS.find((t) => t.key === active)!;
-  const { indicatorRef, registerItem } = useSlidingIndicator(active, { wraps: true });
-  // The Screens tab shows real captured screenshots when the catalog has them;
-  // the other tabs stay neutral placeholders (no public element/flow crop to load).
-  const images = active === 'screens'
-    ? tab.images.map((img, i) => ({ ...img, src: screenSrc[i] }))
-    : tab.images.map((img) => ({ ...img, src: undefined as string | undefined }));
-  return (
-    <div>
-      <div style={{ position: 'relative', display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 28, padding: 5, background: 'var(--color-background-muted)', borderRadius: 999, width: 'fit-content' }}>
-        <div ref={indicatorRef} style={{ position: 'absolute', top: 0, left: 0, borderRadius: 999, background: 'var(--color-text-primary)', pointerEvents: 'none' }} />
-        {PATTERN_TABS.map((t) => (
-          <ToggleButton
-            key={t.key}
-            ref={registerItem(t.key)}
-            label={t.label}
-            isPressed={active === t.key}
-            onPressedChange={() => setActive(t.key)}
-            style={{
-              position: 'relative',
-              borderRadius: 999,
-              background: 'transparent',
-              // The indicator behind this pill is --color-text-primary, so the active label
-              // has to invert or it renders in its own background colour (1:1 contrast).
-              // Passing children as well as `label` is what makes this colour stick — the
-              // label prop alone is styled by the design system and ignores it. Matches
-              // FilterChips, which already does exactly this.
-              color: active === t.key ? 'var(--color-background-surface)' : 'var(--color-text-secondary)',
-              transition: 'color .12s ease',
-            }}
-          >
-            {t.label}
-          </ToggleButton>
-        ))}
-      </div>
-      <div style={{ marginBottom: 24, maxWidth: 520 }}>
-        <Text type="body" color="secondary">{tab.desc}</Text>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20 }}>
-        {images.map((img) => (
-          <div key={img.seed} style={{ position: 'relative', aspectRatio: images.length === 1 ? '16/9' : '4/3', borderRadius: 'var(--radius-container)', overflow: 'hidden', background: 'var(--color-background-muted)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-low)' }}>
-            <PlaceholderImage seed={img.seed} src={img.src} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const navLink: CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' };
-
-export function Home({ onBrowse, onPricing, onBuildInPublic, onLogin }: {
+export function Home({
+  onBrowse,
+  onPricing,
+  onBuildInPublic,
+  onLogin,
+}: {
   onBrowse: () => void;
   onPricing: () => void;
   onBuildInPublic: () => void;
   onLogin: () => void;
 }) {
-  const isCompactNav = useMediaQuery('(max-width: 640px)', false);
-  const realApps = useCatalogPreview();
-  // One screen from each of the first few real apps, for variety across the tiles.
-  const screenSrc = (realApps ?? []).map((a) => a.screens[0]?.url).filter((u): u is string => Boolean(u)).slice(0, 3);
+  const isCompactNav = useMediaQuery("(max-width: 700px)", false);
+  const isMobile = useMediaQuery("(max-width: 760px)", false);
+  const catalog = useCatalogPreview();
   const statCounts = useCatalogStats();
+  const realScreens = (catalog ?? [])
+    .flatMap((app) =>
+      app.screens
+        .slice(0, 1)
+        .map((screen) => ({ name: app.name, url: screen.url })),
+    )
+    .filter((item): item is { name: string; url: string } => Boolean(item.url))
+    .slice(0, 6);
+  const carouselApps = (catalog ?? [])
+    .flatMap((app) => (app.iconUrl ? [{ ...app, iconUrl: app.iconUrl }] : []))
+    .slice(0, 8);
   const stats = statCounts
     ? [
-        { n: String(statCounts.apps), label: 'apps' },
-        { n: String(statCounts.screens), label: 'screens' },
-        { n: String(statCounts.uiElements), label: 'UI elements' },
+        { n: String(statCounts.apps), label: "apps" },
+        { n: String(statCounts.screens), label: "screens" },
+        { n: String(statCounts.uiElements), label: "UI elements" },
       ]
-    : STATS;
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const patternsRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
+    : FALLBACK_STATS;
+  const storyMedia = [
+    "/landing/astryx-apps-catalog.png",
+    "/landing/astryx-public-preview-real-flows.png",
+    realScreens[0]?.url ?? "/landing/astryx-apps-catalog.png",
+  ];
+  const galleryMedia = [
+    realScreens[0]?.url ?? "/landing/astryx-apps-catalog.png",
+    realScreens[1]?.url ?? "/landing/astryx-public-preview-real-flows.png",
+    realScreens[2]?.url ?? "/landing/astryx-apps-catalog.png",
+    realScreens[3]?.url ?? "/landing/astryx-public-preview-real-flows.png",
+    realScreens[4]?.url ?? "/landing/astryx-apps-catalog.png",
+    realScreens[5]?.url ?? "/landing/astryx-public-preview-real-flows.png",
+  ];
+
+  const heroMediaRef = useRef<HTMLDivElement>(null);
+  const storiesRef = useRef<HTMLDivElement>(null);
+  const platformRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const proofRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
-  useRevealOnScroll(marqueeRef);
-  useRevealOnScroll(patternsRef);
-  useRevealOnScroll(statsRef);
+  useRevealOnScroll(heroMediaRef);
+  useRevealOnScroll(storiesRef);
+  useRevealOnScroll(platformRef);
+  useRevealOnScroll(galleryRef);
+  useRevealOnScroll(proofRef);
   useRevealOnScroll(ctaRef);
+
   return (
-    <div className="vitrine-page" style={{ minHeight: '100vh', color: 'var(--color-text-primary)' }}>
-      {/* header — glass pill nav */}
-      <div
+    <div
+      className="vitrine-page"
+      style={{
+        minHeight: "100vh",
+        color: "var(--color-text-primary)",
+        overflow: "clip",
+      }}
+    >
+      <header
         style={{
-          position: 'sticky',
-          top: 20,
-          zIndex: 10,
-          margin: '20px auto 0',
-          maxWidth: 1096,
-          width: 'calc(100% - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 20,
-          padding: '11px 12px 11px 22px',
-          borderRadius: 999,
-          background: 'color-mix(in srgb, var(--color-background-body) 86%, transparent)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid var(--color-border)',
-          boxShadow: 'var(--shadow-low)',
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          borderBottom:
+            "1px solid color-mix(in srgb, var(--color-border) 70%, transparent)",
+          background:
+            "color-mix(in srgb, var(--color-background-body) 88%, transparent)",
+          backdropFilter: "blur(18px) saturate(150%)",
+          WebkitBackdropFilter: "blur(18px) saturate(150%)",
         }}
       >
-        <Button type="button" label="Vitrine" variant="ghost" size="lg" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={24} height={24} style={{ display: 'block' }} />} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
-        {isCompactNav ? (
-          <AstryxMenu
-            button={{ label: 'Menu', icon: <Icon icon="menu" />, isIconOnly: true, variant: 'ghost', size: 'sm' }}
-            items={[
-              { label: 'Browse', onClick: onBrowse },
-              { label: 'Pricing', onClick: onPricing },
-              { label: 'Build in public', onClick: onBuildInPublic },
-              { label: 'Log in', onClick: onLogin },
-            ]}
+        <div
+          style={{
+            ...wrap,
+            minHeight: 62,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 20,
+          }}
+        >
+          <Button
+            type="button"
+            label="Vitrines"
+            variant="ghost"
+            size="lg"
+            onClick={onBrowse}
+            icon={
+              <img
+                src="/favicon.svg"
+                alt=""
+                aria-hidden="true"
+                width={24}
+                height={24}
+                style={{ display: "block" }}
+              />
+            }
+            style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em" }}
           />
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 34, flex: '0 0 auto' }}>
-            <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
-            <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
-            <Button label="Build in public" variant="ghost" onClick={onBuildInPublic} style={navLink} />
-            <Button label="Log in" variant="ghost" onClick={onLogin} style={navLink} />
-          </div>
-        )}
-      </div>
-
-      {/* hero */}
-      <Section style={{ padding: '80px 32px 0', textAlign: 'center' }}>
-        <HeroIconStack />
-        <div style={{ marginTop: 28, animation: 'hmFadeUp .5s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <Heading level={1} type="display-1">Discover real design, reconstructed.</Heading>
+          {isCompactNav ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Button
+                label="Log in"
+                variant="primary"
+                size="sm"
+                onClick={onLogin}
+                style={navLink}
+              />
+              <AstryxMenu
+                button={{
+                  label: "Menu",
+                  icon: <Icon icon="menu" />,
+                  isIconOnly: true,
+                  variant: "ghost",
+                  size: "sm",
+                }}
+                items={[
+                  { label: "Browse", onClick: onBrowse },
+                  { label: "Pricing", onClick: onPricing },
+                  { label: "Build in public", onClick: onBuildInPublic },
+                  { label: "Log in", onClick: onLogin },
+                ]}
+              />
+            </div>
+          ) : (
+            <nav
+              aria-label="Main navigation"
+              style={{ display: "flex", alignItems: "center", gap: 22 }}
+            >
+              <Button
+                label="Browse"
+                variant="ghost"
+                onClick={onBrowse}
+                style={navLink}
+              />
+              <Button
+                label="Pricing"
+                variant="ghost"
+                onClick={onPricing}
+                style={navLink}
+              />
+              <Button
+                label="Build in public"
+                variant="ghost"
+                onClick={onBuildInPublic}
+                style={navLink}
+              />
+              <Button
+                label="Log in"
+                variant="primary"
+                onClick={onLogin}
+                style={navLink}
+              />
+            </nav>
+          )}
         </div>
-        <div style={{ margin: '20px auto 0', maxWidth: 520, animation: 'hmFadeUp .5s cubic-bezier(.16,1,.3,1) .1s both' }}>
-          <Text type="large" color="secondary">Real screens, real flows, real decisions —</Text>
-          <br />
-          <Text type="large" color="secondary">reconstructed from the apps you already use.</Text>
+      </header>
+
+      <Section
+        style={{
+          paddingTop: isMobile ? 60 : 86,
+          paddingBottom: isMobile ? 36 : 54,
+          textAlign: "center",
+        }}
+      >
+        <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+          <Heading
+            level={1}
+            type="display-1"
+            style={{
+              fontSize: isMobile ? 43 : 76,
+              lineHeight: isMobile ? 1 : 0.96,
+              letterSpacing: isMobile ? "-0.045em" : "-0.055em",
+              animation: "hmFadeUp .55s cubic-bezier(.16,1,.3,1) both",
+            }}
+          >
+            Product research for decisions that ship.
+          </Heading>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              flexWrap: "wrap",
+              marginTop: isMobile ? 24 : 30,
+              animation: "hmFadeUp .55s cubic-bezier(.16,1,.3,1) .08s both",
+            }}
+          >
+            <Button
+              variant="primary"
+              size="lg"
+              label="Explore the library"
+              clickAction={onBrowse}
+            />
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="lg"
+                label="Start a project"
+                clickAction={onLogin}
+              />
+            )}
+          </div>
         </div>
       </Section>
 
-      {/* app icon marquee */}
-      <div ref={marqueeRef} style={{ padding: '96px 0 88px' }}>
-        <IconMarquee />
+      <div
+        ref={heroMediaRef}
+        style={{ ...wrap, paddingBottom: isMobile ? 74 : 112 }}
+      >
+        <div
+          style={{
+            position: "relative",
+            borderRadius: isMobile ? 16 : 24,
+            padding: isMobile ? 5 : 9,
+            border: "1px solid var(--color-border)",
+            background: "var(--color-background-surface)",
+            boxShadow: "0 34px 110px rgba(0,0,0,.34)",
+          }}
+        >
+          <video
+            aria-label="Vitrines product evidence demo"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster="/landing/astryx-apps-catalog.png"
+            style={{
+              display: "block",
+              width: "100%",
+              aspectRatio: isMobile ? "4 / 3" : "16 / 9",
+              objectFit: "cover",
+              objectPosition: "center",
+              borderRadius: isMobile ? 12 : 17,
+              background: "#0f1012",
+            }}
+          >
+            <source src="/landing/astryx-product-demo.mp4" type="video/mp4" />
+          </video>
+          <div
+            style={{
+              position: "absolute",
+              left: isMobile ? 16 : 28,
+              bottom: isMobile ? 16 : 28,
+              padding: "8px 11px",
+              borderRadius: 999,
+              background: "color-mix(in srgb, var(--vitrine-color-surface) 82%, transparent)",
+              color: "var(--vitrine-color-text-primary)",
+              fontSize: 12,
+              fontWeight: 700,
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            Live Vitrines catalog · {stats[0].n} apps
+          </div>
+        </div>
       </div>
 
-      {/* find patterns (tabbed) */}
-      <div ref={patternsRef} style={{ background: 'var(--color-background-surface)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-        <Section style={{ padding: '80px 32px' }}>
-          <div style={{ maxWidth: 560, marginBottom: 40 }}>
-            <Heading level={2}>Find design patterns in seconds</Heading>
-            <div style={{ marginTop: 8 }}>
-              <Text type="body" color="secondary">Not just a screenshot — the full anatomy of the product.</Text>
+      <Section style={{ paddingBottom: isMobile ? 70 : 108 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <Text type="supporting" color="secondary">
+            RESEARCH ACROSS THE PRODUCTS PEOPLE USE
+          </Text>
+        </div>
+        <div
+          className="home-logo-carousel"
+          aria-label="Products in the Vitrines research catalog"
+          style={{
+            borderBlock: "1px solid var(--color-border)",
+            paddingBlock: isMobile ? 20 : 24,
+          }}
+        >
+          <div className="home-logo-carousel__track">
+            {[0, 1].map((group) => (
+              <div
+                key={group}
+                className="home-logo-carousel__group"
+                aria-hidden={group === 1 ? "true" : undefined}
+              >
+                {carouselApps.map((app) => (
+                  <div
+                    key={`${group}-${app.id}`}
+                    className="home-logo-carousel__item"
+                  >
+                    <img
+                      src={app.iconUrl}
+                      alt={group === 0 ? `${app.name} app icon` : ""}
+                      loading="lazy"
+                    />
+                    <span>{app.name}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <div
+        ref={storiesRef}
+        style={{ borderTop: "1px solid var(--color-border)" }}
+      >
+        <Section
+          style={{
+            paddingTop: isMobile ? 74 : 112,
+            paddingBottom: isMobile ? 78 : 120,
+          }}
+        >
+          <div style={{ maxWidth: 690, marginBottom: isMobile ? 52 : 76 }}>
+            <Text type="supporting" color="secondary">
+              A RESEARCH PARTNER FOR THE WHOLE JOURNEY
+            </Text>
+            <div style={{ marginTop: 12 }}>
+              <Heading
+                level={2}
+                style={{
+                  fontSize: isMobile ? 32 : 48,
+                  lineHeight: 1.02,
+                  letterSpacing: "-0.045em",
+                }}
+              >
+                Evidence that works alongside you, not after you.
+              </Heading>
             </div>
           </div>
-          <PatternTabs screenSrc={screenSrc} />
+          <div style={{ display: "grid", gap: isMobile ? 72 : 108 }}>
+            {STORIES.map((story, index) => (
+              <article
+                key={story.title}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile
+                    ? "1fr"
+                    : "minmax(0, 1.45fr) minmax(320px, .75fr)",
+                  gap: isMobile ? 28 : 52,
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    order: !isMobile && index % 2 === 1 ? 2 : 1,
+                    height: isMobile ? 360 : 480,
+                  }}
+                >
+                  <ProductMedia
+                    src={storyMedia[index]}
+                    alt={`${story.title} in Vitrines`}
+                  />
+                </div>
+                <div style={{ order: !isMobile && index % 2 === 1 ? 1 : 2 }}>
+                  <Text type="supporting" color="secondary">
+                    {story.eyebrow}
+                  </Text>
+                  <div style={{ marginTop: 12 }}>
+                    <Heading
+                      level={3}
+                      style={{
+                        fontSize: isMobile ? 27 : 34,
+                        lineHeight: 1.05,
+                        letterSpacing: "-0.035em",
+                      }}
+                    >
+                      {story.title}
+                    </Heading>
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <Text type="large" color="secondary">
+                      {story.copy}
+                    </Text>
+                  </div>
+                  <div style={{ marginTop: 24 }}>
+                    <Button
+                      variant="ghost"
+                      label={story.action}
+                      clickAction={index === 2 ? onLogin : onBrowse}
+                    />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </Section>
       </div>
 
-      {/* stats block */}
-      <Section style={{ padding: '56px 32px 24px' }}>
-        <div ref={statsRef}>
-          <StatsBlock stats={stats} />
-        </div>
-      </Section>
-
-      {/* final CTA band */}
-      <div ref={ctaRef} style={{ background: 'var(--color-background-surface)', borderBlock: '1px solid var(--color-border)' }}>
-        <Section style={{ padding: '72px 32px', textAlign: 'center' }}>
-          <Heading level={2}>Start studying the apps you admire.</Heading>
-          <div style={{ margin: '12px auto 28px', maxWidth: 460 }}>
-            <Text type="large" color="secondary">Free to browse. No card required to unlock your first 3 apps.</Text>
+      <div
+        ref={platformRef}
+        style={{
+          borderBlock: "1px solid var(--color-border)",
+          background: "var(--color-background-surface)",
+        }}
+      >
+        <Section
+          style={{
+            paddingTop: isMobile ? 74 : 108,
+            paddingBottom: isMobile ? 74 : 108,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "end",
+              justifyContent: "space-between",
+              gap: 30,
+              marginBottom: 42,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ maxWidth: 640 }}>
+              <Text type="supporting" color="secondary">
+                MORE THAN A REFERENCE LIBRARY
+              </Text>
+              <div style={{ marginTop: 12 }}>
+                <Heading
+                  level={2}
+                  style={{
+                    fontSize: isMobile ? 32 : 48,
+                    lineHeight: 1.02,
+                    letterSpacing: "-0.045em",
+                  }}
+                >
+                  A full product research platform.
+                </Heading>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              label="See what is inside"
+              clickAction={onBrowse}
+            />
           </div>
-          <Button variant="primary" size="lg" label="Start browsing free" clickAction={onLogin} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(3, minmax(0, 1fr))",
+              gap: 12,
+            }}
+          >
+            {CAPABILITIES.map((item, index) => (
+              <article
+                key={item.title}
+                style={{
+                  minHeight: index === 0 || index === 4 ? 300 : 220,
+                  padding: 24,
+                  borderRadius: 18,
+                  border: "1px solid var(--color-border)",
+                  background: "var(--color-background-body)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gridRow:
+                    !isMobile && (index === 0 || index === 4)
+                      ? "span 2"
+                      : undefined,
+                }}
+              >
+                <Text type="supporting" color="secondary">
+                  {item.eyebrow}
+                </Text>
+                <div style={{ marginTop: "auto", paddingTop: 42 }}>
+                  <Heading level={3}>{item.title}</Heading>
+                  <div style={{ marginTop: 9 }}>
+                    <Text type="body" color="secondary">
+                      {item.copy}
+                    </Text>
+                  </div>
+                </div>
+              </article>
+            ))}
+            <article
+              style={{
+                minHeight: 220,
+                padding: 24,
+                borderRadius: 18,
+                border: "1px solid var(--color-border)",
+                background: "var(--color-background-body)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Text type="supporting" color="secondary">
+                LIVE CATALOG
+              </Text>
+              <div
+                style={{
+                  marginTop: "auto",
+                  fontSize: isMobile ? 52 : 68,
+                  lineHeight: 0.9,
+                  fontWeight: 800,
+                  letterSpacing: "-0.06em",
+                }}
+              >
+                {stats[1].n}
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <Text type="body" color="secondary">
+                  real screens and counting
+                </Text>
+              </div>
+            </article>
+          </div>
         </Section>
       </div>
 
-      {/* footer */}
-      <Section style={{ padding: '40px 32px 48px' }}>
-        <Divider />
-        <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <Text type="supporting" color="secondary">Vitrine · a research library of observed application design systems.</Text>
-          <div style={{ display: 'flex', gap: 20 }}>
-            <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
-            <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={{ ...navLink, fontSize: 13 }} />
-            <Button label="Build in public" variant="ghost" size="sm" onClick={onBuildInPublic} style={{ ...navLink, fontSize: 13 }} />
-            <Button label="Sign in" variant="ghost" size="sm" onClick={onLogin} style={{ ...navLink, fontSize: 13 }} />
+      <div ref={galleryRef}>
+        <Section
+          style={{
+            paddingTop: isMobile ? 76 : 112,
+            paddingBottom: isMobile ? 76 : 112,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "end",
+              justifyContent: "space-between",
+              gap: 24,
+              marginBottom: 38,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ maxWidth: 610 }}>
+              <Text type="supporting" color="secondary">
+                INSIDE VITRINES
+              </Text>
+              <div style={{ marginTop: 12 }}>
+                <Heading
+                  level={2}
+                  style={{
+                    fontSize: isMobile ? 32 : 48,
+                    lineHeight: 1.02,
+                    letterSpacing: "-0.045em",
+                  }}
+                >
+                  Patterns found in real products.
+                </Heading>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              label="Browse all evidence"
+              clickAction={onBrowse}
+            />
           </div>
-        </div>
-      </Section>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(2, minmax(0, 1fr))"
+                : "repeat(12, minmax(0, 1fr))",
+              gap: 12,
+            }}
+          >
+            {galleryMedia.map((src, index) => (
+              <div
+                key={`${src}-${index}`}
+                style={{
+                  gridColumn: isMobile
+                    ? undefined
+                    : `span ${index === 0 || index === 5 ? 7 : 5}`,
+                  height: isMobile
+                    ? index % 3 === 0
+                      ? 250
+                      : 190
+                    : index === 0 || index === 5
+                      ? 400
+                      : 300,
+                }}
+              >
+                <ProductMedia
+                  src={src}
+                  alt={`Real product reference ${index + 1} in Vitrines`}
+                  fit="cover"
+                />
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
+
+      <div
+        ref={proofRef}
+        style={{
+          borderBlock: "1px solid var(--color-border)",
+          background: "var(--color-background-surface)",
+        }}
+      >
+        <Section
+          style={{
+            paddingTop: isMobile ? 72 : 104,
+            paddingBottom: isMobile ? 72 : 104,
+          }}
+        >
+          <div style={{ maxWidth: 780, marginBottom: 42 }}>
+            <Text type="supporting" color="secondary">
+              RESEARCH YOUR TEAM CAN USE
+            </Text>
+            <div style={{ marginTop: 12 }}>
+              <Heading
+                level={2}
+                style={{
+                  fontSize: isMobile ? 32 : 48,
+                  lineHeight: 1.02,
+                  letterSpacing: "-0.045em",
+                }}
+              >
+                Keep the source visible when the decision leaves your desk.
+              </Heading>
+            </div>
+            <div style={{ marginTop: 16, maxWidth: 650 }}>
+              <Text type="large" color="secondary">
+                Public previews and living documents make the research legible
+                without handing your team a folder of disconnected screenshots.
+              </Text>
+            </div>
+          </div>
+          <div style={{ height: isMobile ? 280 : 610 }}>
+            <ProductMedia
+              src="/landing/astryx-public-preview-real-flows.png"
+              alt="A public Vitrines product-flow preview"
+            />
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: 1,
+              marginTop: 12,
+              background: "var(--color-border)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 18,
+              overflow: "hidden",
+            }}
+          >
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  padding: isMobile ? "25px 8px" : "36px 28px",
+                  textAlign: "center",
+                  background: "var(--color-background-body)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: isMobile ? 29 : 46,
+                    lineHeight: 1,
+                    fontWeight: 800,
+                    letterSpacing: "-0.05em",
+                  }}
+                >
+                  {stat.n}
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <Text type="supporting" color="secondary">
+                    {stat.label}
+                  </Text>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
+
+      <div ref={ctaRef}>
+        <Section
+          style={{
+            paddingTop: isMobile ? 88 : 140,
+            paddingBottom: isMobile ? 88 : 140,
+            display: "grid",
+            placeItems: "center",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ maxWidth: 800 }}>
+            <Heading
+              level={2}
+              style={{
+                fontSize: isMobile ? 38 : 60,
+                lineHeight: 0.98,
+                letterSpacing: "-0.05em",
+              }}
+            >
+              Your next decision starts here.
+            </Heading>
+            <div style={{ margin: "16px auto 30px", maxWidth: 580 }}>
+              <Text type="large" color="secondary">
+                Start with evidence. Finish with a direction your team can
+                understand and build.
+              </Text>
+            </div>
+          </div>
+          <PromptSearch onBrowse={onBrowse} compact={isMobile} />
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              marginTop: 18,
+            }}
+          >
+            <Button
+              variant="ghost"
+              label="Browse onboarding flows"
+              clickAction={onBrowse}
+            />
+            <Button
+              variant="ghost"
+              label="Compare mobile patterns"
+              clickAction={onBrowse}
+            />
+          </div>
+        </Section>
+      </div>
+
+      <footer
+        style={{
+          borderTop: "1px solid var(--color-border)",
+          background: "var(--color-background-surface)",
+        }}
+      >
+        <Section style={{ paddingTop: 54, paddingBottom: 42 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(2, minmax(0, 1fr))"
+                : "minmax(240px, 1.4fr) repeat(4, minmax(130px, 1fr))",
+              gap: isMobile ? "42px 24px" : 34,
+              paddingBottom: 54,
+            }}
+          >
+            <div style={{ gridColumn: isMobile ? "1 / -1" : undefined }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  fontSize: 19,
+                  fontWeight: 750,
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                <img
+                  src="/favicon.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={24}
+                  height={24}
+                />{" "}
+                Vitrines
+              </div>
+              <div style={{ maxWidth: 260, marginTop: 14 }}>
+                <Text type="body" color="secondary">
+                  Product research, design decisions, and living handoff in one
+                  workspace.
+                </Text>
+              </div>
+            </div>
+            <div>
+              <Text type="supporting" color="secondary">
+                PRODUCT
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  justifyItems: "start",
+                  marginTop: 10,
+                }}
+              >
+                <Button
+                  label="Apps"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+                <Button
+                  label="Sites"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+                <Button
+                  label="Flows"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+                <Button
+                  label="UI elements"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+              </div>
+            </div>
+            <div>
+              <Text type="supporting" color="secondary">
+                WORKSPACE
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  justifyItems: "start",
+                  marginTop: 10,
+                }}
+              >
+                <Button
+                  label="Projects"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLogin}
+                  style={navLink}
+                />
+                <Button
+                  label="Canvas"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLogin}
+                  style={navLink}
+                />
+                <Button
+                  label="Documents"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLogin}
+                  style={navLink}
+                />
+                <Button
+                  label="Public previews"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+              </div>
+            </div>
+            <div>
+              <Text type="supporting" color="secondary">
+                COMPANY
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  justifyItems: "start",
+                  marginTop: 10,
+                }}
+              >
+                <Button
+                  label="Pricing"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onPricing}
+                  style={navLink}
+                />
+                <Button
+                  label="Build in public"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBuildInPublic}
+                  style={navLink}
+                />
+                <Button
+                  label="Sign in"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLogin}
+                  style={navLink}
+                />
+              </div>
+            </div>
+            <div>
+              <Text type="supporting" color="secondary">
+                USE CASES
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  justifyItems: "start",
+                  marginTop: 10,
+                }}
+              >
+                <Button
+                  label="Product design"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+                <Button
+                  label="Competitive research"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+                <Button
+                  label="Feature planning"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBrowse}
+                  style={navLink}
+                />
+              </div>
+            </div>
+          </div>
+          <Divider />
+          <div
+            style={{
+              paddingTop: 20,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 14,
+            }}
+          >
+            <Text type="supporting" color="secondary">
+              © 2026 Vitrines. Built around real product evidence.
+            </Text>
+            <Button
+              label="Start researching"
+              variant="primary"
+              size="sm"
+              onClick={onBrowse}
+            />
+          </div>
+        </Section>
+      </footer>
     </div>
   );
 }

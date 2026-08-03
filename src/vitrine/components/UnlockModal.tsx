@@ -16,12 +16,16 @@ export function UnlockModal({
   onUpgrade: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const limitReached = remaining < 1;
 
   const confirm = async () => {
     setBusy(true);
+    setError('');
     try {
       await onConfirm();
+    } catch (reason) {
+      setError((reason as Error).message);
     } finally {
       setBusy(false);
     }
@@ -41,11 +45,16 @@ export function UnlockModal({
           </>
         ) : (
           <>
-            <Heading level={3}>Unlock {appId}</Heading>
-            <Text color="secondary">{`This uses one of ${remaining} remaining free app unlocks.`}</Text>
+            <Heading level={3}>Unlock full app analysis</Heading>
+            <Text color="secondary">{`Use one of ${remaining} remaining permanent Free unlocks to inspect every observed screen, UI element, flow, and evidence item for ${appId}.`}</Text>
+            {error ? (
+              <div role="alert" style={{ color: 'var(--color-text-danger)' }}>
+                <Text color="inherit">{error}</Text>
+              </div>
+            ) : null}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
               <Button variant="ghost" label="Cancel" clickAction={onClose} isDisabled={busy} />
-              <Button variant="primary" label="Unlock" isLoading={busy} clickAction={confirm} />
+              <Button variant="primary" label="Unlock full analysis" isLoading={busy} clickAction={confirm} />
             </div>
           </>
         )}

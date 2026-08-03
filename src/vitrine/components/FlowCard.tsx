@@ -49,11 +49,22 @@ export function flowPreviewIndexFromSearch(
   if (!screenCount) return null;
   const params = new URLSearchParams(search);
   const tab = params.get('tab');
+  const flowView = params.get('flowView');
+  const hasPreviewMode = tab === 'screens'
+    || tab === 'prototype'
+    || tab === 'document'
+    || flowView === 'visual'
+    || flowView === 'document';
   if (
     params.get('flow') !== flowId
-    || (tab !== 'screens' && tab !== 'prototype' && tab !== 'document')
+    || !hasPreviewMode
   ) return null;
-  const parsed = Number(params.get('screen') ?? 0);
+  const legacyStep = Number(params.get('step'));
+  const parsed = params.has('screen')
+    ? Number(params.get('screen'))
+    : Number.isInteger(legacyStep) && legacyStep > 0
+      ? legacyStep - 1
+      : 0;
   return Number.isInteger(parsed) && parsed >= 0 && parsed < screenCount ? parsed : 0;
 }
 
@@ -64,6 +75,7 @@ export function flowPreviewModeFromSearch(
   const params = new URLSearchParams(search);
   if (params.get('flow') !== flowId) return 'screens';
   const tab = params.get('tab');
+  if (params.get('flowView') === 'document') return 'document';
   return tab === 'prototype' || tab === 'document' ? tab : 'screens';
 }
 
@@ -73,6 +85,8 @@ function writeFlowPreviewUrl(flowId: string, screenIndex: number, mode: FlowPrev
   url.searchParams.set('flow', flowId);
   url.searchParams.set('tab', mode);
   url.searchParams.set('screen', String(screenIndex));
+  url.searchParams.delete('flowView');
+  url.searchParams.delete('step');
   window.history.replaceState(window.history.state, '', url);
 }
 
@@ -83,6 +97,8 @@ function clearFlowPreviewUrl(flowId: string) {
   url.searchParams.delete('flow');
   url.searchParams.delete('tab');
   url.searchParams.delete('screen');
+  url.searchParams.delete('flowView');
+  url.searchParams.delete('step');
   window.history.replaceState(window.history.state, '', url);
 }
 
@@ -100,6 +116,7 @@ export function FlowCard({
   userRole = 'user',
   onOpenSourceApp,
   syncPreviewUrl = true,
+  iconTooltips = false,
 }: {
   flow: DesignFlow<EvidenceView>;
   onOpen: () => void;
@@ -114,6 +131,7 @@ export function FlowCard({
   userRole?: 'admin' | 'user';
   onOpenSourceApp?: () => void;
   syncPreviewUrl?: boolean;
+  iconTooltips?: boolean;
 }) {
   const trackRef = useRef<HTMLButtonElement>(null);
   const [saved, setSaved] = useState(false);
@@ -249,6 +267,7 @@ export function FlowCard({
           {carouselEdges.canScrollLeft ? (
             <IconButton
               label="Previous flow screens"
+              tooltip={iconTooltips ? 'Previous flow screens' : undefined}
               icon={<Icon icon="chevronLeft" size="md" />}
               variant="secondary"
               className="flow-strip-card__arrow flow-strip-card__arrow--left"
@@ -258,6 +277,7 @@ export function FlowCard({
           {carouselEdges.canScrollRight ? (
             <IconButton
               label="Next flow screens"
+              tooltip={iconTooltips ? 'Next flow screens' : undefined}
               icon={<Icon icon="chevronRight" size="md" />}
               variant="secondary"
               className="flow-strip-card__arrow flow-strip-card__arrow--right"
@@ -314,6 +334,7 @@ export function FlowCard({
             />
             <IconButton
               label="More flow actions"
+              tooltip={iconTooltips ? 'More flow actions' : undefined}
               icon={<Icon icon="moreHorizontal" size="md" />}
               variant="secondary"
               className="flow-strip-card__more"
@@ -339,6 +360,7 @@ export function FlowCard({
           onModeChange={updatePreviewMode}
           onClose={closePreview}
           onOpenSourceApp={openSourceAppFromPreview}
+          iconTooltips={iconTooltips}
         />
       ) : null}
     </>

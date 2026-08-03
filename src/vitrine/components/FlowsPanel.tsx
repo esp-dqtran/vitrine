@@ -13,8 +13,6 @@ export function FlowsPanel({
   platform,
   version,
   selectedFlowId,
-  selectedStep,
-  selectedFlowView,
   onSelectionChange = () => undefined,
   userRole = 'user',
   sourceAppName,
@@ -51,10 +49,7 @@ export function FlowsPanel({
   return (
     <FlowsWorkspace
       groups={groups}
-      selectedFlow={selectedFlow}
       selectedFlowId={selectedFlowId}
-      selectedStep={selectedStep}
-      selectedFlowView={selectedFlowView}
       invalidFlowId={invalidFlowId}
       app={app}
       platform={platform}

@@ -9,9 +9,6 @@ import type {
 } from '../featureDocument.ts';
 import { DocumentFlowPanelView } from './components/DocumentFlowPanel.tsx';
 import { FeatureDocumentEditor } from './components/FeatureDocumentEditor.tsx';
-import { FeatureDocumentEvidencePanel } from './components/FeatureDocumentEvidencePanel.tsx';
-import { FeatureDocumentRevisionHistory } from './components/FeatureDocumentRevisionHistory.tsx';
-import { FeatureDocumentPendingState } from './components/FeatureDocumentPage.tsx';
 
 const claim = (id: string, text: string) => ({ id, kind: 'proposed' as const, text, evidenceIds: [] });
 const content: FeatureDocumentContent = {
@@ -76,28 +73,6 @@ test('renders all structured sections without collapsing into Markdown', () => {
   assert.match(html, /Problem statement/);
   assert.match(html, /IMAGE-42/);
   assert.doesNotMatch(html, /Markdown/);
-});
-
-test('evidence inspector uses only the protected revision media route', () => {
-  const html = renderToStaticMarkup(<FeatureDocumentEvidencePanel documentId={12} revision={revision} selectedEvidenceId="IMAGE-42" onSelect={() => {}} />);
-  assert.match(html, /Flow step 1 image 1/);
-  assert.match(html, /\/api\/feature-documents\/12\/revisions\/4\/media\/42/);
-  assert.match(html, /Cart review/);
-});
-
-test('revision history labels immutable authors and source metadata', () => {
-  const html = renderToStaticMarkup(<FeatureDocumentRevisionHistory revisions={[revision, { ...revision, id: 3, revisionNumber: 3, authorType: 'generated' }]} selectedRevisionId={4} onSelect={() => {}} onRestore={() => {}} />);
-  assert.match(html, /Revision 4 · User edit/);
-  assert.match(html, /Revision 3 · Generated/);
-  assert.match(html, /research-model/);
-  assert.match(html, /Prompt 1/);
-});
-
-test('initial generation exposes durable progress and cancellation before a revision exists', () => {
-  const html = renderToStaticMarkup(<FeatureDocumentPendingState title="Checkout" job={{ id: 9, documentId: 12, status: 'running', stage: 'analyzing', doneCount: 1, totalCount: 3, updatedAt: '2026-07-22T00:00:00.000Z' }} onCancel={() => {}} onReconnect={() => {}} />);
-  assert.match(html, /Analyzing image 2 of 3/);
-  assert.match(html, /Cancel generation/);
-  assert.doesNotMatch(html, /Loading Feature Document/);
 });
 
 test('Document Flow renders structured requirements without exposing the editor', () => {

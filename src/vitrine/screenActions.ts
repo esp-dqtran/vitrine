@@ -55,10 +55,27 @@ export const screenImageCopyUrl = (url: string) => {
 const fetchImageBlob = async (url: string) => {
   const response = await fetch(screenImageCopyUrl(url));
   if (!response.ok) {
-    throw new Error(`Image copy failed with ${response.status}`);
+    throw new Error(`Image request failed with ${response.status}`);
   }
   return response.blob();
 };
+
+export interface ImageBatchProgress {
+  completed: number;
+  total: number;
+  succeeded: number;
+  failed: number;
+}
+
+export interface ImageBatchFailure {
+  url: string;
+  message: string;
+}
+
+export interface ImageBatchResult {
+  succeeded: number;
+  failures: ImageBatchFailure[];
+}
 
 const canvasToBlob = (
   canvas: HTMLCanvasElement | OffscreenCanvas,
@@ -122,19 +139,50 @@ export const copyScreenImageAsPng = async (url: string) => {
   await writePngToClipboard(await imageToPng(blob));
 };
 
-export const copyScreenImagesAsPng = async (urls: string[]) => {
-  if (!urls.length) return;
+export const copyScreenImagesAsPng = async (
+  urls: string[],
+  onProgress?: (progress: ImageBatchProgress) => void,
+): Promise<ImageBatchResult> => {
+  if (!urls.length) return { succeeded: 0, failures: [] };
   if (urls.length === 1) {
-    await copyScreenImageAsPng(urls[0]);
-    return;
+    try {
+      await copyScreenImageAsPng(urls[0]);
+      onProgress?.({ completed: 1, total: 1, succeeded: 1, failed: 0 });
+      return { succeeded: 1, failures: [] };
+    } catch (reason) {
+      onProgress?.({ completed: 1, total: 1, succeeded: 0, failed: 1 });
+      throw reason;
+    }
   }
   if (typeof createImageBitmap === 'undefined') {
     throw new Error('PNG conversion is unavailable');
   }
 
-  const bitmaps = await Promise.all(
-    urls.map(async (url) => createImageBitmap(await fetchImageBlob(url))),
-  );
+  const failures: ImageBatchFailure[] = [];
+  let completed = 0;
+  const loaded = await Promise.all(urls.map(async (url) => {
+    try {
+      return { url, bitmap: await createImageBitmap(await fetchImageBlob(url)) };
+    } catch (reason) {
+      failures.push({
+        url,
+        message: reason instanceof Error ? reason.message : 'Image copy failed',
+      });
+      return null;
+    } finally {
+      completed += 1;
+      onProgress?.({
+        completed,
+        total: urls.length,
+        succeeded: completed - failures.length,
+        failed: failures.length,
+      });
+    }
+  }));
+  const bitmaps = loaded.filter(
+    (item): item is { url: string; bitmap: ImageBitmap } => item !== null,
+  ).map(({ bitmap }) => bitmap);
+  if (!bitmaps.length) throw new Error('Could not copy any selected images');
   try {
     const maxTileHeight = 1200;
     const columns = Math.min(4, Math.ceil(Math.sqrt(bitmaps.length)));
@@ -175,6 +223,7 @@ export const copyScreenImagesAsPng = async (urls: string[]) => {
       );
     });
     await writePngToClipboard(await canvasToBlob(canvas));
+    return { succeeded: bitmaps.length, failures };
   } finally {
     bitmaps.forEach((bitmap) => bitmap.close());
   }

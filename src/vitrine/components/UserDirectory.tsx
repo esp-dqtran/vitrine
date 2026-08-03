@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, ClickableCard, Icon, Selector, Spinner, TextInput } from '@astryxdesign/core';
+import { Badge, Button, ClickableCard, Icon, Spinner, TextInput } from '@astryxdesign/core';
 import type { AdminUser, UserFilter } from '../types.ts';
 import { formatJoinedDate, USER_FILTER_LABELS, userInitial, userPlanLabel } from '../usersPageModel.ts';
 import { AstryxAlertModal } from './AstryxModal.tsx';
-import { AstryxMenu } from './AstryxDropdown.tsx';
+import { AstryxMenu, AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 
 interface UserDirectoryProps {
   users: AdminUser[];
@@ -112,7 +112,12 @@ export function UserDirectory(props: UserDirectoryProps) {
           <TextInput label="Search members" isLabelHidden value={props.query} onChange={props.onQueryChange} placeholder="Search by email…" startIcon={<Icon icon="search" size="sm" />} hasClear={Boolean(props.query)} width="100%" />
         </div>
         <div className="admin-users-filter-control">
-          <Selector label="Filter members" isLabelHidden value={props.filter} onChange={(value) => props.onFilterChange(value as UserFilter)} options={Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({ value, label }))} />
+          <AstryxSingleSelectDropdown
+            ariaLabel="Filter members"
+            value={props.filter}
+            options={Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({ value, label }))}
+            onChange={(value) => props.onFilterChange(value as UserFilter)}
+          />
         </div>
       </div>
 

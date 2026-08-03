@@ -81,7 +81,7 @@ export function SearchTrigger({
           size="sm"
           className="reference-search-trigger__category"
           onClick={onClearCategory}
-          endContent={<Icon icon="close" size="xsm" />}
+          endContent={<Icon icon="close" size="sm" />}
         />
       )}
     </div>

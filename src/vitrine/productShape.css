@@ -1,0 +1,212 @@
+/*
+ * Product-screen shape and elevation contract.
+ *
+ * Shape communicates containment; elevation is reserved for clickable cards
+ * and floating layers. Flow, evidence, document, and canvas geometry remains
+ * domain-owned.
+ */
+
+:where(.apps-discovery, .sites-discovery) {
+  --radius-page: 20px;
+  --reference-card-radius: var(--radius-page);
+  --reference-media-radius: var(--radius-container);
+  --reference-logo-radius: var(--radius-container);
+}
+
+:where(.apps-discovery, .sites-discovery) .discovery-card,
+:where(.apps-discovery, .sites-discovery) .reference-discovery__loading > div,
+.apps-discovery .apps-discovery-screen-card__media {
+  border-radius: var(--radius-page);
+}
+
+:where(.apps-discovery, .sites-discovery) .discovery-card__media,
+:where(.apps-discovery, .sites-discovery) .discovery-card__logo {
+  border-radius: var(--radius-container);
+}
+
+:where(.apps-discovery, .sites-discovery) .discovery-card {
+  box-shadow: var(--shadow-low);
+}
+
+:where(.apps-discovery, .sites-discovery) .discovery-card:hover,
+:where(.apps-discovery, .sites-discovery) .discovery-card:focus-within {
+  box-shadow: var(--shadow-med);
+}
+
+.apps-discovery .apps-discovery-screen-card__media img,
+.apps-discovery .apps-discovery-screen-card__logo,
+.apps-discovery .reference-discovery-nav__brand > img,
+.apps-discovery .apps-filterbar__search,
+.apps-discovery .apps-filterbar__checkbox-option,
+.apps-discovery .apps-filterbar__preview img {
+  border-radius: var(--radius-element);
+}
+
+.apps-discovery :where(
+  .apps-filterbar__filter,
+  .apps-filterbar__filter-button,
+  .apps-filterbar__selection-count,
+  .apps-filterbar__clear
+) {
+  border-radius: var(--radius-full) !important;
+}
+
+@media (max-width: 720px) {
+  :where(.apps-discovery, .sites-discovery) .astryx-dropdown-panel {
+    border-radius: var(--radius-page);
+  }
+}
+
+/* Shared controls use the approved pill shape across normal product screens. */
+:is(
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :is(
+    .astryx-button.astryx-button,
+    .astryx-selector.astryx-selector
+  ):not(
+    .reference-detail__tabs *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  border-radius: var(--radius-full) !important;
+}
+
+/* Shared cards use container shape; specialized evidence geometry is excluded. */
+:where(
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  .astryx-card:not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  border-radius: var(--radius-container);
+}
+
+/* Floating menus sit above the page at medium elevation. */
+:where(
+  .vitrine-page,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :is(
+    .astryx-dropdown,
+    .astryx-dropdown-panel,
+    .projects-team-drawer,
+    .projects-workspace__menu-popover,
+    .settings-profile-menu
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  border-radius: var(--radius-container) !important;
+  box-shadow: var(--shadow-med) !important;
+}
+
+/* Centered dialogs are the highest standard product layer. */
+dialog.astryx-modal.astryx-modal--dialog:not(.flow-preview-dialog-shell) {
+  border-radius: var(--radius-page) !important;
+  box-shadow: var(--shadow-high) !important;
+}
+
+/* Workspace cards and panels share the same containment hierarchy. */
+.projects-workspace .discovery-card,
+.collections-workspace__card,
+.collections-workspace__item {
+  border-radius: var(--radius-container);
+  box-shadow: var(--shadow-low);
+}
+
+.projects-workspace__empty,
+.collections-workspace__empty {
+  border-radius: var(--radius-page);
+}
+
+.projects-workspace .discovery-card:hover,
+.projects-workspace .discovery-card:focus-within,
+.collections-workspace__card:hover,
+.collections-workspace__card:focus-within {
+  box-shadow: var(--shadow-med);
+}
+
+.collections-workspace__composer,
+.settings-workspace__subscription-table,
+.settings-workspace__referrals,
+.settings-workspace__form-card,
+.settings-workspace__profile-card,
+.settings-workspace__details,
+.team-settings__card {
+  border-radius: var(--radius-container);
+}
+
+.settings-workspace__content {
+  border-radius: var(--radius-page) var(--radius-page) 0 0;
+}
+
+/* App detail: containment uses radius; only floating layers use elevation. */
+.reference-detail[data-reference-detail="app"] .reference-detail__logo {
+  border-radius: var(--radius-container);
+}
+
+.reference-detail[data-reference-detail="app"] :is(
+  .reference-detail__actions .astryx-button,
+  .reference-detail__tab-leading .astryx-button,
+  .reference-detail__tab-leading .astryx-selector,
+  .reference-detail__tab-controls .astryx-button,
+  .reference-detail__tab-controls .astryx-selector
+):not(.flow-workspace *) {
+  border-radius: var(--radius-full) !important;
+}
+
+.reference-detail[data-reference-detail="app"]
+  .screen-grid-card__media
+  > .astryx-clickable-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  box-shadow: var(--shadow-low);
+}
+
+.reference-detail[data-reference-detail="app"].app-detail--ios
+  .screen-grid-card__media
+  > .astryx-clickable-card,
+.reference-detail[data-reference-detail="app"].app-detail--android
+  .screen-grid-card__media
+  > .astryx-clickable-card {
+  border-radius: var(--radius-page);
+}
+
+.reference-detail[data-reference-detail="app"] .screen-grid-card__select {
+  border-radius: var(--radius-full) !important;
+  box-shadow: var(--shadow-med) !important;
+}
+
+.reference-detail[data-reference-detail="app"] .screen-grid-card__actions {
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-high);
+}
+
+.reference-detail[data-reference-detail="app"]
+  .astryx-dropdown-panel:not(.flow-workspace *) {
+  border-radius: var(--radius-container);
+  box-shadow: var(--shadow-med);
+}

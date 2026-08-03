@@ -26,3 +26,17 @@ test("shows the active filter count without changing the action name", () => {
     /maxWidth:\s*420/,
   );
 });
+
+test("uses the standard inline icon size for an active category clear action", () => {
+  const html = renderToStaticMarkup(
+    <SearchTrigger
+      label="Search Apps..."
+      activeCategory="AI"
+      onOpen={() => undefined}
+      onClearCategory={() => undefined}
+    />,
+  );
+
+  assert.match(html, />AI</);
+  assert.match(html, /data-size="sm"/);
+});

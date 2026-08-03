@@ -44,11 +44,12 @@ test('redirects authenticated landing and sign-in routes to Apps', () => {
   });
 });
 
-test('keeps all three catalogs public and sends private guest routes to sign-in', () => {
+test('keeps catalogs and the bounded app preview public while sending private guest routes to sign-in', () => {
   assert.deepEqual(decideRootRoute({ name: 'apps' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'sites' }, guest), { kind: 'application' });
   assert.deepEqual(decideRootRoute({ name: 'flows' }, guest), { kind: 'application' });
-  assert.deepEqual(decideRootRoute({ name: 'app', appId: 'linear' }, guest), { kind: 'signin' });
+  assert.deepEqual(decideRootRoute({ name: 'app', appId: 'linear' }, guest), { kind: 'application' });
+  assert.deepEqual(decideRootRoute({ name: 'collections' }, guest), { kind: 'signin' });
   assert.deepEqual(
     decideRootRoute({ name: 'site-version', siteSlug: 'v7' }, guest),
     { kind: 'signin' },
@@ -74,11 +75,11 @@ test('uses the same application renderer for members and admins on normal routes
     { name: 'app', appId: 'linear' },
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'search' },
+    { name: 'collections' },
     { name: 'projects' },
     { name: 'project', projectId: PROJECT_ID },
     { name: 'project-document', projectId: PROJECT_ID },
     { name: 'project-playground', projectId: PROJECT_ID },
-    { name: 'feature-document', documentId: 9 },
     { name: 'settings-billing' },
   ];
 
@@ -112,6 +113,13 @@ test('renders an explicit unavailable state for disabled feature routes', () => 
   });
 });
 
+test('keeps personal Collections available when Research Projects are disabled', () => {
+  const disabled = { ...member, researchProjectsEnabled: false };
+  assert.deepEqual(decideRootRoute({ name: 'collections' }, disabled), {
+    kind: 'application',
+  });
+});
+
 test('renders unknown locations as an explicit public not-found page', () => {
   assert.deepEqual(decideRootRoute({ name: 'not-found', pathname: '/missing' }, guest), {
     kind: 'public',
@@ -137,12 +145,12 @@ test('produces an explicit decision for every current route name', () => {
     { name: 'flows' },
     { name: 'app', appId: 'linear' },
     { name: 'sites' },
+    { name: 'collections' },
     { name: 'site-version', siteSlug: 'v7' },
     { name: 'projects' },
     { name: 'project', projectId: PROJECT_ID },
     { name: 'project-document', projectId: PROJECT_ID },
     { name: 'project-playground', projectId: PROJECT_ID },
-    { name: 'feature-document', documentId: 9 },
     { name: 'feature-document-share', token: 'share' },
     { name: 'admin' },
   ];

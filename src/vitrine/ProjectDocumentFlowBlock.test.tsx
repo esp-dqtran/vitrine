@@ -7,6 +7,7 @@ import * as Y from "yjs";
 import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import {
   catalogFlowOption,
+  projectDocumentFlowView,
   projectDocumentFlowOptions,
   projectDocumentSchema,
   projectDocumentSlashMenuItems,
@@ -32,6 +33,8 @@ const workspace = {
       items: [
         {
           id: 10,
+          appId: "shopify",
+          appIconUrl: "/icons/shopify.png",
           projectId: "3d48a5c7-20b5-480a-a268-c3de515d8344",
           laneId: 1,
           position: 0,
@@ -98,6 +101,8 @@ test("groups project flow evidence into embeddable flow options", () => {
   assert.equal(flows.length, 1);
   assert.deepEqual(flows[0], {
     app: "Shopify",
+    appIconUrl: "/icons/shopify.png",
+    appId: "shopify",
     description: "Checkout without creating an account.",
     id: "project-flow:shopify:guest%20checkout",
     previews: [
@@ -155,6 +160,8 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
 
   assert.deepEqual(option, {
     app: "Linear",
+    appIconUrl: null,
+    appId: "linear",
     catalog: {
       app: "Linear",
       appId: "linear",
@@ -175,6 +182,51 @@ test("converts a catalog result into a stable embeddable Flow reference", () => 
     stepCount: 2,
     title: "Creating Account",
   });
+});
+
+test("keeps the complete visible step sequence instead of truncating the Flow card to four previews", () => {
+  const steps = Array.from({ length: 10 }, (_, index) => ({
+    label: `Step ${index + 1}`,
+    evidence: [{
+      imageId: index + 1,
+      imageUrl: `/api/catalog/flow-media/lovable/web/9/22/${index + 1}?variant=full`,
+      thumbnailUrl: `/api/catalog/flow-media/lovable/web/9/22/${index + 1}?variant=thumb`,
+      description: `Step ${index + 1}`,
+    }],
+  }));
+  const option = catalogFlowOption({
+    category: "Account Management",
+    title: "Deleting account",
+    count: 1,
+    preview: {
+      appId: "lovable",
+      appName: "Lovable",
+      appIconUrl: null,
+      versionId: 9,
+      version: 2,
+      sourceFlowId: "deleting-account",
+      screenCount: 10,
+      flow: {
+        id: "lovable:22",
+        title: "Deleting account",
+        category: "Account Management",
+        description: "Delete a workspace account.",
+        tags: [],
+        steps,
+      },
+    },
+  }, "web");
+
+  assert.equal(option.previews.length, 10);
+  assert.deepEqual(option.previews.map((preview) => preview.label), steps.map((step) => step.label));
+
+  const appFlow = projectDocumentFlowView(option);
+  assert.equal(appFlow.id, option.id);
+  assert.equal(appFlow.steps.length, 10);
+  assert.deepEqual(
+    appFlow.steps.map((step) => step.evidence[0]?.imageUrl),
+    option.previews.map((preview) => preview.url),
+  );
 });
 
 test("inserts the custom Flow block from the slash menu", () => {
@@ -210,6 +262,8 @@ test("keeps Flow block identity and snapshot in the collaborative schema", () =>
     source: "project",
     title: "Guest checkout",
     app: "Shopify",
+    appIconUrl: "",
+    appId: "",
     description: "Checkout without creating an account.",
     platform: "",
     previewSnapshot: "",

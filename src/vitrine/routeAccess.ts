@@ -11,7 +11,6 @@ const AUTHENTICATED_ROUTE_NAMES = new Set<Route['name']>([
   'project',
   'project-document',
   'project-playground',
-  'feature-document',
   'admin',
 ]);
 

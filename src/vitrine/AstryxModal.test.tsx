@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -72,4 +73,16 @@ test('keeps edge drawers inside the shared modal system', () => {
   );
 
   assert.match(html, /astryx-modal--drawer-left/);
+});
+
+test('enforces Escape and backdrop dismissal for every shared modal', async () => {
+  const source = await readFile(
+    new URL('./components/AstryxModal.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(source, /purpose=\{purpose\}/);
+  assert.match(source, /event\.target === dialog/);
+  assert.match(source, /onOpenChange\(false\)/);
+  assert.match(source, /dialog\.addEventListener\('click', closeFromBackdrop\)/);
 });

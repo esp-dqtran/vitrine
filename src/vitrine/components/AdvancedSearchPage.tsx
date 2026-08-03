@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Selector, TextInput } from "@astryxdesign/core";
+import { Button, TextInput } from "@astryxdesign/core";
 import type { SearchFilters, SearchResultItem, SearchType } from "../../searchTypes.ts";
 import { compatibleFilterKeys } from "../../searchScope.ts";
 import { useAdvancedSearch } from "../useAdvancedSearch.ts";
@@ -11,6 +11,7 @@ import {
 } from "../searchState.ts";
 import { updateLocation, useLocationKey } from "../router.ts";
 import { ActiveSearchFilters } from "./ActiveSearchFilters.tsx";
+import { AstryxSingleSelectDropdown } from "./AstryxDropdown.tsx";
 import { AdvancedSearchFilterDrawer } from "./AdvancedSearchFilterDrawer.tsx";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
 import { AdvancedSearchResults } from "./AdvancedSearchResults.tsx";
@@ -102,8 +103,9 @@ export function AdvancedSearchPage({
       </header>
       <div className="advanced-search-toolbar">
         <Button label="Filters" variant="secondary" onClick={() => setFiltersOpen(true)} />
-        <Selector
-          label="Sort"
+        <AstryxSingleSelectDropdown
+          ariaLabel="Sort"
+          triggerClassName="advanced-search-sort"
           value={state.sort}
           onChange={(value) => commit({
               ...state,
@@ -114,7 +116,6 @@ export function AdvancedSearchPage({
             { value: "recent", label: "Recently added" },
             { value: "app-az", label: "App A–Z" },
           ]}
-          size="sm"
         />
       </div>
       <ActiveSearchFilters filters={state.filters} onChange={applyFilters} />

@@ -53,8 +53,8 @@ function Wordmark({ enlarged = false }: { enlarged?: boolean }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: enlarged ? 6 : 9 }}>
       <div style={{ width: iconSize, height: iconSize, borderRadius: enlarged ? 12 : 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
         {enlarged
-          ? <div style={{ width: 20, height: 20, borderRadius: 5, background: '#FFFFFF' }} />
-          : <div style={{ width: 11, height: 11, borderRadius: 3, background: '#FFFFFF' }} />}
+          ? <div style={{ width: 20, height: 20, borderRadius: 5, background: 'var(--color-on-accent)' }} />
+          : <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} />}
       </div>
       <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
     </div>
@@ -108,12 +108,12 @@ function SuccessPanel() {
           width: 60,
           height: 60,
           borderRadius: '50%',
-          background: '#16a34a',
-          color: '#fff',
+          background: 'var(--vitrine-color-status-success)',
+          color: 'var(--color-on-accent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 10px 26px rgba(22,163,74,0.28)',
+          boxShadow: '0 10px 26px color-mix(in srgb, var(--vitrine-color-status-success) 28%, transparent)',
           animation: 'vtRingPop .5s cubic-bezier(.16,1,.3,1) both',
         }}
       >

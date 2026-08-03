@@ -13,17 +13,21 @@ import {
   getDefaultReactSlashMenuItems,
   type DefaultReactSuggestionItem,
 } from "@blocknote/react";
-import { Icon } from "@astryxdesign/core";
+import { Button, Icon } from "@astryxdesign/core";
 
+import type { DesignFlow, EvidenceView } from "../../designSystem.ts";
 import type { Platform } from "../../platformFromUrl.ts";
 import type { ResearchProjectWorkspace } from "../../researchProject.ts";
 import {
   loadFlowCatalogPage,
   type FlowCatalogItem,
 } from "../flowCatalogApi.ts";
+import { FlowCard } from "./FlowCard.tsx";
 
 export interface ProjectDocumentFlowOption {
   app: string;
+  appIconUrl?: string | null;
+  appId?: string;
   catalog?: {
     app: string;
     appId: string;
@@ -42,6 +46,8 @@ export interface ProjectDocumentFlowOption {
   title: string;
 }
 
+const FLOW_PREVIEW_LIMIT = 24;
+
 export const projectFlowReferenceId = (app: string, title: string): string =>
   `project-flow:${encodeURIComponent(app.trim().toLowerCase() || "unknown")}:${encodeURIComponent(title.trim().toLowerCase())}`;
 
@@ -56,9 +62,12 @@ export function projectDocumentFlowOptions(
       const title = item.snapshot.flow?.trim() || item.snapshot.title.trim();
       if (!title) continue;
       const app = item.snapshot.app?.trim() || "Unknown app";
+      const appId = item.appId?.trim();
       const id = projectFlowReferenceId(app, title);
       const existing = groups.get(id) ?? {
         app,
+        ...(item.appIconUrl ? { appIconUrl: item.appIconUrl } : {}),
+        ...(appId ? { appId } : {}),
         description: item.snapshot.description?.trim() || "",
         id,
         previews: [],
@@ -71,7 +80,9 @@ export function projectDocumentFlowOptions(
       if (!existing.description && item.snapshot.description?.trim()) {
         existing.description = item.snapshot.description.trim();
       }
-      if (item.mediaUrl && existing.previews.length < 4) {
+      if (!existing.appIconUrl && item.appIconUrl) existing.appIconUrl = item.appIconUrl;
+      if (!existing.appId && appId) existing.appId = appId;
+      if (item.mediaUrl && existing.previews.length < FLOW_PREVIEW_LIMIT) {
         existing.previews.push({
           label: item.snapshot.step?.trim() || item.stepLabel.trim() || item.snapshot.title,
           url: item.mediaUrl,
@@ -92,9 +103,11 @@ export function catalogFlowOption(
   const previews = item.preview.flow.steps.flatMap((step) => {
     const evidence = step.evidence[0];
     return evidence?.thumbnailUrl ? [{ label: step.label, url: evidence.thumbnailUrl }] : [];
-  }).slice(0, 4);
+  }).slice(0, FLOW_PREVIEW_LIMIT);
   return {
     app: item.preview.appName,
+    appIconUrl: item.preview.appIconUrl,
+    appId: item.preview.appId,
     catalog: {
       app: item.preview.appName,
       appId: item.preview.appId,
@@ -114,6 +127,26 @@ export function catalogFlowOption(
   };
 }
 
+export function projectDocumentFlowView(
+  option: ProjectDocumentFlowOption,
+): DesignFlow<EvidenceView> {
+  return {
+    id: option.id,
+    title: option.title || "Untitled flow",
+    description: option.description,
+    tags: [],
+    steps: option.previews.map((preview, index) => ({
+      label: preview.label || `Step ${index + 1}`,
+      evidence: [{
+        imageId: index + 1,
+        imageUrl: preview.url,
+        thumbnailUrl: preview.url,
+        description: preview.label || null,
+      }],
+    })),
+  };
+}
+
 function previewSnapshot(value: string): ProjectDocumentFlowOption["previews"] {
   if (!value) return [];
   try {
@@ -124,7 +157,7 @@ function previewSnapshot(value: string): ProjectDocumentFlowOption["previews"] {
       && typeof preview === "object"
       && typeof (preview as { label?: unknown }).label === "string"
       && typeof (preview as { url?: unknown }).url === "string",
-    )).slice(0, 4);
+    )).slice(0, FLOW_PREVIEW_LIMIT);
   } catch {
     return [];
   }
@@ -172,6 +205,8 @@ const astryxReferenceBlock = createReactBlockSpec(
       source: { default: "project", values: ["project", "catalog"] as const },
       title: { default: "" },
       app: { default: "" },
+      appIconUrl: { default: "" },
+      appId: { default: "" },
       description: { default: "" },
       platform: { default: "" },
       previewSnapshot: { default: "" },
@@ -203,6 +238,8 @@ const astryxReferenceBlock = createReactBlockSpec(
         .find((flow) => flow.id === block.props.referenceId);
       const flow = current ?? (block.props.referenceId ? {
         app: block.props.app,
+        appIconUrl: block.props.appIconUrl || undefined,
+        appId: block.props.appId || undefined,
         description: block.props.description,
         id: block.props.referenceId,
         platform: block.props.platform === "ios" || block.props.platform === "android" || block.props.platform === "web"
@@ -253,6 +290,8 @@ const astryxReferenceBlock = createReactBlockSpec(
             source: option.source,
             title: option.title,
             app: option.app,
+            appIconUrl: option.appIconUrl ?? "",
+            appId: option.appId ?? "",
             description: option.description,
             platform: option.platform ?? "",
             previewSnapshot: JSON.stringify(option.previews),
@@ -288,31 +327,32 @@ const astryxReferenceBlock = createReactBlockSpec(
                   Flow
                 </span>
                 {editor.isEditable ? (
-                  <button
-                    type="button"
+                  <Button
                     className="project-flow-block__change"
+                    label="Change"
+                    variant="ghost"
+                    size="sm"
                     aria-expanded={pickerOpen}
                     onClick={() => setPickerOpen((open) => !open)}
-                  >
-                    Change
-                  </button>
+                  />
                 ) : null}
               </div>
               <div className="project-flow-block__body">
-                <div className="project-flow-block__copy">
-                  <strong>{flow.title || "Untitled flow"}</strong>
-                  <span>{flow.app || "Unknown app"} · {flow.stepCount} {flow.stepCount === 1 ? "step" : "steps"}</span>
-                  {flow.description ? <p>{flow.description}</p> : null}
-                  {block.props.source === "project" && !current ? (
-                    <p className="project-flow-block__stale">No longer in this project</p>
-                  ) : null}
-                </div>
-                {flow.previews.length ? (
-                  <div className="project-flow-block__previews" aria-label="Flow step previews">
-                    {flow.previews.map((preview, index) => (
-                      <img key={`${preview.url}-${index}`} src={preview.url} alt={preview.label} />
-                    ))}
-                  </div>
+                <FlowCard
+                  flow={projectDocumentFlowView(flow)}
+                  platform={flow.platform ?? initialPlatform}
+                  screenCount={flow.stepCount}
+                  metaLabel={`${flow.app || "Unknown app"} · ${flow.stepCount} ${flow.stepCount === 1 ? "screen" : "screens"}`}
+                  sourceAppName={flow.app || "Unknown app"}
+                  sourceAppIconUrl={flow.appIconUrl}
+                  onOpenSourceApp={flow.appId
+                    ? () => window.location.assign(`/apps/${encodeURIComponent(flow.appId!)}`)
+                    : undefined}
+                  onOpen={() => undefined}
+                  syncPreviewUrl={false}
+                />
+                {block.props.source === "project" && !current ? (
+                  <p className="project-flow-block__stale">No longer in this project</p>
                 ) : null}
               </div>
             </article>
@@ -401,6 +441,7 @@ const astryxReferenceBlock = createReactBlockSpec(
               </div>
             </div>
           ) : null}
+
         </div>
       );
     },

@@ -228,7 +228,7 @@ test('opens a bounded Apps Flow menu and can find a deep Flow option', () => {
   assert.match(deepSearch, /Flow group 5879/);
 });
 
-test('searches Screen patterns by aliases and repeats selected values above the taxonomy', () => {
+test('searches Screen patterns by aliases without duplicating selected values', () => {
   const screenOptions = [
     {
       value: 'Home',
@@ -269,8 +269,8 @@ test('searches Screen patterns by aliases and repeats selected values above the 
     />,
   );
 
-  assert.equal((html.match(/>Home</g) ?? []).length, 3);
-  assert.match(html, /apps-filterbar__selected-options/);
+  assert.equal((html.match(/>Home</g) ?? []).length, 2);
+  assert.doesNotMatch(html, /apps-filterbar__selected-options/);
   assert.match(html, /Screens that present primary content/);
 });
 
@@ -358,28 +358,46 @@ test('constrains long filter menus to the viewport and scrolls only their option
     css,
     /\.apps-filterbar__options\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/,
   );
+  assert.match(
+    componentCss,
+    /\.astryx-dropdown-panel\s*\{[^}]*width:\s*min\(288px,\s*calc\(100vw - 48px\)\)[^}]*animation:\s*astryx-dropdown-in 180ms/,
+  );
+  assert.match(componentCss, /@keyframes astryx-dropdown-in\s*\{/);
+  assert.match(
+    componentCss,
+    /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.astryx-dropdown-panel\s*\{[^}]*animation:\s*none/,
+  );
 });
 
-test('repeats selected Apps filters above their grouped taxonomy with dark controls', async () => {
+test('keeps selected Apps filters checked only in their grouped taxonomy with theme-aware controls', async () => {
   const [source, css] = await Promise.all([
     readFile(new URL('./components/AppsFilterBar.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(source, /apps-filterbar__selected-options/);
-  assert.match(source, /apps-filterbar__option-divider/);
-  assert.match(css, /\.apps-filterbar__selected-options\s*\{/);
+  assert.doesNotMatch(source, /apps-filterbar__selected-options/);
+  assert.doesNotMatch(source, /apps-filterbar__option-divider/);
+  assert.doesNotMatch(css, /\.apps-filterbar__selected-options\s*\{/);
   assert.match(
     source,
     /className="apps-filterbar__checkbox-option"[\s\S]*closest\('input, label'\)[\s\S]*onChange=\{onToggle\}/,
   );
+  assert.match(source, /icon=\{<Icon icon="close" size="sm" \/>\}/);
   assert.match(
     css,
     /\.apps-filterbar__checkbox-option\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;[^}]*cursor:\s*pointer;/,
   );
   assert.match(
     css,
-    /\.apps-filterbar__checkbox-option input\[type='checkbox'\]:checked \+ div\s*\{[^}]*background:\s*#303030\s*!important/,
+    /\.apps-filterbar__checkbox-option input\[type='checkbox'\]:checked \+ div\s*\{[^}]*background:\s*var\(--reference-chrome-hover\)\s*!important/,
+  );
+  assert.match(
+    css,
+    /\.apps-filterbar__filter--selected\s*\{[^}]*border-color:\s*var\(--reference-chrome-text\);[^}]*box-shadow:\s*inset 0 0 0 1px var\(--reference-chrome-text\);/,
+  );
+  assert.match(
+    css,
+    /\.apps-filterbar \.apps-filterbar__filter \.apps-filterbar__filter-button\s*\{[^}]*border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;/,
   );
 });
 

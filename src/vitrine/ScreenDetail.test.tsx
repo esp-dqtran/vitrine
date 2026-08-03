@@ -2,10 +2,22 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ScreenDetail } from './components/ScreenDetail.tsx';
+import { appDetailTabs, ScreenDetail } from './components/ScreenDetail.tsx';
 import { flowMatchesFilters, screenMatchesFilters } from './detailFilters.ts';
 
-test('offers the generated design system alongside screens, elements, and flows', () => {
+test('shows the Design System tab only when the App has a snapshot', () => {
+  assert.deepEqual(appDetailTabs(false).map(({ id }) => id), [
+    'screens',
+    'elements',
+    'flows',
+  ]);
+  assert.deepEqual(appDetailTabs(true).map(({ id }) => id), [
+    'screens',
+    'elements',
+    'flows',
+    'design-system',
+  ]);
+
   const html = renderToStaticMarkup(
     <ScreenDetail
       collections={[]}
@@ -29,8 +41,8 @@ test('offers the generated design system alongside screens, elements, and flows'
   assert.doesNotMatch(html, /aria-label="Overview"/);
   assert.match(html, /aria-selected="true"[^>]*aria-label="Screens"/);
   assert.doesNotMatch(html, /aria-label="Analysis"/);
-  assert.match(html, /app-detail__more-selector/);
-  assert.match(html, /Design System/);
+  assert.doesNotMatch(html, /app-detail__more-selector|More sections/);
+  assert.doesNotMatch(html, /Design System/);
   assert.doesNotMatch(html, /aria-label="Review"/);
   assert.doesNotMatch(html, /Crawler/);
 });
@@ -63,6 +75,16 @@ test('does not expose capture version controls in app detail', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /import \{ VersionPanel \}/);
   assert.doesNotMatch(source, /<VersionPanel/);
+});
+
+test('continues screen preview navigation across lazy gallery pages', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /index !== screens\.length \|\| !nextCursor \|\| loadingMore/);
+  assert.match(source, /const nextPage = await loadMore\(\)/);
+  assert.match(source, /showLightboxScreen\(index, nextPage\.screens\)/);
+  assert.match(source, /total=\{Math\.max\(sectionTotals\.screens, screens\.length\)\}/);
+  assert.match(source, /canNavigateNext=\{lightbox\.index < screens\.length - 1 \|\| Boolean\(nextCursor\)\}/);
 });
 
 test('removes App Knowledge analysis while preserving route selections', () => {
@@ -98,6 +120,16 @@ test('forwards controlled Flow route state and an exact selection callback', () 
 test('does not use generic component or flow libraries', () => {
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /ELEMENT_LIBRARY|FLOW_LIBRARY/);
+});
+
+test('copies selected screens as one board without exposing image downloads', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /'Copy as board'/);
+  assert.doesNotMatch(source, /Download originals?/);
+  assert.doesNotMatch(source, /downloadScreenImages/);
+  assert.match(source, /`Preparing \$\{copyProgress\.completed\} of \$\{copyProgress\.total\}`/);
+  assert.match(source, /Board copied with \$\{result\.succeeded\} of/);
 });
 
 test('animates the active platform indicator and platform content', () => {
@@ -193,7 +225,8 @@ test('renders the App identity and interactive platform inside the reference met
     />,
   );
 
-  assert.match(html, /<h1>Linear —<\/h1>/);
+  assert.match(html, /<h1>Linear<\/h1>/);
+  assert.doesNotMatch(html, /<h1>Linear —<\/h1>/);
   assert.match(
     html,
     /reference-detail__metadata-item[^>]*><span>Platform<\/span><div role="radiogroup"[^>]*class="apps-platform-switcher"/,
@@ -421,8 +454,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
-  assert.match(source, /label="App version"/);
-  assert.match(source, /label="App version"[\s\S]*?placement="below"/);
+  assert.match(source, /<AstryxSingleSelectDropdown[\s\S]*?ariaLabel="App version"/);
   assert.match(source, /label: version\.version_number === latestVersion\?\.version_number\s*\?\s*'Latest'/);
   assert.match(source, /className="reference-detail__section-total"/);
   assert.match(source, /<span>Showing<\/span>/);
@@ -448,11 +480,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   );
   assert.match(
     css,
-    /\.reference-detail__version-selector\s*\{[^}]*min-height:\s*36px !important;[^}]*padding:\s*0 12px !important;[^}]*border:\s*1px solid var\(--color-border\) !important;[^}]*border-radius:\s*999px !important/,
-  );
-  assert.match(
-    css,
-    /\.reference-detail__version-selector > button\s*\{[^}]*min-height:\s*34px !important;[^}]*font-size:\s*14px !important;[^}]*font-weight:\s*500 !important/,
+    /\.reference-detail__version-selector\s*\{[^}]*min-width:\s*88px;[^}]*justify-content:\s*space-between !important;[^}]*font:\s*var\(--vitrine-type-label\) !important/,
   );
   assert.match(
     css,
@@ -460,7 +488,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   );
   assert.match(
     css,
-    /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__navigation\s*\{[^}]*grid-template-areas:[^}]*'leading controls'[^}]*'tabs tabs'/,
+    /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__navigation\s*\{[^}]*grid-template-areas:[^}]*["']leading controls["'][^}]*["']tabs tabs["']/,
   );
   assert.match(
     css,
@@ -501,8 +529,10 @@ test('adds section-specific metadata filters for Screens, UI Elements, and Flows
   assert.match(elementsHtml, /aria-label="Open UI Elements filters"/);
   assert.match(flowsHtml, /aria-label="Open Flows filters"/);
   assert.match(screensHtml, /class="[^"]*apps-filterbar__filter-button/);
-  assert.match(source, /tabControls=\{adminSectionControl \|\| activeMetadataFilter/);
+  assert.match(source, /tabControls=\{activeMetadataFilter \?/);
   assert.match(source, /app-detail__navigation-tools/);
+  assert.doesNotMatch(source, /adminSectionControl|More sections|app-detail__more-selector/);
+  assert.doesNotMatch(screensHtml, />More</);
   assert.match(source, /<DiscoveryFilterMenu/);
   assert.match(source, /flows=\{filteredFlows\}/);
   assert.match(source, /No flows match these filters/);
