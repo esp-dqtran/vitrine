@@ -1,0 +1,123 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Astryx scroll-echo reel</title>
+<style>
+  :root {
+    --frame-w: 720px;
+    --frame-h: 1280px;
+    /* Card viewport is rendered at 1440x1068 then scaled down, so text stays sharp. */
+    --card-scale: 0.455;
+    /* Echo = same scroll offset at 3x the card's scale => reads as 3x the speed. */
+    --echo-scale: 1.365;
+  }
+  html, body { margin: 0; height: 100%; background: #050505; }
+  body { display: grid; place-items: center; }
+  #stage {
+    position: relative;
+    width: var(--frame-w);
+    height: var(--frame-h);
+    overflow: hidden;
+    background: #0a0a0a;
+  }
+  #stage iframe { position: absolute; border: 0; left: 50%; pointer-events: none; }
+  #echo {
+    top: 0;
+    width: 1440px;
+    height: 960px;
+    opacity: .12;
+    filter: blur(2px);
+    transform-origin: 50% 0;
+    transform: translateX(-50%) scale(var(--echo-scale));
+  }
+  #card {
+    top: 50%;
+    width: 1440px;
+    height: 1068px;
+    transform-origin: 50% 50%;
+    transform: translate(-50%, -50%) scale(var(--card-scale));
+    border-radius: 40px; /* 40 * .455 ~= 18px on screen */
+    border: 2px solid #2a2a2a;
+    box-shadow: 0 88px 264px #000;
+    background: #111112;
+  }
+  /* Bookend: 0.5s fade up from black. The 3s tail freeze is just the absence of moves. */
+  #curtain {
+    position: absolute; inset: 0; background: #050505; z-index: 3;
+    transition: opacity .5s linear;
+  }
+  #cursor { position: absolute; z-index: 2; width: 20px; pointer-events: none; }
+  #hint { position: fixed; bottom: 12px; color: #555; font: 12px system-ui; }
+</style>
+
+<div id="stage">
+  <iframe id="echo" src="/" scrolling="no"></iframe>
+  <iframe id="card" src="/" scrolling="no"></iframe>
+  <svg id="cursor" viewBox="0 0 12 19" fill="#fff" stroke="#000" stroke-width=".8">
+    <path d="M1 1l10 9.5-4.6.3 2.8 6-2.4 1.1-2.7-6L1 15z"/>
+  </svg>
+  <div id="curtain"></div>
+</div>
+<p id="hint">720x1280 — press R to replay, then screen-record the frame.</p>
+
+<script>
+  const MOVE = 500, HOLD = 1700, TAIL = 3000;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const frames = [document.getElementById('echo'), document.getElementById('card')];
+  const cursor = document.getElementById('cursor');
+  const curtain = document.getElementById('curtain');
+
+  const scrollTo = y => frames.forEach(f => f.contentWindow.scrollTo(0, y));
+
+  // ponytail: stations come from the page's own <section> offsets, so this never needs
+  // re-measuring when the landing page changes. Add ids and read those if you want manual control.
+  // Each section is *centered* in the card viewport — landing on a raw section top leaves the
+  // bottom half of the card empty, which is what kills the framing.
+  function stations(doc) {
+    const viewH = frames[1].clientHeight;
+    const max = doc.body.scrollHeight - viewH;
+    return [...doc.querySelectorAll('section')]
+      .map(s => {
+        const top = s.getBoundingClientRect().top + doc.documentElement.scrollTop;
+        return Math.min(max, Math.max(0, Math.round(top - Math.max(40, (viewH - s.offsetHeight) / 2))));
+      })
+      .filter((y, i, a) => i === 0 || y - a[i - 1] > 120);
+  }
+
+  function ready() {
+    const doc = frames[1].contentDocument;
+    return doc && doc.querySelectorAll('section').length >= 3 && { doc };
+  }
+
+  async function run() {
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    let s;
+    while (!(s = ready())) await wait(200);
+    await wait(600); // let fonts and catalog previews settle before the first frame
+
+    const stops = stations(s.doc);
+    scrollTo(0);
+    curtain.style.opacity = 0;
+    await wait(500 + HOLD);
+
+    for (let i = 1; i < stops.length; i++) {
+      const from = stops[i - 1], to = stops[i], t0 = performance.now();
+      await new Promise(done => (function step(now) {
+        const p = Math.min((now - t0) / MOVE, 1);
+        scrollTo(from + (to - from) * ease(p));
+        p < 1 ? requestAnimationFrame(step) : done();
+      })(t0));
+      await wait(HOLD);
+    }
+    await wait(TAIL); // dead hold on the last station — deliberately not a loop
+  }
+
+  // Slow lissajous drift inside the card bounds; sells it as a live screen recording.
+  (function drift(t = 0) {
+    cursor.style.left = 360 + 180 * Math.sin(t / 2600) + 'px';
+    cursor.style.top = 640 + 150 * Math.sin(t / 4100) + 'px';
+    requestAnimationFrame(drift);
+  })();
+
+  addEventListener('keydown', e => e.key.toLowerCase() === 'r' && location.reload());
+  run();
+</script>
