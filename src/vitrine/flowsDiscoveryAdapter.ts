@@ -81,10 +81,16 @@ export function selectedFlowDiscoverySearch(
   currentSearch: string,
   query: string,
   platform: FlowsDiscoveryControllerState['platform'],
+  flowGroup?: string,
 ): string {
-  const params = new URLSearchParams(currentSearch);
-  params.set('platform', platform);
-  params.set('query', query);
   const adapter = createFlowsDiscoveryAdapter();
-  return adapter.serialize(adapter.parse(params.toString()));
+  const current = adapter.parse(currentSearch);
+  return adapter.serialize({
+    ...current,
+    platform,
+    query,
+    filters: flowGroup
+      ? [{ group: 'flowGroups', value: flowGroup }]
+      : current.filters,
+  });
 }

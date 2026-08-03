@@ -14,6 +14,7 @@ const apiItem = {
     appId: 'whatsapp',
     appName: 'WhatsApp',
     appIconUrl: '/icons/whatsapp.png',
+    versionId: 17,
     version: 7,
     sourceFlowId: '7230',
     screenCount: 4,
@@ -140,7 +141,7 @@ test('uses preview identity and title as the Flow item key', () => {
   );
 });
 
-test('applies a selected Flow and platform while preserving canonical sort and filters', () => {
+test('applies a selected Flow, platform, and exact Flow group while preserving sort', () => {
   assert.equal(
     selectedFlowDiscoverySearch(
       '?platform=web&sort=grouped&query=old'
@@ -148,9 +149,9 @@ test('applies a selected Flow and platform while preserving canonical sort and f
         + '&filter=flowGroups.New%20User%20Experience',
       'Logging out',
       'android',
+      'Account Management',
     ),
     'platform=android&sort=grouped&query=Logging+out'
-      + '&filter=flowGroups.Account+Management'
-      + '&filter=flowGroups.New+User+Experience',
+      + '&filter=flowGroups.Account+Management',
   );
 });

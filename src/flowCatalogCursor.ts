@@ -4,6 +4,9 @@ import type { Platform } from "./platformFromUrl.ts";
 export type FlowCatalogSort = "popular" | "grouped";
 
 interface FlowCursorKeyBase {
+  exactMatch: 0 | 1;
+  titleTermMatches: number;
+  termMatches: number;
   other: 0 | 1;
   categoryCount: number;
   category: string;
@@ -15,7 +18,7 @@ interface FlowCursorKeyBase {
 
 export type FlowCatalogCursor =
   | {
-      v: 1;
+      v: 2;
       sort: "popular";
       platform: Platform;
       snapshotAt: string;
@@ -23,7 +26,7 @@ export type FlowCatalogCursor =
       key: FlowCursorKeyBase & { categoryRank: number };
     }
   | {
-      v: 1;
+      v: 2;
       sort: "grouped";
       platform: Platform;
       snapshotAt: string;
@@ -88,14 +91,20 @@ function validKey(value: unknown, sort: FlowCatalogSort): boolean {
     "category",
     "categoryCount",
     "categoryId",
+    "exactMatch",
     ...(sort === "popular" ? ["categoryRank"] : []),
     "count",
     "flowId",
     "other",
+    "termMatches",
     "title",
+    "titleTermMatches",
   ];
   return exactKeys(key, fields)
     && (key.other === 0 || key.other === 1)
+    && (key.exactMatch === 0 || key.exactMatch === 1)
+    && count(key.titleTermMatches, 0)
+    && count(key.termMatches, 0)
     && count(key.categoryCount, 1)
     && count(key.count, 1)
     && (sort !== "popular" || count(key.categoryRank, 1))
@@ -112,7 +121,7 @@ function validPayload(
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const item = value as Record<string, unknown>;
   return exactKeys(item, ["identity", "key", "platform", "snapshotAt", "sort", "v"])
-    && item.v === 1
+    && item.v === 2
     && item.sort === expected.sort
     && item.platform === expected.platform
     && item.identity === expected.identity

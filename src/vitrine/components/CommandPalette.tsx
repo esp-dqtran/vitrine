@@ -95,7 +95,7 @@ interface CommandPaletteProps {
   onSelectScreen: (appId: string, evidenceId?: number) => void;
   onSelectCategory: (categoryName: string) => void;
   onSelectFlow: (appId: string, flowId?: string) => void;
-  onSearchFlow: (flowTitle: string, platform: Platform) => void;
+  onSearchFlow: (flowTitle: string, platform: Platform, flowGroup?: string) => void;
 }
 
 export function CommandPalette({
@@ -298,7 +298,7 @@ export function CommandPalette({
         const item = flowItems[activeFlowIndex];
         if (item) {
           event.preventDefault();
-          requestClose(() => onSearchFlow(item.title, platform));
+          requestClose(() => onSearchFlow(item.title, platform, item.category));
         }
       }
       return;
@@ -342,8 +342,8 @@ export function CommandPalette({
     onQueryChange('');
     requestClose(() => onSelectCategory(categoryName));
   };
-  const selectFlowFacet = (title: string) => {
-    requestClose(() => onSearchFlow(title, platform));
+  const selectFlowFacet = (item: FlowCatalogItem) => {
+    requestClose(() => onSearchFlow(item.title, platform, item.category));
   };
 
   const browseContent = nav === 'categories' ? (
@@ -394,7 +394,7 @@ export function CommandPalette({
                 className="command-palette-flow-row"
                 data-highlighted={itemIndex === activeFlowIndex ? 'true' : undefined}
                 onMouseEnter={() => setActiveFlowIndex(itemIndex)}
-                onClick={() => selectFlowFacet(item.title)}
+                onClick={() => selectFlowFacet(item)}
                 endContent={(
                   <span data-command-flow-count="true">{item.count.toLocaleString()}</span>
                 )}
@@ -506,9 +506,19 @@ export function CommandPalette({
             ))}
             <div className="command-palette-sidebar-spacer" />
             <div className="command-palette-promo">
-              <span>NEW</span>
-              <strong>AI Search is now<br />Deep Search</strong>
-              <p>Deep Search is automatically selected for longer, more complex queries</p>
+              {nav === 'flows' ? (
+                <>
+                  <span>FLOW SEARCH</span>
+                  <strong>Search observed<br />product behaviors</strong>
+                  <p>Matches Flow titles and groups across apps on the selected platform.</p>
+                </>
+              ) : (
+                <>
+                  <span>NEW</span>
+                  <strong>AI Search is now<br />Deep Search</strong>
+                  <p>Deep Search is automatically selected for longer, more complex queries</p>
+                </>
+              )}
             </div>
           </div>
 

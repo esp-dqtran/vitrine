@@ -466,12 +466,13 @@ export function App() {
                 ...(flow ? { flow } : {}),
               });
             }}
-            onSearchFlow={(flowTitle, platform) => {
+            onSearchFlow={(flowTitle, platform, flowGroup) => {
               if (route.name === "flows") {
                 const nextSearch = selectedFlowDiscoverySearch(
                   window.location.search,
                   flowTitle,
                   platform,
+                  flowGroup,
                 );
                 closeDiscoveryOverlays();
                 updateLocation(`/flows?${nextSearch}`);

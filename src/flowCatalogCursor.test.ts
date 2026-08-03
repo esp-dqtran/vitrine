@@ -16,12 +16,15 @@ const identity = flowCatalogQueryIdentity({
   flowGroups: ["account management"],
 });
 const grouped: FlowCatalogCursor = {
-  v: 1,
+  v: 2,
   sort: "grouped",
   platform: "web",
   snapshotAt: "2026-07-29T05:00:00.000Z",
   identity,
   key: {
+    exactMatch: 0,
+    titleTermMatches: 1,
+    termMatches: 2,
     other: 0,
     categoryCount: 1081,
     category: "account management",

@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { QueryResult } from "pg";
 import {
+  flowCatalogSearchTerms,
   FlowCatalogFacetCache,
   FlowCatalogPageCache,
+  minimumFlowCatalogTermMatches,
   publishedFlowCatalogPage,
   type FlowCatalogQuery,
 } from "./flowCatalogStore.ts";
@@ -24,6 +26,9 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   title: "Editing Profile",
   title_key: "editing profile",
   title_sort: "editing profile",
+  exact_match: 0,
+  title_term_matches: 0,
+  term_matches: 0,
   count: 1081,
   category_count: 1825,
   category_rank: 1,
@@ -264,7 +269,9 @@ test("normalizes child and parent search variants and applies OR group filters",
   });
 
   assert.equal(calls[0]!.values?.[2], "billing and payments");
-  assert.deepEqual(calls[0]!.values?.[3], ["account and profile", "commerce"]);
+  assert.deepEqual(calls[0]!.values?.[3], ["account & profile", "commerce"]);
+  assert.deepEqual(calls[0]!.values?.[6], ["bill", "payment"]);
+  assert.equal(calls[0]!.values?.[7], 2);
   assert.match(calls[0]!.sql, /canonical\.normalized_name/);
   assert.match(calls[0]!.sql, /parent\.normalized_name/);
   assert.match(calls[0]!.sql, /replace\(canonical\.normalized_name, ' and ', ' '\)/);
@@ -274,6 +281,46 @@ test("normalizes child and parent search variants and applies OR group filters",
     { value: "Account Management", count: 2 },
     { value: "Commerce & Finance", count: 1 },
   ]);
+});
+
+test("reduces natural Flow queries to meaningful stems with a mostly-matching threshold", () => {
+  assert.deepEqual(
+    flowCatalogSearchTerms("checkout with payment method selection"),
+    ["checkout", "payment", "method", "select"],
+  );
+  assert.deepEqual(flowCatalogSearchTerms("Log in"), ["log", " in"]);
+  assert.deepEqual(flowCatalogSearchTerms("Creating accounts"), ["creat", "account"]);
+  assert.equal(minimumFlowCatalogTermMatches(1), 1);
+  assert.equal(minimumFlowCatalogTermMatches(4), 3);
+  assert.equal(minimumFlowCatalogTermMatches(6), 4);
+});
+
+test("filters and orders natural Flow queries by lightweight taxonomy relevance", async () => {
+  const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  await publishedFlowCatalogPage({
+    platform: "web",
+    query: "checkout with payment method selection",
+    cursorSecret: secret,
+    now: () => new Date(timestamp),
+  }, async (sql, values) => {
+    calls.push({ sql, values });
+    return result(calls.length === 1 ? [row({
+      exact_match: 0,
+      title_term_matches: 3,
+      term_matches: 3,
+    })] : [{ total_count: 1, facets: [] }]);
+  });
+
+  assert.deepEqual(calls[0]!.values?.[6], [
+    "checkout",
+    "payment",
+    "method",
+    "select",
+  ]);
+  assert.equal(calls[0]!.values?.[7], 3);
+  assert.match(calls[0]!.sql, /unnest\(\$7::text\[\]\)/);
+  assert.match(calls[0]!.sql, /relevance\.term_matches >= \$8::int/);
+  assert.match(calls[0]!.sql, /ORDER BY ranked\.exact_match DESC,[\s\S]*ranked\.title_term_matches DESC,[\s\S]*ranked\.term_matches DESC/);
 });
 
 test("facets omit their own Flow-group filter while totalCount keeps it", async () => {

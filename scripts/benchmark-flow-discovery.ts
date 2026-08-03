@@ -7,6 +7,30 @@ export interface TimingSummary {
   maxMs: number;
 }
 
+export interface FlowDiscoveryBenchmarkMeasurement extends TimingSummary {
+  url: string;
+  totalCount: number;
+  decodedBytes: number;
+}
+
+export function flowDiscoveryBenchmarkViolations(
+  measurements: readonly FlowDiscoveryBenchmarkMeasurement[],
+): string[] {
+  return measurements.flatMap((measurement) => {
+    const violations = [];
+    if (!Number.isSafeInteger(measurement.totalCount) || measurement.totalCount < 1) {
+      violations.push(`${measurement.url}: no results`);
+    }
+    if (measurement.p95Ms > 250) {
+      violations.push(`${measurement.url}: p95 ${measurement.p95Ms}ms exceeds 250ms`);
+    }
+    if (measurement.decodedBytes > 100_000) {
+      violations.push(`${measurement.url}: ${measurement.decodedBytes} bytes exceeds 100000`);
+    }
+    return violations;
+  });
+}
+
 export function summarizeTimings(samples: readonly number[]): TimingSummary {
   if (samples.length === 0) throw new RangeError("at least one timing is required");
   const sorted = [...samples].sort((left, right) => left - right);
@@ -33,6 +57,7 @@ export function flowDiscoveryBenchmarkUrls(baseUrl: string): string[] {
     const target = new URL(route);
     target.searchParams.set("platform", input.platform);
     target.searchParams.set("limit", "12");
+    target.searchParams.set("facets", "summary");
     target.searchParams.set("sort", input.sort);
     if (input.query) target.searchParams.set("query", input.query);
     if (input.filter) target.searchParams.set("filter", input.filter);
@@ -44,6 +69,11 @@ export function flowDiscoveryBenchmarkUrls(baseUrl: string): string[] {
     url({ platform: "android", sort: "popular" }),
     url({ platform: "web", sort: "grouped" }),
     url({ platform: "web", sort: "popular", query: "settings" }),
+    url({
+      platform: "web",
+      sort: "popular",
+      query: "checkout with payment method selection",
+    }),
     url({ platform: "web", sort: "popular", filter: "flowGroups.Settings" }),
   ];
 }
@@ -54,6 +84,9 @@ async function request(url: string) {
     headers: { "accept-encoding": "gzip, br" },
   });
   const body = await response.arrayBuffer();
+  const envelope = JSON.parse(new TextDecoder().decode(body)) as {
+    totalCount?: unknown;
+  };
   const elapsedMs = performance.now() - startedAt;
   if (!response.ok) {
     throw new Error(`${url} returned ${response.status}`);
@@ -63,6 +96,7 @@ async function request(url: string) {
     decodedBytes: body.byteLength,
     encodedBytes: Number(response.headers.get("content-length")) || null,
     encoding: response.headers.get("content-encoding"),
+    totalCount: Number(envelope.totalCount),
   };
 }
 
@@ -90,9 +124,12 @@ async function main() {
       decodedBytes: payload!.decodedBytes,
       encodedBytes: payload!.encodedBytes,
       encoding: payload!.encoding,
+      totalCount: payload!.totalCount,
     });
   }
   console.log(JSON.stringify(output, null, 2));
+  const violations = flowDiscoveryBenchmarkViolations(output);
+  if (violations.length > 0) throw new Error(violations.join("\n"));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

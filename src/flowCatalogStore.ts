@@ -229,9 +229,61 @@ export function normalizeFlowCatalogText(value: string): string {
     .trim();
 }
 
+const FLOW_SEARCH_STOP_WORDS = new Set([
+  "a", "an", "and", "at", "by", "for", "from", "in", "into", "my",
+  "of", "on", "or", "the", "to", "up", "via", "with",
+]);
+
+function flowSearchStem(token: string): string {
+  let stem = token;
+  if (stem.length > 5 && stem.endsWith("ing")) {
+    stem = stem.slice(0, -3);
+  } else if (stem.length > 4 && stem.endsWith("ies")) {
+    stem = `${stem.slice(0, -3)}y`;
+  } else if (stem.length > 4 && stem.endsWith("tion")) {
+    stem = stem.slice(0, -3);
+  } else if (stem.length > 4 && stem.endsWith("ed")) {
+    stem = stem.slice(0, -2);
+  } else if (stem.length > 4 && stem.endsWith("s")) {
+    stem = stem.slice(0, -1);
+  }
+  if (stem.length > 4 && stem.endsWith("e")) stem = stem.slice(0, -1);
+  return stem;
+}
+
+function normalizeStoredFlowTaxonomyKey(value: string): string {
+  return value.trim().toLocaleLowerCase("en-US").replace(/\s+/g, " ");
+}
+
+export function flowCatalogSearchTerms(value: string): string[] {
+  const normalized = normalizeFlowCatalogText(value);
+  if (!normalized) return [];
+  const tokens = normalized.split(" ");
+  const terms: string[] = [];
+  for (const [index, token] of tokens.entries()) {
+    const previous = flowSearchStem(tokens[index - 1] ?? "");
+    if (
+      (token === "in" || token === "up")
+      && (previous === "log" || previous === "sign" || previous === "set")
+    ) {
+      terms.push(` ${token}`);
+      continue;
+    }
+    if (token.length < 3 || FLOW_SEARCH_STOP_WORDS.has(token)) continue;
+    const stem = flowSearchStem(token);
+    if (stem.length >= 3) terms.push(stem);
+  }
+  return [...new Set(terms.length > 0 ? terms : [normalized])].slice(0, 12);
+}
+
+export function minimumFlowCatalogTermMatches(termCount: number): number {
+  if (termCount <= 0) return 0;
+  return Math.max(1, Math.ceil(termCount * 0.65));
+}
+
 function normalizedGroups(values: readonly string[] | undefined): string[] {
   return [...new Set((values ?? [])
-    .map(normalizeFlowCatalogText)
+    .map(normalizeStoredFlowTaxonomyKey)
     .filter(Boolean))]
     .sort();
 }
@@ -240,6 +292,16 @@ function commonCtes(): string {
   const parentName = "COALESCE(parent.name, 'Other Flows')";
   const parentKey = "COALESCE(parent.normalized_name, 'other flows')";
   const titleKey = "canonical.normalized_name";
+  const titleTermMatch = `(CASE
+    WHEN left(search_term.term, 1) = ' ' THEN ${titleKey} ~
+      ('(^|[^[:alnum:]])' || btrim(search_term.term) || '([^[:alnum:]]|$)')
+    ELSE ${titleKey} LIKE '%' || search_term.term || '%'
+  END)`;
+  const parentTermMatch = `(CASE
+    WHEN left(search_term.term, 1) = ' ' THEN ${parentKey} ~
+      ('(^|[^[:alnum:]])' || btrim(search_term.term) || '([^[:alnum:]]|$)')
+    ELSE ${parentKey} LIKE '%' || search_term.term || '%'
+  END)`;
   return `latest AS MATERIALIZED (
       SELECT DISTINCT ON (av.app_id)
         av.id AS version_id,
@@ -250,33 +312,62 @@ function commonCtes(): string {
         AND av.published_at IS NOT NULL
         AND av.published_at <= $2::timestamptz
       ORDER BY av.app_id, av.published_at DESC, av.version_number DESC, av.id DESC
-    ), instances AS (
+    ), relevant_taxonomy AS MATERIALIZED (
       SELECT
-        latest.app_id,
         canonical.id AS flow_id,
         COALESCE(parent.id, 0)::bigint AS category_id,
         ${parentName} AS category,
         ${parentKey} AS category_key,
         canonical.name AS title,
         ${titleKey} AS title_key,
+        relevance.exact_match,
+        relevance.title_term_matches,
+        relevance.term_matches
+      FROM flows canonical
+      LEFT JOIN flows parent ON parent.id = canonical.parent_id
+      CROSS JOIN LATERAL (
+        SELECT
+          CASE WHEN $3 <> '' AND (
+            ${titleKey} LIKE '%' || $3 || '%'
+            OR ${parentKey} LIKE '%' || $3 || '%'
+            OR replace(${titleKey}, ' and ', ' ')
+              LIKE '%' || replace($3, ' and ', ' ') || '%'
+            OR replace(${parentKey}, ' and ', ' ')
+              LIKE '%' || replace($3, ' and ', ' ') || '%'
+          ) THEN 1 ELSE 0 END::int AS exact_match,
+          COUNT(*) FILTER (
+            WHERE ${titleTermMatch}
+          )::int AS title_term_matches,
+          COUNT(*) FILTER (
+            WHERE ${titleTermMatch} OR ${parentTermMatch}
+          )::int AS term_matches
+        FROM unnest($7::text[]) AS search_term(term)
+      ) relevance
+      WHERE canonical.created_at <= $2::timestamptz
+        AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
+        AND (
+          $3 = ''
+          OR relevance.exact_match = 1
+          OR relevance.term_matches >= $8::int
+        )
+    ), instances AS (
+      SELECT
+        latest.app_id,
+        taxonomy.flow_id,
+        taxonomy.category_id,
+        taxonomy.category,
+        taxonomy.category_key,
+        taxonomy.title,
+        taxonomy.title_key,
+        taxonomy.exact_match,
+        taxonomy.title_term_matches,
+        taxonomy.term_matches,
         afv.id AS version_flow_id
       FROM latest
       JOIN app_flow_versions afv ON afv.version_id = latest.version_id
       JOIN app_flow_version_mappings mapping
         ON mapping.app_flow_version_id = afv.id
-      JOIN flows canonical ON canonical.id = mapping.flow_id
-      LEFT JOIN flows parent ON parent.id = canonical.parent_id
-      WHERE canonical.created_at <= $2::timestamptz
-        AND (parent.id IS NULL OR parent.created_at <= $2::timestamptz)
-        AND (
-          $3 = ''
-          OR ${titleKey} LIKE '%' || $3 || '%'
-          OR ${parentKey} LIKE '%' || $3 || '%'
-          OR replace(${titleKey}, ' and ', ' ')
-            LIKE '%' || replace($3, ' and ', ' ') || '%'
-          OR replace(${parentKey}, ' and ', ' ')
-            LIKE '%' || replace($3, ' and ', ' ') || '%'
-        )
+      JOIN relevant_taxonomy taxonomy ON taxonomy.flow_id = mapping.flow_id
     ), grouped_all AS (
       SELECT
         flow_id,
@@ -285,6 +376,9 @@ function commonCtes(): string {
         category_key,
         title,
         title_key,
+        MAX(exact_match)::int AS exact_match,
+        MAX(title_term_matches)::int AS title_term_matches,
+        MAX(term_matches)::int AS term_matches,
         COUNT(DISTINCT app_id)::int AS count
       FROM instances
       GROUP BY flow_id, category_id, category, category_key, title, title_key
@@ -305,6 +399,9 @@ function keyset(
     const popularKey = cursor.key;
     return {
       sql: `WHERE ROW(
+          -ranked.exact_match,
+          -ranked.title_term_matches,
+          -ranked.term_matches,
           ranked.other_rank,
           ranked.category_rank,
           -ranked.category_count,
@@ -314,10 +411,13 @@ function keyset(
           ranked.title_sort,
           ranked.flow_id
         ) > ROW(
-          $7::int, $8::int, -$9::int, $10::text,
-          $11::bigint, -$12::int, $13::text, $14::bigint
+          -$9::int, -$10::int, -$11::int, $12::int, $13::int, -$14::int,
+          $15::text, $16::bigint, -$17::int, $18::text, $19::bigint
         )`,
       values: [
+        popularKey.exactMatch,
+        popularKey.titleTermMatches,
+        popularKey.termMatches,
         popularKey.other,
         popularKey.categoryRank,
         popularKey.categoryCount,
@@ -331,6 +431,9 @@ function keyset(
   }
   return {
     sql: `WHERE ROW(
+        -ranked.exact_match,
+        -ranked.title_term_matches,
+        -ranked.term_matches,
         ranked.other_rank,
         -ranked.category_count,
         ranked.category_sort,
@@ -339,10 +442,13 @@ function keyset(
         ranked.title_sort,
         ranked.flow_id
       ) > ROW(
-        $7::int, -$8::int, $9::text,
-        $10::bigint, -$11::int, $12::text, $13::bigint
+        -$9::int, -$10::int, -$11::int, $12::int, -$13::int, $14::text,
+        $15::bigint, -$16::int, $17::text, $18::bigint
       )`,
     values: [
+      key.exactMatch,
+      key.titleTermMatches,
+      key.termMatches,
       key.other,
       key.categoryCount,
       key.category,
@@ -356,7 +462,10 @@ function keyset(
 
 function pageSql(sort: FlowCatalogSort, after: string): string {
   const order = sort === "popular"
-    ? `ranked.other_rank,
+    ? `ranked.exact_match DESC,
+       ranked.title_term_matches DESC,
+       ranked.term_matches DESC,
+       ranked.other_rank,
        ranked.category_rank,
        ranked.category_count DESC,
        ranked.category_sort,
@@ -364,7 +473,10 @@ function pageSql(sort: FlowCatalogSort, after: string): string {
        ranked.count DESC,
        ranked.title_sort,
        ranked.flow_id`
-    : `ranked.other_rank,
+    : `ranked.exact_match DESC,
+       ranked.title_term_matches DESC,
+       ranked.term_matches DESC,
+       ranked.other_rank,
        ranked.category_count DESC,
        ranked.category_sort,
        ranked.category_id,
@@ -431,6 +543,9 @@ function pageSql(sort: FlowCatalogSort, after: string): string {
       paged.title,
       paged.title_key,
       paged.title_sort,
+      paged.exact_match,
+      paged.title_term_matches,
+      paged.term_matches,
       paged.count,
       paged.category_count,
       paged.category_rank,
@@ -535,6 +650,9 @@ function cursorFromRow(
   },
 ): FlowCatalogCursor {
   const key = {
+    exactMatch: Number(row.exact_match) as 0 | 1,
+    titleTermMatches: Number(row.title_term_matches),
+    termMatches: Number(row.term_matches),
     other: Number(row.other_rank) as 0 | 1,
     categoryCount: Number(row.category_count),
     category: String(row.category_sort),
@@ -544,8 +662,8 @@ function cursorFromRow(
     flowId: String(row.flow_id),
   };
   return base.sort === "popular"
-    ? { v: 1, ...base, sort: "popular", key: { ...key, categoryRank: Number(row.category_rank) } }
-    : { v: 1, ...base, sort: "grouped", key };
+    ? { v: 2, ...base, sort: "popular", key: { ...key, categoryRank: Number(row.category_rank) } }
+    : { v: 2, ...base, sort: "grouped", key };
 }
 
 interface PublishedFlowCatalogPageInput {
@@ -583,6 +701,8 @@ async function loadPublishedFlowCatalogPage(
   const limit = pageLimit(input.limit);
   const sort = input.sort ?? "popular";
   const search = normalizeFlowCatalogText(input.query ?? "").slice(0, 120);
+  const searchTerms = flowCatalogSearchTerms(search);
+  const minimumTermMatches = minimumFlowCatalogTermMatches(searchTerms.length);
   const flowGroups = normalizedGroups(input.flowGroups);
   const identity = flowCatalogQueryIdentity({ query: search, flowGroups });
   const cursor = input.cursor
@@ -602,6 +722,8 @@ async function loadPublishedFlowCatalogPage(
     flowGroups,
     flowGroups.length > 0,
     limit + 1,
+    searchTerms,
+    minimumTermMatches,
     ...after.values,
   ];
   const cache = input.facetCache
@@ -611,7 +733,7 @@ async function loadPublishedFlowCatalogPage(
   const pageResultPromise = runQuery(pageSql(sort, after.sql), values);
   const metadataResultPromise = input.includeFacets === false || metadata
     ? null
-    : runQuery(metadataSql, values.slice(0, 5));
+    : runQuery(metadataSql, values.slice(0, 8));
   const [result, metadataResult] = await Promise.all([
     pageResultPromise,
     metadataResultPromise,
