@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { startSitesImportWorker } from "./start.ts";
+import {
+  DEFAULT_SITES_CRAWL_TIMEOUT_MS,
+  runSitesCrawlWithTimeout,
+  sitesCrawlTimeoutMs,
+  startSitesImportWorker,
+} from "./start.ts";
 import { wappalyzerOptionsFromEnvironment } from "./wappalyzerConfig.ts";
 
 test("Sites worker verifies migrations and storage before consuming", async () => {
@@ -27,6 +32,33 @@ test("Sites worker does not consume after a failed startup gate", async () => {
     }), failed === "migrations" ? /pending migrations/ : /storage unavailable/);
     assert.equal(consumed, false);
   }
+});
+
+test("Sites worker applies a bounded crawl timeout", async () => {
+  assert.equal(sitesCrawlTimeoutMs(undefined), DEFAULT_SITES_CRAWL_TIMEOUT_MS);
+  assert.equal(sitesCrawlTimeoutMs("2500"), 2_500);
+  assert.throws(() => sitesCrawlTimeoutMs("forever"), /timeout/i);
+  assert.throws(() => sitesCrawlTimeoutMs("999"), /timeout/i);
+
+  let closes = 0;
+  const result = await runSitesCrawlWithTimeout(
+    async () => "done",
+    async () => { closes += 1; },
+    1_000,
+  );
+  assert.equal(result, "done");
+  assert.equal(closes, 1);
+
+  closes = 0;
+  await assert.rejects(
+    runSitesCrawlWithTimeout(
+      () => new Promise<never>(() => undefined),
+      async () => { closes += 1; },
+      10,
+    ),
+    /timed out after 10ms/,
+  );
+  assert.equal(closes, 1);
 });
 
 test("enables Wappalyzer only for an explicitly configured extension", () => {

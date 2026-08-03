@@ -1,0 +1,1624 @@
+{
+  "schemaVersion": 1,
+  "id": "fa157687-ee42-443e-a992-5f8a3fcdd48f",
+  "sourceUrl": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f",
+  "sitemapLastModified": "2026-06-03T18:33:16.776Z",
+  "fetchedAt": "2026-08-02T18:09:05.864Z",
+  "contentHash": "4b7c4bba3e4d5a8e7051b92c56660a45b806be93a65a830b905d8fcef9415a51",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Ssense design system",
+            "item": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f#style-reference",
+        "name": "Ssense design system reference",
+        "headline": "Ssense design system | Refero Styles",
+        "description": "Explore Ssense's light E-commerce design system: Obsidian #000000, Graphite #333333 colors, JHA Times Now, Favorit SSENSE Inter typography, and DESIGN.md...",
+        "url": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f",
+        "mainEntityOfPage": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Ssense",
+          "url": "https://ssense.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/17ed804c-38ea-4361-ae05-a54f0177d2fb.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/17ed804c-38ea-4361-ae05-a54f0177d2fb.jpg",
+          "caption": "Screenshot of Ssense"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/17ed804c-38ea-4361-ae05-a54f0177d2fb.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Ssense design system",
+          "Ssense website design",
+          "Ssense colors",
+          "Ssense typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "E-commerce design system",
+          "Obsidian",
+          "Graphite",
+          "Silver",
+          "Ash",
+          "JHA Times Now",
+          "Favorit SSENSE Inter",
+          "ssense-fonts (micro-tag)"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Ssense design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Ssense website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Ssense colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Ssense typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "E-commerce design system"
+          }
+        ],
+        "datePublished": "2026-02-01T12:44:20.000Z",
+        "dateModified": "2026-02-01T12:44:20.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://ssense.com",
+      "siteName": "Ssense",
+      "extractedAt": "2026-06-03T18:33:16.771Z",
+      "durationMs": 34268,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 441,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#333333",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3210925111636326
+            },
+            "contexts": [
+              "other",
+              "link",
+              "image",
+              "heading",
+              "body"
+            ],
+            "frequency": 1661,
+            "confidence": 1,
+            "prominence": 66101818.39918458,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "body",
+              "link",
+              "nav",
+              "footer"
+            ],
+            "frequency": 448,
+            "confidence": 1,
+            "prominence": 54938213.7015688,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#f4f4f4",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.967153298496294
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 22,
+            "confidence": 1,
+            "prominence": 1462748.041234508,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#979797",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6764032429050417
+            },
+            "contexts": [
+              "link",
+              "other"
+            ],
+            "frequency": 39,
+            "confidence": 1,
+            "prominence": 192371.7348458935,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 133950,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#e8e8e8",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9309991411193288
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 62700,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#888888",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6267535410065036
+            },
+            "contexts": [
+              "other",
+              "list",
+              "link"
+            ],
+            "frequency": 50,
+            "confidence": 1,
+            "prominence": 36258.1427858818,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.09,
+            "background": "#f4f4f4",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.14,
+            "background": "#e8e8e8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.63,
+            "background": "#ffffff",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.49,
+            "background": "#f4f4f4",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.31,
+            "background": "#e8e8e8",
+            "foreground": "#333333"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.54,
+            "background": "#ffffff",
+            "foreground": "#888888"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.22,
+            "background": "#f4f4f4",
+            "foreground": "#888888"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.89,
+            "background": "#e8e8e8",
+            "foreground": "#888888"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 10,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 6
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 3,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 5,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "paddingLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 74,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingBottom",
+              "marginTop",
+              "paddingTop",
+              "marginLeft",
+              "marginBottom",
+              "marginRight",
+              "rowGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 15,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 72,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "marginBottom",
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 30,
+            "contexts": [],
+            "frequency": 22,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 31,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 40,
+            "contexts": [],
+            "frequency": 17,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginRight",
+              "marginLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 55,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 64,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 80,
+            "contexts": [],
+            "frequency": 26,
+            "properties": [
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 105,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 119,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 120,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "JHA Times Now",
+            "source": "custom",
+            "weights": [
+              100,
+              400
+            ],
+            "frequency": 291,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Favorit SSENSE Inter",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 98,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Favorit SSENSE Inter1",
+            "source": "custom",
+            "weights": [
+              100,
+              400
+            ],
+            "frequency": 49,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "ssense-fonts",
+            "source": "custom",
+            "weights": [
+              700
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 11,
+            "family": "Favorit SSENSE Inter",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "link",
+              "footer",
+              "nav",
+              "list"
+            ],
+            "frequency": 38,
+            "lineHeight": 1.36,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Favorit SSENSE Inter",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 53,
+            "lineHeight": 1.36,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 11,
+            "family": "ssense-fonts",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Favorit SSENSE Inter",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "other",
+              "link"
+            ],
+            "frequency": 7,
+            "lineHeight": 4.55,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 100,
+            "contexts": [
+              "body",
+              "other",
+              "heading"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.26,
+            "letterSpacing": -0.004,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.26,
+            "letterSpacing": -0.004,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 15,
+            "family": "JHA Times Now",
+            "weight": 100,
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 36,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.003,
+            "textTransform": "none"
+          },
+          {
+            "size": 19,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 20,
+            "lineHeight": 1.37,
+            "letterSpacing": -0.013,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 19,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 100,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.37,
+            "letterSpacing": -0.013,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 20,
+            "family": "JHA Times Now",
+            "weight": 100,
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 98,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.002,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "JHA Times Now",
+            "weight": 100,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "lineHeight": 2,
+            "letterSpacing": -0.002,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 29,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 100,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.19,
+            "letterSpacing": -0.018,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 38,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.16,
+            "letterSpacing": -0.033,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 56,
+            "family": "JHA Times Now",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.07,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 95,
+            "family": "Favorit SSENSE Inter1",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 0.99,
+            "letterSpacing": -0.047,
+            "textTransform": "uppercase"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use only the seven neutral colors — no accent colors, no brand colors, no fills on interactive elements",
+        "Set display headlines at 56-95px with letter-spacing of -0.033em to -0.047em for compressed editorial weight",
+        "Use weight 100 (hairline) for serif body text at 20px — the thinness is the signature",
+        "Keep all component corners at 0px radius — SSENSE is a sharp-edged system",
+        "Use the Ghost Outlined Button (1px #000000 border, transparent fill) for all calls to action",
+        "Maintain 64px vertical gaps between major sections and 10-20px gaps between related elements",
+        "Pair serif editorial headlines (JHA Times Now) with sans-serif body text (Favorit SSENSE Inter) — the contrast is the system"
+      ],
+      "donts": [
+        "Never add a colored CTA button — the system has no primary action color",
+        "Never use border-radius above 0px on any UI element",
+        "Never use a sans-serif font for editorial display headlines above 38px",
+        "Never use letter-spacing above normal on any element — tracking is always negative or zero",
+        "Never place content on anything other than #ffffff or #f4f4f4 surfaces",
+        "Never use drop shadows or elevation effects — the system is flat",
+        "Never use bold weights (600-700) for anything other than the 11px micro-tag label"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Obsidian",
+          "role": "Primary text, navigation links, logo wordmark, footer links, SVG icon strokes — the anchor color of the entire system",
+          "group": "neutral"
+        },
+        {
+          "hex": "#333333",
+          "name": "Graphite",
+          "role": "Body text and headings — slightly softer than pure black for long-form editorial readability at large sizes",
+          "group": "neutral"
+        },
+        {
+          "hex": "#979797",
+          "name": "Silver",
+          "role": "Hairline borders, dividers, inactive UI separators, secondary meta labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#888888",
+          "name": "Ash",
+          "role": "Muted helper text, list items, tertiary metadata, subdued navigation states",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f4f4f4",
+          "name": "Marble",
+          "role": "Page canvas background, subtle section differentiation, footer surface — barely warmer than pure white",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Card surfaces, hero background, product tiles, elevated content panels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#e8e8e8",
+          "name": "Mist",
+          "role": "Alternative surface tint, subtle alternating bands, ghost button hover backgrounds",
+          "group": "neutral"
+        }
+      ],
+      "imagery": "Photography is the sole source of color and visual energy in this system. Editorial fashion photography dominates: full-bleed or near-full-bleed landscape and portrait crops of models in designer clothing, product photography on gradient backgrounds (dark teal-to-gray studio shots), and environmental lifestyle imagery. Images have sharp corners with no border-radius, no overlays, no duotone treatment — they appear as raw photographic prints placed on the white page. No illustrations, no icons (except the × close button and minimal UI markers), no 3D renders, no abstract graphics. The images do all the emotional and chromatic work that a typical e-commerce site would delegate to color and decoration.",
+      "similar": [
+        {
+          "why": "Same editorial-magazine approach to luxury e-commerce — large serif display type, monochrome palette, photography as the sole color source, sharp-cornered ghost buttons, and generous whitespace between editorial sections",
+          "business": "Mr Porter"
+        },
+        {
+          "why": "Identical restraint philosophy — pure white canvas, no accent colors, hairline-thin sans-serif navigation, serif editorial headlines, and an absolute refusal to use UI decoration that would distract from the product",
+          "business": "The Row"
+        },
+        {
+          "why": "Same ultra-minimal monochrome system with oversized sans-serif display type, negative letter-spacing on large text, completely flat surfaces with no shadows, and sharp 0px corners on all components",
+          "business": "COS"
+        },
+        {
+          "why": "Shares the warm-white (#f4f4f4) canvas, deep typographic contrast between display and body sizes, and a near-total absence of color — both treat photography and typography as the entire visual language",
+          "business": "Aesop"
+        },
+        {
+          "why": "Same luxury editorial e-commerce model — large-scale editorial headlines, monochrome navigation, content-card grids with image-dominant cards, and a flat no-elevation component system",
+          "business": "Net-a-Porter"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "0px",
+          "cards": "0px",
+          "links": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "10-20px",
+        "sectionGap": "64px",
+        "cardPadding": "20px",
+        "pageMaxWidth": "1440px"
+      },
+      "industry": "ecommerce",
+      "surfaces": [
+        {
+          "hex": "#f4f4f4",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page background — the warm-white gallery wall"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Card Surface",
+          "level": 1,
+          "purpose": "Elevated content areas, hero backgrounds, product tiles"
+        },
+        {
+          "hex": "#e8e8e8",
+          "name": "Alt Band",
+          "level": 2,
+          "purpose": "Subtle section alternation, ghost hover states"
+        }
+      ],
+      "northStar": "White gallery wall with editorial serifs. A high-fashion magazine spread rendered as a single-page web experience — where the only color is photography and the only weight is restraint.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 11,
+          "lineHeight": 1,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.37,
+          "letterSpacing": -0.056
+        },
+        {
+          "role": "subheading",
+          "size": 20,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.06
+        },
+        {
+          "role": "heading-sm",
+          "size": 29,
+          "lineHeight": 1.19,
+          "letterSpacing": -0.522
+        },
+        {
+          "role": "heading",
+          "size": 38,
+          "lineHeight": 1.16,
+          "letterSpacing": -1.254
+        },
+        {
+          "role": "heading-lg",
+          "size": 56,
+          "lineHeight": 1.07,
+          "letterSpacing": -2.24
+        },
+        {
+          "role": "display",
+          "size": 95,
+          "lineHeight": 0.99,
+          "letterSpacing": -4.465
+        }
+      ],
+      "components": [
+        {
+          "name": "Ghost Outlined Button",
+          "role": "Primary call-to-action on editorial banners (e.g. 'View Editorial')",
+          "description": "1px solid #000000 border, no fill, transparent background, #000000 text. Padding approximately 10px 20px. No border-radius — completely sharp corners. Text in Favorit SSENSE Inter at 11px weight 400, uppercase, letter-spacing normal. On hover: fill becomes #000000, text inverts to #ffffff. This is the only interactive element style in the system."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Primary site navigation across all pages",
+          "description": "White (#ffffff) background, no border, no shadow. Left-aligned category links (MENSWEAR, WOMENSWEAR, EVERYTHING ELSE, SALE, SEARCH) in Favorit SSENSE Inter 11px weight 400, uppercase, #000000. Centered logo wordmark 'SSENSE' in larger weight. Right-aligned utility links (ENGLISH, LOGIN, WISHLIST, BAG). All text tracking normal, all elements vertically centered with ~20px horizontal padding."
+        },
+        {
+          "name": "Editorial Hero Block",
+          "role": "Landing page hero section combining headline + editorial photography",
+          "description": "Two-column layout: left column holds serif headline (JHA Times Now, 56px, weight 400, #333333) stacked over sans-serif editorial description (Favorit SSENSE Inter, 19-20px, weight 400, #333333), with ghost outlined button below. Right column holds a full-bleed editorial photograph. No card container, no background fill, no dividers — content floats directly on the #ffffff canvas. Gap between columns approximately 40-55px."
+        },
+        {
+          "name": "Editorial Card Grid Item",
+          "role": "Content tiles in the secondary editorial grid below the hero",
+          "description": "Three-column grid of editorial content cards. Each card: top is a landscape photograph with no border-radius, no padding around image. Below image: 'RECENT' micro-label in ssense-fonts weight 700, 11px, uppercase, #000000. Then a headline in Favorit SSENSE Inter 14-19px, weight 400, #000000. Then a metadata line (category + date) in 11px weight 400, #888888. No card background, no border, no shadow — the photograph is the visual anchor."
+        },
+        {
+          "name": "Product Feature Card",
+          "role": "Featured product placement with dark moody photography",
+          "description": "Two-column product feature layout. Each column contains a product photograph on a gradient background (dark teal-to-gray), sharp corners, no border. Below: 'Featured' label in 11px weight 400, then 'NEW ARRIVALS' in Favorit SSENSE Inter ~19px weight 400. The dark photographic backgrounds create tonal contrast against the white page without any colored UI elements."
+        },
+        {
+          "name": "Promotional Banner Strip",
+          "role": "Site-wide announcement bar at the very top",
+          "description": "Full-width horizontal strip at the top of the page. Very light background, thin bottom border. Centered text in Favorit SSENSE Inter 11px weight 400, #000000. A small close (×) icon in the far right corner. No padding drama — sits as a single-line 30-40px tall band."
+        },
+        {
+          "name": "Header Logo Mark",
+          "role": "Brand wordmark centered in navigation",
+          "description": "Text-only 'SSENSE' wordmark in Favorit SSENSE Inter, approximately 19-20px, weight 400, #000000, centered in the top navigation bar. No symbol, no tagline — the wordmark IS the logo. Functions as a home link."
+        },
+        {
+          "name": "Micro Category Label",
+          "role": "Metadata and category tagging on editorial content",
+          "description": "ssense-fonts family at weight 700, 11px, #000000, uppercase. Always precedes an editorial headline. Sets a typographic rhythm: bold tag → regular headline → muted meta. Letter-spacing normal, line-height 1.0 — sits tight against the line below."
+        },
+        {
+          "name": "Meta Description Line",
+          "role": "Secondary descriptive text under editorial headlines",
+          "description": "Favorit SSENSE Inter 14-15px, weight 400, #888888. Pairs with the black headline above to create a two-tone label hierarchy. The 3:1 contrast between #000000 headline and #888888 meta is the system's only typographic color gradient."
+        },
+        {
+          "name": "Editorial Paragraph Block",
+          "role": "Long-form editorial body text in hero sections",
+          "description": "JHA Times Now serif, 20px, weight 100 (hairline), #333333, line-height 1.30. The ultra-light serif weight for body copy is a signature anti-pattern — most luxury sites use regular or medium for body. This creates a whisper-thin text quality that feels typeset, not typed. No maximum width constraint visible — text flows within its column."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Editorial display and subhead serif — the voice of the brand. Used at 56px for hero editorial titles with extreme tight tracking (-0.04em) and 1.07 line-height, creating a compressed magazine-cover effect. Weight 100 is a near-hairline whisper that feels anti-commerce. Substitute: Playfair Display, GT Sectra, or Canela for a similar high-contrast transitional serif.",
+          "sizes": "15px, 20px, 56px",
+          "family": "JHA Times Now",
+          "weight": "100, 400",
+          "lineHeight": "1.07, 1.20, 1.30, 2.00",
+          "substitute": "Playfair Display, GT Sectra, Canela",
+          "letterSpacing": "-0.0400em at 56px, -0.0030em at 20px, -0.0020em at 15px"
+        },
+        {
+          "role": "Primary UI and content sans-serif — used for navigation, body text, editorial descriptions, and the largest display sizes (95px). The letter-spacing scales aggressively tighter as size increases: -0.047em at 95px pulls the giant wordforms into a dense architectural block, while -0.004em at 14px keeps body text natural. This negative-tracking-at-scale pattern is the signature. Substitute: Inter, Söhne, or Neue Haas Grotesk.",
+          "sizes": "11px",
+          "family": "Favorit SSENSE Inter",
+          "weight": "100, 400",
+          "lineHeight": "0.99, 1.16, 1.19, 1.26, 1.37",
+          "substitute": "Inter, Söhne, Neue Haas Grotesk",
+          "letterSpacing": "-0.0470em at 95px, -0.0330em at 38px, -0.0180em at 29px, -0.0130em at 19px, -0.0040em at 14px"
+        },
+        {
+          "role": "Bold micro-label for category tags and merchandising markers — the one place weight 700 appears in the entire system. Always uppercase, always 11px, always tight line-height.",
+          "sizes": "11px",
+          "family": "ssense-fonts (micro-tag)",
+          "weight": "700",
+          "lineHeight": "1.00",
+          "substitute": "Inter Bold, Söhne Bold",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Favorit SSENSE Inter1 — detected in extracted data but not described by AI",
+          "sizes": "14px, 19px, 29px, 38px, 95px",
+          "family": "Favorit SSENSE Inter1",
+          "weight": "100, 400",
+          "lineHeight": "0.99, 1.16, 1.19, 1.26, 1.37",
+          "letterSpacing": "-0.047, -0.033, -0.018, -0.013, -0.004"
+        }
+      ],
+      "description": "SSENSE operates as a digital fashion editorial: pristine white canvas, razor-thin sans-serif navigation, and oversized serif headlines that behave like magazine cover titles rather than web UI. The visual system is deliberately monochrome — no accent colors, no filled CTAs, no decorative gradients — letting editorial photography and typography do all the expressive work. Hierarchy is achieved through extreme scale contrast (95px display down to 11px meta labels) and tight negative letter-spacing on serif faces that pulls letterforms into elegant, compressed shapes. Components are minimal and ghost-like: outlined buttons, hairline borders, near-invisible dividers. The site reads less like a store and more like a curated print publication that happens to sell things.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "SSENSE is a completely flat design system. No drop shadows, no box-shadows, no elevation effects of any kind. Visual separation is achieved exclusively through whitespace, the natural contrast between #ffffff and #f4f4f4 surfaces, and 1px hairline borders in #979797. The flatness reinforces the editorial print-magazine metaphor — like ink on paper, not digital UI."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/7b109301-9595-4763-a3ce-af959db6a4e3.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/17ed804c-38ea-4361-ae05-a54f0177d2fb.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "ssense",
+    "generatedAt": "2026-06-03T18:33:16.771Z",
+    "summary": "SSENSE operates as a digital fashion editorial: pristine white canvas, razor-thin sans-serif navigation, and oversized serif headlines that behave like magazine cover titles rather than web UI. The visual system is deliberately monochrome — no accent colors, no filled CTAs, no decorative gradients — letting editorial photography and typography do all the expressive work. Hierarchy is achieved through extreme scale contrast (95px display down to 11px meta labels) and tight negative letter-spacing on serif faces that pulls letterforms into elegant, compressed shapes. Components are minimal and ghost-like: outlined buttons, hairline borders, near-invisible dividers. The site reads less like a store and more like a curated print publication that happens to sell things.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "fa157687-ee42-443e-a992-5f8a3fcdd48f",
+      "sourceUrl": "https://styles.refero.design/style/fa157687-ee42-443e-a992-5f8a3fcdd48f",
+      "originalUrl": "https://ssense.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/7b109301-9595-4763-a3ce-af959db6a4e3.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/17ed804c-38ea-4361-ae05-a54f0177d2fb.jpg",
+      "importedAt": "2026-08-02T18:09:05.864Z",
+      "upstreamModifiedAt": "2026-06-03T18:33:16.776Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "White gallery wall with editorial serifs. A high-fashion magazine spread rendered as a single-page web experience — where the only color is photography and the only weight is restraint.",
+      "industry": "ecommerce"
+    },
+    "tokens": [
+      {
+        "id": "color-obsidian",
+        "kind": "color",
+        "name": "Obsidian",
+        "value": "#000000",
+        "role": "Primary text, navigation links, logo wordmark, footer links, SVG icon strokes — the anchor color of the entire system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#333333",
+        "role": "Body text and headings — slightly softer than pure black for long-form editorial readability at large sizes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-silver",
+        "kind": "color",
+        "name": "Silver",
+        "value": "#979797",
+        "role": "Hairline borders, dividers, inactive UI separators, secondary meta labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#888888",
+        "role": "Muted helper text, list items, tertiary metadata, subdued navigation states",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-marble",
+        "kind": "color",
+        "name": "Marble",
+        "value": "#f4f4f4",
+        "role": "Page canvas background, subtle section differentiation, footer surface — barely warmer than pure white",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Card surfaces, hero background, product tiles, elevated content panels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mist",
+        "kind": "color",
+        "name": "Mist",
+        "value": "#e8e8e8",
+        "role": "Alternative surface tint, subtle alternating bands, ghost button hover backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-jha-times-now",
+        "kind": "typography",
+        "name": "JHA Times Now",
+        "value": "font-family: JHA Times Now; font-weight: 100, 400; font-size: 15px, 20px, 56px; line-height: 1.07, 1.20, 1.30, 2.00; letter-spacing: -0.0400em at 56px, -0.0030em at 20px, -0.0020em at 15px",
+        "role": "Editorial display and subhead serif — the voice of the brand. Used at 56px for hero editorial titles with extreme tight tracking (-0.04em) and 1.07 line-height, creating a compressed magazine-cover effect. Weight 100 is a near-hairline whisper that feels anti-commerce. Substitute: Playfair Display, GT Sectra, or Canela for a similar high-contrast transitional serif.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-favorit-ssense-inter",
+        "kind": "typography",
+        "name": "Favorit SSENSE Inter",
+        "value": "font-family: Favorit SSENSE Inter; font-weight: 100, 400; font-size: 11px; line-height: 0.99, 1.16, 1.19, 1.26, 1.37; letter-spacing: -0.0470em at 95px, -0.0330em at 38px, -0.0180em at 29px, -0.0130em at 19px, -0.0040em at 14px",
+        "role": "Primary UI and content sans-serif — used for navigation, body text, editorial descriptions, and the largest display sizes (95px). The letter-spacing scales aggressively tighter as size increases: -0.047em at 95px pulls the giant wordforms into a dense architectural block, while -0.004em at 14px keeps body text natural. This negative-tracking-at-scale pattern is the signature. Substitute: Inter, Söhne, or Neue Haas Grotesk.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-ssense-fonts-micro-tag",
+        "kind": "typography",
+        "name": "ssense-fonts (micro-tag)",
+        "value": "font-family: ssense-fonts (micro-tag); font-weight: 700; font-size: 11px; line-height: 1.00; letter-spacing: normal",
+        "role": "Bold micro-label for category tags and merchandising markers — the one place weight 700 appears in the entire system. Always uppercase, always 11px, always tight line-height.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-favorit-ssense-inter1",
+        "kind": "typography",
+        "name": "Favorit SSENSE Inter1",
+        "value": "font-family: Favorit SSENSE Inter1; font-weight: 100, 400; font-size: 14px, 19px, 29px, 38px, 95px; line-height: 0.99, 1.16, 1.19, 1.26, 1.37; letter-spacing: -0.047, -0.033, -0.018, -0.013, -0.004",
+        "role": "Favorit SSENSE Inter1 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 11px; line-height: 1; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.37; letter-spacing: -0.056px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 20px; line-height: 1.2; letter-spacing: -0.06px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 29px; line-height: 1.19; letter-spacing: -0.522px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 38px; line-height: 1.16; letter-spacing: -1.254px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 56px; line-height: 1.07; letter-spacing: -2.24px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 95px; line-height: 0.99; letter-spacing: -4.465px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10-20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1440px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "0px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-links",
+        "kind": "radius",
+        "name": "links",
+        "value": "0px",
+        "role": "Imported links radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "SSENSE is a completely flat design system. No drop shadows, no box-shadows, no elevation effects of any kind. Visual separation is achieved exclusively through whitespace, the natural contrast between #ffffff and #f4f4f4 surfaces, and 1px hairline borders in #979797. The flatness reinforces the editorial print-magazine metaphor — like ink on paper, not digital UI.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "ghost-outlined-button",
+        "name": "Ghost Outlined Button",
+        "category": "Refero components",
+        "description": "1px solid #000000 border, no fill, transparent background, #000000 text. Padding approximately 10px 20px. No border-radius — completely sharp corners. Text in Favorit SSENSE Inter at 11px weight 400, uppercase, letter-spacing normal. On hover: fill becomes #000000, text inverts to #ffffff. This is the only interactive element style in the system.",
+        "variants": [
+          {
+            "id": "ghost-outlined-button-reference",
+            "name": "Reference",
+            "description": "1px solid #000000 border, no fill, transparent background, #000000 text. Padding approximately 10px 20px. No border-radius — completely sharp corners. Text in Favorit SSENSE Inter at 11px weight 400, uppercase, letter-spacing normal. On hover: fill becomes #000000, text inverts to #ffffff. This is the only interactive element style in the system.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary call-to-action on editorial banners (e.g. 'View Editorial')"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "White (#ffffff) background, no border, no shadow. Left-aligned category links (MENSWEAR, WOMENSWEAR, EVERYTHING ELSE, SALE, SEARCH) in Favorit SSENSE Inter 11px weight 400, uppercase, #000000. Centered logo wordmark 'SSENSE' in larger weight. Right-aligned utility links (ENGLISH, LOGIN, WISHLIST, BAG). All text tracking normal, all elements vertically centered with ~20px horizontal padding.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "White (#ffffff) background, no border, no shadow. Left-aligned category links (MENSWEAR, WOMENSWEAR, EVERYTHING ELSE, SALE, SEARCH) in Favorit SSENSE Inter 11px weight 400, uppercase, #000000. Centered logo wordmark 'SSENSE' in larger weight. Right-aligned utility links (ENGLISH, LOGIN, WISHLIST, BAG). All text tracking normal, all elements vertically centered with ~20px horizontal padding.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation across all pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "editorial-hero-block",
+        "name": "Editorial Hero Block",
+        "category": "Refero components",
+        "description": "Two-column layout: left column holds serif headline (JHA Times Now, 56px, weight 400, #333333) stacked over sans-serif editorial description (Favorit SSENSE Inter, 19-20px, weight 400, #333333), with ghost outlined button below. Right column holds a full-bleed editorial photograph. No card container, no background fill, no dividers — content floats directly on the #ffffff canvas. Gap between columns approximately 40-55px.",
+        "variants": [
+          {
+            "id": "editorial-hero-block-reference",
+            "name": "Reference",
+            "description": "Two-column layout: left column holds serif headline (JHA Times Now, 56px, weight 400, #333333) stacked over sans-serif editorial description (Favorit SSENSE Inter, 19-20px, weight 400, #333333), with ghost outlined button below. Right column holds a full-bleed editorial photograph. No card container, no background fill, no dividers — content floats directly on the #ffffff canvas. Gap between columns approximately 40-55px.",
+            "evidence": [],
+            "observedProperties": [
+              "Landing page hero section combining headline + editorial photography"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "editorial-card-grid-item",
+        "name": "Editorial Card Grid Item",
+        "category": "Refero components",
+        "description": "Three-column grid of editorial content cards. Each card: top is a landscape photograph with no border-radius, no padding around image. Below image: 'RECENT' micro-label in ssense-fonts weight 700, 11px, uppercase, #000000. Then a headline in Favorit SSENSE Inter 14-19px, weight 400, #000000. Then a metadata line (category + date) in 11px weight 400, #888888. No card background, no border, no shadow — the photograph is the visual anchor.",
+        "variants": [
+          {
+            "id": "editorial-card-grid-item-reference",
+            "name": "Reference",
+            "description": "Three-column grid of editorial content cards. Each card: top is a landscape photograph with no border-radius, no padding around image. Below image: 'RECENT' micro-label in ssense-fonts weight 700, 11px, uppercase, #000000. Then a headline in Favorit SSENSE Inter 14-19px, weight 400, #000000. Then a metadata line (category + date) in 11px weight 400, #888888. No card background, no border, no shadow — the photograph is the visual anchor.",
+            "evidence": [],
+            "observedProperties": [
+              "Content tiles in the secondary editorial grid below the hero"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-feature-card",
+        "name": "Product Feature Card",
+        "category": "Refero components",
+        "description": "Two-column product feature layout. Each column contains a product photograph on a gradient background (dark teal-to-gray), sharp corners, no border. Below: 'Featured' label in 11px weight 400, then 'NEW ARRIVALS' in Favorit SSENSE Inter ~19px weight 400. The dark photographic backgrounds create tonal contrast against the white page without any colored UI elements.",
+        "variants": [
+          {
+            "id": "product-feature-card-reference",
+            "name": "Reference",
+            "description": "Two-column product feature layout. Each column contains a product photograph on a gradient background (dark teal-to-gray), sharp corners, no border. Below: 'Featured' label in 11px weight 400, then 'NEW ARRIVALS' in Favorit SSENSE Inter ~19px weight 400. The dark photographic backgrounds create tonal contrast against the white page without any colored UI elements.",
+            "evidence": [],
+            "observedProperties": [
+              "Featured product placement with dark moody photography"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "promotional-banner-strip",
+        "name": "Promotional Banner Strip",
+        "category": "Refero components",
+        "description": "Full-width horizontal strip at the top of the page. Very light background, thin bottom border. Centered text in Favorit SSENSE Inter 11px weight 400, #000000. A small close (×) icon in the far right corner. No padding drama — sits as a single-line 30-40px tall band.",
+        "variants": [
+          {
+            "id": "promotional-banner-strip-reference",
+            "name": "Reference",
+            "description": "Full-width horizontal strip at the top of the page. Very light background, thin bottom border. Centered text in Favorit SSENSE Inter 11px weight 400, #000000. A small close (×) icon in the far right corner. No padding drama — sits as a single-line 30-40px tall band.",
+            "evidence": [],
+            "observedProperties": [
+              "Site-wide announcement bar at the very top"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "header-logo-mark",
+        "name": "Header Logo Mark",
+        "category": "Refero components",
+        "description": "Text-only 'SSENSE' wordmark in Favorit SSENSE Inter, approximately 19-20px, weight 400, #000000, centered in the top navigation bar. No symbol, no tagline — the wordmark IS the logo. Functions as a home link.",
+        "variants": [
+          {
+            "id": "header-logo-mark-reference",
+            "name": "Reference",
+            "description": "Text-only 'SSENSE' wordmark in Favorit SSENSE Inter, approximately 19-20px, weight 400, #000000, centered in the top navigation bar. No symbol, no tagline — the wordmark IS the logo. Functions as a home link.",
+            "evidence": [],
+            "observedProperties": [
+              "Brand wordmark centered in navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "micro-category-label",
+        "name": "Micro Category Label",
+        "category": "Refero components",
+        "description": "ssense-fonts family at weight 700, 11px, #000000, uppercase. Always precedes an editorial headline. Sets a typographic rhythm: bold tag → regular headline → muted meta. Letter-spacing normal, line-height 1.0 — sits tight against the line below.",
+        "variants": [
+          {
+            "id": "micro-category-label-reference",
+            "name": "Reference",
+            "description": "ssense-fonts family at weight 700, 11px, #000000, uppercase. Always precedes an editorial headline. Sets a typographic rhythm: bold tag → regular headline → muted meta. Letter-spacing normal, line-height 1.0 — sits tight against the line below.",
+            "evidence": [],
+            "observedProperties": [
+              "Metadata and category tagging on editorial content"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "meta-description-line",
+        "name": "Meta Description Line",
+        "category": "Refero components",
+        "description": "Favorit SSENSE Inter 14-15px, weight 400, #888888. Pairs with the black headline above to create a two-tone label hierarchy. The 3:1 contrast between #000000 headline and #888888 meta is the system's only typographic color gradient.",
+        "variants": [
+          {
+            "id": "meta-description-line-reference",
+            "name": "Reference",
+            "description": "Favorit SSENSE Inter 14-15px, weight 400, #888888. Pairs with the black headline above to create a two-tone label hierarchy. The 3:1 contrast between #000000 headline and #888888 meta is the system's only typographic color gradient.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary descriptive text under editorial headlines"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "editorial-paragraph-block",
+        "name": "Editorial Paragraph Block",
+        "category": "Refero components",
+        "description": "JHA Times Now serif, 20px, weight 100 (hairline), #333333, line-height 1.30. The ultra-light serif weight for body copy is a signature anti-pattern — most luxury sites use regular or medium for body. This creates a whisper-thin text quality that feels typeset, not typed. No maximum width constraint visible — text flows within its column.",
+        "variants": [
+          {
+            "id": "editorial-paragraph-block-reference",
+            "name": "Reference",
+            "description": "JHA Times Now serif, 20px, weight 100 (hairline), #333333, line-height 1.30. The ultra-light serif weight for body copy is a signature anti-pattern — most luxury sites use regular or medium for body. This creates a whisper-thin text quality that feels typeset, not typed. No maximum width constraint visible — text flows within its column.",
+            "evidence": [],
+            "observedProperties": [
+              "Long-form editorial body text in hero sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "imagery-imagery-1",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Photography is the sole source of color and visual energy in this system. Editorial fashion photography dominates: full-bleed or near-full-bleed landscape and portrait crops of models in designer clothing, product photography on gradient backgrounds (dark teal-to-gray studio shots), and environmental lifestyle imagery. Images have sharp corners with no border-radius, no overlays, no duotone treatment — they appear as raw photographic prints placed on the white page. No illustrations, no icons (except the × close button and minimal UI markers), no 3D renders, no abstract graphics. The images do all the emotional and chromatic work that a typical e-commerce site would delegate to color and decoration.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-2",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "SSENSE is a completely flat design system. No drop shadows, no box-shadows, no elevation effects of any kind. Visual separation is achieved exclusively through whitespace, the natural contrast between #ffffff and #f4f4f4 surfaces, and 1px hairline borders in #979797. The flatness reinforces the editorial print-magazine metaphor — like ink on paper, not digital UI.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-3",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use only the seven neutral colors — no accent colors, no brand colors, no fills on interactive elements",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set display headlines at 56-95px with letter-spacing of -0.033em to -0.047em for compressed editorial weight",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use weight 100 (hairline) for serif body text at 20px — the thinness is the signature",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all component corners at 0px radius — SSENSE is a sharp-edged system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the Ghost Outlined Button (1px #000000 border, transparent fill) for all calls to action",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain 64px vertical gaps between major sections and 10-20px gaps between related elements",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair serif editorial headlines (JHA Times Now) with sans-serif body text (Favorit SSENSE Inter) — the contrast is the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add a colored CTA button — the system has no primary action color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use border-radius above 0px on any UI element",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use a sans-serif font for editorial display headlines above 38px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use letter-spacing above normal on any element — tracking is always negative or zero",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never place content on anything other than #ffffff or #f4f4f4 surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use drop shadows or elevation effects — the system is flat",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use bold weights (600-700) for anything other than the 11px micro-tag label",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

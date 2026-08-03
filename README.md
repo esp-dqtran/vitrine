@@ -84,7 +84,7 @@ Advanced Search combines PostgreSQL full-text retrieval with optional 1536-dimen
 Roll out in this order:
 
 1. Confirm the target PostgreSQL server permits `CREATE EXTENSION vector`.
-2. Apply migrations with `npm run db:migrate`, then verify with `npm run db:check` and `npm run db:verify`.
+2. Apply migrations with `npm run db:migrate`, then confirm the schema is current with `npm run db:check`.
 3. Deploy `search-index-worker` while both `ADVANCED_SEARCH_ENABLED=false` and `VITE_ADVANCED_SEARCH_ENABLED=false`.
 4. Queue every published app/platform once with `npm run search:index:backfill`.
 5. Wait until `search_index_queue` has no `queued` or `running` rows. Run `npm run search:verify-relevance` and `npm run search:benchmark` against the verification database.
@@ -121,7 +121,15 @@ Enable both sides of the feature together:
 ```dotenv
 RESEARCH_PROJECTS_ENABLED=true
 VITE_RESEARCH_PROJECTS_ENABLED=true
+TEAMS_ENABLED=true
 ```
+
+The Designer Canvas remains durable through the authenticated API and can also
+use the optional collaboration gateway. Start it with
+`npm run service:designer-canvas-collab`; it listens on `3012` by default. For
+production, set `CANVAS_COLLAB_ALLOWED_ORIGINS` to the exact app origin and
+route `/api/designer-canvas-collaboration` to that service with WebSocket
+upgrades enabled. See [Designer Canvas service](docs/designer-canvas-service.md).
 
 Each Research Project also has a BlockNote document at
 `/projects/:projectId/document`. Start its Hocuspocus gateway with

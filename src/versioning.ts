@@ -1,6 +1,11 @@
 import type { DesignFlow, DesignSystemSnapshot } from './designSystem.ts';
 
 export type AppVersionStatus = 'draft' | 'in_review' | 'published' | 'archived';
+export type AppVersionProvider = 'm' | 'f';
+
+export function isAppVersionProvider(value: unknown): value is AppVersionProvider {
+  return value === 'm' || value === 'f';
+}
 
 export interface PublicationBlocker {
   code: 'screens_missing' | 'screen_analysis_missing' | 'design_system_missing' | 'invalid_evidence';

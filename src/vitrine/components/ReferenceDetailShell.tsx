@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button, Icon, Skeleton, ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator';
 
@@ -71,6 +71,7 @@ export function ReferenceDetailShell<T extends string>({
   children,
 }: ReferenceDetailShellProps<T>) {
   const { indicatorRef, registerItem } = useSlidingIndicator<T>(activeTab);
+  const shouldReduceMotion = useReducedMotion();
   useEffect(() => resetReferenceDetailScroll(), [identityKey]);
   const accessibleTitle = ariaLabel ?? (typeof title === 'string' ? title : 'Reference');
 
@@ -79,10 +80,10 @@ export function ReferenceDetailShell<T extends string>({
       data-reference-detail={dataDetailKind}
       className={`vitrine-page reference-detail${className ? ` ${className}` : ''}`}
       aria-busy={loading || undefined}
-      initial={{ opacity: 0, y: 18 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 18 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
     >
       <header className="reference-detail__hero">
         <div className="reference-detail__hero-inner">
@@ -98,7 +99,7 @@ export function ReferenceDetailShell<T extends string>({
           ) : null}
           <motion.div
             layoutId={identityKey}
-            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
             className={`reference-detail__logo${identityImageUrl ? ` reference-detail__logo--image reference-detail__logo--image-${identityImageTone}` : ''}${loading ? ' app-detail-loading__logo' : ''}`}
             style={identityImageUrl ? undefined : { background: accent }}
           >

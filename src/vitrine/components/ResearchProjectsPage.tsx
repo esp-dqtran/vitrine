@@ -852,20 +852,21 @@ export function ResearchProjectsView({
               </>
             }
           >
-            <label className="projects-workspace__header-search">
-              <SearchIcon aria-hidden="true" />
-              <input
-                ref={projectSearchInputRef}
-                type="search"
-                value={projectQuery}
-                aria-label="Search projects"
-                placeholder="Search projects"
-                onChange={(event) => setProjectQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") closeProjectSearch();
-                }}
-              />
-            </label>
+            <TextInput
+              ref={projectSearchInputRef}
+              className="projects-workspace__header-search"
+              label="Search projects"
+              isLabelHidden
+              value={projectQuery}
+              placeholder="Search projects"
+              startIcon={<SearchIcon aria-hidden="true" />}
+              hasClear={Boolean(projectQuery)}
+              onChange={setProjectQuery}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") closeProjectSearch();
+              }}
+              width="min(800px, 100%)"
+            />
           </WorkspaceHeader>
 
           <header className="projects-workspace__page-header">

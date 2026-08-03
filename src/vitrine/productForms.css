@@ -1,0 +1,226 @@
+/*
+ * Product form controls use the Apps header SearchTrigger as their visual
+ * source while retaining the native behavior of the core input components.
+ * Higher-specificity editor and canvas rules intentionally keep their
+ * domain-owned geometry.
+ */
+.astryx-text-input {
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--vitrine-form-input-height);
+  padding: 0 var(--vitrine-form-input-padding-inline);
+  border: 1px solid var(--vitrine-color-border-emphasized);
+  border-radius: var(--vitrine-form-input-radius);
+  background: var(--vitrine-form-control-surface);
+  color: var(--vitrine-color-text-primary);
+  box-shadow: none;
+  transition:
+    border-color var(--vitrine-transition-fast),
+    background var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-fast);
+}
+
+.astryx-text-input:hover,
+.astryx-text-input:focus-within {
+  background: var(--vitrine-form-control-hover);
+}
+
+.astryx-text-input:focus-within {
+  border-color: var(--vitrine-color-text-primary);
+  box-shadow: 0 0 0 1px var(--vitrine-color-text-primary);
+}
+
+.astryx-text-input[data-status='success'] {
+  border-color: var(--color-text-green);
+  box-shadow: none;
+}
+
+.astryx-text-input[data-status='warning'] {
+  border-color: var(--vitrine-color-status-warning);
+  box-shadow: none;
+}
+
+.astryx-text-input[data-status='error'] {
+  border-color: var(--vitrine-color-status-error);
+  box-shadow: none;
+}
+
+.astryx-text-input > .astryx-icon {
+  width: var(--vitrine-icon-size-control);
+  height: var(--vitrine-icon-size-control);
+  color: var(--vitrine-color-text-primary) !important;
+  font-size: var(--vitrine-icon-size-control);
+}
+
+.astryx-text-input input {
+  min-width: 0;
+  font: var(--vitrine-type-action) !important;
+}
+
+.astryx-text-input input::placeholder {
+  color: var(--vitrine-color-text-secondary);
+  opacity: 1;
+}
+
+.astryx-textarea {
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--vitrine-color-border-emphasized);
+  border-radius: var(--vitrine-form-textarea-radius);
+  background: var(--vitrine-form-control-hover);
+  color: var(--vitrine-color-text-primary);
+  box-shadow: none;
+  transition:
+    border-color var(--vitrine-transition-fast),
+    background var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-fast);
+}
+
+.astryx-textarea:hover,
+.astryx-textarea:focus-within {
+  background: var(--vitrine-form-control-hover);
+}
+
+.astryx-textarea:focus-within {
+  border-color: var(--vitrine-color-text-primary);
+  box-shadow: 0 0 0 1px var(--vitrine-color-text-primary);
+}
+
+.astryx-textarea[data-status='success'] {
+  border-color: var(--vitrine-color-status-success);
+  box-shadow: none;
+}
+
+.astryx-textarea[data-status='warning'] {
+  border-color: var(--vitrine-color-status-warning);
+  box-shadow: none;
+}
+
+.astryx-textarea[data-status='error'] {
+  border-color: var(--vitrine-color-status-error);
+  box-shadow: none;
+}
+
+/* The core attached state overlaps 6px, which leaves a visible seam under
+ * the larger 48px product pill. Increase the overlap while balancing the top
+ * padding so message position and total field height stay unchanged. */
+.astryx-field-status.attached {
+  margin-top: -16px;
+  padding-block-start: 24px;
+}
+
+.astryx-field-status.success {
+  background: color-mix(in srgb, var(--color-text-green) 18%, transparent);
+  color: var(--color-text-green);
+}
+
+.astryx-textarea textarea {
+  box-sizing: border-box;
+  min-height: calc(120px - 2px);
+  padding: var(--spacing-4) var(--vitrine-form-input-padding-inline);
+  outline: none;
+  font: var(--vitrine-presentation-body-large) !important;
+}
+
+.astryx-textarea textarea::placeholder {
+  color: var(--vitrine-color-text-secondary);
+  opacity: 1;
+}
+
+.astryx-checkbox-input,
+.astryx-radio-list-item,
+.astryx-switch-field {
+  color: var(--vitrine-color-text-primary);
+  font: var(--vitrine-presentation-body-large);
+}
+
+.astryx-field-label {
+  font: var(--vitrine-type-action) !important;
+}
+
+.astryx-checkbox,
+.astryx-radio {
+  width: var(--vitrine-form-choice-size);
+  min-width: var(--vitrine-form-choice-size);
+  height: var(--vitrine-form-choice-size);
+  border: 1px solid var(--vitrine-color-border-emphasized);
+  background: var(--vitrine-form-control-surface);
+  color: var(--vitrine-color-text-primary);
+  transition:
+    background var(--vitrine-transition-fast),
+    border-color var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-fast);
+}
+
+.astryx-checkbox {
+  border-radius: var(--vitrine-form-choice-radius);
+}
+
+.astryx-radio {
+  border-radius: 999px;
+}
+
+.astryx-checkbox.checked,
+.astryx-radio.checked {
+  border-color: var(--vitrine-color-action-primary);
+  background: var(--vitrine-color-action-primary);
+  color: var(--vitrine-color-on-action-primary);
+}
+
+.astryx-radio-dot {
+  background: var(--vitrine-color-on-action-primary);
+}
+
+.astryx-switch {
+  width: var(--vitrine-form-switch-width);
+  height: var(--vitrine-form-switch-height);
+  border-radius: 999px;
+  background: var(--vitrine-form-control-hover);
+  transition:
+    background var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-fast);
+}
+
+.astryx-switch.checked {
+  background: var(--vitrine-color-action-primary);
+}
+
+.astryx-switch-thumb.checked {
+  background: var(--vitrine-color-on-action-primary);
+}
+
+.astryx-checkbox-input input:focus-visible + .astryx-checkbox,
+.astryx-radio-list-item input:focus-visible + .astryx-radio,
+.astryx-switch-field input:focus-visible + .astryx-switch {
+  box-shadow:
+    0 0 0 2px var(--vitrine-color-page),
+    0 0 0 3px var(--vitrine-color-text-primary);
+}
+
+.astryx-checkbox-input:has(input:disabled),
+.astryx-radio-list-item:has(input:disabled),
+.astryx-switch-field:has(input:disabled),
+.astryx-switch-field:has(.astryx-switch.disabled) {
+  color: var(--vitrine-color-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 720px) {
+  .astryx-text-input {
+    height: var(--vitrine-form-input-height-compact);
+    padding-inline: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astryx-text-input,
+  .astryx-textarea,
+  .astryx-checkbox,
+  .astryx-radio,
+  .astryx-switch {
+    transition: none;
+  }
+}

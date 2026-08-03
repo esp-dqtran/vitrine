@@ -283,16 +283,17 @@ export function CollectionsWorkspacePage({
             }
           >
             {!selected ? (
-              <label className="projects-workspace__header-search">
-                <SearchIcon aria-hidden="true" />
-                <input
-                  type="search"
-                  value={query}
-                  aria-label="Search collections"
-                  placeholder="Search collections"
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </label>
+              <TextInput
+                className="projects-workspace__header-search"
+                label="Search collections"
+                isLabelHidden
+                value={query}
+                placeholder="Search collections"
+                startIcon={<SearchIcon aria-hidden="true" />}
+                hasClear={Boolean(query)}
+                onChange={setQuery}
+                width="min(800px, 100%)"
+              />
             ) : null}
           </WorkspaceHeader>
 

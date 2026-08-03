@@ -1,0 +1,2406 @@
+{
+  "schemaVersion": 1,
+  "id": "3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+  "sourceUrl": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+  "sitemapLastModified": "2026-07-03T09:52:17.211Z",
+  "fetchedAt": "2026-08-02T18:06:53.258Z",
+  "contentHash": "f3d03e37208a099455aaa45fca046f9cf150a1756bf12c2a393ab6b6b583f5a4",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "monopo saigon design system",
+            "item": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2#style-reference",
+        "name": "monopo saigon design system reference",
+        "headline": "monopo saigon design system | Refero Styles",
+        "description": "Explore monopo saigon's light Agency design system: Obsidian #000000, Paper #ffffff colors, Roobert, Raleway typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+        "mainEntityOfPage": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "monopo saigon",
+          "url": "https://monopo.vn"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/c812544b-510e-483d-b1c5-d860ef03a348.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/c812544b-510e-483d-b1c5-d860ef03a348.jpg",
+          "caption": "Screenshot of monopo saigon"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/c812544b-510e-483d-b1c5-d860ef03a348.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "monopo saigon design system",
+          "monopo saigon website design",
+          "monopo saigon colors",
+          "monopo saigon typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Obsidian",
+          "Paper",
+          "Inkstone",
+          "Felt Gray",
+          "Roobert",
+          "Raleway",
+          "system-ui"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "monopo saigon design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "monopo saigon website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "monopo saigon colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "monopo saigon typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-04-30T02:15:36.367Z",
+        "dateModified": "2026-04-30T02:15:36.367Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://monopo.vn",
+      "siteName": "monopo saigon",
+      "extractedAt": "2026-07-03T02:46:16.954Z",
+      "durationMs": 211278,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 543,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "button",
+              "body"
+            ],
+            "frequency": 53,
+            "confidence": 1,
+            "prominence": 7458334.202803855,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "stroke",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 10,
+              "other/fill": 12,
+              "button/color": 9,
+              "other/stroke": 10,
+              "body/backgroundColor": 1,
+              "other/backgroundColor": 1,
+              "heading/backgroundColor": 10
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "heading",
+              "other",
+              "body",
+              "link",
+              "button",
+              "list"
+            ],
+            "frequency": 183,
+            "confidence": 1,
+            "prominence": 3431978.116122791,
+            "properties": [
+              "color",
+              "backgroundColor",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 31,
+              "link/color": 23,
+              "list/color": 25,
+              "other/fill": 15,
+              "other/color": 35,
+              "button/color": 2,
+              "heading/color": 27,
+              "button/borderColor": 24,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#181818",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.20903608651870992
+            },
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 120216.26605853808,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "body/color": 4,
+              "heading/color": 1
+            }
+          },
+          {
+            "hex": "#6d6d6d",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5347620591506517
+            },
+            "contexts": [
+              "body",
+              "heading"
+            ],
+            "frequency": 8,
+            "confidence": 1,
+            "prominence": 37953.512042268805,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "body/color": 7,
+              "heading/color": 1
+            }
+          },
+          {
+            "hex": "#9a9a9a",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6868759612235704
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 33381,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#808080",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5981807305268477
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 7200,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#636363",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.49969557143204596
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 3385,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "button/backgroundColor": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.76,
+            "background": "#ffffff",
+            "foreground": "#181818"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.46,
+            "background": "#9a9a9a",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.31,
+            "background": "#9a9a9a",
+            "foreground": "#181818"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.01,
+            "background": "#636363",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.32,
+            "background": "#808080",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.17,
+            "background": "#ffffff",
+            "foreground": "#6d6d6d"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.5,
+            "background": "#808080",
+            "foreground": "#181818"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.06,
+            "background": "#000000",
+            "foreground": "#6d6d6d"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.95,
+            "background": "#808080",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.5,
+            "background": "#636363",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.96,
+            "background": "#636363",
+            "foreground": "#181818"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.81,
+            "background": "#9a9a9a",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.84,
+            "background": "#9a9a9a",
+            "foreground": "#6d6d6d"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.31,
+            "background": "#808080",
+            "foreground": "#6d6d6d"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.18,
+            "background": "#000000",
+            "foreground": "#181818"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.16,
+            "background": "#636363",
+            "foreground": "#6d6d6d"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 75.024,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 7
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 2,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginTop",
+              "marginRight",
+              "marginBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body",
+              "marginRight|body",
+              "marginBottom|body",
+              "marginLeft|body"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "list",
+              "body"
+            ],
+            "frequency": 12,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|list",
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "marginRight|icon"
+            ]
+          },
+          {
+            "value": 11,
+            "contexts": [
+              "button",
+              "icon"
+            ],
+            "frequency": 6,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button",
+              "marginLeft|icon"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 13,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|list"
+            ]
+          },
+          {
+            "value": 14,
+            "contexts": [
+              "list",
+              "other",
+              "link",
+              "heading"
+            ],
+            "frequency": 13,
+            "properties": [
+              "marginTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|list",
+              "marginTop|other",
+              "paddingBottom|link",
+              "marginTop|link",
+              "marginTop|heading"
+            ]
+          },
+          {
+            "value": 15,
+            "contexts": [
+              "button",
+              "other",
+              "icon"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginRight",
+              "marginLeft",
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginRight|button",
+              "marginLeft|button",
+              "marginBottom|other",
+              "marginRight|icon",
+              "marginTop|icon"
+            ]
+          },
+          {
+            "value": 19,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|link",
+              "paddingBottom|link"
+            ]
+          },
+          {
+            "value": 22,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 7,
+            "properties": [
+              "paddingRight",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "marginBottom|body"
+            ]
+          },
+          {
+            "value": 23,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 26,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|list"
+            ]
+          },
+          {
+            "value": 27,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|link"
+            ]
+          },
+          {
+            "value": 28,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 8,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 29,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 48,
+            "properties": [
+              "marginTop",
+              "marginRight",
+              "marginBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginRight|other",
+              "marginBottom|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 34,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 37,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingLeft",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|other",
+              "marginRight|body"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|link",
+              "paddingLeft|link"
+            ]
+          },
+          {
+            "value": 46,
+            "contexts": [
+              "hero"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|hero",
+              "marginTop|hero"
+            ]
+          },
+          {
+            "value": 47,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 48,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 64,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|list"
+            ]
+          },
+          {
+            "value": 68,
+            "contexts": [
+              "other",
+              "list"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginTop|list"
+            ]
+          },
+          {
+            "value": 74,
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginTop|link"
+            ]
+          },
+          {
+            "value": 75,
+            "contexts": [
+              "footer"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|footer"
+            ]
+          },
+          {
+            "value": 79,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|card"
+            ]
+          },
+          {
+            "value": 83,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 8,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|list"
+            ]
+          },
+          {
+            "value": 92,
+            "contexts": [
+              "hero"
+            ],
+            "frequency": 1,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|hero"
+            ]
+          },
+          {
+            "value": 97,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 101,
+            "contexts": [
+              "hero"
+            ],
+            "frequency": 1,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|hero"
+            ]
+          },
+          {
+            "value": 111,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 126,
+            "contexts": [
+              "footer"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|footer"
+            ]
+          },
+          {
+            "value": 152,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 180,
+            "contexts": [
+              "hero"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|hero"
+            ]
+          },
+          {
+            "value": 181,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 187,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 5,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|list"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 4
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(90deg, rgb(160, 224, 171), rgb(255, 172, 46) 50%, rgb(165, 45, 37))",
+          "colors": [
+            "rgb(160, 224, 171)",
+            "rgb(255, 172, 46)",
+            "rgb(165, 45, 37)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Roobert",
+            "source": "custom",
+            "weights": [
+              300,
+              400,
+              600
+            ],
+            "frequency": 479,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Raleway",
+            "source": "google",
+            "weights": [
+              400
+            ],
+            "frequency": 14,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "system-ui",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 13,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 15,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 0.92
+        },
+        "steps": [
+          {
+            "size": 9,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "link",
+              "button"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.32,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "list"
+            ],
+            "frequency": 16,
+            "lineHeight": 1.21,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "list",
+              "link"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.21,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 11,
+            "family": "Roobert",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.22,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "body"
+            ],
+            "frequency": 46,
+            "lineHeight": 1.36,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.36,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "list"
+            ],
+            "frequency": 20,
+            "lineHeight": 1.19,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 300,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 3.13,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.82,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "icon",
+              "body"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.39,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "image",
+              "hero",
+              "card",
+              "list",
+              "link",
+              "icon",
+              "button",
+              "body",
+              "footer"
+            ],
+            "frequency": 217,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 2.34,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "list",
+              "link"
+            ],
+            "frequency": 27,
+            "lineHeight": 1.21,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 29,
+            "family": "Roobert",
+            "weight": 300,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.58,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 30,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 39,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "heading",
+              "image"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.19,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 45,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 54,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "other",
+              "heading"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.39,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 54,
+            "family": "Raleway",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 14,
+            "lineHeight": 1.39,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 78,
+            "family": "Roobert",
+            "weight": 300,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 78,
+            "family": "Roobert",
+            "weight": 300,
+            "contexts": [
+              "other",
+              "heading",
+              "icon"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.24,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 94,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 41,
+            "lineHeight": 0.76,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 225,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Set display headlines at 225px Roobert weight 400 and let them own the viewport — never crowd them with subheads or CTAs",
+        "Use the 75px pill radius exclusively for buttons and tags — keep all other elements (cards, images, inputs) at 0px radius for sharp editorial contrast",
+        "Reserve color for one iridescent hero backdrop per page — keep all interface text, borders, and fills strictly in the black/white/gray scale",
+        "Use weight 300 at 78px for manifesto and atmospheric headlines to create whisper authority — never push above weight 400 at this scale",
+        "Set line-height to 0.70–0.76 on display sizes above 78px to let lines lock together as typographic art objects",
+        "Apply cubic-bezier(0.19, 1, 0.22, 1) easing to transform and color transitions with durations of 0.8–1.25s for patient, gliding motion",
+        "Keep all interactive text links at 0px radius with no underlines — let spacing, color, and context signal affordance"
+      ],
+      "donts": [
+        "Never introduce a chromatic UI color — black, white, and gray are the interface palette; the iridescent gradient is media only",
+        "Never use box-shadow or elevation on cards, buttons, or images — the system relies on flat surfaces and hairline 1px borders",
+        "Never set border-radius between 1px and 74px — the system jumps from sharp 0px to full 75px pill, no intermediate rounding",
+        "Never use bold or heavy weights (600+) above 45px — large sizes should whisper at 300 or speak at 400, never shout",
+        "Never center-align body copy in address blocks, lists, or project descriptions — left-align with 8–14px line gaps for editorial flow",
+        "Never add gradients to buttons, badges, or UI controls — gradients belong only in the hero atmospheric media",
+        "Never use Raleway for body or navigation — it is a heading accent only, and even there it appears sparingly",
+        "Never fill the canvas with imagery — the system is text-dominant with one hero-sized visual gesture per page"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Obsidian",
+          "role": "Primary text, SVG strokes, overlay fills — pure black carries all foreground information and graphic marks",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Light text on dark surfaces, inverse labels, and high-contrast captions. Do not promote it to the primary CTA color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#181818",
+          "name": "Inkstone",
+          "role": "Footer body copy and secondary headings — softened black for long-form reading blocks",
+          "group": "neutral"
+        },
+        {
+          "hex": "#6d6d6d",
+          "name": "Felt Gray",
+          "role": "Muted helper text, address blocks, legal copy — quiet annotations that recede without disappearing",
+          "group": "neutral"
+        },
+        {
+          "hex": "#636363",
+          "name": "Slate Pill",
+          "role": "Filled neutral button background — the only solid fill used for actions like Accept",
+          "group": "neutral"
+        },
+        {
+          "hex": "#9a9a9a",
+          "name": "Ash Mist",
+          "role": "Mid-tone neutral for disabled or low-contrast surfaces in the surface stack",
+          "group": "neutral"
+        },
+        {
+          "hex": "#808080",
+          "name": "Pewter",
+          "role": "Secondary mid-tone neutral for hover or muted state layers",
+          "group": "neutral"
+        },
+        {
+          "hex": "#a02d25",
+          "name": "Iridescent Fade",
+          "role": "Chromatic accent appearing only inside the hero gradient wash — molten oxblood anchor of the iridescent atmosphere, not used in interface controls",
+          "group": "brand",
+          "gradient": "linear-gradient(90deg, rgb(160, 224, 171), rgb(255, 172, 46) 50%, rgb(165, 45, 37))"
+        }
+      ],
+      "layout": "$19",
+      "imagery": "Imagery is theatrical and singular: one massive iridescent fluid texture dominates the hero — organic greens dissolving through amber into oxblood like oil on water or molten glass. It reads as full-bleed atmospheric media, possibly video or shader-driven canvas, and occupies the entire viewport as a singular sensory moment rather than a repeated pattern. Project showcases use contained editorial photography (tight product crops, campaign stills) presented without frames or borders — the image is the content. No illustration, no icons beyond tiny UI glyphs, no decorative shapes. Iconography is minimal or absent; the rotating circular text badge functions as the system's only typographic ornament. Overall density: text-dominant with one hero-sized visual gesture, then long quiet editorial stretches of typography and product imagery.",
+      "similar": [
+        {
+          "why": "Same liquid iridescent hero treatment behind monochrome editorial typography and full-pill ghost buttons",
+          "business": "Resn"
+        },
+        {
+          "why": "Same immersive full-bleed dark hero with single monumental headline and restrained monochrome chrome around it",
+          "business": "Active Theory"
+        },
+        {
+          "why": "Same editorial agency rhythm — oversized whisper-weight headlines, generous 46px+ section gaps, and zero shadow elevation",
+          "business": "Locomotive"
+        },
+        {
+          "why": "Same austere black-and-white editorial system with sharp 0px corners and custom geometric sans (Roobert echoing Pentagram's house faces)",
+          "business": "Pentagram"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "75px",
+          "cards": "0px",
+          "images": "0px",
+          "inputs": "0px",
+          "buttons": "75px"
+        },
+        "elementGap": "14px",
+        "sectionGap": "46px",
+        "cardPadding": "34px",
+        "pageMaxWidth": "1078px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "level": 1,
+          "purpose": "Primary canvas — most sections sit on pure white"
+        },
+        {
+          "hex": "#636363",
+          "name": "Slate Pill",
+          "level": 2,
+          "purpose": "Filled button surface for cookie consent and neutral actions"
+        },
+        {
+          "hex": "#000000",
+          "name": "Obsidian",
+          "level": 3,
+          "purpose": "Dark overlay and inverse section — full-bleed dark bands behind iridescent media"
+        },
+        {
+          "hex": "#9a9a9a",
+          "name": "Ash Mist",
+          "level": 4,
+          "purpose": "Quiet mid-tone layer for inset panels or disabled zones"
+        }
+      ],
+      "northStar": "Liquid iridescence behind editorial silence — a monochrome editorial gallery floating on molten light.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.19,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body-sm",
+          "size": 16,
+          "lineHeight": 1.15,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body",
+          "size": 18,
+          "lineHeight": 1.21,
+          "letterSpacing": 0
+        },
+        {
+          "role": "subheading",
+          "size": 39,
+          "lineHeight": 1.19,
+          "letterSpacing": 0
+        },
+        {
+          "role": "subheading-lg",
+          "size": 45,
+          "lineHeight": 1.15,
+          "letterSpacing": 0
+        },
+        {
+          "role": "heading-sm",
+          "size": 54,
+          "lineHeight": 1.39,
+          "letterSpacing": 0
+        },
+        {
+          "role": "heading",
+          "size": 78,
+          "lineHeight": 1.1,
+          "letterSpacing": 0
+        },
+        {
+          "role": "heading-lg",
+          "size": 94,
+          "lineHeight": 0.76,
+          "letterSpacing": 0
+        },
+        {
+          "role": "display",
+          "size": 225,
+          "lineHeight": 1.25,
+          "letterSpacing": 0
+        }
+      ],
+      "components": [
+        {
+          "name": "Ghost Pill Button (Dark Surface)",
+          "role": "Primary action button used over iridescent or dark hero media",
+          "description": "Transparent background, 1px solid rgba(255,255,255,0.3) border, #ffffff text, 75px border-radius (full pill), 11px vertical and 33px horizontal padding, Roobert 16px weight 400. The translucent border dissolves into the iridescent background while the pill silhouette stays unmistakable."
+        },
+        {
+          "name": "Ghost Pill Button (Light Surface)",
+          "role": "Secondary action on white or light gray sections",
+          "description": "Transparent background, 1px solid #000000 border, #000000 text, 75px border-radius, 11px vertical and 33px horizontal padding, Roobert 16px weight 400. Mirrors the dark-surface variant — same geometry, inverted palette."
+        },
+        {
+          "name": "Filled Neutral Pill",
+          "role": "Cookie consent and utilitarian confirmations",
+          "description": "rgba(55,55,55,0.78) background (functionally Slate Pill #636363), #ffffff text, 1px solid #ffffff border, 75px border-radius, 11px vertical and 33px horizontal padding. The only solid-filled action in the system — used sparingly for compliance and consent, never for primary marketing CTAs."
+        },
+        {
+          "name": "Underline-Free Text Link",
+          "role": "Inline navigation, menu items, language switcher, footer links",
+          "description": "No background, no border, 0px radius. Roobert 12–16px weight 400, color shifts between #ffffff (on dark) and #000000 (on light). Underlines are absent — context and weight set the link apart from body copy. Generous line-height (1.36 at 11px, 1.19 at 12px) keeps stacked menus airy."
+        },
+        {
+          "name": "Hero Display Headline",
+          "role": "Full-viewport editorial title",
+          "description": "Roobert 225px weight 400, line-height 1.25, #ffffff over iridescent dark media. Letter-spacing normal. The headline is the hero — no subhead, no CTA, just one monumental phrase centered in the viewport breathing against fluid light."
+        },
+        {
+          "name": "Section Heading (Whisper Weight)",
+          "role": "Atmospheric headline for manifesto or feature sections",
+          "description": "Roobert 78px weight 300, line-height 1.10. The 300-weight at this scale is anti-convention — most sites push 600–700 here. The whisper weight lets the headline feel like it is being spoken, not shouted, giving the editorial chamber its hushed authority."
+        },
+        {
+          "name": "Section Heading (Anchor Weight)",
+          "role": "Bold editorial divider or statement",
+          "description": "Roobert 94px weight 400, line-height 0.76. The tight line-height (0.76) is dramatic — text lines almost touch, creating a dense typographic block that reads as art object. Used for large statement moments where the text itself is visual."
+        },
+        {
+          "name": "Project Card / List Row",
+          "role": "Featured work entry — paired image and title",
+          "description": "Transparent background, 0px border-radius, no shadow. Image bleeds full-width within the 1078px container; title sits below in Roobert 16–18px weight 400. No card chrome — the card is content, not a container. Spacing between rows controlled by 14–46px gaps depending on section density."
+        },
+        {
+          "name": "Language Switcher",
+          "role": "Top-bar locale selector (EN / VN / 中文)",
+          "description": "Three inline text links in Roobert 12px weight 400, color #ffffff or #000000 depending on surface, 0px radius, separated by visual whitespace rather than dividers. Active locale carries the same color but slightly heavier visual weight through spacing alone."
+        },
+        {
+          "name": "Rotating Scroll Indicator",
+          "role": "Bottom-left circular badge prompting downward exploration",
+          "description": "Circular SVG badge with text tracing the circumference ('SCROLL DOWN · SCROLL DOWN'), rotating continuously at slow tempo. Sits at 0,0 of the bottom-left corner with small offset. Ink black stroke on transparent fill — a typographic punctuation mark, not a button."
+        },
+        {
+          "name": "Footer Address Block",
+          "role": "Studio contact information",
+          "description": "Roobert 11px weight 400 line-height 1.36, #6d6d6d Felt Gray text. Tight 8px top margins between lines create a compact address stack that recedes into the page. No dividers or labels — the muted gray does the work."
+        },
+        {
+          "name": "Cookie Banner",
+          "role": "Compliance notice with single accept action",
+          "description": "Fixed bottom bar, rgba(55,55,55,0.78) Slate Pill background, white body text in system-ui 9–16px, paired with Filled Neutral Pill 'Accept' button. Minimal copy, single action, no settings — the banner respects attention by asking for nothing beyond consent."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Persistent header with logo, locale, and menu",
+          "description": "Fixed transparent header 66px tall. Logo wordmark top-left (Roobert 16px weight 400 'monopo saigon'), language switcher centered, menu stack right-aligned (WORK / MANIFESTO / SAIGON SOULS / TEAM / CONTACT at 11–12px weight 400). No background fill — the header is invisible until content scrolls behind it."
+        },
+        {
+          "name": "Iridescent Hero Backdrop",
+          "role": "Atmospheric media behind hero headlines",
+          "description": "Full-viewport organic gradient or video: soft sage green (rgb 160,224,171) dissolving through molten amber (rgb 255,172,46) into deep oxblood (rgb 165,45,37). Applied as a flowing, liquid texture — never as a flat gradient. This is the only chromatic surface in the entire system and exists only behind text, never as UI fill."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary typeface across all interface text, navigation, hero headlines, body, lists, and footers. The custom sans carries geometric clarity with humanist warmth; its wide weight range (300 whisper through 600 anchor) lets the system breathe from monumental 225px headlines down to 11px labels",
+          "sizes": "11px, 12px, 16px, 18px, 29px, 30px, 39px, 45px, 54px, 78px, 94px, 225px",
+          "family": "Roobert",
+          "weight": "300, 400, 600",
+          "lineHeight": "0.70–2.34 (tight 0.70–0.76 on display sizes, generous 1.58 on body)",
+          "substitute": "Inter or Söhne — both share Roobert's geometric-humanist balance and clean aperture"
+        },
+        {
+          "role": "Reserved for specific heading contexts where a slightly more elegant, narrower sans introduces contrast — appears sparingly as a counterpoint to Roobert's bolder presence",
+          "sizes": "54px",
+          "family": "Raleway",
+          "weight": "400",
+          "lineHeight": "1.39",
+          "substitute": "Montserrat or Jost"
+        },
+        {
+          "role": "Micro UI labels, cookie banner body, fine print — browser default fallback ensuring legibility at the smallest scale without committing to a custom face",
+          "sizes": "9px, 16px",
+          "family": "system-ui",
+          "weight": "400",
+          "lineHeight": "1.15–1.32"
+        }
+      ],
+      "description": "$1a",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1b"
+        },
+        {
+          "title": "Motion Personality",
+          "content": "Motion is expressive but unhurried — the system treats transitions as slow camera moves rather than UI snaps. The signature curve is cubic-bezier(0.19, 1, 0.22, 1) (a gentle ease-out) applied to transform, color, and opacity at 0.8s and 1.25s durations. Shorter easing uses plain 'ease' at 0.4s for color and opacity micro-transitions. A rotating animation runs continuously on the scroll-indicator badge at slow tempo. Transforms dominate over positional animation — elements glide, slide, and reveal through transform rather than repositioning layout. The 1.25s duration on transforms (69 occurrences) signals that the studio prefers patience over responsiveness; nothing should feel abrupt. Border transitions (6 occurrences) and flex-basis shifts are rare and reserved for layout reveals, not micro-interactions."
+        }
+      ],
+      "elevationPhilosophy": "The system deliberately avoids shadow elevation. Surfaces are distinguished by color inversion (white to black bands) and hairline 1px borders rather than stacked shadows. The lone 'elevation' gesture is the translucent slate pill on the cookie banner, which uses background opacity rather than shadow to separate from content."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/9f8b76b0-28b6-4677-b358-4ccdd5539e59.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/c812544b-510e-483d-b1c5-d860ef03a348.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "monopo-saigon",
+    "generatedAt": "2026-07-03T02:46:16.954Z",
+    "summary": "$1a",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+      "sourceUrl": "https://styles.refero.design/style/3e52dd36-6ab1-48c6-bc40-47ef6d33abc2",
+      "originalUrl": "https://monopo.vn",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/9f8b76b0-28b6-4677-b358-4ccdd5539e59.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/c812544b-510e-483d-b1c5-d860ef03a348.jpg",
+      "importedAt": "2026-08-02T18:06:53.258Z",
+      "upstreamModifiedAt": "2026-07-03T09:52:17.211Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Liquid iridescence behind editorial silence — a monochrome editorial gallery floating on molten light.",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-obsidian",
+        "kind": "color",
+        "name": "Obsidian",
+        "value": "#000000",
+        "role": "Primary text, SVG strokes, overlay fills — pure black carries all foreground information and graphic marks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Light text on dark surfaces, inverse labels, and high-contrast captions. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-inkstone",
+        "kind": "color",
+        "name": "Inkstone",
+        "value": "#181818",
+        "role": "Footer body copy and secondary headings — softened black for long-form reading blocks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-felt-gray",
+        "kind": "color",
+        "name": "Felt Gray",
+        "value": "#6d6d6d",
+        "role": "Muted helper text, address blocks, legal copy — quiet annotations that recede without disappearing",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate-pill",
+        "kind": "color",
+        "name": "Slate Pill",
+        "value": "#636363",
+        "role": "Filled neutral button background — the only solid fill used for actions like Accept",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash-mist",
+        "kind": "color",
+        "name": "Ash Mist",
+        "value": "#9a9a9a",
+        "role": "Mid-tone neutral for disabled or low-contrast surfaces in the surface stack",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pewter",
+        "kind": "color",
+        "name": "Pewter",
+        "value": "#808080",
+        "role": "Secondary mid-tone neutral for hover or muted state layers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-iridescent-fade",
+        "kind": "color",
+        "name": "Iridescent Fade",
+        "value": "#a02d25",
+        "role": "Chromatic accent appearing only inside the hero gradient wash — molten oxblood anchor of the iridescent atmosphere, not used in interface controls",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-roobert",
+        "kind": "typography",
+        "name": "Roobert",
+        "value": "font-family: Roobert; font-weight: 300, 400, 600; font-size: 11px, 12px, 16px, 18px, 29px, 30px, 39px, 45px, 54px, 78px, 94px, 225px; line-height: 0.70–2.34 (tight 0.70–0.76 on display sizes, generous 1.58 on body)",
+        "role": "Primary typeface across all interface text, navigation, hero headlines, body, lists, and footers. The custom sans carries geometric clarity with humanist warmth; its wide weight range (300 whisper through 600 anchor) lets the system breathe from monumental 225px headlines down to 11px labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-raleway",
+        "kind": "typography",
+        "name": "Raleway",
+        "value": "font-family: Raleway; font-weight: 400; font-size: 54px; line-height: 1.39",
+        "role": "Reserved for specific heading contexts where a slightly more elegant, narrower sans introduces contrast — appears sparingly as a counterpoint to Roobert's bolder presence",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system-ui",
+        "kind": "typography",
+        "name": "system-ui",
+        "value": "font-family: system-ui; font-weight: 400; font-size: 9px, 16px; line-height: 1.15–1.32",
+        "role": "Micro UI labels, cookie banner body, fine print — browser default fallback ensuring legibility at the smallest scale without committing to a custom face",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.19; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 16px; line-height: 1.15; letter-spacing: 0px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 18px; line-height: 1.21; letter-spacing: 0px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 39px; line-height: 1.19; letter-spacing: 0px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-lg-scale",
+        "kind": "typography",
+        "name": "subheading-lg",
+        "value": "font-size: 45px; line-height: 1.15; letter-spacing: 0px",
+        "role": "Imported subheading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 54px; line-height: 1.39; letter-spacing: 0px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 78px; line-height: 1.1; letter-spacing: 0px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 94px; line-height: 0.76; letter-spacing: 0px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 225px; line-height: 1.25; letter-spacing: 0px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "14px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "46px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "34px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1078px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "75px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "0px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "75px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system deliberately avoids shadow elevation. Surfaces are distinguished by color inversion (white to black bands) and hairline 1px borders rather than stacked shadows. The lone 'elevation' gesture is the translucent slate pill on the cookie banner, which uses background opacity rather than shadow to separate from content.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "ghost-pill-button-dark-surface",
+        "name": "Ghost Pill Button (Dark Surface)",
+        "category": "Refero components",
+        "description": "Transparent background, 1px solid rgba(255,255,255,0.3) border, #ffffff text, 75px border-radius (full pill), 11px vertical and 33px horizontal padding, Roobert 16px weight 400. The translucent border dissolves into the iridescent background while the pill silhouette stays unmistakable.",
+        "variants": [
+          {
+            "id": "ghost-pill-button-dark-surface-reference",
+            "name": "Reference",
+            "description": "Transparent background, 1px solid rgba(255,255,255,0.3) border, #ffffff text, 75px border-radius (full pill), 11px vertical and 33px horizontal padding, Roobert 16px weight 400. The translucent border dissolves into the iridescent background while the pill silhouette stays unmistakable.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary action button used over iridescent or dark hero media"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-pill-button-light-surface",
+        "name": "Ghost Pill Button (Light Surface)",
+        "category": "Refero components",
+        "description": "Transparent background, 1px solid #000000 border, #000000 text, 75px border-radius, 11px vertical and 33px horizontal padding, Roobert 16px weight 400. Mirrors the dark-surface variant — same geometry, inverted palette.",
+        "variants": [
+          {
+            "id": "ghost-pill-button-light-surface-reference",
+            "name": "Reference",
+            "description": "Transparent background, 1px solid #000000 border, #000000 text, 75px border-radius, 11px vertical and 33px horizontal padding, Roobert 16px weight 400. Mirrors the dark-surface variant — same geometry, inverted palette.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action on white or light gray sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "filled-neutral-pill",
+        "name": "Filled Neutral Pill",
+        "category": "Refero components",
+        "description": "rgba(55,55,55,0.78) background (functionally Slate Pill #636363), #ffffff text, 1px solid #ffffff border, 75px border-radius, 11px vertical and 33px horizontal padding. The only solid-filled action in the system — used sparingly for compliance and consent, never for primary marketing CTAs.",
+        "variants": [
+          {
+            "id": "filled-neutral-pill-reference",
+            "name": "Reference",
+            "description": "rgba(55,55,55,0.78) background (functionally Slate Pill #636363), #ffffff text, 1px solid #ffffff border, 75px border-radius, 11px vertical and 33px horizontal padding. The only solid-filled action in the system — used sparingly for compliance and consent, never for primary marketing CTAs.",
+            "evidence": [],
+            "observedProperties": [
+              "Cookie consent and utilitarian confirmations"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "underline-free-text-link",
+        "name": "Underline-Free Text Link",
+        "category": "Refero components",
+        "description": "No background, no border, 0px radius. Roobert 12–16px weight 400, color shifts between #ffffff (on dark) and #000000 (on light). Underlines are absent — context and weight set the link apart from body copy. Generous line-height (1.36 at 11px, 1.19 at 12px) keeps stacked menus airy.",
+        "variants": [
+          {
+            "id": "underline-free-text-link-reference",
+            "name": "Reference",
+            "description": "No background, no border, 0px radius. Roobert 12–16px weight 400, color shifts between #ffffff (on dark) and #000000 (on light). Underlines are absent — context and weight set the link apart from body copy. Generous line-height (1.36 at 11px, 1.19 at 12px) keeps stacked menus airy.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline navigation, menu items, language switcher, footer links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-display-headline",
+        "name": "Hero Display Headline",
+        "category": "Refero components",
+        "description": "Roobert 225px weight 400, line-height 1.25, #ffffff over iridescent dark media. Letter-spacing normal. The headline is the hero — no subhead, no CTA, just one monumental phrase centered in the viewport breathing against fluid light.",
+        "variants": [
+          {
+            "id": "hero-display-headline-reference",
+            "name": "Reference",
+            "description": "Roobert 225px weight 400, line-height 1.25, #ffffff over iridescent dark media. Letter-spacing normal. The headline is the hero — no subhead, no CTA, just one monumental phrase centered in the viewport breathing against fluid light.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-viewport editorial title"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading-whisper-weight",
+        "name": "Section Heading (Whisper Weight)",
+        "category": "Refero components",
+        "description": "Roobert 78px weight 300, line-height 1.10. The 300-weight at this scale is anti-convention — most sites push 600–700 here. The whisper weight lets the headline feel like it is being spoken, not shouted, giving the editorial chamber its hushed authority.",
+        "variants": [
+          {
+            "id": "section-heading-whisper-weight-reference",
+            "name": "Reference",
+            "description": "Roobert 78px weight 300, line-height 1.10. The 300-weight at this scale is anti-convention — most sites push 600–700 here. The whisper weight lets the headline feel like it is being spoken, not shouted, giving the editorial chamber its hushed authority.",
+            "evidence": [],
+            "observedProperties": [
+              "Atmospheric headline for manifesto or feature sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading-anchor-weight",
+        "name": "Section Heading (Anchor Weight)",
+        "category": "Refero components",
+        "description": "Roobert 94px weight 400, line-height 0.76. The tight line-height (0.76) is dramatic — text lines almost touch, creating a dense typographic block that reads as art object. Used for large statement moments where the text itself is visual.",
+        "variants": [
+          {
+            "id": "section-heading-anchor-weight-reference",
+            "name": "Reference",
+            "description": "Roobert 94px weight 400, line-height 0.76. The tight line-height (0.76) is dramatic — text lines almost touch, creating a dense typographic block that reads as art object. Used for large statement moments where the text itself is visual.",
+            "evidence": [],
+            "observedProperties": [
+              "Bold editorial divider or statement"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-card-list-row",
+        "name": "Project Card / List Row",
+        "category": "Refero components",
+        "description": "Transparent background, 0px border-radius, no shadow. Image bleeds full-width within the 1078px container; title sits below in Roobert 16–18px weight 400. No card chrome — the card is content, not a container. Spacing between rows controlled by 14–46px gaps depending on section density.",
+        "variants": [
+          {
+            "id": "project-card-list-row-reference",
+            "name": "Reference",
+            "description": "Transparent background, 0px border-radius, no shadow. Image bleeds full-width within the 1078px container; title sits below in Roobert 16–18px weight 400. No card chrome — the card is content, not a container. Spacing between rows controlled by 14–46px gaps depending on section density.",
+            "evidence": [],
+            "observedProperties": [
+              "Featured work entry — paired image and title"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "language-switcher",
+        "name": "Language Switcher",
+        "category": "Refero components",
+        "description": "Three inline text links in Roobert 12px weight 400, color #ffffff or #000000 depending on surface, 0px radius, separated by visual whitespace rather than dividers. Active locale carries the same color but slightly heavier visual weight through spacing alone.",
+        "variants": [
+          {
+            "id": "language-switcher-reference",
+            "name": "Reference",
+            "description": "Three inline text links in Roobert 12px weight 400, color #ffffff or #000000 depending on surface, 0px radius, separated by visual whitespace rather than dividers. Active locale carries the same color but slightly heavier visual weight through spacing alone.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-bar locale selector (EN / VN / 中文)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "rotating-scroll-indicator",
+        "name": "Rotating Scroll Indicator",
+        "category": "Refero components",
+        "description": "Circular SVG badge with text tracing the circumference ('SCROLL DOWN · SCROLL DOWN'), rotating continuously at slow tempo. Sits at 0,0 of the bottom-left corner with small offset. Ink black stroke on transparent fill — a typographic punctuation mark, not a button.",
+        "variants": [
+          {
+            "id": "rotating-scroll-indicator-reference",
+            "name": "Reference",
+            "description": "Circular SVG badge with text tracing the circumference ('SCROLL DOWN · SCROLL DOWN'), rotating continuously at slow tempo. Sits at 0,0 of the bottom-left corner with small offset. Ink black stroke on transparent fill — a typographic punctuation mark, not a button.",
+            "evidence": [],
+            "observedProperties": [
+              "Bottom-left circular badge prompting downward exploration"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer-address-block",
+        "name": "Footer Address Block",
+        "category": "Refero components",
+        "description": "Roobert 11px weight 400 line-height 1.36, #6d6d6d Felt Gray text. Tight 8px top margins between lines create a compact address stack that recedes into the page. No dividers or labels — the muted gray does the work.",
+        "variants": [
+          {
+            "id": "footer-address-block-reference",
+            "name": "Reference",
+            "description": "Roobert 11px weight 400 line-height 1.36, #6d6d6d Felt Gray text. Tight 8px top margins between lines create a compact address stack that recedes into the page. No dividers or labels — the muted gray does the work.",
+            "evidence": [],
+            "observedProperties": [
+              "Studio contact information"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "cookie-banner",
+        "name": "Cookie Banner",
+        "category": "Refero components",
+        "description": "Fixed bottom bar, rgba(55,55,55,0.78) Slate Pill background, white body text in system-ui 9–16px, paired with Filled Neutral Pill 'Accept' button. Minimal copy, single action, no settings — the banner respects attention by asking for nothing beyond consent.",
+        "variants": [
+          {
+            "id": "cookie-banner-reference",
+            "name": "Reference",
+            "description": "Fixed bottom bar, rgba(55,55,55,0.78) Slate Pill background, white body text in system-ui 9–16px, paired with Filled Neutral Pill 'Accept' button. Minimal copy, single action, no settings — the banner respects attention by asking for nothing beyond consent.",
+            "evidence": [],
+            "observedProperties": [
+              "Compliance notice with single accept action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Fixed transparent header 66px tall. Logo wordmark top-left (Roobert 16px weight 400 'monopo saigon'), language switcher centered, menu stack right-aligned (WORK / MANIFESTO / SAIGON SOULS / TEAM / CONTACT at 11–12px weight 400). No background fill — the header is invisible until content scrolls behind it.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Fixed transparent header 66px tall. Logo wordmark top-left (Roobert 16px weight 400 'monopo saigon'), language switcher centered, menu stack right-aligned (WORK / MANIFESTO / SAIGON SOULS / TEAM / CONTACT at 11–12px weight 400). No background fill — the header is invisible until content scrolls behind it.",
+            "evidence": [],
+            "observedProperties": [
+              "Persistent header with logo, locale, and menu"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "iridescent-hero-backdrop",
+        "name": "Iridescent Hero Backdrop",
+        "category": "Refero components",
+        "description": "Full-viewport organic gradient or video: soft sage green (rgb 160,224,171) dissolving through molten amber (rgb 255,172,46) into deep oxblood (rgb 165,45,37). Applied as a flowing, liquid texture — never as a flat gradient. This is the only chromatic surface in the entire system and exists only behind text, never as UI fill.",
+        "variants": [
+          {
+            "id": "iridescent-hero-backdrop-reference",
+            "name": "Reference",
+            "description": "Full-viewport organic gradient or video: soft sage green (rgb 160,224,171) dissolving through molten amber (rgb 255,172,46) into deep oxblood (rgb 165,45,37). Applied as a flowing, liquid texture — never as a flat gradient. This is the only chromatic surface in the entire system and exists only behind text, never as UI fill.",
+            "evidence": [],
+            "observedProperties": [
+              "Atmospheric media behind hero headlines"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "$19",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Imagery is theatrical and singular: one massive iridescent fluid texture dominates the hero — organic greens dissolving through amber into oxblood like oil on water or molten glass. It reads as full-bleed atmospheric media, possibly video or shader-driven canvas, and occupies the entire viewport as a singular sensory moment rather than a repeated pattern. Project showcases use contained editorial photography (tight product crops, campaign stills) presented without frames or borders — the image is the content. No illustration, no icons beyond tiny UI glyphs, no decorative shapes. Iconography is minimal or absent; the rotating circular text badge functions as the system's only typographic ornament. Overall density: text-dominant with one hero-sized visual gesture, then long quiet editorial stretches of typography and product imagery.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system deliberately avoids shadow elevation. Surfaces are distinguished by color inversion (white to black bands) and hairline 1px borders rather than stacked shadows. The lone 'elevation' gesture is the translucent slate pill on the cookie banner, which uses background opacity rather than shadow to separate from content.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set display headlines at 225px Roobert weight 400 and let them own the viewport — never crowd them with subheads or CTAs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the 75px pill radius exclusively for buttons and tags — keep all other elements (cards, images, inputs) at 0px radius for sharp editorial contrast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve color for one iridescent hero backdrop per page — keep all interface text, borders, and fills strictly in the black/white/gray scale",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use weight 300 at 78px for manifesto and atmospheric headlines to create whisper authority — never push above weight 400 at this scale",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set line-height to 0.70–0.76 on display sizes above 78px to let lines lock together as typographic art objects",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply cubic-bezier(0.19, 1, 0.22, 1) easing to transform and color transitions with durations of 0.8–1.25s for patient, gliding motion",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all interactive text links at 0px radius with no underlines — let spacing, color, and context signal affordance",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never introduce a chromatic UI color — black, white, and gray are the interface palette; the iridescent gradient is media only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use box-shadow or elevation on cards, buttons, or images — the system relies on flat surfaces and hairline 1px borders",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never set border-radius between 1px and 74px — the system jumps from sharp 0px to full 75px pill, no intermediate rounding",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use bold or heavy weights (600+) above 45px — large sizes should whisper at 300 or speak at 400, never shout",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never center-align body copy in address blocks, lists, or project descriptions — left-align with 8–14px line gaps for editorial flow",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add gradients to buttons, badges, or UI controls — gradients belong only in the hero atmospheric media",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use Raleway for body or navigation — it is a heading accent only, and even there it appears sparingly",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-18",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never fill the canvas with imagery — the system is text-dominant with one hero-sized visual gesture per page",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

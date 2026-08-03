@@ -6,7 +6,7 @@ const meta = {
   title: 'Components/DataDisplay/Chat',
   component: ChatComposer,
   tags: ['autodocs'],
-  args: { onSubmit: () => {}, placeholder: 'Message Astryx…' },
+  args: { onSubmit: () => {}, placeholder: 'Message Vitrines…' },
 } satisfies Meta<typeof ChatComposer>;
 
 export default meta;
@@ -18,7 +18,7 @@ export const Playground: Story = {
       const [value, setValue] = useState('');
       return (
         <div style={{ maxWidth: 480 }}>
-          <ChatComposer value={value} onChange={setValue} onSubmit={() => setValue('')} placeholder="Message Astryx…" />
+          <ChatComposer value={value} onChange={setValue} onSubmit={() => setValue('')} placeholder="Message Vitrines…" />
         </div>
       );
     }

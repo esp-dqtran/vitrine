@@ -18,6 +18,29 @@
   --vitrine-icon-stroke-width: 2;
   --vitrine-icon-label-gap: var(--spacing-2);
   --vitrine-icon-button-size: var(--vitrine-control-height);
+  --vitrine-motion-fast: 120ms;
+  --vitrine-motion-medium: 180ms;
+  --vitrine-motion-slow: 240ms;
+  --vitrine-motion-ease: cubic-bezier(.16, 1, .3, 1);
+  --vitrine-transition-fast: var(--vitrine-motion-fast) var(--vitrine-motion-ease);
+  --vitrine-transition-standard: var(--vitrine-motion-medium) var(--vitrine-motion-ease);
+  --vitrine-transition-slow: var(--vitrine-motion-slow) var(--vitrine-motion-ease);
+  --vitrine-breakpoint-compact-max: 720px;
+  --vitrine-breakpoint-medium-max: 1100px;
+  --vitrine-page-gutter-compact: 20px;
+  --vitrine-page-gutter-medium: 24px;
+  --vitrine-page-gutter-wide: 32px;
+  --vitrine-form-input-height: 48px;
+  --vitrine-form-input-height-compact: 44px;
+  --vitrine-form-input-radius: 999px;
+  --vitrine-form-input-padding-inline: 22px;
+  --vitrine-form-textarea-radius: var(--radius-container);
+  --vitrine-form-choice-size: 18px;
+  --vitrine-form-choice-radius: 4px;
+  --vitrine-form-switch-width: 40px;
+  --vitrine-form-switch-height: 24px;
+  --vitrine-form-control-surface: var(--vitrine-color-surface);
+  --vitrine-form-control-hover: light-dark(#f1f4f7, #28292d);
 
   /* Large editorial hierarchy is a presentation layer, not a product type role. */
   --vitrine-presentation-display: 600 clamp(2rem, 3vw, 2.375rem) / 1.12 var(--vitrine-font-family-sans);
@@ -107,6 +130,69 @@
   --color-warning-muted: var(--vitrine-color-surface-muted);
   --color-on-warning: var(--vitrine-color-page);
   --color-error: var(--vitrine-color-status-error);
+}
+
+/*
+ * Shared single-selection controls use the approved Vitrines contrast model:
+ * a black pill track with a white selected state. Width remains owned by each
+ * caller so compact controls stay compact and fill controls continue to fill.
+ */
+.astryx-segmented-control {
+  padding: var(--spacing-1) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 999px !important;
+  background: var(--vitrine-color-on-action-primary) !important;
+}
+
+.astryx-segmented-control > button.astryx-segmented-control-item {
+  border-radius: 999px !important;
+  color: color-mix(
+    in srgb,
+    var(--vitrine-color-action-primary) 72%,
+    transparent
+  ) !important;
+  transition:
+    color var(--vitrine-transition-fast),
+    background-color var(--vitrine-transition-standard),
+    box-shadow var(--vitrine-transition-standard) !important;
+}
+
+.astryx-segmented-control > button[aria-checked='true'] {
+  background: var(--vitrine-color-action-primary) !important;
+  color: var(--vitrine-color-on-action-primary) !important;
+  box-shadow: none !important;
+}
+
+.astryx-pagination.pages {
+  padding: var(--spacing-1);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--vitrine-color-on-action-primary);
+}
+
+.astryx-pagination.pages button.astryx-button {
+  width: var(--vitrine-control-height) !important;
+  min-width: var(--vitrine-control-height) !important;
+  height: var(--vitrine-control-height) !important;
+  min-height: var(--vitrine-control-height) !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  color: var(--vitrine-color-action-primary) !important;
+  transition:
+    color var(--vitrine-transition-fast),
+    background-color var(--vitrine-transition-standard) !important;
+}
+
+.astryx-pagination.pages button[aria-current='page'] {
+  background: var(--vitrine-color-action-primary) !important;
+  color: var(--vitrine-color-on-action-primary) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astryx-segmented-control > button.astryx-segmented-control-item,
+  .astryx-pagination.pages button.astryx-button {
+    transition: none !important;
+  }
 }
 
 .vitrine-type-display {

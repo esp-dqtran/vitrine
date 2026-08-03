@@ -1,0 +1,2262 @@
+{
+  "schemaVersion": 1,
+  "id": "fb812ddb-d7c0-4540-82d7-1562dff16f09",
+  "sourceUrl": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09",
+  "sitemapLastModified": "2026-06-03T20:53:52.008Z",
+  "fetchedAt": "2026-08-02T18:08:32.603Z",
+  "contentHash": "55e64a5a41f7930fc9bf2c3cf1ae8ec82bb3b58bf85fb253e3b7343c40d6c74a",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Textla design system",
+            "item": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09#style-reference",
+        "name": "Textla design system reference",
+        "headline": "Textla design system | Refero Styles",
+        "description": "Explore Textla's light SaaS design system: Sunlit Cream #f2ee98, Forest Ink #10380b colors, National 2 Condensed, RethinkSans typography, and DESIGN.md for...",
+        "url": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09",
+        "mainEntityOfPage": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Textla",
+          "url": "https://www.textla.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/c5ae6593-b11a-4dde-b094-babf6fa8da1c.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/c5ae6593-b11a-4dde-b094-babf6fa8da1c.jpg",
+          "caption": "Screenshot of Textla"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/c5ae6593-b11a-4dde-b094-babf6fa8da1c.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Textla design system",
+          "Textla website design",
+          "Textla colors",
+          "Textla typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Sunlit Cream",
+          "Forest Ink",
+          "Marigold",
+          "Sage Wash",
+          "National 2 Condensed",
+          "RethinkSans"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Textla design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Textla website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Textla colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Textla typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-05-07T22:03:03.785Z",
+        "dateModified": "2026-05-07T22:03:03.785Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://www.textla.com",
+      "siteName": "Textla",
+      "extractedAt": "2026-06-03T20:53:52.002Z",
+      "durationMs": 43544,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 929,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#10380b",
+            "oklch": {
+              "c": 0.08458964227156758,
+              "h": 141.5104812886874,
+              "l": 0.301386305382389
+            },
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "hero",
+              "heading",
+              "body",
+              "icon",
+              "image",
+              "card",
+              "button",
+              "badge",
+              "input"
+            ],
+            "frequency": 2410,
+            "confidence": 1,
+            "prominence": 131107090.97539602,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "boxShadow",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "nav/color": 9,
+              "body/color": 6,
+              "card/color": 18,
+              "hero/color": 1,
+              "icon/color": 11,
+              "link/color": 28,
+              "other/fill": 170,
+              "badge/color": 3,
+              "image/color": 25,
+              "input/color": 1,
+              "other/color": 263,
+              "button/color": 6,
+              "other/stroke": 233,
+              "heading/color": 25,
+              "image/boxShadow": 2,
+              "nav/borderColor": 36,
+              "other/boxShadow": 1,
+              "body/borderColor": 24,
+              "card/borderColor": 76,
+              "hero/borderColor": 4,
+              "icon/borderColor": 44,
+              "link/borderColor": 112,
+              "badge/borderColor": 12,
+              "image/borderColor": 100,
+              "input/borderColor": 4,
+              "other/borderColor": 1052,
+              "button/borderColor": 28,
+              "heading/borderColor": 100,
+              "card/backgroundColor": 1,
+              "other/backgroundColor": 13,
+              "button/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#f2ee98",
+            "oklch": {
+              "c": 0.1073689504124827,
+              "h": 106.00726458758876,
+              "l": 0.9332763739367551
+            },
+            "contexts": [
+              "other",
+              "body",
+              "link",
+              "heading",
+              "icon",
+              "badge"
+            ],
+            "frequency": 143,
+            "confidence": 1,
+            "prominence": 30210815.98005225,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "icon/color": 3,
+              "link/color": 3,
+              "other/fill": 33,
+              "badge/color": 3,
+              "other/color": 7,
+              "heading/color": 1,
+              "body/borderColor": 4,
+              "icon/borderColor": 12,
+              "link/borderColor": 12,
+              "badge/borderColor": 12,
+              "other/borderColor": 28,
+              "heading/borderColor": 4,
+              "link/backgroundColor": 3,
+              "other/backgroundColor": 17
+            }
+          },
+          {
+            "hex": "#fce519",
+            "oklch": {
+              "c": 0.1875500313153288,
+              "h": 101.8644626327517,
+              "l": 0.9124284113867228
+            },
+            "contexts": [
+              "other",
+              "icon",
+              "badge",
+              "card",
+              "heading"
+            ],
+            "frequency": 80,
+            "confidence": 1,
+            "prominence": 11958713.2438912,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "icon/color": 2,
+              "other/fill": 10,
+              "badge/color": 1,
+              "other/color": 7,
+              "other/stroke": 1,
+              "heading/color": 1,
+              "icon/borderColor": 8,
+              "badge/borderColor": 4,
+              "other/borderColor": 28,
+              "heading/borderColor": 4,
+              "card/backgroundColor": 1,
+              "other/backgroundColor": 13
+            }
+          },
+          {
+            "hex": "#fefde6",
+            "oklch": {
+              "c": 0.030027839050501194,
+              "h": 104.90652388206878,
+              "l": 0.988760190138633
+            },
+            "contexts": [
+              "other",
+              "card",
+              "image",
+              "input",
+              "button"
+            ],
+            "frequency": 128,
+            "confidence": 1,
+            "prominence": 1724860.0620156964,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "card/color": 1,
+              "other/fill": 11,
+              "image/color": 3,
+              "other/color": 19,
+              "button/color": 1,
+              "image/borderColor": 12,
+              "other/borderColor": 76,
+              "input/backgroundColor": 1,
+              "other/backgroundColor": 4
+            }
+          },
+          {
+            "hex": "#dbe8ac",
+            "oklch": {
+              "c": 0.07948602077300251,
+              "h": 117.94522954950935,
+              "l": 0.9065628680018438
+            },
+            "contexts": [
+              "card",
+              "other"
+            ],
+            "frequency": 4,
+            "confidence": 1,
+            "prominence": 1333994.1290746874,
+            "properties": [
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 1,
+              "card/backgroundColor": 2,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 56,
+            "confidence": 1,
+            "prominence": 1204264.3052144668,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "link/color": 1,
+              "other/fill": 5,
+              "other/color": 9,
+              "other/stroke": 1,
+              "link/borderColor": 4,
+              "other/borderColor": 36
+            }
+          },
+          {
+            "hex": "#30be60",
+            "oklch": {
+              "c": 0.17826164994577093,
+              "h": 149.802852313697,
+              "l": 0.7069329215288671
+            },
+            "contexts": [
+              "heading",
+              "body",
+              "other"
+            ],
+            "frequency": 50,
+            "confidence": 1,
+            "prominence": 556442.2363460358,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "other/fill": 15,
+              "other/color": 2,
+              "heading/color": 4,
+              "body/borderColor": 4,
+              "other/borderColor": 8,
+              "heading/borderColor": 16
+            }
+          },
+          {
+            "hex": "#be5230",
+            "oklch": {
+              "c": 0.14752827201234445,
+              "h": 37.79034229062917,
+              "l": 0.5717431405705654
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 3856,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.23285488833428652,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 13.19,
+            "background": "#10380b",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.81,
+            "background": "#fefde6",
+            "foreground": "#10380b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.96,
+            "background": "#f2ee98",
+            "foreground": "#10380b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.27,
+            "background": "#fce519",
+            "foreground": "#10380b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.14,
+            "background": "#dbe8ac",
+            "foreground": "#10380b"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.44,
+            "background": "#10380b",
+            "foreground": "#30be60"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.36,
+            "background": "#fefde6",
+            "foreground": "#30be60"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.02,
+            "background": "#f2ee98",
+            "foreground": "#30be60"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.89,
+            "background": "#fce519",
+            "foreground": "#30be60"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.86,
+            "background": "#dbe8ac",
+            "foreground": "#30be60"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.3,
+            "background": "#dbe8ac",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.28,
+            "background": "#fce519",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.26,
+            "background": "#dbe8ac",
+            "foreground": "#fefde6"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.25,
+            "background": "#fefde6",
+            "foreground": "#fce519"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.2,
+            "background": "#f2ee98",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.17,
+            "background": "#fefde6",
+            "foreground": "#f2ee98"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.08,
+            "background": "#dbe8ac",
+            "foreground": "#f2ee98"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.07,
+            "background": "#fce519",
+            "foreground": "#f2ee98"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.03,
+            "background": "#fefde6",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.01,
+            "background": "#dbe8ac",
+            "foreground": "#fce519"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 1440,
+            "contexts": [
+              "other",
+              "button",
+              "input"
+            ],
+            "frequency": 21
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "card",
+              "image",
+              "other",
+              "link"
+            ],
+            "frequency": 19
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "nav",
+              "other",
+              "link",
+              "card"
+            ],
+            "frequency": 10
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgb(16, 56, 11) 8px 8px 0px 0px",
+            "contexts": [
+              "image"
+            ],
+            "frequency": 2
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 8,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|button",
+              "marginLeft|button"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "nav",
+              "link",
+              "other",
+              "heading"
+            ],
+            "frequency": 43,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "paddingBottom|nav",
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingTop|link",
+              "paddingBottom|link",
+              "rowGap|link",
+              "columnGap|link",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|other",
+              "columnGap|other",
+              "marginTop|other",
+              "paddingRight|heading"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|card",
+              "columnGap|card"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "nav",
+              "other",
+              "link",
+              "card",
+              "input",
+              "button"
+            ],
+            "frequency": 72,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|link",
+              "paddingLeft|link",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|card",
+              "columnGap|card",
+              "paddingTop|input",
+              "paddingBottom|input",
+              "paddingTop|button",
+              "paddingBottom|button",
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other",
+              "hero",
+              "card",
+              "input"
+            ],
+            "frequency": 79,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other",
+              "paddingTop|hero",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card",
+              "rowGap|card",
+              "columnGap|card",
+              "paddingRight|input",
+              "paddingLeft|input"
+            ]
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|card",
+              "columnGap|card"
+            ]
+          },
+          {
+            "value": 33,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other",
+              "hero",
+              "card"
+            ],
+            "frequency": 116,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|hero",
+              "paddingLeft|hero",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "marginRight|other",
+              "rowGap|card",
+              "columnGap|card"
+            ]
+          },
+          {
+            "value": 64,
+            "contexts": [
+              "other",
+              "card",
+              "button"
+            ],
+            "frequency": 15,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|card",
+              "columnGap|card",
+              "paddingTop|other",
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 80,
+            "contexts": [
+              "card",
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginRight",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card",
+              "marginRight|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 102,
+            "contexts": [
+              "hero"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|hero"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "paddingTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 143,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|card",
+              "marginLeft|card"
+            ]
+          },
+          {
+            "value": 160,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 220,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "RethinkSans",
+            "source": "custom",
+            "weights": [
+              600,
+              700,
+              800
+            ],
+            "frequency": 391,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "National 2 Condensed",
+            "source": "custom",
+            "weights": [
+              600,
+              700,
+              800
+            ],
+            "frequency": 75,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 0.85
+        },
+        "steps": [
+          {
+            "size": 16,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "badge",
+              "hero",
+              "body",
+              "image",
+              "icon",
+              "card",
+              "button"
+            ],
+            "frequency": 348,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.71,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "RethinkSans",
+            "weight": 700,
+            "contexts": [
+              "nav",
+              "link"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.71,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "National 2 Condensed",
+            "weight": 600,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "RethinkSans",
+            "weight": 800,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "RethinkSans",
+            "weight": 800,
+            "contexts": [
+              "other",
+              "icon"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "National 2 Condensed",
+            "weight": 600,
+            "contexts": [
+              "input"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "National 2 Condensed",
+            "weight": 800,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "RethinkSans",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 22,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "National 2 Condensed",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "National 2 Condensed",
+            "weight": 800,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 32,
+            "family": "National 2 Condensed",
+            "weight": 800,
+            "contexts": [
+              "other",
+              "icon"
+            ],
+            "frequency": 18,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 13,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 48,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 12,
+            "lineHeight": 1,
+            "letterSpacing": -0.03,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.13,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 86,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.8,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 86,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 104,
+            "family": "National 2 Condensed",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.13,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 156,
+            "family": "National 2 Condensed",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 0.8,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 180,
+            "family": "National 2 Condensed",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 0.8,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use #10380b (Forest Ink) for all body text, borders, icons, and primary action fills — it is the system's only ink color",
+        "Apply the 8px 8px 0 0 #10380b hard offset shadow to elevated cards and product mockups, never to buttons or inputs",
+        "Reach for National 2 Condensed at 56px+ for headlines, with -0.03em letter-spacing preserved at every size",
+        "Pair every filled pill CTA with a ghost text-link sibling to create a two-button rhythm (filled + chevron text)",
+        "Use #f2ee98 (Sunlit Cream) as the page canvas on all default sections; introduce #fefde6 (Parchment) only for card surfaces that need to lift one level",
+        "Use #fce519 (Marigold) sparingly — star ratings, hero CTAs, and decorative icon accents only — never for body text or large fills",
+        "Keep all button radii at 1440px (full pill) and all card/image radii at 40px — this radius pair defines the system's softness"
+      ],
+      "donts": [
+        "Do not use #fce519 for body text — Marigold fails contrast on cream and should never carry paragraphs",
+        "Do not apply soft Gaussian shadows; the only elevation language is the hard 8px offset in Forest Ink",
+        "Do not use the condensed display face (National 2 Condensed) below 20px — it becomes illegible as UI text",
+        "Do not introduce blue, purple, or any non-green/yellow hue — the system is strictly botanical warm",
+        "Do not use sharp 0px radii on any container — the system is consistently rounded (16px minimum)",
+        "Do not set RethinkSans below weight 600 — the face has no light weights and lighter settings will render incorrectly",
+        "Do not use white (#ffffff) as a page background — the canvas is always Sunlit Cream; white appears only inside product mockups and on dark green surfaces"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#f2ee98",
+          "name": "Sunlit Cream",
+          "role": "Page canvas and section background — the warm desert-light base that sets the system's botanical mood",
+          "group": "brand"
+        },
+        {
+          "hex": "#10380b",
+          "name": "Forest Ink",
+          "role": "Primary text, pill button fills, icon strokes, hard offset shadow, and brand mark — the single deep green that does 80% of structural work",
+          "group": "brand"
+        },
+        {
+          "hex": "#fce519",
+          "name": "Marigold",
+          "role": "Yellow state accent for badges, validation surfaces, and short status labels. Do not promote it to the primary CTA color",
+          "group": "accent"
+        },
+        {
+          "hex": "#dbe8ac",
+          "name": "Sage Wash",
+          "role": "Muted card and surface tint — a soft botanical green used for subtle panel differentiation on the cream canvas",
+          "group": "accent"
+        },
+        {
+          "hex": "#30be60",
+          "name": "Vivid Fern",
+          "role": "Green outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color",
+          "group": "accent"
+        },
+        {
+          "hex": "#fefde6",
+          "name": "Parchment",
+          "role": "Lighter card surface that sits one level above Sunlit Cream — used for product mockup cards, testimonial cards, and elevated panels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Snowcap",
+          "role": "Pure white for high-contrast text on Forest Ink backgrounds and for thin icon strokes inside the product UI mockup",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Max-width 1200px centered with comfortable 40px gutters. Hero is a two-column split: oversized headline + dual CTAs + star social proof on the left, product dashboard card overlapping a cactus illustration on the right. Section rhythm alternates Sunlit Cream and Forest Ink bands with 80-120px vertical gaps. Content blocks use 2-column testimonial grids and 4-column stat bars. Feature sections pair circular icon lists with chat bubble illustrations in 2-column layouts. Bottom-of-page stats are a full-bleed Marigold band. Navigation is a single transparent top bar; no sidebar or sticky mega-menu.",
+      "imagery": "Hand-drawn monochrome line illustrations are the system's signature visual element: cacti, clouds, sunbursts, small figures with parachutes, and desert flora rendered in 1.5-2px Forest Ink strokes on the cream canvas. Illustrations are flat, unshaded, and used as scene-fillers in hero negative space and feature section backgrounds — they never appear inside cards. Product screenshots and dashboard mockups are framed as cards with hard offset shadows, treated as objects within the illustrated world. A small set of circular line-art icons (gift box, phone, megaphone, person) appear in Marigold-filled circles for feature lists. Photography is limited to one embedded customer video frame; everything else is illustrated.",
+      "similar": [
+        {
+          "why": "Same neobrutalist hard offset shadows, pill-shaped CTAs, and illustrated mascot energy on a warm cream canvas",
+          "business": "Gumroad"
+        },
+        {
+          "why": "SMS marketing peer with similar marketing-page personality, though Postscript runs a lighter more commercial palette",
+          "business": "Postscript"
+        },
+        {
+          "why": "Heavy condensed display type and confident weight-700 UI text create the same poster-like typographic confidence",
+          "business": "Linear"
+        },
+        {
+          "why": "Marketing platform with illustrated hero scenes and bold condensed headlines, though Klaviyo uses cooler purple accents",
+          "business": "Klaviyo"
+        },
+        {
+          "why": "Editorial / newsletter-adjacent brand using oversized condensed serif-adjacent display type and warm cream backgrounds for a printed-publication feel",
+          "business": "Substack"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "nav": "16px",
+          "tags": "40px",
+          "cards": "40px",
+          "badges": "1440px",
+          "images": "40px",
+          "inputs": "1440px",
+          "buttons": "1440px"
+        },
+        "elementGap": "24px",
+        "sectionGap": "80-120px",
+        "cardPadding": "24-40px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "saas",
+      "surfaces": [
+        {
+          "hex": "#f2ee98",
+          "name": "Sunlit Cream",
+          "level": 0,
+          "purpose": "Default page canvas and section background"
+        },
+        {
+          "hex": "#fefde6",
+          "name": "Parchment",
+          "level": 1,
+          "purpose": "Lighter card surface for testimonials, product mockups, and elevated panels"
+        },
+        {
+          "hex": "#dbe8ac",
+          "name": "Sage Wash",
+          "level": 2,
+          "purpose": "Subtle tint for differentiation panels within cream sections"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Snowcap",
+          "level": 3,
+          "purpose": "Pure white only inside product UI mockups and chat bubbles"
+        },
+        {
+          "hex": "#10380b",
+          "name": "Forest Ink",
+          "level": 4,
+          "purpose": "Inverted dark surface for stat bars, feature cards, and high-contrast sections"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "8px 8px 0 0 #10380b",
+          "element": "Product Dashboard Card"
+        },
+        {
+          "style": "8px 8px 0 0 #10380b",
+          "element": "Testimonial Card"
+        },
+        {
+          "style": "8px 8px 0 0 #10380b",
+          "element": "Video Testimonial Frame"
+        },
+        {
+          "style": "8px 8px 0 0 #10380b",
+          "element": "Feature Card"
+        }
+      ],
+      "northStar": "Sunlit retro botanical almanac — a cream-yellow page printed in deep forest green, illustrated with cactus line art, stamped with hard offset shadows.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 16,
+          "lineHeight": 24,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body",
+          "size": 18,
+          "lineHeight": 28,
+          "letterSpacing": 0
+        },
+        {
+          "role": "subheading",
+          "size": 20,
+          "lineHeight": 32,
+          "letterSpacing": 0
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 30,
+          "letterSpacing": -0.72
+        },
+        {
+          "role": "heading",
+          "size": 32,
+          "lineHeight": 38,
+          "letterSpacing": -0.96
+        },
+        {
+          "role": "heading-lg",
+          "size": 56,
+          "lineHeight": 62,
+          "letterSpacing": -1.68
+        },
+        {
+          "role": "display",
+          "size": 86,
+          "lineHeight": 70,
+          "letterSpacing": -2.58
+        },
+        {
+          "role": "display-xl",
+          "size": 180,
+          "lineHeight": 144,
+          "letterSpacing": -5.4
+        }
+      ],
+      "components": [
+        {
+          "name": "Marigold Pill CTA",
+          "role": "Primary hero action button — the signature filled button in the hero section",
+          "description": "1440px radius pill, #fce519 (Marigold) background, #10380b (Forest Ink) text at 16-18px RethinkSans weight 700, padding 12px 28px. Optional 4px margin to ghost sibling button. No shadow."
+        },
+        {
+          "name": "Forest Pill Button",
+          "role": "Primary dark action button used on light surfaces",
+          "description": "1440px radius pill, #10380b (Forest Ink) background, #f2ee98 (Sunlit Cream) text at 16-18px RethinkSans weight 700, padding 12px 28px."
+        },
+        {
+          "name": "Ghost Text Button",
+          "role": "Secondary inline action paired beside a filled CTA",
+          "description": "No background, no border, #10380b (Forest Ink) text at 16-18px RethinkSans weight 600, trailing chevron icon. Padding 8px 4px."
+        },
+        {
+          "name": "Outlined Call Button",
+          "role": "Phone number CTA in nav",
+          "description": "1440px radius pill, 1px solid #10380b (Forest Ink) border, transparent fill, Forest Ink text with leading phone icon. Padding 8px 20px."
+        },
+        {
+          "name": "Parchment Testimonial Card",
+          "role": "Customer quote card on cream canvas",
+          "description": "#fefde6 (Parchment) background, 40px border-radius, 24-40px padding. Contains avatar (circular), name in 20px RethinkSans 700, role in 16px weight 600, quote in 24-32px National 2 Condensed weight 700 Forest Ink. Optional hard offset shadow `8px 8px 0 0 #10380b`."
+        },
+        {
+          "name": "Product Dashboard Card",
+          "role": "Hero product UI mockup and embedded screenshots",
+          "description": "White or #fefde6 (Parchment) background, 40px border-radius, 1px solid #10380b border, 8px 8px 0 0 Forest Ink hard offset shadow. Phone number header pill in dark green, stat block with three large condensed numbers (Campaigns/Messages/Subscribers), campaign list rows with status badges."
+        },
+        {
+          "name": "Status Pill Badge",
+          "role": "Campaign status indicator (One-time, Recurring, Sending Monday, etc.)",
+          "description": "1440px or 40px radius, small padding 4px 12px, 14-16px RethinkSans weight 700. Two color variants: Forest Ink fill with Sunlit Cream text for default states; Marigold fill with Forest Ink text for active/highlight states."
+        },
+        {
+          "name": "Star Rating Display",
+          "role": "Five-star social proof element",
+          "description": "Five star icons in #fce519 (Marigold) fill, 16-20px size, tightly grouped. Always paired with 'Five star rating' label in RethinkSans 16px weight 600 Forest Ink."
+        },
+        {
+          "name": "Feature List Item",
+          "role": "Three-step onboarding list with circular icon",
+          "description": "40px circular icon container with Marigold fill and dark line-art icon, 24px gap to label. Label in 24-32px National 2 Condensed weight 700 Forest Ink, optional subtext in 16px RethinkSans 600."
+        },
+        {
+          "name": "G2 Leader Ribbon",
+          "role": "Third-party award badge for testimonial card",
+          "description": "Red/orange gradient ribbon with white text 'Leader' and 'SUMMER 2025' label, 0px radius top corners, pointed bottom edge. Sits overlapping the testimonial card top-right."
+        },
+        {
+          "name": "Stat Counter Bar",
+          "role": "Bottom social-proof statistics strip",
+          "description": "Full-width band, #fce519 (Marigold) background, 4-column grid. Each stat: large number in 48-64px National 2 Condensed 800 Forest Ink, label in 18-20px RethinkSans 600 Forest Ink. 80px vertical padding."
+        },
+        {
+          "name": "Video Testimonial Frame",
+          "role": "Embedded customer video card",
+          "description": "16:9 or 4:3 video frame, 40px radius, Forest Ink 1px border, hard offset shadow. Caption below: name in 24px National 2 Condensed 700, role in 16px RethinkSans 600, star rating row in Marigold."
+        },
+        {
+          "name": "Chat Bubble Card",
+          "role": "SMS conversation illustration in feature section",
+          "description": "White background, 40px radius with one corner more rounded (asymmetric to indicate speech tail), 16-24px padding. Sender message in 16px RethinkSans 600 Forest Ink, reply in same on dark green bubble with cream text. Circle avatar with initials."
+        },
+        {
+          "name": "Navigation Bar",
+          "role": "Top header with logo, links, and dual CTAs",
+          "description": "Transparent over canvas, 16px nav links in RethinkSans 600 Forest Ink with 24-32px gap. Right side: outlined phone button + Marigold 'Try for free' pill. Logo is dark green wordmark with small icon mark."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Display and heading face — oversized condensed headlines up to 180px drive the poster-like visual identity. Tight -0.03em letter-spacing at all sizes, very tight 0.8 line-height at display weights, creating compressed stacked headlines. Hero 'Unbeatable' appears in italic 800.",
+          "sizes": "16px, 18px, 20px, 24px, 32px, 40px, 48px, 56px, 64px, 86px, 104px, 156px, 180px",
+          "family": "National 2 Condensed",
+          "weight": "600, 700, 800",
+          "lineHeight": "0.80–1.30",
+          "substitute": "Bebas Neue, Oswald, Antonio",
+          "letterSpacing": "-0.03em"
+        },
+        {
+          "role": "Body and UI face — already starts at weight 600, so no light weights exist. The system treats type as a structural element: 16px for nav and small UI, 18px for body, 20px for emphasized body. Line-height 1.0 for inline icons/badges, 1.5-1.71 for readable paragraphs.",
+          "sizes": "16px, 18px, 20px",
+          "family": "RethinkSans",
+          "weight": "600, 700, 800",
+          "lineHeight": "1.00–1.71",
+          "substitute": "Inter, Manrope, Plus Jakarta Sans"
+        }
+      ],
+      "description": "Textla wraps an SMS marketing product in a sunlit retro botanical almanac: a warm cream-yellow canvas (#f2ee98) carries every page, with deep forest green (#10380b) doing the work of ink, border, shadow, and brand mark. Typography is the loudest voice — a condensed display face (National 2 Condensed) drives oversized italicized headlines up to 180px while a heavy sans (RethinkSans, 600-800) handles all UI at 16-20px, giving the system a printed-poster confidence. Components lean neobrutalist: hard 8px offset shadows in the brand green, 1440px pill controls, 40px-rounded cards, and star ratings in vivid marigold yellow. Hand-drawn line illustrations of cacti, clouds, and desert figures fill the negative space, making the product feel like a vintage field guide rather than a dashboard.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Elevation Philosophy",
+          "content": "The system uses one shadow only: a hard 8px offset in Forest Ink (#10380b), no blur, no spread. This is neobrutalist elevation — cards 'stamp' onto the cream canvas rather than floating with soft shadow. Never use Gaussian shadows; never stack multiple shadow layers. The 8px offset is constant: it does not scale with card size or importance. Cards without the shadow feel incomplete; buttons, inputs, and inline elements never receive the shadow."
+        }
+      ]
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/f2c2da0e-64aa-449f-bd91-aed23613ac2f.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/c5ae6593-b11a-4dde-b094-babf6fa8da1c.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "textla",
+    "generatedAt": "2026-06-03T20:53:52.002Z",
+    "summary": "Textla wraps an SMS marketing product in a sunlit retro botanical almanac: a warm cream-yellow canvas (#f2ee98) carries every page, with deep forest green (#10380b) doing the work of ink, border, shadow, and brand mark. Typography is the loudest voice — a condensed display face (National 2 Condensed) drives oversized italicized headlines up to 180px while a heavy sans (RethinkSans, 600-800) handles all UI at 16-20px, giving the system a printed-poster confidence. Components lean neobrutalist: hard 8px offset shadows in the brand green, 1440px pill controls, 40px-rounded cards, and star ratings in vivid marigold yellow. Hand-drawn line illustrations of cacti, clouds, and desert figures fill the negative space, making the product feel like a vintage field guide rather than a dashboard.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "fb812ddb-d7c0-4540-82d7-1562dff16f09",
+      "sourceUrl": "https://styles.refero.design/style/fb812ddb-d7c0-4540-82d7-1562dff16f09",
+      "originalUrl": "https://www.textla.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/f2c2da0e-64aa-449f-bd91-aed23613ac2f.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/c5ae6593-b11a-4dde-b094-babf6fa8da1c.jpg",
+      "importedAt": "2026-08-02T18:08:32.603Z",
+      "upstreamModifiedAt": "2026-06-03T20:53:52.008Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Sunlit retro botanical almanac — a cream-yellow page printed in deep forest green, illustrated with cactus line art, stamped with hard offset shadows.",
+      "industry": "saas"
+    },
+    "tokens": [
+      {
+        "id": "color-sunlit-cream",
+        "kind": "color",
+        "name": "Sunlit Cream",
+        "value": "#f2ee98",
+        "role": "Page canvas and section background — the warm desert-light base that sets the system's botanical mood",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-forest-ink",
+        "kind": "color",
+        "name": "Forest Ink",
+        "value": "#10380b",
+        "role": "Primary text, pill button fills, icon strokes, hard offset shadow, and brand mark — the single deep green that does 80% of structural work",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-marigold",
+        "kind": "color",
+        "name": "Marigold",
+        "value": "#fce519",
+        "role": "Yellow state accent for badges, validation surfaces, and short status labels. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-sage-wash",
+        "kind": "color",
+        "name": "Sage Wash",
+        "value": "#dbe8ac",
+        "role": "Muted card and surface tint — a soft botanical green used for subtle panel differentiation on the cream canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-vivid-fern",
+        "kind": "color",
+        "name": "Vivid Fern",
+        "value": "#30be60",
+        "role": "Green outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-parchment",
+        "kind": "color",
+        "name": "Parchment",
+        "value": "#fefde6",
+        "role": "Lighter card surface that sits one level above Sunlit Cream — used for product mockup cards, testimonial cards, and elevated panels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-snowcap",
+        "kind": "color",
+        "name": "Snowcap",
+        "value": "#ffffff",
+        "role": "Pure white for high-contrast text on Forest Ink backgrounds and for thin icon strokes inside the product UI mockup",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-national-2-condensed",
+        "kind": "typography",
+        "name": "National 2 Condensed",
+        "value": "font-family: National 2 Condensed; font-weight: 600, 700, 800; font-size: 16px, 18px, 20px, 24px, 32px, 40px, 48px, 56px, 64px, 86px, 104px, 156px, 180px; line-height: 0.80–1.30; letter-spacing: -0.03em",
+        "role": "Display and heading face — oversized condensed headlines up to 180px drive the poster-like visual identity. Tight -0.03em letter-spacing at all sizes, very tight 0.8 line-height at display weights, creating compressed stacked headlines. Hero 'Unbeatable' appears in italic 800.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-rethinksans",
+        "kind": "typography",
+        "name": "RethinkSans",
+        "value": "font-family: RethinkSans; font-weight: 600, 700, 800; font-size: 16px, 18px, 20px; line-height: 1.00–1.71",
+        "role": "Body and UI face — already starts at weight 600, so no light weights exist. The system treats type as a structural element: 16px for nav and small UI, 18px for body, 20px for emphasized body. Line-height 1.0 for inline icons/badges, 1.5-1.71 for readable paragraphs.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 16px; line-height: 24; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 18px; line-height: 28; letter-spacing: 0px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 20px; line-height: 32; letter-spacing: 0px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 30; letter-spacing: -0.72px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 32px; line-height: 38; letter-spacing: -0.96px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 56px; line-height: 62; letter-spacing: -1.68px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 86px; line-height: 70; letter-spacing: -2.58px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-xl-scale",
+        "kind": "typography",
+        "name": "display-xl",
+        "value": "font-size: 180px; line-height: 144; letter-spacing: -5.4px",
+        "role": "Imported display-xl type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "24px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80-120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24-40px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-nav",
+        "kind": "radius",
+        "name": "nav",
+        "value": "16px",
+        "role": "Imported nav radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "40px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "40px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-badges",
+        "kind": "radius",
+        "name": "badges",
+        "value": "1440px",
+        "role": "Imported badges radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "40px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "1440px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "1440px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "marigold-pill-cta",
+        "name": "Marigold Pill CTA",
+        "category": "Refero components",
+        "description": "1440px radius pill, #fce519 (Marigold) background, #10380b (Forest Ink) text at 16-18px RethinkSans weight 700, padding 12px 28px. Optional 4px margin to ghost sibling button. No shadow.",
+        "variants": [
+          {
+            "id": "marigold-pill-cta-reference",
+            "name": "Reference",
+            "description": "1440px radius pill, #fce519 (Marigold) background, #10380b (Forest Ink) text at 16-18px RethinkSans weight 700, padding 12px 28px. Optional 4px margin to ghost sibling button. No shadow.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary hero action button — the signature filled button in the hero section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "forest-pill-button",
+        "name": "Forest Pill Button",
+        "category": "Refero components",
+        "description": "1440px radius pill, #10380b (Forest Ink) background, #f2ee98 (Sunlit Cream) text at 16-18px RethinkSans weight 700, padding 12px 28px.",
+        "variants": [
+          {
+            "id": "forest-pill-button-reference",
+            "name": "Reference",
+            "description": "1440px radius pill, #10380b (Forest Ink) background, #f2ee98 (Sunlit Cream) text at 16-18px RethinkSans weight 700, padding 12px 28px.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary dark action button used on light surfaces"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-text-button",
+        "name": "Ghost Text Button",
+        "category": "Refero components",
+        "description": "No background, no border, #10380b (Forest Ink) text at 16-18px RethinkSans weight 600, trailing chevron icon. Padding 8px 4px.",
+        "variants": [
+          {
+            "id": "ghost-text-button-reference",
+            "name": "Reference",
+            "description": "No background, no border, #10380b (Forest Ink) text at 16-18px RethinkSans weight 600, trailing chevron icon. Padding 8px 4px.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary inline action paired beside a filled CTA"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-call-button",
+        "name": "Outlined Call Button",
+        "category": "Refero components",
+        "description": "1440px radius pill, 1px solid #10380b (Forest Ink) border, transparent fill, Forest Ink text with leading phone icon. Padding 8px 20px.",
+        "variants": [
+          {
+            "id": "outlined-call-button-reference",
+            "name": "Reference",
+            "description": "1440px radius pill, 1px solid #10380b (Forest Ink) border, transparent fill, Forest Ink text with leading phone icon. Padding 8px 20px.",
+            "evidence": [],
+            "observedProperties": [
+              "Phone number CTA in nav"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "parchment-testimonial-card",
+        "name": "Parchment Testimonial Card",
+        "category": "Refero components",
+        "description": "#fefde6 (Parchment) background, 40px border-radius, 24-40px padding. Contains avatar (circular), name in 20px RethinkSans 700, role in 16px weight 600, quote in 24-32px National 2 Condensed weight 700 Forest Ink. Optional hard offset shadow `8px 8px 0 0 #10380b`.",
+        "variants": [
+          {
+            "id": "parchment-testimonial-card-reference",
+            "name": "Reference",
+            "description": "#fefde6 (Parchment) background, 40px border-radius, 24-40px padding. Contains avatar (circular), name in 20px RethinkSans 700, role in 16px weight 600, quote in 24-32px National 2 Condensed weight 700 Forest Ink. Optional hard offset shadow `8px 8px 0 0 #10380b`.",
+            "evidence": [],
+            "observedProperties": [
+              "Customer quote card on cream canvas"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-dashboard-card",
+        "name": "Product Dashboard Card",
+        "category": "Refero components",
+        "description": "White or #fefde6 (Parchment) background, 40px border-radius, 1px solid #10380b border, 8px 8px 0 0 Forest Ink hard offset shadow. Phone number header pill in dark green, stat block with three large condensed numbers (Campaigns/Messages/Subscribers), campaign list rows with status badges.",
+        "variants": [
+          {
+            "id": "product-dashboard-card-reference",
+            "name": "Reference",
+            "description": "White or #fefde6 (Parchment) background, 40px border-radius, 1px solid #10380b border, 8px 8px 0 0 Forest Ink hard offset shadow. Phone number header pill in dark green, stat block with three large condensed numbers (Campaigns/Messages/Subscribers), campaign list rows with status badges.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero product UI mockup and embedded screenshots"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "status-pill-badge",
+        "name": "Status Pill Badge",
+        "category": "Refero components",
+        "description": "1440px or 40px radius, small padding 4px 12px, 14-16px RethinkSans weight 700. Two color variants: Forest Ink fill with Sunlit Cream text for default states; Marigold fill with Forest Ink text for active/highlight states.",
+        "variants": [
+          {
+            "id": "status-pill-badge-reference",
+            "name": "Reference",
+            "description": "1440px or 40px radius, small padding 4px 12px, 14-16px RethinkSans weight 700. Two color variants: Forest Ink fill with Sunlit Cream text for default states; Marigold fill with Forest Ink text for active/highlight states.",
+            "evidence": [],
+            "observedProperties": [
+              "Campaign status indicator (One-time, Recurring, Sending Monday, etc.)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "star-rating-display",
+        "name": "Star Rating Display",
+        "category": "Refero components",
+        "description": "Five star icons in #fce519 (Marigold) fill, 16-20px size, tightly grouped. Always paired with 'Five star rating' label in RethinkSans 16px weight 600 Forest Ink.",
+        "variants": [
+          {
+            "id": "star-rating-display-reference",
+            "name": "Reference",
+            "description": "Five star icons in #fce519 (Marigold) fill, 16-20px size, tightly grouped. Always paired with 'Five star rating' label in RethinkSans 16px weight 600 Forest Ink.",
+            "evidence": [],
+            "observedProperties": [
+              "Five-star social proof element"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-list-item",
+        "name": "Feature List Item",
+        "category": "Refero components",
+        "description": "40px circular icon container with Marigold fill and dark line-art icon, 24px gap to label. Label in 24-32px National 2 Condensed weight 700 Forest Ink, optional subtext in 16px RethinkSans 600.",
+        "variants": [
+          {
+            "id": "feature-list-item-reference",
+            "name": "Reference",
+            "description": "40px circular icon container with Marigold fill and dark line-art icon, 24px gap to label. Label in 24-32px National 2 Condensed weight 700 Forest Ink, optional subtext in 16px RethinkSans 600.",
+            "evidence": [],
+            "observedProperties": [
+              "Three-step onboarding list with circular icon"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "g2-leader-ribbon",
+        "name": "G2 Leader Ribbon",
+        "category": "Refero components",
+        "description": "Red/orange gradient ribbon with white text 'Leader' and 'SUMMER 2025' label, 0px radius top corners, pointed bottom edge. Sits overlapping the testimonial card top-right.",
+        "variants": [
+          {
+            "id": "g2-leader-ribbon-reference",
+            "name": "Reference",
+            "description": "Red/orange gradient ribbon with white text 'Leader' and 'SUMMER 2025' label, 0px radius top corners, pointed bottom edge. Sits overlapping the testimonial card top-right.",
+            "evidence": [],
+            "observedProperties": [
+              "Third-party award badge for testimonial card"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "stat-counter-bar",
+        "name": "Stat Counter Bar",
+        "category": "Refero components",
+        "description": "Full-width band, #fce519 (Marigold) background, 4-column grid. Each stat: large number in 48-64px National 2 Condensed 800 Forest Ink, label in 18-20px RethinkSans 600 Forest Ink. 80px vertical padding.",
+        "variants": [
+          {
+            "id": "stat-counter-bar-reference",
+            "name": "Reference",
+            "description": "Full-width band, #fce519 (Marigold) background, 4-column grid. Each stat: large number in 48-64px National 2 Condensed 800 Forest Ink, label in 18-20px RethinkSans 600 Forest Ink. 80px vertical padding.",
+            "evidence": [],
+            "observedProperties": [
+              "Bottom social-proof statistics strip"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "video-testimonial-frame",
+        "name": "Video Testimonial Frame",
+        "category": "Refero components",
+        "description": "16:9 or 4:3 video frame, 40px radius, Forest Ink 1px border, hard offset shadow. Caption below: name in 24px National 2 Condensed 700, role in 16px RethinkSans 600, star rating row in Marigold.",
+        "variants": [
+          {
+            "id": "video-testimonial-frame-reference",
+            "name": "Reference",
+            "description": "16:9 or 4:3 video frame, 40px radius, Forest Ink 1px border, hard offset shadow. Caption below: name in 24px National 2 Condensed 700, role in 16px RethinkSans 600, star rating row in Marigold.",
+            "evidence": [],
+            "observedProperties": [
+              "Embedded customer video card"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "chat-bubble-card",
+        "name": "Chat Bubble Card",
+        "category": "Refero components",
+        "description": "White background, 40px radius with one corner more rounded (asymmetric to indicate speech tail), 16-24px padding. Sender message in 16px RethinkSans 600 Forest Ink, reply in same on dark green bubble with cream text. Circle avatar with initials.",
+        "variants": [
+          {
+            "id": "chat-bubble-card-reference",
+            "name": "Reference",
+            "description": "White background, 40px radius with one corner more rounded (asymmetric to indicate speech tail), 16-24px padding. Sender message in 16px RethinkSans 600 Forest Ink, reply in same on dark green bubble with cream text. Circle avatar with initials.",
+            "evidence": [],
+            "observedProperties": [
+              "SMS conversation illustration in feature section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "navigation-bar",
+        "name": "Navigation Bar",
+        "category": "Refero components",
+        "description": "Transparent over canvas, 16px nav links in RethinkSans 600 Forest Ink with 24-32px gap. Right side: outlined phone button + Marigold 'Try for free' pill. Logo is dark green wordmark with small icon mark.",
+        "variants": [
+          {
+            "id": "navigation-bar-reference",
+            "name": "Reference",
+            "description": "Transparent over canvas, 16px nav links in RethinkSans 600 Forest Ink with 24-32px gap. Right side: outlined phone button + Marigold 'Try for free' pill. Logo is dark green wordmark with small icon mark.",
+            "evidence": [],
+            "observedProperties": [
+              "Top header with logo, links, and dual CTAs"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width 1200px centered with comfortable 40px gutters. Hero is a two-column split: oversized headline + dual CTAs + star social proof on the left, product dashboard card overlapping a cactus illustration on the right. Section rhythm alternates Sunlit Cream and Forest Ink bands with 80-120px vertical gaps. Content blocks use 2-column testimonial grids and 4-column stat bars. Feature sections pair circular icon lists with chat bubble illustrations in 2-column layouts. Bottom-of-page stats are a full-bleed Marigold band. Navigation is a single transparent top bar; no sidebar or sticky mega-menu.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Hand-drawn monochrome line illustrations are the system's signature visual element: cacti, clouds, sunbursts, small figures with parachutes, and desert flora rendered in 1.5-2px Forest Ink strokes on the cream canvas. Illustrations are flat, unshaded, and used as scene-fillers in hero negative space and feature section backgrounds — they never appear inside cards. Product screenshots and dashboard mockups are framed as cards with hard offset shadows, treated as objects within the illustrated world. A small set of circular line-art icons (gift box, phone, megaphone, person) appear in Marigold-filled circles for feature lists. Photography is limited to one embedded customer video frame; everything else is illustrated.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-3",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #10380b (Forest Ink) for all body text, borders, icons, and primary action fills — it is the system's only ink color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply the 8px 8px 0 0 #10380b hard offset shadow to elevated cards and product mockups, never to buttons or inputs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reach for National 2 Condensed at 56px+ for headlines, with -0.03em letter-spacing preserved at every size",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair every filled pill CTA with a ghost text-link sibling to create a two-button rhythm (filled + chevron text)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #f2ee98 (Sunlit Cream) as the page canvas on all default sections; introduce #fefde6 (Parchment) only for card surfaces that need to lift one level",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #fce519 (Marigold) sparingly — star ratings, hero CTAs, and decorative icon accents only — never for body text or large fills",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all button radii at 1440px (full pill) and all card/image radii at 40px — this radius pair defines the system's softness",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use #fce519 for body text — Marigold fails contrast on cream and should never carry paragraphs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not apply soft Gaussian shadows; the only elevation language is the hard 8px offset in Forest Ink",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use the condensed display face (National 2 Condensed) below 20px — it becomes illegible as UI text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce blue, purple, or any non-green/yellow hue — the system is strictly botanical warm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use sharp 0px radii on any container — the system is consistently rounded (16px minimum)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not set RethinkSans below weight 600 — the face has no light weights and lighter settings will render incorrectly",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use white (#ffffff) as a page background — the canvas is always Sunlit Cream; white appears only inside product mockups and on dark green surfaces",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

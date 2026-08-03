@@ -1,0 +1,2049 @@
+{
+  "schemaVersion": 1,
+  "id": "742b500d-3e10-4daa-bb89-d0d26272e5f6",
+  "sourceUrl": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6",
+  "sitemapLastModified": "2026-05-11T16:26:20.547Z",
+  "fetchedAt": "2026-08-02T18:09:38.791Z",
+  "contentHash": "90689f50b39dbd4a6cbc61c1c04a7ba1c67ab1a2811fd6d4fc1249eaaad08d75",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Paste design system",
+            "item": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6#style-reference",
+        "name": "Paste design system reference",
+        "headline": "Paste design system | Refero Styles",
+        "description": "Explore Paste's light Productivity design system: Amber Flame #f06413, Honey Glow #feab30 colors, system-ui, Inter typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6",
+        "mainEntityOfPage": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Paste",
+          "url": "https://pasteapp.io"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/b6419726-3f2a-4311-9a74-6e17d8dcdc5a.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/b6419726-3f2a-4311-9a74-6e17d8dcdc5a.jpg",
+          "caption": "Screenshot of Paste"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/b6419726-3f2a-4311-9a74-6e17d8dcdc5a.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Paste design system",
+          "Paste website design",
+          "Paste colors",
+          "Paste typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Productivity design system",
+          "Amber Flame",
+          "Honey Glow",
+          "Signal Blue",
+          "Bright Blue",
+          "system-ui",
+          "Inter"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Paste design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Paste website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Paste colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Paste typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Productivity design system"
+          }
+        ],
+        "datePublished": "2026-03-09T13:06:54.000Z",
+        "dateModified": "2026-03-09T13:06:54.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://pasteapp.io",
+      "siteName": "Paste",
+      "extractedAt": "2026-04-11T23:07:11.731Z",
+      "durationMs": 114884,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 1028,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "icon",
+              "image",
+              "heading",
+              "link"
+            ],
+            "frequency": 3930,
+            "confidence": 1,
+            "prominence": 375735606.8618637,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#f5f5f7",
+            "oklch": {
+              "c": 0.002650512495870664,
+              "h": 286.3501396984551,
+              "l": 0.9707137751817563
+            },
+            "contexts": [
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 164,
+            "confidence": 1,
+            "prominence": 231794956.16734096,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#101010",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.17304230872217735
+            },
+            "contexts": [
+              "body",
+              "link",
+              "heading",
+              "other"
+            ],
+            "frequency": 368,
+            "confidence": 1,
+            "prominence": 21459822.259601288,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "body",
+              "other",
+              "heading"
+            ],
+            "frequency": 117,
+            "confidence": 1,
+            "prominence": 10827774.045256048,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#1c95ff",
+            "oklch": {
+              "c": 0.18513517503009577,
+              "h": 251.4155772003869,
+              "l": 0.6625704383581429
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 159545,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#ababb0",
+            "oklch": {
+              "c": 0.0070971950386639355,
+              "h": 286.2255994956662,
+              "l": 0.7427489786994617
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 55,
+            "confidence": 1,
+            "prominence": 107041.16592336576,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#0088ff",
+            "oklch": {
+              "c": 0.2017874378254327,
+              "h": 254.08790503045662,
+              "l": 0.6320535763052352
+            },
+            "contexts": [
+              "button",
+              "other",
+              "body"
+            ],
+            "frequency": 14,
+            "confidence": 1,
+            "prominence": 61267.85832033279,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#34c759",
+            "oklch": {
+              "c": 0.1943808483568989,
+              "h": 147.4439509612092,
+              "l": 0.7303242287287017
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 40537.38193630917,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#cb30e0",
+            "oklch": {
+              "c": 0.26293555513414724,
+              "h": 322.5056793982214,
+              "l": 0.6215708004386546
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 40537.38193630917,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#ff383c",
+            "oklch": {
+              "c": 0.23282108237793053,
+              "h": 25.739345617440467,
+              "l": 0.6531974022890799
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 40537.38193630917,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#f0f0f0",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9551400502551023
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 13326,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#d0d0d3",
+            "oklch": {
+              "c": 0.0047864379386763495,
+              "h": 286.29839637869173,
+              "l": 0.8586263995611438
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 305,
+            "properties": [
+              "backgroundColor"
+            ]
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.004222994953904043,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.29,
+            "background": "#f5f5f7",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.03,
+            "background": "#ffffff",
+            "foreground": "#101010"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.43,
+            "background": "#f0f0f0",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.48,
+            "background": "#101010",
+            "foreground": "#f5f5f7"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.7,
+            "background": "#f0f0f0",
+            "foreground": "#101010"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.64,
+            "background": "#d0d0d3",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.36,
+            "background": "#d0d0d3",
+            "foreground": "#101010"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.46,
+            "background": "#34c759",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.18,
+            "background": "#ababb0",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.57,
+            "background": "#101010",
+            "foreground": "#34c759"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.32,
+            "background": "#101010",
+            "foreground": "#ababb0"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.79,
+            "background": "#1c95ff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.15,
+            "background": "#1c95ff",
+            "foreground": "#101010"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.97,
+            "background": "#0088ff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.41,
+            "background": "#0088ff",
+            "foreground": "#101010"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.33,
+            "background": "#101010",
+            "foreground": "#ff383c"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.57,
+            "background": "#101010",
+            "foreground": "#cb30e0"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.17,
+            "background": "#ffffff",
+            "foreground": "#cb30e0"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.83,
+            "background": "#f5f5f7",
+            "foreground": "#cb30e0"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 20
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 22
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 11
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 6
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 9
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "other",
+              "button",
+              "image"
+            ],
+            "frequency": 90
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(16, 16, 16, 0.1) 0px 0px 30px 0px",
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "frequency": 24,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 2,
+            "frequency": 134,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 3,
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 4,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 8,
+            "frequency": 26,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 10,
+            "frequency": 25,
+            "properties": [
+              "paddingRight",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 12,
+            "frequency": 26,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 16,
+            "frequency": 36,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 20,
+            "frequency": 123,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 24,
+            "frequency": 8,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 30,
+            "frequency": 14,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 36,
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 40,
+            "frequency": 13,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 50,
+            "frequency": 8,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 60,
+            "frequency": 15,
+            "properties": [
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 70,
+            "frequency": 5,
+            "properties": [
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 100,
+            "frequency": 7,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 140,
+            "frequency": 4,
+            "properties": [
+              "paddingBottom",
+              "paddingTop"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": null
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(0deg, rgb(240, 100, 19) -29.375%, rgb(254, 171, 48) 100%)",
+          "colors": [
+            "rgb(240, 100, 19)",
+            "rgb(254, 171, 48)"
+          ],
+          "frequency": 2
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 883,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "system-ui",
+            "source": "system",
+            "weights": [
+              400,
+              500,
+              600,
+              700
+            ],
+            "frequency": 140,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Inter",
+            "source": "google",
+            "weights": [
+              400
+            ],
+            "frequency": 5,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 12,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "icon",
+              "button",
+              "image"
+            ],
+            "frequency": 883,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.29,
+            "letterSpacing": -0.029,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "system-ui",
+            "weight": 500,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 14,
+            "lineHeight": 1.33,
+            "letterSpacing": -0.013,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.063,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.25,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 17,
+            "lineHeight": 1.5,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.5,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 29,
+            "lineHeight": 1.5,
+            "letterSpacing": 0.013,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.44,
+            "letterSpacing": 0.011,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.67,
+            "letterSpacing": 0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.22,
+            "letterSpacing": 0.011,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.22,
+            "letterSpacing": 0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.18,
+            "letterSpacing": 0.009,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.012,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.05,
+            "letterSpacing": 0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 54,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 0.96,
+            "letterSpacing": 0.011,
+            "textTransform": "none"
+          },
+          {
+            "size": 60,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.03,
+            "letterSpacing": 0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 80,
+            "family": "system-ui",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0.008,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use 100px border-radius for ALL buttons, badges, and pill-shaped elements — this is non-negotiable and defines the visual identity",
+        "Alternate page sections between #ffffff and #f5f5f7 backgrounds to create rhythm without visible dividers",
+        "Set display headlines (40px+) in system-ui weight 600-700 with negative letter-spacing (-0.7px to -1.04px) — tight tracking at large sizes is essential",
+        "Reserve the amber-orange gradient (rgb(240,100,19) → rgb(254,171,48)) for brand mark and occasional headline accents — never for backgrounds or large surfaces",
+        "Keep all CTA buttons in #0088ff with white text — the warm brand / cool CTA temperature split is the core interaction pattern",
+        "Use #6e6e73 or #ababb0 for secondary/body text to maintain the high-contrast headline / low-contrast body hierarchy",
+        "Apply the soft ambient shadow (rgba(16,16,16,0.1) 0px 0px 30px) to elevated cards — never sharp directional shadows"
+      ],
+      "tags": [
+        "pill-buttons",
+        "system-font",
+        "white-space-heavy",
+        "amber-brand-gradient",
+        "Apple-native-aesthetic",
+        "monochrome-with-warm-accent",
+        "device-mockups",
+        "alternating-sections",
+        "comfortable-density",
+        "Mac-utility"
+      ],
+      "donts": [
+        "Never use the amber-orange gradient as a button fill — it is reserved for the logo and decorative headline accents only",
+        "Never mix sharp-corner containers (0px radius) with the pill-radius system — minimum radius for any container is 8px, with 16-20px for cards",
+        "Never use more than one chromatic accent color (#0088ff) in a single CTA context — the four category colors (#34c759, #cb30e0, #ff383c) are for indicators, not buttons",
+        "Never set body text in weight 700 — reserve 700 for headlines at 40px+; body stays at 400-500",
+        "Never add visible border lines between sections — use background color shifts (#ffffff ↔ #f5f5f7) and spacing instead",
+        "Never use directional or hard-edged shadows — the only shadow in the system is the ambient 30px blur at 10% opacity",
+        "Never apply positive letter-spacing to headlines — display type always uses negative tracking; positive spacing is only for small (14-18px) labels"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#f06413",
+          "name": "Amber Flame",
+          "role": "Logo, brand mark, gradient start — the warm orange anchors the entire identity as the only chromatic element on a monochrome canvas",
+          "group": "brand",
+          "gradient": "linear-gradient(0deg, rgb(240, 100, 19) -29.375%, rgb(254, 171, 48) 100%)"
+        },
+        {
+          "hex": "#feab30",
+          "name": "Honey Glow",
+          "role": "Logo gradient end, warm highlight — lifts the amber into golden territory, visible in section headings and brand accents",
+          "group": "brand"
+        },
+        {
+          "hex": "#0088ff",
+          "name": "Signal Blue",
+          "role": "Primary CTA buttons, interactive links — cool blue against warm-amber brand creates intentional temperature contrast that separates identity from action",
+          "group": "accent"
+        },
+        {
+          "hex": "#1c95ff",
+          "name": "Bright Blue",
+          "role": "Hover/active state for blue CTAs, secondary interactive highlights",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "role": "Primary page background, card surfaces, hero sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f5f5f7",
+          "name": "Snow Gray",
+          "role": "Alternating section backgrounds, subtle surface differentiation from white",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f0f0f0",
+          "name": "Mist",
+          "role": "Divider backgrounds, subtle containers",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d0d0d3",
+          "name": "Silver",
+          "role": "Borders, decorative dividers",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ababb0",
+          "name": "Pewter",
+          "role": "Secondary body text, captions, muted labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#6e6e73",
+          "name": "Smoke",
+          "role": "Tertiary text, metadata, footnotes",
+          "group": "neutral"
+        },
+        {
+          "hex": "#272727",
+          "name": "Charcoal",
+          "role": "Dark surface backgrounds in dark sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#101010",
+          "name": "Ink",
+          "role": "Primary heading and body text color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "True Black",
+          "role": "Maximum contrast text, nav links, icon color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#34c759",
+          "name": "Vivid Green",
+          "role": "Feature category indicator, privacy/security highlights",
+          "group": "semantic"
+        },
+        {
+          "hex": "#cb30e0",
+          "name": "Electric Magenta",
+          "role": "Feature category indicator, collaboration highlights",
+          "group": "semantic"
+        },
+        {
+          "hex": "#ff383c",
+          "name": "Alert Red",
+          "role": "Feature category indicator, emphasis highlights",
+          "group": "semantic"
+        }
+      ],
+      "layout": "Max-width ~1200px centered container. Hero is full-width white with centered headline, centered body text, and a composed multi-device product screenshot below. CTA button centered below body copy. Sticky navigation bar at top with logo left, links center, CTA right. Below hero: a thin press-logos bar (social proof). Sections alternate between #ffffff and #f5f5f7 backgrounds with 80-120px vertical gaps. Feature sections use large amber-gradient headlines centered, followed by explanatory content. Content is predominantly centered single-column — no sidebars, minimal multi-column grids. Section rhythm: hero → social proof → feature intro (amber headline on gray) → feature details → next feature section. The page reads as a vertical scroll with clear section breaks via background shifts.",
+      "imagery": "Product-focused device mockups dominate — MacBook, iPhone, and iPad shown together in composed arrangements where devices overlap slightly to communicate ecosystem unity. Screenshots show the actual app UI with colorful clipboard items (photos, text snippets, maps, messages) providing visual interest against the monochrome page. No lifestyle photography, no abstract illustrations. The hero image is a composite of three device frames centered on white, establishing a 'product showcase in a gallery' feel. Press logos are displayed in muted gray. The amber-orange gradient appears only in the logo icon and as headline text color in feature sections — it's treated like a precious material used sparingly. Icon style mirrors Apple's SF Symbols: mono-weight, single-color, functional. Overall density is text-dominant with large product imagery as section anchors.",
+      "similar": [
+        {
+          "why": "Same Apple-native system-font aesthetic with monochrome canvas, single warm accent color, and device mockup hero compositions",
+          "business": "Things (Cultured Code)"
+        },
+        {
+          "why": "Pill-shaped buttons, white-space-heavy layout, amber/warm brand accent against minimalist white page — nearly identical visual temperature",
+          "business": "Bear App"
+        },
+        {
+          "why": "Mac/iOS utility positioning with product-screenshot-centric hero, system-ui typography, alternating white/gray sections",
+          "business": "Fantastical (Flexibits)"
+        },
+        {
+          "why": "Developer productivity tool using pill CTAs, system font stack, single brand color against monochrome — though Raycast skews darker",
+          "business": "Raycast"
+        },
+        {
+          "why": "Alternating white/light-gray sections, centered single-column layout, device mockup compositions showing the actual product UI",
+          "business": "Notion"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "16-20px",
+          "badges": "100px",
+          "images": "16-24px",
+          "buttons": "100px",
+          "containers": "24-40px"
+        },
+        "elementGap": "16-20px",
+        "sectionGap": "80-120px",
+        "cardPadding": "20-30px",
+        "pageMaxWidth": "1200px"
+      },
+      "category": "SaaS",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Page Canvas",
+          "level": 0,
+          "purpose": "Primary page background"
+        },
+        {
+          "hex": "#f5f5f7",
+          "name": "Section Alternate",
+          "level": 1,
+          "purpose": "Alternating section backgrounds for visual rhythm"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Elevated Card",
+          "level": 2,
+          "purpose": "Cards and containers that float above Section Alternate with ambient shadow"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "rgba(16, 16, 16, 0.1) 0px 0px 30px 0px",
+          "element": "Feature Card"
+        }
+      ],
+      "northStar": "Amber lantern on white marble — the brand's warm gradient logo floats in vast white space, like a single lit window in a snow-covered building.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 14,
+          "lineHeight": 18,
+          "letterSpacing": -0.41
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 24
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 24
+        },
+        {
+          "role": "heading-sm",
+          "size": 22,
+          "lineHeight": 28
+        },
+        {
+          "role": "heading",
+          "size": 40,
+          "lineHeight": 44,
+          "letterSpacing": -0.24
+        },
+        {
+          "role": "heading-lg",
+          "size": 54,
+          "lineHeight": 56,
+          "letterSpacing": -0.7
+        },
+        {
+          "role": "display",
+          "size": 80,
+          "lineHeight": 80,
+          "letterSpacing": -1.04
+        }
+      ],
+      "components": [
+        {
+          "html": "$19",
+          "name": "Primary CTA Button Group",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1a",
+          "name": "Social Proof / Press Logos Bar",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1b",
+          "name": "Feature Cards Grid",
+          "role": "",
+          "description": ""
+        },
+        {
+          "name": "Primary CTA Button (Filled Pill)",
+          "role": "Main call-to-action across hero and sections",
+          "description": "Background #0088ff, white text, 100px border-radius (full pill). Padding 8px 20px. system-ui weight 600, ~16px. No border. Hover state shifts to #1c95ff. The pill shape at 100px radius is a defining visual — every button is fully rounded."
+        },
+        {
+          "name": "Ghost Pill Button (Outline)",
+          "role": "Secondary actions, alternative CTAs",
+          "description": "Transparent background, border color matching text. 100px border-radius. Padding 10px 30px — slightly larger than filled variant. system-ui weight 500-600."
+        },
+        {
+          "name": "Navigation Bar",
+          "role": "Top-level site navigation, sticky header",
+          "description": "White background, horizontally centered. Logo (amber gradient icon + 'Paste' in black) on left. Nav links in #000000, system-ui weight 400-500 at ~16px. Right-aligned 'Try for free' pill button in #0088ff. Links include dropdowns (e.g. 'Use Cases ▾')."
+        },
+        {
+          "name": "Hero Section",
+          "role": "Primary landing area with product showcase",
+          "description": "Pure white (#ffffff) background. Centered layout. Product screenshots (Mac, iPhone, iPad) composited together as hero image. Headline at 54-60px, system-ui weight 700, #101010, tight letter-spacing. Body text at 18px, weight 400, #6e6e73. CTA button below body text."
+        },
+        {
+          "name": "Feature Section (Amber Headline)",
+          "role": "Section introduction with brand-colored headline",
+          "description": "Background #f5f5f7 (Snow Gray). Large headline at 54-80px in the amber-orange brand gradient — this is the signature move: display-size text rendered in the brand gradient against a light gray surface. Body text in #101010 or #6e6e73."
+        },
+        {
+          "name": "Feature Card",
+          "role": "Individual feature highlight within grid layouts",
+          "description": "White (#ffffff) or Snow Gray (#f5f5f7) background. Border-radius 16-20px. Padding 20-30px. Shadow: rgba(16,16,16,0.1) 0px 0px 30px — soft ambient glow, not directional. Headline in system-ui weight 600, 22-24px. Body in weight 400, 16px, #6e6e73."
+        },
+        {
+          "name": "Category Color Indicator",
+          "role": "Visual markers for feature categories (privacy, collaboration, etc.)",
+          "description": "Four chromatic accents used as category identifiers: #0088ff (productivity), #34c759 (privacy/security), #cb30e0 (collaboration), #ff383c (power features). Applied as text color or border-color on body elements, never as backgrounds."
+        },
+        {
+          "name": "Product Screenshot Container",
+          "role": "Device mockup display for product imagery",
+          "description": "Product screenshots shown within device frames (MacBook, iPhone, iPad). Images have 16-24px border-radius when not in device frames. Composed in overlapping arrangements — devices overlap slightly to show ecosystem. No drop shadow on device frames themselves."
+        },
+        {
+          "name": "Section Divider (Surface Shift)",
+          "role": "Visual separation between page sections",
+          "description": "No visible divider lines — sections are separated by background color alternation between #ffffff and #f5f5f7 with large 80-120px vertical spacing. The transition itself IS the divider."
+        },
+        {
+          "name": "Pricing CTA Block",
+          "role": "Conversion-focused pricing section",
+          "description": "Contains 'Buy Now' and 'Try for Free' pill buttons. Likely centered layout with price information in system-ui weight 600-700 at heading scale. Blue filled button for primary action, ghost/outline variant for secondary."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary typeface for all content — headlines, body, subheadings. Using the system font stack is a deliberate choice that makes the app feel native to macOS/iOS, reinforcing the clipboard-manager-as-OS-extension identity. Weight 400 for body, 600-700 for headlines.",
+          "sizes": "15px, 16px, 18px, 22px, 24px, 40px, 54px, 60px, 80px",
+          "family": "system-ui",
+          "weight": "400, 500, 600, 700",
+          "lineHeight": "0.96–1.67 (tight at display sizes, relaxed at body)",
+          "substitute": "SF Pro Display / SF Pro Text (system default on Apple), Inter on non-Apple systems",
+          "letterSpacing": "-1.04px at 80px, -0.78px at 60px, -0.70px at 54px; positive +0.36–1.01px tracking at small sizes (15-18px) for legibility at caption scale"
+        },
+        {
+          "role": "Used for press/media logos section labels — small metadata text where system-ui's metrics may not be optimal",
+          "sizes": "14px",
+          "family": "Inter",
+          "weight": "400",
+          "lineHeight": "1.29",
+          "substitute": "Inter (Google Fonts)",
+          "letterSpacing": "-0.41px at 14px — tight tracking for compact labels"
+        }
+      ],
+      "description": "Feels like sunlight through a minimalist gallery — vast white space with black typography and a single warm-amber focal point that draws the eye like a lantern in snow. The page is dominated by pure white (#ffffff) and near-white (#f5f5f7) surfaces with near-black (#101010) text, creating extreme contrast. system-ui at display sizes (54-80px) with tight letter-spacing (-0.013em) and weight 400-700 gives headlines a native-OS feel that reinforces the Mac-utility identity. The amber-orange gradient logo (rgb(240,100,19) → rgb(254,171,48)) is the only warm element on an otherwise monochrome canvas, making it impossibly magnetic. Blue CTA buttons (#0088ff) with 100px pill radius are the sole call to action — warm brand, cool CTA, white field.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1c"
+        },
+        {
+          "title": "Gradient System",
+          "content": "The amber-orange gradient (linear-gradient(0deg, rgb(240,100,19) -29.375%, rgb(254,171,48) 100%)) is the singular brand gradient. It appears in exactly two contexts: (1) the logo icon as a background fill, and (2) large display headlines via -webkit-background-clip: text to create gradient text. It is NEVER used as a section background, button fill, or decorative element. The gradient flows from deep burnt orange at the bottom to golden amber at top — when applied to text, it creates a warm metallic shimmer effect. No other gradients exist in the system."
+        },
+        {
+          "title": "Category Color System",
+          "content": "Four vivid chromatic colors are used as feature-category indicators, applied as text color or border accents on body-level elements — never as backgrounds or button fills:\n- Blue (#0088ff): productivity/general features\n- Green (#34c759): privacy and security features\n- Magenta (#cb30e0): collaboration features\n- Red (#ff383c): power/advanced features\nThese colors mirror Apple's SF Symbols palette, reinforcing the native-OS aesthetic. They appear at body text scale (16-18px) only."
+        }
+      ]
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/b1c40caa-7792-4c3c-900a-c6588b272656.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/b6419726-3f2a-4311-9a74-6e17d8dcdc5a.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "paste",
+    "generatedAt": "2026-04-11T23:07:11.731Z",
+    "summary": "Feels like sunlight through a minimalist gallery — vast white space with black typography and a single warm-amber focal point that draws the eye like a lantern in snow. The page is dominated by pure white (#ffffff) and near-white (#f5f5f7) surfaces with near-black (#101010) text, creating extreme contrast. system-ui at display sizes (54-80px) with tight letter-spacing (-0.013em) and weight 400-700 gives headlines a native-OS feel that reinforces the Mac-utility identity. The amber-orange gradient logo (rgb(240,100,19) → rgb(254,171,48)) is the only warm element on an otherwise monochrome canvas, making it impossibly magnetic. Blue CTA buttons (#0088ff) with 100px pill radius are the sole call to action — warm brand, cool CTA, white field.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "742b500d-3e10-4daa-bb89-d0d26272e5f6",
+      "sourceUrl": "https://styles.refero.design/style/742b500d-3e10-4daa-bb89-d0d26272e5f6",
+      "originalUrl": "https://pasteapp.io",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/b1c40caa-7792-4c3c-900a-c6588b272656.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/b6419726-3f2a-4311-9a74-6e17d8dcdc5a.jpg",
+      "importedAt": "2026-08-02T18:09:38.791Z",
+      "upstreamModifiedAt": "2026-05-11T16:26:20.547Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Amber lantern on white marble — the brand's warm gradient logo floats in vast white space, like a single lit window in a snow-covered building."
+    },
+    "tokens": [
+      {
+        "id": "color-amber-flame",
+        "kind": "color",
+        "name": "Amber Flame",
+        "value": "#f06413",
+        "role": "Logo, brand mark, gradient start — the warm orange anchors the entire identity as the only chromatic element on a monochrome canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-honey-glow",
+        "kind": "color",
+        "name": "Honey Glow",
+        "value": "#feab30",
+        "role": "Logo gradient end, warm highlight — lifts the amber into golden territory, visible in section headings and brand accents",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signal-blue",
+        "kind": "color",
+        "name": "Signal Blue",
+        "value": "#0088ff",
+        "role": "Primary CTA buttons, interactive links — cool blue against warm-amber brand creates intentional temperature contrast that separates identity from action",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bright-blue",
+        "kind": "color",
+        "name": "Bright Blue",
+        "value": "#1c95ff",
+        "role": "Hover/active state for blue CTAs, secondary interactive highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-white",
+        "kind": "color",
+        "name": "Pure White",
+        "value": "#ffffff",
+        "role": "Primary page background, card surfaces, hero sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-snow-gray",
+        "kind": "color",
+        "name": "Snow Gray",
+        "value": "#f5f5f7",
+        "role": "Alternating section backgrounds, subtle surface differentiation from white",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mist",
+        "kind": "color",
+        "name": "Mist",
+        "value": "#f0f0f0",
+        "role": "Divider backgrounds, subtle containers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-silver",
+        "kind": "color",
+        "name": "Silver",
+        "value": "#d0d0d3",
+        "role": "Borders, decorative dividers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pewter",
+        "kind": "color",
+        "name": "Pewter",
+        "value": "#ababb0",
+        "role": "Secondary body text, captions, muted labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-smoke",
+        "kind": "color",
+        "name": "Smoke",
+        "value": "#6e6e73",
+        "role": "Tertiary text, metadata, footnotes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#272727",
+        "role": "Dark surface backgrounds in dark sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#101010",
+        "role": "Primary heading and body text color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-true-black",
+        "kind": "color",
+        "name": "True Black",
+        "value": "#000000",
+        "role": "Maximum contrast text, nav links, icon color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-vivid-green",
+        "kind": "color",
+        "name": "Vivid Green",
+        "value": "#34c759",
+        "role": "Feature category indicator, privacy/security highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-electric-magenta",
+        "kind": "color",
+        "name": "Electric Magenta",
+        "value": "#cb30e0",
+        "role": "Feature category indicator, collaboration highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-alert-red",
+        "kind": "color",
+        "name": "Alert Red",
+        "value": "#ff383c",
+        "role": "Feature category indicator, emphasis highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system-ui",
+        "kind": "typography",
+        "name": "system-ui",
+        "value": "font-family: system-ui; font-weight: 400, 500, 600, 700; font-size: 15px, 16px, 18px, 22px, 24px, 40px, 54px, 60px, 80px; line-height: 0.96–1.67 (tight at display sizes, relaxed at body); letter-spacing: -1.04px at 80px, -0.78px at 60px, -0.70px at 54px; positive +0.36–1.01px tracking at small sizes (15-18px) for legibility at caption scale",
+        "role": "Primary typeface for all content — headlines, body, subheadings. Using the system font stack is a deliberate choice that makes the app feel native to macOS/iOS, reinforcing the clipboard-manager-as-OS-extension identity. Weight 400 for body, 600-700 for headlines.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-inter",
+        "kind": "typography",
+        "name": "Inter",
+        "value": "font-family: Inter; font-weight: 400; font-size: 14px; line-height: 1.29; letter-spacing: -0.41px at 14px — tight tracking for compact labels",
+        "role": "Used for press/media logos section labels — small metadata text where system-ui's metrics may not be optimal",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 14px; line-height: 18; letter-spacing: -0.41px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 24",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 24",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 22px; line-height: 28",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 40px; line-height: 44; letter-spacing: -0.24px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 54px; line-height: 56; letter-spacing: -0.7px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 80px; line-height: 80; letter-spacing: -1.04px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16-20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80-120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20-30px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "16-20px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-badges",
+        "kind": "radius",
+        "name": "badges",
+        "value": "100px",
+        "role": "Imported badges radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "16-24px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "100px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-containers",
+        "kind": "radius",
+        "name": "containers",
+        "value": "24-40px",
+        "role": "Imported containers radius",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "primary-cta-button-group",
+        "name": "Primary CTA Button Group",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "primary-cta-button-group-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "social-proof-press-logos-bar",
+        "name": "Social Proof / Press Logos Bar",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "social-proof-press-logos-bar-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-cards-grid",
+        "name": "Feature Cards Grid",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "feature-cards-grid-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "primary-cta-button-filled-pill",
+        "name": "Primary CTA Button (Filled Pill)",
+        "category": "Refero components",
+        "description": "Background #0088ff, white text, 100px border-radius (full pill). Padding 8px 20px. system-ui weight 600, ~16px. No border. Hover state shifts to #1c95ff. The pill shape at 100px radius is a defining visual — every button is fully rounded.",
+        "variants": [
+          {
+            "id": "primary-cta-button-filled-pill-reference",
+            "name": "Reference",
+            "description": "Background #0088ff, white text, 100px border-radius (full pill). Padding 8px 20px. system-ui weight 600, ~16px. No border. Hover state shifts to #1c95ff. The pill shape at 100px radius is a defining visual — every button is fully rounded.",
+            "evidence": [],
+            "observedProperties": [
+              "Main call-to-action across hero and sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-pill-button-outline",
+        "name": "Ghost Pill Button (Outline)",
+        "category": "Refero components",
+        "description": "Transparent background, border color matching text. 100px border-radius. Padding 10px 30px — slightly larger than filled variant. system-ui weight 500-600.",
+        "variants": [
+          {
+            "id": "ghost-pill-button-outline-reference",
+            "name": "Reference",
+            "description": "Transparent background, border color matching text. 100px border-radius. Padding 10px 30px — slightly larger than filled variant. system-ui weight 500-600.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary actions, alternative CTAs"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "navigation-bar",
+        "name": "Navigation Bar",
+        "category": "Refero components",
+        "description": "White background, horizontally centered. Logo (amber gradient icon + 'Paste' in black) on left. Nav links in #000000, system-ui weight 400-500 at ~16px. Right-aligned 'Try for free' pill button in #0088ff. Links include dropdowns (e.g. 'Use Cases ▾').",
+        "variants": [
+          {
+            "id": "navigation-bar-reference",
+            "name": "Reference",
+            "description": "White background, horizontally centered. Logo (amber gradient icon + 'Paste' in black) on left. Nav links in #000000, system-ui weight 400-500 at ~16px. Right-aligned 'Try for free' pill button in #0088ff. Links include dropdowns (e.g. 'Use Cases ▾').",
+            "evidence": [],
+            "observedProperties": [
+              "Top-level site navigation, sticky header"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-section",
+        "name": "Hero Section",
+        "category": "Refero components",
+        "description": "Pure white (#ffffff) background. Centered layout. Product screenshots (Mac, iPhone, iPad) composited together as hero image. Headline at 54-60px, system-ui weight 700, #101010, tight letter-spacing. Body text at 18px, weight 400, #6e6e73. CTA button below body text.",
+        "variants": [
+          {
+            "id": "hero-section-reference",
+            "name": "Reference",
+            "description": "Pure white (#ffffff) background. Centered layout. Product screenshots (Mac, iPhone, iPad) composited together as hero image. Headline at 54-60px, system-ui weight 700, #101010, tight letter-spacing. Body text at 18px, weight 400, #6e6e73. CTA button below body text.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary landing area with product showcase"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-section-amber-headline",
+        "name": "Feature Section (Amber Headline)",
+        "category": "Refero components",
+        "description": "Background #f5f5f7 (Snow Gray). Large headline at 54-80px in the amber-orange brand gradient — this is the signature move: display-size text rendered in the brand gradient against a light gray surface. Body text in #101010 or #6e6e73.",
+        "variants": [
+          {
+            "id": "feature-section-amber-headline-reference",
+            "name": "Reference",
+            "description": "Background #f5f5f7 (Snow Gray). Large headline at 54-80px in the amber-orange brand gradient — this is the signature move: display-size text rendered in the brand gradient against a light gray surface. Body text in #101010 or #6e6e73.",
+            "evidence": [],
+            "observedProperties": [
+              "Section introduction with brand-colored headline"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-card",
+        "name": "Feature Card",
+        "category": "Refero components",
+        "description": "White (#ffffff) or Snow Gray (#f5f5f7) background. Border-radius 16-20px. Padding 20-30px. Shadow: rgba(16,16,16,0.1) 0px 0px 30px — soft ambient glow, not directional. Headline in system-ui weight 600, 22-24px. Body in weight 400, 16px, #6e6e73.",
+        "variants": [
+          {
+            "id": "feature-card-reference",
+            "name": "Reference",
+            "description": "White (#ffffff) or Snow Gray (#f5f5f7) background. Border-radius 16-20px. Padding 20-30px. Shadow: rgba(16,16,16,0.1) 0px 0px 30px — soft ambient glow, not directional. Headline in system-ui weight 600, 22-24px. Body in weight 400, 16px, #6e6e73.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual feature highlight within grid layouts"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "category-color-indicator",
+        "name": "Category Color Indicator",
+        "category": "Refero components",
+        "description": "Four chromatic accents used as category identifiers: #0088ff (productivity), #34c759 (privacy/security), #cb30e0 (collaboration), #ff383c (power features). Applied as text color or border-color on body elements, never as backgrounds.",
+        "variants": [
+          {
+            "id": "category-color-indicator-reference",
+            "name": "Reference",
+            "description": "Four chromatic accents used as category identifiers: #0088ff (productivity), #34c759 (privacy/security), #cb30e0 (collaboration), #ff383c (power features). Applied as text color or border-color on body elements, never as backgrounds.",
+            "evidence": [],
+            "observedProperties": [
+              "Visual markers for feature categories (privacy, collaboration, etc.)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-screenshot-container",
+        "name": "Product Screenshot Container",
+        "category": "Refero components",
+        "description": "Product screenshots shown within device frames (MacBook, iPhone, iPad). Images have 16-24px border-radius when not in device frames. Composed in overlapping arrangements — devices overlap slightly to show ecosystem. No drop shadow on device frames themselves.",
+        "variants": [
+          {
+            "id": "product-screenshot-container-reference",
+            "name": "Reference",
+            "description": "Product screenshots shown within device frames (MacBook, iPhone, iPad). Images have 16-24px border-radius when not in device frames. Composed in overlapping arrangements — devices overlap slightly to show ecosystem. No drop shadow on device frames themselves.",
+            "evidence": [],
+            "observedProperties": [
+              "Device mockup display for product imagery"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-divider-surface-shift",
+        "name": "Section Divider (Surface Shift)",
+        "category": "Refero components",
+        "description": "No visible divider lines — sections are separated by background color alternation between #ffffff and #f5f5f7 with large 80-120px vertical spacing. The transition itself IS the divider.",
+        "variants": [
+          {
+            "id": "section-divider-surface-shift-reference",
+            "name": "Reference",
+            "description": "No visible divider lines — sections are separated by background color alternation between #ffffff and #f5f5f7 with large 80-120px vertical spacing. The transition itself IS the divider.",
+            "evidence": [],
+            "observedProperties": [
+              "Visual separation between page sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pricing-cta-block",
+        "name": "Pricing CTA Block",
+        "category": "Refero components",
+        "description": "Contains 'Buy Now' and 'Try for Free' pill buttons. Likely centered layout with price information in system-ui weight 600-700 at heading scale. Blue filled button for primary action, ghost/outline variant for secondary.",
+        "variants": [
+          {
+            "id": "pricing-cta-block-reference",
+            "name": "Reference",
+            "description": "Contains 'Buy Now' and 'Try for Free' pill buttons. Likely centered layout with price information in system-ui weight 600-700 at heading scale. Blue filled button for primary action, ghost/outline variant for secondary.",
+            "evidence": [],
+            "observedProperties": [
+              "Conversion-focused pricing section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width ~1200px centered container. Hero is full-width white with centered headline, centered body text, and a composed multi-device product screenshot below. CTA button centered below body copy. Sticky navigation bar at top with logo left, links center, CTA right. Below hero: a thin press-logos bar (social proof). Sections alternate between #ffffff and #f5f5f7 backgrounds with 80-120px vertical gaps. Feature sections use large amber-gradient headlines centered, followed by explanatory content. Content is predominantly centered single-column — no sidebars, minimal multi-column grids. Section rhythm: hero → social proof → feature intro (amber headline on gray) → feature details → next feature section. The page reads as a vertical scroll with clear section breaks via background shifts.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product-focused device mockups dominate — MacBook, iPhone, and iPad shown together in composed arrangements where devices overlap slightly to communicate ecosystem unity. Screenshots show the actual app UI with colorful clipboard items (photos, text snippets, maps, messages) providing visual interest against the monochrome page. No lifestyle photography, no abstract illustrations. The hero image is a composite of three device frames centered on white, establishing a 'product showcase in a gallery' feel. Press logos are displayed in muted gray. The amber-orange gradient appears only in the logo icon and as headline text color in feature sections — it's treated like a precious material used sparingly. Icon style mirrors Apple's SF Symbols: mono-weight, single-color, functional. Overall density is text-dominant with large product imagery as section anchors.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-3",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 100px border-radius for ALL buttons, badges, and pill-shaped elements — this is non-negotiable and defines the visual identity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Alternate page sections between #ffffff and #f5f5f7 backgrounds to create rhythm without visible dividers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set display headlines (40px+) in system-ui weight 600-700 with negative letter-spacing (-0.7px to -1.04px) — tight tracking at large sizes is essential",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve the amber-orange gradient (rgb(240,100,19) → rgb(254,171,48)) for brand mark and occasional headline accents — never for backgrounds or large surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all CTA buttons in #0088ff with white text — the warm brand / cool CTA temperature split is the core interaction pattern",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #6e6e73 or #ababb0 for secondary/body text to maintain the high-contrast headline / low-contrast body hierarchy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply the soft ambient shadow (rgba(16,16,16,0.1) 0px 0px 30px) to elevated cards — never sharp directional shadows",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use the amber-orange gradient as a button fill — it is reserved for the logo and decorative headline accents only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never mix sharp-corner containers (0px radius) with the pill-radius system — minimum radius for any container is 8px, with 16-20px for cards",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use more than one chromatic accent color (#0088ff) in a single CTA context — the four category colors (#34c759, #cb30e0, #ff383c) are for indicators, not buttons",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never set body text in weight 700 — reserve 700 for headlines at 40px+; body stays at 400-500",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add visible border lines between sections — use background color shifts (#ffffff ↔ #f5f5f7) and spacing instead",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use directional or hard-edged shadows — the only shadow in the system is the ambient 30px blur at 10% opacity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply positive letter-spacing to headlines — display type always uses negative tracking; positive spacing is only for small (14-18px) labels",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

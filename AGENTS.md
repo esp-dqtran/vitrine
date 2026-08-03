@@ -1,5 +1,12 @@
 # Project working rules
 
+## Product naming
+
+- The product name is **Vitrines**, not Astryx.
+- Use **Vitrines** in user-facing copy, product discussions, marketing, documentation, and new UI text.
+- The repository directory may remain named `Astryx`; treat that as a filesystem path only, not the current product name.
+- Do not rename existing files, symbols, environment variables, or infrastructure identifiers solely for this naming rule unless the user explicitly requests a migration.
+
 ## Superpowers skill policy
 
 - Do not automatically invoke or follow any `superpowers:*` skill.

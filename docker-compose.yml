@@ -80,6 +80,7 @@ services:
       APP_KNOWLEDGE_PROVIDER: ${APP_KNOWLEDGE_PROVIDER:-chatgpt-browser}
       APP_KNOWLEDGE_BROWSER_CONCURRENCY: ${APP_KNOWLEDGE_BROWSER_CONCURRENCY:-1}
       RESEARCH_PROJECTS_ENABLED: ${RESEARCH_PROJECTS_ENABLED:-false}
+      TEAMS_ENABLED: ${TEAMS_ENABLED:-false}
       ADVANCED_SEARCH_ENABLED: ${ADVANCED_SEARCH_ENABLED:-false}
       SEARCH_EMBEDDING_BASE_URL: ${SEARCH_EMBEDDING_BASE_URL:-https://api.openai.com/v1}
       SEARCH_EMBEDDING_API_KEY: ${SEARCH_EMBEDDING_API_KEY:-}
@@ -96,6 +97,29 @@ services:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: on-failure
+
+  designer-canvas-collab:
+    profiles: ["research"]
+    build:
+      context: .
+      dockerfile: services/designer-canvas-collab/Dockerfile
+    ports:
+      - "${CANVAS_COLLAB_HOST_PORT:-3012}:3012"
+    environment:
+      NODE_ENV: production
+      PORT: 3012
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/astryx}
+      APP_URL: ${APP_URL:-http://localhost:5173}
+      CANVAS_COLLAB_ALLOWED_ORIGINS: ${CANVAS_COLLAB_ALLOWED_ORIGINS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3012/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 6

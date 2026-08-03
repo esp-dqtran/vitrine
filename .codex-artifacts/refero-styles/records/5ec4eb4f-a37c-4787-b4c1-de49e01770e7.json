@@ -1,0 +1,3140 @@
+{
+  "schemaVersion": 1,
+  "id": "5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+  "sourceUrl": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+  "sitemapLastModified": "2026-05-11T16:26:20.547Z",
+  "fetchedAt": "2026-08-02T18:09:37.084Z",
+  "contentHash": "6efa6a2cbd507b650f13dbe8a7bbc7d310ce894f00b384e1f584884d301556db",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Deel design system",
+            "item": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7#style-reference",
+        "name": "Deel design system reference",
+        "headline": "Deel design system | Refero Styles",
+        "description": "Explore Deel's mixed SaaS design system: Deep Cosmos #201547, Violet Mid #5938b7 colors, BagossCondensedFont, BagossExtendedFont typography, and DESIGN.md...",
+        "url": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+        "mainEntityOfPage": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Deel",
+          "url": "https://deel.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/bc361a48-9147-41a8-bd80-ace7c07ddc35.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/bc361a48-9147-41a8-bd80-ace7c07ddc35.jpg",
+          "caption": "Screenshot of Deel"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/bc361a48-9147-41a8-bd80-ace7c07ddc35.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Deel design system",
+          "Deel website design",
+          "Deel colors",
+          "Deel typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Deep Cosmos",
+          "Violet Mid",
+          "Lavender Pulse",
+          "Pale Amethyst",
+          "BagossCondensedFont",
+          "BagossExtendedFont",
+          "BagossStandardFont"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Deel design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Deel website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Deel colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Deel typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-03-20T15:15:02.000Z",
+        "dateModified": "2026-03-20T15:15:02.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://deel.com",
+      "siteName": "Deel",
+      "extractedAt": "2026-04-11T19:19:36.969Z",
+      "durationMs": 149131,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 3216,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "button",
+              "hero",
+              "icon",
+              "image",
+              "heading",
+              "body",
+              "card",
+              "footer",
+              "input"
+            ],
+            "frequency": 2359,
+            "confidence": 1,
+            "prominence": 107096517.91322343,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#fffbf4",
+            "oklch": {
+              "c": 0.010178894195010255,
+              "h": 81.79530174605209,
+              "l": 0.9892378443470732
+            },
+            "contexts": [
+              "other",
+              "button",
+              "heading",
+              "body",
+              "link"
+            ],
+            "frequency": 382,
+            "confidence": 1,
+            "prominence": 82021586.54780634,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#1b1b1b",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.2221287433751307
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "heading",
+              "body",
+              "other",
+              "link",
+              "icon",
+              "footer"
+            ],
+            "frequency": 722,
+            "confidence": 1,
+            "prominence": 18312333.234233603,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "hero",
+              "link",
+              "body",
+              "heading",
+              "other",
+              "icon",
+              "input"
+            ],
+            "frequency": 252,
+            "confidence": 1,
+            "prominence": 14678026.93203459,
+            "properties": [
+              "backgroundColor",
+              "borderColor",
+              "color",
+              "fill",
+              "stroke"
+            ]
+          },
+          {
+            "hex": "#141414",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.1912512996316179
+            },
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 13,
+            "confidence": 1,
+            "prominence": 1599089.0672641937,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#404040",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3714949460297332
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "confidence": 1,
+            "prominence": 1295626.5892347686,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#dbdbdb",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8899620604076641
+            },
+            "contexts": [
+              "button",
+              "body",
+              "other",
+              "input"
+            ],
+            "frequency": 49,
+            "confidence": 1,
+            "prominence": 705702.1341132418,
+            "properties": [
+              "borderColor",
+              "boxShadow"
+            ]
+          },
+          {
+            "hex": "#201547",
+            "oklch": {
+              "c": 0.08899790114250317,
+              "h": 288.064029339538,
+              "l": 0.24376035493638
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 548046,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#5f5f5f",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.48692170287574027
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 90,
+            "confidence": 1,
+            "prominence": 516849.05032458046,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#ffcf25",
+            "oklch": {
+              "c": 0.1712724107324776,
+              "h": 90.90990455561324,
+              "l": 0.8718019646906681
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "confidence": 1,
+            "prominence": 106509.48004846169,
+            "properties": [
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#d8ebff",
+            "oklch": {
+              "c": 0.03393000249356954,
+              "h": 249.564912510777,
+              "l": 0.9321050513311949
+            },
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 4,
+            "confidence": 1,
+            "prominence": 61366.2376197781,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#d9d0ca",
+            "oklch": {
+              "c": 0.01296783921355121,
+              "h": 56.22606164292894,
+              "l": 0.8631426570620147
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 45,
+            "confidence": 1,
+            "prominence": 56108.342349627135,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#a98df6",
+            "oklch": {
+              "c": 0.15104146630961085,
+              "h": 294.5303503647524,
+              "l": 0.712082569157663
+            },
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 55773.150915559665,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#5938b7",
+            "oklch": {
+              "c": 0.18842696658158145,
+              "h": 288.5687988789207,
+              "l": 0.45744753380846837
+            },
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 42354.56370908307,
+            "properties": [
+              "backgroundColor",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#faaf00",
+            "oklch": {
+              "c": 0.16795503030388967,
+              "h": 77.73027159141414,
+              "l": 0.8049649012273034
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2520,
+            "confidence": 1,
+            "prominence": 32543.367560232593,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#767676",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.566521959328904
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 15,
+            "confidence": 1,
+            "prominence": 9012,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#ffe27c",
+            "oklch": {
+              "c": 0.12606877986370663,
+              "h": 93.87250466191219,
+              "l": 0.916193081557081
+            },
+            "contexts": [
+              "body",
+              "icon",
+              "other"
+            ],
+            "frequency": 5850,
+            "confidence": 1,
+            "prominence": 7208.333281623899,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ]
+          },
+          {
+            "hex": "#cccccc",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8452222558133237
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 7,
+            "confidence": 1,
+            "prominence": 6102,
+            "properties": [
+              "borderColor",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#c4b1f9",
+            "oklch": {
+              "c": 0.10207202698163802,
+              "h": 296.13636109463806,
+              "l": 0.8020004852048911
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 5070,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#101828",
+            "oklch": {
+              "c": 0.034,
+              "h": 264.665,
+              "l": 0.21
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 20,
+            "confidence": 1,
+            "prominence": 4546.048532576017,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#381f89",
+            "oklch": {
+              "c": 0.1629418882422069,
+              "h": 285.0401223838334,
+              "l": 0.34897662695262177
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 2672.8512257456755,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#b1d8fc",
+            "oklch": {
+              "c": 0.06494788375015985,
+              "h": 246.48011878383528,
+              "l": 0.8663728674276464
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1024,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#a4a4a4",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.7180590196995562
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 7,
+            "confidence": 1,
+            "prominence": 192,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#53a945",
+            "oklch": {
+              "c": 0.16058006519402027,
+              "h": 140.95722360354603,
+              "l": 0.6588300118298739
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 64,
+            "properties": [
+              "backgroundColor"
+            ]
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.2558112912435194,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 20.36,
+            "background": "#fffbf4",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.42,
+            "background": "#141414",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.86,
+            "background": "#141414",
+            "foreground": "#fffbf4"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.75,
+            "background": "#ffffff",
+            "foreground": "#101828"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.25,
+            "background": "#d8ebff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.22,
+            "background": "#ffffff",
+            "foreground": "#1b1b1b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.2,
+            "background": "#fffbf4",
+            "foreground": "#101828"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.7,
+            "background": "#1b1b1b",
+            "foreground": "#fffbf4"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.67,
+            "background": "#201547",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.42,
+            "background": "#ffe27c",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.16,
+            "background": "#201547",
+            "foreground": "#fffbf4"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.17,
+            "background": "#dbdbdb",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.13,
+            "background": "#d8ebff",
+            "foreground": "#141414"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.58,
+            "background": "#d8ebff",
+            "foreground": "#101828"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.41,
+            "background": "#141414",
+            "foreground": "#ffe27c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.2,
+            "background": "#ffcf25",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.15,
+            "background": "#d8ebff",
+            "foreground": "#1b1b1b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.1,
+            "background": "#b1d8fc",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.88,
+            "background": "#ffe27c",
+            "foreground": "#101828"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 5,
+            "contexts": [
+              "other",
+              "icon"
+            ],
+            "frequency": 8
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 8
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 9
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other",
+              "card"
+            ],
+            "frequency": 18
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 2
+          },
+          {
+            "value": 200,
+            "contexts": [
+              "button",
+              "body",
+              "input"
+            ],
+            "frequency": 13
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(27, 27, 27, 0.16) 0px 16px 32px 0px, rgba(27, 27, 27, 0.05) 0px 2px 32px 0px",
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 2,
+            "frequency": 50,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 4,
+            "frequency": 181,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 5,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 6,
+            "frequency": 28,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginRight"
+            ]
+          },
+          {
+            "value": 7,
+            "frequency": 3,
+            "properties": [
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 8,
+            "frequency": 112,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingTop",
+              "paddingBottom",
+              "marginTop",
+              "marginRight",
+              "paddingLeft",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 10,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 11,
+            "frequency": 3,
+            "properties": [
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 12,
+            "frequency": 177,
+            "properties": [
+              "paddingLeft",
+              "paddingRight",
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 14,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 16,
+            "frequency": 108,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom",
+              "marginTop",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 20,
+            "frequency": 49,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 24,
+            "frequency": 167,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 25,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 28,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 32,
+            "frequency": 35,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom",
+              "paddingBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 40,
+            "frequency": 29,
+            "properties": [
+              "marginLeft",
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom",
+              "paddingTop",
+              "paddingBottom",
+              "marginRight",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 48,
+            "frequency": 29,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginBottom",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 57,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 60,
+            "frequency": 3,
+            "properties": [
+              "marginBottom",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 64,
+            "frequency": 17,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom",
+              "marginTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 80,
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 96,
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 128,
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Inter",
+            "source": "google",
+            "weights": [
+              400,
+              460,
+              500,
+              560,
+              600,
+              700
+            ],
+            "frequency": 2196,
+            "fontFeatureSettings": [
+              "\"ss01\"",
+              "\"ss02\""
+            ]
+          },
+          {
+            "family": "BagossStandardFont",
+            "source": "custom",
+            "weights": [
+              500,
+              600
+            ],
+            "frequency": 25,
+            "fontFeatureSettings": [
+              "\"ss02\"",
+              "\"ss01\""
+            ]
+          },
+          {
+            "family": "BagossCondensedFont",
+            "source": "custom",
+            "weights": [
+              500
+            ],
+            "frequency": 25,
+            "fontFeatureSettings": [
+              "\"ss01\"",
+              "\"ss02\""
+            ]
+          },
+          {
+            "family": "BagossExtendedFont",
+            "source": "custom",
+            "weights": [
+              600
+            ],
+            "frequency": 6,
+            "fontFeatureSettings": [
+              "\"ss02\""
+            ]
+          },
+          {
+            "family": "BagossStandardVF",
+            "source": "custom",
+            "weights": [
+              500
+            ],
+            "frequency": 5,
+            "fontFeatureSettings": [
+              "\"ss02\"",
+              "\"ss01\""
+            ]
+          }
+        ],
+        "scale": {
+          "base": 24,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 700,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.06,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "BagossStandardFont",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "nav",
+              "other"
+            ],
+            "frequency": 37,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.06,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 13,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.06,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "BagossStandardFont",
+            "weight": 500,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "BagossStandardFont",
+            "weight": 600,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "icon"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "button",
+              "body",
+              "icon"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 560,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 40,
+            "lineHeight": 1.7,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "BagossStandardVF",
+            "weight": 500,
+            "contexts": [
+              "button",
+              "nav"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.6,
+            "letterSpacing": 0.025,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.6,
+            "letterSpacing": 0.025,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "hero",
+              "link",
+              "icon",
+              "button",
+              "body",
+              "image",
+              "card",
+              "footer"
+            ],
+            "frequency": 539,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "body",
+              "icon"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "BagossStandardFont",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 18,
+            "lineHeight": 1.7,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "BagossStandardFont",
+            "weight": 500,
+            "contexts": [
+              "body",
+              "button"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.7,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Inter",
+            "weight": 460,
+            "contexts": [
+              "input"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 17,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.7,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.56,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.6,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.6,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Inter",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.5,
+            "letterSpacing": 0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.6,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0.016,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 3,
+            "lineHeight": 0.85,
+            "letterSpacing": 0.008,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.99,
+            "letterSpacing": 0.009,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.13,
+            "letterSpacing": 0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "icon",
+              "body"
+            ],
+            "frequency": 1406,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 28,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 28,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.15,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 30,
+            "family": "BagossExtendedFont",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 44,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.05,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 60,
+            "family": "BagossCondensedFont",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 60,
+            "family": "Inter",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "BagossExtendedFont",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0.005,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use BagossCondensedFont at 44-60px weight 500 with -0.005em letter-spacing for all primary hero headlines inside dark (#201547) sections.",
+        "Apply 200px border-radius to all pill buttons, search inputs, and currency chips — this is the system's defining shape token.",
+        "Use #fffbf4 (Warm Cream) as the page body background, never pure white (#ffffff), for all light-theme content sections below the hero.",
+        "Accent the single most emotionally charged word in each hero headline with #a98df6 (Lavender Pulse) — one word only, never a phrase.",
+        "Pair dark (#141414 or #201547) section backgrounds with Inter body text in #d9d0ca (Linen) — not pure white — for softer contrast on extended reading.",
+        "Use rgba(27,27,27,0.16) as the standard border color for inputs and card outlines in light sections — never a solid opaque gray.",
+        "Reserve #ffcf25 (Electric Lime) strictly for product screenshots and graphic accents — never apply it as a button or text color."
+      ],
+      "tags": [
+        "split-hero",
+        "dark-light-mixed",
+        "pill-buttons",
+        "custom-typeface",
+        "warm-cream-background",
+        "violet-accent",
+        "global-HR",
+        "product-screenshot-UI",
+        "enterprise-SaaS",
+        "fluorescent-contrast"
+      ],
+      "donts": [
+        "Don't use BagossCondensedFont below 16px — at small sizes switch to BagossStandardFont or Inter for legibility.",
+        "Don't use 8px or 16px border-radius on primary CTA buttons — those radii belong only to secondary badges and icon containers.",
+        "Don't use #5938b7 (Violet Mid) or any saturated violet in light (cream) body sections — violet is hero-zone-only.",
+        "Don't apply box shadows to feature product cards — the system uses border (1px #dbdbdb) as the only card boundary in light sections; shadows appear only on floating overlays.",
+        "Don't mix BagossExtendedFont and BagossCondensedFont in the same heading — choose one cut per section based on available width.",
+        "Don't use pure white (#ffffff) as the page background — the system's warm cream (#fffbf4) distinguishes Deel's light theme from generic white-page SaaS.",
+        "Don't apply letter-spacing to BagossCondensedFont display headlines — the -0.005em is already set; adding positive tracking breaks the compressed silhouette."
+      ],
+      "theme": "mixed",
+      "colors": [
+        {
+          "hex": "#201547",
+          "name": "Deep Cosmos",
+          "role": "Hero section background — the darkest brand surface, houses white headlines and violet accent text",
+          "group": "brand"
+        },
+        {
+          "hex": "#5938b7",
+          "name": "Violet Mid",
+          "role": "CTA buttons in hero context, pill backgrounds — saturated mid-violet bridges cosmos and accent",
+          "group": "brand"
+        },
+        {
+          "hex": "#a98df6",
+          "name": "Lavender Pulse",
+          "role": "Headline accent text ('anywhere.') in dark hero — vivid violet pops against #201547",
+          "group": "brand"
+        },
+        {
+          "hex": "#c4b1f9",
+          "name": "Pale Amethyst",
+          "role": "Soft violet surface tint, used as background on secondary dark panels",
+          "group": "brand"
+        },
+        {
+          "hex": "#381f89",
+          "name": "Indigo Shadow",
+          "role": "Deep violet body text or decorative elements within dark sections",
+          "group": "brand"
+        },
+        {
+          "hex": "#ffcf25",
+          "name": "Electric Lime",
+          "role": "Product screenshot accent, border highlights — the neon counterpoint to deep purple creating visual tension",
+          "group": "accent"
+        },
+        {
+          "hex": "#faaf00",
+          "name": "Amber Core",
+          "role": "Icon fills and body-level accent color in light sections — warm, confident",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffe27c",
+          "name": "Butter Glow",
+          "role": "Light amber for icon strokes, decorative fills — softer version of Amber Core",
+          "group": "accent"
+        },
+        {
+          "hex": "#d8ebff",
+          "name": "Sky Mist",
+          "role": "Button and panel backgrounds in light sections — very pale blue-gray tint",
+          "group": "accent"
+        },
+        {
+          "hex": "#53a945",
+          "name": "Celadon Check",
+          "role": "Success state chip background (e.g. green checkmark on Crypto selection chip)",
+          "group": "semantic"
+        },
+        {
+          "hex": "#b1d8fc",
+          "name": "Powder Blue",
+          "role": "UI illustration fill in product screenshots",
+          "group": "accent"
+        },
+        {
+          "hex": "#000000",
+          "name": "Midnight Ink",
+          "role": "Primary text, icon fills, borders — near-universal dark token",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1b1b1b",
+          "name": "Graphite",
+          "role": "Body text, nav labels, CTA button background (dark pill), footer text",
+          "group": "neutral"
+        },
+        {
+          "hex": "#141414",
+          "name": "Obsidian",
+          "role": "Dark section backgrounds, deepest surface in light-theme stacks",
+          "group": "neutral"
+        },
+        {
+          "hex": "#404040",
+          "name": "Charcoal",
+          "role": "Mid-dark surface, secondary panel backgrounds",
+          "group": "neutral"
+        },
+        {
+          "hex": "#5f5f5f",
+          "name": "Slate",
+          "role": "Secondary body text, metadata, captions",
+          "group": "neutral"
+        },
+        {
+          "hex": "#767676",
+          "name": "Fog",
+          "role": "Tertiary text, muted labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#a4a4a4",
+          "name": "Ash",
+          "role": "Disabled states, light icon tones",
+          "group": "neutral"
+        },
+        {
+          "hex": "#dbdbdb",
+          "name": "Bone",
+          "role": "Border separators, input outlines, card dividers",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d9d0ca",
+          "name": "Linen",
+          "role": "Warm-toned rule lines and subtle separators in cream body sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#fffbf4",
+          "name": "Warm Cream",
+          "role": "Page body background — warm off-white gives light sections a tactile, paper-like quality vs pure white",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "role": "Card surfaces, nav background, input backgrounds, button text on dark",
+          "group": "neutral"
+        },
+        {
+          "hex": "#101828",
+          "name": "Near Black",
+          "role": "High-contrast body text alternative to pure black",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Max-width approximately 1280px centered, but the hero breaks this rule — it runs full viewport width as a 50/50 split: left panel (#201547) contains text + CTA, right panel is full-bleed product imagery with no padding. Below the hero, content resets to max-width contained with 80-120px vertical section gaps. Sections alternate: white/cream light bands with card grids (3-column feature cards), then full-width dark (#141414) bands with 3-column stat rows, then a full-bleed photo section with floating UI chips overlaid. Navigation is a fixed top bar — pure white background, logo left, dropdown nav center, language + log in + CTA pill right. Hero is not full-viewport-height but a defined panel (~480px). The brand logo section (trust strip) uses a horizontal scrolling row of gray logos on white, 2 rows, separated by a light rule. Feature product cards use a 3-column equal grid with 16px gaps.",
+      "imagery": "Deel mixes two distinct image registers: dark-panel graphic design (geometric yellow-green forms as abstract background shapes on the right hero panel, pure graphic, no photography) and real-world lifestyle photography (hands holding a purple iPhone over a table with an orange mug — warm, candid, slightly editorial). Product screenshots are rendered as phone mockups or flat UI crops embedded in cards, contained with 24px radius. The hero right panel uses a dramatic high-contrast shot — black angular shapes over electric yellow-green (#ffcf25), iPhone floating in front — this is purely product showcase, not human context. Below the hero, photography shifts to warm, natural-light scenes that feel ambient rather than staged. Icons are outlined, monochrome (#1b1b1b or white depending on surface), consistent 16-20px stroke-weight SVGs. Customer logos are rendered as flat gray silhouettes at reduced opacity to avoid visual competition. The overall ratio is approximately 40% imagery, 60% text+UI.",
+      "similar": [
+        {
+          "why": "Same deep-purple dark hero panel with white condensed headline typography, cream body sections below, and dual-tone split hero",
+          "business": "Rippling"
+        },
+        {
+          "why": "Custom typeface with multiple optical cuts (Stripe's StripeS has Condensed/Display variants like Bagoss), paired with Inter for body",
+          "business": "Stripe"
+        },
+        {
+          "why": "Global HR/payroll SaaS with identical pill-button system (200px radius), violet brand accent against white/cream backgrounds",
+          "business": "Remote.com"
+        },
+        {
+          "why": "Enterprise HR platform using alternating dark/light section banding with full-width dark stat panels",
+          "business": "Workday"
+        },
+        {
+          "why": "Warm off-white body background (not pure white) with rounded pill forms as the primary shape language across buttons and chips",
+          "business": "Gusto"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "200px",
+          "cards": "24px",
+          "chips": "100px",
+          "icons": "5px",
+          "inputs": "200px",
+          "panels": "12px",
+          "buttons": "200px",
+          "buttonsMedium": "16px"
+        },
+        "elementGap": "8-16px",
+        "sectionGap": "80-120px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1280px"
+      },
+      "category": "SaaS",
+      "surfaces": [
+        {
+          "hex": "#fffbf4",
+          "name": "Warm Cream Page",
+          "level": 1,
+          "purpose": "Base page background for all light-theme content sections"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White Card",
+          "level": 2,
+          "purpose": "Card surfaces, nav bar, input backgrounds elevated above cream"
+        },
+        {
+          "hex": "#201547",
+          "name": "Deep Cosmos Hero",
+          "level": 3,
+          "purpose": "Hero left panel — deepest dark surface, maximum brand presence"
+        },
+        {
+          "hex": "#141414",
+          "name": "Dark Feature Band",
+          "level": 4,
+          "purpose": "Near-black bands for stat/feature sections on dark alternating zones"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Frosted Glass",
+          "level": 5,
+          "purpose": "rgba(255,255,255,0.05) overlay tint on dark surfaces for card differentiation without opacity loss"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "rgba(27, 27, 27, 0.16) 0px 16px 32px 0px, rgba(27, 27, 27, 0.05) 0px 2px 32px 0px",
+          "element": "Floating Overlay Card (testimonial badge, currency chip group)"
+        }
+      ],
+      "northStar": "Global command split-screen — a war-room purple panel beside a neon product showcase, then warm cream scrolls below.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body",
+          "size": 15,
+          "lineHeight": 1.6,
+          "letterSpacing": 0.375
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 44,
+          "lineHeight": 1.05,
+          "letterSpacing": -0.22
+        },
+        {
+          "role": "heading-lg",
+          "size": 60,
+          "lineHeight": 1,
+          "letterSpacing": -0.3
+        },
+        {
+          "role": "display",
+          "size": 64,
+          "lineHeight": 1,
+          "letterSpacing": 0.32
+        }
+      ],
+      "components": [
+        {
+          "html": "$19",
+          "name": "Hero CTA Button Group",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1a",
+          "name": "Feature Product Cards",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1b",
+          "name": "Dark Stat Callout Row",
+          "role": "",
+          "description": ""
+        },
+        {
+          "name": "Dark Hero CTA Button",
+          "role": "Primary call-to-action within the dark hero panel",
+          "description": "Pill-shaped button (200px radius), background #5938b7, white text, Inter or BagossStandardVF 15px weight 500, padding 8px 16px. Small right-facing arrow icon. On #201547 backgrounds only."
+        },
+        {
+          "name": "Ghost Pill Navigation Button",
+          "role": "Nav items with dropdown indicators",
+          "description": "Transparent background, #1b1b1b text, 200px border-radius, padding 8px 12px, BagossStandardVF 15px weight 500, letter-spacing 0.025em. Includes chevron icon at 12px. No border in default state."
+        },
+        {
+          "name": "Dark Filled Pill Button",
+          "role": "'Book a demo' CTA in the top nav",
+          "description": "Background #1b1b1b, white text, 200px border-radius, padding 8px 16px, BagossStandardVF 15px weight 500. The highest-contrast nav element — only solid-fill nav button."
+        },
+        {
+          "name": "Ghost Underline Button",
+          "role": "Text-level inline CTAs like 'Learn more →'",
+          "description": "Transparent background, #1b1b1b text, no border-radius (0px), padding 8px 0px, no horizontal padding. Arrow character appended. Signals navigation without visual weight."
+        },
+        {
+          "name": "Pill Input with Search",
+          "role": "Search and email capture fields",
+          "description": "Background #ffffff, border rgba(27,27,27,0.16) 1px, border-radius 200px, padding 1px 54px 1px 24px. Right-side icon or button inset at 54px. Inter 14px weight 400 placeholder text in #767676."
+        },
+        {
+          "name": "Feature Product Card",
+          "role": "Product feature cards (Deel Payroll, Deel HR, Deel IT)",
+          "description": "Background #fffbf4 (warm cream), border-radius 24px, no shadow, padding 24px. Contains a bold label in BagossCondensedFont 24px weight 500, descriptor in Inter 16px weight 400 #5f5f5f, and a product screenshot cropped at bottom. Border: 1px solid #dbdbdb."
+        },
+        {
+          "name": "Dark Stats Panel",
+          "role": "Stat callout panels on dark background sections",
+          "description": "Background rgba(255,255,255,0.05) — frosted white tint at 5% on dark surfaces. Border-radius 24px. No shadow. Contains bold stat in BagossCondensedFont 44px weight 500, descriptor in Inter 15px #d9d0ca."
+        },
+        {
+          "name": "Currency Selection Chip",
+          "role": "Illustrative UI chips showing selectable options (ARS, CAD, USD, etc.)",
+          "description": "Background #ffffff or rgba(255,255,255,0.9), border 1px solid #dbdbdb, border-radius 200px, padding 8px 16px. Flag emoji + currency code in Inter 16px weight 500 #1b1b1b. Active state adds green checkmark badge (#53a945)."
+        },
+        {
+          "name": "Customer Logo Badge",
+          "role": "Testimonial attribution chip (e.g. Robinhood badge on carousel)",
+          "description": "Background #ffffff, border-radius 16px, padding 6px 12px, contains company logo image at 16px height + company name in Inter 13px weight 500 #1b1b1b. Subtle box-shadow: rgba(27,27,27,0.16) 0px 16px 32px."
+        },
+        {
+          "name": "Trust Logo Strip",
+          "role": "Social proof logo row below hero",
+          "description": "Flat company wordmarks rendered in #a4a4a4 or #dbdbdb on #ffffff background. 16px vertical spacing between label ('TRUSTED BY 40,000+...') and logos. Labels use Inter 10px weight 600 letter-spacing 0.06em in Slate. Logos at approximately 80px wide, 24px tall."
+        },
+        {
+          "name": "Section Eyebrow Label",
+          "role": "Pre-heading category label (e.g. 'WHAT DEEL DOES')",
+          "description": "Inter 12px weight 600, letter-spacing 0.06em, all-caps, color #5f5f5f. No background. Left-aligned above the section heading. Creates category context without visual mass."
+        },
+        {
+          "name": "Stat Callout Row",
+          "role": "Three-column feature stat blocks in dark sections",
+          "description": "Dark background (#141414 or #1b1b1b), three equal columns each with bold lead text in BagossCondensedFont 24px weight 500 #ffffff, body in Inter 15px weight 400 #d9d0ca. 'Learn more →' or 'Book a demo →' ghost links at bottom of each column."
+        },
+        {
+          "name": "Hero Split Panel",
+          "role": "Primary homepage hero container",
+          "description": "Left panel: background #201547, padding 64px 48px. Right panel: background vivid product image with #ffcf25 accent border elements, no padding. Two-column 50/50 split at viewport width. Left contains BagossCondensedFont 60px headline in #ffffff with 'anywhere.' in #a98df6."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary display and hero headlines — the condensed cut lets oversized text fill wide containers without breaking; the -0.005em tracking tightens the text mass. This is Deel's most distinctive typographic voice: large, dense, confident headlines that compress horizontal space.",
+          "sizes": "16px, 24px, 28px, 44px, 60px",
+          "family": "BagossCondensedFont",
+          "weight": "500",
+          "lineHeight": "1.00–1.15",
+          "letterSpacing": "-0.005em",
+          "fontFeatureSettings": "\"ss01\" on, \"ss02\" on"
+        },
+        {
+          "role": "Section headers where width is the feature — extended cut fills horizontal space at large sizes, used for spread-out banner headlines like 'The Global People Platform'",
+          "sizes": "30px, 64px",
+          "family": "BagossExtendedFont",
+          "weight": "600",
+          "lineHeight": "1.00–1.20",
+          "letterSpacing": "0.005em",
+          "fontFeatureSettings": "\"ss02\" on"
+        },
+        {
+          "role": "UI labels, badge text, small captions — the workhorse standard cut at utility sizes",
+          "sizes": "12px, 14px, 16px",
+          "family": "BagossStandardFont",
+          "weight": "500, 600",
+          "lineHeight": "1.50–1.70",
+          "letterSpacing": "0.015em",
+          "fontFeatureSettings": "\"ss02\" on, \"ss01\" on"
+        },
+        {
+          "role": "Navigation items and button labels — variable-font version allows optical tuning at this critical interactive size",
+          "sizes": "15px",
+          "family": "BagossStandardVF",
+          "weight": "500",
+          "lineHeight": "1.60",
+          "letterSpacing": "0.025em",
+          "fontFeatureSettings": "\"ss02\" on, \"ss01\" on"
+        },
+        {
+          "role": "All body copy, subheadings, stats, footer text, input values — Inter handles everything below headline level. The wide weight range (400–700) creates internal hierarchy without switching families. ss01/ss02 features keep it feeling designed rather than default.",
+          "sizes": "10px, 12px, 13px, 14px, 15px, 16px, 17px, 18px, 20px, 24px, 60px",
+          "family": "Inter",
+          "weight": "400, 460, 500, 560, 600, 700",
+          "lineHeight": "1.40–1.60",
+          "substitute": "Inter (Google Fonts)",
+          "letterSpacing": "varies: -0.01em at large sizes, +0.006em to +0.025em at small sizes, +0.06em for all-caps labels",
+          "fontFeatureSettings": "\"ss01\" on, \"ss02\" on"
+        }
+      ],
+      "description": "Deel operates in contrasting registers — a deep purple-black (#201547) hero punched through with electric yellow-green product shots, then a cream-warm (#fffbf4) body that stretches through the rest of the page. The dual-zone layout is the signature move: dark/vivid left panel with serif-weight condensed Bagoss headlines, fluorescent product imagery on the right, then warmth and space below. Accent violet (#a98df6 to #5938b7) appears only within the dark hero for the word 'anywhere.' and CTAs — never in the light body sections. Pill-shaped buttons (200px radius) coexist with 24px-radius cards, creating a soft geometry throughout. The custom Bagoss family — in Condensed, Extended, Standard, and VF cuts — gives the brand typographic range unavailable through any system font.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1c"
+        },
+        {
+          "title": "Bagoss Typeface System",
+          "content": "Deel uses a proprietary 4-cut type family (BagossCondensedFont, BagossExtendedFont, BagossStandardFont, BagossStandardVF) as its typographic identity. Each cut has a defined role: Condensed at 44-60px for compressed hero headlines; Extended at 64px for wide-spread section banners; Standard at 12-16px for UI labels and badges; StandardVF for interactive elements (nav, buttons) where variable-font optical sizing matters. All cuts share ss01/ss02 OpenType features that enable stylistic alternate glyphs — these must remain active for authentic brand rendering. Do NOT substitute Bagoss with a condensed system font at headline sizes — the proportions are distinct enough to visually break the design. If Bagoss is unavailable, use Barlow Condensed (Google Fonts, weight 500) as a structural proxy while noting it lacks the custom OpenType personality."
+        }
+      ],
+      "elevationPhilosophy": "Deel uses borders, not shadows, as the primary card boundary language in light sections — 1px solid #dbdbdb or rgba(27,27,27,0.16) defines card edges. The single shadow value (16px/32px spread with dual-layer rgba(27,27,27)) is reserved exclusively for floating UI elements like testimonial badges and product chips that need to appear physically lifted above a photo background."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/650ec721-0cb5-4123-bd5c-64e98f4d6847.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/bc361a48-9147-41a8-bd80-ace7c07ddc35.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "deel",
+    "generatedAt": "2026-04-11T19:19:36.969Z",
+    "summary": "Deel operates in contrasting registers — a deep purple-black (#201547) hero punched through with electric yellow-green product shots, then a cream-warm (#fffbf4) body that stretches through the rest of the page. The dual-zone layout is the signature move: dark/vivid left panel with serif-weight condensed Bagoss headlines, fluorescent product imagery on the right, then warmth and space below. Accent violet (#a98df6 to #5938b7) appears only within the dark hero for the word 'anywhere.' and CTAs — never in the light body sections. Pill-shaped buttons (200px radius) coexist with 24px-radius cards, creating a soft geometry throughout. The custom Bagoss family — in Condensed, Extended, Standard, and VF cuts — gives the brand typographic range unavailable through any system font.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+      "sourceUrl": "https://styles.refero.design/style/5ec4eb4f-a37c-4787-b4c1-de49e01770e7",
+      "originalUrl": "https://deel.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/650ec721-0cb5-4123-bd5c-64e98f4d6847.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/bc361a48-9147-41a8-bd80-ace7c07ddc35.jpg",
+      "importedAt": "2026-08-02T18:09:37.084Z",
+      "upstreamModifiedAt": "2026-05-11T16:26:20.547Z",
+      "attribution": "Imported from Refero Styles",
+      "northStar": "Global command split-screen — a war-room purple panel beside a neon product showcase, then warm cream scrolls below."
+    },
+    "tokens": [
+      {
+        "id": "color-deep-cosmos",
+        "kind": "color",
+        "name": "Deep Cosmos",
+        "value": "#201547",
+        "role": "Hero section background — the darkest brand surface, houses white headlines and violet accent text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-violet-mid",
+        "kind": "color",
+        "name": "Violet Mid",
+        "value": "#5938b7",
+        "role": "CTA buttons in hero context, pill backgrounds — saturated mid-violet bridges cosmos and accent",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-lavender-pulse",
+        "kind": "color",
+        "name": "Lavender Pulse",
+        "value": "#a98df6",
+        "role": "Headline accent text ('anywhere.') in dark hero — vivid violet pops against #201547",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pale-amethyst",
+        "kind": "color",
+        "name": "Pale Amethyst",
+        "value": "#c4b1f9",
+        "role": "Soft violet surface tint, used as background on secondary dark panels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-indigo-shadow",
+        "kind": "color",
+        "name": "Indigo Shadow",
+        "value": "#381f89",
+        "role": "Deep violet body text or decorative elements within dark sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-electric-lime",
+        "kind": "color",
+        "name": "Electric Lime",
+        "value": "#ffcf25",
+        "role": "Product screenshot accent, border highlights — the neon counterpoint to deep purple creating visual tension",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-amber-core",
+        "kind": "color",
+        "name": "Amber Core",
+        "value": "#faaf00",
+        "role": "Icon fills and body-level accent color in light sections — warm, confident",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-butter-glow",
+        "kind": "color",
+        "name": "Butter Glow",
+        "value": "#ffe27c",
+        "role": "Light amber for icon strokes, decorative fills — softer version of Amber Core",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-sky-mist",
+        "kind": "color",
+        "name": "Sky Mist",
+        "value": "#d8ebff",
+        "role": "Button and panel backgrounds in light sections — very pale blue-gray tint",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-celadon-check",
+        "kind": "color",
+        "name": "Celadon Check",
+        "value": "#53a945",
+        "role": "Success state chip background (e.g. green checkmark on Crypto selection chip)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-powder-blue",
+        "kind": "color",
+        "name": "Powder Blue",
+        "value": "#b1d8fc",
+        "role": "UI illustration fill in product screenshots",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-midnight-ink",
+        "kind": "color",
+        "name": "Midnight Ink",
+        "value": "#000000",
+        "role": "Primary text, icon fills, borders — near-universal dark token",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#1b1b1b",
+        "role": "Body text, nav labels, CTA button background (dark pill), footer text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-obsidian",
+        "kind": "color",
+        "name": "Obsidian",
+        "value": "#141414",
+        "role": "Dark section backgrounds, deepest surface in light-theme stacks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#404040",
+        "role": "Mid-dark surface, secondary panel backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate",
+        "kind": "color",
+        "name": "Slate",
+        "value": "#5f5f5f",
+        "role": "Secondary body text, metadata, captions",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog",
+        "kind": "color",
+        "name": "Fog",
+        "value": "#767676",
+        "role": "Tertiary text, muted labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#a4a4a4",
+        "role": "Disabled states, light icon tones",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone",
+        "kind": "color",
+        "name": "Bone",
+        "value": "#dbdbdb",
+        "role": "Border separators, input outlines, card dividers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-linen",
+        "kind": "color",
+        "name": "Linen",
+        "value": "#d9d0ca",
+        "role": "Warm-toned rule lines and subtle separators in cream body sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-warm-cream",
+        "kind": "color",
+        "name": "Warm Cream",
+        "value": "#fffbf4",
+        "role": "Page body background — warm off-white gives light sections a tactile, paper-like quality vs pure white",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-white",
+        "kind": "color",
+        "name": "Pure White",
+        "value": "#ffffff",
+        "role": "Card surfaces, nav background, input backgrounds, button text on dark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-near-black",
+        "kind": "color",
+        "name": "Near Black",
+        "value": "#101828",
+        "role": "High-contrast body text alternative to pure black",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-bagosscondensedfont",
+        "kind": "typography",
+        "name": "BagossCondensedFont",
+        "value": "font-family: BagossCondensedFont; font-weight: 500; font-size: 16px, 24px, 28px, 44px, 60px; line-height: 1.00–1.15; letter-spacing: -0.005em",
+        "role": "Primary display and hero headlines — the condensed cut lets oversized text fill wide containers without breaking; the -0.005em tracking tightens the text mass. This is Deel's most distinctive typographic voice: large, dense, confident headlines that compress horizontal space.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-bagossextendedfont",
+        "kind": "typography",
+        "name": "BagossExtendedFont",
+        "value": "font-family: BagossExtendedFont; font-weight: 600; font-size: 30px, 64px; line-height: 1.00–1.20; letter-spacing: 0.005em",
+        "role": "Section headers where width is the feature — extended cut fills horizontal space at large sizes, used for spread-out banner headlines like 'The Global People Platform'",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-bagossstandardfont",
+        "kind": "typography",
+        "name": "BagossStandardFont",
+        "value": "font-family: BagossStandardFont; font-weight: 500, 600; font-size: 12px, 14px, 16px; line-height: 1.50–1.70; letter-spacing: 0.015em",
+        "role": "UI labels, badge text, small captions — the workhorse standard cut at utility sizes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-bagossstandardvf",
+        "kind": "typography",
+        "name": "BagossStandardVF",
+        "value": "font-family: BagossStandardVF; font-weight: 500; font-size: 15px; line-height: 1.60; letter-spacing: 0.025em",
+        "role": "Navigation items and button labels — variable-font version allows optical tuning at this critical interactive size",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-inter",
+        "kind": "typography",
+        "name": "Inter",
+        "value": "font-family: Inter; font-weight: 400, 460, 500, 560, 600, 700; font-size: 10px, 12px, 13px, 14px, 15px, 16px, 17px, 18px, 20px, 24px, 60px; line-height: 1.40–1.60; letter-spacing: varies: -0.01em at large sizes, +0.006em to +0.025em at small sizes, +0.06em for all-caps labels",
+        "role": "All body copy, subheadings, stats, footer text, input values — Inter handles everything below headline level. The wide weight range (400–700) creates internal hierarchy without switching families. ss01/ss02 features keep it feeling designed rather than default.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 1.5",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 15px; line-height: 1.6; letter-spacing: 0.375px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.5",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.2",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 44px; line-height: 1.05; letter-spacing: -0.22px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 60px; line-height: 1; letter-spacing: -0.3px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 64px; line-height: 1; letter-spacing: 0.32px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "8-16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80-120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1280px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "200px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "24px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-chips",
+        "kind": "radius",
+        "name": "chips",
+        "value": "100px",
+        "role": "Imported chips radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-icons",
+        "kind": "radius",
+        "name": "icons",
+        "value": "5px",
+        "role": "Imported icons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "200px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-panels",
+        "kind": "radius",
+        "name": "panels",
+        "value": "12px",
+        "role": "Imported panels radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "200px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttonsmedium",
+        "kind": "radius",
+        "name": "buttonsMedium",
+        "value": "16px",
+        "role": "Imported buttonsMedium radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Deel uses borders, not shadows, as the primary card boundary language in light sections — 1px solid #dbdbdb or rgba(27,27,27,0.16) defines card edges. The single shadow value (16px/32px spread with dual-layer rgba(27,27,27)) is reserved exclusively for floating UI elements like testimonial badges and product chips that need to appear physically lifted above a photo background.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "hero-cta-button-group",
+        "name": "Hero CTA Button Group",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "hero-cta-button-group-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-product-cards",
+        "name": "Feature Product Cards",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "feature-product-cards-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-stat-callout-row",
+        "name": "Dark Stat Callout Row",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "dark-stat-callout-row-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-hero-cta-button",
+        "name": "Dark Hero CTA Button",
+        "category": "Refero components",
+        "description": "Pill-shaped button (200px radius), background #5938b7, white text, Inter or BagossStandardVF 15px weight 500, padding 8px 16px. Small right-facing arrow icon. On #201547 backgrounds only.",
+        "variants": [
+          {
+            "id": "dark-hero-cta-button-reference",
+            "name": "Reference",
+            "description": "Pill-shaped button (200px radius), background #5938b7, white text, Inter or BagossStandardVF 15px weight 500, padding 8px 16px. Small right-facing arrow icon. On #201547 backgrounds only.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary call-to-action within the dark hero panel"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-pill-navigation-button",
+        "name": "Ghost Pill Navigation Button",
+        "category": "Refero components",
+        "description": "Transparent background, #1b1b1b text, 200px border-radius, padding 8px 12px, BagossStandardVF 15px weight 500, letter-spacing 0.025em. Includes chevron icon at 12px. No border in default state.",
+        "variants": [
+          {
+            "id": "ghost-pill-navigation-button-reference",
+            "name": "Reference",
+            "description": "Transparent background, #1b1b1b text, 200px border-radius, padding 8px 12px, BagossStandardVF 15px weight 500, letter-spacing 0.025em. Includes chevron icon at 12px. No border in default state.",
+            "evidence": [],
+            "observedProperties": [
+              "Nav items with dropdown indicators"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-filled-pill-button",
+        "name": "Dark Filled Pill Button",
+        "category": "Refero components",
+        "description": "Background #1b1b1b, white text, 200px border-radius, padding 8px 16px, BagossStandardVF 15px weight 500. The highest-contrast nav element — only solid-fill nav button.",
+        "variants": [
+          {
+            "id": "dark-filled-pill-button-reference",
+            "name": "Reference",
+            "description": "Background #1b1b1b, white text, 200px border-radius, padding 8px 16px, BagossStandardVF 15px weight 500. The highest-contrast nav element — only solid-fill nav button.",
+            "evidence": [],
+            "observedProperties": [
+              "'Book a demo' CTA in the top nav"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-underline-button",
+        "name": "Ghost Underline Button",
+        "category": "Refero components",
+        "description": "Transparent background, #1b1b1b text, no border-radius (0px), padding 8px 0px, no horizontal padding. Arrow character appended. Signals navigation without visual weight.",
+        "variants": [
+          {
+            "id": "ghost-underline-button-reference",
+            "name": "Reference",
+            "description": "Transparent background, #1b1b1b text, no border-radius (0px), padding 8px 0px, no horizontal padding. Arrow character appended. Signals navigation without visual weight.",
+            "evidence": [],
+            "observedProperties": [
+              "Text-level inline CTAs like 'Learn more →'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pill-input-with-search",
+        "name": "Pill Input with Search",
+        "category": "Refero components",
+        "description": "Background #ffffff, border rgba(27,27,27,0.16) 1px, border-radius 200px, padding 1px 54px 1px 24px. Right-side icon or button inset at 54px. Inter 14px weight 400 placeholder text in #767676.",
+        "variants": [
+          {
+            "id": "pill-input-with-search-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border rgba(27,27,27,0.16) 1px, border-radius 200px, padding 1px 54px 1px 24px. Right-side icon or button inset at 54px. Inter 14px weight 400 placeholder text in #767676.",
+            "evidence": [],
+            "observedProperties": [
+              "Search and email capture fields"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-product-card",
+        "name": "Feature Product Card",
+        "category": "Refero components",
+        "description": "Background #fffbf4 (warm cream), border-radius 24px, no shadow, padding 24px. Contains a bold label in BagossCondensedFont 24px weight 500, descriptor in Inter 16px weight 400 #5f5f5f, and a product screenshot cropped at bottom. Border: 1px solid #dbdbdb.",
+        "variants": [
+          {
+            "id": "feature-product-card-reference",
+            "name": "Reference",
+            "description": "Background #fffbf4 (warm cream), border-radius 24px, no shadow, padding 24px. Contains a bold label in BagossCondensedFont 24px weight 500, descriptor in Inter 16px weight 400 #5f5f5f, and a product screenshot cropped at bottom. Border: 1px solid #dbdbdb.",
+            "evidence": [],
+            "observedProperties": [
+              "Product feature cards (Deel Payroll, Deel HR, Deel IT)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-stats-panel",
+        "name": "Dark Stats Panel",
+        "category": "Refero components",
+        "description": "Background rgba(255,255,255,0.05) — frosted white tint at 5% on dark surfaces. Border-radius 24px. No shadow. Contains bold stat in BagossCondensedFont 44px weight 500, descriptor in Inter 15px #d9d0ca.",
+        "variants": [
+          {
+            "id": "dark-stats-panel-reference",
+            "name": "Reference",
+            "description": "Background rgba(255,255,255,0.05) — frosted white tint at 5% on dark surfaces. Border-radius 24px. No shadow. Contains bold stat in BagossCondensedFont 44px weight 500, descriptor in Inter 15px #d9d0ca.",
+            "evidence": [],
+            "observedProperties": [
+              "Stat callout panels on dark background sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "currency-selection-chip",
+        "name": "Currency Selection Chip",
+        "category": "Refero components",
+        "description": "Background #ffffff or rgba(255,255,255,0.9), border 1px solid #dbdbdb, border-radius 200px, padding 8px 16px. Flag emoji + currency code in Inter 16px weight 500 #1b1b1b. Active state adds green checkmark badge (#53a945).",
+        "variants": [
+          {
+            "id": "currency-selection-chip-reference",
+            "name": "Reference",
+            "description": "Background #ffffff or rgba(255,255,255,0.9), border 1px solid #dbdbdb, border-radius 200px, padding 8px 16px. Flag emoji + currency code in Inter 16px weight 500 #1b1b1b. Active state adds green checkmark badge (#53a945).",
+            "evidence": [],
+            "observedProperties": [
+              "Illustrative UI chips showing selectable options (ARS, CAD, USD, etc.)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "customer-logo-badge",
+        "name": "Customer Logo Badge",
+        "category": "Refero components",
+        "description": "Background #ffffff, border-radius 16px, padding 6px 12px, contains company logo image at 16px height + company name in Inter 13px weight 500 #1b1b1b. Subtle box-shadow: rgba(27,27,27,0.16) 0px 16px 32px.",
+        "variants": [
+          {
+            "id": "customer-logo-badge-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border-radius 16px, padding 6px 12px, contains company logo image at 16px height + company name in Inter 13px weight 500 #1b1b1b. Subtle box-shadow: rgba(27,27,27,0.16) 0px 16px 32px.",
+            "evidence": [],
+            "observedProperties": [
+              "Testimonial attribution chip (e.g. Robinhood badge on carousel)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "trust-logo-strip",
+        "name": "Trust Logo Strip",
+        "category": "Refero components",
+        "description": "Flat company wordmarks rendered in #a4a4a4 or #dbdbdb on #ffffff background. 16px vertical spacing between label ('TRUSTED BY 40,000+...') and logos. Labels use Inter 10px weight 600 letter-spacing 0.06em in Slate. Logos at approximately 80px wide, 24px tall.",
+        "variants": [
+          {
+            "id": "trust-logo-strip-reference",
+            "name": "Reference",
+            "description": "Flat company wordmarks rendered in #a4a4a4 or #dbdbdb on #ffffff background. 16px vertical spacing between label ('TRUSTED BY 40,000+...') and logos. Labels use Inter 10px weight 600 letter-spacing 0.06em in Slate. Logos at approximately 80px wide, 24px tall.",
+            "evidence": [],
+            "observedProperties": [
+              "Social proof logo row below hero"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-eyebrow-label",
+        "name": "Section Eyebrow Label",
+        "category": "Refero components",
+        "description": "Inter 12px weight 600, letter-spacing 0.06em, all-caps, color #5f5f5f. No background. Left-aligned above the section heading. Creates category context without visual mass.",
+        "variants": [
+          {
+            "id": "section-eyebrow-label-reference",
+            "name": "Reference",
+            "description": "Inter 12px weight 600, letter-spacing 0.06em, all-caps, color #5f5f5f. No background. Left-aligned above the section heading. Creates category context without visual mass.",
+            "evidence": [],
+            "observedProperties": [
+              "Pre-heading category label (e.g. 'WHAT DEEL DOES')"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "stat-callout-row",
+        "name": "Stat Callout Row",
+        "category": "Refero components",
+        "description": "Dark background (#141414 or #1b1b1b), three equal columns each with bold lead text in BagossCondensedFont 24px weight 500 #ffffff, body in Inter 15px weight 400 #d9d0ca. 'Learn more →' or 'Book a demo →' ghost links at bottom of each column.",
+        "variants": [
+          {
+            "id": "stat-callout-row-reference",
+            "name": "Reference",
+            "description": "Dark background (#141414 or #1b1b1b), three equal columns each with bold lead text in BagossCondensedFont 24px weight 500 #ffffff, body in Inter 15px weight 400 #d9d0ca. 'Learn more →' or 'Book a demo →' ghost links at bottom of each column.",
+            "evidence": [],
+            "observedProperties": [
+              "Three-column feature stat blocks in dark sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-split-panel",
+        "name": "Hero Split Panel",
+        "category": "Refero components",
+        "description": "Left panel: background #201547, padding 64px 48px. Right panel: background vivid product image with #ffcf25 accent border elements, no padding. Two-column 50/50 split at viewport width. Left contains BagossCondensedFont 60px headline in #ffffff with 'anywhere.' in #a98df6.",
+        "variants": [
+          {
+            "id": "hero-split-panel-reference",
+            "name": "Reference",
+            "description": "Left panel: background #201547, padding 64px 48px. Right panel: background vivid product image with #ffcf25 accent border elements, no padding. Two-column 50/50 split at viewport width. Left contains BagossCondensedFont 60px headline in #ffffff with 'anywhere.' in #a98df6.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary homepage hero container"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width approximately 1280px centered, but the hero breaks this rule — it runs full viewport width as a 50/50 split: left panel (#201547) contains text + CTA, right panel is full-bleed product imagery with no padding. Below the hero, content resets to max-width contained with 80-120px vertical section gaps. Sections alternate: white/cream light bands with card grids (3-column feature cards), then full-width dark (#141414) bands with 3-column stat rows, then a full-bleed photo section with floating UI chips overlaid. Navigation is a fixed top bar — pure white background, logo left, dropdown nav center, language + log in + CTA pill right. Hero is not full-viewport-height but a defined panel (~480px). The brand logo section (trust strip) uses a horizontal scrolling row of gray logos on white, 2 rows, separated by a light rule. Feature product cards use a 3-column equal grid with 16px gaps.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Deel mixes two distinct image registers: dark-panel graphic design (geometric yellow-green forms as abstract background shapes on the right hero panel, pure graphic, no photography) and real-world lifestyle photography (hands holding a purple iPhone over a table with an orange mug — warm, candid, slightly editorial). Product screenshots are rendered as phone mockups or flat UI crops embedded in cards, contained with 24px radius. The hero right panel uses a dramatic high-contrast shot — black angular shapes over electric yellow-green (#ffcf25), iPhone floating in front — this is purely product showcase, not human context. Below the hero, photography shifts to warm, natural-light scenes that feel ambient rather than staged. Icons are outlined, monochrome (#1b1b1b or white depending on surface), consistent 16-20px stroke-weight SVGs. Customer logos are rendered as flat gray silhouettes at reduced opacity to avoid visual competition. The overall ratio is approximately 40% imagery, 60% text+UI.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Deel uses borders, not shadows, as the primary card boundary language in light sections — 1px solid #dbdbdb or rgba(27,27,27,0.16) defines card edges. The single shadow value (16px/32px spread with dual-layer rgba(27,27,27)) is reserved exclusively for floating UI elements like testimonial badges and product chips that need to appear physically lifted above a photo background.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use BagossCondensedFont at 44-60px weight 500 with -0.005em letter-spacing for all primary hero headlines inside dark (#201547) sections.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply 200px border-radius to all pill buttons, search inputs, and currency chips — this is the system's defining shape token.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #fffbf4 (Warm Cream) as the page body background, never pure white (#ffffff), for all light-theme content sections below the hero.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Accent the single most emotionally charged word in each hero headline with #a98df6 (Lavender Pulse) — one word only, never a phrase.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair dark (#141414 or #201547) section backgrounds with Inter body text in #d9d0ca (Linen) — not pure white — for softer contrast on extended reading.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use rgba(27,27,27,0.16) as the standard border color for inputs and card outlines in light sections — never a solid opaque gray.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve #ffcf25 (Electric Lime) strictly for product screenshots and graphic accents — never apply it as a button or text color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use BagossCondensedFont below 16px — at small sizes switch to BagossStandardFont or Inter for legibility.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use 8px or 16px border-radius on primary CTA buttons — those radii belong only to secondary badges and icon containers.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use #5938b7 (Violet Mid) or any saturated violet in light (cream) body sections — violet is hero-zone-only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't apply box shadows to feature product cards — the system uses border (1px #dbdbdb) as the only card boundary in light sections; shadows appear only on floating overlays.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't mix BagossExtendedFont and BagossCondensedFont in the same heading — choose one cut per section based on available width.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use pure white (#ffffff) as the page background — the system's warm cream (#fffbf4) distinguishes Deel's light theme from generic white-page SaaS.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't apply letter-spacing to BagossCondensedFont display headlines — the -0.005em is already set; adding positive tracking breaks the compressed silhouette.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

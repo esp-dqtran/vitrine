@@ -59,7 +59,6 @@ export function ScreenPreviewDialog({
   const [status, setStatus] = useState('');
   const [mediaFailed, setMediaFailed] = useState(false);
   const [mediaDimensions, setMediaDimensions] = useState<Record<number, { width: number; height: number }>>({});
-  const [moreOpen, setMoreOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const saved = savedScreens.has(screen.id);
   const context = foundInFlows[0]
@@ -258,17 +257,6 @@ export function ScreenPreviewDialog({
               size="lg"
               className="flow-preview-dialog__copy"
             />
-            <IconButton
-              label="More screen actions"
-              tooltip="More screen actions"
-              icon={<Icon icon="moreHorizontal" size="md" />}
-              variant="secondary"
-              className="flow-preview-dialog__more"
-              onClick={() => {
-                setMoreOpen((value) => !value);
-                setInfoOpen(false);
-              }}
-            />
           </div>
 
           <div className="flow-preview-dialog__metadata">
@@ -279,16 +267,9 @@ export function ScreenPreviewDialog({
               aria-expanded={infoOpen}
               onClick={() => {
                 setInfoOpen((value) => !value);
-                setMoreOpen(false);
               }}
             />
           </div>
-
-          {moreOpen ? (
-            <div className="flow-preview-dialog__menu">
-              <a href={screen.url} target="_blank" rel="noreferrer">Open original image</a>
-            </div>
-          ) : null}
 
           {infoOpen ? (
             <aside className="flow-preview-dialog__info">

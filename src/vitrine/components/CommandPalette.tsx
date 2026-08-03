@@ -467,7 +467,7 @@ export function CommandPalette({
               />
             ))}
           </div>
-          <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" onClick={() => requestClose()} />
+          <IconButton label="Close search" icon={<Icon icon="close" size="sm" />} variant="ghost" size="sm" className="astryx-modal__icon-action" onClick={() => requestClose()} />
         </div>
 
         <div className="command-palette-app-chips" aria-label="Popular apps">

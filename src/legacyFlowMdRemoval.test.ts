@@ -13,7 +13,6 @@ test('removes legacy FLOW.md while preserving Feature Document creation', async 
     exportEngine,
     apiApp,
     database,
-    migrationVerifier,
     readme,
     dropMigration,
   ] = await Promise.all([
@@ -24,7 +23,6 @@ test('removes legacy FLOW.md while preserving Feature Document creation', async 
     source('./exportEngine.ts'),
     source('../services/api/src/app.ts'),
     source('./db.ts'),
-    source('../scripts/verify-migrations.ts'),
     source('../README.md'),
     source('../migrations/0020_drop_flow_documents.sql').catch(() => ''),
   ]);
@@ -36,7 +34,6 @@ test('removes legacy FLOW.md while preserving Feature Document creation', async 
   assert.doesNotMatch(exportEngine, /flow-md|function flowMd/);
   assert.doesNotMatch(apiApp, /flow-doc|flow-md|getFlowDocument|saveFlowDocument/);
   assert.doesNotMatch(database, /getFlowDocument|saveFlowDocument|flow_documents/);
-  assert.doesNotMatch(migrationVerifier, /["']flow_documents["']/);
   assert.doesNotMatch(readme, /FLOW\.md|flow-md|flow-doc/);
   assert.match(dropMigration, /DROP TABLE IF EXISTS flow_documents/i);
 

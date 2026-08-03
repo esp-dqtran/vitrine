@@ -1,0 +1,1816 @@
+{
+  "schemaVersion": 1,
+  "id": "973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+  "sourceUrl": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+  "sitemapLastModified": "2026-06-03T14:59:19.339Z",
+  "fetchedAt": "2026-08-02T18:09:32.236Z",
+  "contentHash": "54e558d315b626feb4ef4abb3bb22a4d6d59afeb403745a425808ad7404c5fd7",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Sociotype design system",
+            "item": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed#style-reference",
+        "name": "Sociotype design system reference",
+        "headline": "Sociotype design system | Refero Styles",
+        "description": "Explore Sociotype's light Design design system: Onyx #000000, Paper #ffffff colors, Main Onsite, Onsite typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+        "mainEntityOfPage": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Sociotype",
+          "url": "https://socio-type.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/e8858bc6-b746-4753-b4c2-933839a883b3.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/e8858bc6-b746-4753-b4c2-933839a883b3.jpg",
+          "caption": "Screenshot of Sociotype"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/e8858bc6-b746-4753-b4c2-933839a883b3.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Sociotype design system",
+          "Sociotype website design",
+          "Sociotype colors",
+          "Sociotype typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Design design system",
+          "Onyx",
+          "Paper",
+          "Charcoal",
+          "Graphite",
+          "Main Onsite",
+          "Onsite",
+          "Avec Sharp / Ceno / Meso / Gestura / Rework"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Sociotype design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Sociotype website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Sociotype colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Sociotype typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Design design system"
+          }
+        ],
+        "datePublished": "2026-04-30T02:23:06.008Z",
+        "dateModified": "2026-04-30T02:23:06.008Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://socio-type.com",
+      "siteName": "Sociotype",
+      "extractedAt": "2026-06-03T14:59:19.335Z",
+      "durationMs": 40251,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 641,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "hero",
+              "link",
+              "nav",
+              "button",
+              "list",
+              "body",
+              "card",
+              "image",
+              "footer"
+            ],
+            "frequency": 2511,
+            "confidence": 1,
+            "prominence": 312793181.8413217,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "nav/fill": 72,
+              "nav/color": 66,
+              "body/color": 38,
+              "card/color": 6,
+              "hero/color": 2,
+              "link/color": 58,
+              "list/color": 34,
+              "image/color": 55,
+              "other/color": 223,
+              "button/color": 6,
+              "footer/color": 1,
+              "nav/borderColor": 264,
+              "body/borderColor": 152,
+              "card/borderColor": 24,
+              "hero/borderColor": 8,
+              "link/borderColor": 232,
+              "list/borderColor": 136,
+              "image/borderColor": 220,
+              "other/borderColor": 886,
+              "button/borderColor": 24,
+              "footer/borderColor": 4
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "link",
+              "list",
+              "button",
+              "heading",
+              "body",
+              "footer"
+            ],
+            "frequency": 182,
+            "confidence": 1,
+            "prominence": 193410500.2312697,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/color": 3,
+              "link/color": 4,
+              "list/color": 5,
+              "other/fill": 14,
+              "other/color": 18,
+              "button/color": 1,
+              "heading/color": 2,
+              "body/borderColor": 12,
+              "link/borderColor": 16,
+              "list/borderColor": 20,
+              "other/borderColor": 72,
+              "button/borderColor": 4,
+              "heading/borderColor": 8,
+              "other/backgroundColor": 2,
+              "footer/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#d6d6d6",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8767110099126372
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 1351328.713797194,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {
+              "other/borderColor": 6
+            }
+          },
+          {
+            "hex": "#818181",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6032473921145677
+            },
+            "contexts": [
+              "other",
+              "input",
+              "button",
+              "list",
+              "link",
+              "body"
+            ],
+            "frequency": 89,
+            "confidence": 1,
+            "prominence": 207122.5730383983,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 4,
+              "list/color": 5,
+              "input/color": 1,
+              "other/color": 6,
+              "button/color": 1,
+              "body/borderColor": 4,
+              "link/borderColor": 16,
+              "list/borderColor": 20,
+              "input/borderColor": 4,
+              "other/borderColor": 23,
+              "button/borderColor": 4
+            }
+          },
+          {
+            "hex": "#e3e3e3",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9158314666321387
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 31905,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {
+              "other/borderColor": 1
+            }
+          },
+          {
+            "hex": "#9d9d9d",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6960069354631117
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 55,
+            "confidence": 1,
+            "prominence": 1080.1680155027143,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "list/color": 11,
+              "list/borderColor": 44
+            }
+          },
+          {
+            "hex": "#1a1818",
+            "oklch": {
+              "c": 0.0031625740514090576,
+              "h": 17.406899033498448,
+              "l": 0.21133039948663518
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 12,
+            "confidence": 1,
+            "prominence": 532.8633194123173,
+            "properties": [
+              "stroke",
+              "fill"
+            ],
+            "usageCounts": {
+              "nav/fill": 6,
+              "nav/stroke": 6
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.00003591385477412057,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.68,
+            "background": "#ffffff",
+            "foreground": "#1a1818"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.36,
+            "background": "#e3e3e3",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.45,
+            "background": "#d6d6d6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.78,
+            "background": "#e3e3e3",
+            "foreground": "#1a1818"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.16,
+            "background": "#d6d6d6",
+            "foreground": "#1a1818"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.9,
+            "background": "#ffffff",
+            "foreground": "#818181"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.71,
+            "background": "#ffffff",
+            "foreground": "#9d9d9d"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 6,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 38,
+            "properties": [
+              "marginBottom",
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|other",
+              "paddingTop|other"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "footer"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other",
+              "paddingTop|footer"
+            ]
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 40,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginBottom|body"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "footer"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|footer"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "card",
+              "body",
+              "footer"
+            ],
+            "frequency": 54,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "columnGap",
+              "marginBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "columnGap|other",
+              "columnGap|card",
+              "marginBottom|body",
+              "paddingRight|footer",
+              "paddingLeft|footer",
+              "marginRight|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "marginTop",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 25,
+            "contexts": [
+              "list"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "marginRight|list"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|body"
+            ]
+          },
+          {
+            "value": 37,
+            "contexts": [
+              "list",
+              "other"
+            ],
+            "frequency": 7,
+            "properties": [
+              "marginRight",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginRight|list",
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 50,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "marginRight|nav"
+            ]
+          },
+          {
+            "value": 51,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|button"
+            ]
+          },
+          {
+            "value": 55,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 7,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 140,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Main Onsite",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 545,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Avec Sharp",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Ceno",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Meso",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Onsite",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Gestura",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": [
+              "\"liga\""
+            ]
+          },
+          {
+            "family": "Rework",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 12,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 0.89
+        },
+        "steps": [
+          {
+            "size": 11,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0.08,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "body",
+              "link",
+              "image"
+            ],
+            "frequency": 309,
+            "lineHeight": 1.33,
+            "letterSpacing": 0.08,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "other",
+              "body"
+            ],
+            "frequency": 23,
+            "lineHeight": 1.33,
+            "letterSpacing": 0.08,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 13,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "hero",
+              "link",
+              "list",
+              "image",
+              "footer"
+            ],
+            "frequency": 87,
+            "lineHeight": 1.38,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "link"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.38,
+            "letterSpacing": 0.05,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "list",
+              "link",
+              "button",
+              "body"
+            ],
+            "frequency": 16,
+            "lineHeight": 1.29,
+            "letterSpacing": 0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.31,
+            "letterSpacing": 0.05,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 18,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 20,
+            "lineHeight": 1.22,
+            "letterSpacing": 0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 26,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "card",
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 65,
+            "lineHeight": 1.19,
+            "letterSpacing": 0.025,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "Main Onsite",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "heading",
+              "input",
+              "button"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.13,
+            "letterSpacing": 0.015,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Avec Sharp",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Ceno",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Meso",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Onsite",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Gestura",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          },
+          {
+            "size": 251,
+            "family": "Rework",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.25,
+            "letterSpacing": 0.001,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use 0px border-radius on every component — buttons, cards, inputs, tags, and images all stay sharp. The angularity is part of the type-foundry aesthetic.",
+        "Set all UI text in Onsite weight 400, never bold. The site speaks in one calm voice; weight 700 would shout over the specimens.",
+        "Use letter-spacing between 0.025em and 0.080em for any UI text under 16px to give small labels a museum-card quality. Reserve 0.001em for 251px display specimens only.",
+        "Keep surfaces pure Paper (#ffffff) with Onyx (#000000) text. No tints, no dark mode, no card fills — the background is always the same white that holds the specimens.",
+        "Use 1px solid #d6d6d6 or #9d9d9d for all dividers and structural borders. No 2px+ rules, no shadows, no double lines.",
+        "Suffixed arrows (→) on text links replace button styling. 'More Info →' is the canonical link pattern, never 'Read More' inside a bordered box.",
+        "Use a single atmospheric photograph (one per featured font) as the only source of color per page. The hero image is the moment the palette earns its saturation."
+      ],
+      "donts": [
+        "Don't introduce any chromatic color into the UI. The 0% colorfulness is a deliberate signal that the type is the product — adding blue, red, or any accent would compete with the specimens.",
+        "Don't use shadows, gradients, or any elevation effects. The design language is flat; depth comes from typography scale and whitespace, not from z-axis tricks.",
+        "Don't use bold (600/700) for headings. Stay at Onsite 400; size alone carries hierarchy (14 → 18 → 26 → 40 → 251).",
+        "Don't round any corner. A 4px or 8px radius would make the type foundry look like a generic SaaS card — the sharp 0px is what makes it feel like editorial print.",
+        "Don't fill backgrounds on cards or nav. Let Paper show through; if a component needs to separate from the page, use a 1px #d6d6d6 border instead of a fill.",
+        "Don't use icon-only buttons with colorful backgrounds. Controls are text-only in #818181 or use outlined glyphs at 12px — the size selector and fullscreen toggle show the pattern.",
+        "Don't set body text below 14px. The smallest UI is 11–12px and those are reserved for captions and meta labels, never long-form reading."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Onyx",
+          "role": "Primary text, all borders and dividers, nav and link strokes — the structural black of every UI line",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Page and card surfaces, reverse text on dark overlays",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1a1818",
+          "name": "Charcoal",
+          "role": "Body text on light surfaces where true black reads too clinical — used for paragraph copy and descriptions",
+          "group": "neutral"
+        },
+        {
+          "hex": "#818181",
+          "name": "Graphite",
+          "role": "Secondary text, caption labels, size selector, muted metadata",
+          "group": "neutral"
+        },
+        {
+          "hex": "#9d9d9d",
+          "name": "Ash",
+          "role": "Hairline list dividers and subtle separators within type family navigation",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d6d6d6",
+          "name": "Bone",
+          "role": "Light section dividers, subtle structural borders",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed hero photographs with the wordmark and featured label overlaid; the rest of the site is a max-width ~1200px content area centered on Paper. Specimen pages follow a strict two-column pattern: a narrow ~120px left rail listing sub-family categories (Text, Curve, Sharp, Stencil / Mono, SemiMono, Condensed, Standard, Extended) and a wider right column with the 251px specimen on top, an editorial description paragraph below, and a 'More Info →' link. Vertical rhythm is generous (120px section gaps) with 1px hairlines marking transitions. Navigation is a single top bar — no sidebar, no footer chrome, no breadcrumbs. The featured image carousel rotates the hero position but the underlying layout is identical across all five featured typefaces. The site never uses card grids, pricing tables, or multi-column feature blocks — every page is essentially one long specimen wall.",
+      "imagery": "The site uses a single full-bleed atmospheric photograph per featured typeface — refracted light, water droplets, glass textures, prismatic color (green, yellow, blue, red). These are the only chromatic events on the site: editorial, mood-rich, full-bleed with 0px radius, no overlay tint, no masking. The photography behaves like a museum spotlight on the specimen, and the white text overlaid is the only typographic element competing with the letterforms. All other pages are pure UI — no product photography, no lifestyle imagery, no icon decoration. Icons (fullscreen toggle, category dots) are 12px outlined glyphs in #818181, mono weight, functional not decorative.",
+      "similar": [
+        {
+          "why": "Same type-foundry-as-product model: white canvas, oversized specimen display, single sans UI face at wide letter-spacing, hairline rules, no shadows or color",
+          "business": "Dinamo (dinamo.com)"
+        },
+        {
+          "why": "Type foundry site with monochrome interface, 0px radii, specimen-first pages, and full-bleed atmospheric photography as the only color source",
+          "business": "Grilli Type (grillitype.com)"
+        },
+        {
+          "why": "Editorial type foundry aesthetic — paper-white pages, editorial paragraph blocks beside specimen displays, museum-label typography for UI chrome",
+          "business": "Commercial Type (commercialtype.com)"
+        },
+        {
+          "why": "Independent type foundry with zero-chrome specimen pages: massive display type, thin dividers, no card fills, no buttons — links carry an arrow suffix",
+          "business": "OH no Type (ohnotype.com)"
+        },
+        {
+          "why": "Type specimen gallery with single-word 200px+ hero displays, hairline-bordered meta rows, and 0% colorful interface that defers entirely to the letterforms",
+          "business": "Production Type (productiontype.com)"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "0px",
+          "cards": "0px",
+          "inputs": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "12px",
+        "sectionGap": "120px",
+        "cardPadding": "12px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "design",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "level": 0,
+          "purpose": "Universal page and card background — the same white holds the hero photo, the type specimens, and all detail pages"
+        }
+      ],
+      "northStar": "Type specimen museum on white paper",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 11,
+          "lineHeight": 1.38,
+          "letterSpacing": 0.88
+        },
+        {
+          "role": "body",
+          "size": 14,
+          "lineHeight": 1.29,
+          "letterSpacing": 0.21
+        },
+        {
+          "role": "heading-sm",
+          "size": 18,
+          "lineHeight": 1.19,
+          "letterSpacing": 0.45
+        },
+        {
+          "role": "heading",
+          "size": 26,
+          "lineHeight": 1.13,
+          "letterSpacing": 0.39
+        },
+        {
+          "role": "heading-lg",
+          "size": 40,
+          "lineHeight": 1,
+          "letterSpacing": 0.6
+        },
+        {
+          "role": "display",
+          "size": 251,
+          "lineHeight": 1.25,
+          "letterSpacing": 0.25
+        }
+      ],
+      "components": [
+        {
+          "name": "Top Navigation Bar",
+          "role": "Sticky site header with left-anchored section links and centered wordmark",
+          "description": "Full-width transparent bar over the hero image. Left: 'Typefaces' link in Onsite 12px weight 400, #000000, letter-spacing 0.025em. Center: 'SOCIOTYPE' wordmark in Onsite 14px, letter-spacing 0.08em. Right: 'Shop', 'Trials', 'About', 'Cart' links in same treatment. No background fill, no border, no shadow — it floats over content."
+        },
+        {
+          "name": "Hero Feature Image",
+          "role": "Full-bleed atmospheric photograph as a rotating featured typeface showcase",
+          "description": "Full-viewport photographic image (refracted glass, water droplets, prismatic green/yellow/blue). 251px specimen text overlaid in the bottom-left in white (#ffffff) for the featured font name. No rounded corners, no overlay tint — the photo IS the section."
+        },
+        {
+          "name": "Featured Overlay Label",
+          "role": "Top-left caption identifying the current hero specimen",
+          "description": "'Featured: Avec' in Onsite 16px weight 400, #ffffff, overlaid on the hero image. Short description paragraph beneath in Onsite 12px #ffffff at 50% line width, 6px margin-bottom from the headline."
+        },
+        {
+          "name": "Image Carousel Counter",
+          "role": "Top-right pagination indicator for the featured image rotation",
+          "description": "'1/5' in Onsite 16px #ffffff, top-right of the hero, tracking the current featured typeface position."
+        },
+        {
+          "name": "Type Specimen Display",
+          "role": "Massive single-word specimen of the font being sold",
+          "description": "The font name ('Avec', 'Onsite') set in itself at 251px Onsite 400 weight, #000000, line-height 1.25, letter-spacing 0.001em. Sits on Paper (#ffffff) with 0px padding/margin from the viewport edges, giving the specimen maximum visual real estate."
+        },
+        {
+          "name": "Specimen Meta Header",
+          "role": "Top-of-specimen breadcrumb and size indicator",
+          "description": "Left: font family + style name in Onsite 12px #000000 with 0.08em letter-spacing (e.g. 'Avec Sharp    Regular'). Right: current display size '25px' in Onsite 12px and a fullscreen toggle icon. A 1px #d6d6d6 hairline border separates this header from the specimen below."
+        },
+        {
+          "name": "Style Category List",
+          "role": "Vertical list of font sub-families (Text, Curve, Sharp, Stencil / Mono, SemiMono, etc.)",
+          "description": "Left column, fixed ~120px wide. Each category name in Onsite 14px weight 400 #000000, with '14 Styles' / '8 Styles' caption beneath in Onsite 11px #818181, letter-spacing 0.05em. Items separated by 1px #9d9d9d borders with 9px vertical padding between entries."
+        },
+        {
+          "name": "Specimen Description Block",
+          "role": "Editorial description of the font family beside the category list",
+          "description": "Right column, Onsite 16px weight 400 #000000, line-height 1.22, max-width ~540px. Plain prose paragraph. 30px margin-bottom separating it from the next element."
+        },
+        {
+          "name": "More Info Arrow Link",
+          "role": "Text link to the font's full detail page",
+          "description": "Inline link in Onsite 16px #000000 with a right-arrow glyph (→) appended with a space. No underline, no color change, no border. The arrow IS the affordance — it signals clickability through the suffix character rather than styling."
+        },
+        {
+          "name": "Size Selector Control",
+          "role": "Dropdown/toggle for switching specimen display size",
+          "description": "Onsite 12px #818181, top-right of the specimen page. Minimal text-only control, no border, no background. Adjacent fullscreen icon is a 12px outlined square glyph."
+        },
+        {
+          "name": "Specimen Section Divider",
+          "role": "Hairline separator between meta header and the large specimen",
+          "description": "1px solid #d6d6d6 horizontal rule, full width of the content area, 0px padding above/below."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Main Onsite — detected in extracted data but not described by AI",
+          "sizes": "11px, 12px, 13px, 14px, 16px, 18px, 26px, 40px",
+          "family": "Main Onsite",
+          "weight": "400",
+          "lineHeight": "1, 1.13, 1.19, 1.22, 1.29, 1.31, 1.33, 1.38",
+          "letterSpacing": "0.015, 0.025, 0.04, 0.05, 0.08"
+        },
+        {
+          "role": "Primary UI typeface for body, nav, buttons, links, captions, and headings — used at every interface scale from 11px micro-labels to 40px section titles. The wide letter-spacing range (0.015em–0.080em) gives small text a museum-label quality; the custom 400 weight keeps the entire interface at one calm voice.",
+          "sizes": "251px",
+          "family": "Onsite",
+          "weight": "400",
+          "lineHeight": "1.00–1.38",
+          "substitute": "Inter, IBM Plex Sans, Söhne",
+          "letterSpacing": "0.015em at body, 0.025em at small UI, 0.040em at nav, 0.050em at captions, 0.080em at the smallest 11px labels"
+        },
+        {
+          "role": "Display specimens — each font is showcased at a single massive 251px size as the product being sold. These are page heroes, not UI text. The tight 0.001em letter-spacing lets the display type breathe at its own proportions while the UI chrome (Onsite) keeps wide tracking for contrast.",
+          "sizes": "251px",
+          "family": "Avec Sharp / Ceno / Meso / Gestura / Rework",
+          "weight": "400",
+          "lineHeight": "1.25",
+          "substitute": "Each is a custom font; substitute with Playfair Display, GT Sectra, Recoleta, or PP Editorial New for editorial display needs",
+          "letterSpacing": "0.001em (essentially normal)",
+          "fontFeatureSettings": "liga (on Gestura)"
+        },
+        {
+          "role": "Ceno — detected in extracted data but not described by AI",
+          "sizes": "251px",
+          "family": "Ceno",
+          "weight": "400",
+          "lineHeight": "1.25",
+          "letterSpacing": "0.001"
+        },
+        {
+          "role": "Meso — detected in extracted data but not described by AI",
+          "sizes": "251px",
+          "family": "Meso",
+          "weight": "400",
+          "lineHeight": "1.25",
+          "letterSpacing": "0.001"
+        },
+        {
+          "role": "Gestura — detected in extracted data but not described by AI",
+          "sizes": "251px",
+          "family": "Gestura",
+          "weight": "400",
+          "lineHeight": "1.25",
+          "letterSpacing": "0.001",
+          "fontFeatureSettings": "\"liga\""
+        },
+        {
+          "role": "Rework — detected in extracted data but not described by AI",
+          "sizes": "251px",
+          "family": "Rework",
+          "weight": "400",
+          "lineHeight": "1.25",
+          "letterSpacing": "0.001"
+        }
+      ],
+      "description": "Sociotype is a type foundry site that operates as a curated letterform gallery: a near-pure black-and-white canvas where custom typefaces are the only chromatic event. The interface is essentially a specimen book rendered in a browser — enormous 251px type specimens sit on paper-white backgrounds, with hairline 1px borders and zero shadows drawing all the visual weight. The hero breaks the monochrome contract with a single full-bleed atmospheric photograph (refracted glass, water, prismatic color) used as a rotating feature stage, letting the photography supply the one moment of saturated color per page load. Navigation, labels, and chrome are uniformly small (11–14px) Onsite Regular with wide letter-spacing, behaving like museum wall text rather than app UI. Components are stripped to their minimum: a top bar, a size selector, a fullscreen toggle, arrow-suffix text links, and category lists — every element defers to the type being sold.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The design has no shadows. Depth and separation are produced entirely through 1px hairlines (#d6d6d6, #9d9d9d) and whitespace. Elevation would feel heavy in a system whose entire job is to let 251px letterforms float unencumbered on a white page."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/4dab43bc-8ccd-490b-b315-4f72fed3759c.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/e8858bc6-b746-4753-b4c2-933839a883b3.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "sociotype",
+    "generatedAt": "2026-06-03T14:59:19.335Z",
+    "summary": "Sociotype is a type foundry site that operates as a curated letterform gallery: a near-pure black-and-white canvas where custom typefaces are the only chromatic event. The interface is essentially a specimen book rendered in a browser — enormous 251px type specimens sit on paper-white backgrounds, with hairline 1px borders and zero shadows drawing all the visual weight. The hero breaks the monochrome contract with a single full-bleed atmospheric photograph (refracted glass, water, prismatic color) used as a rotating feature stage, letting the photography supply the one moment of saturated color per page load. Navigation, labels, and chrome are uniformly small (11–14px) Onsite Regular with wide letter-spacing, behaving like museum wall text rather than app UI. Components are stripped to their minimum: a top bar, a size selector, a fullscreen toggle, arrow-suffix text links, and category lists — every element defers to the type being sold.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+      "sourceUrl": "https://styles.refero.design/style/973332dc-4e10-4e90-85d8-3bce9c3cd3ed",
+      "originalUrl": "https://socio-type.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/4dab43bc-8ccd-490b-b315-4f72fed3759c.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/e8858bc6-b746-4753-b4c2-933839a883b3.jpg",
+      "importedAt": "2026-08-02T18:09:32.236Z",
+      "upstreamModifiedAt": "2026-06-03T14:59:19.339Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Type specimen museum on white paper",
+      "industry": "design"
+    },
+    "tokens": [
+      {
+        "id": "color-onyx",
+        "kind": "color",
+        "name": "Onyx",
+        "value": "#000000",
+        "role": "Primary text, all borders and dividers, nav and link strokes — the structural black of every UI line",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Page and card surfaces, reverse text on dark overlays",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#1a1818",
+        "role": "Body text on light surfaces where true black reads too clinical — used for paragraph copy and descriptions",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#818181",
+        "role": "Secondary text, caption labels, size selector, muted metadata",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#9d9d9d",
+        "role": "Hairline list dividers and subtle separators within type family navigation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone",
+        "kind": "color",
+        "name": "Bone",
+        "value": "#d6d6d6",
+        "role": "Light section dividers, subtle structural borders",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-main-onsite",
+        "kind": "typography",
+        "name": "Main Onsite",
+        "value": "font-family: Main Onsite; font-weight: 400; font-size: 11px, 12px, 13px, 14px, 16px, 18px, 26px, 40px; line-height: 1, 1.13, 1.19, 1.22, 1.29, 1.31, 1.33, 1.38; letter-spacing: 0.015, 0.025, 0.04, 0.05, 0.08",
+        "role": "Main Onsite — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-onsite",
+        "kind": "typography",
+        "name": "Onsite",
+        "value": "font-family: Onsite; font-weight: 400; font-size: 251px; line-height: 1.00–1.38; letter-spacing: 0.015em at body, 0.025em at small UI, 0.040em at nav, 0.050em at captions, 0.080em at the smallest 11px labels",
+        "role": "Primary UI typeface for body, nav, buttons, links, captions, and headings — used at every interface scale from 11px micro-labels to 40px section titles. The wide letter-spacing range (0.015em–0.080em) gives small text a museum-label quality; the custom 400 weight keeps the entire interface at one calm voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-avec-sharp-ceno-meso-gestura-rework",
+        "kind": "typography",
+        "name": "Avec Sharp / Ceno / Meso / Gestura / Rework",
+        "value": "font-family: Avec Sharp / Ceno / Meso / Gestura / Rework; font-weight: 400; font-size: 251px; line-height: 1.25; letter-spacing: 0.001em (essentially normal)",
+        "role": "Display specimens — each font is showcased at a single massive 251px size as the product being sold. These are page heroes, not UI text. The tight 0.001em letter-spacing lets the display type breathe at its own proportions while the UI chrome (Onsite) keeps wide tracking for contrast.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-ceno",
+        "kind": "typography",
+        "name": "Ceno",
+        "value": "font-family: Ceno; font-weight: 400; font-size: 251px; line-height: 1.25; letter-spacing: 0.001",
+        "role": "Ceno — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-meso",
+        "kind": "typography",
+        "name": "Meso",
+        "value": "font-family: Meso; font-weight: 400; font-size: 251px; line-height: 1.25; letter-spacing: 0.001",
+        "role": "Meso — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-gestura",
+        "kind": "typography",
+        "name": "Gestura",
+        "value": "font-family: Gestura; font-weight: 400; font-size: 251px; line-height: 1.25; letter-spacing: 0.001",
+        "role": "Gestura — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-rework",
+        "kind": "typography",
+        "name": "Rework",
+        "value": "font-family: Rework; font-weight: 400; font-size: 251px; line-height: 1.25; letter-spacing: 0.001",
+        "role": "Rework — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 11px; line-height: 1.38; letter-spacing: 0.88px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 14px; line-height: 1.29; letter-spacing: 0.21px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 18px; line-height: 1.19; letter-spacing: 0.45px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 26px; line-height: 1.13; letter-spacing: 0.39px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 40px; line-height: 1; letter-spacing: 0.6px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 251px; line-height: 1.25; letter-spacing: 0.25px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "12px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "12px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "0px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The design has no shadows. Depth and separation are produced entirely through 1px hairlines (#d6d6d6, #9d9d9d) and whitespace. Elevation would feel heavy in a system whose entire job is to let 251px letterforms float unencumbered on a white page.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Full-width transparent bar over the hero image. Left: 'Typefaces' link in Onsite 12px weight 400, #000000, letter-spacing 0.025em. Center: 'SOCIOTYPE' wordmark in Onsite 14px, letter-spacing 0.08em. Right: 'Shop', 'Trials', 'About', 'Cart' links in same treatment. No background fill, no border, no shadow — it floats over content.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Full-width transparent bar over the hero image. Left: 'Typefaces' link in Onsite 12px weight 400, #000000, letter-spacing 0.025em. Center: 'SOCIOTYPE' wordmark in Onsite 14px, letter-spacing 0.08em. Right: 'Shop', 'Trials', 'About', 'Cart' links in same treatment. No background fill, no border, no shadow — it floats over content.",
+            "evidence": [],
+            "observedProperties": [
+              "Sticky site header with left-anchored section links and centered wordmark"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-feature-image",
+        "name": "Hero Feature Image",
+        "category": "Refero components",
+        "description": "Full-viewport photographic image (refracted glass, water droplets, prismatic green/yellow/blue). 251px specimen text overlaid in the bottom-left in white (#ffffff) for the featured font name. No rounded corners, no overlay tint — the photo IS the section.",
+        "variants": [
+          {
+            "id": "hero-feature-image-reference",
+            "name": "Reference",
+            "description": "Full-viewport photographic image (refracted glass, water droplets, prismatic green/yellow/blue). 251px specimen text overlaid in the bottom-left in white (#ffffff) for the featured font name. No rounded corners, no overlay tint — the photo IS the section.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed atmospheric photograph as a rotating featured typeface showcase"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "featured-overlay-label",
+        "name": "Featured Overlay Label",
+        "category": "Refero components",
+        "description": "'Featured: Avec' in Onsite 16px weight 400, #ffffff, overlaid on the hero image. Short description paragraph beneath in Onsite 12px #ffffff at 50% line width, 6px margin-bottom from the headline.",
+        "variants": [
+          {
+            "id": "featured-overlay-label-reference",
+            "name": "Reference",
+            "description": "'Featured: Avec' in Onsite 16px weight 400, #ffffff, overlaid on the hero image. Short description paragraph beneath in Onsite 12px #ffffff at 50% line width, 6px margin-bottom from the headline.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-left caption identifying the current hero specimen"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "image-carousel-counter",
+        "name": "Image Carousel Counter",
+        "category": "Refero components",
+        "description": "'1/5' in Onsite 16px #ffffff, top-right of the hero, tracking the current featured typeface position.",
+        "variants": [
+          {
+            "id": "image-carousel-counter-reference",
+            "name": "Reference",
+            "description": "'1/5' in Onsite 16px #ffffff, top-right of the hero, tracking the current featured typeface position.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-right pagination indicator for the featured image rotation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "type-specimen-display",
+        "name": "Type Specimen Display",
+        "category": "Refero components",
+        "description": "The font name ('Avec', 'Onsite') set in itself at 251px Onsite 400 weight, #000000, line-height 1.25, letter-spacing 0.001em. Sits on Paper (#ffffff) with 0px padding/margin from the viewport edges, giving the specimen maximum visual real estate.",
+        "variants": [
+          {
+            "id": "type-specimen-display-reference",
+            "name": "Reference",
+            "description": "The font name ('Avec', 'Onsite') set in itself at 251px Onsite 400 weight, #000000, line-height 1.25, letter-spacing 0.001em. Sits on Paper (#ffffff) with 0px padding/margin from the viewport edges, giving the specimen maximum visual real estate.",
+            "evidence": [],
+            "observedProperties": [
+              "Massive single-word specimen of the font being sold"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "specimen-meta-header",
+        "name": "Specimen Meta Header",
+        "category": "Refero components",
+        "description": "Left: font family + style name in Onsite 12px #000000 with 0.08em letter-spacing (e.g. 'Avec Sharp    Regular'). Right: current display size '25px' in Onsite 12px and a fullscreen toggle icon. A 1px #d6d6d6 hairline border separates this header from the specimen below.",
+        "variants": [
+          {
+            "id": "specimen-meta-header-reference",
+            "name": "Reference",
+            "description": "Left: font family + style name in Onsite 12px #000000 with 0.08em letter-spacing (e.g. 'Avec Sharp    Regular'). Right: current display size '25px' in Onsite 12px and a fullscreen toggle icon. A 1px #d6d6d6 hairline border separates this header from the specimen below.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-of-specimen breadcrumb and size indicator"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "style-category-list",
+        "name": "Style Category List",
+        "category": "Refero components",
+        "description": "Left column, fixed ~120px wide. Each category name in Onsite 14px weight 400 #000000, with '14 Styles' / '8 Styles' caption beneath in Onsite 11px #818181, letter-spacing 0.05em. Items separated by 1px #9d9d9d borders with 9px vertical padding between entries.",
+        "variants": [
+          {
+            "id": "style-category-list-reference",
+            "name": "Reference",
+            "description": "Left column, fixed ~120px wide. Each category name in Onsite 14px weight 400 #000000, with '14 Styles' / '8 Styles' caption beneath in Onsite 11px #818181, letter-spacing 0.05em. Items separated by 1px #9d9d9d borders with 9px vertical padding between entries.",
+            "evidence": [],
+            "observedProperties": [
+              "Vertical list of font sub-families (Text, Curve, Sharp, Stencil / Mono, SemiMono, etc.)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "specimen-description-block",
+        "name": "Specimen Description Block",
+        "category": "Refero components",
+        "description": "Right column, Onsite 16px weight 400 #000000, line-height 1.22, max-width ~540px. Plain prose paragraph. 30px margin-bottom separating it from the next element.",
+        "variants": [
+          {
+            "id": "specimen-description-block-reference",
+            "name": "Reference",
+            "description": "Right column, Onsite 16px weight 400 #000000, line-height 1.22, max-width ~540px. Plain prose paragraph. 30px margin-bottom separating it from the next element.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial description of the font family beside the category list"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "more-info-arrow-link",
+        "name": "More Info Arrow Link",
+        "category": "Refero components",
+        "description": "Inline link in Onsite 16px #000000 with a right-arrow glyph (→) appended with a space. No underline, no color change, no border. The arrow IS the affordance — it signals clickability through the suffix character rather than styling.",
+        "variants": [
+          {
+            "id": "more-info-arrow-link-reference",
+            "name": "Reference",
+            "description": "Inline link in Onsite 16px #000000 with a right-arrow glyph (→) appended with a space. No underline, no color change, no border. The arrow IS the affordance — it signals clickability through the suffix character rather than styling.",
+            "evidence": [],
+            "observedProperties": [
+              "Text link to the font's full detail page"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "size-selector-control",
+        "name": "Size Selector Control",
+        "category": "Refero components",
+        "description": "Onsite 12px #818181, top-right of the specimen page. Minimal text-only control, no border, no background. Adjacent fullscreen icon is a 12px outlined square glyph.",
+        "variants": [
+          {
+            "id": "size-selector-control-reference",
+            "name": "Reference",
+            "description": "Onsite 12px #818181, top-right of the specimen page. Minimal text-only control, no border, no background. Adjacent fullscreen icon is a 12px outlined square glyph.",
+            "evidence": [],
+            "observedProperties": [
+              "Dropdown/toggle for switching specimen display size"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "specimen-section-divider",
+        "name": "Specimen Section Divider",
+        "category": "Refero components",
+        "description": "1px solid #d6d6d6 horizontal rule, full width of the content area, 0px padding above/below.",
+        "variants": [
+          {
+            "id": "specimen-section-divider-reference",
+            "name": "Reference",
+            "description": "1px solid #d6d6d6 horizontal rule, full width of the content area, 0px padding above/below.",
+            "evidence": [],
+            "observedProperties": [
+              "Hairline separator between meta header and the large specimen"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed hero photographs with the wordmark and featured label overlaid; the rest of the site is a max-width ~1200px content area centered on Paper. Specimen pages follow a strict two-column pattern: a narrow ~120px left rail listing sub-family categories (Text, Curve, Sharp, Stencil / Mono, SemiMono, Condensed, Standard, Extended) and a wider right column with the 251px specimen on top, an editorial description paragraph below, and a 'More Info →' link. Vertical rhythm is generous (120px section gaps) with 1px hairlines marking transitions. Navigation is a single top bar — no sidebar, no footer chrome, no breadcrumbs. The featured image carousel rotates the hero position but the underlying layout is identical across all five featured typefaces. The site never uses card grids, pricing tables, or multi-column feature blocks — every page is essentially one long specimen wall.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "The site uses a single full-bleed atmospheric photograph per featured typeface — refracted light, water droplets, glass textures, prismatic color (green, yellow, blue, red). These are the only chromatic events on the site: editorial, mood-rich, full-bleed with 0px radius, no overlay tint, no masking. The photography behaves like a museum spotlight on the specimen, and the white text overlaid is the only typographic element competing with the letterforms. All other pages are pure UI — no product photography, no lifestyle imagery, no icon decoration. Icons (fullscreen toggle, category dots) are 12px outlined glyphs in #818181, mono weight, functional not decorative.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The design has no shadows. Depth and separation are produced entirely through 1px hairlines (#d6d6d6, #9d9d9d) and whitespace. Elevation would feel heavy in a system whose entire job is to let 251px letterforms float unencumbered on a white page.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 0px border-radius on every component — buttons, cards, inputs, tags, and images all stay sharp. The angularity is part of the type-foundry aesthetic.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all UI text in Onsite weight 400, never bold. The site speaks in one calm voice; weight 700 would shout over the specimens.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use letter-spacing between 0.025em and 0.080em for any UI text under 16px to give small labels a museum-card quality. Reserve 0.001em for 251px display specimens only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep surfaces pure Paper (#ffffff) with Onyx (#000000) text. No tints, no dark mode, no card fills — the background is always the same white that holds the specimens.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 1px solid #d6d6d6 or #9d9d9d for all dividers and structural borders. No 2px+ rules, no shadows, no double lines.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Suffixed arrows (→) on text links replace button styling. 'More Info →' is the canonical link pattern, never 'Read More' inside a bordered box.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use a single atmospheric photograph (one per featured font) as the only source of color per page. The hero image is the moment the palette earns its saturation.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce any chromatic color into the UI. The 0% colorfulness is a deliberate signal that the type is the product — adding blue, red, or any accent would compete with the specimens.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use shadows, gradients, or any elevation effects. The design language is flat; depth comes from typography scale and whitespace, not from z-axis tricks.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use bold (600/700) for headings. Stay at Onsite 400; size alone carries hierarchy (14 → 18 → 26 → 40 → 251).",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't round any corner. A 4px or 8px radius would make the type foundry look like a generic SaaS card — the sharp 0px is what makes it feel like editorial print.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't fill backgrounds on cards or nav. Let Paper show through; if a component needs to separate from the page, use a 1px #d6d6d6 border instead of a fill.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use icon-only buttons with colorful backgrounds. Controls are text-only in #818181 or use outlined glyphs at 12px — the size selector and fullscreen toggle show the pattern.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't set body text below 14px. The smallest UI is 11–12px and those are reserved for captions and meta labels, never long-form reading.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

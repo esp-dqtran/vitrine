@@ -1,0 +1,61 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e6]:
+    - generic [ref=f3e7]: Vitrine
+    - generic [ref=f3e12]:
+      - heading "Welcome back" [level=1] [ref=f3e13]
+      - generic [ref=f3e14]: Sign in to pick up your saved screens and boards.
+    - generic [ref=f3e15]:
+      - generic [ref=f3e17]:
+        - generic [ref=f3e18] [cursor=pointer]: Email
+        - textbox "Email" [ref=f3e21]:
+          - /placeholder: you@company.com
+      - generic [ref=f3e23]:
+        - generic [ref=f3e24]:
+          - generic [ref=f3e25] [cursor=pointer]: Password
+          - textbox "Password" [ref=f3e28]:
+            - /placeholder: ••••••••
+        - button "Show password" [ref=f3e29] [cursor=pointer]:
+          - status
+      - button "Sign in" [ref=f3e36] [cursor=pointer]:
+        - status
+    - button "Don't have an account? Sign up" [ref=f3e40] [cursor=pointer]:
+      - status
+  - generic [ref=f3e44]:
+    - generic:
+      - generic:
+        - img "Linear"
+    - generic:
+      - generic:
+        - img "Airbnb"
+    - generic:
+      - generic:
+        - img "Atlassian"
+    - generic:
+      - generic:
+        - img "ChatGPT"
+    - generic:
+      - generic:
+        - img "Claude"
+    - generic:
+      - generic:
+        - img "Stripe"
+    - generic [ref=f3e45]:
+      - heading "The products you admire, taken apart." [level=2] [ref=f3e46]:
+        - generic [ref=f3e47]: The
+        - generic [ref=f3e48]: products
+        - generic [ref=f3e49]: you
+        - generic [ref=f3e50]: admire,
+        - generic [ref=f3e51]: taken
+        - generic [ref=f3e52]: apart.
+      - paragraph [ref=f3e53]: Browse real screens, UI elements, and end-to-end flows from the teams setting the standard. Save what inspires you.
+    - generic [ref=f3e57]:
+      - generic:
+        - img "Tide Guide — Unclassified"
+      - generic:
+        - img "Agoda — Unclassified"
+      - img "Threads — Unclassified" [ref=f3e60]
+      - generic:
+        - img "Comet — Unclassified"
+      - generic:
+        - img "Quo — Unclassified"
+      - generic [ref=f3e61]: Threads

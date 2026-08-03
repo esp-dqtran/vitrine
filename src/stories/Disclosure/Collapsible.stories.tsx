@@ -15,7 +15,7 @@ export const FAQGroup: Story = {
   name: 'FAQ group',
   render: () => (
     <CollapsibleGroup type="single">
-      <Collapsible value="a" trigger="What is Astryx?" defaultIsOpen={false}>
+      <Collapsible value="a" trigger="What is Vitrines?" defaultIsOpen={false}>
         <Text type="body" color="secondary">
           An open-source React + StyleX design system with 150+ accessible components.
         </Text>

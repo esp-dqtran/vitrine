@@ -97,7 +97,6 @@ export function FlowPreviewDialog({
   const [savedScreens, setSavedScreens] = useState<Set<number>>(() => new Set());
   const [failedScreens, setFailedScreens] = useState<Set<number>>(() => new Set());
   const [resolutions, setResolutions] = useState<Record<number, ScreenResolution>>({});
-  const [moreOpen, setMoreOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const activeScreen = screens[activeIndex];
   const activeResolution = activeScreen
@@ -121,7 +120,6 @@ export function FlowPreviewDialog({
     activeIndexRef.current = boundedIndex;
     onActiveIndexChange(boundedIndex);
     scrollToScreen(boundedIndex);
-    setMoreOpen(false);
     setInfoOpen(false);
   }, [onActiveIndexChange, screens.length, scrollToScreen]);
 
@@ -477,17 +475,6 @@ export function FlowPreviewDialog({
               size="lg"
               className="flow-preview-dialog__copy"
             />
-            <IconButton
-              label="More screen actions"
-              tooltip={iconTooltips ? 'More screen actions' : undefined}
-              icon={<Icon icon="moreHorizontal" size="md" />}
-              variant="secondary"
-              className="flow-preview-dialog__more"
-              onClick={() => {
-                setMoreOpen((value) => !value);
-                setInfoOpen(false);
-              }}
-            />
           </div> : null}
           {activeMode === 'prototype' ? (
             <div className="flow-preview-dialog__footer-actions flow-preview-dialog__footer-actions--prototype">
@@ -499,30 +486,6 @@ export function FlowPreviewDialog({
                 isDisabled={activeIndex === 0}
                 onClick={() => selectScreen(0)}
               />
-              <IconButton
-                label="More prototype actions"
-                tooltip={iconTooltips ? 'More prototype actions' : undefined}
-                icon={<Icon icon="moreHorizontal" size="md" />}
-                variant="secondary"
-                className="flow-preview-dialog__more"
-                onClick={() => {
-                  setMoreOpen((value) => !value);
-                  setInfoOpen(false);
-                }}
-              />
-            </div>
-          ) : null}
-
-          {activeMode !== 'document' && moreOpen && activeScreen ? (
-            <div className="flow-preview-dialog__menu" role="menu" aria-label="Screen actions">
-              <a
-                href={activeScreen.evidence.imageUrl}
-                target="_blank"
-                rel="noreferrer"
-                role="menuitem"
-              >
-                Open full image
-              </a>
             </div>
           ) : null}
 
@@ -534,7 +497,6 @@ export function FlowPreviewDialog({
               aria-expanded={infoOpen}
               onClick={() => {
                 setInfoOpen((value) => !value);
-                setMoreOpen(false);
               }}
             />
           </div> : null}

@@ -1,0 +1,1638 @@
+{
+  "schemaVersion": 1,
+  "id": "9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+  "sourceUrl": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+  "sitemapLastModified": "2026-06-03T20:11:01.064Z",
+  "fetchedAt": "2026-08-02T18:08:44.600Z",
+  "contentHash": "8a5b7d8be8aaa9161164f291f4cb1c32bd4440a42b61171fe59dcf18e3debc7f",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Studio Gruhl design system",
+            "item": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f#style-reference",
+        "name": "Studio Gruhl design system reference",
+        "headline": "Studio Gruhl design system | Refero Styles",
+        "description": "Explore Studio Gruhl's dark Agency design system: Bright White #ffffff, Carbon #2e2e30 colors, GreedStandard, Arial typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+        "mainEntityOfPage": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Studio Gruhl",
+          "url": "https://www.studiogruhl.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/fc9ca3ea-4455-413b-b878-caf22bd9a4ca.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/fc9ca3ea-4455-413b-b878-caf22bd9a4ca.jpg",
+          "caption": "Screenshot of Studio Gruhl"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/fc9ca3ea-4455-413b-b878-caf22bd9a4ca.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Studio Gruhl design system",
+          "Studio Gruhl website design",
+          "Studio Gruhl colors",
+          "Studio Gruhl typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Bright White",
+          "Carbon",
+          "Obsidian",
+          "Ash",
+          "GreedStandard",
+          "Arial"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Studio Gruhl design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Studio Gruhl website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Studio Gruhl colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Studio Gruhl typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-04-30T02:09:18.005Z",
+        "dateModified": "2026-04-30T02:09:18.005Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://www.studiogruhl.com",
+      "siteName": "Studio Gruhl",
+      "extractedAt": "2026-06-03T20:11:01.058Z",
+      "durationMs": 36977,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 419,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "heading",
+              "hero",
+              "card",
+              "button",
+              "icon",
+              "body",
+              "link",
+              "footer"
+            ],
+            "frequency": 1559,
+            "confidence": 1,
+            "prominence": 102337136.21773565,
+            "properties": [
+              "color",
+              "backgroundColor",
+              "borderColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "nav/fill": 61,
+              "icon/fill": 8,
+              "nav/color": 114,
+              "body/color": 5,
+              "card/color": 19,
+              "hero/color": 2,
+              "icon/color": 12,
+              "link/color": 14,
+              "nav/stroke": 1,
+              "other/fill": 20,
+              "other/color": 102,
+              "button/color": 5,
+              "footer/color": 1,
+              "heading/color": 24,
+              "nav/borderColor": 434,
+              "body/borderColor": 20,
+              "card/borderColor": 76,
+              "hero/borderColor": 8,
+              "icon/borderColor": 48,
+              "link/borderColor": 56,
+              "other/borderColor": 408,
+              "button/borderColor": 20,
+              "footer/borderColor": 4,
+              "heading/borderColor": 96,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#2e2e30",
+            "oklch": {
+              "c": 0.00355717210695998,
+              "h": 286.1847139074292,
+              "l": 0.30195016936868097
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "card",
+              "other"
+            ],
+            "frequency": 15,
+            "confidence": 1,
+            "prominence": 697088,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/backgroundColor": 2,
+              "card/backgroundColor": 4,
+              "other/backgroundColor": 6,
+              "button/backgroundColor": 3
+            }
+          },
+          {
+            "hex": "#18181b",
+            "oklch": {
+              "c": 0.005860382494179248,
+              "h": 285.8851326887739,
+              "l": 0.21033093087281887
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 23,
+            "confidence": 1,
+            "prominence": 253264.1586148352,
+            "properties": [
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/borderColor": 22,
+              "nav/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#969696",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6731222170290512
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 50,
+            "confidence": 1,
+            "prominence": 47154.87186780904,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 10,
+              "body/borderColor": 40
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "button",
+              "nav"
+            ],
+            "frequency": 10,
+            "confidence": 1,
+            "prominence": 5535.090589819676,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "nav/color": 1,
+              "button/color": 1,
+              "nav/borderColor": 4,
+              "button/borderColor": 4
+            }
+          },
+          {
+            "hex": "#eef0b1",
+            "oklch": {
+              "c": 0.08088426358961784,
+              "h": 109.38128084337609,
+              "l": 0.9386117399637708
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 679,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          }
+        ],
+        "isDarkMode": true,
+        "colorfulness": 0.00043854634786316985,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.73,
+            "background": "#eef0b1",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.72,
+            "background": "#18181b",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.96,
+            "background": "#eef0b1",
+            "foreground": "#18181b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.55,
+            "background": "#2e2e30",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.44,
+            "background": "#eef0b1",
+            "foreground": "#2e2e30"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.99,
+            "background": "#18181b",
+            "foreground": "#969696"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.58,
+            "background": "#2e2e30",
+            "foreground": "#969696"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.96,
+            "background": "#ffffff",
+            "foreground": "#969696"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.5,
+            "background": "#eef0b1",
+            "foreground": "#969696"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.55,
+            "background": "#2e2e30",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.19,
+            "background": "#18181b",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.18,
+            "background": "#eef0b1",
+            "foreground": "#ffffff"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 12,
+            "contexts": [
+              "nav",
+              "card",
+              "button",
+              "other",
+              "link"
+            ],
+            "frequency": 27
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "icon",
+              "card"
+            ],
+            "frequency": 10
+          },
+          {
+            "value": 9999,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 10
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "button",
+              "card"
+            ],
+            "frequency": 20,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "button",
+              "card",
+              "other",
+              "link"
+            ],
+            "frequency": 26,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button",
+              "marginRight|card",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "paddingTop|link",
+              "paddingBottom|link"
+            ]
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "heading"
+            ],
+            "frequency": 32,
+            "properties": [
+              "paddingTop",
+              "paddingLeft",
+              "marginRight",
+              "marginLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "paddingLeft|nav",
+              "marginRight|nav",
+              "marginLeft|nav",
+              "marginTop|heading"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 13,
+            "properties": [
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|nav",
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "button",
+              "link"
+            ],
+            "frequency": 11,
+            "properties": [
+              "marginRight",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingRight|link",
+              "paddingLeft|link"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "nav",
+              "heading"
+            ],
+            "frequency": 37,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "paddingBottom|heading"
+            ]
+          },
+          {
+            "value": 28,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 29,
+            "contexts": [
+              "other",
+              "footer"
+            ],
+            "frequency": 8,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|footer",
+              "paddingLeft|footer"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|body"
+            ]
+          },
+          {
+            "value": 59,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 72,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|card"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "hero",
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|hero",
+              "marginBottom|other"
+            ]
+          }
+        ],
+        "density": "compact",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "GreedStandard",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 343,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Arial",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 6,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "GreedStandard",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 13,
+            "family": "Arial",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "nav",
+              "icon"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "GreedStandard",
+            "weight": 700,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 16,
+            "family": "GreedStandard",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "hero",
+              "card",
+              "image",
+              "link",
+              "icon",
+              "footer"
+            ],
+            "frequency": 280,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "GreedStandard",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "body",
+              "other",
+              "link"
+            ],
+            "frequency": 25,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "GreedStandard",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 80,
+            "family": "GreedStandard",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "link"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use GreedStandard at 80px / weight 700 / line-height 1.00 for the one manifesto headline moment on every page — it is the brand's only typographic anchor",
+        "Build every screen on the Carbon (#2e2e30) canvas; Obsidian (#18181b) only for sticky nav and deep layers, Lime Cream (#eef0b1) only for rare inverted sections",
+        "Use 12px border-radius for all functional surfaces (cards, buttons, tiles) and reserve 9999px exclusively for nav pills and inline tags",
+        "Default to 15-16px GreedStandard 400 for body, nav, and card text — never reach for Arial unless a system-fallback is rendering",
+        "Let case study video and imagery run full-bleed with raw edges; contain the work only in floating info cards, not in rounded image frames",
+        "Communicate depth with surface color shifts (Carbon → Obsidian → Lime Cream) and 1px white borders — never with box-shadow",
+        "Keep secondary copy in Ash (#969696); reserve Bright White for headings, active states, and primary metadata"
+      ],
+      "donts": [
+        "Never introduce a chromatic CTA color — the system has no accent button; actions are neutral filled (#2e2e30) or ghost white outlined",
+        "Never use box-shadow, drop-shadow, or blur on any component — the design is intentionally flat with surface-only elevation",
+        "Never apply gradients to UI chrome or functional components — gradients are reserved for content media and belong inside the video/image, not the frame",
+        "Never break the 12px radius convention for cards or buttons; only nav pills (9999px), icons (9px), and rare showcase panels (40px) deviate",
+        "Never use a light or white page background for the main canvas — Carbon is the only acceptable base; Lime Cream is a rare full-bleed inversion, not a background",
+        "Never replace GreedStandard with a system font for display moments — the custom face at 80px is what makes the manifesto read as Studio Gruhl",
+        "Never add multi-column dashboard layouts or sidebar navigation — the structure is single-column full-bleed scroll with a centered pill nav"
+      ],
+      "theme": "dark",
+      "colors": [
+        {
+          "hex": "#ffffff",
+          "name": "Bright White",
+          "role": "Primary text, hairline borders, nav dividers, icon strokes — white doubles as the divider system in this monochrome dark UI",
+          "group": "neutral"
+        },
+        {
+          "hex": "#2e2e30",
+          "name": "Carbon",
+          "role": "Page canvas, card surfaces, neutral filled button background — the dominant surface for the entire dark experience",
+          "group": "neutral"
+        },
+        {
+          "hex": "#18181b",
+          "name": "Obsidian",
+          "role": "Nav bar surface, deeper layered cards, footer base — sits one step below Carbon to create a subtle depth read",
+          "group": "neutral"
+        },
+        {
+          "hex": "#969696",
+          "name": "Ash",
+          "role": "Muted body text, caption copy, low-emphasis dividers — never used for headings, always for secondary information",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Pure Black",
+          "role": "Deep border accent on certain buttons and nav edges, used sparingly for a near-invisible structural line",
+          "group": "neutral"
+        },
+        {
+          "hex": "#eef0b1",
+          "name": "Lime Cream",
+          "role": "Yellow wash for highlight backgrounds, decorative bands, and soft emphasis behind content.",
+          "group": "accent"
+        }
+      ],
+      "layout": "Full-bleed portfolio structure with zero page max-width. The page is a vertical scroll of single-screen sections, each taking up most of the viewport. The hero is a full-bleed video with a floating pill nav anchored top-center. Below, a manifesto block runs massive left-aligned type against the dark canvas with extreme negative space. Case studies appear as full-bleed image or video bands, often with a floating info card overlaid near the bottom edge. Some case studies use a stacked vertical panel layout (5-6 columns of slightly different shades) to show sequence or progress. Navigation is a single horizontal pill at the top — no sidebar, no mega-menu. Density is intentionally sparse between work, but each work piece is presented at maximum scale with no surrounding scaffolding.",
+      "imagery": "Full-bleed video and photography dominate — case studies open with edge-to-edge loops (e.g. the Nike swoosh on warm amber gradient) that fill 80-100% of viewport height. Imagery is always raw-edged or masked with the canvas; no rounded photo treatments, no contained thumbnails. The hero is a video player with minimal chrome (pause, mute, fullscreen icons at corners). Photography within cards tends to be tight product or motion crops on neutral backgrounds. Iconography is minimal: a stylized S monogram for the wordmark, a 4-petal cross glyph for project categories, and thin line icons for nav controls. The interface contains no decorative illustration — the case study media is the only visual content.",
+      "similar": [
+        {
+          "why": "Same text-first, monochromatic dark canvas approach where the work and oversized typography carry all the visual energy",
+          "business": "Pentagram"
+        },
+        {
+          "why": "Identical philosophy of letting case study color and media dominate while UI chrome stays restrained and achromatic",
+          "business": "Studio Dumbar"
+        },
+        {
+          "why": "Full-bleed dark portfolio with massive display type and zero decorative UI scaffolding around the work",
+          "business": "&Walsh"
+        },
+        {
+          "why": "Brand studio aesthetic with compact UI, minimal chromatic accents, and oversized custom display type as the identity anchor",
+          "business": "Koto"
+        },
+        {
+          "why": "Creative studio that pairs dark surfaces with single large display type and floats minimal info cards over full-bleed case study media",
+          "business": "Mast Studio"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "12px",
+          "icons": "9px",
+          "panels": "40px",
+          "buttons": "12px",
+          "nav-pills": "9999px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "120px",
+        "cardPadding": "16px",
+        "pageMaxWidth": null
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#2e2e30",
+          "name": "Carbon Canvas",
+          "level": 0,
+          "purpose": "Default page background — every section sits on this unless explicitly inverted"
+        },
+        {
+          "hex": "#18181b",
+          "name": "Obsidian Layer",
+          "level": 1,
+          "purpose": "Sticky nav, deeper cards, and structural zones that need to feel pressed-in from the canvas"
+        },
+        {
+          "hex": "#eef0b1",
+          "name": "Lime Cream Inversion",
+          "level": 2,
+          "purpose": "Full-bleed section accent — rare moments where the entire band flips to a pale lime wash for typographic contrast"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Bright White Pop",
+          "level": 3,
+          "purpose": "Highest elevation — used for inline chips, floating info cards, or micro-elements that need to cut through the dark surface"
+        }
+      ],
+      "elevation": [],
+      "northStar": "matte-black gallery manifesto",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "body-sm",
+          "size": 15,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "body-lg",
+          "size": 80,
+          "lineHeight": 1.15
+        }
+      ],
+      "components": [
+        {
+          "name": "Pill Navigation Button",
+          "role": "Top-bar nav links",
+          "description": "9999px border-radius pill, 9px horizontal padding, white 1px border on Carbon (#2e2e30) fill, 15px GreedStandard 400 text in white. The nav bar itself is an Obsidian (#18181b) pill container holding the hamburger, monogram, and contact icon in a single horizontal cluster."
+        },
+        {
+          "name": "Neutral Filled Button",
+          "role": "Primary action when no chromatic accent is available",
+          "description": "12px border-radius, Carbon (#2e2e30) fill, 1px Pure Black (#000000) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. Used for in-content actions like 'More About Us' — reads as a pressed surface, not a colored CTA."
+        },
+        {
+          "name": "Ghost White Button",
+          "role": "Secondary action or outlined link",
+          "description": "12px border-radius, transparent fill, 1px Bright White (#ffffff) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. The 'More About Us' treatment often appears as this ghost variant."
+        },
+        {
+          "name": "Manifesto Display Headline",
+          "role": "Brand-defining oversized type block",
+          "description": "80px GreedStandard weight 700, line-height 1.00, all-caps, Bright White (#ffffff) on Carbon canvas. Fills roughly 60% of viewport width and runs 3-4 lines. The signature element of the brand — every page should have at least one such moment."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Sticky minimal header",
+          "description": "Centered horizontal pill, Obsidian (#18181b) fill, 9999px radius, 10px vertical padding, contains hamburger icon (left), S monogram (center), email icon (right). Sits 24px from the top edge, floating above all content."
+        },
+        {
+          "name": "Full-Bleed Video Hero",
+          "role": "Case study opener",
+          "description": "Edge-to-edge video block filling ~80% of viewport height with 12px corner radius. Bare playback controls (pause bottom-left, volume + fullscreen bottom-right) in thin white line icons. No title overlay on the video itself — copy lives in the adjacent manifesto block."
+        },
+        {
+          "name": "Project Case Study Card",
+          "role": "Grid item for case study index",
+          "description": "Carbon (#2e2e30) surface, 12px border-radius, 16px padding, optional 1px white border at low opacity. Image or video fills the card body; project name and category metadata below in 15px GreedStandard 400 white / Ash (#969696). No elevation, no shadow."
+        },
+        {
+          "name": "Floating Info Card",
+          "role": "Project title overlay on showcase media",
+          "description": "Obsidian (#18181b) surface, 12px border-radius, ~16px padding, 24-29px horizontal padding. Contains a 40-48px square icon tile on the left (9px radius), project name in 15px GreedStandard 700 white, one-line description in 13px Ash, and a thin white arrow icon on the right. Anchored near the bottom-center of full-bleed media."
+        },
+        {
+          "name": "Stacked Panel Showcase",
+          "role": "Multi-frame case study progression",
+          "description": "Five to six vertical panels of equal width filling the viewport, each a slightly different shade of a single color family (e.g. variations of indigo/purple). Panels are separated by the canvas color, not by borders. Used to show screen sequences or process stages within a single project."
+        },
+        {
+          "name": "Icon Tile",
+          "role": "Project category or app icon container",
+          "description": "40-48px square, 9px border-radius, white or Carbon fill, 1px border. Contains a thin line glyph (e.g. the 4-petal cross) at ~50% scale. Pairs with Floating Info Cards as the left-side thumbnail."
+        },
+        {
+          "name": "Footer Link Bar",
+          "role": "Minimal site footer",
+          "description": "Carbon canvas, no container. 15px GreedStandard 400 Ash (#969696) text with 29px horizontal padding between links. 1px white or near-black top border. No logo, no social icons, no copyright walls."
+        },
+        {
+          "name": "Tag/Label Pill",
+          "role": "Project category metadata",
+          "description": "9999px radius, 6-8px vertical / 12px horizontal padding, 1px white border, 10-13px GreedStandard 400 white text. Always inline with other metadata, never standalone."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Sole display and UI typeface. At 80px / weight 700 / line-height 1.00 it becomes the manifesto headline — the entire brand reads off this single oversized moment. At 15-16px / weight 400 it carries navigation, card metadata, and body. The 10px size handles micro labels and index marks.",
+          "sizes": "10px, 15px, 16px, 80px",
+          "family": "GreedStandard",
+          "weight": "400, 700",
+          "lineHeight": "1.00, 1.15, 1.20",
+          "substitute": "Archivo (Google Fonts) for the grotesque DNA; pair with Anton if pure condensed display is needed for the 80px moments"
+        },
+        {
+          "role": "System fallback for tiny UI labels and icon-adjacent text — appears in only a handful of minor contexts",
+          "sizes": "13px",
+          "family": "Arial",
+          "weight": "400",
+          "lineHeight": "1.20"
+        }
+      ],
+      "description": "Studio Gruhl runs on a dark, text-first portfolio language: massive GreedStandard type bleeds edge-to-edge while UI chrome recedes into matte black surfaces. The interface is essentially achromatic — white text, charcoal surfaces, and a muted ash gray — so that case-study video and imagery carry all the chromatic weight. Components are minimal and compact: pill-shaped navigation at 9999px, a 12px radius as the universal workhorse for cards and buttons, and almost no decorative chrome. The work IS the decoration; the framework simply provides a quiet, full-bleed stage.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "Zero-shadow design. The system communicates depth through surface color shifts alone (Carbon → Obsidian → Lime Cream → White) — no drop shadows, no glow, no blur. A card sitting on the canvas is distinguished only by its 12px radius and a 1px white or near-black border. Components appear stamped onto the surface, not floating above it. This flatness is the design: the visual energy comes from the work and the type, not from layered UI chrome."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/e71be078-7487-405a-a6cd-5693492618d3.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/fc9ca3ea-4455-413b-b878-caf22bd9a4ca.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "studio-gruhl",
+    "generatedAt": "2026-06-03T20:11:01.058Z",
+    "summary": "Studio Gruhl runs on a dark, text-first portfolio language: massive GreedStandard type bleeds edge-to-edge while UI chrome recedes into matte black surfaces. The interface is essentially achromatic — white text, charcoal surfaces, and a muted ash gray — so that case-study video and imagery carry all the chromatic weight. Components are minimal and compact: pill-shaped navigation at 9999px, a 12px radius as the universal workhorse for cards and buttons, and almost no decorative chrome. The work IS the decoration; the framework simply provides a quiet, full-bleed stage.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+      "sourceUrl": "https://styles.refero.design/style/9e3fde24-cc7d-4b96-a70a-7c172882aa8f",
+      "originalUrl": "https://www.studiogruhl.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/e71be078-7487-405a-a6cd-5693492618d3.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/fc9ca3ea-4455-413b-b878-caf22bd9a4ca.jpg",
+      "importedAt": "2026-08-02T18:08:44.600Z",
+      "upstreamModifiedAt": "2026-06-03T20:11:01.064Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "dark",
+      "northStar": "matte-black gallery manifesto",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-bright-white",
+        "kind": "color",
+        "name": "Bright White",
+        "value": "#ffffff",
+        "role": "Primary text, hairline borders, nav dividers, icon strokes — white doubles as the divider system in this monochrome dark UI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-carbon",
+        "kind": "color",
+        "name": "Carbon",
+        "value": "#2e2e30",
+        "role": "Page canvas, card surfaces, neutral filled button background — the dominant surface for the entire dark experience",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-obsidian",
+        "kind": "color",
+        "name": "Obsidian",
+        "value": "#18181b",
+        "role": "Nav bar surface, deeper layered cards, footer base — sits one step below Carbon to create a subtle depth read",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#969696",
+        "role": "Muted body text, caption copy, low-emphasis dividers — never used for headings, always for secondary information",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-black",
+        "kind": "color",
+        "name": "Pure Black",
+        "value": "#000000",
+        "role": "Deep border accent on certain buttons and nav edges, used sparingly for a near-invisible structural line",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-lime-cream",
+        "kind": "color",
+        "name": "Lime Cream",
+        "value": "#eef0b1",
+        "role": "Yellow wash for highlight backgrounds, decorative bands, and soft emphasis behind content.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-greedstandard",
+        "kind": "typography",
+        "name": "GreedStandard",
+        "value": "font-family: GreedStandard; font-weight: 400, 700; font-size: 10px, 15px, 16px, 80px; line-height: 1.00, 1.15, 1.20",
+        "role": "Sole display and UI typeface. At 80px / weight 700 / line-height 1.00 it becomes the manifesto headline — the entire brand reads off this single oversized moment. At 15-16px / weight 400 it carries navigation, card metadata, and body. The 10px size handles micro labels and index marks.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-arial",
+        "kind": "typography",
+        "name": "Arial",
+        "value": "font-family: Arial; font-weight: 400; font-size: 13px; line-height: 1.20",
+        "role": "System fallback for tiny UI labels and icon-adjacent text — appears in only a handful of minor contexts",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 1.15",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 15px; line-height: 1.15",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.15",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-lg-scale",
+        "kind": "typography",
+        "name": "body-lg",
+        "value": "font-size: 80px; line-height: 1.15",
+        "role": "Imported body-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "16px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "12px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-icons",
+        "kind": "radius",
+        "name": "icons",
+        "value": "9px",
+        "role": "Imported icons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-panels",
+        "kind": "radius",
+        "name": "panels",
+        "value": "40px",
+        "role": "Imported panels radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "12px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-nav-pills",
+        "kind": "radius",
+        "name": "nav-pills",
+        "value": "9999px",
+        "role": "Imported nav-pills radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Zero-shadow design. The system communicates depth through surface color shifts alone (Carbon → Obsidian → Lime Cream → White) — no drop shadows, no glow, no blur. A card sitting on the canvas is distinguished only by its 12px radius and a 1px white or near-black border. Components appear stamped onto the surface, not floating above it. This flatness is the design: the visual energy comes from the work and the type, not from layered UI chrome.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "pill-navigation-button",
+        "name": "Pill Navigation Button",
+        "category": "Refero components",
+        "description": "9999px border-radius pill, 9px horizontal padding, white 1px border on Carbon (#2e2e30) fill, 15px GreedStandard 400 text in white. The nav bar itself is an Obsidian (#18181b) pill container holding the hamburger, monogram, and contact icon in a single horizontal cluster.",
+        "variants": [
+          {
+            "id": "pill-navigation-button-reference",
+            "name": "Reference",
+            "description": "9999px border-radius pill, 9px horizontal padding, white 1px border on Carbon (#2e2e30) fill, 15px GreedStandard 400 text in white. The nav bar itself is an Obsidian (#18181b) pill container holding the hamburger, monogram, and contact icon in a single horizontal cluster.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-bar nav links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "neutral-filled-button",
+        "name": "Neutral Filled Button",
+        "category": "Refero components",
+        "description": "12px border-radius, Carbon (#2e2e30) fill, 1px Pure Black (#000000) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. Used for in-content actions like 'More About Us' — reads as a pressed surface, not a colored CTA.",
+        "variants": [
+          {
+            "id": "neutral-filled-button-reference",
+            "name": "Reference",
+            "description": "12px border-radius, Carbon (#2e2e30) fill, 1px Pure Black (#000000) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. Used for in-content actions like 'More About Us' — reads as a pressed surface, not a colored CTA.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary action when no chromatic accent is available"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-white-button",
+        "name": "Ghost White Button",
+        "category": "Refero components",
+        "description": "12px border-radius, transparent fill, 1px Bright White (#ffffff) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. The 'More About Us' treatment often appears as this ghost variant.",
+        "variants": [
+          {
+            "id": "ghost-white-button-reference",
+            "name": "Reference",
+            "description": "12px border-radius, transparent fill, 1px Bright White (#ffffff) border, 6-8px vertical / 16px horizontal padding, 15px GreedStandard 400 white text. The 'More About Us' treatment often appears as this ghost variant.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action or outlined link"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "manifesto-display-headline",
+        "name": "Manifesto Display Headline",
+        "category": "Refero components",
+        "description": "80px GreedStandard weight 700, line-height 1.00, all-caps, Bright White (#ffffff) on Carbon canvas. Fills roughly 60% of viewport width and runs 3-4 lines. The signature element of the brand — every page should have at least one such moment.",
+        "variants": [
+          {
+            "id": "manifesto-display-headline-reference",
+            "name": "Reference",
+            "description": "80px GreedStandard weight 700, line-height 1.00, all-caps, Bright White (#ffffff) on Carbon canvas. Fills roughly 60% of viewport width and runs 3-4 lines. The signature element of the brand — every page should have at least one such moment.",
+            "evidence": [],
+            "observedProperties": [
+              "Brand-defining oversized type block"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Centered horizontal pill, Obsidian (#18181b) fill, 9999px radius, 10px vertical padding, contains hamburger icon (left), S monogram (center), email icon (right). Sits 24px from the top edge, floating above all content.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Centered horizontal pill, Obsidian (#18181b) fill, 9999px radius, 10px vertical padding, contains hamburger icon (left), S monogram (center), email icon (right). Sits 24px from the top edge, floating above all content.",
+            "evidence": [],
+            "observedProperties": [
+              "Sticky minimal header"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "full-bleed-video-hero",
+        "name": "Full-Bleed Video Hero",
+        "category": "Refero components",
+        "description": "Edge-to-edge video block filling ~80% of viewport height with 12px corner radius. Bare playback controls (pause bottom-left, volume + fullscreen bottom-right) in thin white line icons. No title overlay on the video itself — copy lives in the adjacent manifesto block.",
+        "variants": [
+          {
+            "id": "full-bleed-video-hero-reference",
+            "name": "Reference",
+            "description": "Edge-to-edge video block filling ~80% of viewport height with 12px corner radius. Bare playback controls (pause bottom-left, volume + fullscreen bottom-right) in thin white line icons. No title overlay on the video itself — copy lives in the adjacent manifesto block.",
+            "evidence": [],
+            "observedProperties": [
+              "Case study opener"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-case-study-card",
+        "name": "Project Case Study Card",
+        "category": "Refero components",
+        "description": "Carbon (#2e2e30) surface, 12px border-radius, 16px padding, optional 1px white border at low opacity. Image or video fills the card body; project name and category metadata below in 15px GreedStandard 400 white / Ash (#969696). No elevation, no shadow.",
+        "variants": [
+          {
+            "id": "project-case-study-card-reference",
+            "name": "Reference",
+            "description": "Carbon (#2e2e30) surface, 12px border-radius, 16px padding, optional 1px white border at low opacity. Image or video fills the card body; project name and category metadata below in 15px GreedStandard 400 white / Ash (#969696). No elevation, no shadow.",
+            "evidence": [],
+            "observedProperties": [
+              "Grid item for case study index"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "floating-info-card",
+        "name": "Floating Info Card",
+        "category": "Refero components",
+        "description": "Obsidian (#18181b) surface, 12px border-radius, ~16px padding, 24-29px horizontal padding. Contains a 40-48px square icon tile on the left (9px radius), project name in 15px GreedStandard 700 white, one-line description in 13px Ash, and a thin white arrow icon on the right. Anchored near the bottom-center of full-bleed media.",
+        "variants": [
+          {
+            "id": "floating-info-card-reference",
+            "name": "Reference",
+            "description": "Obsidian (#18181b) surface, 12px border-radius, ~16px padding, 24-29px horizontal padding. Contains a 40-48px square icon tile on the left (9px radius), project name in 15px GreedStandard 700 white, one-line description in 13px Ash, and a thin white arrow icon on the right. Anchored near the bottom-center of full-bleed media.",
+            "evidence": [],
+            "observedProperties": [
+              "Project title overlay on showcase media"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "stacked-panel-showcase",
+        "name": "Stacked Panel Showcase",
+        "category": "Refero components",
+        "description": "Five to six vertical panels of equal width filling the viewport, each a slightly different shade of a single color family (e.g. variations of indigo/purple). Panels are separated by the canvas color, not by borders. Used to show screen sequences or process stages within a single project.",
+        "variants": [
+          {
+            "id": "stacked-panel-showcase-reference",
+            "name": "Reference",
+            "description": "Five to six vertical panels of equal width filling the viewport, each a slightly different shade of a single color family (e.g. variations of indigo/purple). Panels are separated by the canvas color, not by borders. Used to show screen sequences or process stages within a single project.",
+            "evidence": [],
+            "observedProperties": [
+              "Multi-frame case study progression"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "icon-tile",
+        "name": "Icon Tile",
+        "category": "Refero components",
+        "description": "40-48px square, 9px border-radius, white or Carbon fill, 1px border. Contains a thin line glyph (e.g. the 4-petal cross) at ~50% scale. Pairs with Floating Info Cards as the left-side thumbnail.",
+        "variants": [
+          {
+            "id": "icon-tile-reference",
+            "name": "Reference",
+            "description": "40-48px square, 9px border-radius, white or Carbon fill, 1px border. Contains a thin line glyph (e.g. the 4-petal cross) at ~50% scale. Pairs with Floating Info Cards as the left-side thumbnail.",
+            "evidence": [],
+            "observedProperties": [
+              "Project category or app icon container"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer-link-bar",
+        "name": "Footer Link Bar",
+        "category": "Refero components",
+        "description": "Carbon canvas, no container. 15px GreedStandard 400 Ash (#969696) text with 29px horizontal padding between links. 1px white or near-black top border. No logo, no social icons, no copyright walls.",
+        "variants": [
+          {
+            "id": "footer-link-bar-reference",
+            "name": "Reference",
+            "description": "Carbon canvas, no container. 15px GreedStandard 400 Ash (#969696) text with 29px horizontal padding between links. 1px white or near-black top border. No logo, no social icons, no copyright walls.",
+            "evidence": [],
+            "observedProperties": [
+              "Minimal site footer"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "tag-label-pill",
+        "name": "Tag/Label Pill",
+        "category": "Refero components",
+        "description": "9999px radius, 6-8px vertical / 12px horizontal padding, 1px white border, 10-13px GreedStandard 400 white text. Always inline with other metadata, never standalone.",
+        "variants": [
+          {
+            "id": "tag-label-pill-reference",
+            "name": "Reference",
+            "description": "9999px radius, 6-8px vertical / 12px horizontal padding, 1px white border, 10-13px GreedStandard 400 white text. Always inline with other metadata, never standalone.",
+            "evidence": [],
+            "observedProperties": [
+              "Project category metadata"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed portfolio structure with zero page max-width. The page is a vertical scroll of single-screen sections, each taking up most of the viewport. The hero is a full-bleed video with a floating pill nav anchored top-center. Below, a manifesto block runs massive left-aligned type against the dark canvas with extreme negative space. Case studies appear as full-bleed image or video bands, often with a floating info card overlaid near the bottom edge. Some case studies use a stacked vertical panel layout (5-6 columns of slightly different shades) to show sequence or progress. Navigation is a single horizontal pill at the top — no sidebar, no mega-menu. Density is intentionally sparse between work, but each work piece is presented at maximum scale with no surrounding scaffolding.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Full-bleed video and photography dominate — case studies open with edge-to-edge loops (e.g. the Nike swoosh on warm amber gradient) that fill 80-100% of viewport height. Imagery is always raw-edged or masked with the canvas; no rounded photo treatments, no contained thumbnails. The hero is a video player with minimal chrome (pause, mute, fullscreen icons at corners). Photography within cards tends to be tight product or motion crops on neutral backgrounds. Iconography is minimal: a stylized S monogram for the wordmark, a 4-petal cross glyph for project categories, and thin line icons for nav controls. The interface contains no decorative illustration — the case study media is the only visual content.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Zero-shadow design. The system communicates depth through surface color shifts alone (Carbon → Obsidian → Lime Cream → White) — no drop shadows, no glow, no blur. A card sitting on the canvas is distinguished only by its 12px radius and a 1px white or near-black border. Components appear stamped onto the surface, not floating above it. This flatness is the design: the visual energy comes from the work and the type, not from layered UI chrome.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use GreedStandard at 80px / weight 700 / line-height 1.00 for the one manifesto headline moment on every page — it is the brand's only typographic anchor",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Build every screen on the Carbon (#2e2e30) canvas; Obsidian (#18181b) only for sticky nav and deep layers, Lime Cream (#eef0b1) only for rare inverted sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 12px border-radius for all functional surfaces (cards, buttons, tiles) and reserve 9999px exclusively for nav pills and inline tags",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Default to 15-16px GreedStandard 400 for body, nav, and card text — never reach for Arial unless a system-fallback is rendering",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let case study video and imagery run full-bleed with raw edges; contain the work only in floating info cards, not in rounded image frames",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Communicate depth with surface color shifts (Carbon → Obsidian → Lime Cream) and 1px white borders — never with box-shadow",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep secondary copy in Ash (#969696); reserve Bright White for headings, active states, and primary metadata",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never introduce a chromatic CTA color — the system has no accent button; actions are neutral filled (#2e2e30) or ghost white outlined",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use box-shadow, drop-shadow, or blur on any component — the design is intentionally flat with surface-only elevation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply gradients to UI chrome or functional components — gradients are reserved for content media and belong inside the video/image, not the frame",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never break the 12px radius convention for cards or buttons; only nav pills (9999px), icons (9px), and rare showcase panels (40px) deviate",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use a light or white page background for the main canvas — Carbon is the only acceptable base; Lime Cream is a rare full-bleed inversion, not a background",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never replace GreedStandard with a system font for display moments — the custom face at 80px is what makes the manifesto read as Studio Gruhl",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add multi-column dashboard layouts or sidebar navigation — the structure is single-column full-bleed scroll with a centered pill nav",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

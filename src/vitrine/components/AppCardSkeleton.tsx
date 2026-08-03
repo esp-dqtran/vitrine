@@ -8,11 +8,11 @@ export function AppCardSkeleton({ index = 0 }: { index?: number }) {
       aria-hidden="true"
     >
       <span className="discovery-card__media app-discovery-card__media app-card-skeleton__media">
-        <Skeleton width="100%" height="100%" radius="rounded" index={index} />
+        <Skeleton width="100%" height="100%" radius={14} index={index} />
       </span>
       <span className="discovery-card__identity app-discovery-card__identity">
         <span className="discovery-card__logo app-discovery-card__logo app-card-skeleton__logo">
-          <Skeleton width="100%" height="100%" radius="rounded" index={index} />
+          <Skeleton width="100%" height="100%" radius={12} index={index} />
         </span>
         <span className="discovery-card__copy app-discovery-card__copy">
           <span className="app-card-skeleton__title">

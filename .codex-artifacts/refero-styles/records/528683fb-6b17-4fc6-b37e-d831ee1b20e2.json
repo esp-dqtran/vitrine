@@ -1,0 +1,1470 @@
+{
+  "schemaVersion": 1,
+  "id": "528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+  "sourceUrl": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+  "sitemapLastModified": "2026-06-05T12:56:26.316Z",
+  "fetchedAt": "2026-08-02T18:06:55.556Z",
+  "contentHash": "6f69503059d914aae3637987e59b08230e75e5ef4ff7ee763f57001ce506aa1d",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Myrch Club design system",
+            "item": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2#style-reference",
+        "name": "Myrch Club design system reference",
+        "headline": "Myrch Club design system | Refero Styles",
+        "description": "Explore Myrch Club's light Media design system: Canvas White #ffffff, Gallery Gray #f9f9f9 colors, Times New Roman, Arial Narrow typography, and DESIGN.md...",
+        "url": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+        "mainEntityOfPage": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Myrch Club",
+          "url": "https://www.myrch.club"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/879d1b51-24fc-4484-8473-d6e93168ea12.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/879d1b51-24fc-4484-8473-d6e93168ea12.jpg",
+          "caption": "Screenshot of Myrch Club"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/879d1b51-24fc-4484-8473-d6e93168ea12.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Myrch Club design system",
+          "Myrch Club website design",
+          "Myrch Club colors",
+          "Myrch Club typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Media design system",
+          "Canvas White",
+          "Gallery Gray",
+          "Hairline Gray",
+          "Caption Gray",
+          "Times New Roman",
+          "Arial Narrow"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Myrch Club design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Myrch Club website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Myrch Club colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Myrch Club typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Media design system"
+          }
+        ],
+        "datePublished": "2026-04-30T03:20:21.933Z",
+        "dateModified": "2026-04-30T03:20:21.933Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://www.myrch.club",
+      "siteName": "Myrch Club",
+      "extractedAt": "2026-06-03T22:06:20.457Z",
+      "durationMs": 24428,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 1251,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 75,
+            "confidence": 1,
+            "prominence": 108180546.9141682,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "other/color": 15,
+              "other/borderColor": 60
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "icon",
+              "button"
+            ],
+            "frequency": 12,
+            "confidence": 1,
+            "prominence": 60772784.04599592,
+            "properties": [
+              "backgroundColor",
+              "color"
+            ],
+            "usageCounts": {
+              "button/color": 2,
+              "icon/backgroundColor": 2,
+              "other/backgroundColor": 8
+            }
+          },
+          {
+            "hex": "#b8b8b8",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.781338805582926
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 26030037.269656137,
+            "properties": [
+              "boxShadow"
+            ],
+            "usageCounts": {
+              "other/boxShadow": 2
+            }
+          },
+          {
+            "hex": "#111111",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.17763777307657064
+            },
+            "contexts": [
+              "other",
+              "icon",
+              "heading",
+              "badge",
+              "button"
+            ],
+            "frequency": 310,
+            "confidence": 1,
+            "prominence": 10620088.512692498,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "icon/fill": 4,
+              "icon/color": 2,
+              "other/fill": 6,
+              "badge/color": 16,
+              "other/color": 22,
+              "button/color": 12,
+              "heading/color": 6,
+              "icon/borderColor": 8,
+              "badge/borderColor": 64,
+              "other/borderColor": 88,
+              "button/borderColor": 56,
+              "heading/borderColor": 24,
+              "button/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#ff0000",
+            "oklch": {
+              "c": 0.2576833038053608,
+              "h": 29.233880279627854,
+              "l": 0.6279553639214311
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 3218913.153631249,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6
+            }
+          },
+          {
+            "hex": "#f9f9f9",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9821176395629414
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 64,
+            "confidence": 1,
+            "prominence": 1290220.03552759,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 64
+            }
+          },
+          {
+            "hex": "#cfcfcf",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8545136555239683
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 320,
+            "confidence": 1,
+            "prominence": 24554.64055752367,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 64,
+              "body/borderColor": 256
+            }
+          },
+          {
+            "hex": "#888888",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6267535410065036
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 320,
+            "confidence": 1,
+            "prominence": 14346.438006311728,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 64,
+              "body/borderColor": 256
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.0037679424434776034,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.95,
+            "background": "#f9f9f9",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.88,
+            "background": "#111111",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.94,
+            "background": "#f9f9f9",
+            "foreground": "#111111"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.48,
+            "background": "#cfcfcf",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.12,
+            "background": "#111111",
+            "foreground": "#cfcfcf"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.59,
+            "background": "#b8b8b8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.52,
+            "background": "#b8b8b8",
+            "foreground": "#111111"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.33,
+            "background": "#111111",
+            "foreground": "#888888"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.54,
+            "background": "#ffffff",
+            "foreground": "#888888"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.37,
+            "background": "#f9f9f9",
+            "foreground": "#888888"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.56,
+            "background": "#ffffff",
+            "foreground": "#cfcfcf"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.48,
+            "background": "#f9f9f9",
+            "foreground": "#cfcfcf"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.11,
+            "background": "#111111",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.05,
+            "background": "#f9f9f9",
+            "foreground": "#ffffff"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 10,
+            "contexts": [
+              "button",
+              "card"
+            ],
+            "frequency": 78
+          },
+          {
+            "value": 23,
+            "corners": [
+              23,
+              23,
+              0,
+              0
+            ],
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "asymmetric": true
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(17, 17, 17, 0.3) 0px 0px 20px 0px",
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 6,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 28,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|icon"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 28,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "heading",
+              "other",
+              "badge"
+            ],
+            "frequency": 98,
+            "properties": [
+              "paddingBottom",
+              "marginTop",
+              "marginRight",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|heading",
+              "paddingBottom|other",
+              "marginTop|badge",
+              "marginRight|badge",
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other",
+              "card"
+            ],
+            "frequency": 270,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card"
+            ]
+          },
+          {
+            "value": 38,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 64,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "badge",
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginBottom",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|badge",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 60,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Times",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 1018,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Arial Narrow",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 221,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 14,
+            "family": "Arial Narrow",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 192,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Arial Narrow",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Times",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "icon",
+              "badge",
+              "card",
+              "image"
+            ],
+            "frequency": 1018,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Arial Narrow",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 42,
+            "family": "Arial Narrow",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "other",
+              "icon",
+              "button"
+            ],
+            "frequency": 24,
+            "lineHeight": 1.24,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Set all product tiles on a #f9f9f9 gallery card with 10px radius and 30px internal padding.",
+        "Use Times 16px weight 400 for all body and description copy; use Arial Narrow 14px for labels, chips, and metadata.",
+        "Reserve #ff0000 exclusively for the oversized script wordmark behind the header; treat it as a signature artwork, not a functional color.",
+        "Use #111111 as the dominant interface color for text, filled chips, and borders — keep the palette strictly black-on-white for everything else.",
+        "Use 10px border-radius for all chips, buttons, and cards as a single consistent rhythm.",
+        "Separate content with hairline #cfcfcf borders and color shifts rather than drop shadows.",
+        "Allow generous whitespace — section gaps of 40px and card padding of 30px — to preserve the gallery/archive feel."
+      ],
+      "donts": [
+        "Do not use #ff0000 for buttons, links, tags, error states, or any functional UI element.",
+        "Do not introduce additional accent colors — the system is strictly monochrome with one red artwork exception.",
+        "Do not use heavy or stacked shadows; the single 20px 30%-opacity blur is the maximum elevation allowed.",
+        "Do not use bold or display-weight typography; both Times and Arial Narrow appear at weight 400 only.",
+        "Do not fill buttons with chromatic colors — buttons should be #111111 fill on #ffffff or outlined #111111.",
+        "Do not use rounded or pill shapes (9999px radius) — the 10px radius is deliberate and consistent.",
+        "Do not add gradients, glows, or colored backgrounds to the product cards."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#ffffff",
+          "name": "Canvas White",
+          "role": "Page background, image surfaces, inverted text on dark chips",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f9f9f9",
+          "name": "Gallery Gray",
+          "role": "Card and product tile backgrounds — sets objects apart from the page with a whisper of warmth",
+          "group": "neutral"
+        },
+        {
+          "hex": "#cfcfcf",
+          "name": "Hairline Gray",
+          "role": "Dividers, secondary borders, placeholder structure",
+          "group": "neutral"
+        },
+        {
+          "hex": "#888888",
+          "name": "Caption Gray",
+          "role": "Secondary text, metadata, timestamps, muted helper labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#111111",
+          "name": "Ink Black",
+          "role": "Primary text, filled filter chips, button borders, headings — the dominant interface color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "True Black",
+          "role": "Hard borders and text where maximum contrast is needed",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ff0000",
+          "name": "Signature Red",
+          "role": "The wordmark only — a pure, unmoderated red used at oversized scale behind the header as a brand watermark; never used for buttons, links, or functional UI",
+          "group": "brand"
+        }
+      ],
+      "layout": "The page is a max-width centered layout (estimated 1280px) with a full-bleed header zone where the red script wordmark bleeds beyond the container edges. The header is a single left-aligned block: brand name, description paragraph, and a horizontal row of filter chips. Below the header, the content is a 3-column product grid of square-ish cards on a white canvas, each card holding a single product photo and a two-line label row. Vertical rhythm is spacious — ~40px between sections and 30px inside each card. The layout is symmetric and grid-based with no asymmetric or overlapping sections. Navigation is minimal: just the filter chip row, a tiny social icon in the top-right, and the scroll itself.",
+      "imagery": "Product photography is the primary visual content: individual merch objects (apparel, accessories, containers) photographed in isolation on near-white backgrounds, with no lifestyle or contextual staging. Each object is treated as an archival specimen — centered, lit evenly, and given generous internal padding within its card. The only non-product imagery is the red cursive 'myrch' script, which functions as a decorative brand watermark rather than a photograph. There is no illustration, no 3D rendering, and no abstract graphics. Imagery occupies roughly 50-60% of the viewport in the main content area, with the remainder as white space and label text.",
+      "similar": [
+        {
+          "why": "Same near-monochrome archive aesthetic with hairline borders, generous whitespace, and serif/sans typographic pairing for cataloging content",
+          "business": "Are.na"
+        },
+        {
+          "why": "Editorial typographic restraint with black-and-white interface and a single bold accent used as a signature mark rather than functional UI",
+          "business": "Mubi"
+        },
+        {
+          "why": "Gallery-style grid of objects with serif italic labels and condensed sans metadata, prioritising content over chrome",
+          "business": "It's Nice That"
+        },
+        {
+          "why": "Archive/catalog sensibility using Times serif body and narrow sans labels on white space, treating items as curated specimens",
+          "business": "Cabinet magazine"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "10px",
+          "chips": "10px",
+          "buttons": "10px"
+        },
+        "elementGap": "20px",
+        "sectionGap": "40px",
+        "cardPadding": "30px",
+        "pageMaxWidth": "1280px"
+      },
+      "industry": "media",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page background"
+        },
+        {
+          "hex": "#f9f9f9",
+          "name": "Gallery Card",
+          "level": 1,
+          "purpose": "Product tile and component surface"
+        },
+        {
+          "hex": "#111111",
+          "name": "Ink Surface",
+          "level": 2,
+          "purpose": "Active filter chip, filled control"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "rgba(17, 17, 17, 0.3) 0px 0px 20px 0px",
+          "element": "Product tile"
+        }
+      ],
+      "northStar": "white-walled exhibition vitrine — editorial serif labels floating in generous negative space, disrupted by a single red script signature",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 14,
+          "lineHeight": 1.43
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "subheading",
+          "size": 20,
+          "lineHeight": 1.33
+        },
+        {
+          "role": "heading",
+          "size": 42,
+          "lineHeight": 1.24
+        }
+      ],
+      "components": [
+        {
+          "name": "Header Brand Lockup",
+          "role": "Site identity in the top-left",
+          "description": "'Myrch(dot)Club® — All ⓘ' rendered in Arial Narrow 20px, #111111. The registered trademark and circled-i are literal typographic characters, not icons. The wordmark dot is spelled out, reinforcing the archival/dot-matrix catalog feel."
+        },
+        {
+          "name": "Red Script Watermark",
+          "role": "Brand signature bleeding behind the header",
+          "description": "Oversized red (#ff0000) cursive 'myrch' set behind the header zone at 200px+ size, intentionally clipped by the page edges. Not a component to recreate literally — it is one custom artwork. On other pages, treat the red as reserved for this single hero watermark; do not reuse for buttons or accents."
+        },
+        {
+          "name": "Description Block",
+          "role": "Introductory paragraph beneath the brand",
+          "description": "Times 16px, weight 400, #111111, line-height 1.20. Two lines of text describing the archive's purpose. Sets the editorial reading voice for the site."
+        },
+        {
+          "name": "Filter Chip — Active",
+          "role": "Currently selected category filter",
+          "description": "Filled #111111 background, #ffffff text, 10px radius, padding 6px 12px. Text in Arial Narrow 14px weight 400. No border needed — the fill is the signal."
+        },
+        {
+          "name": "Filter Chip — Inactive",
+          "role": "Unselected category filter",
+          "description": "Transparent background, 1px solid #111111 border, #111111 text, 10px radius, padding 6px 12px. Arial Narrow 14px. On hover, can invert to the active style."
+        },
+        {
+          "name": "Curatorial Caption",
+          "role": "Tiny attribution line under the chips",
+          "description": "Times 14px, #888888. E.g. 'Myrch.Club is built and curated by ⬛ Manual Engineering.' Acts as a footer-of-the-header, a museum wall plaque."
+        },
+        {
+          "name": "Product Grid Card",
+          "role": "Individual merch item tile",
+          "description": "#f9f9f9 background, 10px border-radius, 30px internal padding, 1px #cfcfcf or absent border. Contains a product image centered on a slightly lighter inner area, then below: brand name in Times italic (#111111) left-aligned, and item name + source venue in Arial Narrow 14px (#888888) right-aligned. No drop shadow on the card itself."
+        },
+        {
+          "name": "Product Image Frame",
+          "role": "Photograph container within a card",
+          "description": "White (#ffffff) or very light background, generous internal padding around the photographed object, no border. The shadow rgba(17,17,17,0.3) 0px 0px 20px 0px may apply here as a subtle vignette around the object to lift it from the card surface."
+        },
+        {
+          "name": "Card Label Row",
+          "role": "Metadata strip beneath each product image",
+          "description": "Two-column inline layout: brand name left in Times italic 14px #111111; product + venue right in Arial Narrow 14px #888888. ~20px gap from the image to the label row, ~30px from label row to the card edge."
+        },
+        {
+          "name": "Instagram Icon Button",
+          "role": "Social link in the top-right corner",
+          "description": "Small, minimal — likely a stroke-only icon at ~20px, no background, no border, #111111. Sits in the absolute top-right of the header strip."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary body and interface type — used for descriptions, product metadata, and general reading text. The serif choice signals editorial/archive intent; a humanist serif substitute like EB Garamond or Lora preserves the curatorial atmosphere",
+          "sizes": "16px",
+          "family": "Times New Roman",
+          "weight": "400",
+          "lineHeight": "1.20",
+          "substitute": "EB Garamond, Lora, Source Serif Pro",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Secondary structural type — condensed sans for compact labels, filter chips, navigation, and the 42px brand name in the header. The narrow proportions contrast the serif body and create catalog/inventory utility. Substitute with a condensed grotesk like Barlow Condensed or Roboto Condensed",
+          "sizes": "14px, 20px, 42px",
+          "family": "Arial Narrow",
+          "weight": "400",
+          "lineHeight": "1.24, 1.33, 1.40, 1.43",
+          "substitute": "Barlow Condensed, Roboto Condensed, Helvetica Neue Condensed",
+          "letterSpacing": "normal"
+        }
+      ],
+      "description": "Myrch Club operates as a typographic archive: a near-monochrome gallery where serif body type, narrow sans labels, and a single defiant red script wordmark define the entire visual identity. The interface is deliberately white-spaced and editorial — product photography sits in soft gray cards (#f9f9f9) on a pure white canvas, separated by hairline borders rather than heavy elevation. The red appears only in the oversized cursive logo bleeding through the header, functioning as a watermark of intent rather than a functional UI color. Everything else — navigation chips, filter tags, captions — is rendered in near-black (#111111) with thin borders, creating a catalog-of-objects feeling closer to a museum index than an e-commerce grid.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Signature Element — Red Wordmark",
+          "content": "The #ff0000 cursive 'myrch' script is a one-off brand artwork, not a repeatable design token. On the homepage it sits oversized behind the header zone, clipped by the viewport. When recreating other pages, either omit it or render it as a contained hero element. Do not fragment the red across the UI; it should always read as a single bold statement, not a distributed accent."
+        }
+      ],
+      "elevationPhilosophy": "Elevation is nearly absent by design. The single 20px 30%-opacity black blur is used only on elevated image areas where the product photograph needs separation from the page. Surfaces are defined by background color shifts (#ffffff → #f9f9f9) and hairline #111111 borders, not by stacked shadows. The result reads as flat, editorial, and object-focused."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/259c3276-0274-432a-971e-03397d661a51.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/879d1b51-24fc-4484-8473-d6e93168ea12.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "myrch-club",
+    "generatedAt": "2026-06-03T22:06:20.457Z",
+    "summary": "Myrch Club operates as a typographic archive: a near-monochrome gallery where serif body type, narrow sans labels, and a single defiant red script wordmark define the entire visual identity. The interface is deliberately white-spaced and editorial — product photography sits in soft gray cards (#f9f9f9) on a pure white canvas, separated by hairline borders rather than heavy elevation. The red appears only in the oversized cursive logo bleeding through the header, functioning as a watermark of intent rather than a functional UI color. Everything else — navigation chips, filter tags, captions — is rendered in near-black (#111111) with thin borders, creating a catalog-of-objects feeling closer to a museum index than an e-commerce grid.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+      "sourceUrl": "https://styles.refero.design/style/528683fb-6b17-4fc6-b37e-d831ee1b20e2",
+      "originalUrl": "https://www.myrch.club",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/259c3276-0274-432a-971e-03397d661a51.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/879d1b51-24fc-4484-8473-d6e93168ea12.jpg",
+      "importedAt": "2026-08-02T18:06:55.556Z",
+      "upstreamModifiedAt": "2026-06-05T12:56:26.316Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "white-walled exhibition vitrine — editorial serif labels floating in generous negative space, disrupted by a single red script signature",
+      "industry": "media"
+    },
+    "tokens": [
+      {
+        "id": "color-canvas-white",
+        "kind": "color",
+        "name": "Canvas White",
+        "value": "#ffffff",
+        "role": "Page background, image surfaces, inverted text on dark chips",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-gallery-gray",
+        "kind": "color",
+        "name": "Gallery Gray",
+        "value": "#f9f9f9",
+        "role": "Card and product tile backgrounds — sets objects apart from the page with a whisper of warmth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-hairline-gray",
+        "kind": "color",
+        "name": "Hairline Gray",
+        "value": "#cfcfcf",
+        "role": "Dividers, secondary borders, placeholder structure",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-caption-gray",
+        "kind": "color",
+        "name": "Caption Gray",
+        "value": "#888888",
+        "role": "Secondary text, metadata, timestamps, muted helper labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink-black",
+        "kind": "color",
+        "name": "Ink Black",
+        "value": "#111111",
+        "role": "Primary text, filled filter chips, button borders, headings — the dominant interface color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-true-black",
+        "kind": "color",
+        "name": "True Black",
+        "value": "#000000",
+        "role": "Hard borders and text where maximum contrast is needed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signature-red",
+        "kind": "color",
+        "name": "Signature Red",
+        "value": "#ff0000",
+        "role": "The wordmark only — a pure, unmoderated red used at oversized scale behind the header as a brand watermark; never used for buttons, links, or functional UI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-times-new-roman",
+        "kind": "typography",
+        "name": "Times New Roman",
+        "value": "font-family: Times New Roman; font-weight: 400; font-size: 16px; line-height: 1.20; letter-spacing: normal",
+        "role": "Primary body and interface type — used for descriptions, product metadata, and general reading text. The serif choice signals editorial/archive intent; a humanist serif substitute like EB Garamond or Lora preserves the curatorial atmosphere",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-arial-narrow",
+        "kind": "typography",
+        "name": "Arial Narrow",
+        "value": "font-family: Arial Narrow; font-weight: 400; font-size: 14px, 20px, 42px; line-height: 1.24, 1.33, 1.40, 1.43; letter-spacing: normal",
+        "role": "Secondary structural type — condensed sans for compact labels, filter chips, navigation, and the 42px brand name in the header. The narrow proportions contrast the serif body and create catalog/inventory utility. Substitute with a condensed grotesk like Barlow Condensed or Roboto Condensed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 14px; line-height: 1.43",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.2",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 20px; line-height: 1.33",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 42px; line-height: 1.24",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "40px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "30px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1280px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "10px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-chips",
+        "kind": "radius",
+        "name": "chips",
+        "value": "10px",
+        "role": "Imported chips radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "10px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Elevation is nearly absent by design. The single 20px 30%-opacity black blur is used only on elevated image areas where the product photograph needs separation from the page. Surfaces are defined by background color shifts (#ffffff → #f9f9f9) and hairline #111111 borders, not by stacked shadows. The result reads as flat, editorial, and object-focused.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "header-brand-lockup",
+        "name": "Header Brand Lockup",
+        "category": "Refero components",
+        "description": "'Myrch(dot)Club® — All ⓘ' rendered in Arial Narrow 20px, #111111. The registered trademark and circled-i are literal typographic characters, not icons. The wordmark dot is spelled out, reinforcing the archival/dot-matrix catalog feel.",
+        "variants": [
+          {
+            "id": "header-brand-lockup-reference",
+            "name": "Reference",
+            "description": "'Myrch(dot)Club® — All ⓘ' rendered in Arial Narrow 20px, #111111. The registered trademark and circled-i are literal typographic characters, not icons. The wordmark dot is spelled out, reinforcing the archival/dot-matrix catalog feel.",
+            "evidence": [],
+            "observedProperties": [
+              "Site identity in the top-left"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "red-script-watermark",
+        "name": "Red Script Watermark",
+        "category": "Refero components",
+        "description": "Oversized red (#ff0000) cursive 'myrch' set behind the header zone at 200px+ size, intentionally clipped by the page edges. Not a component to recreate literally — it is one custom artwork. On other pages, treat the red as reserved for this single hero watermark; do not reuse for buttons or accents.",
+        "variants": [
+          {
+            "id": "red-script-watermark-reference",
+            "name": "Reference",
+            "description": "Oversized red (#ff0000) cursive 'myrch' set behind the header zone at 200px+ size, intentionally clipped by the page edges. Not a component to recreate literally — it is one custom artwork. On other pages, treat the red as reserved for this single hero watermark; do not reuse for buttons or accents.",
+            "evidence": [],
+            "observedProperties": [
+              "Brand signature bleeding behind the header"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "description-block",
+        "name": "Description Block",
+        "category": "Refero components",
+        "description": "Times 16px, weight 400, #111111, line-height 1.20. Two lines of text describing the archive's purpose. Sets the editorial reading voice for the site.",
+        "variants": [
+          {
+            "id": "description-block-reference",
+            "name": "Reference",
+            "description": "Times 16px, weight 400, #111111, line-height 1.20. Two lines of text describing the archive's purpose. Sets the editorial reading voice for the site.",
+            "evidence": [],
+            "observedProperties": [
+              "Introductory paragraph beneath the brand"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "filter-chip-active",
+        "name": "Filter Chip — Active",
+        "category": "Refero components",
+        "description": "Filled #111111 background, #ffffff text, 10px radius, padding 6px 12px. Text in Arial Narrow 14px weight 400. No border needed — the fill is the signal.",
+        "variants": [
+          {
+            "id": "filter-chip-active-reference",
+            "name": "Reference",
+            "description": "Filled #111111 background, #ffffff text, 10px radius, padding 6px 12px. Text in Arial Narrow 14px weight 400. No border needed — the fill is the signal.",
+            "evidence": [],
+            "observedProperties": [
+              "Currently selected category filter"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "filter-chip-inactive",
+        "name": "Filter Chip — Inactive",
+        "category": "Refero components",
+        "description": "Transparent background, 1px solid #111111 border, #111111 text, 10px radius, padding 6px 12px. Arial Narrow 14px. On hover, can invert to the active style.",
+        "variants": [
+          {
+            "id": "filter-chip-inactive-reference",
+            "name": "Reference",
+            "description": "Transparent background, 1px solid #111111 border, #111111 text, 10px radius, padding 6px 12px. Arial Narrow 14px. On hover, can invert to the active style.",
+            "evidence": [],
+            "observedProperties": [
+              "Unselected category filter"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "curatorial-caption",
+        "name": "Curatorial Caption",
+        "category": "Refero components",
+        "description": "Times 14px, #888888. E.g. 'Myrch.Club is built and curated by ⬛ Manual Engineering.' Acts as a footer-of-the-header, a museum wall plaque.",
+        "variants": [
+          {
+            "id": "curatorial-caption-reference",
+            "name": "Reference",
+            "description": "Times 14px, #888888. E.g. 'Myrch.Club is built and curated by ⬛ Manual Engineering.' Acts as a footer-of-the-header, a museum wall plaque.",
+            "evidence": [],
+            "observedProperties": [
+              "Tiny attribution line under the chips"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-grid-card",
+        "name": "Product Grid Card",
+        "category": "Refero components",
+        "description": "#f9f9f9 background, 10px border-radius, 30px internal padding, 1px #cfcfcf or absent border. Contains a product image centered on a slightly lighter inner area, then below: brand name in Times italic (#111111) left-aligned, and item name + source venue in Arial Narrow 14px (#888888) right-aligned. No drop shadow on the card itself.",
+        "variants": [
+          {
+            "id": "product-grid-card-reference",
+            "name": "Reference",
+            "description": "#f9f9f9 background, 10px border-radius, 30px internal padding, 1px #cfcfcf or absent border. Contains a product image centered on a slightly lighter inner area, then below: brand name in Times italic (#111111) left-aligned, and item name + source venue in Arial Narrow 14px (#888888) right-aligned. No drop shadow on the card itself.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual merch item tile"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-image-frame",
+        "name": "Product Image Frame",
+        "category": "Refero components",
+        "description": "White (#ffffff) or very light background, generous internal padding around the photographed object, no border. The shadow rgba(17,17,17,0.3) 0px 0px 20px 0px may apply here as a subtle vignette around the object to lift it from the card surface.",
+        "variants": [
+          {
+            "id": "product-image-frame-reference",
+            "name": "Reference",
+            "description": "White (#ffffff) or very light background, generous internal padding around the photographed object, no border. The shadow rgba(17,17,17,0.3) 0px 0px 20px 0px may apply here as a subtle vignette around the object to lift it from the card surface.",
+            "evidence": [],
+            "observedProperties": [
+              "Photograph container within a card"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "card-label-row",
+        "name": "Card Label Row",
+        "category": "Refero components",
+        "description": "Two-column inline layout: brand name left in Times italic 14px #111111; product + venue right in Arial Narrow 14px #888888. ~20px gap from the image to the label row, ~30px from label row to the card edge.",
+        "variants": [
+          {
+            "id": "card-label-row-reference",
+            "name": "Reference",
+            "description": "Two-column inline layout: brand name left in Times italic 14px #111111; product + venue right in Arial Narrow 14px #888888. ~20px gap from the image to the label row, ~30px from label row to the card edge.",
+            "evidence": [],
+            "observedProperties": [
+              "Metadata strip beneath each product image"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "instagram-icon-button",
+        "name": "Instagram Icon Button",
+        "category": "Refero components",
+        "description": "Small, minimal — likely a stroke-only icon at ~20px, no background, no border, #111111. Sits in the absolute top-right of the header strip.",
+        "variants": [
+          {
+            "id": "instagram-icon-button-reference",
+            "name": "Reference",
+            "description": "Small, minimal — likely a stroke-only icon at ~20px, no background, no border, #111111. Sits in the absolute top-right of the header strip.",
+            "evidence": [],
+            "observedProperties": [
+              "Social link in the top-right corner"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "The page is a max-width centered layout (estimated 1280px) with a full-bleed header zone where the red script wordmark bleeds beyond the container edges. The header is a single left-aligned block: brand name, description paragraph, and a horizontal row of filter chips. Below the header, the content is a 3-column product grid of square-ish cards on a white canvas, each card holding a single product photo and a two-line label row. Vertical rhythm is spacious — ~40px between sections and 30px inside each card. The layout is symmetric and grid-based with no asymmetric or overlapping sections. Navigation is minimal: just the filter chip row, a tiny social icon in the top-right, and the scroll itself.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product photography is the primary visual content: individual merch objects (apparel, accessories, containers) photographed in isolation on near-white backgrounds, with no lifestyle or contextual staging. Each object is treated as an archival specimen — centered, lit evenly, and given generous internal padding within its card. The only non-product imagery is the red cursive 'myrch' script, which functions as a decorative brand watermark rather than a photograph. There is no illustration, no 3D rendering, and no abstract graphics. Imagery occupies roughly 50-60% of the viewport in the main content area, with the remainder as white space and label text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Elevation is nearly absent by design. The single 20px 30%-opacity black blur is used only on elevated image areas where the product photograph needs separation from the page. Surfaces are defined by background color shifts (#ffffff → #f9f9f9) and hairline #111111 borders, not by stacked shadows. The result reads as flat, editorial, and object-focused.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all product tiles on a #f9f9f9 gallery card with 10px radius and 30px internal padding.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Times 16px weight 400 for all body and description copy; use Arial Narrow 14px for labels, chips, and metadata.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve #ff0000 exclusively for the oversized script wordmark behind the header; treat it as a signature artwork, not a functional color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #111111 as the dominant interface color for text, filled chips, and borders — keep the palette strictly black-on-white for everything else.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 10px border-radius for all chips, buttons, and cards as a single consistent rhythm.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Separate content with hairline #cfcfcf borders and color shifts rather than drop shadows.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Allow generous whitespace — section gaps of 40px and card padding of 30px — to preserve the gallery/archive feel.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use #ff0000 for buttons, links, tags, error states, or any functional UI element.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce additional accent colors — the system is strictly monochrome with one red artwork exception.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use heavy or stacked shadows; the single 20px 30%-opacity blur is the maximum elevation allowed.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use bold or display-weight typography; both Times and Arial Narrow appear at weight 400 only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not fill buttons with chromatic colors — buttons should be #111111 fill on #ffffff or outlined #111111.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use rounded or pill shapes (9999px radius) — the 10px radius is deliberate and consistent.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add gradients, glows, or colored backgrounds to the product cards.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

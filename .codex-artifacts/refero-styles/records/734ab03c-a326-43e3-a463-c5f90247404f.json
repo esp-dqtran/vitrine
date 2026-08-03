@@ -1,0 +1,1980 @@
+{
+  "schemaVersion": 1,
+  "id": "734ab03c-a326-43e3-a463-c5f90247404f",
+  "sourceUrl": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f",
+  "sitemapLastModified": "2026-06-03T17:16:10.085Z",
+  "fetchedAt": "2026-08-02T18:09:19.769Z",
+  "contentHash": "1ecd716d91079e313b8025a0437f5aa3231d57efbdccb7fa011bc962d25dfb46",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Dopper design system",
+            "item": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f#style-reference",
+        "name": "Dopper design system reference",
+        "headline": "Dopper design system | Refero Styles",
+        "description": "Explore Dopper's light E-commerce design system: Midnight Navy #000f2e, Warm Cream #f6ecc8 colors, Dopper, Gilroy typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f",
+        "mainEntityOfPage": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Dopper",
+          "url": "https://dopper.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/62f98cfd-7477-4ab7-91fc-536355ee6fa7.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/62f98cfd-7477-4ab7-91fc-536355ee6fa7.jpg",
+          "caption": "Screenshot of Dopper"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/62f98cfd-7477-4ab7-91fc-536355ee6fa7.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Dopper design system",
+          "Dopper website design",
+          "Dopper colors",
+          "Dopper typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "E-commerce design system",
+          "Midnight Navy",
+          "Warm Cream",
+          "Soft Off-White",
+          "Electric Blue",
+          "Dopper",
+          "Gilroy",
+          "-apple-system"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Dopper design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dopper website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dopper colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dopper typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "E-commerce design system"
+          }
+        ],
+        "datePublished": "2026-02-25T16:33:37.000Z",
+        "dateModified": "2026-02-25T16:33:37.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://dopper.com",
+      "siteName": "Dopper",
+      "extractedAt": "2026-06-03T17:16:10.083Z",
+      "durationMs": 33382,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 283,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "link",
+              "image",
+              "hero",
+              "heading",
+              "body",
+              "button",
+              "icon"
+            ],
+            "frequency": 865,
+            "confidence": 1,
+            "prominence": 17705320.20080017,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#fcfaf2",
+            "oklch": {
+              "c": 0.010754824534655292,
+              "h": 95.16063951543033,
+              "l": 0.98444529460702
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 9,
+            "confidence": 1,
+            "prominence": 3621167.3776748157,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#000f2e",
+            "oklch": {
+              "c": 0.06764148921261007,
+              "h": 258.5894264726184,
+              "l": 0.17792274670040148
+            },
+            "contexts": [
+              "link",
+              "other",
+              "card",
+              "heading",
+              "body"
+            ],
+            "frequency": 195,
+            "confidence": 1,
+            "prominence": 2439258.0779146454,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#f6ecc8",
+            "oklch": {
+              "c": 0.04822888951778811,
+              "h": 94.27393234942393,
+              "l": 0.9418242710014113
+            },
+            "contexts": [
+              "body",
+              "card",
+              "heading"
+            ],
+            "frequency": 151,
+            "confidence": 1,
+            "prominence": 806331.9358705989,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#0067e5",
+            "oklch": {
+              "c": 0.20762557787891706,
+              "h": 258.6888195439254,
+              "l": 0.5436126556570267
+            },
+            "contexts": [
+              "other",
+              "card",
+              "body"
+            ],
+            "frequency": 14,
+            "confidence": 1,
+            "prominence": 492268.2150466734,
+            "properties": [
+              "backgroundColor",
+              "stroke"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#116973",
+            "oklch": {
+              "c": 0.07739328384607497,
+              "h": 206.94876127803556,
+              "l": 0.47783815531186136
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 176327.0782052286,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#8ab1e6",
+            "oklch": {
+              "c": 0.0878662490532658,
+              "h": 256.21216161020226,
+              "l": 0.7518422114958869
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 176327.0782052286,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#fed200",
+            "oklch": {
+              "c": 0.17945846647589522,
+              "h": 93.50364063989593,
+              "l": 0.8759479685959706
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 176327.0782052286,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#dbd6cd",
+            "oklch": {
+              "c": 0.013396283997096485,
+              "h": 82.40107261905315,
+              "l": 0.8775484896784108
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 15244,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#cce2ff",
+            "oklch": {
+              "c": 0.04631762628019726,
+              "h": 255.36351512350467,
+              "l": 0.9056886464443578
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 11200,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#515a8a",
+            "oklch": {
+              "c": 0.07817107768815566,
+              "h": 274.9813989037021,
+              "l": 0.48108783959214513
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 10,
+            "confidence": 1,
+            "prominence": 2490.790765418854,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#caddef",
+            "oklch": {
+              "c": 0.033016723208881806,
+              "h": 247.91385405728704,
+              "l": 0.8879368951440866
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1600,
+            "properties": [
+              "boxShadow"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.05401109042919674,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 20.1,
+            "background": "#fcfaf2",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.14,
+            "background": "#000f2e",
+            "foreground": "#fcfaf2"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.75,
+            "background": "#f6ecc8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.02,
+            "background": "#f6ecc8",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.89,
+            "background": "#cce2ff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.1,
+            "background": "#caddef",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.51,
+            "background": "#dbd6cd",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.43,
+            "background": "#fed200",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.34,
+            "background": "#cce2ff",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.63,
+            "background": "#caddef",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.1,
+            "background": "#dbd6cd",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.03,
+            "background": "#fed200",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.51,
+            "background": "#8ab1e6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.59,
+            "background": "#8ab1e6",
+            "foreground": "#000f2e"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.32,
+            "background": "#fcfaf2",
+            "foreground": "#515a8a"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.1,
+            "background": "#116973",
+            "foreground": "#fcfaf2"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.58,
+            "background": "#f6ecc8",
+            "foreground": "#515a8a"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.39,
+            "background": "#116973",
+            "foreground": "#f6ecc8"
+          },
+          {
+            "level": "AA",
+            "ratio": 5,
+            "background": "#cce2ff",
+            "foreground": "#515a8a"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.94,
+            "background": "#0067e5",
+            "foreground": "#fcfaf2"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 20,
+            "contexts": [
+              "other",
+              "link",
+              "image",
+              "button",
+              "card",
+              "body"
+            ],
+            "frequency": 42
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 9999,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 8,
+            "contexts": [],
+            "frequency": 27,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 20,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 20,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 16,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingRight",
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 19,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 86,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingBottom",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 30,
+            "contexts": [],
+            "frequency": 14,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "paddingLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 35,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 40,
+            "contexts": [],
+            "frequency": 20,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 48,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 50,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 58,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 60,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 70,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "paddingLeft",
+              "marginBottom",
+              "paddingRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 85,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 90,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 96,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 100,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 113,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 142,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 150,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(90deg, rgb(0, 103, 229) 0px, rgb(65, 131, 217) 100%)",
+          "colors": [
+            "rgb(0, 103, 229)",
+            "rgb(65, 131, 217)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "-apple-system",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 189,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Gilroy",
+            "source": "custom",
+            "weights": [
+              400,
+              600,
+              700
+            ],
+            "frequency": 82,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Dopper",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 9,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 14,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 16,
+            "family": "-apple-system",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "image",
+              "hero",
+              "button",
+              "icon",
+              "card",
+              "body"
+            ],
+            "frequency": 189,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Gilroy",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Gilroy",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "card",
+              "link"
+            ],
+            "frequency": 34,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Gilroy",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Gilroy",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Gilroy",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Gilroy",
+            "weight": 600,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 27,
+            "family": "Gilroy",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "heading"
+            ],
+            "frequency": 13,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 43,
+            "family": "Gilroy",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 48,
+            "family": "Gilroy",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 58,
+            "family": "Dopper",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 72,
+            "family": "Dopper",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use 20px border-radius on every card, button, and product image — consistency creates the rounded warm identity.",
+        "Default to the #f6ecc8 cream band for hero and alternating section backgrounds, and #fcfaf2 for the main page canvas.",
+        "Use Gilroy weight 700 for card titles and section headings, weight 600 for buttons and subheadings, weight 400 for body.",
+        "Pair the filled Electric Blue button (#0067e5) with the outlined black button on every hero — the duo is the signature action pattern.",
+        "Keep the Solution Card grid to 5 equal-width columns at desktop; the candy-bright color variety only works as a complete set.",
+        "Use the Dopper display face only at 58px or larger, weight 400, with tight 1.0 line-height — it's a poster face, not a body face.",
+        "Maintain 20px gaps within cards and 40-60px gaps between major layout elements for the comfortable spacious density."
+      ],
+      "donts": [
+        "Don't add drop shadows to cards or images — the system is intentionally flat, depth comes from color blocks.",
+        "Don't use pure white (#ffffff) for the canvas — always use #fcfaf2 to preserve the warm cream undertone.",
+        "Don't introduce more than one button style per screen — filled blue for primary, outlined black for secondary, nothing else.",
+        "Don't use the Dopper display face for anything smaller than 48px — it loses its quirky character at body sizes.",
+        "Don't dilute the cream hero band with images or gradients — the emptiness is the design.",
+        "Don't use gray neutrals for body text — Midnight Navy (#000f2e) and Heather Violet (#515a8a) are the two text tones.",
+        "Don't break the 20px radius rule with sharp 0px corners on cards or buttons; the 9999px pill is reserved for tags only."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000f2e",
+          "name": "Midnight Navy",
+          "role": "Primary text, headings, dark surface cards, logo wordmark — the dominant ink of the system. Deep enough to anchor the cream canvas without going pure black",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f6ecc8",
+          "name": "Warm Cream",
+          "role": "Hero band background, alternating section backdrop — sets the warm, sunlit atmosphere of the brand",
+          "group": "neutral"
+        },
+        {
+          "hex": "#fcfaf2",
+          "name": "Soft Off-White",
+          "role": "Page canvas, card surfaces, button text on filled blue — the base layer everything sits on",
+          "group": "neutral"
+        },
+        {
+          "hex": "#0067e5",
+          "name": "Electric Blue",
+          "role": "Blue supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color",
+          "group": "brand"
+        },
+        {
+          "hex": "#515a8a",
+          "name": "Heather Violet",
+          "role": "Muted secondary text, supporting body copy — keeps longer passages from competing with the Midnight Navy headings",
+          "group": "neutral"
+        },
+        {
+          "hex": "#fed200",
+          "name": "Signal Yellow",
+          "role": "Solution card fill, decorative high-energy accent — one of the candy-bright poster colors for the product grid",
+          "group": "accent"
+        },
+        {
+          "hex": "#116973",
+          "name": "Deep Teal",
+          "role": "Solution card fill, decorative oceanic accent — reinforces the water brand narrative in the product grid",
+          "group": "accent"
+        },
+        {
+          "hex": "#8ab1e6",
+          "name": "Sky Wash",
+          "role": "Solution card fill, soft brand-blue companion — a lighter blue tone for visual variety in card blocks",
+          "group": "accent"
+        },
+        {
+          "hex": "#000000",
+          "name": "Black Ink",
+          "role": "Outlined button stroke, icon strokes, text in solid dark contexts — used sparingly for maximum contrast outlines",
+          "group": "neutral"
+        },
+        {
+          "hex": "#4183d9",
+          "name": "Brand Blue Drift",
+          "role": "Gradient terminus paired with Electric Blue — used in the subtle horizontal brand gradient for decorative washes",
+          "group": "brand",
+          "gradient": "linear-gradient(90deg, rgb(0, 103, 229) 0px, rgb(65, 131, 217) 100%)"
+        }
+      ],
+      "layout": "The page uses a centered max-width container (~1200-1280px) for all content, but hero and section backgrounds stretch full-bleed. The hero is left-aligned text on a cream band, no hero image — just typography breathing in space. Below the hero, a horizontal marquee strip breaks the vertical flow. Content sections alternate: the feature block is a 2-column text-right/image-left composition, then a 5-column card grid of equal-width colored tiles. Navigation is a minimal top bar with centered logo. Vertical rhythm is generous — ~70-80px between major sections — creating a poster-like pace rather than a dense information layout.",
+      "imagery": "Product photography is tight-cropped and dominant — bottles, taps, and map graphics fill their containers with no decorative context. The hero section uses massive whitespace instead of a hero image, letting the display headline own the frame. Solution cards mix product photography with a real lifestyle photo (paddleboarders) for human warmth. Colors in imagery are vibrant and saturated to match the candy-bright card palette. The only iconography is the Electric Blue water droplet, used as a small repeating brand mark in the marquee.",
+      "similar": [
+        {
+          "why": "Same warm cream aesthetic with rounded product photography and a single saturated accent — the water bottle space shares this sunlit clean palette.",
+          "business": "BKR"
+        },
+        {
+          "why": "Rounded 20px corners on every card, oversized display headlines, and a candy-bright product grid of colored tiles — the poster-card layout language is nearly identical.",
+          "business": "Chilly's"
+        },
+        {
+          "why": "Vivid full-bleed color blocks in the product grid and a flat no-shadow card system — both rely on color saturation instead of elevation for visual hierarchy.",
+          "business": "Hydroflask"
+        },
+        {
+          "why": "Generous whitespace, large custom-feeling display type for hero punch, and a single brand blue that appears in logo, CTA, and small repeated marks.",
+          "business": "S'well"
+        },
+        {
+          "why": "Warm cream hero bands with massive left-aligned display headlines and no hero image — the text-on-cream approach to opening pages.",
+          "business": "Boll & Branch"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "9999px",
+          "cards": "20px",
+          "images": "20px",
+          "buttons": "20px"
+        },
+        "elementGap": "20px",
+        "sectionGap": "80px",
+        "cardPadding": "20px",
+        "pageMaxWidth": "1280px"
+      },
+      "industry": "ecommerce",
+      "surfaces": [
+        {
+          "hex": "#fcfaf2",
+          "name": "Page Canvas",
+          "level": 0,
+          "purpose": "Default page background, off-white warm base"
+        },
+        {
+          "hex": "#f6ecc8",
+          "name": "Hero Cream",
+          "level": 1,
+          "purpose": "Full-bleed hero band and alternating section backdrop"
+        },
+        {
+          "hex": "#0067e5",
+          "name": "Solution Cards",
+          "level": 2,
+          "purpose": "Colorful product solution tiles, each card a different brand hue"
+        },
+        {
+          "hex": "#000f2",
+          "name": "Navy Block",
+          "level": 3,
+          "purpose": "Dark surface for contrast sections, text-heavy blocks"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "none — zero shadow. Depth comes from 20px corner radius and color contrast against the cream canvas, not from drop shadows.",
+          "element": "Solution cards, feature block images, hero product imagery"
+        }
+      ],
+      "northStar": "Sunlit cream lagoon with a vivid blue current. A warm beige expanse where one electric blue channel and full-bleed candy-bright cards cut through like sunlight on water.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 14,
+          "lineHeight": 1.3
+        },
+        {
+          "role": "body-sm",
+          "size": 16,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body",
+          "size": 18,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "subheading",
+          "size": 24,
+          "lineHeight": 1.3
+        },
+        {
+          "role": "heading-sm",
+          "size": 27,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 43,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading-lg",
+          "size": 48,
+          "lineHeight": 1.1
+        },
+        {
+          "role": "display",
+          "size": 72,
+          "lineHeight": 1
+        }
+      ],
+      "components": [
+        {
+          "name": "Top Navigation Bar",
+          "role": "Header with centered logo, grouped nav items, utility links",
+          "description": "White-translucent bar on cream canvas. Left group: 'Bottle', 'Travel Mug', 'Tap', 'Mission', 'Get Involved' (each with dropdown chevrons). Center: Dopper wordmark in Electric Blue (#0067e5). Right group: 'Find a Store' (link), 'For Businesses' (bold link), 'EN' locale, cart icon. No background fill, sits on the cream page."
+        },
+        {
+          "name": "Filled Blue Action Button",
+          "role": "Primary action",
+          "description": "Background #0067e5, text #fcfaf2, weight 600, ~16px font, 20px border-radius, ~20px horizontal padding × ~12px vertical. Rounded pill-adjacent shape (20px not full pill). Used for the most important action on each screen."
+        },
+        {
+          "name": "Outlined Dark Action Button",
+          "role": "Secondary action paired with primary",
+          "description": "Transparent fill, 1.5px black (#000000) border, black text, weight 600, 20px border-radius, matching padding to filled button. Always appears alongside the filled blue button in hero and feature blocks."
+        },
+        {
+          "name": "Hero Band",
+          "role": "Full-bleed opening section",
+          "description": "Background #f6ecc8 cream, no max-width constraint — the band stretches edge to edge. Display headline (Dopper 72px weight 400) sits left-aligned in the lower half. Body subtext (18px, Midnight Navy) follows. Two-button CTA cluster left-aligned. Downward chevron at the bottom center hints at scroll."
+        },
+        {
+          "name": "Marquee Ticker",
+          "role": "Scrolling announcement strip",
+          "description": "Sits between the hero and the feature section. Repeating 'new' word (Gilroy 27px weight 700, Midnight Navy) alternating with Electric Blue water droplet icons. Single horizontal row, no background, just inline text + icon rhythm."
+        },
+        {
+          "name": "Feature Block (Image + Copy)",
+          "role": "Two-column product highlight",
+          "description": "Left: large product imagery with 20px rounded corners, no shadow. Right: heading (Gilroy 43px weight 600, Midnight Navy) and supporting body (18px). Vertically centered alignment, generous gap (40-60px) between columns."
+        },
+        {
+          "name": "Solution Card — Teal Variant",
+          "role": "Product solution tile",
+          "description": "Background #116973 Deep Teal, 20px radius, full-bleed colored surface. Card title (Gilroy 27px weight 700, white) at top, descriptive copy (16px, white) below, product image filling lower portion, 'Learn more' link (white, underlined) at bottom-left."
+        },
+        {
+          "name": "Solution Card — Yellow Variant",
+          "role": "Product solution tile",
+          "description": "Background #fed200 Signal Yellow, 20px radius. Same structure as teal variant: title, copy, product image, 'Learn more' link. Title and body in Midnight Navy (#000f2e) for contrast against the bright yellow."
+        },
+        {
+          "name": "Solution Card — Electric Blue Variant",
+          "role": "Product solution tile",
+          "description": "Background #0067e5 Electric Blue, 20px radius. Title and body in #fcfaf2 off-white. Features the Tap product image with a stylized water drop graphic."
+        },
+        {
+          "name": "Solution Card — Sky Blue Variant",
+          "role": "Product solution tile",
+          "description": "Background #8ab1e6 Sky Wash, 20px radius. Title and body in Midnight Navy (#000f2e) for readability against the lighter blue. Features the Map product with green location pins."
+        },
+        {
+          "name": "Solution Card — Photo Variant",
+          "role": "Product solution tile with real photography",
+          "description": "Full-bleed lifestyle photo (people on paddleboards) as card surface, 20px radius. White title and copy overlay the photograph at the top, 'Learn more' link in white at bottom."
+        },
+        {
+          "name": "Section Heading",
+          "role": "Intro for content grids",
+          "description": "Gilroy 48px weight 700, Midnight Navy (#000f2e), left-aligned. No underline or accent — relies on size and weight alone. Pairs with a max-width container and generous top margin (~70-80px) before the grid."
+        },
+        {
+          "name": "Inline Link / 'Learn More'",
+          "role": "Card-level navigation",
+          "description": "Underlined text link, Gilroy 16px weight 600, color matches the card surface context (white on dark/colored cards, Midnight Navy on light cards). Sits at the bottom-left of every solution card."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Display hero headlines ('Hot, cold, or fizzy.') — a custom quirky face with tight line-height that sits like a poster cut-out. Substitute with Fraunces or a chunky display serif for close fidelity.",
+          "sizes": "58px, 72px",
+          "family": "Dopper",
+          "weight": "400",
+          "lineHeight": "1.00",
+          "substitute": "Fraunces"
+        },
+        {
+          "role": "Headlines, subheadings, card titles, body emphasis — the structural workhorse. Weight 600 for section headings ('Explore our solutions'), 700 for card titles, 400 for body. Substitute with Manrope or Outfit.",
+          "sizes": "18px, 20px, 24px, 27px, 43px, 48px",
+          "family": "Gilroy",
+          "weight": "400, 600, 700",
+          "lineHeight": "1.10, 1.20, 1.30",
+          "substitute": "Manrope"
+        },
+        {
+          "role": "System fallback for utility text and small body — inherits platform-native rhythm.",
+          "sizes": "16px",
+          "family": "-apple-system",
+          "weight": "400",
+          "lineHeight": "1.00",
+          "substitute": "system-ui"
+        }
+      ],
+      "description": "Dopper's visual language reads as a sunlit eco-counter: a warm cream canvas (#f6ecc8 hero, #fcfaf2 page body) carries generous whitespace and a single saturated blue (#0067e5) that snaps every interactive element into focus. The brand voice is confident but friendly — oversized display headlines in a custom 'Dopper' face, rounded 20px corners on every card and button, and solution blocks painted in candy-bright full fills (teal, yellow, sky, navy) that turn the product grid into a poster. Typography is dual-personality: a quirky custom display face for hero punch and a clean grotesque (Gilroy) for everything structural. The system avoids heavy shadows and decoration, instead using color blocks, generous 20px gaps, and large product imagery to create rhythm.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The system is flat-by-design. No drop shadows appear anywhere — the design creates hierarchy through color blocks (full-bleed card fills), generous whitespace, and rounded 20px corners. Elevation is implied by saturation, not by blur."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/abe99ae5-c7e3-4b1d-ab71-8d6061b4cdf3.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/62f98cfd-7477-4ab7-91fc-536355ee6fa7.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "dopper",
+    "generatedAt": "2026-06-03T17:16:10.083Z",
+    "summary": "Dopper's visual language reads as a sunlit eco-counter: a warm cream canvas (#f6ecc8 hero, #fcfaf2 page body) carries generous whitespace and a single saturated blue (#0067e5) that snaps every interactive element into focus. The brand voice is confident but friendly — oversized display headlines in a custom 'Dopper' face, rounded 20px corners on every card and button, and solution blocks painted in candy-bright full fills (teal, yellow, sky, navy) that turn the product grid into a poster. Typography is dual-personality: a quirky custom display face for hero punch and a clean grotesque (Gilroy) for everything structural. The system avoids heavy shadows and decoration, instead using color blocks, generous 20px gaps, and large product imagery to create rhythm.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "734ab03c-a326-43e3-a463-c5f90247404f",
+      "sourceUrl": "https://styles.refero.design/style/734ab03c-a326-43e3-a463-c5f90247404f",
+      "originalUrl": "https://dopper.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/abe99ae5-c7e3-4b1d-ab71-8d6061b4cdf3.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/62f98cfd-7477-4ab7-91fc-536355ee6fa7.jpg",
+      "importedAt": "2026-08-02T18:09:19.769Z",
+      "upstreamModifiedAt": "2026-06-03T17:16:10.085Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Sunlit cream lagoon with a vivid blue current. A warm beige expanse where one electric blue channel and full-bleed candy-bright cards cut through like sunlight on water.",
+      "industry": "ecommerce"
+    },
+    "tokens": [
+      {
+        "id": "color-midnight-navy",
+        "kind": "color",
+        "name": "Midnight Navy",
+        "value": "#000f2e",
+        "role": "Primary text, headings, dark surface cards, logo wordmark — the dominant ink of the system. Deep enough to anchor the cream canvas without going pure black",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-warm-cream",
+        "kind": "color",
+        "name": "Warm Cream",
+        "value": "#f6ecc8",
+        "role": "Hero band background, alternating section backdrop — sets the warm, sunlit atmosphere of the brand",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-soft-off-white",
+        "kind": "color",
+        "name": "Soft Off-White",
+        "value": "#fcfaf2",
+        "role": "Page canvas, card surfaces, button text on filled blue — the base layer everything sits on",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-electric-blue",
+        "kind": "color",
+        "name": "Electric Blue",
+        "value": "#0067e5",
+        "role": "Blue supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-heather-violet",
+        "kind": "color",
+        "name": "Heather Violet",
+        "value": "#515a8a",
+        "role": "Muted secondary text, supporting body copy — keeps longer passages from competing with the Midnight Navy headings",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signal-yellow",
+        "kind": "color",
+        "name": "Signal Yellow",
+        "value": "#fed200",
+        "role": "Solution card fill, decorative high-energy accent — one of the candy-bright poster colors for the product grid",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-teal",
+        "kind": "color",
+        "name": "Deep Teal",
+        "value": "#116973",
+        "role": "Solution card fill, decorative oceanic accent — reinforces the water brand narrative in the product grid",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-sky-wash",
+        "kind": "color",
+        "name": "Sky Wash",
+        "value": "#8ab1e6",
+        "role": "Solution card fill, soft brand-blue companion — a lighter blue tone for visual variety in card blocks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-black-ink",
+        "kind": "color",
+        "name": "Black Ink",
+        "value": "#000000",
+        "role": "Outlined button stroke, icon strokes, text in solid dark contexts — used sparingly for maximum contrast outlines",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-brand-blue-drift",
+        "kind": "color",
+        "name": "Brand Blue Drift",
+        "value": "#4183d9",
+        "role": "Gradient terminus paired with Electric Blue — used in the subtle horizontal brand gradient for decorative washes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-dopper",
+        "kind": "typography",
+        "name": "Dopper",
+        "value": "font-family: Dopper; font-weight: 400; font-size: 58px, 72px; line-height: 1.00",
+        "role": "Display hero headlines ('Hot, cold, or fizzy.') — a custom quirky face with tight line-height that sits like a poster cut-out. Substitute with Fraunces or a chunky display serif for close fidelity.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-gilroy",
+        "kind": "typography",
+        "name": "Gilroy",
+        "value": "font-family: Gilroy; font-weight: 400, 600, 700; font-size: 18px, 20px, 24px, 27px, 43px, 48px; line-height: 1.10, 1.20, 1.30",
+        "role": "Headlines, subheadings, card titles, body emphasis — the structural workhorse. Weight 600 for section headings ('Explore our solutions'), 700 for card titles, 400 for body. Substitute with Manrope or Outfit.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-apple-system",
+        "kind": "typography",
+        "name": "-apple-system",
+        "value": "font-family: -apple-system; font-weight: 400; font-size: 16px; line-height: 1.00",
+        "role": "System fallback for utility text and small body — inherits platform-native rhythm.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 14px; line-height: 1.3",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 16px; line-height: 1.5",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 18px; line-height: 1.5",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 24px; line-height: 1.3",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 27px; line-height: 1.2",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 43px; line-height: 1.2",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 48px; line-height: 1.1",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 72px; line-height: 1",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1280px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "9999px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "20px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "20px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "20px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system is flat-by-design. No drop shadows appear anywhere — the design creates hierarchy through color blocks (full-bleed card fills), generous whitespace, and rounded 20px corners. Elevation is implied by saturation, not by blur.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "White-translucent bar on cream canvas. Left group: 'Bottle', 'Travel Mug', 'Tap', 'Mission', 'Get Involved' (each with dropdown chevrons). Center: Dopper wordmark in Electric Blue (#0067e5). Right group: 'Find a Store' (link), 'For Businesses' (bold link), 'EN' locale, cart icon. No background fill, sits on the cream page.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "White-translucent bar on cream canvas. Left group: 'Bottle', 'Travel Mug', 'Tap', 'Mission', 'Get Involved' (each with dropdown chevrons). Center: Dopper wordmark in Electric Blue (#0067e5). Right group: 'Find a Store' (link), 'For Businesses' (bold link), 'EN' locale, cart icon. No background fill, sits on the cream page.",
+            "evidence": [],
+            "observedProperties": [
+              "Header with centered logo, grouped nav items, utility links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "filled-blue-action-button",
+        "name": "Filled Blue Action Button",
+        "category": "Refero components",
+        "description": "Background #0067e5, text #fcfaf2, weight 600, ~16px font, 20px border-radius, ~20px horizontal padding × ~12px vertical. Rounded pill-adjacent shape (20px not full pill). Used for the most important action on each screen.",
+        "variants": [
+          {
+            "id": "filled-blue-action-button-reference",
+            "name": "Reference",
+            "description": "Background #0067e5, text #fcfaf2, weight 600, ~16px font, 20px border-radius, ~20px horizontal padding × ~12px vertical. Rounded pill-adjacent shape (20px not full pill). Used for the most important action on each screen.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-dark-action-button",
+        "name": "Outlined Dark Action Button",
+        "category": "Refero components",
+        "description": "Transparent fill, 1.5px black (#000000) border, black text, weight 600, 20px border-radius, matching padding to filled button. Always appears alongside the filled blue button in hero and feature blocks.",
+        "variants": [
+          {
+            "id": "outlined-dark-action-button-reference",
+            "name": "Reference",
+            "description": "Transparent fill, 1.5px black (#000000) border, black text, weight 600, 20px border-radius, matching padding to filled button. Always appears alongside the filled blue button in hero and feature blocks.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action paired with primary"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-band",
+        "name": "Hero Band",
+        "category": "Refero components",
+        "description": "Background #f6ecc8 cream, no max-width constraint — the band stretches edge to edge. Display headline (Dopper 72px weight 400) sits left-aligned in the lower half. Body subtext (18px, Midnight Navy) follows. Two-button CTA cluster left-aligned. Downward chevron at the bottom center hints at scroll.",
+        "variants": [
+          {
+            "id": "hero-band-reference",
+            "name": "Reference",
+            "description": "Background #f6ecc8 cream, no max-width constraint — the band stretches edge to edge. Display headline (Dopper 72px weight 400) sits left-aligned in the lower half. Body subtext (18px, Midnight Navy) follows. Two-button CTA cluster left-aligned. Downward chevron at the bottom center hints at scroll.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed opening section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "marquee-ticker",
+        "name": "Marquee Ticker",
+        "category": "Refero components",
+        "description": "Sits between the hero and the feature section. Repeating 'new' word (Gilroy 27px weight 700, Midnight Navy) alternating with Electric Blue water droplet icons. Single horizontal row, no background, just inline text + icon rhythm.",
+        "variants": [
+          {
+            "id": "marquee-ticker-reference",
+            "name": "Reference",
+            "description": "Sits between the hero and the feature section. Repeating 'new' word (Gilroy 27px weight 700, Midnight Navy) alternating with Electric Blue water droplet icons. Single horizontal row, no background, just inline text + icon rhythm.",
+            "evidence": [],
+            "observedProperties": [
+              "Scrolling announcement strip"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-block-image-copy",
+        "name": "Feature Block (Image + Copy)",
+        "category": "Refero components",
+        "description": "Left: large product imagery with 20px rounded corners, no shadow. Right: heading (Gilroy 43px weight 600, Midnight Navy) and supporting body (18px). Vertically centered alignment, generous gap (40-60px) between columns.",
+        "variants": [
+          {
+            "id": "feature-block-image-copy-reference",
+            "name": "Reference",
+            "description": "Left: large product imagery with 20px rounded corners, no shadow. Right: heading (Gilroy 43px weight 600, Midnight Navy) and supporting body (18px). Vertically centered alignment, generous gap (40-60px) between columns.",
+            "evidence": [],
+            "observedProperties": [
+              "Two-column product highlight"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-card-teal-variant",
+        "name": "Solution Card — Teal Variant",
+        "category": "Refero components",
+        "description": "Background #116973 Deep Teal, 20px radius, full-bleed colored surface. Card title (Gilroy 27px weight 700, white) at top, descriptive copy (16px, white) below, product image filling lower portion, 'Learn more' link (white, underlined) at bottom-left.",
+        "variants": [
+          {
+            "id": "solution-card-teal-variant-reference",
+            "name": "Reference",
+            "description": "Background #116973 Deep Teal, 20px radius, full-bleed colored surface. Card title (Gilroy 27px weight 700, white) at top, descriptive copy (16px, white) below, product image filling lower portion, 'Learn more' link (white, underlined) at bottom-left.",
+            "evidence": [],
+            "observedProperties": [
+              "Product solution tile"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-card-yellow-variant",
+        "name": "Solution Card — Yellow Variant",
+        "category": "Refero components",
+        "description": "Background #fed200 Signal Yellow, 20px radius. Same structure as teal variant: title, copy, product image, 'Learn more' link. Title and body in Midnight Navy (#000f2e) for contrast against the bright yellow.",
+        "variants": [
+          {
+            "id": "solution-card-yellow-variant-reference",
+            "name": "Reference",
+            "description": "Background #fed200 Signal Yellow, 20px radius. Same structure as teal variant: title, copy, product image, 'Learn more' link. Title and body in Midnight Navy (#000f2e) for contrast against the bright yellow.",
+            "evidence": [],
+            "observedProperties": [
+              "Product solution tile"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-card-electric-blue-variant",
+        "name": "Solution Card — Electric Blue Variant",
+        "category": "Refero components",
+        "description": "Background #0067e5 Electric Blue, 20px radius. Title and body in #fcfaf2 off-white. Features the Tap product image with a stylized water drop graphic.",
+        "variants": [
+          {
+            "id": "solution-card-electric-blue-variant-reference",
+            "name": "Reference",
+            "description": "Background #0067e5 Electric Blue, 20px radius. Title and body in #fcfaf2 off-white. Features the Tap product image with a stylized water drop graphic.",
+            "evidence": [],
+            "observedProperties": [
+              "Product solution tile"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-card-sky-blue-variant",
+        "name": "Solution Card — Sky Blue Variant",
+        "category": "Refero components",
+        "description": "Background #8ab1e6 Sky Wash, 20px radius. Title and body in Midnight Navy (#000f2e) for readability against the lighter blue. Features the Map product with green location pins.",
+        "variants": [
+          {
+            "id": "solution-card-sky-blue-variant-reference",
+            "name": "Reference",
+            "description": "Background #8ab1e6 Sky Wash, 20px radius. Title and body in Midnight Navy (#000f2e) for readability against the lighter blue. Features the Map product with green location pins.",
+            "evidence": [],
+            "observedProperties": [
+              "Product solution tile"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-card-photo-variant",
+        "name": "Solution Card — Photo Variant",
+        "category": "Refero components",
+        "description": "Full-bleed lifestyle photo (people on paddleboards) as card surface, 20px radius. White title and copy overlay the photograph at the top, 'Learn more' link in white at bottom.",
+        "variants": [
+          {
+            "id": "solution-card-photo-variant-reference",
+            "name": "Reference",
+            "description": "Full-bleed lifestyle photo (people on paddleboards) as card surface, 20px radius. White title and copy overlay the photograph at the top, 'Learn more' link in white at bottom.",
+            "evidence": [],
+            "observedProperties": [
+              "Product solution tile with real photography"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading",
+        "name": "Section Heading",
+        "category": "Refero components",
+        "description": "Gilroy 48px weight 700, Midnight Navy (#000f2e), left-aligned. No underline or accent — relies on size and weight alone. Pairs with a max-width container and generous top margin (~70-80px) before the grid.",
+        "variants": [
+          {
+            "id": "section-heading-reference",
+            "name": "Reference",
+            "description": "Gilroy 48px weight 700, Midnight Navy (#000f2e), left-aligned. No underline or accent — relies on size and weight alone. Pairs with a max-width container and generous top margin (~70-80px) before the grid.",
+            "evidence": [],
+            "observedProperties": [
+              "Intro for content grids"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "inline-link-learn-more",
+        "name": "Inline Link / 'Learn More'",
+        "category": "Refero components",
+        "description": "Underlined text link, Gilroy 16px weight 600, color matches the card surface context (white on dark/colored cards, Midnight Navy on light cards). Sits at the bottom-left of every solution card.",
+        "variants": [
+          {
+            "id": "inline-link-learn-more-reference",
+            "name": "Reference",
+            "description": "Underlined text link, Gilroy 16px weight 600, color matches the card surface context (white on dark/colored cards, Midnight Navy on light cards). Sits at the bottom-left of every solution card.",
+            "evidence": [],
+            "observedProperties": [
+              "Card-level navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "The page uses a centered max-width container (~1200-1280px) for all content, but hero and section backgrounds stretch full-bleed. The hero is left-aligned text on a cream band, no hero image — just typography breathing in space. Below the hero, a horizontal marquee strip breaks the vertical flow. Content sections alternate: the feature block is a 2-column text-right/image-left composition, then a 5-column card grid of equal-width colored tiles. Navigation is a minimal top bar with centered logo. Vertical rhythm is generous — ~70-80px between major sections — creating a poster-like pace rather than a dense information layout.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product photography is tight-cropped and dominant — bottles, taps, and map graphics fill their containers with no decorative context. The hero section uses massive whitespace instead of a hero image, letting the display headline own the frame. Solution cards mix product photography with a real lifestyle photo (paddleboarders) for human warmth. Colors in imagery are vibrant and saturated to match the candy-bright card palette. The only iconography is the Electric Blue water droplet, used as a small repeating brand mark in the marquee.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system is flat-by-design. No drop shadows appear anywhere — the design creates hierarchy through color blocks (full-bleed card fills), generous whitespace, and rounded 20px corners. Elevation is implied by saturation, not by blur.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 20px border-radius on every card, button, and product image — consistency creates the rounded warm identity.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Default to the #f6ecc8 cream band for hero and alternating section backgrounds, and #fcfaf2 for the main page canvas.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Gilroy weight 700 for card titles and section headings, weight 600 for buttons and subheadings, weight 400 for body.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair the filled Electric Blue button (#0067e5) with the outlined black button on every hero — the duo is the signature action pattern.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the Solution Card grid to 5 equal-width columns at desktop; the candy-bright color variety only works as a complete set.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the Dopper display face only at 58px or larger, weight 400, with tight 1.0 line-height — it's a poster face, not a body face.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain 20px gaps within cards and 40-60px gaps between major layout elements for the comfortable spacious density.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add drop shadows to cards or images — the system is intentionally flat, depth comes from color blocks.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use pure white (#ffffff) for the canvas — always use #fcfaf2 to preserve the warm cream undertone.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce more than one button style per screen — filled blue for primary, outlined black for secondary, nothing else.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use the Dopper display face for anything smaller than 48px — it loses its quirky character at body sizes.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't dilute the cream hero band with images or gradients — the emptiness is the design.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use gray neutrals for body text — Midnight Navy (#000f2e) and Heather Violet (#515a8a) are the two text tones.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't break the 20px radius rule with sharp 0px corners on cards or buttons; the 9999px pill is reserved for tags only.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

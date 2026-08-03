@@ -1,0 +1,1730 @@
+{
+  "schemaVersion": 1,
+  "id": "34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+  "sourceUrl": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+  "sitemapLastModified": "2026-06-05T09:45:01.261Z",
+  "fetchedAt": "2026-08-02T18:07:13.504Z",
+  "contentHash": "2968a3ee523f3b2d0946fafc0dfd0b4aadf4578124b1cd12378501bba7308f58",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Readwise design system",
+            "item": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b#style-reference",
+        "name": "Readwise design system reference",
+        "headline": "Readwise design system | Refero Styles",
+        "description": "Explore Readwise's light Productivity design system: Pen Blue #478cd0, Highlighter Yellow #fff7ca colors, Charter, Mulish typography, and DESIGN.md for AI...",
+        "url": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+        "mainEntityOfPage": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Readwise",
+          "url": "https://readwise.io"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/e99b902d-4825-4fe2-9edf-1971be5b186b.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/e99b902d-4825-4fe2-9edf-1971be5b186b.jpg",
+          "caption": "Screenshot of Readwise"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/e99b902d-4825-4fe2-9edf-1971be5b186b.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Readwise design system",
+          "Readwise website design",
+          "Readwise colors",
+          "Readwise typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Productivity design system",
+          "Pen Blue",
+          "Highlighter Yellow",
+          "Reader Orange",
+          "Paper White",
+          "Charter",
+          "Mulish"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Readwise design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Readwise website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Readwise colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Readwise typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Productivity design system"
+          }
+        ],
+        "datePublished": "2026-02-22T09:37:09.000Z",
+        "dateModified": "2026-02-22T09:37:09.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://readwise.io",
+      "siteName": "Readwise",
+      "extractedAt": "2026-06-03T20:28:32.504Z",
+      "durationMs": 26643,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 235,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#1f1f1f",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.23929237775790413
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "heading",
+              "body",
+              "image"
+            ],
+            "frequency": 510,
+            "confidence": 1,
+            "prominence": 59276054.59400497,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "image",
+              "body",
+              "link"
+            ],
+            "frequency": 233,
+            "confidence": 1,
+            "prominence": 2732960.5377811785,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#478cd0",
+            "oklch": {
+              "c": 0.12467858079907806,
+              "h": 250.1720379567266,
+              "l": 0.625975447053782
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "link",
+              "image",
+              "icon"
+            ],
+            "frequency": 393,
+            "confidence": 1,
+            "prominence": 2017784.2991000977,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#f1f5f8",
+            "oklch": {
+              "c": 0.005869339385622285,
+              "h": 239.81962933195115,
+              "l": 0.9679737724512771
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 937895,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "link",
+              "other"
+            ],
+            "frequency": 9,
+            "confidence": 1,
+            "prominence": 16307.345017802061,
+            "properties": [
+              "color",
+              "borderColor",
+              "stroke"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#2d2f33",
+            "oklch": {
+              "c": 0.00771459570376682,
+              "h": 264.4535646903793,
+              "l": 0.30476359931767477
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 7276.669439530055,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#fff7ca",
+            "oklch": {
+              "c": 0.05862122283141525,
+              "h": 99.00606468941044,
+              "l": 0.9712336052006924
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 6446,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#fb9100",
+            "oklch": {
+              "c": 0.1737298350640575,
+              "h": 61.79386561901993,
+              "l": 0.7535021205941596
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 567,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.11550473648024567,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.41,
+            "background": "#fff7ca",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.16,
+            "background": "#f1f5f8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.48,
+            "background": "#1f1f1f",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.23,
+            "background": "#fff7ca",
+            "foreground": "#1f1f1f"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.04,
+            "background": "#f1f5f8",
+            "foreground": "#1f1f1f"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.41,
+            "background": "#ffffff",
+            "foreground": "#2d2f33"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.39,
+            "background": "#fff7ca",
+            "foreground": "#2d2f33"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.23,
+            "background": "#f1f5f8",
+            "foreground": "#2d2f33"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.15,
+            "background": "#fb9100",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.18,
+            "background": "#fb9100",
+            "foreground": "#1f1f1f"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.93,
+            "background": "#478cd0",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.84,
+            "background": "#fb9100",
+            "foreground": "#2d2f33"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.65,
+            "background": "#478cd0",
+            "foreground": "#1f1f1f"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.79,
+            "background": "#478cd0",
+            "foreground": "#2d2f33"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.54,
+            "background": "#478cd0",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.27,
+            "background": "#fff7ca",
+            "foreground": "#478cd0"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.23,
+            "background": "#f1f5f8",
+            "foreground": "#478cd0"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.29,
+            "background": "#fb9100",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.54,
+            "background": "#fb9100",
+            "foreground": "#478cd0"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "button",
+              "link"
+            ],
+            "frequency": 8
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 5,
+            "contexts": [],
+            "frequency": 60,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 8,
+            "contexts": [],
+            "frequency": 13,
+            "properties": [
+              "marginLeft",
+              "paddingTop",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 74,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginTop",
+              "marginBottom",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 72,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 14,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 18,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "marginTop",
+              "marginLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 25,
+            "properties": [
+              "marginTop",
+              "paddingTop",
+              "marginRight",
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 30,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 35,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 40,
+            "contexts": [],
+            "frequency": 16,
+            "properties": [
+              "marginBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 48,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "marginRight",
+              "marginTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 60,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 64,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 123,
+            "contexts": [],
+            "frequency": 12,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 147,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgb(116, 150, 247) 0%, rgb(72, 139, 210) 50%)",
+          "colors": [
+            "rgb(116, 150, 247)",
+            "rgb(72, 139, 210)"
+          ],
+          "frequency": 3
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(to right, rgb(255, 242, 172), rgb(255, 247, 202))",
+          "colors": [
+            "rgb(255, 242, 172)",
+            "rgb(255, 247, 202)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Mulish",
+            "source": "google",
+            "weights": [
+              400,
+              600,
+              700,
+              800
+            ],
+            "frequency": 218,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Charter",
+            "source": "custom",
+            "weights": [
+              400,
+              600
+            ],
+            "frequency": 13,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 11,
+            "family": "Mulish",
+            "weight": 800,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.09,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Mulish",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Mulish",
+            "weight": 700,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Mulish",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "image",
+              "link",
+              "body"
+            ],
+            "frequency": 161,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Mulish",
+            "weight": 600,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Mulish",
+            "weight": 700,
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 23,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Mulish",
+            "weight": 700,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "Charter",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "Mulish",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "Mulish",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link",
+              "icon"
+            ],
+            "frequency": 13,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 29,
+            "family": "Charter",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.13,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 50,
+            "family": "Charter",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 50,
+            "family": "Charter",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.13,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Charter 50px weight 400 for hero display headlines, lineHeight 1.00, no letter-spacing adjustment — the tight leading makes the headline feel like a book title.",
+        "Apply #fff7ca as a background wash behind 2–4 word phrases in body copy to signal emphasis; never as a full-surface background or button fill.",
+        "Set the primary CTA as a solid #478cd0 button with white text, 10px radius, and 10/24px padding — no gradients, no shadows on the button itself.",
+        "Use Mulish -0.02em tracking at all sizes; the tightened letter-spacing is what makes the sans feel like a deliberate choice rather than a default.",
+        "Layer cards on the #f1f5f8 canvas with white #ffffff fills and hairline borders rather than relying on shadows for separation.",
+        "Limit chromatic color to the single Pen Blue accent for actions and links; use Reader Orange only for the single 'Reader' feature badge.",
+        "Pair every serif headline with Mulish body text at 16–18px — the contrast between transitional serif and humanist sans is the site's typographic identity."
+      ],
+      "donts": [
+        "Don't use Charter for body copy, nav, or buttons — it's reserved for headlines 22px and above.",
+        "Don't apply #fff7ca to full card surfaces, section backgrounds, or large areas — it loses its meaning as a highlighter if it covers more than a line of text.",
+        "Don't introduce additional accent colors beyond Pen Blue, Highlighter Yellow, and Reader Orange — the system is deliberately near-monochromatic.",
+        "Don't use heavy drop shadows on cards or buttons; if elevation is needed, keep it soft (spread ≤ 20px) and tinted with Ink rather than pure black.",
+        "Don't set display headlines in all-caps or with positive letter-spacing — Charter at 50px works because of its tight 1.00 leading and natural tracking.",
+        "Don't use a filled colored button for secondary actions; use the Ghost Sign In style (white fill, 1px border) or a plain text link in Pen Blue.",
+        "Don't set the page background to pure white #ffffff — Page Mist #f1f5f8 is what makes the white cards and product mockups read as elevated surfaces."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#478cd0",
+          "name": "Pen Blue",
+          "role": "Blue supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color",
+          "group": "brand"
+        },
+        {
+          "hex": "#fff7ca",
+          "name": "Highlighter Yellow",
+          "role": "Yellow supporting accent for decorative details and low-frequency emphasis.",
+          "group": "accent"
+        },
+        {
+          "hex": "#fb9100",
+          "name": "Reader Orange",
+          "role": "Orange supporting accent for decorative details and low-frequency emphasis",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "role": "Card surfaces, product screenshot backgrounds, button text on filled buttons, and the nav background. The topmost surface tier",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1f1f1f",
+          "name": "Ink",
+          "role": "Primary heading and body text. Near-black rather than pure black — softer on the eye, reads as printed ink rather than digital display",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f1f5f8",
+          "name": "Page Mist",
+          "role": "Page canvas background. A cool, very-light blue-gray that reads as off-white paper rather than a flat gray, giving the entire page a subtle blue cast",
+          "group": "neutral"
+        },
+        {
+          "hex": "#2d2f33",
+          "name": "Deep Slate",
+          "role": "Secondary text and dark surface details. Used in nav and component borders where a slightly different tone from Ink is needed",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "True Black",
+          "role": "Dark supporting neutral for text, icons, and strong contrast.",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Centered, max-width ~1200px page container with a near-full-bleed hero. The hero is a vertical stack: nav bar at top, large serif headline, sub-headline with inline yellow highlight, single blue CTA, then the product mockup below — no split-screen, no side-by-side text/image. Sections below the hero alternate between centered text-and-icon blocks (3-column grid for 'How it works') and horizontal-scrolling card rows (testimonials). Vertical rhythm is comfortable but not spacious — ~64px between sections, ~24px internal padding. The nav is a single horizontal bar, not sticky, with a pill-shaped container that sits on the Page Mist background. No sidebar, no mega-menu, no footer visible above the fold.",
+      "imagery": "Product mockups dominate the visual hierarchy: a photorealistic laptop showing the Daily Review interface paired with an iPhone showing the mobile companion, both centered on the hero. The mockups are real product screenshots, not illustrations or 3D renders. Below the hero, user-generated content (tweet screenshots) provides social proof in a horizontal scrolling row — treated as found objects rather than designed cards. The only illustration is three small circular step icons in the 'How it works' section, each a flat filled circle with a white line-glyph. No lifestyle photography, no abstract graphics, no decorative imagery — every visual either shows the product or shows what users say about it.",
+      "similar": [
+        {
+          "why": "Same serif-display-headline + sans-body pairing on a near-white canvas, with a single accent color used sparingly for CTAs and links.",
+          "business": "Medium"
+        },
+        {
+          "why": "Editorial serif headlines on a quiet paper-white background, product-first hero with a real screenshot, and an almost-monochromatic palette that lets the content carry the color.",
+          "business": "Substack"
+        },
+        {
+          "why": "Comfortable density, minimal nav, product mockups as hero imagery, and a near-monochromatic palette with one accent color doing all the work.",
+          "business": "Notion"
+        },
+        {
+          "why": "Reading-focused product with a single blue accent on white, testimonial-heavy social proof section, and compact typographic rhythm.",
+          "business": "Pocket (Mozilla)"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "nav": "16px",
+          "tags": "10px",
+          "cards": "10px",
+          "buttons": "10px"
+        },
+        "elementGap": "12px",
+        "sectionGap": "64px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "productivity",
+      "surfaces": [
+        {
+          "hex": "#f1f5f8",
+          "name": "Page Canvas",
+          "level": 0,
+          "purpose": "Base page background. Cool off-white paper tone."
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Card Surface",
+          "level": 1,
+          "purpose": "Testimonial cards, product mockup backgrounds, elevated content blocks."
+        },
+        {
+          "hex": "#fff7ca",
+          "name": "Highlight Wash",
+          "level": 2,
+          "purpose": "In-line emphasis behind text. Also used as a soft callout surface."
+        }
+      ],
+      "elevation": [
+        {
+          "style": "0 20px 40px rgba(31,31,31,0.15)",
+          "element": "Product mockup laptop frame"
+        },
+        {
+          "style": "0 2px 8px rgba(31,31,31,0.08)",
+          "element": "Testimonial cards"
+        }
+      ],
+      "northStar": "A reader's annotated journal — quiet paper-white, serif headlines, and one blue pen.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 11,
+          "lineHeight": 1.09,
+          "letterSpacing": -0.22
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.28
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.32
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.36
+        },
+        {
+          "role": "heading-sm",
+          "size": 22,
+          "lineHeight": 1.25,
+          "letterSpacing": -0.44
+        },
+        {
+          "role": "heading",
+          "size": 29,
+          "lineHeight": 1.13,
+          "letterSpacing": 0
+        },
+        {
+          "role": "display",
+          "size": 50,
+          "lineHeight": 1,
+          "letterSpacing": 0
+        }
+      ],
+      "components": [
+        {
+          "name": "Primary CTA Button",
+          "role": "The main conversion action on hero and feature sections",
+          "description": "Filled with Pen Blue (#478cd0), white text, Mulish 16px weight 600 uppercase tracking, 10px border-radius, 10px vertical / 24px horizontal padding. Single, confident button — no secondary action beside it on the hero."
+        },
+        {
+          "name": "Ghost Sign In Button",
+          "role": "Top-right navigation action",
+          "description": "White background, 1px True Black border, 10px radius, Mulish 14px weight 600, 10px vertical / 18px horizontal padding. Outlined, not filled — keeps the nav quiet."
+        },
+        {
+          "name": "Feature Badge Tag",
+          "role": "Flags new or beta features in the nav",
+          "description": "Reader Orange (#fb9100) pill background, white text, Mulish 11px weight 700, 10px radius, tightly padded (2–4px vertical, 6px horizontal). Small enough to be a footnote, colorful enough to catch the eye."
+        },
+        {
+          "name": "Step Icon Circle",
+          "role": "Visual anchor for 'How it works' steps",
+          "description": "36–40px filled circle with a white line-icon inside. Three instances use three different colors: Pen Blue, a desaturated purple, and Reader Orange. Each circle sits above a Charter 22px step title and a Mulish 14–16px description."
+        },
+        {
+          "name": "Testimonial Card",
+          "role": "User social proof in horizontal scroll",
+          "description": "White card on Page Mist canvas, 10px radius, 24px padding, hairline 1px border in #f1f5f8 (slightly darker than canvas), optional very soft shadow. Contains avatar, name, handle, date, and the tweet text in Mulish 14px. Twitter card aesthetic — looks like a screenshot, not a designed card."
+        },
+        {
+          "name": "In-line Highlighted Text",
+          "role": "Emphasizes key phrases in body copy",
+          "description": "Text wrapped in a Highlighter Yellow (#fff7ca) background wash, no border, no padding adjustment. The yellow extends slightly above and below the text baseline. This is the product's signature visual element — it IS the brand."
+        },
+        {
+          "name": "Product Hero Mockup",
+          "role": "Shows the actual app on laptop and phone",
+          "description": "Photorealistic laptop and iPhone frame, centered on Page Mist canvas, slight rotation/tilt for depth. The laptop screen shows the Daily Review interface; the phone shows a connected mobile view. Functions as the hero's primary visual — not an illustration, a real product shot."
+        },
+        {
+          "name": "Navigation Bar",
+          "role": "Top-level site navigation",
+          "description": "White background, 16px radius on the outer container (pill-shaped bar), horizontal layout: logo left, nav links center, Sign In button right. Tight vertical padding (~14px). Minimal, quiet, almost invisible."
+        },
+        {
+          "name": "Text Link",
+          "role": "In-body navigation and references",
+          "description": "Pen Blue (#478cd0), underlined, Mulish inherits surrounding text size. Used for usernames, hashtags, and references inside testimonial content. No special hover treatment needed — the underline IS the affordance."
+        },
+        {
+          "name": "Section Heading",
+          "role": "Top-of-section titles like 'Here's how Readwise works:' and 'Here's what our users say:'",
+          "description": "Charter 29px weight 400, Ink color, lineHeight 1.13, centered alignment. Sets the editorial tone immediately — a serif headline tells the reader they're in a book-adjacent space, not a dashboard."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Editorial serif used exclusively for headlines and large display text. The choice of a transitional serif in a productivity SaaS is the site's signature move — it signals 'reading' and 'books' before any copy is read. Weight 400 at 50px with lineHeight 1.00 creates tight, book-title-style display; weight 600 at 29px handles section headlines. Substitute: Source Serif Pro or Lora if Charter is unavailable.",
+          "sizes": "22px, 29px, 50px",
+          "family": "Charter",
+          "weight": "400, 600",
+          "lineHeight": "1.00–1.25",
+          "substitute": "Source Serif Pro",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Humanist sans for everything non-display: nav, body, buttons, labels, icons. The weight range is wide — 400 for body, 600 for buttons, 700/800 for bold tags and emphasis. Tighter lineHeight (1.09) at 11px keeps captions compact; 1.50 at 16–18px gives body copy room to breathe. Consistent -0.02em tracking across all sizes tightens the sans into a clean utility voice.",
+          "sizes": "11px, 14px, 16px, 18px, 22px",
+          "family": "Mulish",
+          "weight": "400, 600, 700, 800",
+          "lineHeight": "1.09–1.50",
+          "substitute": "Inter or DM Sans",
+          "letterSpacing": "-0.02em",
+          "fontFeatureSettings": "\"tnum\" on, \"lnum\" on"
+        }
+      ],
+      "description": "Readwise presents a literary productivity workspace: a near-white canvas with a single editorial blue accent and warm yellow highlighter washes that literally visualize the product's purpose. The type system pairs a transitional serif (Charter) for headlines with a humanist sans (Mulish) for everything else, creating a bookish-but-modern reading-room atmosphere rather than a typical SaaS dashboard feel. Surfaces are flat and quiet — cards float on a cool paper-white (#f1f5f8) with hairline borders, almost no shadows, and rounded corners that feel like printed cards rather than app tiles. Yellow (#fff7ca) functions as a literal highlighter behind in-line emphasized text, not as a decorative accent — the product's identity IS the act of marking what matters. Components stay compact and text-forward, with one filled blue button carrying all the weight and everything else rendered in ghost or text-link form.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Typographic Identity",
+          "content": "The serif/sans pairing is the single most distinctive choice in this system. Charter at 50px weight 400 with lineHeight 1.00 for the hero, Charter at 29px weight 400 for section headlines, then Mulish for everything from 22px down. The serif does not appear in body copy, nav, or buttons — it is a display-only face. This split is deliberate: the serif signals 'reading material / books / editorial', while Mulish handles all functional UI. Don't blur this boundary; don't set Charter at 14px or 16px, and don't let Mulish creep into the headline role."
+        }
+      ],
+      "elevationPhilosophy": "Elevation is used sparingly and only on hero product imagery and testimonial cards. Most surfaces rely on hairline borders and the contrast between the page canvas (#f1f5f8) and white cards to establish layering. Shadows are soft, low-spread, and tinted with the Ink color rather than pure black — this keeps the page from feeling like a typical app UI."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/eafc743c-0138-4fef-a7c2-29a2ed3d60cf.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/e99b902d-4825-4fe2-9edf-1971be5b186b.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "readwise",
+    "generatedAt": "2026-06-03T20:28:32.504Z",
+    "summary": "Readwise presents a literary productivity workspace: a near-white canvas with a single editorial blue accent and warm yellow highlighter washes that literally visualize the product's purpose. The type system pairs a transitional serif (Charter) for headlines with a humanist sans (Mulish) for everything else, creating a bookish-but-modern reading-room atmosphere rather than a typical SaaS dashboard feel. Surfaces are flat and quiet — cards float on a cool paper-white (#f1f5f8) with hairline borders, almost no shadows, and rounded corners that feel like printed cards rather than app tiles. Yellow (#fff7ca) functions as a literal highlighter behind in-line emphasized text, not as a decorative accent — the product's identity IS the act of marking what matters. Components stay compact and text-forward, with one filled blue button carrying all the weight and everything else rendered in ghost or text-link form.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+      "sourceUrl": "https://styles.refero.design/style/34c8dbee-f5d9-4495-a0e0-a25c6ca4b95b",
+      "originalUrl": "https://readwise.io",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/eafc743c-0138-4fef-a7c2-29a2ed3d60cf.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/e99b902d-4825-4fe2-9edf-1971be5b186b.jpg",
+      "importedAt": "2026-08-02T18:07:13.504Z",
+      "upstreamModifiedAt": "2026-06-05T09:45:01.261Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "A reader's annotated journal — quiet paper-white, serif headlines, and one blue pen.",
+      "industry": "productivity"
+    },
+    "tokens": [
+      {
+        "id": "color-pen-blue",
+        "kind": "color",
+        "name": "Pen Blue",
+        "value": "#478cd0",
+        "role": "Blue supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-highlighter-yellow",
+        "kind": "color",
+        "name": "Highlighter Yellow",
+        "value": "#fff7ca",
+        "role": "Yellow supporting accent for decorative details and low-frequency emphasis.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-reader-orange",
+        "kind": "color",
+        "name": "Reader Orange",
+        "value": "#fb9100",
+        "role": "Orange supporting accent for decorative details and low-frequency emphasis",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper-white",
+        "kind": "color",
+        "name": "Paper White",
+        "value": "#ffffff",
+        "role": "Card surfaces, product screenshot backgrounds, button text on filled buttons, and the nav background. The topmost surface tier",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#1f1f1f",
+        "role": "Primary heading and body text. Near-black rather than pure black — softer on the eye, reads as printed ink rather than digital display",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-page-mist",
+        "kind": "color",
+        "name": "Page Mist",
+        "value": "#f1f5f8",
+        "role": "Page canvas background. A cool, very-light blue-gray that reads as off-white paper rather than a flat gray, giving the entire page a subtle blue cast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-slate",
+        "kind": "color",
+        "name": "Deep Slate",
+        "value": "#2d2f33",
+        "role": "Secondary text and dark surface details. Used in nav and component borders where a slightly different tone from Ink is needed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-true-black",
+        "kind": "color",
+        "name": "True Black",
+        "value": "#000000",
+        "role": "Dark supporting neutral for text, icons, and strong contrast.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-charter",
+        "kind": "typography",
+        "name": "Charter",
+        "value": "font-family: Charter; font-weight: 400, 600; font-size: 22px, 29px, 50px; line-height: 1.00–1.25; letter-spacing: normal",
+        "role": "Editorial serif used exclusively for headlines and large display text. The choice of a transitional serif in a productivity SaaS is the site's signature move — it signals 'reading' and 'books' before any copy is read. Weight 400 at 50px with lineHeight 1.00 creates tight, book-title-style display; weight 600 at 29px handles section headlines. Substitute: Source Serif Pro or Lora if Charter is unavailable.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-mulish",
+        "kind": "typography",
+        "name": "Mulish",
+        "value": "font-family: Mulish; font-weight: 400, 600, 700, 800; font-size: 11px, 14px, 16px, 18px, 22px; line-height: 1.09–1.50; letter-spacing: -0.02em",
+        "role": "Humanist sans for everything non-display: nav, body, buttons, labels, icons. The weight range is wide — 400 for body, 600 for buttons, 700/800 for bold tags and emphasis. Tighter lineHeight (1.09) at 11px keeps captions compact; 1.50 at 16–18px gives body copy room to breathe. Consistent -0.02em tracking across all sizes tightens the sans into a clean utility voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 11px; line-height: 1.09; letter-spacing: -0.22px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.5; letter-spacing: -0.28px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.5; letter-spacing: -0.32px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.5; letter-spacing: -0.36px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 22px; line-height: 1.25; letter-spacing: -0.44px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 29px; line-height: 1.13; letter-spacing: 0px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 50px; line-height: 1; letter-spacing: 0px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "12px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-nav",
+        "kind": "radius",
+        "name": "nav",
+        "value": "16px",
+        "role": "Imported nav radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "10px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "10px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "10px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Elevation is used sparingly and only on hero product imagery and testimonial cards. Most surfaces rely on hairline borders and the contrast between the page canvas (#f1f5f8) and white cards to establish layering. Shadows are soft, low-spread, and tinted with the Ink color rather than pure black — this keeps the page from feeling like a typical app UI.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "primary-cta-button",
+        "name": "Primary CTA Button",
+        "category": "Refero components",
+        "description": "Filled with Pen Blue (#478cd0), white text, Mulish 16px weight 600 uppercase tracking, 10px border-radius, 10px vertical / 24px horizontal padding. Single, confident button — no secondary action beside it on the hero.",
+        "variants": [
+          {
+            "id": "primary-cta-button-reference",
+            "name": "Reference",
+            "description": "Filled with Pen Blue (#478cd0), white text, Mulish 16px weight 600 uppercase tracking, 10px border-radius, 10px vertical / 24px horizontal padding. Single, confident button — no secondary action beside it on the hero.",
+            "evidence": [],
+            "observedProperties": [
+              "The main conversion action on hero and feature sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-sign-in-button",
+        "name": "Ghost Sign In Button",
+        "category": "Refero components",
+        "description": "White background, 1px True Black border, 10px radius, Mulish 14px weight 600, 10px vertical / 18px horizontal padding. Outlined, not filled — keeps the nav quiet.",
+        "variants": [
+          {
+            "id": "ghost-sign-in-button-reference",
+            "name": "Reference",
+            "description": "White background, 1px True Black border, 10px radius, Mulish 14px weight 600, 10px vertical / 18px horizontal padding. Outlined, not filled — keeps the nav quiet.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-right navigation action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-badge-tag",
+        "name": "Feature Badge Tag",
+        "category": "Refero components",
+        "description": "Reader Orange (#fb9100) pill background, white text, Mulish 11px weight 700, 10px radius, tightly padded (2–4px vertical, 6px horizontal). Small enough to be a footnote, colorful enough to catch the eye.",
+        "variants": [
+          {
+            "id": "feature-badge-tag-reference",
+            "name": "Reference",
+            "description": "Reader Orange (#fb9100) pill background, white text, Mulish 11px weight 700, 10px radius, tightly padded (2–4px vertical, 6px horizontal). Small enough to be a footnote, colorful enough to catch the eye.",
+            "evidence": [],
+            "observedProperties": [
+              "Flags new or beta features in the nav"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "step-icon-circle",
+        "name": "Step Icon Circle",
+        "category": "Refero components",
+        "description": "36–40px filled circle with a white line-icon inside. Three instances use three different colors: Pen Blue, a desaturated purple, and Reader Orange. Each circle sits above a Charter 22px step title and a Mulish 14–16px description.",
+        "variants": [
+          {
+            "id": "step-icon-circle-reference",
+            "name": "Reference",
+            "description": "36–40px filled circle with a white line-icon inside. Three instances use three different colors: Pen Blue, a desaturated purple, and Reader Orange. Each circle sits above a Charter 22px step title and a Mulish 14–16px description.",
+            "evidence": [],
+            "observedProperties": [
+              "Visual anchor for 'How it works' steps"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "testimonial-card",
+        "name": "Testimonial Card",
+        "category": "Refero components",
+        "description": "White card on Page Mist canvas, 10px radius, 24px padding, hairline 1px border in #f1f5f8 (slightly darker than canvas), optional very soft shadow. Contains avatar, name, handle, date, and the tweet text in Mulish 14px. Twitter card aesthetic — looks like a screenshot, not a designed card.",
+        "variants": [
+          {
+            "id": "testimonial-card-reference",
+            "name": "Reference",
+            "description": "White card on Page Mist canvas, 10px radius, 24px padding, hairline 1px border in #f1f5f8 (slightly darker than canvas), optional very soft shadow. Contains avatar, name, handle, date, and the tweet text in Mulish 14px. Twitter card aesthetic — looks like a screenshot, not a designed card.",
+            "evidence": [],
+            "observedProperties": [
+              "User social proof in horizontal scroll"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "in-line-highlighted-text",
+        "name": "In-line Highlighted Text",
+        "category": "Refero components",
+        "description": "Text wrapped in a Highlighter Yellow (#fff7ca) background wash, no border, no padding adjustment. The yellow extends slightly above and below the text baseline. This is the product's signature visual element — it IS the brand.",
+        "variants": [
+          {
+            "id": "in-line-highlighted-text-reference",
+            "name": "Reference",
+            "description": "Text wrapped in a Highlighter Yellow (#fff7ca) background wash, no border, no padding adjustment. The yellow extends slightly above and below the text baseline. This is the product's signature visual element — it IS the brand.",
+            "evidence": [],
+            "observedProperties": [
+              "Emphasizes key phrases in body copy"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-hero-mockup",
+        "name": "Product Hero Mockup",
+        "category": "Refero components",
+        "description": "Photorealistic laptop and iPhone frame, centered on Page Mist canvas, slight rotation/tilt for depth. The laptop screen shows the Daily Review interface; the phone shows a connected mobile view. Functions as the hero's primary visual — not an illustration, a real product shot.",
+        "variants": [
+          {
+            "id": "product-hero-mockup-reference",
+            "name": "Reference",
+            "description": "Photorealistic laptop and iPhone frame, centered on Page Mist canvas, slight rotation/tilt for depth. The laptop screen shows the Daily Review interface; the phone shows a connected mobile view. Functions as the hero's primary visual — not an illustration, a real product shot.",
+            "evidence": [],
+            "observedProperties": [
+              "Shows the actual app on laptop and phone"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "navigation-bar",
+        "name": "Navigation Bar",
+        "category": "Refero components",
+        "description": "White background, 16px radius on the outer container (pill-shaped bar), horizontal layout: logo left, nav links center, Sign In button right. Tight vertical padding (~14px). Minimal, quiet, almost invisible.",
+        "variants": [
+          {
+            "id": "navigation-bar-reference",
+            "name": "Reference",
+            "description": "White background, 16px radius on the outer container (pill-shaped bar), horizontal layout: logo left, nav links center, Sign In button right. Tight vertical padding (~14px). Minimal, quiet, almost invisible.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-level site navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "text-link",
+        "name": "Text Link",
+        "category": "Refero components",
+        "description": "Pen Blue (#478cd0), underlined, Mulish inherits surrounding text size. Used for usernames, hashtags, and references inside testimonial content. No special hover treatment needed — the underline IS the affordance.",
+        "variants": [
+          {
+            "id": "text-link-reference",
+            "name": "Reference",
+            "description": "Pen Blue (#478cd0), underlined, Mulish inherits surrounding text size. Used for usernames, hashtags, and references inside testimonial content. No special hover treatment needed — the underline IS the affordance.",
+            "evidence": [],
+            "observedProperties": [
+              "In-body navigation and references"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading",
+        "name": "Section Heading",
+        "category": "Refero components",
+        "description": "Charter 29px weight 400, Ink color, lineHeight 1.13, centered alignment. Sets the editorial tone immediately — a serif headline tells the reader they're in a book-adjacent space, not a dashboard.",
+        "variants": [
+          {
+            "id": "section-heading-reference",
+            "name": "Reference",
+            "description": "Charter 29px weight 400, Ink color, lineHeight 1.13, centered alignment. Sets the editorial tone immediately — a serif headline tells the reader they're in a book-adjacent space, not a dashboard.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-of-section titles like 'Here's how Readwise works:' and 'Here's what our users say:'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Centered, max-width ~1200px page container with a near-full-bleed hero. The hero is a vertical stack: nav bar at top, large serif headline, sub-headline with inline yellow highlight, single blue CTA, then the product mockup below — no split-screen, no side-by-side text/image. Sections below the hero alternate between centered text-and-icon blocks (3-column grid for 'How it works') and horizontal-scrolling card rows (testimonials). Vertical rhythm is comfortable but not spacious — ~64px between sections, ~24px internal padding. The nav is a single horizontal bar, not sticky, with a pill-shaped container that sits on the Page Mist background. No sidebar, no mega-menu, no footer visible above the fold.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product mockups dominate the visual hierarchy: a photorealistic laptop showing the Daily Review interface paired with an iPhone showing the mobile companion, both centered on the hero. The mockups are real product screenshots, not illustrations or 3D renders. Below the hero, user-generated content (tweet screenshots) provides social proof in a horizontal scrolling row — treated as found objects rather than designed cards. The only illustration is three small circular step icons in the 'How it works' section, each a flat filled circle with a white line-glyph. No lifestyle photography, no abstract graphics, no decorative imagery — every visual either shows the product or shows what users say about it.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Elevation is used sparingly and only on hero product imagery and testimonial cards. Most surfaces rely on hairline borders and the contrast between the page canvas (#f1f5f8) and white cards to establish layering. Shadows are soft, low-spread, and tinted with the Ink color rather than pure black — this keeps the page from feeling like a typical app UI.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Charter 50px weight 400 for hero display headlines, lineHeight 1.00, no letter-spacing adjustment — the tight leading makes the headline feel like a book title.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply #fff7ca as a background wash behind 2–4 word phrases in body copy to signal emphasis; never as a full-surface background or button fill.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set the primary CTA as a solid #478cd0 button with white text, 10px radius, and 10/24px padding — no gradients, no shadows on the button itself.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Mulish -0.02em tracking at all sizes; the tightened letter-spacing is what makes the sans feel like a deliberate choice rather than a default.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Layer cards on the #f1f5f8 canvas with white #ffffff fills and hairline borders rather than relying on shadows for separation.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Limit chromatic color to the single Pen Blue accent for actions and links; use Reader Orange only for the single 'Reader' feature badge.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair every serif headline with Mulish body text at 16–18px — the contrast between transitional serif and humanist sans is the site's typographic identity.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use Charter for body copy, nav, or buttons — it's reserved for headlines 22px and above.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't apply #fff7ca to full card surfaces, section backgrounds, or large areas — it loses its meaning as a highlighter if it covers more than a line of text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce additional accent colors beyond Pen Blue, Highlighter Yellow, and Reader Orange — the system is deliberately near-monochromatic.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use heavy drop shadows on cards or buttons; if elevation is needed, keep it soft (spread ≤ 20px) and tinted with Ink rather than pure black.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't set display headlines in all-caps or with positive letter-spacing — Charter at 50px works because of its tight 1.00 leading and natural tracking.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use a filled colored button for secondary actions; use the Ghost Sign In style (white fill, 1px border) or a plain text link in Pen Blue.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't set the page background to pure white #ffffff — Page Mist #f1f5f8 is what makes the white cards and product mockups read as elevated surfaces.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

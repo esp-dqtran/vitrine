@@ -49,6 +49,13 @@ export interface ProjectDocumentAccess {
 }
 
 export interface ProjectDocumentStore {
+  listDocuments(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView[] | undefined>;
+  createDocument(userId: number, projectId: ResearchProjectId, title: string): Promise<ProjectDocumentView | undefined>;
+  getDocumentById(userId: number, projectId: ResearchProjectId, documentId: number): Promise<ProjectDocumentView | undefined>;
+  updateDocumentById(userId: number, projectId: ResearchProjectId, documentId: number, patch: ProjectDocumentPatch): Promise<ProjectDocumentView | undefined>;
+  listCommentsById(userId: number, projectId: ResearchProjectId, documentId: number): Promise<ProjectDocumentCommentView[] | undefined>;
+  addCommentById(userId: number, projectId: ResearchProjectId, documentId: number, body: string): Promise<ProjectDocumentCommentView | undefined>;
+  resolveCommentById(userId: number, projectId: ResearchProjectId, documentId: number, commentId: number, resolved: boolean): Promise<ProjectDocumentCommentView | undefined>;
   ensureDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
   getDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
   updateDocument(userId: number, projectId: ResearchProjectId, patch: ProjectDocumentPatch): Promise<ProjectDocumentView | undefined>;
@@ -127,13 +134,18 @@ const selectDocumentSql = `
          document.page_width,
          document.octobase_document_id AS collaboration_document_id,
          CASE
-           WHEN document.owner_user_id = $1 THEN 'editor'
-           ELSE collaborator.role
+           WHEN project.organization_id IS NULL AND document.owner_user_id = $1 THEN 'editor'
+           WHEN team_member.role IN ('owner', 'admin') THEN 'editor'
+           WHEN collaborator.role IS NOT NULL THEN collaborator.role
+           ELSE 'editor'
          END AS role,
          document.created_at,
          document.updated_at
   FROM project_documents document
   JOIN research_projects project ON project.id = document.project_id
+  LEFT JOIN organization_members team_member
+    ON team_member.organization_id = project.organization_id
+   AND team_member.user_id = $1
   LEFT JOIN project_document_collaborators collaborator
     ON collaborator.project_id = document.project_id
    AND collaborator.user_id = $1
@@ -141,10 +153,15 @@ const selectDocumentSql = `
     AND document.document_key = $3
     AND document.trashed_at IS NULL
     AND (
-      document.owner_user_id = $1
+      (project.organization_id IS NULL AND document.owner_user_id = $1)
+      OR team_member.user_id = $1
       OR collaborator.role IN ('editor', 'viewer')
     )
   LIMIT 1`;
+
+const selectDocumentsSql = selectDocumentSql
+  .replace("AND document.document_key = $3", "AND ($3::bigint IS NULL OR document.id = $3::bigint)")
+  .replace("  LIMIT 1", "  ORDER BY document.updated_at DESC, document.id DESC");
 
 export function createProjectDocumentStore(
   databaseQuery: ProjectDocumentQuery = (sql, values) =>
@@ -161,8 +178,136 @@ export function createProjectDocumentStore(
     return result.rows[0] ? view(result.rows[0] as DocumentRow) : undefined;
   };
 
+  const getDocumentById = async (
+    userId: number,
+    projectId: ResearchProjectId,
+    documentId: number,
+  ): Promise<ProjectDocumentView | undefined> => {
+    const result = await databaseQuery(selectDocumentsSql, [userId, projectId, documentId]);
+    return result.rows[0] ? view(result.rows[0] as DocumentRow) : undefined;
+  };
+
+  const listCommentsForDocument = async (
+    userId: number,
+    projectId: ResearchProjectId,
+    documentId: number,
+  ): Promise<ProjectDocumentCommentView[] | undefined> => {
+    const document = await getDocumentById(userId, projectId, documentId);
+    if (!document) return undefined;
+    const comments = await databaseQuery(
+      `SELECT comment.id, comment.body, comment.author_user_id,
+              author.email AS author_email, comment.resolved_at,
+              comment.created_at, comment.updated_at
+       FROM project_document_comments comment
+       JOIN users author ON author.id = comment.author_user_id
+       WHERE comment.document_id = $1
+       ORDER BY comment.resolved_at NULLS FIRST, comment.created_at, comment.id`,
+      [document.id],
+    );
+    return comments.rows.map((row) => commentView(row as CommentRow));
+  };
+
   return {
     getDocument,
+    getDocumentById,
+
+    async listDocuments(userId, projectId) {
+      const result = await databaseQuery(selectDocumentsSql, [userId, projectId, null]);
+      if (!result.rows.length) {
+        const project = await databaseQuery(
+          `SELECT 1 FROM research_projects project
+           LEFT JOIN organization_members team_member
+             ON team_member.organization_id = project.organization_id AND team_member.user_id = $1
+           LEFT JOIN project_document_collaborators collaborator
+             ON collaborator.project_id = project.id AND collaborator.user_id = $1
+           WHERE project.public_id = $2::uuid AND (
+             (project.organization_id IS NULL AND project.user_id = $1)
+             OR team_member.user_id = $1 OR collaborator.user_id = $1
+           ) LIMIT 1`,
+          [userId, projectId],
+        );
+        if (!project.rowCount) return undefined;
+      }
+      return result.rows.map((row) => view(row as DocumentRow));
+    },
+
+    async createDocument(userId, projectId, title) {
+      const collaborationId = randomUUID();
+      const documentKey = `page:${randomUUID()}`;
+      const inserted = await databaseQuery(
+        `INSERT INTO project_documents (
+           project_id, owner_user_id, document_key, title,
+           octobase_document_id, last_editor_mode, integration_version,
+           created_by_user_id, created_by_email,
+           last_edited_by_user_id, last_edited_by_email
+         )
+         SELECT project.id, $1, $3, $4, $5, 'page', $6,
+                account.id, account.email, account.id, account.email
+         FROM research_projects project
+         JOIN users account ON account.id = $1
+         LEFT JOIN organization_members team_member
+           ON team_member.organization_id = project.organization_id AND team_member.user_id = $1
+         LEFT JOIN project_document_collaborators collaborator
+           ON collaborator.project_id = project.id AND collaborator.user_id = $1
+         WHERE project.public_id = $2::uuid AND (
+           (project.organization_id IS NULL AND project.user_id = $1)
+           OR team_member.role IN ('owner', 'admin', 'member')
+           OR collaborator.role = 'editor'
+         )
+         RETURNING id`,
+        [userId, projectId, documentKey, title, collaborationId, PROJECT_DOCUMENT_INTEGRATION_VERSION],
+      );
+      const id = Number(inserted.rows[0]?.id);
+      return Number.isSafeInteger(id) ? getDocumentById(userId, projectId, id) : undefined;
+    },
+
+    async updateDocumentById(userId, projectId, documentId, patch) {
+      const existing = await getDocumentById(userId, projectId, documentId);
+      if (!existing || existing.role !== "editor") return undefined;
+      await databaseQuery(
+        `UPDATE project_documents SET
+           title = COALESCE($2, title), icon = COALESCE($3, icon),
+           is_favorite = COALESCE($4, is_favorite), page_width = COALESCE($5, page_width),
+           updated_at = now(), last_edited_by_user_id = $6::bigint,
+           last_edited_by_email = (SELECT email FROM users WHERE id = $6::bigint)
+         WHERE id = $1`,
+        [documentId, patch.title ?? null, patch.icon ?? null,
+          patch.isFavorite ?? null, patch.pageWidth ?? null, userId],
+      );
+      return getDocumentById(userId, projectId, documentId);
+    },
+
+    listCommentsById: listCommentsForDocument,
+
+    async addCommentById(userId, projectId, documentId, body) {
+      const document = await getDocumentById(userId, projectId, documentId);
+      if (!document || document.role !== "editor") return undefined;
+      const inserted = await databaseQuery(
+        `INSERT INTO project_document_comments (project_id, document_id, author_user_id, body)
+         SELECT project_id, id, $2, $3 FROM project_documents
+         WHERE id = $1 AND trashed_at IS NULL
+         RETURNING id, body, author_user_id,
+           (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+           resolved_at, created_at, updated_at`,
+        [document.id, userId, body],
+      );
+      return inserted.rows[0] ? commentView(inserted.rows[0] as CommentRow) : undefined;
+    },
+
+    async resolveCommentById(userId, projectId, documentId, commentId, resolved) {
+      const document = await getDocumentById(userId, projectId, documentId);
+      if (!document || document.role !== "editor") return undefined;
+      const updated = await databaseQuery(
+        `UPDATE project_document_comments comment
+         SET resolved_at = CASE WHEN $3 THEN now() ELSE NULL END, updated_at = now()
+         WHERE comment.id = $2 AND comment.document_id = $1
+         RETURNING id, body, author_user_id,
+           (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+           resolved_at, created_at, updated_at`,
+        [document.id, commentId, resolved],
+      );
+      return updated.rows[0] ? commentView(updated.rows[0] as CommentRow) : undefined;
+    },
 
     async ensureDocument(userId, projectId) {
       return transaction(async (transactionQuery) => {
@@ -184,7 +329,7 @@ export function createProjectDocumentStore(
              last_edited_by_email
            )
            SELECT project.id,
-                  project.user_id,
+                  $1,
                   $3,
                   CASE
                     WHEN char_length(project.title) <= 108 THEN project.title || ' notes'
@@ -198,9 +343,31 @@ export function createProjectDocumentStore(
                   account.id,
                   account.email
            FROM research_projects project
-           JOIN users account ON account.id = project.user_id
+           JOIN users account ON account.id = $1
            WHERE project.public_id = $2::uuid
-             AND project.user_id = $1
+             AND (
+               (project.organization_id IS NULL AND project.user_id = $1)
+               OR EXISTS (
+                 SELECT 1 FROM organization_members membership
+                 WHERE membership.organization_id = project.organization_id
+                   AND membership.user_id = $1
+                   AND (
+                     membership.role IN ('owner', 'admin')
+                     OR NOT EXISTS (
+                       SELECT 1 FROM project_document_collaborators project_member
+                       WHERE project_member.project_id = project.id
+                         AND project_member.user_id = $1
+                         AND project_member.role = 'viewer'
+                     )
+                   )
+               )
+               OR EXISTS (
+                 SELECT 1 FROM project_document_collaborators project_member
+                 WHERE project_member.project_id = project.id
+                   AND project_member.user_id = $1
+                   AND project_member.role = 'editor'
+               )
+             )
            ON CONFLICT (project_id, document_key) DO NOTHING
            RETURNING id`,
           [
@@ -319,17 +486,24 @@ export function createProjectDocumentStore(
       const result = await databaseQuery(
         `SELECT document.id AS document_id,
                 CASE
-                  WHEN document.owner_user_id = $1 THEN 'editor'
-                  ELSE collaborator.role
+                  WHEN project.organization_id IS NULL AND document.owner_user_id = $1 THEN 'editor'
+                  WHEN team_member.role IN ('owner', 'admin') THEN 'editor'
+                  WHEN collaborator.role IS NOT NULL THEN collaborator.role
+                  ELSE 'editor'
                 END AS role
          FROM project_documents document
+         JOIN research_projects project ON project.id = document.project_id
+         LEFT JOIN organization_members team_member
+           ON team_member.organization_id = project.organization_id
+          AND team_member.user_id = $1
          LEFT JOIN project_document_collaborators collaborator
            ON collaborator.project_id = document.project_id
           AND collaborator.user_id = $1
          WHERE document.octobase_document_id = $2
            AND document.trashed_at IS NULL
            AND (
-             document.owner_user_id = $1
+             (project.organization_id IS NULL AND document.owner_user_id = $1)
+             OR team_member.user_id = $1
              OR collaborator.role IN ('editor', 'viewer')
            )
          LIMIT 1`,

@@ -22,6 +22,10 @@ test('maps every application surface to the compact Screen detail hierarchy', as
   assert.match(styles, /h4, h5, h6, label, legend[^{]*\{[^}]*font:\s*var\(--vitrine-type-label\)\s*!important/s);
   assert.match(styles, /p, li, dt, dd, blockquote, input, textarea, select[^{]*\{[^}]*font:\s*var\(--vitrine-type-body\)\s*!important/s);
   assert.match(styles, /button\[data-variant="primary"\][^{]*\{[^}]*font:\s*var\(--vitrine-type-action\)\s*!important/s);
+  assert.match(
+    styles,
+    /\.reference-detail__actions\s*button\s*\{[^}]*font:\s*var\(--vitrine-type-action\)\s*!important;[^}]*font-size:\s*16px\s*!important/s,
+  );
   assert.match(styles, /small, time, figcaption[^{]*\{[^}]*font:\s*var\(--vitrine-type-supporting\)\s*!important/s);
   assert.match(styles, /\[class\*="__metadata"\][^{]*\{[^}]*font:\s*var\(--vitrine-type-detail\)\s*!important/s);
   assert.match(styles, /\[data-admin-dashboard="true"\][^}]*h1\s*\{[^}]*font:\s*var\(--vitrine-type-title\)\s*!important/s);

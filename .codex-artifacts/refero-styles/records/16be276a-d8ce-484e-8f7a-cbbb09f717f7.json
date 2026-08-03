@@ -1,0 +1,1740 @@
+{
+  "schemaVersion": 1,
+  "id": "16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+  "sourceUrl": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+  "sitemapLastModified": "2026-06-05T03:59:47.501Z",
+  "fetchedAt": "2026-08-02T18:07:47.459Z",
+  "contentHash": "585c9a14ebedecde476d2a6a3a6e0f42764080e283b8a780e54fb57ba35df3a3",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Outsource Consultants design system",
+            "item": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7#style-reference",
+        "name": "Outsource Consultants design system reference",
+        "headline": "Outsource Consultants design system | Refero Styles",
+        "description": "Explore Outsource Consultants's light Agency design system: Indigo Strike #1925aa, Bone #e8e6e0 colors, GT America Mono, PP Neue Montreal typography, and...",
+        "url": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+        "mainEntityOfPage": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Outsource Consultants",
+          "url": "https://oci.madebybuzzworthy.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/13192e6d-ac3f-46ed-8d04-528a3ebd1342.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/13192e6d-ac3f-46ed-8d04-528a3ebd1342.jpg",
+          "caption": "Screenshot of Outsource Consultants"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/13192e6d-ac3f-46ed-8d04-528a3ebd1342.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Outsource Consultants design system",
+          "Outsource Consultants website design",
+          "Outsource Consultants colors",
+          "Outsource Consultants typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Indigo Strike",
+          "Bone",
+          "Ink",
+          "Paper",
+          "GT America Mono",
+          "PP Neue Montreal",
+          "ui-sans-serif"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Outsource Consultants design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Outsource Consultants website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Outsource Consultants colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Outsource Consultants typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-03-24T12:09:56.000Z",
+        "dateModified": "2026-03-24T12:09:56.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://oci.madebybuzzworthy.com",
+      "siteName": "Outsource Consultants",
+      "extractedAt": "2026-06-03T17:58:11.567Z",
+      "durationMs": 28932,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 573,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "body",
+              "nav",
+              "heading",
+              "icon",
+              "link",
+              "image",
+              "footer"
+            ],
+            "frequency": 565,
+            "confidence": 1,
+            "prominence": 102433285.7596373,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#1925aa",
+            "oklch": {
+              "c": 0.2046620436497447,
+              "h": 267.98904777304193,
+              "l": 0.372857
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "heading",
+              "icon",
+              "body",
+              "link",
+              "card",
+              "footer"
+            ],
+            "frequency": 1194,
+            "confidence": 1,
+            "prominence": 13248742.194117073,
+            "properties": [
+              "borderColor",
+              "backgroundColor",
+              "color"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#e8e6e0",
+            "oklch": {
+              "c": 0.00834615931840682,
+              "h": 91.19305273771978,
+              "l": 0.924815
+            },
+            "contexts": [
+              "nav",
+              "other",
+              "heading",
+              "list",
+              "body",
+              "link",
+              "card",
+              "button"
+            ],
+            "frequency": 779,
+            "confidence": 1,
+            "prominence": 12451100.086619494,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0.00004979863382744551,
+              "h": 23.78842605119702,
+              "l": 0.999994
+            },
+            "contexts": [
+              "button",
+              "nav",
+              "other",
+              "heading",
+              "badge",
+              "body",
+              "card",
+              "icon"
+            ],
+            "frequency": 155,
+            "confidence": 1,
+            "prominence": 9245277.411367258,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#0d1355",
+            "oklch": {
+              "c": 0.11677900068527015,
+              "h": 269.99379293680056,
+              "l": 0.23938
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1058,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.25180344310255287,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.92,
+            "background": "#0d1355",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.83,
+            "background": "#e8e6e0",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.55,
+            "background": "#0d1355",
+            "foreground": "#e8e6e0"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.13,
+            "background": "#ffffff",
+            "foreground": "#1925aa"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.92,
+            "background": "#e8e6e0",
+            "foreground": "#1925aa"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.89,
+            "background": "#1925aa",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.52,
+            "background": "#0d1355",
+            "foreground": "#1925aa"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.25,
+            "background": "#ffffff",
+            "foreground": "#e8e6e0"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.24,
+            "background": "#0d1355",
+            "foreground": "#000000"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 8,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 9,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 19,
+            "properties": [
+              "marginBottom",
+              "marginRight",
+              "marginLeft",
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 11,
+            "contexts": [],
+            "frequency": 14,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 9,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 15,
+            "contexts": [],
+            "frequency": 63,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "columnGap",
+              "paddingTop",
+              "marginLeft",
+              "marginTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 16,
+            "contexts": [],
+            "frequency": 9,
+            "properties": [
+              "paddingBottom",
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 17,
+            "contexts": [],
+            "frequency": 12,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 18,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "marginLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "marginTop",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 22,
+            "contexts": [],
+            "frequency": 16,
+            "properties": [
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 25,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 26,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "marginTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 28,
+            "contexts": [],
+            "frequency": 9,
+            "properties": [
+              "marginRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 30,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 32,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 35,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 44,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 45,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 46,
+            "contexts": [],
+            "frequency": 9,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 50,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "marginBottom",
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 55,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 65,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 80,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 100,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 128,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 150,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 180,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "GT America Mono",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 198,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "ui-sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 163,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "PP Neue Montreal",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 155,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 0.9
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "GT America Mono",
+            "weight": 500,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 10,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "nav"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 10,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "other",
+              "body",
+              "nav"
+            ],
+            "frequency": 108,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "body",
+              "icon",
+              "other"
+            ],
+            "frequency": 60,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "nav"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.05,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1,
+            "letterSpacing": 0.02,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "GT America Mono",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 16,
+            "family": "ui-sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "nav",
+              "heading",
+              "list",
+              "card",
+              "link",
+              "image",
+              "button",
+              "icon",
+              "footer"
+            ],
+            "frequency": 163,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "card",
+              "other",
+              "heading",
+              "link"
+            ],
+            "frequency": 21,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "badge",
+              "other",
+              "body"
+            ],
+            "frequency": 10,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 30,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "heading",
+              "icon",
+              "other"
+            ],
+            "frequency": 30,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 36,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 7,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 46,
+            "family": "PP Neue Montreal",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 37,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 160,
+            "family": "PP Neue Montreal",
+            "weight": 500,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 38,
+            "lineHeight": 0.94,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Let PP Neue Montreal do the work — push display sizes to 46–160px and use line-height 0.94–1.10 at those scales; do not add weight to compensate for small size.",
+        "Use GT America Mono exclusively for labels, captions, nav items, and accordion descriptions; keep it at 10–14px with tracking -0.05em (tight) at 10px and +0.02em (open) at 14px.",
+        "Alternate between the bone canvas and the Indigo Strike full-bleed to create section rhythm — do not stack multiple bone sections without an indigo interruption.",
+        "Treat borders as hairlines: 1px Ink at low opacity for dividers between accordion rows and section bisectors; never use borders for cards or containers.",
+        "Use vertical rotated text in the right margin (18px PP Neue Montreal) as a section annotation device.",
+        "Anchor every section with a flush-left display headline in the body color (Ink on bone, Bone on indigo); keep headlines full-width and uncontained.",
+        "Keep all corners sharp — 0px radius on every element including buttons, cards, and tags."
+      ],
+      "donts": [
+        "Do not introduce shadows, glows, blurs, or any form of drop elevation — the system is deliberately flat.",
+        "Do not use indigo as a button background fill — the Menu button is white with an indigo icon square; indigo is a surface, not an action color.",
+        "Do not add a second accent color — the system is bone + ink + a single indigo; any new chromatic role will dilute the editorial tension.",
+        "Do not use PP Neue Montreal below 12px — the grotesque loses character at small sizes; switch to GT America Mono for anything sub-14px.",
+        "Do not center headlines or wrap them — display type stays flush-left and bleeds toward the page edge.",
+        "Do not use cards with backgrounds, padding, or radius — content sits directly on the bone canvas divided only by hairlines.",
+        "Do not use a system font fallback for hero type — if PP Neue Montreal is unavailable, substitute with a grotesque (Inter or Söhne), not a humanist sans."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#1925aa",
+          "name": "Indigo Strike",
+          "role": "Brand mark, full-bleed section backgrounds, large headlines, icon strokes, nav borders — the singular chromatic voice of the system, used as a sudden tonal shift rather than a decorative accent",
+          "group": "brand"
+        },
+        {
+          "hex": "#e8e6e0",
+          "name": "Bone",
+          "role": "Page canvas and card surface — a warm off-white that reads as paper rather than screen, providing the neutral ground against which indigo gains force",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Ink",
+          "role": "Body copy, small labels, standard text — used for dense information layers that must stay recessive against the bone canvas",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Light supporting surface for subtle backgrounds and section separation. Do not promote it to the primary CTA color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#0d1355",
+          "name": "Deep Indigo",
+          "role": "Logo and brand-mark fill — a near-black violet that grounds the wordmark against the brighter Indigo Strike used in UI contexts",
+          "group": "brand"
+        }
+      ],
+      "layout": "Asymmetric editorial layout. The page is not a max-width centered column — it is a series of full-bleed horizontal bands (bone or indigo) with content anchored to the left edge and occasional vertical annotations in the right margin. The hero is a 160px flush-left display headline with a rotated side label, spanning the full viewport. Section transitions use the split-heading device (one word left, one word right, hairline bisector). Service lists are full-width accordions, not card grids. Navigation is a minimal single-line header with no dropdowns visible — menu access is gated by the Menu button. The overall rhythm is slow and poster-like: few elements per viewport, large vertical breathing room (80px section gaps), and tonal shifts doing the work that cards and grids do in conventional SaaS layouts.",
+      "imagery": "No photography, illustration, or product imagery. The system is pure typography on flat color — the page reads as a printed document. The only graphical element is the small square brand mark in the header and the '/' icon glyph in the menu button, both flat single-color. Visual richness comes entirely from typographic scale and the bone/indigo tonal alternation.",
+      "similar": [
+        {
+          "why": "Same editorial-broadsheet approach: full-bleed single-color sections, grotesque sans at extreme display sizes, minimal nav, and typography doing all the compositional work",
+          "business": "Pentagram"
+        },
+        {
+          "why": "Single-accent chromatic interruption against a neutral canvas, rotated side labels as annotation devices, and poster-scale type used in place of imagery",
+          "business": "Studio Dumbar"
+        },
+        {
+          "why": "Architectural/technical aesthetic with mono micro-labels, hairline dividers, and a bone-paper feel — type as the primary visual element",
+          "business": "Werkplaats Typografie archive"
+        },
+        {
+          "why": "Split two-word headings bisected by hairlines, generous asymmetric whitespace, and a single indigo/blue that detonates against warm off-white",
+          "business": "Hofmann & Brand (or similar Swiss editorial agencies)"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "0px",
+          "cards": "0px",
+          "inputs": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "15px",
+        "sectionGap": "80px",
+        "cardPadding": "20px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#e8e6e0",
+          "name": "Bone Canvas",
+          "level": 0,
+          "purpose": "Base page background — the warm off-white that defines the system's paper-like quality"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "level": 1,
+          "purpose": "Menu button fill and any element that needs to visually punch through the bone canvas"
+        },
+        {
+          "hex": "#1925aa",
+          "name": "Indigo Field",
+          "level": 2,
+          "purpose": "Full-bleed section background — the only chromatic surface, used for tonal punctuation between bone sections"
+        }
+      ],
+      "northStar": "Architectural broadsheet on bone paper. A monograph aesthetic where one violent indigo section interrupts an otherwise warm, typographically maximalist grid.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.5
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body-lg",
+          "size": 18,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "subheading",
+          "size": 24,
+          "lineHeight": 1.3
+        },
+        {
+          "role": "heading-sm",
+          "size": 30,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 36,
+          "lineHeight": 1.1
+        },
+        {
+          "role": "heading-lg",
+          "size": 46,
+          "lineHeight": 1.05
+        },
+        {
+          "role": "display",
+          "size": 160,
+          "lineHeight": 0.94,
+          "letterSpacing": -0.8
+        }
+      ],
+      "components": [
+        {
+          "name": "Brand Header Bar",
+          "role": "Sticky top navigation",
+          "description": "Left-aligned logo wordmark ('Outsource Consultants Inc.') set in GT America Mono 10px in Deep Indigo, preceded by a small square brand mark in Deep Indigo. Right-aligned secondary nav links in GT America Mono 10px tracking +0.02em. The header sits directly on the bone canvas with no background fill and no shadow — its presence is defined by content density rather than a container."
+        },
+        {
+          "name": "Menu Toggle Button",
+          "role": "Navigation trigger",
+          "description": "A square Paper (#ffffff) button containing the word 'MENU' in GT America Mono 10px tracking +0.02em in Ink, with a flush-right 1:1 Indigo Strike square containing a white '/' glyph. Zero radius, no border, no shadow. The pairing of neutral button + chromatic icon is the only place where indigo acts as a small functional mark — it reads as a light switch rather than a CTA."
+        },
+        {
+          "name": "Hero Display Headline",
+          "role": "Section anchor / brand statement",
+          "description": "PP Neue Montreal 160px weight 400, line-height 0.94, color Bone (#e8e6e0) when on the indigo full-bleed, or Ink when on bone canvas. The extreme line-height is intentional — letters at 160px nearly touch vertically, creating a dense block of type. Sits flush-left, bleeding to the page edge, with no accompanying image or illustration."
+        },
+        {
+          "name": "Vertical Side Label",
+          "role": "Section annotation",
+          "description": "Short caption (2–4 words) rotated 90° counter-clockwise, set in PP Neue Montreal 18px weight 400 in Bone, positioned in the right margin. Acts as a printed-margin annotation — a signature editorial device borrowed from broadsheet layout."
+        },
+        {
+          "name": "Full-Bleed Indigo Section",
+          "role": "Alternating tonal band",
+          "description": "Edge-to-edge Indigo Strike (#1925aa) background with a large multi-line headline in PP Neue Montreal 46px weight 400 in Bone, and supporting body copy in 18px Bone. The section is a complete inversion of the bone canvas — same typography, reversed tonal relationship. Used sparingly, once per page, to break monotony."
+        },
+        {
+          "name": "Service Accordion Item — Collapsed",
+          "role": "Expandable list row",
+          "description": "Full-width row, PP Neue Montreal 24px weight 500 in Indigo Strike, flush-left, with a '+' glyph in PP Neue Montreal 24px in Indigo Strike flush-right. Separated from the next row by a 1px hairline border in Ink at 10–15% opacity. Zero padding-top/bottom asymmetry — the row is the unit of rhythm."
+        },
+        {
+          "name": "Service Accordion Item — Expanded",
+          "role": "Open accordion panel",
+          "description": "Same row treatment as collapsed state but with a '×' glyph replacing '+', and a description block below in GT America Mono 10px tracking -0.05em in Indigo Strike, followed by a '[ LEARN MORE → ]' link in the same mono micro-label style. The expanded description sits indented to align with the title baseline, not flush-left, creating a subtle hanging indent."
+        },
+        {
+          "name": "Section Heading Pair",
+          "role": "Two-part section title",
+          "description": "Two words placed at opposite horizontal extremes of the section — e.g. 'Our' flush-left and 'Services' flush-right — both in PP Neue Montreal 160px weight 400 in Indigo Strike. A 1px vertical hairline in Ink at low opacity bisects the section between them. This split-heading pattern is a signature device for introducing multi-part content."
+        },
+        {
+          "name": "Centered Body Caption",
+          "role": "Editorial block",
+          "description": "Short paragraph (2–4 lines) in GT America Mono 10px tracking +0.02em, all-caps, centered, in Indigo Strike. Used as a transitional element between sections — reads as a caption beneath an architectural plate."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Micro-metadata and technical labels — nav identifiers, menu button text, accordion descriptions, footer tags. The mono face signals 'technical / regulatory / specification' and is kept under 14px so it reads as annotation rather than content. Negative tracking at 10px tightens the monospace grid; the slight positive tracking at 14px opens it for legibility. This pairing of editorial sans + technical mono is the system's core typographic gesture.",
+          "sizes": "10, 12, 14px",
+          "family": "GT America Mono",
+          "weight": "400, 500",
+          "lineHeight": "1.00, 1.30, 1.33, 1.50",
+          "substitute": "JetBrains Mono, IBM Plex Mono, or Space Mono",
+          "letterSpacing": "-0.05em at 10px, +0.02em at 14px"
+        },
+        {
+          "role": "Display and editorial type — carries the massive hero headline at 160px (line-height 0.94, so letters nearly touch), subheadings at 36–46px, and body at 18px. The grotesque geometry and tight line-height at scale create a poster-like voice; the same family steps down to 12–16px for nav links and service titles. Using one sans family from 12px to 160px (an extreme ratio) is a signature choice — it means hierarchy is built by size alone, not by weight or family switching.",
+          "sizes": "12, 16, 18, 24, 30, 36, 46, 160px",
+          "family": "PP Neue Montreal",
+          "weight": "400, 500",
+          "lineHeight": "0.94, 1.00, 1.50",
+          "substitute": "Inter, Söhne, or General Sans"
+        },
+        {
+          "role": "ui-sans-serif — detected in extracted data but not described by AI",
+          "sizes": "16px",
+          "family": "ui-sans-serif",
+          "weight": "400",
+          "lineHeight": "1.5"
+        }
+      ],
+      "description": "Outsource Consultants operates on a stark editorial-architectural system: a warm bone-gray canvas, a single vivid indigo that detonates across full-bleed sections, and typography that swings between a grotesque sans at 160px and a mono micro-label at 10px. The aesthetic borrows from Swiss broadsides and architecture plates — large type does the heavy lifting while information is compressed into monospaced metadata. Layouts are asymmetric and generous, with sections alternating between bone and indigo rather than stacking on white. Components are borderless, almost flat, relying on scale and the indigo-on-bone contrast to create hierarchy rather than elevation, shadows, or fills. The system feels less like a SaaS dashboard and more like a printed monograph for a technical practice.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Typographic Philosophy",
+          "content": "The system uses a single grotesque sans (PP Neue Montreal) from 12px to 160px, creating an extreme type ratio of ~13:1 between body and display. This is unusual — most sites cap display at 3–4× body size. The result is that headlines behave like posters rather than headings: they dominate the viewport and force the page to scroll vertically through them. Pairing this with a monospaced micro-face (GT America Mono) at 10–14px creates a two-register system: monumental statements and technical annotations. There is no middle-weight voice. Body text at 16–18px is the quietest register, which is counterintuitive but intentional — the system privileges the dramatic and the granular over the conversational."
+        }
+      ],
+      "elevationPhilosophy": "No shadows, no blur, no glow. The system treats elevation as a tonal problem rather than a depth problem: hierarchy is created by switching between bone, paper, and indigo surfaces, and by using borderless dividers (1px hairline rules) rather than drop-shadows. This flatness is a deliberate editorial choice — the page should read as a printed plate, not a glassy app."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/b0ea024c-57c0-41ce-a999-f39f98402a81.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/13192e6d-ac3f-46ed-8d04-528a3ebd1342.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "outsource-consultants",
+    "generatedAt": "2026-06-03T17:58:11.567Z",
+    "summary": "Outsource Consultants operates on a stark editorial-architectural system: a warm bone-gray canvas, a single vivid indigo that detonates across full-bleed sections, and typography that swings between a grotesque sans at 160px and a mono micro-label at 10px. The aesthetic borrows from Swiss broadsides and architecture plates — large type does the heavy lifting while information is compressed into monospaced metadata. Layouts are asymmetric and generous, with sections alternating between bone and indigo rather than stacking on white. Components are borderless, almost flat, relying on scale and the indigo-on-bone contrast to create hierarchy rather than elevation, shadows, or fills. The system feels less like a SaaS dashboard and more like a printed monograph for a technical practice.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+      "sourceUrl": "https://styles.refero.design/style/16be276a-d8ce-484e-8f7a-cbbb09f717f7",
+      "originalUrl": "https://oci.madebybuzzworthy.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/b0ea024c-57c0-41ce-a999-f39f98402a81.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/13192e6d-ac3f-46ed-8d04-528a3ebd1342.jpg",
+      "importedAt": "2026-08-02T18:07:47.459Z",
+      "upstreamModifiedAt": "2026-06-05T03:59:47.501Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Architectural broadsheet on bone paper. A monograph aesthetic where one violent indigo section interrupts an otherwise warm, typographically maximalist grid.",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-indigo-strike",
+        "kind": "color",
+        "name": "Indigo Strike",
+        "value": "#1925aa",
+        "role": "Brand mark, full-bleed section backgrounds, large headlines, icon strokes, nav borders — the singular chromatic voice of the system, used as a sudden tonal shift rather than a decorative accent",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone",
+        "kind": "color",
+        "name": "Bone",
+        "value": "#e8e6e0",
+        "role": "Page canvas and card surface — a warm off-white that reads as paper rather than screen, providing the neutral ground against which indigo gains force",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#000000",
+        "role": "Body copy, small labels, standard text — used for dense information layers that must stay recessive against the bone canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Light supporting surface for subtle backgrounds and section separation. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-indigo",
+        "kind": "color",
+        "name": "Deep Indigo",
+        "value": "#0d1355",
+        "role": "Logo and brand-mark fill — a near-black violet that grounds the wordmark against the brighter Indigo Strike used in UI contexts",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-gt-america-mono",
+        "kind": "typography",
+        "name": "GT America Mono",
+        "value": "font-family: GT America Mono; font-weight: 400, 500; font-size: 10, 12, 14px; line-height: 1.00, 1.30, 1.33, 1.50; letter-spacing: -0.05em at 10px, +0.02em at 14px",
+        "role": "Micro-metadata and technical labels — nav identifiers, menu button text, accordion descriptions, footer tags. The mono face signals 'technical / regulatory / specification' and is kept under 14px so it reads as annotation rather than content. Negative tracking at 10px tightens the monospace grid; the slight positive tracking at 14px opens it for legibility. This pairing of editorial sans + technical mono is the system's core typographic gesture.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-pp-neue-montreal",
+        "kind": "typography",
+        "name": "PP Neue Montreal",
+        "value": "font-family: PP Neue Montreal; font-weight: 400, 500; font-size: 12, 16, 18, 24, 30, 36, 46, 160px; line-height: 0.94, 1.00, 1.50",
+        "role": "Display and editorial type — carries the massive hero headline at 160px (line-height 0.94, so letters nearly touch), subheadings at 36–46px, and body at 18px. The grotesque geometry and tight line-height at scale create a poster-like voice; the same family steps down to 12–16px for nav links and service titles. Using one sans family from 12px to 160px (an extreme ratio) is a signature choice — it means hierarchy is built by size alone, not by weight or family switching.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-ui-sans-serif",
+        "kind": "typography",
+        "name": "ui-sans-serif",
+        "value": "font-family: ui-sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5",
+        "role": "ui-sans-serif — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 1.5; letter-spacing: -0.5px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.5",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-lg-scale",
+        "kind": "typography",
+        "name": "body-lg",
+        "value": "font-size: 18px; line-height: 1.5",
+        "role": "Imported body-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 24px; line-height: 1.3",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 30px; line-height: 1.2",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 36px; line-height: 1.1",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 46px; line-height: 1.05",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 160px; line-height: 0.94; letter-spacing: -0.8px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "15px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "0px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "No shadows, no blur, no glow. The system treats elevation as a tonal problem rather than a depth problem: hierarchy is created by switching between bone, paper, and indigo surfaces, and by using borderless dividers (1px hairline rules) rather than drop-shadows. This flatness is a deliberate editorial choice — the page should read as a printed plate, not a glassy app.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "brand-header-bar",
+        "name": "Brand Header Bar",
+        "category": "Refero components",
+        "description": "Left-aligned logo wordmark ('Outsource Consultants Inc.') set in GT America Mono 10px in Deep Indigo, preceded by a small square brand mark in Deep Indigo. Right-aligned secondary nav links in GT America Mono 10px tracking +0.02em. The header sits directly on the bone canvas with no background fill and no shadow — its presence is defined by content density rather than a container.",
+        "variants": [
+          {
+            "id": "brand-header-bar-reference",
+            "name": "Reference",
+            "description": "Left-aligned logo wordmark ('Outsource Consultants Inc.') set in GT America Mono 10px in Deep Indigo, preceded by a small square brand mark in Deep Indigo. Right-aligned secondary nav links in GT America Mono 10px tracking +0.02em. The header sits directly on the bone canvas with no background fill and no shadow — its presence is defined by content density rather than a container.",
+            "evidence": [],
+            "observedProperties": [
+              "Sticky top navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "menu-toggle-button",
+        "name": "Menu Toggle Button",
+        "category": "Refero components",
+        "description": "A square Paper (#ffffff) button containing the word 'MENU' in GT America Mono 10px tracking +0.02em in Ink, with a flush-right 1:1 Indigo Strike square containing a white '/' glyph. Zero radius, no border, no shadow. The pairing of neutral button + chromatic icon is the only place where indigo acts as a small functional mark — it reads as a light switch rather than a CTA.",
+        "variants": [
+          {
+            "id": "menu-toggle-button-reference",
+            "name": "Reference",
+            "description": "A square Paper (#ffffff) button containing the word 'MENU' in GT America Mono 10px tracking +0.02em in Ink, with a flush-right 1:1 Indigo Strike square containing a white '/' glyph. Zero radius, no border, no shadow. The pairing of neutral button + chromatic icon is the only place where indigo acts as a small functional mark — it reads as a light switch rather than a CTA.",
+            "evidence": [],
+            "observedProperties": [
+              "Navigation trigger"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-display-headline",
+        "name": "Hero Display Headline",
+        "category": "Refero components",
+        "description": "PP Neue Montreal 160px weight 400, line-height 0.94, color Bone (#e8e6e0) when on the indigo full-bleed, or Ink when on bone canvas. The extreme line-height is intentional — letters at 160px nearly touch vertically, creating a dense block of type. Sits flush-left, bleeding to the page edge, with no accompanying image or illustration.",
+        "variants": [
+          {
+            "id": "hero-display-headline-reference",
+            "name": "Reference",
+            "description": "PP Neue Montreal 160px weight 400, line-height 0.94, color Bone (#e8e6e0) when on the indigo full-bleed, or Ink when on bone canvas. The extreme line-height is intentional — letters at 160px nearly touch vertically, creating a dense block of type. Sits flush-left, bleeding to the page edge, with no accompanying image or illustration.",
+            "evidence": [],
+            "observedProperties": [
+              "Section anchor / brand statement"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "vertical-side-label",
+        "name": "Vertical Side Label",
+        "category": "Refero components",
+        "description": "Short caption (2–4 words) rotated 90° counter-clockwise, set in PP Neue Montreal 18px weight 400 in Bone, positioned in the right margin. Acts as a printed-margin annotation — a signature editorial device borrowed from broadsheet layout.",
+        "variants": [
+          {
+            "id": "vertical-side-label-reference",
+            "name": "Reference",
+            "description": "Short caption (2–4 words) rotated 90° counter-clockwise, set in PP Neue Montreal 18px weight 400 in Bone, positioned in the right margin. Acts as a printed-margin annotation — a signature editorial device borrowed from broadsheet layout.",
+            "evidence": [],
+            "observedProperties": [
+              "Section annotation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "full-bleed-indigo-section",
+        "name": "Full-Bleed Indigo Section",
+        "category": "Refero components",
+        "description": "Edge-to-edge Indigo Strike (#1925aa) background with a large multi-line headline in PP Neue Montreal 46px weight 400 in Bone, and supporting body copy in 18px Bone. The section is a complete inversion of the bone canvas — same typography, reversed tonal relationship. Used sparingly, once per page, to break monotony.",
+        "variants": [
+          {
+            "id": "full-bleed-indigo-section-reference",
+            "name": "Reference",
+            "description": "Edge-to-edge Indigo Strike (#1925aa) background with a large multi-line headline in PP Neue Montreal 46px weight 400 in Bone, and supporting body copy in 18px Bone. The section is a complete inversion of the bone canvas — same typography, reversed tonal relationship. Used sparingly, once per page, to break monotony.",
+            "evidence": [],
+            "observedProperties": [
+              "Alternating tonal band"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "service-accordion-item-collapsed",
+        "name": "Service Accordion Item — Collapsed",
+        "category": "Refero components",
+        "description": "Full-width row, PP Neue Montreal 24px weight 500 in Indigo Strike, flush-left, with a '+' glyph in PP Neue Montreal 24px in Indigo Strike flush-right. Separated from the next row by a 1px hairline border in Ink at 10–15% opacity. Zero padding-top/bottom asymmetry — the row is the unit of rhythm.",
+        "variants": [
+          {
+            "id": "service-accordion-item-collapsed-reference",
+            "name": "Reference",
+            "description": "Full-width row, PP Neue Montreal 24px weight 500 in Indigo Strike, flush-left, with a '+' glyph in PP Neue Montreal 24px in Indigo Strike flush-right. Separated from the next row by a 1px hairline border in Ink at 10–15% opacity. Zero padding-top/bottom asymmetry — the row is the unit of rhythm.",
+            "evidence": [],
+            "observedProperties": [
+              "Expandable list row"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "service-accordion-item-expanded",
+        "name": "Service Accordion Item — Expanded",
+        "category": "Refero components",
+        "description": "Same row treatment as collapsed state but with a '×' glyph replacing '+', and a description block below in GT America Mono 10px tracking -0.05em in Indigo Strike, followed by a '[ LEARN MORE → ]' link in the same mono micro-label style. The expanded description sits indented to align with the title baseline, not flush-left, creating a subtle hanging indent.",
+        "variants": [
+          {
+            "id": "service-accordion-item-expanded-reference",
+            "name": "Reference",
+            "description": "Same row treatment as collapsed state but with a '×' glyph replacing '+', and a description block below in GT America Mono 10px tracking -0.05em in Indigo Strike, followed by a '[ LEARN MORE → ]' link in the same mono micro-label style. The expanded description sits indented to align with the title baseline, not flush-left, creating a subtle hanging indent.",
+            "evidence": [],
+            "observedProperties": [
+              "Open accordion panel"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading-pair",
+        "name": "Section Heading Pair",
+        "category": "Refero components",
+        "description": "Two words placed at opposite horizontal extremes of the section — e.g. 'Our' flush-left and 'Services' flush-right — both in PP Neue Montreal 160px weight 400 in Indigo Strike. A 1px vertical hairline in Ink at low opacity bisects the section between them. This split-heading pattern is a signature device for introducing multi-part content.",
+        "variants": [
+          {
+            "id": "section-heading-pair-reference",
+            "name": "Reference",
+            "description": "Two words placed at opposite horizontal extremes of the section — e.g. 'Our' flush-left and 'Services' flush-right — both in PP Neue Montreal 160px weight 400 in Indigo Strike. A 1px vertical hairline in Ink at low opacity bisects the section between them. This split-heading pattern is a signature device for introducing multi-part content.",
+            "evidence": [],
+            "observedProperties": [
+              "Two-part section title"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "centered-body-caption",
+        "name": "Centered Body Caption",
+        "category": "Refero components",
+        "description": "Short paragraph (2–4 lines) in GT America Mono 10px tracking +0.02em, all-caps, centered, in Indigo Strike. Used as a transitional element between sections — reads as a caption beneath an architectural plate.",
+        "variants": [
+          {
+            "id": "centered-body-caption-reference",
+            "name": "Reference",
+            "description": "Short paragraph (2–4 lines) in GT America Mono 10px tracking +0.02em, all-caps, centered, in Indigo Strike. Used as a transitional element between sections — reads as a caption beneath an architectural plate.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial block"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Asymmetric editorial layout. The page is not a max-width centered column — it is a series of full-bleed horizontal bands (bone or indigo) with content anchored to the left edge and occasional vertical annotations in the right margin. The hero is a 160px flush-left display headline with a rotated side label, spanning the full viewport. Section transitions use the split-heading device (one word left, one word right, hairline bisector). Service lists are full-width accordions, not card grids. Navigation is a minimal single-line header with no dropdowns visible — menu access is gated by the Menu button. The overall rhythm is slow and poster-like: few elements per viewport, large vertical breathing room (80px section gaps), and tonal shifts doing the work that cards and grids do in conventional SaaS layouts.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "No photography, illustration, or product imagery. The system is pure typography on flat color — the page reads as a printed document. The only graphical element is the small square brand mark in the header and the '/' icon glyph in the menu button, both flat single-color. Visual richness comes entirely from typographic scale and the bone/indigo tonal alternation.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "No shadows, no blur, no glow. The system treats elevation as a tonal problem rather than a depth problem: hierarchy is created by switching between bone, paper, and indigo surfaces, and by using borderless dividers (1px hairline rules) rather than drop-shadows. This flatness is a deliberate editorial choice — the page should read as a printed plate, not a glassy app.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let PP Neue Montreal do the work — push display sizes to 46–160px and use line-height 0.94–1.10 at those scales; do not add weight to compensate for small size.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use GT America Mono exclusively for labels, captions, nav items, and accordion descriptions; keep it at 10–14px with tracking -0.05em (tight) at 10px and +0.02em (open) at 14px.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Alternate between the bone canvas and the Indigo Strike full-bleed to create section rhythm — do not stack multiple bone sections without an indigo interruption.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Treat borders as hairlines: 1px Ink at low opacity for dividers between accordion rows and section bisectors; never use borders for cards or containers.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use vertical rotated text in the right margin (18px PP Neue Montreal) as a section annotation device.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Anchor every section with a flush-left display headline in the body color (Ink on bone, Bone on indigo); keep headlines full-width and uncontained.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all corners sharp — 0px radius on every element including buttons, cards, and tags.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce shadows, glows, blurs, or any form of drop elevation — the system is deliberately flat.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use indigo as a button background fill — the Menu button is white with an indigo icon square; indigo is a surface, not an action color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add a second accent color — the system is bone + ink + a single indigo; any new chromatic role will dilute the editorial tension.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use PP Neue Montreal below 12px — the grotesque loses character at small sizes; switch to GT America Mono for anything sub-14px.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not center headlines or wrap them — display type stays flush-left and bleeds toward the page edge.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use cards with backgrounds, padding, or radius — content sits directly on the bone canvas divided only by hairlines.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use a system font fallback for hero type — if PP Neue Montreal is unavailable, substitute with a grotesque (Inter or Söhne), not a humanist sans.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

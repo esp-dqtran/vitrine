@@ -1,0 +1,314 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - generic [ref=e7]:
+      - link "Vitrine Apps" [ref=e8] [cursor=pointer]:
+        - /url: /apps
+      - tablist "Reference type" [ref=e10]:
+        - tab "Apps" [selected] [ref=e11] [cursor=pointer]:
+          - status
+        - tab "Sites" [ref=e16] [cursor=pointer]:
+          - status
+        - tab "Flows" [ref=e21] [cursor=pointer]:
+          - status
+    - button "Search Apps…, Open search and filters" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: Search Apps…
+      - status
+    - button "Login" [ref=e38] [cursor=pointer]:
+      - status
+  - main [ref=e41]:
+    - generic [ref=e42]:
+      - generic "App discovery filters" [ref=e43]:
+        - generic [ref=e44]:
+          - heading "Categories" [level=2] [ref=e45]
+          - generic [ref=e46]:
+            - button "AI" [ref=e47] [cursor=pointer]:
+              - status
+            - button "Finance" [ref=e50] [cursor=pointer]:
+              - status
+            - button "CRM" [ref=e53] [cursor=pointer]:
+              - status
+            - button "Business" [ref=e56] [cursor=pointer]:
+              - status
+            - button "News" [ref=e59] [cursor=pointer]:
+              - status
+        - generic [ref=e62]:
+          - heading "Screens" [level=2] [ref=e63]
+          - generic [ref=e64]:
+            - button "My Account & Profile" [ref=e65] [cursor=pointer]:
+              - status
+            - button "Filter & Sort" [ref=e68] [cursor=pointer]:
+              - status
+            - button "Chat Bot" [ref=e71] [cursor=pointer]:
+              - status
+            - button "Signup" [ref=e74] [cursor=pointer]:
+              - status
+            - button "Settings & Preferences" [ref=e77] [cursor=pointer]:
+              - status
+            - button "Charts" [ref=e80] [cursor=pointer]:
+              - status
+        - generic [ref=e83]:
+          - heading "UI Elements" [level=2] [ref=e84]
+          - generic [ref=e85]:
+            - button "Navigation Menu" [ref=e86] [cursor=pointer]:
+              - status
+            - button "Dialog" [ref=e89] [cursor=pointer]:
+              - status
+            - button "Card" [ref=e92] [cursor=pointer]:
+              - status
+            - button "Dropdown Menu" [ref=e95] [cursor=pointer]:
+              - status
+            - button "Text Field" [ref=e98] [cursor=pointer]:
+              - status
+        - generic [ref=e101]:
+          - heading "Flows" [level=2] [ref=e102]
+          - generic [ref=e103]:
+            - button "Setting Up" [ref=e104] [cursor=pointer]:
+              - status
+            - button "Searching & Finding" [ref=e107] [cursor=pointer]:
+              - status
+            - button "Filtering & Sorting" [ref=e110] [cursor=pointer]:
+              - status
+            - button "Resetting Password" [ref=e113] [cursor=pointer]:
+              - status
+            - button "Reporting" [ref=e116] [cursor=pointer]:
+              - status
+      - region "App discovery controls" [ref=e119]:
+        - generic [ref=e120]:
+          - generic "App platform" [ref=e121]:
+            - 'button "App platform: Web" [ref=e122] [cursor=pointer]':
+              - generic [ref=e123]: Web
+              - status
+          - generic [ref=e130]:
+            - button "Open Categories filters" [expanded] [ref=e131] [cursor=pointer]:
+              - generic [ref=e132]: Categories
+              - status
+            - dialog "Categories filters" [ref=e369]:
+              - generic [ref=e370]:
+                - generic [ref=e372]:
+                  - generic: Search Categories
+                  - textbox "Search Categories" [active] [ref=e379]:
+                    - /placeholder: Search categories…
+                - group "Categories suggestions" [ref=e380]:
+                  - generic [ref=e381]:
+                    - heading "Categories" [level=3] [ref=e382]
+                    - generic [ref=e385] [cursor=pointer]:
+                      - checkbox "AI" [ref=e387]
+                      - generic [ref=e389]: AI
+                    - generic [ref=e393] [cursor=pointer]:
+                      - checkbox "Business" [ref=e395]
+                      - generic [ref=e397]: Business
+                    - generic [ref=e401] [cursor=pointer]:
+                      - checkbox "CRM" [ref=e403]
+                      - generic [ref=e405]: CRM
+                    - generic [ref=e409] [cursor=pointer]:
+                      - checkbox "Finance" [ref=e411]
+                      - generic [ref=e413]: Finance
+                    - generic [ref=e417] [cursor=pointer]:
+                      - checkbox "News" [ref=e419]
+                      - generic [ref=e421]: News
+                    - generic [ref=e425] [cursor=pointer]:
+                      - checkbox "Collaboration" [ref=e427]
+                      - generic [ref=e429]: Collaboration
+                    - generic [ref=e433] [cursor=pointer]:
+                      - checkbox "Communication" [ref=e435]
+                      - generic [ref=e437]: Communication
+                    - generic [ref=e441] [cursor=pointer]:
+                      - checkbox "Crypto & Web3" [ref=e443]
+                      - generic [ref=e445]: Crypto & Web3
+                    - generic [ref=e449] [cursor=pointer]:
+                      - checkbox "Developer Tools" [ref=e451]
+                      - generic [ref=e453]: Developer Tools
+                    - generic [ref=e457] [cursor=pointer]:
+                      - checkbox "Education" [ref=e459]
+                      - generic [ref=e461]: Education
+                    - generic [ref=e465] [cursor=pointer]:
+                      - checkbox "Entertainment" [ref=e467]
+                      - generic [ref=e469]: Entertainment
+                    - generic [ref=e473] [cursor=pointer]:
+                      - checkbox "Food & Drink" [ref=e475]
+                      - generic [ref=e477]: Food & Drink
+                    - generic [ref=e481] [cursor=pointer]:
+                      - checkbox "Graphics & Design" [ref=e483]
+                      - generic [ref=e485]: Graphics & Design
+                    - generic [ref=e489] [cursor=pointer]:
+                      - checkbox "Health & Fitness" [ref=e491]
+                      - generic [ref=e493]: Health & Fitness
+                    - generic [ref=e497] [cursor=pointer]:
+                      - checkbox "Jobs & Recruitment" [ref=e499]
+                      - generic [ref=e501]: Jobs & Recruitment
+                    - generic [ref=e505] [cursor=pointer]:
+                      - checkbox "Lifestyle" [ref=e507]
+                      - generic [ref=e509]: Lifestyle
+                    - generic [ref=e513] [cursor=pointer]:
+                      - checkbox "Maps & Navigation" [ref=e515]
+                      - generic [ref=e517]: Maps & Navigation
+                    - generic [ref=e521] [cursor=pointer]:
+                      - checkbox "Medical" [ref=e523]
+                      - generic [ref=e525]: Medical
+                    - generic [ref=e529] [cursor=pointer]:
+                      - checkbox "Music & Audio" [ref=e531]
+                      - generic [ref=e533]: Music & Audio
+                    - generic [ref=e537] [cursor=pointer]:
+                      - checkbox "Photo & Video" [ref=e539]
+                      - generic [ref=e541]: Photo & Video
+                    - generic [ref=e545] [cursor=pointer]:
+                      - checkbox "Productivity" [ref=e547]
+                      - generic [ref=e549]: Productivity
+                    - generic [ref=e553] [cursor=pointer]:
+                      - checkbox "Real Estate" [ref=e555]
+                      - generic [ref=e557]: Real Estate
+                    - generic [ref=e561] [cursor=pointer]:
+                      - checkbox "Reference" [ref=e563]
+                      - generic [ref=e565]: Reference
+                    - generic [ref=e569] [cursor=pointer]:
+                      - checkbox "Shopping" [ref=e571]
+                      - generic [ref=e573]: Shopping
+                    - generic [ref=e577] [cursor=pointer]:
+                      - checkbox "Social Networking" [ref=e579]
+                      - generic [ref=e581]: Social Networking
+                    - generic [ref=e585] [cursor=pointer]:
+                      - checkbox "Sports" [ref=e587]
+                      - generic [ref=e589]: Sports
+                    - generic [ref=e593] [cursor=pointer]:
+                      - checkbox "Travel & Transportation" [ref=e595]
+                      - generic [ref=e597]: Travel & Transportation
+                    - generic [ref=e601] [cursor=pointer]:
+                      - checkbox "Utilities" [ref=e603]
+                      - generic [ref=e605]: Utilities
+          - button "Open Screens filters" [ref=e139] [cursor=pointer]:
+            - generic [ref=e140]: Screens
+            - status
+          - button "Open UI Elements filters" [ref=e147] [cursor=pointer]:
+            - generic [ref=e148]: UI Elements
+            - status
+          - button "Open Flows filters" [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: Flows
+            - status
+        - 'button "Sort: Latest" [ref=e164] [cursor=pointer]':
+          - generic [ref=e165]: Latest
+          - status
+      - region "apps results" [ref=e171]:
+        - paragraph [ref=e172]:
+          - text: Showing
+          - strong [ref=e173]: 468 apps
+        - generic [ref=e175]:
+          - link "Open Aboard" [ref=e176] [cursor=pointer]:
+            - generic [ref=e180]:
+              - strong [ref=e181]: Aboard
+              - generic [ref=e182]: Business, Jobs & Recruitment
+              - generic [ref=e183]: Jul 24, 2026 · 624 screens
+          - link "Open Artlist" [ref=e184] [cursor=pointer]:
+            - generic [ref=e188]:
+              - strong [ref=e189]: Artlist
+              - generic [ref=e190]: Photo & Video
+              - generic [ref=e191]: Jul 24, 2026 · 201 screens
+          - link "Open Greptile" [ref=e192] [cursor=pointer]:
+            - generic [ref=e196]:
+              - strong [ref=e197]: Greptile
+              - generic [ref=e198]: Developer Tools
+              - generic [ref=e199]: Jul 24, 2026 · 135 screens
+          - link "Open Twenty" [ref=e200] [cursor=pointer]:
+            - generic [ref=e204]:
+              - strong [ref=e205]: Twenty
+              - generic [ref=e206]: Business
+              - generic [ref=e207]: Jul 24, 2026 · 436 screens
+          - link "Open Gamma" [ref=e208] [cursor=pointer]:
+            - generic [ref=e212]:
+              - strong [ref=e213]: Gamma
+              - generic [ref=e214]: AI, Photo & Video
+              - generic [ref=e215]: Jul 24, 2026 · 527 screens
+          - link "Open Xero" [ref=e216] [cursor=pointer]:
+            - generic [ref=e220]:
+              - strong [ref=e221]: Xero
+              - generic [ref=e222]: Business
+              - generic [ref=e223]: Jul 24, 2026 · 612 screens
+          - link "Open Semrush" [ref=e224] [cursor=pointer]:
+            - generic [ref=e228]:
+              - strong [ref=e229]: Semrush
+              - generic [ref=e230]: Business
+              - generic [ref=e231]: Jul 24, 2026 · 516 screens
+          - link "Open Mercor" [ref=e232] [cursor=pointer]:
+            - generic [ref=e236]:
+              - strong [ref=e237]: Mercor
+              - generic [ref=e238]: AI, Jobs & Recruitment
+              - generic [ref=e239]: Jul 24, 2026 · 190 screens
+          - link "Open WRITER" [ref=e240] [cursor=pointer]:
+            - generic [ref=e244]:
+              - strong [ref=e245]: WRITER
+              - generic [ref=e246]: AI, Business
+              - generic [ref=e247]: Jul 22, 2026 · 555 screens
+          - link "Open Codecademy" [ref=e248] [cursor=pointer]:
+            - generic [ref=e252]:
+              - strong [ref=e253]: Codecademy
+              - generic [ref=e254]: AI, Education
+              - generic [ref=e255]: Jul 22, 2026 · 405 screens
+          - link "Open Adobe Express" [ref=e256] [cursor=pointer]:
+            - generic [ref=e260]:
+              - strong [ref=e261]: Adobe Express
+              - generic [ref=e262]: AI, Graphics & Design
+              - generic [ref=e263]: Jul 22, 2026 · 535 screens
+          - link "Open WeTransfer" [ref=e264] [cursor=pointer]:
+            - generic [ref=e268]:
+              - strong [ref=e269]: WeTransfer
+              - generic [ref=e270]: Productivity
+              - generic [ref=e271]: Jul 22, 2026 · 167 screens
+          - link "Open Zendesk" [ref=e272] [cursor=pointer]:
+            - generic [ref=e276]:
+              - strong [ref=e277]: Zendesk
+              - generic [ref=e278]: Business, CRM
+              - generic [ref=e279]: Jul 21, 2026 · 622 screens
+          - link "Open Cake Equity" [ref=e280] [cursor=pointer]:
+            - generic [ref=e284]:
+              - strong [ref=e285]: Cake Equity
+              - generic [ref=e286]: Business
+              - generic [ref=e287]: Jul 21, 2026 · 552 screens
+          - link "Open Gamma" [ref=e288] [cursor=pointer]:
+            - generic [ref=e292]:
+              - strong [ref=e293]: Gamma
+              - generic [ref=e294]: Crypto & Web3, Shopping
+              - generic [ref=e295]: Jul 21, 2026 · 290 screens
+          - link "Open Stripe" [ref=e296] [cursor=pointer]:
+            - generic [ref=e300]:
+              - strong [ref=e301]: Stripe
+              - generic [ref=e302]: Business
+              - generic [ref=e303]: Jul 21, 2026 · 568 screens
+          - link "Open Deputy" [ref=e304] [cursor=pointer]:
+            - generic [ref=e308]:
+              - strong [ref=e309]: Deputy
+              - generic [ref=e310]: Business, Jobs & Recruitment
+              - generic [ref=e311]: Jul 21, 2026 · 592 screens
+          - link "Open Trello" [ref=e312] [cursor=pointer]:
+            - generic [ref=e316]:
+              - strong [ref=e317]: Trello
+              - generic [ref=e318]: Business, Collaboration
+              - generic [ref=e319]: Jul 21, 2026 · 465 screens
+          - link "Open Grain" [ref=e320] [cursor=pointer]:
+            - generic [ref=e324]:
+              - strong [ref=e325]: Grain
+              - generic [ref=e326]: AI, Productivity
+              - generic [ref=e327]: Jul 21, 2026 · 323 screens
+          - link "Open VEED" [ref=e328] [cursor=pointer]:
+            - generic [ref=e332]:
+              - strong [ref=e333]: VEED
+              - generic [ref=e334]: AI, Photo & Video
+              - generic [ref=e335]: Jul 21, 2026 · 424 screens
+          - link "Open Oku" [ref=e336] [cursor=pointer]:
+            - generic [ref=e340]:
+              - strong [ref=e341]: Oku
+              - generic [ref=e342]: Lifestyle, Reference
+              - generic [ref=e343]: Jul 21, 2026 · 124 screens
+          - link "Open Twist" [ref=e344] [cursor=pointer]:
+            - generic [ref=e348]:
+              - strong [ref=e349]: Twist
+              - generic [ref=e350]: Business, Collaboration, Communication
+              - generic [ref=e351]: Jul 21, 2026 · 289 screens
+          - link "Open Plane" [ref=e352] [cursor=pointer]:
+            - generic [ref=e356]:
+              - strong [ref=e357]: Plane
+              - generic [ref=e358]: Business, Productivity
+              - generic [ref=e359]: Jul 21, 2026 · 403 screens
+          - link "Open Twingate" [ref=e360] [cursor=pointer]:
+            - generic [ref=e364]:
+              - strong [ref=e365]: Twingate
+              - generic [ref=e366]: Developer Tools, Utilities
+              - generic [ref=e367]: Jul 21, 2026 · 260 screens

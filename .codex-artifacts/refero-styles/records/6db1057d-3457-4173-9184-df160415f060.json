@@ -1,0 +1,2664 @@
+{
+  "schemaVersion": 1,
+  "id": "6db1057d-3457-4173-9184-df160415f060",
+  "sourceUrl": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060",
+  "sitemapLastModified": "2026-05-11T16:26:20.547Z",
+  "fetchedAt": "2026-08-02T18:09:35.183Z",
+  "contentHash": "60a49458d64ff8aa9ce400d7e77ee1128788e24dce1620d065e4c520652c3a53",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Partiful design system",
+            "item": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060#style-reference",
+        "name": "Partiful design system reference",
+        "headline": "Partiful design system | Refero Styles",
+        "description": "Explore Partiful's light SaaS design system: Midnight Ink #000000, Pure Canvas #ffffff colors, sans-serif, Partiful Display Medium typography, and DESIGN.md...",
+        "url": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060",
+        "mainEntityOfPage": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Partiful",
+          "url": "https://partiful.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/ed2506e6-631a-43e7-957a-226cbf694bb6.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/ed2506e6-631a-43e7-957a-226cbf694bb6.jpg",
+          "caption": "Screenshot of Partiful"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/ed2506e6-631a-43e7-957a-226cbf694bb6.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Partiful design system",
+          "Partiful website design",
+          "Partiful colors",
+          "Partiful typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Midnight Ink",
+          "Pure Canvas",
+          "Graphite",
+          "Slate",
+          "sans-serif",
+          "Partiful Display Medium",
+          "TWK Lausanne Pan"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Partiful design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Partiful website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Partiful colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Partiful typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-04-04T13:18:57.000Z",
+        "dateModified": "2026-04-04T13:18:57.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://partiful.com",
+      "siteName": "Partiful",
+      "extractedAt": "2026-04-29T23:17:09.758Z",
+      "durationMs": 134625,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 1285,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 1
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "image",
+              "nav",
+              "heading",
+              "icon",
+              "body",
+              "list",
+              "button",
+              "card"
+            ],
+            "frequency": 4156,
+            "confidence": 1,
+            "prominence": 164302400.8392481,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/fill": 3,
+              "icon/fill": 98,
+              "nav/color": 14,
+              "body/color": 22,
+              "card/color": 11,
+              "icon/color": 59,
+              "list/color": 29,
+              "other/fill": 123,
+              "image/color": 67,
+              "other/color": 552,
+              "button/color": 1,
+              "heading/color": 30,
+              "nav/borderColor": 56,
+              "body/borderColor": 88,
+              "card/borderColor": 44,
+              "icon/borderColor": 236,
+              "list/borderColor": 116,
+              "image/borderColor": 268,
+              "other/borderColor": 2208,
+              "button/borderColor": 4,
+              "heading/borderColor": 120,
+              "button/backgroundColor": 7
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "nav",
+              "body",
+              "button",
+              "card"
+            ],
+            "frequency": 106,
+            "confidence": 1,
+            "prominence": 92139512.38812865,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "nav/color": 6,
+              "body/color": 8,
+              "other/fill": 2,
+              "heading/color": 3,
+              "nav/borderColor": 24,
+              "body/borderColor": 32,
+              "heading/borderColor": 12,
+              "nav/backgroundColor": 1,
+              "card/backgroundColor": 11,
+              "other/backgroundColor": 5,
+              "button/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#666666",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5102783583015936
+            },
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 290,
+            "confidence": 1,
+            "prominence": 572049.1225912028,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 57,
+              "link/color": 1,
+              "body/borderColor": 228,
+              "link/borderColor": 4
+            }
+          },
+          {
+            "hex": "#333333",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3210925111636325
+            },
+            "contexts": [
+              "body",
+              "link",
+              "other"
+            ],
+            "frequency": 106,
+            "confidence": 1,
+            "prominence": 272193.4710429327,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 19,
+              "other/fill": 6,
+              "body/borderColor": 4,
+              "link/borderColor": 76
+            }
+          },
+          {
+            "hex": "#999999",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.6829534013134412
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 85,
+            "confidence": 1,
+            "prominence": 15088.869644040526,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 17,
+              "body/borderColor": 68
+            }
+          },
+          {
+            "hex": "#b3b3b3",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.7651658759683705
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 25,
+            "confidence": 1,
+            "prominence": 5870.849207958224,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 5,
+              "body/borderColor": 20
+            }
+          },
+          {
+            "hex": "#d9c58b",
+            "oklch": {
+              "c": 0.07870281800068052,
+              "h": 91.24696221312969,
+              "l": 0.8265531930886245
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 4981.222738889668,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "nav/color": 1,
+              "nav/borderColor": 4
+            }
+          },
+          {
+            "hex": "#cccccc",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8452222558133237
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1600,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#f19a38",
+            "oklch": {
+              "c": 0.1495588693212748,
+              "h": 64.54214962597604,
+              "l": 0.7586704421891471
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 501.4827251399043,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 5
+            }
+          },
+          {
+            "hex": "#fe8207",
+            "oklch": {
+              "c": 0.1830522075198907,
+              "h": 53.73281410058475,
+              "l": 0.7336779514801128
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 91,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.0007488186385444234,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.08,
+            "background": "#cccccc",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.63,
+            "background": "#ffffff",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.31,
+            "background": "#000000",
+            "foreground": "#d9c58b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.02,
+            "background": "#000000",
+            "foreground": "#b3b3b3"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.42,
+            "background": "#f19a38",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.41,
+            "background": "#fe8207",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.87,
+            "background": "#cccccc",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.41,
+            "background": "#d9c58b",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.37,
+            "background": "#000000",
+            "foreground": "#999999"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.03,
+            "background": "#b3b3b3",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.74,
+            "background": "#ffffff",
+            "foreground": "#666666"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.67,
+            "background": "#f19a38",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.06,
+            "background": "#fe8207",
+            "foreground": "#333333"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.66,
+            "background": "#000000",
+            "foreground": "#666666"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.58,
+            "background": "#cccccc",
+            "foreground": "#666666"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.85,
+            "background": "#ffffff",
+            "foreground": "#999999"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.1,
+            "background": "#ffffff",
+            "foreground": "#b3b3b3"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.77,
+            "background": "#cccccc",
+            "foreground": "#999999"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.71,
+            "background": "#ffffff",
+            "foreground": "#d9c58b"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "image",
+              "card"
+            ],
+            "frequency": 36
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "link"
+            ],
+            "frequency": 18
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "button",
+              "card"
+            ],
+            "frequency": 9
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 6
+          },
+          {
+            "value": 960,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(0, 0, 0, 0.1) 0px 0px 6px 0px",
+            "contexts": [
+              "card"
+            ],
+            "frequency": 8
+          },
+          {
+            "value": "rgba(0, 0, 0, 0.1) 0px 0px 20px 0px",
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "other",
+              "button"
+            ],
+            "frequency": 22,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "rowGap|button",
+              "columnGap|button"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 32,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "nav",
+              "other",
+              "button"
+            ],
+            "frequency": 36,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingTop|button",
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "other",
+              "button",
+              "link"
+            ],
+            "frequency": 95,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "paddingBottom|nav",
+              "paddingLeft|nav",
+              "rowGap|nav",
+              "columnGap|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "rowGap|button",
+              "columnGap|button",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|link",
+              "columnGap|link"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "link",
+              "list",
+              "button",
+              "card"
+            ],
+            "frequency": 86,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "rowGap|link",
+              "columnGap|link",
+              "rowGap|list",
+              "columnGap|list",
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingTop|card",
+              "rowGap|card",
+              "columnGap|card"
+            ]
+          },
+          {
+            "value": 15,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "card"
+            ],
+            "frequency": 28,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "nav",
+              "other",
+              "body"
+            ],
+            "frequency": 36,
+            "properties": [
+              "paddingTop",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|other",
+              "columnGap|other",
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "nav",
+              "other",
+              "button"
+            ],
+            "frequency": 45,
+            "properties": [
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingBottom|nav",
+              "paddingLeft|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 24,
+            "properties": [
+              "paddingLeft",
+              "paddingRight",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|other",
+              "paddingRight|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 60,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 7,
+            "properties": [
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|other",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "paddingRight|other"
+            ]
+          },
+          {
+            "value": 80,
+            "contexts": [
+              "other",
+              "list"
+            ],
+            "frequency": 15,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|list",
+              "columnGap|list",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 160,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": null
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgb(248, 196, 255) 0%, rgb(240, 182, 224) 100%)",
+          "colors": [
+            "rgb(248, 196, 255)",
+            "rgb(240, 182, 224)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgba(255, 255, 255, 0.2) 0%, rgba(150, 196, 255, 0.2) 100%)",
+          "colors": [
+            "rgba(255, 255, 255, 0.2)",
+            "rgba(150, 196, 255, 0.2)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgba(150, 196, 255, 0.1) 0%, rgb(255, 255, 255) 100%)",
+          "colors": [
+            "rgba(150, 196, 255, 0.1)",
+            "rgb(255, 255, 255)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(130deg, rgb(133, 218, 220) 0%, rgb(192, 226, 226) 100%)",
+          "colors": [
+            "rgb(133, 218, 220)",
+            "rgb(192, 226, 226)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 942,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "TWK Lausanne Pan 550",
+            "source": "custom",
+            "weights": [
+              400,
+              550
+            ],
+            "frequency": 50,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "TWK Lausanne Pan 400",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 43,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "TWK Lausanne Pan 700",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 27,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": ".SFNSDisplay",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 16,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Partiful Display Medium",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": ".SFNSDisplay-Semibold",
+            "source": "custom",
+            "weights": [
+              600
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": ".SFNSText",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "TWK Lausanne Pan 600",
+            "source": "custom",
+            "weights": [
+              600
+            ],
+            "frequency": 4,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "TWK Lausanne Pan 650",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 3,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "TWK Lausanne Pan",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "TWK Lausanne Pan 850",
+            "source": "custom",
+            "weights": [
+              825
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "TWK Lausanne Pan 500",
+            "source": "custom",
+            "weights": [
+              500
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 18,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 11,
+            "family": ".SFNSDisplay",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 16,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 11,
+            "family": ".SFNSText",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "image",
+              "nav",
+              "icon",
+              "button",
+              "list",
+              "link",
+              "card"
+            ],
+            "frequency": 942,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": ".SFNSDisplay-Semibold",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "TWK Lausanne Pan 700",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "TWK Lausanne Pan 700",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "TWK Lausanne Pan 600",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "TWK Lausanne Pan 400",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 40,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "TWK Lausanne Pan 500",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "TWK Lausanne Pan 550",
+            "weight": 550,
+            "contexts": [
+              "nav",
+              "body"
+            ],
+            "frequency": 18,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "TWK Lausanne Pan",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.96,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "TWK Lausanne Pan 700",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "nav"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "TWK Lausanne Pan 400",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "TWK Lausanne Pan 550",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "TWK Lausanne Pan 650",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "TWK Lausanne Pan 700",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "TWK Lausanne Pan 550",
+            "weight": 550,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 29,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 26,
+            "family": "Partiful Display Medium",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 36,
+            "family": "TWK Lausanne Pan 700",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "Partiful Display Medium",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 42,
+            "family": "Partiful Display Medium",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 48,
+            "family": "Partiful Display Medium",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 112,
+            "family": "TWK Lausanne Pan 850",
+            "weight": 825,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.8,
+            "letterSpacing": -0.03,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use #000000 filled buttons with #ffffff text and 8px radius for all primary CTAs — no colored accent replaces this.",
+        "Apply TWK Lausanne Pan at -0.04em letter-spacing for all headings at 24px and above; drop to -0.02em for body text at 14-18px.",
+        "Use 960px border-radius for pill badges, RSVP status tags, and tab selectors — never a small radius on these elements.",
+        "Wrap feature sections in periwinkle-to-white gradients (rgba(150,196,255,0.1) → #ffffff) to create visual rhythm alternating with pure white sections.",
+        "Scatter invitation card tiles at ±10-15° rotation in showcase sections — the tilted stack of cards communicates creative variety and physical party energy.",
+        "Reserve Partiful Display Medium exclusively for hero headlines and the largest section display titles; use TWK Lausanne Pan 700 for all other headings.",
+        "Use #31c431, #ffae00, and red exclusively for RSVP semantic states (Going/Maybe/Can't go) — never use these as decorative or brand colors elsewhere in the UI."
+      ],
+      "donts": [
+        "Never use a colored accent (purple, blue, pink) as the primary button fill — the entire action hierarchy runs on black and white only.",
+        "Don't apply box-shadow to the hero or full-bleed sections — elevation is only used on cards and floating widgets, never on full-width surfaces.",
+        "Don't use Partiful Display Medium below 26px — at small sizes it loses its identity; use TWK Lausanne Pan 700 instead.",
+        "Never use #d9c58b (Warm Sand) for anything other than the active nav link state — it reads as a selected-state indicator, not a general accent.",
+        "Don't center-align body copy paragraphs in feature sections — body text stays left-aligned even when the section layout is centered.",
+        "Don't use more than 2 type sizes in a single card component — the hierarchy is title + body, not a cascade of 3+ sizes.",
+        "Never apply the pink-to-mauve gradient to interactive UI components (buttons, inputs, badges) — it is a background/surface treatment only."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Midnight Ink",
+          "role": "Primary text, filled CTA buttons, icon fills, card borders — black on white is the entire contrast system; no blue or colored accent dilutes it",
+          "group": "brand"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure Canvas",
+          "role": "Page background, card surfaces, button text on dark backgrounds, nav surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#333333",
+          "name": "Graphite",
+          "role": "Secondary body text, footer links, supporting labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#666666",
+          "name": "Slate",
+          "role": "Tertiary body copy, descriptive paragraphs, helper text in feature sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#999999",
+          "name": "Ash",
+          "role": "Muted captions, attribution text, ratings sub-labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#b3b3b3",
+          "name": "Fog",
+          "role": "Footer section headings, disabled labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#cccccc",
+          "name": "Silver",
+          "role": "Hairline borders, disabled button backgrounds",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d9c58b",
+          "name": "Warm Sand",
+          "role": "Active nav item highlight text — the single warm accent in an otherwise achromatic nav bar",
+          "group": "accent"
+        },
+        {
+          "hex": "#f8c4ff",
+          "name": "Party Pink",
+          "role": "Hero gradient start — soft pink-violet wash over photography",
+          "group": "accent",
+          "gradient": "linear-gradient(rgb(248, 196, 255) 0%, rgb(240, 182, 224) 100%)"
+        },
+        {
+          "hex": "#96c4ff",
+          "name": "Sky Periwinkle",
+          "role": "Section gradient accent — soft blue tint fading to white for feature-section backgrounds",
+          "group": "accent",
+          "gradient": "linear-gradient(rgba(150, 196, 255, 0.1) 0%, rgb(255, 255, 255) 100%)"
+        },
+        {
+          "hex": "#85dadc",
+          "name": "Spearmint",
+          "role": "Decorative surface gradient — teal-to-pale wash used in invitation card previews",
+          "group": "accent",
+          "gradient": "linear-gradient(130deg, rgb(133, 218, 220) 0%, rgb(192, 226, 226) 100%)"
+        },
+        {
+          "hex": "#001666",
+          "name": "Midnight Blue",
+          "role": "Deep brand accent in invitation templates and decorative event card designs",
+          "group": "accent"
+        }
+      ],
+      "layout": "Max-width approximately 1200px, centered. Hero is full-bleed viewport-width photography (~420px tall) with left-aligned headline and centered gradient overlay, navigation sits in a dark-background top bar above it. Below the hero, sections alternate between white canvas (feature demos with tab selectors and event card mockups) and soft gradient washes (periwinkle-to-white or pink-to-white) for 'For every occasion' type sections. Feature sections use a two-column layout: text-left with a large product card mockup or scattered invitation tiles on the right. Invitation gallery carousels are full-width horizontal scroll rows with visible overflow. A 3-4 column card grid appears in testimonial/press sections. Section vertical rhythm is consistent at ~80px gaps. Navigation is a sticky top bar with horizontal category links (Graduations, Birthdays, Dinners, etc.) plus Login/Create button pair in the top right — no mega-menu, no sidebar.",
+      "imagery": "$19",
+      "similar": [
+        {
+          "why": "Both use full-bleed event photography heroes with heavy white text overlays, but Partiful opts for black/white button system where Eventbrite uses orange CTAs",
+          "business": "Eventbrite"
+        },
+        {
+          "why": "Same editorial sans-serif type approach, white card UI for event previews, and gradient-washed section backgrounds — both position themselves as aesthetic event platforms vs functional ticketing tools",
+          "business": "Luma (lu.ma)"
+        },
+        {
+          "why": "Horizontal scrolling template gallery carousels with portrait-format tiles showing wildly varied design styles, same 'pick your vibe' creative showcase layout",
+          "business": "Canva"
+        },
+        {
+          "why": "Scattered rotated card displays at ±15° angles against gradient backgrounds to showcase product variety — same physical-pile-of-materials metaphor",
+          "business": "Hotmart"
+        },
+        {
+          "why": "Direct competitor with same invitation template gallery model and editorial photography in hero sections, though Paperless Post uses warmer brown tones where Partiful uses cool pink-violet",
+          "business": "Paperless Post"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "12px",
+          "badges": "960px",
+          "images": "12px",
+          "inputs": "8px",
+          "modals": "16px",
+          "buttons": "8px",
+          "navPills": "4px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "80px",
+        "cardPadding": "",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "saas",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Base page background for all feature and content sections"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Card Surface",
+          "level": 1,
+          "purpose": "White card with shadow separation (rgba(0,0,0,0.1) 0px 0px 6px 0px) — floats above canvas via shadow, not color difference"
+        },
+        {
+          "hex": "#96c4ff",
+          "name": "Gradient Wash",
+          "level": 2,
+          "purpose": "Section backgrounds using periwinkle-to-white or pink-to-mauve gradients — the only non-white surface level, used for hero and alternating feature bands"
+        },
+        {
+          "hex": "#000000",
+          "name": "Overlay Ink",
+          "level": 3,
+          "purpose": "Dark overlay for hero photography — photography sections use black with gradient overlay and backdrop blur for legible white text"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "rgba(0, 0, 0, 0.1) 0px 0px 6px 0px",
+          "element": "Standard Card"
+        },
+        {
+          "style": "rgba(0, 0, 0, 0.05) 0px 0.8px 2.4px -0.6px, rgba(0, 0, 0, 0.05) 0px 2.4px 7.2px -1.25px, rgba(0, 0, 0, 0.05) 0px 6.4px 19.1px -1.875px, rgba(0, 0, 0, 0.05) 0px 20px 60px -2.5px",
+          "element": "Event Preview Card (elevated)"
+        },
+        {
+          "style": "rgba(0, 0, 0, 0.1) 0px 0px 20px 0px",
+          "element": "Floating Button"
+        }
+      ],
+      "northStar": "confetti landing on white marble — the page stays quiet and light while the content explodes with color and celebration.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 11,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.22
+        },
+        {
+          "role": "body",
+          "size": 14,
+          "lineHeight": 1.4,
+          "letterSpacing": -0.28
+        },
+        {
+          "role": "heading-sm",
+          "size": 18,
+          "lineHeight": 1.4,
+          "letterSpacing": -0.36
+        },
+        {
+          "role": "heading",
+          "size": 24,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.96
+        },
+        {
+          "role": "heading-lg",
+          "size": 36,
+          "lineHeight": 1.2,
+          "letterSpacing": -1.44
+        },
+        {
+          "role": "display",
+          "size": 48,
+          "lineHeight": 1,
+          "letterSpacing": -0.96
+        }
+      ],
+      "components": [
+        {
+          "html": "<style>:root{--color-midnight-ink:#000000;--color-pure-canvas:#ffffff;--color-graphite:#333333;--color-slate:#666666;--color-warm-sand:#d9c58b;--color-party-pink:linear-gradient(rgb(248,196,255) 0%,rgb(240,182,224) 100%);--font-twk-lausanne-pan:'Inter',sans-serif;--font-partiful-display-medium:'Cabinet Grotesk','Satoshi',sans-serif;--spacing-8:8px;--spacing-12:12px;--spacing-16:16px;}</style><div style=\"width:100%;background:linear-gradient(rgb(248,196,255) 0%,rgb(240,182,224) 100%);padding:10px 0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;\"><span style=\"font-family:var(--font-twk-lausanne-pan);font-size:14px;font-weight:550;letter-spacing:-0.02em;color:var(--color-midnight-ink);display:flex;align-items:center;gap:8px;\"><span style=\"font-size:16px;\">🎈</span> Get $400 to throw your birthday party <span style=\"font-size:16px;\">🎈</span></span></div>",
+          "name": "Announcement Banner",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1a",
+          "name": "Feature Tab Selector",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1b",
+          "name": "RSVP Response Buttons",
+          "role": "",
+          "description": ""
+        },
+        {
+          "name": "Primary Filled Button",
+          "role": "Main page CTAs — Create invite, Create event",
+          "description": "Background #000000, text #ffffff, border-radius 8px, padding 10px 24px. Font: TWK Lausanne Pan 700 at 14px, -0.04em letter-spacing. On dark/photo hero sections appears as white-filled with black text. No shadow in default state."
+        },
+        {
+          "name": "Ghost Nav Button",
+          "role": "Login / secondary header action",
+          "description": "Background transparent, border 1px solid #000000, text #000000, border-radius 4px, padding 10px 24px. Sits in the navigation bar beside the filled Create button. Font: TWK Lausanne Pan 550 at 16px."
+        },
+        {
+          "name": "Pill Badge / Rating Tag",
+          "role": "Star rating display, count labels, RSVP status",
+          "description": "Background rgba(0,0,0,0.05) or rgba(0,0,0,0.2), border-radius 960px (full pill), padding 6px 12px. Text #000000 at 12px TWK Lausanne Pan 700. Semantic variants: Leaf #31c431 background for Going, Amber #ffae00 for Maybe, Ember red for Can't go."
+        },
+        {
+          "name": "Active Nav Link",
+          "role": "Currently selected category in horizontal navigation",
+          "description": "Text color #d9c58b (Warm Sand), border-bottom or border-color #d9c58b, border-radius 4px. Contrasts against the dark hero background to signal selection. All other nav links render in #ffffff on dark sections."
+        },
+        {
+          "name": "Standard Content Card",
+          "role": "Feature cards, testimonial cards, invite preview tiles",
+          "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px, padding 12px 16px 16px 16px. Headline in TWK Lausanne Pan 700 at 18px, body text #666666 at 14px TWK Lausanne Pan 400."
+        },
+        {
+          "name": "Event Preview Card",
+          "role": "Live event page mockup shown in feature demos",
+          "description": "Background #ffffff, border-radius 12px, multi-layer shadow (rgba(0,0,0,0.05) stack from 0.8px to 60px spread). Contains event title in Partiful Display Medium 40px, date/time in TWK Lausanne Pan 400 at 18px #333333, and a guest avatar row with a +N overflow indicator."
+        },
+        {
+          "name": "Invitation Template Tile",
+          "role": "Gallery of invitation design options in carousels",
+          "description": "Aspect ratio roughly 3:4 portrait. Border-radius 12px. Each tile is a full-bleed image — photography, illustration, or typographic design — with no overlaid text labels. Displayed in horizontal scrolling rows or scattered at ±15° rotation in feature sections."
+        },
+        {
+          "name": "Feature Tab Selector",
+          "role": "Tabbed navigation for Backgrounds / Fonts / Animations / Posters",
+          "description": "Background rgba(0,0,0,0.05) pill container with active tab having #ffffff background and box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Border-radius 960px for container and individual tab items. Font: TWK Lausanne Pan 550 at 14px. Padding 8px 16px per tab."
+        },
+        {
+          "name": "RSVP Response Button",
+          "role": "Going / Maybe / Can't go response options on event pages",
+          "description": "Circular shape (border-radius 960px), size ~56px, background #ffffff with box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Contains a single emoji. Label text in TWK Lausanne Pan 400 at 12px #333333 centered below the circle."
+        },
+        {
+          "name": "Hero Section",
+          "role": "Full-bleed page header with photography and gradient overlay",
+          "description": "Full viewport width, ~420px tall. Background: full-bleed editorial photography with a linear-gradient overlay (Party Pink #f8c4ff to mauve at 0.4 opacity) layered over the image from left-to-right. White headline text at Partiful Display Medium 48px, subtext TWK Lausanne Pan 400 18px #ffffff, white ghost Create invite button. Backdrop blur 2px on text containers for legibility."
+        },
+        {
+          "name": "Announcement Banner",
+          "role": "Top-of-page promotional strip",
+          "description": "Full width, ~32px tall, background: soft pink-to-mauve gradient (Party Pink gradient). Text #000000 TWK Lausanne Pan 550 at 14px, centered. Flanked by emoji decorators. No close button visible in default state."
+        },
+        {
+          "name": "App Notification Preview",
+          "role": "Mobile push notification widget shown floating over hero",
+          "description": "Background #ffffff, border-radius 16px, box-shadow rgba(0,0,0,0.1) 0px 0px 20px 0px. Width ~240px. Contains app icon (32px, radius 8px), headline in .SFNSDisplay-Semibold 12px, subtext .SFNSText 11px #666666. Action button in #000000 background #ffffff text, border-radius 40px, padding 6px 16px."
+        }
+      ],
+      "typography": [
+        {
+          "role": "sans-serif — detected in extracted data but not described by AI",
+          "sizes": "12px",
+          "family": "sans-serif",
+          "weight": "400",
+          "lineHeight": "1.2"
+        },
+        {
+          "role": "Hero headlines and section display titles only — this custom face is the brand's signature; its slightly rounded geometric letterforms at weight 500 read as celebratory without being childish. Used exclusively for the largest type on any screen.",
+          "sizes": "26px, 40px, 42px, 48px",
+          "family": "Partiful Display Medium",
+          "weight": "400, 500",
+          "lineHeight": "1.00–1.20",
+          "substitute": "Cabinet Grotesk, Satoshi",
+          "letterSpacing": "-0.02em across all sizes",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        },
+        {
+          "role": "Everything else: nav links, body copy, card labels, buttons, captions, and the massive 112px decorative numeral at weight 825. The variable weight axis means the entire type system runs through one family — 400 for prose, 550-650 for UI emphasis, 700 for section headings, 825 only for oversized display numerals. The tight -0.04em tracking at bold weights and -0.02em at regular weights gives text a snug, editorial density uncommon in event apps.",
+          "sizes": "12px, 14px, 16px, 18px, 20px, 22px, 24px, 36px, 112px",
+          "family": "TWK Lausanne Pan",
+          "weight": "400, 500, 550, 600, 650, 700, 825",
+          "lineHeight": "1.20–1.40",
+          "substitute": "Neue Haas Grotesk, Inter",
+          "letterSpacing": "-0.02em at regular weights (400–600), -0.04em at heavy weights (650–825), -0.03em at 112px display size",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        },
+        {
+          "role": "System UI fallback appearing in app-like micro-UI contexts (notification previews, in-app RSVP widget). Renders as San Francisco on Apple devices — not a brand choice but a functional system font for OS-native feeling components.",
+          "sizes": "11px, 12px",
+          "family": ".SFNSDisplay / .SFNSText",
+          "weight": "400, 600",
+          "lineHeight": "1.00–1.40",
+          "substitute": "SF Pro, system-ui",
+          "letterSpacing": "-0.0200em"
+        },
+        {
+          "role": "TWK Lausanne Pan 550 — detected in extracted data but not described by AI",
+          "sizes": "16px, 20px, 24px",
+          "family": "TWK Lausanne Pan 550",
+          "weight": "400, 550",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.02",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        },
+        {
+          "role": "TWK Lausanne Pan 400 — detected in extracted data but not described by AI",
+          "sizes": "14px, 18px",
+          "family": "TWK Lausanne Pan 400",
+          "weight": "400",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.02",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        },
+        {
+          "role": "TWK Lausanne Pan 700 — detected in extracted data but not described by AI",
+          "sizes": "12px, 14px, 18px, 24px, 36px",
+          "family": "TWK Lausanne Pan 700",
+          "weight": "400, 700",
+          "lineHeight": "1.2",
+          "letterSpacing": "-0.04"
+        },
+        {
+          "role": ".SFNSText — detected in extracted data but not described by AI",
+          "sizes": "11px",
+          "family": ".SFNSText",
+          "weight": "400",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.02"
+        },
+        {
+          "role": ".SFNSDisplay-Semibold — detected in extracted data but not described by AI",
+          "sizes": "12px",
+          "family": ".SFNSDisplay-Semibold",
+          "weight": "600",
+          "lineHeight": "1",
+          "letterSpacing": "-0.02"
+        },
+        {
+          "role": "TWK Lausanne Pan 600 — detected in extracted data but not described by AI",
+          "sizes": "14px",
+          "family": "TWK Lausanne Pan 600",
+          "weight": "600",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.02"
+        },
+        {
+          "role": "TWK Lausanne Pan 650 — detected in extracted data but not described by AI",
+          "sizes": "22px",
+          "family": "TWK Lausanne Pan 650",
+          "weight": "400",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.04",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        },
+        {
+          "role": "TWK Lausanne Pan 500 — detected in extracted data but not described by AI",
+          "sizes": "14px",
+          "family": "TWK Lausanne Pan 500",
+          "weight": "500",
+          "lineHeight": "1.4",
+          "letterSpacing": "-0.02"
+        },
+        {
+          "role": "TWK Lausanne Pan 850 — detected in extracted data but not described by AI",
+          "sizes": "112px",
+          "family": "TWK Lausanne Pan 850",
+          "weight": "825",
+          "lineHeight": "0.8",
+          "letterSpacing": "-0.03",
+          "fontFeatureSettings": "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+        }
+      ],
+      "description": "Partiful runs on celebration energy: a white canvas that gives way to full-bleed photographic heroes washed in purple-to-pink gradients, then returns to white for feature sections with soft periwinkle-to-white gradient backgrounds. The type system pairs a custom display face (Partiful Display Medium) for statement headlines — used at sizes up to 112px with tight -0.03em tracking — with TWK Lausanne Pan across all weights for UI text, giving the whole interface a confident, slightly editorial quality. Black is the primary action color: filled black buttons, black borders, black headings — no blue accent, just pure contrast. Decorative depth comes from invitation card imagery, scattered at tilted angles against gradient washes, making the UI feel like a physical party surface rather than a software dashboard.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1c"
+        },
+        {
+          "title": "Gradient System",
+          "content": "$1d"
+        }
+      ]
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/8be60b09-d028-4a17-b61a-0fa76af8b63e.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/ed2506e6-631a-43e7-957a-226cbf694bb6.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "partiful",
+    "generatedAt": "2026-04-29T23:17:09.758Z",
+    "summary": "Partiful runs on celebration energy: a white canvas that gives way to full-bleed photographic heroes washed in purple-to-pink gradients, then returns to white for feature sections with soft periwinkle-to-white gradient backgrounds. The type system pairs a custom display face (Partiful Display Medium) for statement headlines — used at sizes up to 112px with tight -0.03em tracking — with TWK Lausanne Pan across all weights for UI text, giving the whole interface a confident, slightly editorial quality. Black is the primary action color: filled black buttons, black borders, black headings — no blue accent, just pure contrast. Decorative depth comes from invitation card imagery, scattered at tilted angles against gradient washes, making the UI feel like a physical party surface rather than a software dashboard.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "6db1057d-3457-4173-9184-df160415f060",
+      "sourceUrl": "https://styles.refero.design/style/6db1057d-3457-4173-9184-df160415f060",
+      "originalUrl": "https://partiful.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/8be60b09-d028-4a17-b61a-0fa76af8b63e.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/ed2506e6-631a-43e7-957a-226cbf694bb6.jpg",
+      "importedAt": "2026-08-02T18:09:35.183Z",
+      "upstreamModifiedAt": "2026-05-11T16:26:20.547Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "confetti landing on white marble — the page stays quiet and light while the content explodes with color and celebration.",
+      "industry": "saas"
+    },
+    "tokens": [
+      {
+        "id": "color-midnight-ink",
+        "kind": "color",
+        "name": "Midnight Ink",
+        "value": "#000000",
+        "role": "Primary text, filled CTA buttons, icon fills, card borders — black on white is the entire contrast system; no blue or colored accent dilutes it",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-canvas",
+        "kind": "color",
+        "name": "Pure Canvas",
+        "value": "#ffffff",
+        "role": "Page background, card surfaces, button text on dark backgrounds, nav surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#333333",
+        "role": "Secondary body text, footer links, supporting labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate",
+        "kind": "color",
+        "name": "Slate",
+        "value": "#666666",
+        "role": "Tertiary body copy, descriptive paragraphs, helper text in feature sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#999999",
+        "role": "Muted captions, attribution text, ratings sub-labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog",
+        "kind": "color",
+        "name": "Fog",
+        "value": "#b3b3b3",
+        "role": "Footer section headings, disabled labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-silver",
+        "kind": "color",
+        "name": "Silver",
+        "value": "#cccccc",
+        "role": "Hairline borders, disabled button backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-warm-sand",
+        "kind": "color",
+        "name": "Warm Sand",
+        "value": "#d9c58b",
+        "role": "Active nav item highlight text — the single warm accent in an otherwise achromatic nav bar",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-party-pink",
+        "kind": "color",
+        "name": "Party Pink",
+        "value": "#f8c4ff",
+        "role": "Hero gradient start — soft pink-violet wash over photography",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-sky-periwinkle",
+        "kind": "color",
+        "name": "Sky Periwinkle",
+        "value": "#96c4ff",
+        "role": "Section gradient accent — soft blue tint fading to white for feature-section backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-spearmint",
+        "kind": "color",
+        "name": "Spearmint",
+        "value": "#85dadc",
+        "role": "Decorative surface gradient — teal-to-pale wash used in invitation card previews",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-midnight-blue",
+        "kind": "color",
+        "name": "Midnight Blue",
+        "value": "#001666",
+        "role": "Deep brand accent in invitation templates and decorative event card designs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sans-serif",
+        "kind": "typography",
+        "name": "sans-serif",
+        "value": "font-family: sans-serif; font-weight: 400; font-size: 12px; line-height: 1.2",
+        "role": "sans-serif — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-partiful-display-medium",
+        "kind": "typography",
+        "name": "Partiful Display Medium",
+        "value": "font-family: Partiful Display Medium; font-weight: 400, 500; font-size: 26px, 40px, 42px, 48px; line-height: 1.00–1.20; letter-spacing: -0.02em across all sizes",
+        "role": "Hero headlines and section display titles only — this custom face is the brand's signature; its slightly rounded geometric letterforms at weight 500 read as celebratory without being childish. Used exclusively for the largest type on any screen.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan",
+        "value": "font-family: TWK Lausanne Pan; font-weight: 400, 500, 550, 600, 650, 700, 825; font-size: 12px, 14px, 16px, 18px, 20px, 22px, 24px, 36px, 112px; line-height: 1.20–1.40; letter-spacing: -0.02em at regular weights (400–600), -0.04em at heavy weights (650–825), -0.03em at 112px display size",
+        "role": "Everything else: nav links, body copy, card labels, buttons, captions, and the massive 112px decorative numeral at weight 825. The variable weight axis means the entire type system runs through one family — 400 for prose, 550-650 for UI emphasis, 700 for section headings, 825 only for oversized display numerals. The tight -0.04em tracking at bold weights and -0.02em at regular weights gives text a snug, editorial density uncommon in event apps.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sfnsdisplay-sfnstext",
+        "kind": "typography",
+        "name": ".SFNSDisplay / .SFNSText",
+        "value": "font-family: .SFNSDisplay / .SFNSText; font-weight: 400, 600; font-size: 11px, 12px; line-height: 1.00–1.40; letter-spacing: -0.0200em",
+        "role": "System UI fallback appearing in app-like micro-UI contexts (notification previews, in-app RSVP widget). Renders as San Francisco on Apple devices — not a brand choice but a functional system font for OS-native feeling components.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-550",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 550",
+        "value": "font-family: TWK Lausanne Pan 550; font-weight: 400, 550; font-size: 16px, 20px, 24px; line-height: 1.4; letter-spacing: -0.02",
+        "role": "TWK Lausanne Pan 550 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-400",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 400",
+        "value": "font-family: TWK Lausanne Pan 400; font-weight: 400; font-size: 14px, 18px; line-height: 1.4; letter-spacing: -0.02",
+        "role": "TWK Lausanne Pan 400 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-700",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 700",
+        "value": "font-family: TWK Lausanne Pan 700; font-weight: 400, 700; font-size: 12px, 14px, 18px, 24px, 36px; line-height: 1.2; letter-spacing: -0.04",
+        "role": "TWK Lausanne Pan 700 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sfnstext",
+        "kind": "typography",
+        "name": ".SFNSText",
+        "value": "font-family: .SFNSText; font-weight: 400; font-size: 11px; line-height: 1.4; letter-spacing: -0.02",
+        "role": ".SFNSText — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sfnsdisplay-semibold",
+        "kind": "typography",
+        "name": ".SFNSDisplay-Semibold",
+        "value": "font-family: .SFNSDisplay-Semibold; font-weight: 600; font-size: 12px; line-height: 1; letter-spacing: -0.02",
+        "role": ".SFNSDisplay-Semibold — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-600",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 600",
+        "value": "font-family: TWK Lausanne Pan 600; font-weight: 600; font-size: 14px; line-height: 1.4; letter-spacing: -0.02",
+        "role": "TWK Lausanne Pan 600 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-650",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 650",
+        "value": "font-family: TWK Lausanne Pan 650; font-weight: 400; font-size: 22px; line-height: 1.4; letter-spacing: -0.04",
+        "role": "TWK Lausanne Pan 650 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-500",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 500",
+        "value": "font-family: TWK Lausanne Pan 500; font-weight: 500; font-size: 14px; line-height: 1.4; letter-spacing: -0.02",
+        "role": "TWK Lausanne Pan 500 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-twk-lausanne-pan-850",
+        "kind": "typography",
+        "name": "TWK Lausanne Pan 850",
+        "value": "font-family: TWK Lausanne Pan 850; font-weight: 825; font-size: 112px; line-height: 0.8; letter-spacing: -0.03",
+        "role": "TWK Lausanne Pan 850 — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 11px; line-height: 1.2; letter-spacing: -0.22px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 14px; line-height: 1.4; letter-spacing: -0.28px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 18px; line-height: 1.4; letter-spacing: -0.36px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 24px; line-height: 1.2; letter-spacing: -0.96px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 36px; line-height: 1.2; letter-spacing: -1.44px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 48px; line-height: 1; letter-spacing: -0.96px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "12px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-badges",
+        "kind": "radius",
+        "name": "badges",
+        "value": "960px",
+        "role": "Imported badges radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "12px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "8px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-modals",
+        "kind": "radius",
+        "name": "modals",
+        "value": "16px",
+        "role": "Imported modals radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "8px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-navpills",
+        "kind": "radius",
+        "name": "navPills",
+        "value": "4px",
+        "role": "Imported navPills radius",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "announcement-banner",
+        "name": "Announcement Banner",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "announcement-banner-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-tab-selector",
+        "name": "Feature Tab Selector",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "feature-tab-selector-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "rsvp-response-buttons",
+        "name": "RSVP Response Buttons",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "rsvp-response-buttons-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "primary-filled-button",
+        "name": "Primary Filled Button",
+        "category": "Refero components",
+        "description": "Background #000000, text #ffffff, border-radius 8px, padding 10px 24px. Font: TWK Lausanne Pan 700 at 14px, -0.04em letter-spacing. On dark/photo hero sections appears as white-filled with black text. No shadow in default state.",
+        "variants": [
+          {
+            "id": "primary-filled-button-reference",
+            "name": "Reference",
+            "description": "Background #000000, text #ffffff, border-radius 8px, padding 10px 24px. Font: TWK Lausanne Pan 700 at 14px, -0.04em letter-spacing. On dark/photo hero sections appears as white-filled with black text. No shadow in default state.",
+            "evidence": [],
+            "observedProperties": [
+              "Main page CTAs — Create invite, Create event"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-nav-button",
+        "name": "Ghost Nav Button",
+        "category": "Refero components",
+        "description": "Background transparent, border 1px solid #000000, text #000000, border-radius 4px, padding 10px 24px. Sits in the navigation bar beside the filled Create button. Font: TWK Lausanne Pan 550 at 16px.",
+        "variants": [
+          {
+            "id": "ghost-nav-button-reference",
+            "name": "Reference",
+            "description": "Background transparent, border 1px solid #000000, text #000000, border-radius 4px, padding 10px 24px. Sits in the navigation bar beside the filled Create button. Font: TWK Lausanne Pan 550 at 16px.",
+            "evidence": [],
+            "observedProperties": [
+              "Login / secondary header action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pill-badge-rating-tag",
+        "name": "Pill Badge / Rating Tag",
+        "category": "Refero components",
+        "description": "Background rgba(0,0,0,0.05) or rgba(0,0,0,0.2), border-radius 960px (full pill), padding 6px 12px. Text #000000 at 12px TWK Lausanne Pan 700. Semantic variants: Leaf #31c431 background for Going, Amber #ffae00 for Maybe, Ember red for Can't go.",
+        "variants": [
+          {
+            "id": "pill-badge-rating-tag-reference",
+            "name": "Reference",
+            "description": "Background rgba(0,0,0,0.05) or rgba(0,0,0,0.2), border-radius 960px (full pill), padding 6px 12px. Text #000000 at 12px TWK Lausanne Pan 700. Semantic variants: Leaf #31c431 background for Going, Amber #ffae00 for Maybe, Ember red for Can't go.",
+            "evidence": [],
+            "observedProperties": [
+              "Star rating display, count labels, RSVP status"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "active-nav-link",
+        "name": "Active Nav Link",
+        "category": "Refero components",
+        "description": "Text color #d9c58b (Warm Sand), border-bottom or border-color #d9c58b, border-radius 4px. Contrasts against the dark hero background to signal selection. All other nav links render in #ffffff on dark sections.",
+        "variants": [
+          {
+            "id": "active-nav-link-reference",
+            "name": "Reference",
+            "description": "Text color #d9c58b (Warm Sand), border-bottom or border-color #d9c58b, border-radius 4px. Contrasts against the dark hero background to signal selection. All other nav links render in #ffffff on dark sections.",
+            "evidence": [],
+            "observedProperties": [
+              "Currently selected category in horizontal navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "standard-content-card",
+        "name": "Standard Content Card",
+        "category": "Refero components",
+        "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px, padding 12px 16px 16px 16px. Headline in TWK Lausanne Pan 700 at 18px, body text #666666 at 14px TWK Lausanne Pan 400.",
+        "variants": [
+          {
+            "id": "standard-content-card-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px, padding 12px 16px 16px 16px. Headline in TWK Lausanne Pan 700 at 18px, body text #666666 at 14px TWK Lausanne Pan 400.",
+            "evidence": [],
+            "observedProperties": [
+              "Feature cards, testimonial cards, invite preview tiles"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "event-preview-card",
+        "name": "Event Preview Card",
+        "category": "Refero components",
+        "description": "Background #ffffff, border-radius 12px, multi-layer shadow (rgba(0,0,0,0.05) stack from 0.8px to 60px spread). Contains event title in Partiful Display Medium 40px, date/time in TWK Lausanne Pan 400 at 18px #333333, and a guest avatar row with a +N overflow indicator.",
+        "variants": [
+          {
+            "id": "event-preview-card-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border-radius 12px, multi-layer shadow (rgba(0,0,0,0.05) stack from 0.8px to 60px spread). Contains event title in Partiful Display Medium 40px, date/time in TWK Lausanne Pan 400 at 18px #333333, and a guest avatar row with a +N overflow indicator.",
+            "evidence": [],
+            "observedProperties": [
+              "Live event page mockup shown in feature demos"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "invitation-template-tile",
+        "name": "Invitation Template Tile",
+        "category": "Refero components",
+        "description": "Aspect ratio roughly 3:4 portrait. Border-radius 12px. Each tile is a full-bleed image — photography, illustration, or typographic design — with no overlaid text labels. Displayed in horizontal scrolling rows or scattered at ±15° rotation in feature sections.",
+        "variants": [
+          {
+            "id": "invitation-template-tile-reference",
+            "name": "Reference",
+            "description": "Aspect ratio roughly 3:4 portrait. Border-radius 12px. Each tile is a full-bleed image — photography, illustration, or typographic design — with no overlaid text labels. Displayed in horizontal scrolling rows or scattered at ±15° rotation in feature sections.",
+            "evidence": [],
+            "observedProperties": [
+              "Gallery of invitation design options in carousels"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-tab-selector",
+        "name": "Feature Tab Selector",
+        "category": "Refero components",
+        "description": "Background rgba(0,0,0,0.05) pill container with active tab having #ffffff background and box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Border-radius 960px for container and individual tab items. Font: TWK Lausanne Pan 550 at 14px. Padding 8px 16px per tab.",
+        "variants": [
+          {
+            "id": "feature-tab-selector-reference",
+            "name": "Reference",
+            "description": "Background rgba(0,0,0,0.05) pill container with active tab having #ffffff background and box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Border-radius 960px for container and individual tab items. Font: TWK Lausanne Pan 550 at 14px. Padding 8px 16px per tab.",
+            "evidence": [],
+            "observedProperties": [
+              "Tabbed navigation for Backgrounds / Fonts / Animations / Posters"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "rsvp-response-button",
+        "name": "RSVP Response Button",
+        "category": "Refero components",
+        "description": "Circular shape (border-radius 960px), size ~56px, background #ffffff with box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Contains a single emoji. Label text in TWK Lausanne Pan 400 at 12px #333333 centered below the circle.",
+        "variants": [
+          {
+            "id": "rsvp-response-button-reference",
+            "name": "Reference",
+            "description": "Circular shape (border-radius 960px), size ~56px, background #ffffff with box-shadow rgba(0,0,0,0.1) 0px 0px 6px 0px. Contains a single emoji. Label text in TWK Lausanne Pan 400 at 12px #333333 centered below the circle.",
+            "evidence": [],
+            "observedProperties": [
+              "Going / Maybe / Can't go response options on event pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-section",
+        "name": "Hero Section",
+        "category": "Refero components",
+        "description": "Full viewport width, ~420px tall. Background: full-bleed editorial photography with a linear-gradient overlay (Party Pink #f8c4ff to mauve at 0.4 opacity) layered over the image from left-to-right. White headline text at Partiful Display Medium 48px, subtext TWK Lausanne Pan 400 18px #ffffff, white ghost Create invite button. Backdrop blur 2px on text containers for legibility.",
+        "variants": [
+          {
+            "id": "hero-section-reference",
+            "name": "Reference",
+            "description": "Full viewport width, ~420px tall. Background: full-bleed editorial photography with a linear-gradient overlay (Party Pink #f8c4ff to mauve at 0.4 opacity) layered over the image from left-to-right. White headline text at Partiful Display Medium 48px, subtext TWK Lausanne Pan 400 18px #ffffff, white ghost Create invite button. Backdrop blur 2px on text containers for legibility.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed page header with photography and gradient overlay"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "announcement-banner",
+        "name": "Announcement Banner",
+        "category": "Refero components",
+        "description": "Full width, ~32px tall, background: soft pink-to-mauve gradient (Party Pink gradient). Text #000000 TWK Lausanne Pan 550 at 14px, centered. Flanked by emoji decorators. No close button visible in default state.",
+        "variants": [
+          {
+            "id": "announcement-banner-reference",
+            "name": "Reference",
+            "description": "Full width, ~32px tall, background: soft pink-to-mauve gradient (Party Pink gradient). Text #000000 TWK Lausanne Pan 550 at 14px, centered. Flanked by emoji decorators. No close button visible in default state.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-of-page promotional strip"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "app-notification-preview",
+        "name": "App Notification Preview",
+        "category": "Refero components",
+        "description": "Background #ffffff, border-radius 16px, box-shadow rgba(0,0,0,0.1) 0px 0px 20px 0px. Width ~240px. Contains app icon (32px, radius 8px), headline in .SFNSDisplay-Semibold 12px, subtext .SFNSText 11px #666666. Action button in #000000 background #ffffff text, border-radius 40px, padding 6px 16px.",
+        "variants": [
+          {
+            "id": "app-notification-preview-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border-radius 16px, box-shadow rgba(0,0,0,0.1) 0px 0px 20px 0px. Width ~240px. Contains app icon (32px, radius 8px), headline in .SFNSDisplay-Semibold 12px, subtext .SFNSText 11px #666666. Action button in #000000 background #ffffff text, border-radius 40px, padding 6px 16px.",
+            "evidence": [],
+            "observedProperties": [
+              "Mobile push notification widget shown floating over hero"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width approximately 1200px, centered. Hero is full-bleed viewport-width photography (~420px tall) with left-aligned headline and centered gradient overlay, navigation sits in a dark-background top bar above it. Below the hero, sections alternate between white canvas (feature demos with tab selectors and event card mockups) and soft gradient washes (periwinkle-to-white or pink-to-white) for 'For every occasion' type sections. Feature sections use a two-column layout: text-left with a large product card mockup or scattered invitation tiles on the right. Invitation gallery carousels are full-width horizontal scroll rows with visible overflow. A 3-4 column card grid appears in testimonial/press sections. Section vertical rhythm is consistent at ~80px gaps. Navigation is a sticky top bar with horizontal category links (Graduations, Birthdays, Dinners, etc.) plus Login/Create button pair in the top right — no mega-menu, no sidebar.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "$19",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-3",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #000000 filled buttons with #ffffff text and 8px radius for all primary CTAs — no colored accent replaces this.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply TWK Lausanne Pan at -0.04em letter-spacing for all headings at 24px and above; drop to -0.02em for body text at 14-18px.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 960px border-radius for pill badges, RSVP status tags, and tab selectors — never a small radius on these elements.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Wrap feature sections in periwinkle-to-white gradients (rgba(150,196,255,0.1) → #ffffff) to create visual rhythm alternating with pure white sections.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Scatter invitation card tiles at ±10-15° rotation in showcase sections — the tilted stack of cards communicates creative variety and physical party energy.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve Partiful Display Medium exclusively for hero headlines and the largest section display titles; use TWK Lausanne Pan 700 for all other headings.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #31c431, #ffae00, and red exclusively for RSVP semantic states (Going/Maybe/Can't go) — never use these as decorative or brand colors elsewhere in the UI.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use a colored accent (purple, blue, pink) as the primary button fill — the entire action hierarchy runs on black and white only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't apply box-shadow to the hero or full-bleed sections — elevation is only used on cards and floating widgets, never on full-width surfaces.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use Partiful Display Medium below 26px — at small sizes it loses its identity; use TWK Lausanne Pan 700 instead.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use #d9c58b (Warm Sand) for anything other than the active nav link state — it reads as a selected-state indicator, not a general accent.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't center-align body copy paragraphs in feature sections — body text stays left-aligned even when the section layout is centered.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use more than 2 type sizes in a single card component — the hierarchy is title + body, not a cascade of 3+ sizes.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply the pink-to-mauve gradient to interactive UI components (buttons, inputs, badges) — it is a background/surface treatment only.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

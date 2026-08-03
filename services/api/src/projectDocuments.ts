@@ -15,7 +15,10 @@ import type {
 
 export interface ProjectDocumentRouteDependencies {
   store: Pick<ProjectDocumentStore,
-    "ensureDocument" | "getDocument" | "updateDocument" | "listComments" | "addComment" | "resolveComment">;
+    "ensureDocument" | "getDocument" | "updateDocument" | "listComments" | "addComment" | "resolveComment">
+    & Partial<Pick<ProjectDocumentStore,
+      "listDocuments" | "createDocument" | "getDocumentById" | "updateDocumentById"
+      | "listCommentsById" | "addCommentById" | "resolveCommentById">>;
   enabled: boolean;
 }
 
@@ -103,10 +106,150 @@ function commentBody(body: unknown): string | undefined {
   return normalized && normalized.length <= 2000 ? normalized : undefined;
 }
 
+function documentIdFromRequest(
+  request: express.Request,
+  response: express.Response,
+): number | undefined {
+  const documentId = Number(request.params.documentId);
+  if (!Number.isSafeInteger(documentId) || documentId < 1) {
+    response.status(400).json({ error: "invalid document id" });
+    return undefined;
+  }
+  return documentId;
+}
+
 export function mountProjectDocumentRoutes(
   app: express.Express,
   dependencies: ProjectDocumentRouteDependencies,
 ): void {
+  app.use("/research-projects/:id/documents", (_request, response, next) => {
+    if (!dependencies.enabled) response.status(404).json({ error: "Not found" });
+    else next();
+  });
+
+  app.get("/research-projects/:id/documents", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    if (!projectId) return;
+    if (!dependencies.store.listDocuments) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    const documents = await dependencies.store.listDocuments(response.locals.user.id, projectId);
+    if (!documents) {
+      response.status(404).json({ error: "research project not found" });
+      return;
+    }
+    response.json(documents);
+  }));
+
+  app.post("/research-projects/:id/documents", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const title = (request.body as { title?: unknown } | undefined)?.title;
+    if (!projectId) return;
+    if (typeof title !== "string" || !title.trim() || title.trim().length > 120) {
+      response.status(400).json({ error: "document title is required" });
+      return;
+    }
+    if (!dependencies.store.createDocument) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    const document = await dependencies.store.createDocument(
+      response.locals.user.id, projectId, title.trim(),
+    );
+    if (!document) {
+      response.status(404).json({ error: "research project not found" });
+      return;
+    }
+    response.status(201).json(document);
+  }));
+
+  app.get("/research-projects/:id/documents/:documentId", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    if (!projectId || !documentId) return;
+    if (!dependencies.store.getDocumentById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    sendDocument(response, await dependencies.store.getDocumentById(
+      response.locals.user.id, projectId, documentId,
+    ));
+  }));
+
+  app.patch("/research-projects/:id/documents/:documentId", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    const patch = documentPatch(request.body);
+    if (!projectId || !documentId) return;
+    if (!patch) {
+      response.status(400).json({ error: "invalid project document update" });
+      return;
+    }
+    if (!dependencies.store.updateDocumentById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    sendDocument(response, await dependencies.store.updateDocumentById(
+      response.locals.user.id, projectId, documentId, patch,
+    ));
+  }));
+
+  app.get("/research-projects/:id/documents/:documentId/comments", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    if (!projectId || !documentId) return;
+    if (!dependencies.store.listCommentsById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    const comments = await dependencies.store.listCommentsById(
+      response.locals.user.id, projectId, documentId,
+    );
+    if (!comments) {
+      response.status(404).json({ error: "project document not found" });
+      return;
+    }
+    response.json(comments);
+  }));
+
+  app.post("/research-projects/:id/documents/:documentId/comments", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    const body = commentBody(request.body);
+    if (!projectId || !documentId) return;
+    if (!body) {
+      response.status(400).json({ error: "comment body is required" });
+      return;
+    }
+    if (!dependencies.store.addCommentById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    sendComment(response, await dependencies.store.addCommentById(
+      response.locals.user.id, projectId, documentId, body,
+    ));
+  }));
+
+  app.patch("/research-projects/:id/documents/:documentId/comments/:commentId", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    const commentId = Number(request.params.commentId);
+    const resolved = (request.body as { resolved?: unknown } | undefined)?.resolved;
+    if (!projectId || !documentId) return;
+    if (!Number.isSafeInteger(commentId) || commentId < 1 || typeof resolved !== "boolean") {
+      response.status(400).json({ error: "invalid comment update" });
+      return;
+    }
+    if (!dependencies.store.resolveCommentById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    sendComment(response, await dependencies.store.resolveCommentById(
+      response.locals.user.id, projectId, documentId, commentId, resolved,
+    ));
+  }));
+
   app.use("/research-projects/:id/document", (_request, response, next) => {
     if (!dependencies.enabled) response.status(404).json({ error: "Not found" });
     else next();

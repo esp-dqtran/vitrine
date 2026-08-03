@@ -224,6 +224,16 @@ export function buildEvidencePage(page: EvidencePageRecord): {
   };
 }
 
+export function buildPublishedPreviewScreens(
+  app: string,
+  previews: PublishedPreviewImage[],
+): CatalogScreen[] {
+  return [...previews]
+    .sort((left, right) => left.preview_rank - right.preview_rank)
+    .slice(0, 3)
+    .map((image) => screen(app, image, image.preview_rank));
+}
+
 export function buildCatalogPage(
   images: CrawledImage[],
   cursor?: string,
@@ -265,9 +275,10 @@ export function buildPublishedCatalogPage(
           : { analyzedScreens: row.analyzed_screens }),
         platforms: row.available_platforms,
         lastCapturedAt: row.last_captured_at,
-        previewScreens: (previewsByApp.get(row.app) ?? [])
-          .sort((left, right) => left.preview_rank - right.preview_rank)
-          .map((image) => screen(row.app, image, image.preview_rank)),
+        previewScreens: buildPublishedPreviewScreens(
+          row.app,
+          (previewsByApp.get(row.app) ?? []) as PublishedPreviewImage[],
+        ),
         websiteUrl: row.website_url ?? meta.websiteUrl,
         iconUrl: row.icon_url,
       };

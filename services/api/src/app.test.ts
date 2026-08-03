@@ -48,7 +48,7 @@ const referralCampaign = {
   endsAt: new Date("2026-10-19T00:00:00Z"),
   rewardCap: 3 as const,
 };
-const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
+const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, provider: "m" as const, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
 const adminCookie = { cookie: "astryx_session=admin" };
 const previewSha256 = createHash("sha256").update("image").digest("hex");
 const previewMetadata: ObjectMetadata = {
@@ -337,6 +337,102 @@ test("serves real catalog stats publicly, without a session", async (t) => {
   const response = await fetch(`${base}/catalog/stats`);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { apps: 512, screens: 137412, uiElements: 647 });
+});
+
+test("serves a bounded public app evidence preview and records the view", async (t) => {
+  const events: Array<{ userId?: number; action: string; appSlug?: string }> = [];
+  let uiElementInput: unknown;
+  let flowInput: unknown[] = [];
+  const { base, server } = await serve(createApiApp({
+    publishedAppPreviewMetadata: async (app) => {
+      assert.equal(app, "linear");
+      return {
+        app: "linear", display_name: "Linear", icon_url: null,
+        categories: [productivityCategory], total_screens: 443, total_ui_elements: 18,
+        total_flows: 12, analyzed_screens: 401, last_captured_at: "2026-07-25T00:00:00.000Z",
+        available_platforms: ["web"],
+      };
+    },
+    publishedPreviewImages: async (app) => {
+      assert.equal(app, "linear");
+      return catalogPageRecord.previews;
+    },
+    appUiElementSummary: async (input) => {
+      uiElementInput = input;
+      return {
+        totalOccurrences: 18,
+        totalTypes: 4,
+        items: [{
+          component_type: "Top Navigation Bar",
+          component_group: "Navigation",
+          occurrence_count: 9,
+          image_id: 8,
+          image_url: "mobbin-bulk:0123456789abcdef",
+          description: "Primary navigation",
+          purpose: "Navigate",
+          visible_states: ["Default"],
+        }],
+      };
+    },
+    publishedAppPreviewFlows: async (...input) => {
+      flowInput = input;
+      return [{
+        version_id: 11,
+        version_flow_id: 22,
+        source_flow_id: "onboarding",
+        title: "Onboarding",
+        description: "Create a workspace",
+        steps: [
+          { label: "Start", evidence: [7] },
+          { label: "Finish", evidence: [8] },
+        ],
+      }];
+    },
+    recordAccessEvent: async (event) => { events.push(event); },
+  }));
+  t.after(() => close(server));
+
+  const response = await fetch(`${base}/catalog/apps/linear/preview`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.app.totalScreens, 443);
+  assert.equal(body.app.totalUiElements, 18);
+  assert.equal(body.app.totalFlows, 12);
+  assert.equal(body.previewScreens.length, 1);
+  assert.deepEqual(uiElementInput, {
+    app: "linear",
+    platform: "web",
+    publishedOnly: true,
+    limit: 3,
+  });
+  assert.deepEqual(flowInput, ["linear", "web"]);
+  assert.deepEqual(body.previewUiElements, [{
+    type: "Top Navigation Bar",
+    group: "Navigation",
+    count: 9,
+    thumbnailUrl: "/api/catalog/facet-media/linear/elements/Top%20Navigation%20Bar/web/1",
+  }]);
+  assert.deepEqual(body.previewFlows, [{
+    id: "onboarding",
+    title: "Onboarding",
+    description: "Create a workspace",
+    stepCount: 2,
+    screens: [{
+      label: "Start",
+      thumbnailUrl: "/api/catalog/flow-media/linear/web/11/22/1?variant=thumb",
+    }, {
+      label: "Finish",
+      thumbnailUrl: "/api/catalog/flow-media/linear/web/11/22/2?variant=thumb",
+    }],
+  }]);
+  assert.equal(response.headers.get("cache-control"), "private, max-age=60, stale-while-revalidate=300");
+  assert.deepEqual(events, [{
+    ipPrefix: "127.0.0.0/24",
+    appSlug: "linear",
+    featureKey: "library",
+    action: "preview_viewed",
+    outcome: "success",
+  }]);
 });
 
 test("serves ordered published Categories publicly", async (t) => {
@@ -1712,7 +1808,7 @@ test("prevents active Pro from banking permanent Free unlocks", async (t) => {
 });
 
 test("reviews and publishes an existing admin draft while hiding drafts from designers", async (t) => {
-  const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
+  const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, provider: "m" as const, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
   const { base, server } = await serve(createApiApp({
     resolveSession: async (token) => token === "admin" ? admin : user,
@@ -2245,6 +2341,40 @@ test("serves only the first three public preview images", async (t) => {
     { rank: 1, variant: "full" },
     { rank: 2, variant: "thumb" },
   ]);
+});
+
+test("streams public preview bytes for same-origin canvas insertion", async (t) => {
+  let signedUrlCalls = 0;
+  let objectBodyCalls = 0;
+  const signedObjectStore: ObjectStore = {
+    ...localObjectStore,
+    get: async () => {
+      objectBodyCalls += 1;
+      return { metadata: previewMetadata, body: Buffer.from("image") };
+    },
+    signedGetUrl: async () => {
+      signedUrlCalls += 1;
+      return "https://objects.example.test/signed-preview";
+    },
+  };
+  const { base, server } = await serve(createApiApp({
+    objectStore: signedObjectStore,
+    publishedPreviewObject: async () => previewMetadata,
+  }));
+  t.after(() => close(server));
+
+  const redirected = await fetch(`${base}/preview-media/linear/1`, { redirect: "manual" });
+  assert.equal(redirected.status, 302);
+  assert.equal(redirected.headers.get("location"), "https://objects.example.test/signed-preview");
+
+  const inline = await fetch(`${base}/preview-media/linear/1?variant=full&inline=1`, {
+    redirect: "manual",
+  });
+  assert.equal(inline.status, 200);
+  assert.equal(inline.headers.get("content-type"), "image/webp");
+  assert.equal(await inline.text(), "image");
+  assert.equal(signedUrlCalls, 1);
+  assert.equal(objectBodyCalls, 1);
 });
 
 test("serves allowlisted public taxonomy previews and protected media", async (t) => {
@@ -3373,6 +3503,7 @@ test("accepts raw Stripe webhooks before JSON parsing", async (t) => {
 });
 
 test("creates Checkout and returns safe subscription state", async (t) => {
+  const events: Array<{ action: string; outcome: string; metadata?: Record<string, unknown> }> = [];
   const { base, server } = await serve(createApiApp({
     resolveSession: async () => user,
     billing: {
@@ -3400,6 +3531,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
       freeUnlocksRemaining: 2,
       exportUsage: { used: 1, limit: 20, resetAt: "2026-08-01T00:00:00Z" },
     }),
+    recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
   const checkout = await fetch(`${base}/billing/checkout`, {
@@ -3415,6 +3547,34 @@ test("creates Checkout and returns safe subscription state", async (t) => {
   assert.equal(subscription.plan, "pro");
   assert.equal(subscription.interval, "month");
   assert.equal(subscription.stripe_customer_id, undefined);
+  assert.deepEqual(events.map(({ action, outcome, metadata }) => ({ action, outcome, metadata })), [{
+    action: "checkout_started",
+    outcome: "created",
+    metadata: { interval: "month" },
+  }]);
+});
+
+test("records only allowed authenticated app funnel events", async (t) => {
+  const events: Array<{ action: string; outcome: string; appSlug?: string }> = [];
+  const { base, server } = await serve(createApiApp({
+    resolveSession: async () => user,
+    recordAccessEvent: async (event) => { events.push(event); },
+  }));
+  t.after(() => close(server));
+  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+
+  const accepted = await fetch(`${base}/apps/linear/funnel-events`, {
+    method: "POST", headers, body: JSON.stringify({ action: "unlock_clicked" }),
+  });
+  assert.equal(accepted.status, 204);
+  const rejected = await fetch(`${base}/apps/linear/funnel-events`, {
+    method: "POST", headers, body: JSON.stringify({ action: "invented_event" }),
+  });
+  assert.equal(rejected.status, 400);
+  assert.equal(events.length, 1);
+  assert.equal(events[0]?.action, "unlock_clicked");
+  assert.equal(events[0]?.outcome, "viewed");
+  assert.equal(events[0]?.appSlug, "linear");
 });
 
 test("blocks catalog-wide traversal and records a redacted audit event", async (t) => {

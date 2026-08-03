@@ -1,0 +1,1123 @@
+{
+  "schemaVersion": 1,
+  "id": "36cba9c4-9852-4f59-a52d-17be741f6ed8",
+  "sourceUrl": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8",
+  "sitemapLastModified": "2026-06-03T17:25:33.603Z",
+  "fetchedAt": "2026-08-02T18:09:18.211Z",
+  "contentHash": "eb6a0d03950e31e749e7ac53d86ca21d2313f21dab0831528bd41ef88700957c",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "ATMOS design system",
+            "item": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8#style-reference",
+        "name": "ATMOS design system reference",
+        "headline": "ATMOS design system | Refero Styles",
+        "description": "Explore ATMOS's light Agency design system: Deep Violet #0825c6, Paper White #ffffff colors, _NewYork, DM Sans typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8",
+        "mainEntityOfPage": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "ATMOS",
+          "url": "https://atmos.leeroy.ca"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/157e77fa-674e-4832-8962-01cbc2d5efb0.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/157e77fa-674e-4832-8962-01cbc2d5efb0.jpg",
+          "caption": "Screenshot of ATMOS"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/157e77fa-674e-4832-8962-01cbc2d5efb0.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "ATMOS design system",
+          "ATMOS website design",
+          "ATMOS colors",
+          "ATMOS typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Deep Violet",
+          "Paper White",
+          "Ink Black",
+          "_NewYork",
+          "DM Sans",
+          "Times"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "ATMOS design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "ATMOS website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "ATMOS colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "ATMOS typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-04-30T01:38:04.086Z",
+        "dateModified": "2026-04-30T01:38:04.086Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://atmos.leeroy.ca",
+      "siteName": "ATMOS",
+      "extractedAt": "2026-06-03T17:25:33.599Z",
+      "durationMs": 38877,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 144,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "body",
+              "link"
+            ],
+            "frequency": 361,
+            "confidence": 1,
+            "prominence": 17245847.311056342,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 4,
+              "link/color": 3,
+              "other/fill": 2,
+              "other/color": 54,
+              "heading/color": 8,
+              "body/borderColor": 16,
+              "link/borderColor": 12,
+              "other/borderColor": 216,
+              "heading/borderColor": 32,
+              "body/backgroundColor": 10,
+              "other/backgroundColor": 4
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 130,
+            "confidence": 1,
+            "prominence": 9115316.209992535,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 10,
+              "other/fill": 35,
+              "other/color": 9,
+              "body/borderColor": 40,
+              "other/borderColor": 36
+            }
+          },
+          {
+            "hex": "#0825c6",
+            "oklch": {
+              "c": 0.2397192038074945,
+              "h": 264.9114217709534,
+              "l": 0.4018803783793125
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 21,
+            "confidence": 1,
+            "prominence": 426428.6891005729,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 21
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.026573602618018288,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.05,
+            "background": "#ffffff",
+            "foreground": "#0825c6"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 10,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|link"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body",
+              "marginBottom|body"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 30,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 42,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|heading"
+            ]
+          },
+          {
+            "value": 50,
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body",
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|heading",
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 134,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginTop",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|heading",
+              "marginBottom|heading"
+            ]
+          },
+          {
+            "value": 250,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Times",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 53,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "DM Sans",
+            "source": "google",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 27,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "_NewYork",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 20,
+          "name": "Major Third",
+          "ratio": 1.25,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "Times",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 53,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "DM Sans",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "DM Sans",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 25,
+            "family": "DM Sans",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 25,
+            "family": "DM Sans",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 30,
+            "family": "DM Sans",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 50,
+            "family": "_NewYork",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 200,
+            "family": "_NewYork",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Let the violet gradient occupy the full first viewport — do not crop or contain it",
+        "Use _NewYork (or Playfair Display) at 50–200px for any display-level text; never below 40px",
+        "Set border-radius to 9999px on all buttons, tags, and pill-shaped elements",
+        "Maintain 100–250px vertical padding between sections; tight spacing breaks the meditative rhythm",
+        "Keep button text at DM Sans 20px weight 700, line-height 1.15",
+        "Use Times 10px for fine print and orbital/annotation text only"
+      ],
+      "donts": [
+        "Do not add a navigation bar, header, or footer — there are none in this system",
+        "Do not use card components, shadows, or elevation — the design is flat and borderless below the hero",
+        "Do not introduce additional chromatic colors — violet and white/black are the complete palette",
+        "Do not use DM Sans at display sizes — it is a UI face, not a display face; switch to serif above 40px",
+        "Do not set text below 10px or above 200px — the type scale has only six steps",
+        "Do not use sharp (0–4px) radii on interactive elements — pills are mandatory for buttons",
+        "Do not fill the page with content — silence and white space are structural elements"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#0825c6",
+          "name": "Deep Violet",
+          "role": "Hero gradient anchor, decorative atmosphere — the singular chromatic note; fills the sky of the opening viewport",
+          "group": "brand",
+          "gradient": "linear-gradient(180deg, #0825c6 0%, #6b6ce0 100%)"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "role": "Hairline borders, dividers, input outlines, and card edges on light surfaces. Do not promote it to the primary CTA color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Ink Black",
+          "role": "Body text, headings, button text, border outlines — the only contrast color",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed single-column layout. The hero is a centered composition: wordmark dead center, orbital ring wrapped around it, pill button below. No grid, no sidebar, no multi-column content. Subsequent sections are centered stacks or pure white space with 250px vertical breathing room. Navigation does not exist — the page is a single moment, not a flow.",
+      "imagery": "No photography, no product screenshots, no illustrations. The sole visual is the violet gradient sky. Everything else is typography on white. This is a text-art site, not a content site.",
+      "similar": [
+        {
+          "why": "Same editorial serif display + generous white space + restrained single-accent palette",
+          "business": "Aesop"
+        },
+        {
+          "why": "Full-bleed gradient hero with centered product/wordmark, no navigation, dramatic scale typography",
+          "business": "Apple AirPods Max page"
+        },
+        {
+          "why": "Fashion-brand approach: one dominant color field, large serif type, no UI chrome",
+          "business": "Bottega Veneta"
+        },
+        {
+          "why": "Agency portfolio minimalism — the page is the art piece, not a container for content",
+          "business": "Studio Dumbar"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "0px",
+          "inputs": "9999px",
+          "buttons": "9999px"
+        },
+        "elementGap": "20px",
+        "sectionGap": "",
+        "cardPadding": "30px",
+        "pageMaxWidth": null
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#0825c6",
+          "name": "Sky Gradient",
+          "level": 1,
+          "purpose": "Hero atmosphere — deep violet to lavender vertical fade occupying the opening viewport"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "level": 2,
+          "purpose": "All content below the hero — pure white canvas, no differentiation between page and card"
+        }
+      ],
+      "northStar": "violet horizon above white void",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "body",
+          "size": 20,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body-lg",
+          "size": 25,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "subheading",
+          "size": 30,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "heading",
+          "size": 50,
+          "lineHeight": 1.15
+        },
+        {
+          "role": "display",
+          "size": 200,
+          "lineHeight": 1.15
+        }
+      ],
+      "components": [
+        {
+          "name": "Hero Wordmark",
+          "role": "Brand display element",
+          "description": "Centered _NewYork serif at 200px, weight 400, white (#ffffff), line-height 1.15. Sits in the middle of the violet gradient viewport. No subtitle beneath it — the type IS the message."
+        },
+        {
+          "name": "Orbital Text Ring",
+          "role": "Decorative annotation",
+          "description": "Small caps text curving in a circle around the wordmark. Times 10px, weight 400, white, letter-spacing normal, line-height 1.15. Drawn as SVG text-on-path. Creates a seal or stamp aesthetic."
+        },
+        {
+          "name": "Pill Button (On Violet)",
+          "role": "Primary interaction",
+          "description": "White (#ffffff) fill, black (#000000) text, DM Sans 20px weight 700, padding 12px 32px, border-radius 9999px. Floats centered below the wordmark in the hero. The contrast inversion (white pill on violet) is the only action affordance on the page."
+        },
+        {
+          "name": "Ghost Link",
+          "role": "Inline navigation or secondary action",
+          "description": "DM Sans 20–30px weight 400, no underline by default, black on white. The link role appears in body text contexts with minimal chrome."
+        },
+        {
+          "name": "White Space Section",
+          "role": "Layout primitive",
+          "description": "Not a visible component — the dominant pattern. Full-bleed #ffffff blocks with 250px vertical padding, containing only centered type or nothing at all. Section gaps measured in hundreds of pixels, not dozens."
+        },
+        {
+          "name": "Caption Label",
+          "role": "Fine print / metadata",
+          "description": "Times 10px weight 400, black on white, line-height 1.15. Used for dates, credits, or editorial annotations. The serif-at-10px choice is deliberately old-fashioned."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Display wordmark and large headings — custom serif at 200px weight 400 creates monumentality through restraint; the thin strokes and high contrast of editorial serifs read as gallery signage, not web UI. Use at 200px for the brand mark, 50px for section anchors. No bold weight — the form itself carries presence.",
+          "sizes": "50px, 200px",
+          "family": "_NewYork",
+          "weight": "400",
+          "lineHeight": "1.15",
+          "substitute": "Playfair Display, Cormorant Garamond, or DM Serif Display for a similar editorial serif"
+        },
+        {
+          "role": "UI labels, link text, body copy, and button text — the only working sans-serif. Weight 400 for labels and links, 700 for emphasized micro-copy. Generous line-height (1.5) for longer passages, tight (1.15) for button and nav text.",
+          "sizes": "20px, 25px, 30px",
+          "family": "DM Sans",
+          "weight": "400, 700",
+          "lineHeight": "1.15–1.50",
+          "substitute": "Inter, Manrope, or system-ui"
+        },
+        {
+          "role": "Orbital micro-labels — the curved text ring around the wordmark uses 10px Times at normal spacing. This deliberately anti-modern choice (serif at 10px) creates a vintage editorial annotation feel. Use sparingly for fine print and caption-level metadata only.",
+          "sizes": "10px",
+          "family": "Times",
+          "weight": "400",
+          "lineHeight": "1.15",
+          "substitute": "DM Serif Text, or any system serif"
+        }
+      ],
+      "description": "Atmos is a single-screen meditation: one deep violet sky fading to lavender above an expanse of white silence. The entire interface lives in the first viewport — a colossal serif wordmark, a ring of small caps text orbiting it, and a single pill button — then dissolves into negative space. Typography does the heavy lifting: a custom display serif at 200px whispers rather than shouts, paired with DM Sans for micro-labels. There is no product UI, no navigation bar, no cards, no shadows. The only chromatic note is the violet gradient; everything else is paper-white and ink-black.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "No shadows. The design relies entirely on the violet-to-white transition and sheer negative space to create depth. Elevation is achieved through scale and isolation, not drop shadows or borders."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/b382b51f-9f31-41ba-beb6-94c4e25f223e.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/157e77fa-674e-4832-8962-01cbc2d5efb0.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "atmos",
+    "generatedAt": "2026-06-03T17:25:33.599Z",
+    "summary": "Atmos is a single-screen meditation: one deep violet sky fading to lavender above an expanse of white silence. The entire interface lives in the first viewport — a colossal serif wordmark, a ring of small caps text orbiting it, and a single pill button — then dissolves into negative space. Typography does the heavy lifting: a custom display serif at 200px whispers rather than shouts, paired with DM Sans for micro-labels. There is no product UI, no navigation bar, no cards, no shadows. The only chromatic note is the violet gradient; everything else is paper-white and ink-black.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "36cba9c4-9852-4f59-a52d-17be741f6ed8",
+      "sourceUrl": "https://styles.refero.design/style/36cba9c4-9852-4f59-a52d-17be741f6ed8",
+      "originalUrl": "https://atmos.leeroy.ca",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/b382b51f-9f31-41ba-beb6-94c4e25f223e.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/157e77fa-674e-4832-8962-01cbc2d5efb0.jpg",
+      "importedAt": "2026-08-02T18:09:18.211Z",
+      "upstreamModifiedAt": "2026-06-03T17:25:33.603Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "violet horizon above white void",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-deep-violet",
+        "kind": "color",
+        "name": "Deep Violet",
+        "value": "#0825c6",
+        "role": "Hero gradient anchor, decorative atmosphere — the singular chromatic note; fills the sky of the opening viewport",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper-white",
+        "kind": "color",
+        "name": "Paper White",
+        "value": "#ffffff",
+        "role": "Hairline borders, dividers, input outlines, and card edges on light surfaces. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink-black",
+        "kind": "color",
+        "name": "Ink Black",
+        "value": "#000000",
+        "role": "Body text, headings, button text, border outlines — the only contrast color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-newyork",
+        "kind": "typography",
+        "name": "_NewYork",
+        "value": "font-family: _NewYork; font-weight: 400; font-size: 50px, 200px; line-height: 1.15",
+        "role": "Display wordmark and large headings — custom serif at 200px weight 400 creates monumentality through restraint; the thin strokes and high contrast of editorial serifs read as gallery signage, not web UI. Use at 200px for the brand mark, 50px for section anchors. No bold weight — the form itself carries presence.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-dm-sans",
+        "kind": "typography",
+        "name": "DM Sans",
+        "value": "font-family: DM Sans; font-weight: 400, 700; font-size: 20px, 25px, 30px; line-height: 1.15–1.50",
+        "role": "UI labels, link text, body copy, and button text — the only working sans-serif. Weight 400 for labels and links, 700 for emphasized micro-copy. Generous line-height (1.5) for longer passages, tight (1.15) for button and nav text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-times",
+        "kind": "typography",
+        "name": "Times",
+        "value": "font-family: Times; font-weight: 400; font-size: 10px; line-height: 1.15",
+        "role": "Orbital micro-labels — the curved text ring around the wordmark uses 10px Times at normal spacing. This deliberately anti-modern choice (serif at 10px) creates a vintage editorial annotation feel. Use sparingly for fine print and caption-level metadata only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 1.15",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 20px; line-height: 1.5",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-lg-scale",
+        "kind": "typography",
+        "name": "body-lg",
+        "value": "font-size: 25px; line-height: 1.5",
+        "role": "Imported body-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 30px; line-height: 1.15",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 50px; line-height: 1.15",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 200px; line-height: 1.15",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "30px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "9999px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "9999px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "No shadows. The design relies entirely on the violet-to-white transition and sheer negative space to create depth. Elevation is achieved through scale and isolation, not drop shadows or borders.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "hero-wordmark",
+        "name": "Hero Wordmark",
+        "category": "Refero components",
+        "description": "Centered _NewYork serif at 200px, weight 400, white (#ffffff), line-height 1.15. Sits in the middle of the violet gradient viewport. No subtitle beneath it — the type IS the message.",
+        "variants": [
+          {
+            "id": "hero-wordmark-reference",
+            "name": "Reference",
+            "description": "Centered _NewYork serif at 200px, weight 400, white (#ffffff), line-height 1.15. Sits in the middle of the violet gradient viewport. No subtitle beneath it — the type IS the message.",
+            "evidence": [],
+            "observedProperties": [
+              "Brand display element"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "orbital-text-ring",
+        "name": "Orbital Text Ring",
+        "category": "Refero components",
+        "description": "Small caps text curving in a circle around the wordmark. Times 10px, weight 400, white, letter-spacing normal, line-height 1.15. Drawn as SVG text-on-path. Creates a seal or stamp aesthetic.",
+        "variants": [
+          {
+            "id": "orbital-text-ring-reference",
+            "name": "Reference",
+            "description": "Small caps text curving in a circle around the wordmark. Times 10px, weight 400, white, letter-spacing normal, line-height 1.15. Drawn as SVG text-on-path. Creates a seal or stamp aesthetic.",
+            "evidence": [],
+            "observedProperties": [
+              "Decorative annotation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pill-button-on-violet",
+        "name": "Pill Button (On Violet)",
+        "category": "Refero components",
+        "description": "White (#ffffff) fill, black (#000000) text, DM Sans 20px weight 700, padding 12px 32px, border-radius 9999px. Floats centered below the wordmark in the hero. The contrast inversion (white pill on violet) is the only action affordance on the page.",
+        "variants": [
+          {
+            "id": "pill-button-on-violet-reference",
+            "name": "Reference",
+            "description": "White (#ffffff) fill, black (#000000) text, DM Sans 20px weight 700, padding 12px 32px, border-radius 9999px. Floats centered below the wordmark in the hero. The contrast inversion (white pill on violet) is the only action affordance on the page.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary interaction"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-link",
+        "name": "Ghost Link",
+        "category": "Refero components",
+        "description": "DM Sans 20–30px weight 400, no underline by default, black on white. The link role appears in body text contexts with minimal chrome.",
+        "variants": [
+          {
+            "id": "ghost-link-reference",
+            "name": "Reference",
+            "description": "DM Sans 20–30px weight 400, no underline by default, black on white. The link role appears in body text contexts with minimal chrome.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline navigation or secondary action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "white-space-section",
+        "name": "White Space Section",
+        "category": "Refero components",
+        "description": "Not a visible component — the dominant pattern. Full-bleed #ffffff blocks with 250px vertical padding, containing only centered type or nothing at all. Section gaps measured in hundreds of pixels, not dozens.",
+        "variants": [
+          {
+            "id": "white-space-section-reference",
+            "name": "Reference",
+            "description": "Not a visible component — the dominant pattern. Full-bleed #ffffff blocks with 250px vertical padding, containing only centered type or nothing at all. Section gaps measured in hundreds of pixels, not dozens.",
+            "evidence": [],
+            "observedProperties": [
+              "Layout primitive"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "caption-label",
+        "name": "Caption Label",
+        "category": "Refero components",
+        "description": "Times 10px weight 400, black on white, line-height 1.15. Used for dates, credits, or editorial annotations. The serif-at-10px choice is deliberately old-fashioned.",
+        "variants": [
+          {
+            "id": "caption-label-reference",
+            "name": "Reference",
+            "description": "Times 10px weight 400, black on white, line-height 1.15. Used for dates, credits, or editorial annotations. The serif-at-10px choice is deliberately old-fashioned.",
+            "evidence": [],
+            "observedProperties": [
+              "Fine print / metadata"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed single-column layout. The hero is a centered composition: wordmark dead center, orbital ring wrapped around it, pill button below. No grid, no sidebar, no multi-column content. Subsequent sections are centered stacks or pure white space with 250px vertical breathing room. Navigation does not exist — the page is a single moment, not a flow.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "No photography, no product screenshots, no illustrations. The sole visual is the violet gradient sky. Everything else is typography on white. This is a text-art site, not a content site.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "No shadows. The design relies entirely on the violet-to-white transition and sheer negative space to create depth. Elevation is achieved through scale and isolation, not drop shadows or borders.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let the violet gradient occupy the full first viewport — do not crop or contain it",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use _NewYork (or Playfair Display) at 50–200px for any display-level text; never below 40px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set border-radius to 9999px on all buttons, tags, and pill-shaped elements",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain 100–250px vertical padding between sections; tight spacing breaks the meditative rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep button text at DM Sans 20px weight 700, line-height 1.15",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Times 10px for fine print and orbital/annotation text only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add a navigation bar, header, or footer — there are none in this system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use card components, shadows, or elevation — the design is flat and borderless below the hero",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce additional chromatic colors — violet and white/black are the complete palette",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use DM Sans at display sizes — it is a UI face, not a display face; switch to serif above 40px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not set text below 10px or above 200px — the type scale has only six steps",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use sharp (0–4px) radii on interactive elements — pills are mandatory for buttons",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not fill the page with content — silence and white space are structural elements",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

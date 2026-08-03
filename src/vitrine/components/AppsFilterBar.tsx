@@ -120,13 +120,14 @@ function DiscoveryFilterSearch({
 }) {
   return (
     <div className="apps-filterbar__search">
-      <Icon icon="search" size="sm" />
       <TextInput
         label={`Search ${label}`}
         isLabelHidden
         value={query}
         onChange={onQueryChange}
         placeholder={`Search ${label.toLowerCase()}…`}
+        startIcon={<Icon icon="search" size="sm" />}
+        hasClear
         hasAutoFocus
         width="100%"
       />

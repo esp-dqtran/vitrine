@@ -1,0 +1,2647 @@
+{
+  "schemaVersion": 1,
+  "id": "fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+  "sourceUrl": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+  "sitemapLastModified": "2026-05-11T16:26:20.547Z",
+  "fetchedAt": "2026-08-02T18:09:37.081Z",
+  "contentHash": "c0c0392d858030df531a65410b4153b1087e22ac699566b2f22d4692da4f360e",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Descript design system",
+            "item": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c#style-reference",
+        "name": "Descript design system reference",
+        "headline": "Descript design system | Refero Styles",
+        "description": "Explore Descript's mixed Media design system: Broadcast Burgundy #390a1a, On-Air Coral #f73b3b colors, Booton, Gamuth Display typography, and DESIGN.md for...",
+        "url": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+        "mainEntityOfPage": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Descript",
+          "url": "https://descript.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/12cf4751-0935-4c03-a6df-935b42a0580f.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/12cf4751-0935-4c03-a6df-935b42a0580f.jpg",
+          "caption": "Screenshot of Descript"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/12cf4751-0935-4c03-a6df-935b42a0580f.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Descript design system",
+          "Descript website design",
+          "Descript colors",
+          "Descript typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Media design system",
+          "Broadcast Burgundy",
+          "On-Air Coral",
+          "Hot Take Red",
+          "Plum Mid",
+          "Booton",
+          "Gamuth Display",
+          "Brett"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Descript design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Descript website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Descript colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Descript typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Media design system"
+          }
+        ],
+        "datePublished": "2026-03-21T11:54:06.000Z",
+        "dateModified": "2026-03-21T11:54:06.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://descript.com",
+      "siteName": "Descript",
+      "extractedAt": "2026-04-11T19:27:40.467Z",
+      "durationMs": 110880,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 1537,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 3
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#e5e7eb",
+            "oklch": {
+              "c": 0.005813542372075684,
+              "h": 264.5313231484507,
+              "l": 0.9275823098127417
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "heading",
+              "body",
+              "button",
+              "list",
+              "image",
+              "card",
+              "icon",
+              "link"
+            ],
+            "frequency": 6091,
+            "confidence": 1,
+            "prominence": 168906105.57851046,
+            "properties": [
+              "borderColor",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#1a1a1a",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.217786502463702
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "list",
+              "image",
+              "card",
+              "button",
+              "icon",
+              "body",
+              "heading",
+              "link"
+            ],
+            "frequency": 1178,
+            "confidence": 1,
+            "prominence": 137075389.05722317,
+            "properties": [
+              "color"
+            ]
+          },
+          {
+            "hex": "#faf8f7",
+            "oklch": {
+              "c": 0.0025242078306398135,
+              "h": 48.71908682365734,
+              "l": 0.9803788673179319
+            },
+            "contexts": [
+              "nav",
+              "card",
+              "other",
+              "heading",
+              "button",
+              "body"
+            ],
+            "frequency": 107,
+            "confidence": 1,
+            "prominence": 90747549.9342398,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "stroke"
+            ]
+          },
+          {
+            "hex": "#390a1a",
+            "oklch": {
+              "c": 0.07478151757047571,
+              "h": 4.324246193022192,
+              "l": 0.2361881267910615
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "body",
+              "button"
+            ],
+            "frequency": 72,
+            "confidence": 1,
+            "prominence": 10649240.333553214,
+            "properties": [
+              "backgroundColor",
+              "color"
+            ]
+          },
+          {
+            "hex": "#3f2a32",
+            "oklch": {
+              "c": 0.03367340111349826,
+              "h": 354.6304222121026,
+              "l": 0.3130879179650366
+            },
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 18,
+            "confidence": 1,
+            "prominence": 8274571.986856868,
+            "properties": [
+              "backgroundColor",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "body",
+              "heading",
+              "other"
+            ],
+            "frequency": 11,
+            "confidence": 1,
+            "prominence": 5449530.177046235,
+            "properties": [
+              "color",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#190308",
+            "oklch": {
+              "c": 0.044072400740492554,
+              "h": 6.0274206780171715,
+              "l": 0.14818844003302095
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 2624689.9763817308,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#110a0d",
+            "oklch": {
+              "c": 0.013591028798759954,
+              "h": 351.3109366772352,
+              "l": 0.15576194069248878
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1460870,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#26171d",
+            "oklch": {
+              "c": 0.02628116933014213,
+              "h": 353.7109459693965,
+              "l": 0.22670399009469128
+            },
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 24,
+            "confidence": 1,
+            "prominence": 1068360.9111633834,
+            "properties": [
+              "color",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#0c0b5f",
+            "oklch": {
+              "c": 0.13857431327911007,
+              "h": 269.80586257198934,
+              "l": 0.23961071747802287
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 785851.864881738,
+            "properties": [
+              "color"
+            ]
+          },
+          {
+            "hex": "#a28993",
+            "oklch": {
+              "c": 0.033256497771057936,
+              "h": 352.00960584095856,
+              "l": 0.6559741076078638
+            },
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 518700,
+            "properties": [
+              "color"
+            ]
+          },
+          {
+            "hex": "#ebebff",
+            "oklch": {
+              "c": 0.02683043135020609,
+              "h": 285.8757162394852,
+              "l": 0.9460029261918108
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 304009,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#583f4a",
+            "oklch": {
+              "c": 0.03860877398737253,
+              "h": 350.881117131979,
+              "l": 0.39914290721779877
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 241213.54961303348,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#ffe8db",
+            "oklch": {
+              "c": 0.030678428322911115,
+              "h": 51.52342571860956,
+              "l": 0.9460651565630636
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 166898,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#f73b3b",
+            "oklch": {
+              "c": 0.22356626633780055,
+              "h": 26.235402070254633,
+              "l": 0.6415552035186391
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "body",
+              "button"
+            ],
+            "frequency": 9,
+            "confidence": 1,
+            "prominence": 128824.37151973191,
+            "properties": [
+              "color",
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#ff5340",
+            "oklch": {
+              "c": 0.21119299780075781,
+              "h": 29.82180647561551,
+              "l": 0.6773593692717272
+            },
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 8,
+            "confidence": 1,
+            "prominence": 78569.76108574915,
+            "properties": [
+              "color"
+            ]
+          },
+          {
+            "hex": "#907580",
+            "oklch": {
+              "c": 0.03707712588117094,
+              "h": 351.89259762656405,
+              "l": 0.5916108136859837
+            },
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 24,
+            "confidence": 1,
+            "prominence": 45398.3381112377,
+            "properties": [
+              "borderColor",
+              "color"
+            ]
+          },
+          {
+            "hex": "#d1c7cb",
+            "oklch": {
+              "c": 0.01236940212021205,
+              "h": 351.0374056232008,
+              "l": 0.8389438716940664
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "body"
+            ],
+            "frequency": 93,
+            "confidence": 1,
+            "prominence": 45390.52779786764,
+            "properties": [
+              "boxShadow",
+              "color"
+            ]
+          },
+          {
+            "hex": "#651a39",
+            "oklch": {
+              "c": 0.11060564501371162,
+              "h": 359.3272793286392,
+              "l": 0.3507190336821831
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "heading"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 43675.526412184656,
+            "properties": [
+              "backgroundColor",
+              "color"
+            ]
+          },
+          {
+            "hex": "#c4b5bb",
+            "oklch": {
+              "c": 0.018913213789121558,
+              "h": 351.2927209355594,
+              "l": 0.7874074975435368
+            },
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 46,
+            "confidence": 1,
+            "prominence": 38465.52779786764,
+            "properties": [
+              "color"
+            ]
+          },
+          {
+            "hex": "#8787e0",
+            "oklch": {
+              "c": 0.13065622989013628,
+              "h": 282.23027559470336,
+              "l": 0.6614488731766166
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 10605,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#4c343e",
+            "oklch": {
+              "c": 0.03778446134187862,
+              "h": 352.4712392079124,
+              "l": 0.35630680468434894
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 9001,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#cdcdfe",
+            "oklch": {
+              "c": 0.06763591658967305,
+              "h": 284.89803733071346,
+              "l": 0.8645099224994135
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 6328.7552653795765,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#772a4d",
+            "oklch": {
+              "c": 0.11413818948698459,
+              "h": 355.1218642148681,
+              "l": 0.4089151474956753
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "confidence": 1,
+            "prominence": 552.6188865831922,
+            "properties": [
+              "stroke"
+            ]
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.018031408721152293,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 19.85,
+            "background": "#190308",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.57,
+            "background": "#110a0d",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.75,
+            "background": "#190308",
+            "foreground": "#faf8f7"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.48,
+            "background": "#110a0d",
+            "foreground": "#faf8f7"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.4,
+            "background": "#ffffff",
+            "foreground": "#1a1a1a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.17,
+            "background": "#26171d",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.09,
+            "background": "#ffffff",
+            "foreground": "#0c0b5f"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.04,
+            "background": "#ffffff",
+            "foreground": "#390a1a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.88,
+            "background": "#ebebff",
+            "foreground": "#190308"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.84,
+            "background": "#ffe8db",
+            "foreground": "#190308"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.64,
+            "background": "#ebebff",
+            "foreground": "#110a0d"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.6,
+            "background": "#ffe8db",
+            "foreground": "#110a0d"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.44,
+            "background": "#faf8f7",
+            "foreground": "#1a1a1a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.22,
+            "background": "#26171d",
+            "foreground": "#faf8f7"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.14,
+            "background": "#faf8f7",
+            "foreground": "#0c0b5f"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.1,
+            "background": "#390a1a",
+            "foreground": "#faf8f7"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.03,
+            "background": "#e5e7eb",
+            "foreground": "#190308"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.81,
+            "background": "#e5e7eb",
+            "foreground": "#110a0d"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.8,
+            "background": "#ebebff",
+            "foreground": "#1a1a1a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.77,
+            "background": "#ffe8db",
+            "foreground": "#1a1a1a"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 4,
+            "contexts": [
+              "other",
+              "card",
+              "image",
+              "button",
+              "nav"
+            ],
+            "frequency": 54
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "list"
+            ],
+            "frequency": 9
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "body"
+            ],
+            "frequency": 30
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4
+          },
+          {
+            "value": 9999,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 4
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(0, 0, 0, 0.16) 0px 2px 4px 0px",
+            "contexts": [
+              "nav",
+              "button"
+            ],
+            "frequency": 5
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "frequency": 7,
+            "properties": [
+              "marginRight",
+              "paddingTop",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 4,
+            "frequency": 18,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 5,
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ]
+          },
+          {
+            "value": 6,
+            "frequency": 15,
+            "properties": [
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 8,
+            "frequency": 85,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "marginBottom",
+              "paddingTop",
+              "paddingBottom",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 9,
+            "frequency": 3,
+            "properties": [
+              "marginTop"
+            ]
+          },
+          {
+            "value": 11,
+            "frequency": 6,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 12,
+            "frequency": 52,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 16,
+            "frequency": 59,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginRight",
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom",
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 17,
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 20,
+            "frequency": 5,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 21,
+            "frequency": 15,
+            "properties": [
+              "marginTop",
+              "paddingTop",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 23,
+            "frequency": 2,
+            "properties": [
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 24,
+            "frequency": 98,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "marginBottom",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 25,
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ]
+          },
+          {
+            "value": 28,
+            "frequency": 64,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 31,
+            "frequency": 2,
+            "properties": [
+              "marginBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 32,
+            "frequency": 93,
+            "properties": [
+              "marginBottom",
+              "marginTop",
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 39,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 40,
+            "frequency": 3,
+            "properties": [
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 45,
+            "frequency": 6,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 48,
+            "frequency": 4,
+            "properties": [
+              "paddingBottom",
+              "marginTop",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 60,
+            "frequency": 2,
+            "properties": [
+              "paddingBottom",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 64,
+            "frequency": 3,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 71,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 72,
+            "frequency": 9,
+            "properties": [
+              "marginTop",
+              "rowGap",
+              "columnGap",
+              "marginRight"
+            ]
+          },
+          {
+            "value": 80,
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 88,
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 89,
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 96,
+            "frequency": 6,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 100,
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 104,
+            "frequency": 10,
+            "properties": [
+              "paddingBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 106,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          },
+          {
+            "value": 152,
+            "frequency": 11,
+            "properties": [
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 192,
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Booton",
+            "source": "custom",
+            "weights": [
+              400,
+              600
+            ],
+            "frequency": 1493,
+            "fontFeatureSettings": [
+              "\"calt\", \"liga\""
+            ]
+          },
+          {
+            "family": "Gamuth Display",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 22,
+            "fontFeatureSettings": [
+              "\"calt\", \"liga\""
+            ]
+          },
+          {
+            "family": "Brett",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 14,
+            "fontFeatureSettings": [
+              "\"calt\", \"liga\""
+            ]
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "button",
+              "list",
+              "image",
+              "card",
+              "icon",
+              "body",
+              "link",
+              "nav"
+            ],
+            "frequency": 1044,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "nav",
+              "body",
+              "other",
+              "list",
+              "image",
+              "card",
+              "button",
+              "icon"
+            ],
+            "frequency": 145,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.38,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "card",
+              "other"
+            ],
+            "frequency": 30,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "nav"
+            ],
+            "frequency": 44,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Brett",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0.04,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.56,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Brett",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "nav"
+            ],
+            "frequency": 104,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.5,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 24,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Brett",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.56,
+            "letterSpacing": 0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Brett",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.56,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 16,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Booton",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "Gamuth Display",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "Gamuth Display",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "Booton",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 88,
+            "family": "Gamuth Display",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Gamuth Display weight 400 for all H1/H2 hero headlines — never bold or weight 700",
+        "Precede every major section heading with a Brett 18px, 0.04em tracked eyebrow label in #f73b3b",
+        "Apply #f73b3b background with 12px border-radius and 16px/32px padding for all primary CTAs",
+        "Pair #390a1a dark sections immediately with #faf8f7 light sections — maintain alternating band rhythm",
+        "Use 4px border-radius for all cards; reserve 12px for floating UI components and modals",
+        "Set Booton letter-spacing to −0.02em (negative) across all body sizes — never neutral or positive tracking except in Brett eyebrows",
+        "Use #583f4a as the elevated card surface on dark #390a1a backgrounds — never pure black or white cards on dark sections"
+      ],
+      "tags": [
+        "dark-hero",
+        "editorial-serif",
+        "burgundy",
+        "broadcast",
+        "coral-accent",
+        "warm-neutrals",
+        "mixed-theme",
+        "content-creation",
+        "ai-tools",
+        "creator-economy"
+      ],
+      "donts": [
+        "Never use a pure white (#ffffff) page background — all light surfaces use #faf8f7 (Warm Parchment)",
+        "Never apply Gamuth Display to body copy, captions, or UI labels — it is heading-only at 40px minimum",
+        "Never use the coral CTA (#f73b3b) for more than one button per screen — it functions as a single focal signal",
+        "Never add drop shadows to section cards — background-color contrast alone defines elevation on card surfaces",
+        "Never use a generic sans-serif substitute for Booton without applying −0.02em letter-spacing — positive or zero tracking breaks the warmth",
+        "Never place green, blue, or teal semantic colors in the UI — the system has no cool-hued semantic states; use only the warm coral/burgundy/violet palette",
+        "Never use border-radius above 12px on cards or sections — 9999px is reserved exclusively for compact icon pill buttons"
+      ],
+      "theme": "mixed",
+      "colors": [
+        {
+          "hex": "#390a1a",
+          "name": "Broadcast Burgundy",
+          "role": "Hero backgrounds, primary dark surface — creates the theater-dark immersion that makes coral CTAs read as on-air signals",
+          "group": "brand"
+        },
+        {
+          "hex": "#f73b3b",
+          "name": "On-Air Coral",
+          "role": "Primary CTA buttons, active section labels — the single vivid signal against deep burgundy dark",
+          "group": "brand"
+        },
+        {
+          "hex": "#ff5340",
+          "name": "Hot Take Red",
+          "role": "Inline text highlights, secondary accent emphasis in body copy",
+          "group": "accent"
+        },
+        {
+          "hex": "#651a39",
+          "name": "Plum Mid",
+          "role": "Nav hover states, secondary button backgrounds — one step lighter than Broadcast Burgundy for interactive depth",
+          "group": "brand"
+        },
+        {
+          "hex": "#0c0b5f",
+          "name": "Deep Violet",
+          "role": "Inline links and callout text in light sections — a cool contrast to the otherwise warm palette",
+          "group": "accent"
+        },
+        {
+          "hex": "#8787e0",
+          "name": "Soft Violet",
+          "role": "Underlord AI feature accent — used on AI chat interface send button",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffe8db",
+          "name": "Pale Peach",
+          "role": "Card backgrounds for feature cards in warm sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f1eaed",
+          "name": "Blush Mist",
+          "role": "Card backgrounds for testimonial and feature content cards in light sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#190308",
+          "name": "Studio Black",
+          "role": "Deepest background layer, nav overlay backgrounds",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1a1a1a",
+          "name": "Ink Dark",
+          "role": "Body text, nav text — used across all surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#faf8f7",
+          "name": "Warm Parchment",
+          "role": "Light section page backgrounds, button text on dark — deliberately off-white to maintain warmth against burgundy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "role": "Button text on coral CTAs, card surfaces in chat UI",
+          "group": "neutral"
+        },
+        {
+          "hex": "#a28993",
+          "name": "Dusty Rose",
+          "role": "Secondary body text, de-emphasized labels on dark surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#907580",
+          "name": "Border Mauve",
+          "role": "Card borders, dividers, input borders on dark surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#e5e7eb",
+          "name": "Fog Gray",
+          "role": "Borders and dividers on light surfaces, button borders",
+          "group": "neutral"
+        },
+        {
+          "hex": "#583f4a",
+          "name": "Muted Plum",
+          "role": "Mid-dark card backgrounds in dark sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d1c7cb",
+          "name": "Steel Mauve",
+          "role": "Shadows, secondary text on light surfaces",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Max-width approximately 1200px, centered with generous horizontal padding. Hero is full-bleed #390a1a burgundy dark spanning 100vh with centered headline stack and single CTA. Below hero, alternating dark (#390a1a) and light (#faf8f7) horizontal bands create a clear rhythm — dark for brand immersion, light for feature explanation. Feature sections use 2-3 column card grids with 24px gaps. Testimonials use a 2-column card grid on dark background with an awards card occupying the left column. Social proof logo strip is full-bleed single row between hero and feature sections. Navigation is sticky white bar at top with left-aligned wordmark and right-aligned utility links + CTA button. Section headings are always centered with eyebrow label above and subtext below, max-width ~640px for readability.",
+      "imagery": "Product UI screenshots are the primary visual asset — shown as floating cards partially cropped, overlapping, presented at perspective to simulate depth. No lifestyle photography in screenshots; the product interface IS the visual. UI previews show the Descript editor with real transcript text, building credibility through product exposure. G2 badge art (flat, illustrative award icons) appears in the social proof section. Icons use a filled-with-outline hybrid style at approximately 20-24px, monocolor matching the surface text color. The Underlord AI chat component is showcased as a standalone card with a clean white background floating against the dark hero — product-as-hero framing. All imagery is contained within rounded-corner cards (12px) rather than full-bleed, maintaining the 'exhibit behind glass' feel.",
+      "similar": [
+        {
+          "why": "Same mixed dark/light banded layout with a single vivid accent color on otherwise neutral-dark hero sections",
+          "business": "Rive"
+        },
+        {
+          "why": "Custom editorial serif for SaaS hero headlines combined with product-UI-as-hero visual strategy",
+          "business": "Framer"
+        },
+        {
+          "why": "Creator-tool SaaS with dark brand sections, coral/warm CTAs, and video product screenshot previews",
+          "business": "Loom"
+        },
+        {
+          "why": "Deep dark brand color as primary surface with warm off-white light sections and editorial type scale",
+          "business": "Pitch"
+        },
+        {
+          "why": "AI creative tool using dark theatrical hero + single bright CTA + product interface showcase as primary imagery",
+          "business": "Runway ML"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "4px",
+          "badges": "100px",
+          "inputs": "8px",
+          "buttons": "12px",
+          "buttonsPill": "9999px"
+        },
+        "elementGap": "16px",
+        "sectionGap": "80-120px",
+        "cardPadding": "",
+        "pageMaxWidth": "1200px"
+      },
+      "category": "ai",
+      "surfaces": [
+        {
+          "hex": "#190308",
+          "name": "Studio Dark",
+          "level": 0,
+          "purpose": "Deepest background — used behind logo strip and page footer"
+        },
+        {
+          "hex": "#390a1a",
+          "name": "Broadcast Burgundy",
+          "level": 1,
+          "purpose": "Hero and primary dark sections — dominant dark surface"
+        },
+        {
+          "hex": "#583f4a",
+          "name": "Muted Plum",
+          "level": 2,
+          "purpose": "Cards and elevated containers on dark backgrounds"
+        },
+        {
+          "hex": "#faf8f7",
+          "name": "Warm Parchment",
+          "level": 3,
+          "purpose": "Light section backgrounds, nav bar — the opposing pole to the dark surfaces"
+        },
+        {
+          "hex": "#f1eaed",
+          "name": "Blush Mist",
+          "level": 4,
+          "purpose": "Cards and containers on light section backgrounds"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "level": 5,
+          "purpose": "UI components like chat cards that need maximum contrast on any surface"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "rgba(0, 0, 0, 0.16) 0px 2px 4px 0px",
+          "element": "AI Chat Card"
+        },
+        {
+          "style": "rgba(0, 0, 0, 0.16) 0px 2px 4px 0px",
+          "element": "Nav Dropdown"
+        }
+      ],
+      "northStar": "Broadcast booth meets editorial press — deep burgundy theater dark, editorial serif headlines, coral on-air signals.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 16,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.32
+        },
+        {
+          "role": "body-sm",
+          "size": 18,
+          "lineHeight": 1.56,
+          "letterSpacing": -0.36
+        },
+        {
+          "role": "body",
+          "size": 20,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.4
+        },
+        {
+          "role": "subheading",
+          "size": 24,
+          "lineHeight": 1.33,
+          "letterSpacing": -0.48
+        },
+        {
+          "role": "heading-sm",
+          "size": 40,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 56,
+          "lineHeight": 1.1
+        },
+        {
+          "role": "display",
+          "size": 88,
+          "lineHeight": 1.1
+        }
+      ],
+      "components": [
+        {
+          "html": "$19",
+          "name": "Primary CTA Button Group",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1a",
+          "name": "Testimonial Card Grid",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1b",
+          "name": "Awards Recognition Card with Category Tags",
+          "role": "",
+          "description": ""
+        },
+        {
+          "name": "Primary CTA Button",
+          "role": "Main conversion action — 'Get started for free'",
+          "description": "Background #f73b3b, text #fff7fd (warm white), border-radius 12px, padding 16px 32px. Booton weight 600 at 18px. No border. The coral against dark backgrounds is the loudest element in the hierarchy."
+        },
+        {
+          "name": "Dark Pill Icon Button",
+          "role": "Media controls and compact icon actions in dark sections",
+          "description": "Background #390a1a, border-radius 9999px, padding 12px all sides. Square-ish pill with icon only. #651a39 variant used for hover/active state."
+        },
+        {
+          "name": "Sign Up Nav Button",
+          "role": "Primary nav conversion CTA",
+          "description": "Background #651a39 (Plum Mid), text white, border-radius 12px, padding 12px 20px. Sits in sticky white nav — creates a warm burgundy-to-plum contrast against #faf8f7 nav background."
+        },
+        {
+          "name": "Eyebrow Label",
+          "role": "Section category tags above hero headings",
+          "description": "Brett typeface, 18px, 0.04em letter-spacing, #f73b3b (On-Air Coral) on dark surfaces, uppercase. No background, no border. Used exclusively to introduce section headings."
+        },
+        {
+          "name": "Feature Card — Blush",
+          "role": "Feature description cards in light sections",
+          "description": "Background #f1eaed (Blush Mist), border-radius 4px, padding 24px 24px 32px, no shadow. Booton 600 for card title at 20px, Booton 400 for body at 16px, #1a1a1a text."
+        },
+        {
+          "name": "Feature Card — Peach",
+          "role": "Alternate feature cards with warmer tint",
+          "description": "Background #ffe8db (Pale Peach), border-radius 4px, padding 24px 24px 32px, no shadow. Same typography treatment as Blush card."
+        },
+        {
+          "name": "Testimonial Card",
+          "role": "Social proof quotes in grid layout on dark background",
+          "description": "Background #583f4a (Muted Plum), border-radius 4px, padding 24px. Booton 400 at 16px, text #faf8f7. Subtle border-color #907580. No shadow."
+        },
+        {
+          "name": "AI Chat Interface Card",
+          "role": "Product UI preview showing Underlord AI assistant",
+          "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.16) 0px 2px 4px. Inner message bubbles use #cdcdfe (muted violet) for AI messages, #8787e0 for send button. Booton 400 at 16px."
+        },
+        {
+          "name": "Nav Bar",
+          "role": "Sticky top navigation",
+          "description": "Background #faf8f7, border-bottom #e5e7eb 1px. Text #1a1a1a at 16px Booton 400. Dropdown chevrons as inline icons. Max-height 50px. Contains wordmark (Descript logo with stacked-lines icon in #f73b3b), text nav links, and Sign Up pill button in #651a39."
+        },
+        {
+          "name": "Social Proof Logo Strip",
+          "role": "Trust logos (Canva, Figma, Spotify, etc.)",
+          "description": "Full-width band on #390a1a background. Logos rendered in #faf8f7 or desaturated white at reduced opacity. Booton 400 16px label text above in #a28993."
+        },
+        {
+          "name": "Category Tag Badge",
+          "role": "Filter tags and feature category pills",
+          "description": "Border 1px solid #907580, background transparent, border-radius 100px, padding 6px 12px. Booton 400 at 14-16px, text #faf8f7 on dark / #1a1a1a on light. Used in Awards card to show product category labels."
+        },
+        {
+          "name": "Awards Recognition Card",
+          "role": "G2 award display in testimonials section",
+          "description": "Background #faf8f7, border-radius 4px, padding 24px. Contains G2 badge images, year label in #f73b3b (Brett 18px), category tag badges with transparent background and #907580 borders."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary workhorse across UI — nav, body copy, buttons, captions, and feature labels. Weight 600 for subheadings and card titles; weight 400 for body and nav. The custom design gives it a warmth that distinguishes it from commodity grotesques like Inter.",
+          "sizes": "16px, 18px, 20px, 24px, 56px",
+          "family": "Booton",
+          "weight": "400, 600",
+          "lineHeight": "1.10–1.56",
+          "substitute": "Source Sans Pro, IBM Plex Sans",
+          "letterSpacing": "-0.32px at 16px (−0.02em applied across all sizes)",
+          "fontFeatureSettings": "\"calt\", \"liga\""
+        },
+        {
+          "role": "Hero and section headings only. A custom editorial serif — the signature choice that marks Descript as a content creation tool, not enterprise SaaS. Weight 400 at 88px is confident restraint; most SaaS hero fonts lean heavy.",
+          "sizes": "40px, 56px, 88px",
+          "family": "Gamuth Display",
+          "weight": "400",
+          "lineHeight": "1.10–1.20",
+          "substitute": "Playfair Display, Fraunces",
+          "fontFeatureSettings": "\"calt\", \"liga\""
+        },
+        {
+          "role": "Section eyebrow labels only (e.g. 'AI VIDEO EDITOR', 'AI VIDEO AGENT'). Wide 0.04em tracking mimics broadcast chyron or print section slugs — the only place positive letter-spacing appears in the system.",
+          "sizes": "18px",
+          "family": "Brett",
+          "weight": "400",
+          "lineHeight": "1.00–1.56",
+          "substitute": "Courier Prime, Space Mono",
+          "letterSpacing": "0.72px at 18px (0.04em)",
+          "fontFeatureSettings": "\"calt\", \"liga\""
+        }
+      ],
+      "description": "Descript's visual language is deep burgundy darkness cut by coral-red action — like the interior of a recording booth where the walls absorb everything and only the signal glows. The #390a1a near-black burgundy dominates 70% of the hero, creating a theater-dark immersion that makes the coral-red CTA (#f73b3b) feel like an on-air indicator light. Headlines use Gamuth Display, a custom editorial serif at 88px — an unusual choice for a SaaS product that signals craft and content creation rather than enterprise utility. The light sections (#faf8f7, a warm off-white) provide contrast between dark bands without ever going pure white, keeping the palette unified in warmth. Tag labels like 'AI VIDEO EDITOR' use Brett, a custom typeface with wide 0.04em tracking that mimics broadcast chyron styling.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1c"
+        },
+        {
+          "title": "Three-Font Discipline",
+          "content": "This system uses exactly three typefaces with non-overlapping roles — a strict hierarchy:\n\n1. **Gamuth Display** — headings only (40px+). Never in UI, never in body, never in captions.\n2. **Brett** — eyebrow labels only (18px, tracked wide). Never for body, never for headings.\n3. **Booton** — everything else: nav, body, buttons, cards, captions, UI text.\n\nViolating these boundaries — e.g. using Gamuth Display for a card title at 24px, or Brett for a body paragraph — breaks the system's editorial authority. Substitute fonts should maintain this same three-tier structure."
+        }
+      ],
+      "elevationPhilosophy": "Shadows appear only on floating UI elements (chat card, nav dropdowns) using a single system: rgba(0,0,0,0.16) 0px 2px 4px. Cards and section containers use background-color contrast alone for separation — no shadow hierarchy. This keeps the dark sections feeling like material surfaces rather than layered interfaces."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/400af899-65c7-4211-9065-c21643c579ef.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/12cf4751-0935-4c03-a6df-935b42a0580f.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "descript",
+    "generatedAt": "2026-04-11T19:27:40.467Z",
+    "summary": "Descript's visual language is deep burgundy darkness cut by coral-red action — like the interior of a recording booth where the walls absorb everything and only the signal glows. The #390a1a near-black burgundy dominates 70% of the hero, creating a theater-dark immersion that makes the coral-red CTA (#f73b3b) feel like an on-air indicator light. Headlines use Gamuth Display, a custom editorial serif at 88px — an unusual choice for a SaaS product that signals craft and content creation rather than enterprise utility. The light sections (#faf8f7, a warm off-white) provide contrast between dark bands without ever going pure white, keeping the palette unified in warmth. Tag labels like 'AI VIDEO EDITOR' use Brett, a custom typeface with wide 0.04em tracking that mimics broadcast chyron styling.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+      "sourceUrl": "https://styles.refero.design/style/fe955d4a-c56d-4ab0-a6b3-8d985ab9570c",
+      "originalUrl": "https://descript.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/400af899-65c7-4211-9065-c21643c579ef.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/12cf4751-0935-4c03-a6df-935b42a0580f.jpg",
+      "importedAt": "2026-08-02T18:09:37.081Z",
+      "upstreamModifiedAt": "2026-05-11T16:26:20.547Z",
+      "attribution": "Imported from Refero Styles",
+      "northStar": "Broadcast booth meets editorial press — deep burgundy theater dark, editorial serif headlines, coral on-air signals."
+    },
+    "tokens": [
+      {
+        "id": "color-broadcast-burgundy",
+        "kind": "color",
+        "name": "Broadcast Burgundy",
+        "value": "#390a1a",
+        "role": "Hero backgrounds, primary dark surface — creates the theater-dark immersion that makes coral CTAs read as on-air signals",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-on-air-coral",
+        "kind": "color",
+        "name": "On-Air Coral",
+        "value": "#f73b3b",
+        "role": "Primary CTA buttons, active section labels — the single vivid signal against deep burgundy dark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-hot-take-red",
+        "kind": "color",
+        "name": "Hot Take Red",
+        "value": "#ff5340",
+        "role": "Inline text highlights, secondary accent emphasis in body copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-plum-mid",
+        "kind": "color",
+        "name": "Plum Mid",
+        "value": "#651a39",
+        "role": "Nav hover states, secondary button backgrounds — one step lighter than Broadcast Burgundy for interactive depth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-violet",
+        "kind": "color",
+        "name": "Deep Violet",
+        "value": "#0c0b5f",
+        "role": "Inline links and callout text in light sections — a cool contrast to the otherwise warm palette",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-soft-violet",
+        "kind": "color",
+        "name": "Soft Violet",
+        "value": "#8787e0",
+        "role": "Underlord AI feature accent — used on AI chat interface send button",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pale-peach",
+        "kind": "color",
+        "name": "Pale Peach",
+        "value": "#ffe8db",
+        "role": "Card backgrounds for feature cards in warm sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-blush-mist",
+        "kind": "color",
+        "name": "Blush Mist",
+        "value": "#f1eaed",
+        "role": "Card backgrounds for testimonial and feature content cards in light sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-studio-black",
+        "kind": "color",
+        "name": "Studio Black",
+        "value": "#190308",
+        "role": "Deepest background layer, nav overlay backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink-dark",
+        "kind": "color",
+        "name": "Ink Dark",
+        "value": "#1a1a1a",
+        "role": "Body text, nav text — used across all surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-warm-parchment",
+        "kind": "color",
+        "name": "Warm Parchment",
+        "value": "#faf8f7",
+        "role": "Light section page backgrounds, button text on dark — deliberately off-white to maintain warmth against burgundy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-white",
+        "kind": "color",
+        "name": "Pure White",
+        "value": "#ffffff",
+        "role": "Button text on coral CTAs, card surfaces in chat UI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-dusty-rose",
+        "kind": "color",
+        "name": "Dusty Rose",
+        "value": "#a28993",
+        "role": "Secondary body text, de-emphasized labels on dark surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-border-mauve",
+        "kind": "color",
+        "name": "Border Mauve",
+        "value": "#907580",
+        "role": "Card borders, dividers, input borders on dark surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog-gray",
+        "kind": "color",
+        "name": "Fog Gray",
+        "value": "#e5e7eb",
+        "role": "Borders and dividers on light surfaces, button borders",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-muted-plum",
+        "kind": "color",
+        "name": "Muted Plum",
+        "value": "#583f4a",
+        "role": "Mid-dark card backgrounds in dark sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-steel-mauve",
+        "kind": "color",
+        "name": "Steel Mauve",
+        "value": "#d1c7cb",
+        "role": "Shadows, secondary text on light surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-booton",
+        "kind": "typography",
+        "name": "Booton",
+        "value": "font-family: Booton; font-weight: 400, 600; font-size: 16px, 18px, 20px, 24px, 56px; line-height: 1.10–1.56; letter-spacing: -0.32px at 16px (−0.02em applied across all sizes)",
+        "role": "Primary workhorse across UI — nav, body copy, buttons, captions, and feature labels. Weight 600 for subheadings and card titles; weight 400 for body and nav. The custom design gives it a warmth that distinguishes it from commodity grotesques like Inter.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-gamuth-display",
+        "kind": "typography",
+        "name": "Gamuth Display",
+        "value": "font-family: Gamuth Display; font-weight: 400; font-size: 40px, 56px, 88px; line-height: 1.10–1.20",
+        "role": "Hero and section headings only. A custom editorial serif — the signature choice that marks Descript as a content creation tool, not enterprise SaaS. Weight 400 at 88px is confident restraint; most SaaS hero fonts lean heavy.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-brett",
+        "kind": "typography",
+        "name": "Brett",
+        "value": "font-family: Brett; font-weight: 400; font-size: 18px; line-height: 1.00–1.56; letter-spacing: 0.72px at 18px (0.04em)",
+        "role": "Section eyebrow labels only (e.g. 'AI VIDEO EDITOR', 'AI VIDEO AGENT'). Wide 0.04em tracking mimics broadcast chyron or print section slugs — the only place positive letter-spacing appears in the system.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 16px; line-height: 1.5; letter-spacing: -0.32px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 18px; line-height: 1.56; letter-spacing: -0.36px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 20px; line-height: 1.5; letter-spacing: -0.4px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 24px; line-height: 1.33; letter-spacing: -0.48px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 40px; line-height: 1.2",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 56px; line-height: 1.1",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 88px; line-height: 1.1",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80-120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "4px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-badges",
+        "kind": "radius",
+        "name": "badges",
+        "value": "100px",
+        "role": "Imported badges radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "8px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "12px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttonspill",
+        "kind": "radius",
+        "name": "buttonsPill",
+        "value": "9999px",
+        "role": "Imported buttonsPill radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Shadows appear only on floating UI elements (chat card, nav dropdowns) using a single system: rgba(0,0,0,0.16) 0px 2px 4px. Cards and section containers use background-color contrast alone for separation — no shadow hierarchy. This keeps the dark sections feeling like material surfaces rather than layered interfaces.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "primary-cta-button-group",
+        "name": "Primary CTA Button Group",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "primary-cta-button-group-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "testimonial-card-grid",
+        "name": "Testimonial Card Grid",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "testimonial-card-grid-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "awards-recognition-card-with-category-tags",
+        "name": "Awards Recognition Card with Category Tags",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "awards-recognition-card-with-category-tags-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "primary-cta-button",
+        "name": "Primary CTA Button",
+        "category": "Refero components",
+        "description": "Background #f73b3b, text #fff7fd (warm white), border-radius 12px, padding 16px 32px. Booton weight 600 at 18px. No border. The coral against dark backgrounds is the loudest element in the hierarchy.",
+        "variants": [
+          {
+            "id": "primary-cta-button-reference",
+            "name": "Reference",
+            "description": "Background #f73b3b, text #fff7fd (warm white), border-radius 12px, padding 16px 32px. Booton weight 600 at 18px. No border. The coral against dark backgrounds is the loudest element in the hierarchy.",
+            "evidence": [],
+            "observedProperties": [
+              "Main conversion action — 'Get started for free'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-pill-icon-button",
+        "name": "Dark Pill Icon Button",
+        "category": "Refero components",
+        "description": "Background #390a1a, border-radius 9999px, padding 12px all sides. Square-ish pill with icon only. #651a39 variant used for hover/active state.",
+        "variants": [
+          {
+            "id": "dark-pill-icon-button-reference",
+            "name": "Reference",
+            "description": "Background #390a1a, border-radius 9999px, padding 12px all sides. Square-ish pill with icon only. #651a39 variant used for hover/active state.",
+            "evidence": [],
+            "observedProperties": [
+              "Media controls and compact icon actions in dark sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "sign-up-nav-button",
+        "name": "Sign Up Nav Button",
+        "category": "Refero components",
+        "description": "Background #651a39 (Plum Mid), text white, border-radius 12px, padding 12px 20px. Sits in sticky white nav — creates a warm burgundy-to-plum contrast against #faf8f7 nav background.",
+        "variants": [
+          {
+            "id": "sign-up-nav-button-reference",
+            "name": "Reference",
+            "description": "Background #651a39 (Plum Mid), text white, border-radius 12px, padding 12px 20px. Sits in sticky white nav — creates a warm burgundy-to-plum contrast against #faf8f7 nav background.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary nav conversion CTA"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "eyebrow-label",
+        "name": "Eyebrow Label",
+        "category": "Refero components",
+        "description": "Brett typeface, 18px, 0.04em letter-spacing, #f73b3b (On-Air Coral) on dark surfaces, uppercase. No background, no border. Used exclusively to introduce section headings.",
+        "variants": [
+          {
+            "id": "eyebrow-label-reference",
+            "name": "Reference",
+            "description": "Brett typeface, 18px, 0.04em letter-spacing, #f73b3b (On-Air Coral) on dark surfaces, uppercase. No background, no border. Used exclusively to introduce section headings.",
+            "evidence": [],
+            "observedProperties": [
+              "Section category tags above hero headings"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-card-blush",
+        "name": "Feature Card — Blush",
+        "category": "Refero components",
+        "description": "Background #f1eaed (Blush Mist), border-radius 4px, padding 24px 24px 32px, no shadow. Booton 600 for card title at 20px, Booton 400 for body at 16px, #1a1a1a text.",
+        "variants": [
+          {
+            "id": "feature-card-blush-reference",
+            "name": "Reference",
+            "description": "Background #f1eaed (Blush Mist), border-radius 4px, padding 24px 24px 32px, no shadow. Booton 600 for card title at 20px, Booton 400 for body at 16px, #1a1a1a text.",
+            "evidence": [],
+            "observedProperties": [
+              "Feature description cards in light sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-card-peach",
+        "name": "Feature Card — Peach",
+        "category": "Refero components",
+        "description": "Background #ffe8db (Pale Peach), border-radius 4px, padding 24px 24px 32px, no shadow. Same typography treatment as Blush card.",
+        "variants": [
+          {
+            "id": "feature-card-peach-reference",
+            "name": "Reference",
+            "description": "Background #ffe8db (Pale Peach), border-radius 4px, padding 24px 24px 32px, no shadow. Same typography treatment as Blush card.",
+            "evidence": [],
+            "observedProperties": [
+              "Alternate feature cards with warmer tint"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "testimonial-card",
+        "name": "Testimonial Card",
+        "category": "Refero components",
+        "description": "Background #583f4a (Muted Plum), border-radius 4px, padding 24px. Booton 400 at 16px, text #faf8f7. Subtle border-color #907580. No shadow.",
+        "variants": [
+          {
+            "id": "testimonial-card-reference",
+            "name": "Reference",
+            "description": "Background #583f4a (Muted Plum), border-radius 4px, padding 24px. Booton 400 at 16px, text #faf8f7. Subtle border-color #907580. No shadow.",
+            "evidence": [],
+            "observedProperties": [
+              "Social proof quotes in grid layout on dark background"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ai-chat-interface-card",
+        "name": "AI Chat Interface Card",
+        "category": "Refero components",
+        "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.16) 0px 2px 4px. Inner message bubbles use #cdcdfe (muted violet) for AI messages, #8787e0 for send button. Booton 400 at 16px.",
+        "variants": [
+          {
+            "id": "ai-chat-interface-card-reference",
+            "name": "Reference",
+            "description": "Background #ffffff, border-radius 12px, box-shadow rgba(0,0,0,0.16) 0px 2px 4px. Inner message bubbles use #cdcdfe (muted violet) for AI messages, #8787e0 for send button. Booton 400 at 16px.",
+            "evidence": [],
+            "observedProperties": [
+              "Product UI preview showing Underlord AI assistant"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "nav-bar",
+        "name": "Nav Bar",
+        "category": "Refero components",
+        "description": "Background #faf8f7, border-bottom #e5e7eb 1px. Text #1a1a1a at 16px Booton 400. Dropdown chevrons as inline icons. Max-height 50px. Contains wordmark (Descript logo with stacked-lines icon in #f73b3b), text nav links, and Sign Up pill button in #651a39.",
+        "variants": [
+          {
+            "id": "nav-bar-reference",
+            "name": "Reference",
+            "description": "Background #faf8f7, border-bottom #e5e7eb 1px. Text #1a1a1a at 16px Booton 400. Dropdown chevrons as inline icons. Max-height 50px. Contains wordmark (Descript logo with stacked-lines icon in #f73b3b), text nav links, and Sign Up pill button in #651a39.",
+            "evidence": [],
+            "observedProperties": [
+              "Sticky top navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "social-proof-logo-strip",
+        "name": "Social Proof Logo Strip",
+        "category": "Refero components",
+        "description": "Full-width band on #390a1a background. Logos rendered in #faf8f7 or desaturated white at reduced opacity. Booton 400 16px label text above in #a28993.",
+        "variants": [
+          {
+            "id": "social-proof-logo-strip-reference",
+            "name": "Reference",
+            "description": "Full-width band on #390a1a background. Logos rendered in #faf8f7 or desaturated white at reduced opacity. Booton 400 16px label text above in #a28993.",
+            "evidence": [],
+            "observedProperties": [
+              "Trust logos (Canva, Figma, Spotify, etc.)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "category-tag-badge",
+        "name": "Category Tag Badge",
+        "category": "Refero components",
+        "description": "Border 1px solid #907580, background transparent, border-radius 100px, padding 6px 12px. Booton 400 at 14-16px, text #faf8f7 on dark / #1a1a1a on light. Used in Awards card to show product category labels.",
+        "variants": [
+          {
+            "id": "category-tag-badge-reference",
+            "name": "Reference",
+            "description": "Border 1px solid #907580, background transparent, border-radius 100px, padding 6px 12px. Booton 400 at 14-16px, text #faf8f7 on dark / #1a1a1a on light. Used in Awards card to show product category labels.",
+            "evidence": [],
+            "observedProperties": [
+              "Filter tags and feature category pills"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "awards-recognition-card",
+        "name": "Awards Recognition Card",
+        "category": "Refero components",
+        "description": "Background #faf8f7, border-radius 4px, padding 24px. Contains G2 badge images, year label in #f73b3b (Brett 18px), category tag badges with transparent background and #907580 borders.",
+        "variants": [
+          {
+            "id": "awards-recognition-card-reference",
+            "name": "Reference",
+            "description": "Background #faf8f7, border-radius 4px, padding 24px. Contains G2 badge images, year label in #f73b3b (Brett 18px), category tag badges with transparent background and #907580 borders.",
+            "evidence": [],
+            "observedProperties": [
+              "G2 award display in testimonials section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width approximately 1200px, centered with generous horizontal padding. Hero is full-bleed #390a1a burgundy dark spanning 100vh with centered headline stack and single CTA. Below hero, alternating dark (#390a1a) and light (#faf8f7) horizontal bands create a clear rhythm — dark for brand immersion, light for feature explanation. Feature sections use 2-3 column card grids with 24px gaps. Testimonials use a 2-column card grid on dark background with an awards card occupying the left column. Social proof logo strip is full-bleed single row between hero and feature sections. Navigation is sticky white bar at top with left-aligned wordmark and right-aligned utility links + CTA button. Section headings are always centered with eyebrow label above and subtext below, max-width ~640px for readability.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product UI screenshots are the primary visual asset — shown as floating cards partially cropped, overlapping, presented at perspective to simulate depth. No lifestyle photography in screenshots; the product interface IS the visual. UI previews show the Descript editor with real transcript text, building credibility through product exposure. G2 badge art (flat, illustrative award icons) appears in the social proof section. Icons use a filled-with-outline hybrid style at approximately 20-24px, monocolor matching the surface text color. The Underlord AI chat component is showcased as a standalone card with a clean white background floating against the dark hero — product-as-hero framing. All imagery is contained within rounded-corner cards (12px) rather than full-bleed, maintaining the 'exhibit behind glass' feel.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Shadows appear only on floating UI elements (chat card, nav dropdowns) using a single system: rgba(0,0,0,0.16) 0px 2px 4px. Cards and section containers use background-color contrast alone for separation — no shadow hierarchy. This keeps the dark sections feeling like material surfaces rather than layered interfaces.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Gamuth Display weight 400 for all H1/H2 hero headlines — never bold or weight 700",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Precede every major section heading with a Brett 18px, 0.04em tracked eyebrow label in #f73b3b",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply #f73b3b background with 12px border-radius and 16px/32px padding for all primary CTAs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair #390a1a dark sections immediately with #faf8f7 light sections — maintain alternating band rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 4px border-radius for all cards; reserve 12px for floating UI components and modals",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set Booton letter-spacing to −0.02em (negative) across all body sizes — never neutral or positive tracking except in Brett eyebrows",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #583f4a as the elevated card surface on dark #390a1a backgrounds — never pure black or white cards on dark sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use a pure white (#ffffff) page background — all light surfaces use #faf8f7 (Warm Parchment)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply Gamuth Display to body copy, captions, or UI labels — it is heading-only at 40px minimum",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use the coral CTA (#f73b3b) for more than one button per screen — it functions as a single focal signal",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add drop shadows to section cards — background-color contrast alone defines elevation on card surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use a generic sans-serif substitute for Booton without applying −0.02em letter-spacing — positive or zero tracking breaks the warmth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never place green, blue, or teal semantic colors in the UI — the system has no cool-hued semantic states; use only the warm coral/burgundy/violet palette",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use border-radius above 12px on cards or sections — 9999px is reserved exclusively for compact icon pill buttons",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

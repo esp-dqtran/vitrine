@@ -53,11 +53,13 @@ async function completedTargets(logDirectory: string): Promise<Set<string>> {
 }
 
 function runOne(target: Target, options: {
+  provider: "kiro" | "claude";
   model: string;
   limit: number;
   workers: number;
   timeoutMs: number;
   visibility: string;
+  maxEvidence: number;
 }): Promise<{ code: number; tail: string }> {
   return new Promise((resolve) => {
     const child = spawn("node", [
@@ -68,13 +70,15 @@ function runOne(target: Target, options: {
       "--app", target.app,
       "--platform", target.platform,
       "--version", String(target.version_number),
-      "--provider", "claude",
+      "--provider", options.provider,
       "--model", options.model,
       "--limit", String(options.limit),
       "--workers", String(options.workers),
       "--timeout-ms", String(options.timeoutMs),
       "--visibility", options.visibility,
       "--any-provider",
+      "--max-evidence", String(options.maxEvidence),
+      "--skip-incomplete-evidence",
     ], { cwd: process.cwd(), env: process.env, stdio: ["ignore", "pipe", "pipe"] });
     let output = "";
     const append = (chunk: Buffer): void => {
@@ -89,7 +93,12 @@ function runOne(target: Target, options: {
 }
 
 async function main(): Promise<void> {
-  const model = argument("--model") ?? "claude-opus-5";
+  const providerArgument = argument("--provider") ?? "kiro";
+  if (providerArgument !== "kiro" && providerArgument !== "claude") {
+    throw new Error("--provider must be kiro or claude");
+  }
+  const provider = providerArgument;
+  const model = argument("--model") ?? (provider === "claude" ? "opus" : "claude-opus-5");
   const perApp = positiveInteger(argument("--per-app"), 2);
   const workers = positiveInteger(argument("--workers"), 2);
   const timeoutMs = positiveInteger(argument("--timeout-ms"), 900_000);
@@ -100,6 +109,9 @@ async function main(): Promise<void> {
   if (!Number.isSafeInteger(shard) || shard < 0 || shard >= shards) {
     throw new Error("--shard must be between 0 and --shards minus one");
   }
+  const maxEvidence = positiveInteger(argument("--max-evidence"), 12);
+  // Smallest apps first: finishing whole apps sooner beats partial progress on huge ones.
+  const order = argument("--order") === "asc" ? "ASC" : "DESC";
   const logDirectory = argument("--log-dir") ?? join("data", "feature-descriptions");
   const logPath = join(logDirectory, `sweep-log-${shard}of${shards}.jsonl`);
 
@@ -110,9 +122,26 @@ async function main(): Promise<void> {
        JOIN app_flow_versions afv ON afv.version_id = av.id
       WHERE av.status = 'published'
       GROUP BY a.name, av.platform, av.version_number
-      ORDER BY COUNT(afv.id) DESC`,
+      ORDER BY COUNT(afv.id) ${order}`,
   );
-  await closePool();
+
+  // The runner exits non-zero when any single Flow fails, so exit code alone would leave
+  // a 500-Flow app permanently "failed" over one bad Flow. Ask the database instead.
+  async function fullyCovered(target: Target): Promise<{ flows: number; docs: number }> {
+    const { rows: [row] } = await query<{ flows: number; docs: number }>(
+      `SELECT COUNT(DISTINCT afv.source_flow_id)::int AS flows,
+              COUNT(DISTINCT d.source_flow_id) FILTER (WHERE d.visibility = 'catalog')::int AS docs
+         FROM app_versions av
+         JOIN apps a ON a.id = av.app_id
+         JOIN app_flow_versions afv ON afv.version_id = av.id
+         LEFT JOIN feature_documents d ON d.source_flow_id = afv.source_flow_id
+         LEFT JOIN feature_document_revisions r
+           ON r.id = d.current_revision_id AND r.source_version_id = av.id
+        WHERE a.name = $1 AND av.platform = $2 AND av.version_number = $3`,
+      [target.app, target.platform, target.version_number],
+    );
+    return row ?? { flows: 0, docs: 0 };
+  }
 
   await mkdir(dirname(logPath), { recursive: true });
   const done = await completedTargets(logDirectory);
@@ -123,6 +152,7 @@ async function main(): Promise<void> {
 
   console.log(JSON.stringify({
     event: "sweep-start",
+    provider,
     model,
     perApp,
     workers,
@@ -133,20 +163,42 @@ async function main(): Promise<void> {
     pending: pending.length,
   }));
 
+  // A provider outage (usage limit, expired auth) fails every target in seconds. Without
+  // this the sweep burns hours hammering a dead endpoint, so stop after a failure streak.
+  const failureStreakLimit = positiveInteger(argument("--failure-streak-limit"), 15);
+  let failureStreak = 0;
   let ok = 0;
   let failed = 0;
   const sweepStarted = Date.now();
   for (const [index, target] of pending.entries()) {
     const key = `${target.app}/${target.platform}/${target.version_number}`;
     const started = Date.now();
-    const result = await runOne(target, { model, limit: perApp, workers, timeoutMs, visibility });
+    const result = await runOne(target, {
+      provider,
+      model,
+      limit: perApp,
+      workers,
+      timeoutMs,
+      visibility,
+      maxEvidence,
+    });
     const durationMs = Date.now() - started;
-    const status = result.code === 0 ? "ok" : "failed";
-    if (result.code === 0) ok += 1;
-    else failed += 1;
+    const coverage = await fullyCovered(target);
+    const complete = coverage.flows > 0 && coverage.docs >= coverage.flows;
+    const status = complete ? "ok" : "failed";
+    if (complete) {
+      ok += 1;
+      failureStreak = 0;
+    } else {
+      failed += 1;
+      // Partial progress still means the provider is alive, so do not trip the breaker.
+      if (coverage.docs === 0) failureStreak += 1;
+      else failureStreak = 0;
+    }
     const entry = {
       key,
       status,
+      coverage: `${coverage.docs}/${coverage.flows}`,
       durationMs,
       durationLabel: `${(durationMs / 1000).toFixed(1)}s`,
       flows: target.flows,
@@ -160,13 +212,25 @@ async function main(): Promise<void> {
       of: pending.length,
       key,
       status,
+      coverage: entry.coverage,
       durationLabel: entry.durationLabel,
       ok,
       failed,
       elapsedLabel: `${((Date.now() - sweepStarted) / 60_000).toFixed(1)}m`,
     }));
+    if (failureStreak >= failureStreakLimit) {
+      console.log(JSON.stringify({
+        event: "sweep-aborted",
+        reason: `${failureStreak} consecutive failures — provider is likely unavailable`,
+        ok,
+        failed,
+        remaining: pending.length - index - 1,
+      }));
+      break;
+    }
   }
 
+  await closePool();
   console.log(JSON.stringify({
     event: "sweep-done",
     ok,

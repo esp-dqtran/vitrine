@@ -1,0 +1,1230 @@
+{
+  "schemaVersion": 1,
+  "id": "6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+  "sourceUrl": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+  "sitemapLastModified": "2026-06-05T01:58:01.524Z",
+  "fetchedAt": "2026-08-02T18:08:01.585Z",
+  "contentHash": "9b73bc1654272d9eb549a2d09a54060c2f59df05d1de0ca741ad3b38026008c9",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Dries Bos design system",
+            "item": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f#style-reference",
+        "name": "Dries Bos design system reference",
+        "headline": "Dries Bos design system | Refero Styles",
+        "description": "Explore Dries Bos's light Agency design system: Vellum #e8e7e3, Parchment #dddbd5 colors, Sohne Buch, myFont typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+        "mainEntityOfPage": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Dries Bos",
+          "url": "https://www.driesbos.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/bf9d045a-00d4-4e58-b61c-601175077176.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/bf9d045a-00d4-4e58-b61c-601175077176.jpg",
+          "caption": "Screenshot of Dries Bos"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/bf9d045a-00d4-4e58-b61c-601175077176.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Dries Bos design system",
+          "Dries Bos website design",
+          "Dries Bos colors",
+          "Dries Bos typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Vellum",
+          "Parchment",
+          "India Ink",
+          "Graphite",
+          "Sohne Buch",
+          "myFont"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Dries Bos design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dries Bos website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dries Bos colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Dries Bos typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-04-30T03:30:23.375Z",
+        "dateModified": "2026-04-30T03:30:23.375Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://www.driesbos.com",
+      "siteName": "Dries Bos",
+      "extractedAt": "2026-06-03T17:05:22.539Z",
+      "durationMs": 22989,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 588,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#050200",
+            "oklch": {
+              "c": 0.01959677417678574,
+              "h": 73.07034913676799,
+              "l": 0.0920381012832934
+            },
+            "contexts": [
+              "other",
+              "link",
+              "button",
+              "body",
+              "icon",
+              "input"
+            ],
+            "frequency": 2397,
+            "confidence": 1,
+            "prominence": 24675683.809109647,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 72,
+              "icon/color": 90,
+              "link/color": 17,
+              "other/fill": 102,
+              "input/color": 1,
+              "other/color": 274,
+              "button/color": 5,
+              "body/borderColor": 288,
+              "icon/borderColor": 360,
+              "link/borderColor": 68,
+              "input/borderColor": 4,
+              "other/borderColor": 1096,
+              "button/borderColor": 20
+            }
+          },
+          {
+            "hex": "#e8e7e3",
+            "oklch": {
+              "c": 0.005468105921262441,
+              "h": 95.1032593944213,
+              "l": 0.9276237004263561
+            },
+            "contexts": [
+              "body",
+              "link",
+              "other",
+              "button"
+            ],
+            "frequency": 38,
+            "confidence": 1,
+            "prominence": 6727962.9026629785,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/backgroundColor": 1,
+              "link/backgroundColor": 2,
+              "other/backgroundColor": 33,
+              "button/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#dddbd5",
+            "oklch": {
+              "c": 0.00840481028437622,
+              "h": 91.49047297298232,
+              "l": 0.8913125008417433
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 333136.9281765769,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#747472",
+            "oklch": {
+              "c": 0.0031061746030220496,
+              "h": 95.09956704605942,
+              "l": 0.5570508403030494
+            },
+            "contexts": [
+              "button",
+              "other",
+              "icon"
+            ],
+            "frequency": 33,
+            "confidence": 1,
+            "prominence": 169178.48932293878,
+            "properties": [
+              "color",
+              "borderColor",
+              "stroke"
+            ],
+            "usageCounts": {
+              "icon/color": 1,
+              "other/color": 1,
+              "button/color": 4,
+              "other/stroke": 3,
+              "icon/borderColor": 4,
+              "other/borderColor": 4,
+              "button/borderColor": 16
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "icon"
+            ],
+            "frequency": 36,
+            "confidence": 1,
+            "prominence": 2688.0779366645384,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "icon/fill": 36
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.051013318424140836,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 16.97,
+            "background": "#e8e7e3",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.72,
+            "background": "#e8e7e3",
+            "foreground": "#050200"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.17,
+            "background": "#dddbd5",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.94,
+            "background": "#dddbd5",
+            "foreground": "#050200"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.78,
+            "background": "#e8e7e3",
+            "foreground": "#747472"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.38,
+            "background": "#dddbd5",
+            "foreground": "#747472"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 1000,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 6,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "body",
+              "button"
+            ],
+            "frequency": 10,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|body",
+              "paddingRight|body",
+              "paddingBottom|body",
+              "paddingLeft|body",
+              "paddingTop|button",
+              "rowGap|button",
+              "columnGap|button"
+            ]
+          },
+          {
+            "value": 13,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 17,
+            "properties": [
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|button",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 15,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 25,
+            "contexts": [
+              "link",
+              "button",
+              "other"
+            ],
+            "frequency": 404,
+            "properties": [
+              "paddingLeft",
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|link",
+              "paddingTop|button",
+              "paddingRight|button",
+              "paddingBottom|button",
+              "paddingLeft|button",
+              "paddingTop|link",
+              "paddingRight|link",
+              "paddingBottom|link",
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 15,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 79,
+            "contexts": [
+              "link",
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|link",
+              "paddingTop|other",
+              "marginTop|other"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Sohne Buch",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 279,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "myFont",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 186,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": null,
+        "steps": [
+          {
+            "size": 20,
+            "family": "myFont",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "button",
+              "icon",
+              "input"
+            ],
+            "frequency": 186,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Sohne Buch",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "button",
+              "body",
+              "icon",
+              "other"
+            ],
+            "frequency": 279,
+            "lineHeight": 1.45,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Keep the palette to exactly four tones: Vellum, Parchment, India Ink, Graphite. Never introduce a chromatic color.",
+        "Set table row and card padding to 25px on all sides — this is the dominant rhythm of the layout.",
+        "Use Sohne Buch 400 at a single weight for all text. Do not bold, do not italic. Hierarchy comes from size and color (Graphite vs India Ink), not weight.",
+        "Draw borders and dividers as 1px India Ink hairlines. Do not use 2px+ rules; do not use shadows.",
+        "Use the myFont icon set at 20px with 1.0 line-height. Align icons optically to the x-height of adjacent text, not to the bounding box.",
+        "Let whitespace carry visual weight. Maintain ~79px vertical gap between major sections.",
+        "Keep all interactive elements borderless. The arrow, link, and icon ARE the affordance — no button containers, no filled states."
+      ],
+      "donts": [
+        "Do not add a brand color, accent color, or CTA fill. The system is monochromatic by design.",
+        "Do not apply border-radius to rows, table cells, or cards. Corners are sharp (0px). Only pill elements (1000px) curve.",
+        "Do not introduce drop shadows, glows, or elevation effects. Surfaces are flat; separation is tonal (Vellum → Parchment) or hairline.",
+        "Do not use multiple font weights. Sohne Buch 400 is the only registered weight — adding 500/600/700 breaks the editorial restraint.",
+        "Do not wrap interactive elements in button containers. Links are text + arrow icon, nothing more.",
+        "Do not use photography, gradients, or colored illustrations. The wireframe line drawing is the only visual content; honor that.",
+        "Do not right-align body text. All editorial copy is left-aligned, including the bio description."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#e8e7e3",
+          "name": "Vellum",
+          "role": "Page background, table row base, card surfaces — warm off-white reads as paper, not screen",
+          "group": "neutral"
+        },
+        {
+          "hex": "#dddbd5",
+          "name": "Parchment",
+          "role": "Alternating table rows, subtle surface lift one step above the canvas",
+          "group": "neutral"
+        },
+        {
+          "hex": "#050200",
+          "name": "India Ink",
+          "role": "Body text, hairline borders, wireframe strokes, icon strokes — the only high-contrast tone in the system",
+          "group": "neutral"
+        },
+        {
+          "hex": "#747472",
+          "name": "Graphite",
+          "role": "Muted secondary text, disabled icon strokes, de-emphasized metadata",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Single full-width column, max-width ~1200px centered. Hero zone contains the wireframe illustration bleeding to viewport edges, with the header bar overlaying its bottom edge. Below the hero, a bio description block sits in the same left-aligned column. The majority of the page is a four-column data table (year, project name, discipline, action icons) with generous 25px row padding. No multi-column grids, no card grids, no sidebar. The entire scroll is vertical through a single list. Navigation is a minimal header bar with three icon controls — no nav links, no menu.",
+      "imagery": "The site has exactly one visual element: a large wireframe / line-drawing illustration in the hero zone, rendered as thin India Ink strokes on the Vellum background. No photography, no raster images, no colored illustrations, no gradients, no product screenshots. The wireframe (perspective architectural geometry) bleeds beyond the viewport edges and signals the developer's spatial/structural thinking. The rest of the site is pure type and table.",
+      "similar": [
+        {
+          "why": "Same editorial minimalism — warm monochrome palette, generous whitespace, type and wireframe as the primary visual language",
+          "business": "Rauno Freiberg"
+        },
+        {
+          "why": "Same table-as-portfolio pattern with hairline structure, no card containers, sharp 0px corners",
+          "business": "Stas Ponomarenko"
+        },
+        {
+          "why": "Same wireframe/blueprint line-drawing hero treatment on warm off-white background, type-only body",
+          "business": "Cobe (architects)"
+        },
+        {
+          "why": "Same single-weight sans-serif typography, monochromatic restraint, and index-list-as-navigation approach",
+          "business": "Phil Stumph"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "icons": "0px",
+          "buttons": "0px",
+          "table_rows": "0px",
+          "pill_elements": "1000px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "79px",
+        "cardPadding": "25px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#e8e7e3",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page background — the warm paper ground"
+        },
+        {
+          "hex": "#dddbd5",
+          "name": "Row Surface",
+          "level": 1,
+          "purpose": "Alternating table row background, creates the only surface differentiation in the system"
+        }
+      ],
+      "elevation": [],
+      "northStar": "editorial ink on warm vellum",
+      "typeScale": [
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.45
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.45
+        },
+        {
+          "role": "subheading",
+          "size": 20,
+          "lineHeight": 1.45
+        }
+      ],
+      "components": [
+        {
+          "name": "Work Table Row",
+          "role": "Primary navigation through portfolio — one project per row",
+          "description": "Full-width row on vellum (#e8e7e3) or parchment (#dddbd5) background, no border between rows. Four-column flex layout: year (left-aligned, ~80px), project name (flexible width, India Ink #050200), discipline tag (muted Graphite #747472), action icons (right-aligned). Vertical padding ~25px. Type: Sohne Buch 400 at the base scale. No hover state beyond the existing tone — the row is always legible."
+        },
+        {
+          "name": "Column Header",
+          "role": "Labels above the work table",
+          "description": "Same baseline as table cells but in Graphite #747472 instead of India Ink. Right-aligned for the last column (action icons). Padding 25px top/sides, matches row padding so columns optically align."
+        },
+        {
+          "name": "Header Bar",
+          "role": "Persistent identity strip at the top of every viewport",
+          "description": "Single horizontal band, vellum background, no border. Left: wordmark 'Name — Discipline' in India Ink at 14-16px. Right: three icon controls (theme toggle, expand/collapse, close) in 20px myFont glyphs, stroke India Ink. No logo lockup, no nav links — the header IS the navigation."
+        },
+        {
+          "name": "Theme Toggle Icon",
+          "role": "Switch between light and dark rendering",
+          "description": "20×20px myFont glyph (half-filled circle), India Ink stroke. Sits inline with other header icons. No background, no border, no label — the icon is self-explanatory."
+        },
+        {
+          "name": "Arrow Link",
+          "role": "Inline directional cue for the bio/intro line",
+          "description": "20px myFont right-arrow glyph, India Ink, sits at the right edge of the description text block. The arrow IS the link affordance — no underline, no color change, no button container. Vertical-aligned to the last line of the paragraph."
+        },
+        {
+          "name": "External Link Icon",
+          "role": "Indicator that a work item opens in a new tab",
+          "description": "20px myFont diagonal-arrow glyph, India Ink, positioned in the action column of table rows that have an external URL. Paired with the standard arrow icon in the same row."
+        },
+        {
+          "name": "Bio Description Block",
+          "role": "Hero-adjacent text introducing the developer",
+          "description": "Two short sentences in Sohne Buch 400, India Ink, left-aligned, max-width matches the table width. Arrow link at the end of the second line. No headline, no label, no decoration — just type on vellum."
+        },
+        {
+          "name": "Wireframe Hero Illustration",
+          "role": "Signature visual element — a line drawing occupying the top third of the page",
+          "description": "Thin-stroke architectural sketch (perspective box / room / frame) rendered in India Ink lines at ~0.5-1px. No fills, no shading, no color. Sits on vellum background. The drawing bleeds off the edges of the viewport — it is not contained in a card. This is the only piece of visual content on the entire site."
+        },
+        {
+          "name": "Search Icon",
+          "role": "Optional filter trigger for the work table",
+          "description": "20px myFont magnifying-glass glyph, Graphite #747472 (de-emphasized vs the action icons), right-aligned in the column header row."
+        }
+      ],
+      "typography": [
+        {
+          "role": "All interface and editorial text — headlines, body, table cells, labels. Used at one weight (400) across all roles; the single weight plus generous letter-spacing carries the quiet authority instead of bold/regular contrast",
+          "sizes": "20px",
+          "family": "Sohne Buch",
+          "weight": "400",
+          "lineHeight": "1.45",
+          "substitute": "Inter, Söhne, Untitled Sans, Neue Haas Grotesk"
+        },
+        {
+          "role": "Icon glyph set — arrows, external-link markers, theme toggle, search, moon/sun. The 1.0 line-height confirms this is a pictogram face, not running text",
+          "sizes": "20px",
+          "family": "myFont",
+          "weight": "400",
+          "lineHeight": "1.00",
+          "substitute": "Phosphor, Lucide, or a custom icon set with 1.0 line-height metrics"
+        }
+      ],
+      "description": "A monochromatic portfolio language built on warm vellum paper and near-black ink — the visual equivalent of an architect's drafting table. Every element is a line, a label, or empty space; no fills, no shadows, no chromatic accents interrupt the editorial calm. The work list is a spreadsheet made beautiful: columns, dates, project names, and discipline tags sit on the same horizontal grid, separated by hairline rules rather than card containers. The hero is a large wireframe drawing — thin strokes on warm ground — that signals the developer's craft without ever showing a screenshot. Color is structural (paper, ink, gray) not expressive; the site trusts whitespace and type to carry mood.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The system deliberately uses zero shadow. Separation between elements is achieved through tonal shifts (Vellum → Parchment), hairline 1px borders, and whitespace — never through drop shadows or blur effects. This flatness is a signature choice: it makes the interface read as printed matter, not software."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/6e29cd7f-c315-4c62-b7bb-4cde7cd8ef63.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/bf9d045a-00d4-4e58-b61c-601175077176.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "dries-bos",
+    "generatedAt": "2026-06-03T17:05:22.539Z",
+    "summary": "A monochromatic portfolio language built on warm vellum paper and near-black ink — the visual equivalent of an architect's drafting table. Every element is a line, a label, or empty space; no fills, no shadows, no chromatic accents interrupt the editorial calm. The work list is a spreadsheet made beautiful: columns, dates, project names, and discipline tags sit on the same horizontal grid, separated by hairline rules rather than card containers. The hero is a large wireframe drawing — thin strokes on warm ground — that signals the developer's craft without ever showing a screenshot. Color is structural (paper, ink, gray) not expressive; the site trusts whitespace and type to carry mood.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+      "sourceUrl": "https://styles.refero.design/style/6d0db1c7-5500-40cd-b2f3-d3d9abbd3a2f",
+      "originalUrl": "https://www.driesbos.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/6e29cd7f-c315-4c62-b7bb-4cde7cd8ef63.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/bf9d045a-00d4-4e58-b61c-601175077176.jpg",
+      "importedAt": "2026-08-02T18:08:01.585Z",
+      "upstreamModifiedAt": "2026-06-05T01:58:01.524Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "editorial ink on warm vellum",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-vellum",
+        "kind": "color",
+        "name": "Vellum",
+        "value": "#e8e7e3",
+        "role": "Page background, table row base, card surfaces — warm off-white reads as paper, not screen",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-parchment",
+        "kind": "color",
+        "name": "Parchment",
+        "value": "#dddbd5",
+        "role": "Alternating table rows, subtle surface lift one step above the canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-india-ink",
+        "kind": "color",
+        "name": "India Ink",
+        "value": "#050200",
+        "role": "Body text, hairline borders, wireframe strokes, icon strokes — the only high-contrast tone in the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#747472",
+        "role": "Muted secondary text, disabled icon strokes, de-emphasized metadata",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sohne-buch",
+        "kind": "typography",
+        "name": "Sohne Buch",
+        "value": "font-family: Sohne Buch; font-weight: 400; font-size: 20px; line-height: 1.45",
+        "role": "All interface and editorial text — headlines, body, table cells, labels. Used at one weight (400) across all roles; the single weight plus generous letter-spacing carries the quiet authority instead of bold/regular contrast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-myfont",
+        "kind": "typography",
+        "name": "myFont",
+        "value": "font-family: myFont; font-weight: 400; font-size: 20px; line-height: 1.00",
+        "role": "Icon glyph set — arrows, external-link markers, theme toggle, search, moon/sun. The 1.0 line-height confirms this is a pictogram face, not running text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.45",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.45",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 20px; line-height: 1.45",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "79px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "25px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-icons",
+        "kind": "radius",
+        "name": "icons",
+        "value": "0px",
+        "role": "Imported icons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-table-rows",
+        "kind": "radius",
+        "name": "table_rows",
+        "value": "0px",
+        "role": "Imported table_rows radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-pill-elements",
+        "kind": "radius",
+        "name": "pill_elements",
+        "value": "1000px",
+        "role": "Imported pill_elements radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system deliberately uses zero shadow. Separation between elements is achieved through tonal shifts (Vellum → Parchment), hairline 1px borders, and whitespace — never through drop shadows or blur effects. This flatness is a signature choice: it makes the interface read as printed matter, not software.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "work-table-row",
+        "name": "Work Table Row",
+        "category": "Refero components",
+        "description": "Full-width row on vellum (#e8e7e3) or parchment (#dddbd5) background, no border between rows. Four-column flex layout: year (left-aligned, ~80px), project name (flexible width, India Ink #050200), discipline tag (muted Graphite #747472), action icons (right-aligned). Vertical padding ~25px. Type: Sohne Buch 400 at the base scale. No hover state beyond the existing tone — the row is always legible.",
+        "variants": [
+          {
+            "id": "work-table-row-reference",
+            "name": "Reference",
+            "description": "Full-width row on vellum (#e8e7e3) or parchment (#dddbd5) background, no border between rows. Four-column flex layout: year (left-aligned, ~80px), project name (flexible width, India Ink #050200), discipline tag (muted Graphite #747472), action icons (right-aligned). Vertical padding ~25px. Type: Sohne Buch 400 at the base scale. No hover state beyond the existing tone — the row is always legible.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary navigation through portfolio — one project per row"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "column-header",
+        "name": "Column Header",
+        "category": "Refero components",
+        "description": "Same baseline as table cells but in Graphite #747472 instead of India Ink. Right-aligned for the last column (action icons). Padding 25px top/sides, matches row padding so columns optically align.",
+        "variants": [
+          {
+            "id": "column-header-reference",
+            "name": "Reference",
+            "description": "Same baseline as table cells but in Graphite #747472 instead of India Ink. Right-aligned for the last column (action icons). Padding 25px top/sides, matches row padding so columns optically align.",
+            "evidence": [],
+            "observedProperties": [
+              "Labels above the work table"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "header-bar",
+        "name": "Header Bar",
+        "category": "Refero components",
+        "description": "Single horizontal band, vellum background, no border. Left: wordmark 'Name — Discipline' in India Ink at 14-16px. Right: three icon controls (theme toggle, expand/collapse, close) in 20px myFont glyphs, stroke India Ink. No logo lockup, no nav links — the header IS the navigation.",
+        "variants": [
+          {
+            "id": "header-bar-reference",
+            "name": "Reference",
+            "description": "Single horizontal band, vellum background, no border. Left: wordmark 'Name — Discipline' in India Ink at 14-16px. Right: three icon controls (theme toggle, expand/collapse, close) in 20px myFont glyphs, stroke India Ink. No logo lockup, no nav links — the header IS the navigation.",
+            "evidence": [],
+            "observedProperties": [
+              "Persistent identity strip at the top of every viewport"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "theme-toggle-icon",
+        "name": "Theme Toggle Icon",
+        "category": "Refero components",
+        "description": "20×20px myFont glyph (half-filled circle), India Ink stroke. Sits inline with other header icons. No background, no border, no label — the icon is self-explanatory.",
+        "variants": [
+          {
+            "id": "theme-toggle-icon-reference",
+            "name": "Reference",
+            "description": "20×20px myFont glyph (half-filled circle), India Ink stroke. Sits inline with other header icons. No background, no border, no label — the icon is self-explanatory.",
+            "evidence": [],
+            "observedProperties": [
+              "Switch between light and dark rendering"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "arrow-link",
+        "name": "Arrow Link",
+        "category": "Refero components",
+        "description": "20px myFont right-arrow glyph, India Ink, sits at the right edge of the description text block. The arrow IS the link affordance — no underline, no color change, no button container. Vertical-aligned to the last line of the paragraph.",
+        "variants": [
+          {
+            "id": "arrow-link-reference",
+            "name": "Reference",
+            "description": "20px myFont right-arrow glyph, India Ink, sits at the right edge of the description text block. The arrow IS the link affordance — no underline, no color change, no button container. Vertical-aligned to the last line of the paragraph.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline directional cue for the bio/intro line"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "external-link-icon",
+        "name": "External Link Icon",
+        "category": "Refero components",
+        "description": "20px myFont diagonal-arrow glyph, India Ink, positioned in the action column of table rows that have an external URL. Paired with the standard arrow icon in the same row.",
+        "variants": [
+          {
+            "id": "external-link-icon-reference",
+            "name": "Reference",
+            "description": "20px myFont diagonal-arrow glyph, India Ink, positioned in the action column of table rows that have an external URL. Paired with the standard arrow icon in the same row.",
+            "evidence": [],
+            "observedProperties": [
+              "Indicator that a work item opens in a new tab"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "bio-description-block",
+        "name": "Bio Description Block",
+        "category": "Refero components",
+        "description": "Two short sentences in Sohne Buch 400, India Ink, left-aligned, max-width matches the table width. Arrow link at the end of the second line. No headline, no label, no decoration — just type on vellum.",
+        "variants": [
+          {
+            "id": "bio-description-block-reference",
+            "name": "Reference",
+            "description": "Two short sentences in Sohne Buch 400, India Ink, left-aligned, max-width matches the table width. Arrow link at the end of the second line. No headline, no label, no decoration — just type on vellum.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero-adjacent text introducing the developer"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "wireframe-hero-illustration",
+        "name": "Wireframe Hero Illustration",
+        "category": "Refero components",
+        "description": "Thin-stroke architectural sketch (perspective box / room / frame) rendered in India Ink lines at ~0.5-1px. No fills, no shading, no color. Sits on vellum background. The drawing bleeds off the edges of the viewport — it is not contained in a card. This is the only piece of visual content on the entire site.",
+        "variants": [
+          {
+            "id": "wireframe-hero-illustration-reference",
+            "name": "Reference",
+            "description": "Thin-stroke architectural sketch (perspective box / room / frame) rendered in India Ink lines at ~0.5-1px. No fills, no shading, no color. Sits on vellum background. The drawing bleeds off the edges of the viewport — it is not contained in a card. This is the only piece of visual content on the entire site.",
+            "evidence": [],
+            "observedProperties": [
+              "Signature visual element — a line drawing occupying the top third of the page"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "search-icon",
+        "name": "Search Icon",
+        "category": "Refero components",
+        "description": "20px myFont magnifying-glass glyph, Graphite #747472 (de-emphasized vs the action icons), right-aligned in the column header row.",
+        "variants": [
+          {
+            "id": "search-icon-reference",
+            "name": "Reference",
+            "description": "20px myFont magnifying-glass glyph, Graphite #747472 (de-emphasized vs the action icons), right-aligned in the column header row.",
+            "evidence": [],
+            "observedProperties": [
+              "Optional filter trigger for the work table"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Single full-width column, max-width ~1200px centered. Hero zone contains the wireframe illustration bleeding to viewport edges, with the header bar overlaying its bottom edge. Below the hero, a bio description block sits in the same left-aligned column. The majority of the page is a four-column data table (year, project name, discipline, action icons) with generous 25px row padding. No multi-column grids, no card grids, no sidebar. The entire scroll is vertical through a single list. Navigation is a minimal header bar with three icon controls — no nav links, no menu.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "The site has exactly one visual element: a large wireframe / line-drawing illustration in the hero zone, rendered as thin India Ink strokes on the Vellum background. No photography, no raster images, no colored illustrations, no gradients, no product screenshots. The wireframe (perspective architectural geometry) bleeds beyond the viewport edges and signals the developer's spatial/structural thinking. The rest of the site is pure type and table.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system deliberately uses zero shadow. Separation between elements is achieved through tonal shifts (Vellum → Parchment), hairline 1px borders, and whitespace — never through drop shadows or blur effects. This flatness is a signature choice: it makes the interface read as printed matter, not software.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the palette to exactly four tones: Vellum, Parchment, India Ink, Graphite. Never introduce a chromatic color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set table row and card padding to 25px on all sides — this is the dominant rhythm of the layout.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Sohne Buch 400 at a single weight for all text. Do not bold, do not italic. Hierarchy comes from size and color (Graphite vs India Ink), not weight.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Draw borders and dividers as 1px India Ink hairlines. Do not use 2px+ rules; do not use shadows.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the myFont icon set at 20px with 1.0 line-height. Align icons optically to the x-height of adjacent text, not to the bounding box.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let whitespace carry visual weight. Maintain ~79px vertical gap between major sections.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all interactive elements borderless. The arrow, link, and icon ARE the affordance — no button containers, no filled states.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add a brand color, accent color, or CTA fill. The system is monochromatic by design.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not apply border-radius to rows, table cells, or cards. Corners are sharp (0px). Only pill elements (1000px) curve.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce drop shadows, glows, or elevation effects. Surfaces are flat; separation is tonal (Vellum → Parchment) or hairline.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use multiple font weights. Sohne Buch 400 is the only registered weight — adding 500/600/700 breaks the editorial restraint.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not wrap interactive elements in button containers. Links are text + arrow icon, nothing more.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use photography, gradients, or colored illustrations. The wireframe line drawing is the only visual content; honor that.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not right-align body text. All editorial copy is left-aligned, including the bio description.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

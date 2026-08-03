@@ -186,12 +186,13 @@ dialog.flow-preview-dialog-shell::backdrop {
   width: 36px !important;
   height: 36px !important;
   border-radius: 50% !important;
-  color: var(--vitrine-color-text-primary) !important;
+  background: var(--vitrine-color-on-action-primary) !important;
+  color: var(--vitrine-color-action-primary) !important;
   font: var(--vitrine-type-label) !important;
 }
 
 .flow-preview-dialog__header-actions > button:last-child {
-  background: var(--vitrine-color-surface-muted) !important;
+  background: var(--vitrine-color-on-action-primary) !important;
 }
 
 .flow-preview-dialog__divider {
@@ -397,13 +398,6 @@ dialog.flow-preview-dialog-shell::backdrop {
   order: 2;
 }
 
-.flow-preview-dialog__more {
-  width: 44px !important;
-  min-width: 44px !important;
-  background: var(--vitrine-color-surface-muted) !important;
-  color: var(--vitrine-color-text-primary) !important;
-}
-
 .flow-preview-dialog__restart {
   min-width: 164px;
   background: var(--vitrine-color-surface-muted) !important;
@@ -443,11 +437,11 @@ dialog.flow-preview-dialog-shell::backdrop {
   background: transparent;
   color: var(--vitrine-color-text-primary);
   font: var(--vitrine-type-label);
+  font-weight: 700;
   letter-spacing: .2px;
   cursor: pointer;
 }
 
-.flow-preview-dialog__menu,
 .flow-preview-dialog__info {
   position: absolute;
   z-index: 8;
@@ -457,36 +451,6 @@ dialog.flow-preview-dialog-shell::backdrop {
   background: var(--vitrine-color-surface);
   color: var(--vitrine-color-text-primary);
   box-shadow: 0 16px 44px rgb(0 0 0 / 38%);
-}
-
-.flow-preview-dialog__menu {
-  left: 50%;
-  bottom: 88px;
-  width: 190px;
-  transform: translateX(22px);
-}
-
-.flow-preview-dialog__menu a,
-.flow-preview-dialog__menu button {
-  display: flex;
-  width: 100%;
-  min-height: 38px;
-  align-items: center;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.flow-preview-dialog__menu a:hover,
-.flow-preview-dialog__menu button:hover {
-  background: rgb(255 255 255 / 8%);
 }
 
 .flow-preview-dialog__info {
@@ -547,8 +511,8 @@ dialog.flow-preview-dialog-shell::backdrop {
 .app-screen-preview-dialog__context strong {
   padding: 5px 10px;
   border-radius: 9px;
-  background: var(--vitrine-color-surface-muted);
-  color: var(--vitrine-color-text-primary);
+  background: var(--vitrine-color-action-primary);
+  color: var(--vitrine-color-on-action-primary);
   font: var(--vitrine-type-label);
 }
 
@@ -735,11 +699,6 @@ dialog.flow-preview-dialog-shell::backdrop {
     min-width: 110px;
   }
 
-  .flow-preview-dialog__more {
-    width: 46px !important;
-    min-width: 46px !important;
-  }
-
   .flow-preview-dialog__metadata {
     right: 0;
     bottom: 18px;
@@ -750,10 +709,6 @@ dialog.flow-preview-dialog-shell::backdrop {
   .flow-preview-dialog__progress {
     left: 16px;
     bottom: 22px;
-  }
-
-  .flow-preview-dialog__menu {
-    bottom: 124px;
   }
 
   .flow-preview-dialog__info {

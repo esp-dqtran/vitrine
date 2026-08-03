@@ -8,7 +8,28 @@ export const RESEARCH_LIMITS = {
 } as const;
 
 export type ResearchPlatform = "all" | "ios" | "android" | "web";
-export type ResearchSourceKind = "catalog_screen" | "catalog_flow_step" | "private_upload";
+
+export const RESEARCH_PROJECT_ICONS = [
+  "initial",
+  "folder",
+  "grid",
+  "book",
+  "sparkle",
+] as const;
+
+export type ResearchProjectIcon = (typeof RESEARCH_PROJECT_ICONS)[number];
+
+export function normalizeResearchProjectIcon(
+  value: unknown,
+): ResearchProjectIcon {
+  return RESEARCH_PROJECT_ICONS.includes(value as ResearchProjectIcon)
+    ? (value as ResearchProjectIcon)
+    : "initial";
+}
+export type ResearchSourceKind =
+  | "catalog_screen"
+  | "catalog_flow_step"
+  | "private_upload";
 export type ResearchProjectId = string;
 
 const researchProjectIdPattern =
@@ -36,6 +57,8 @@ export interface ResearchEvidenceSnapshot {
 
 export interface ResearchProjectItem {
   id: number;
+  appId?: string;
+  appIconUrl?: string;
   projectId: ResearchProjectId;
   laneId: number;
   position: number;
@@ -66,7 +89,11 @@ export interface ResearchSynthesisResult {
   executiveRead: string;
   observations: CitedResearchText[];
   differences: CitedResearchText[];
-  alternatives: Array<{ title: string; tradeoff: string; evidenceIds: string[] }>;
+  alternatives: Array<{
+    title: string;
+    tradeoff: string;
+    evidenceIds: string[];
+  }>;
   recommendation: CitedResearchText;
   requirements: CitedResearchText[];
   openQuestions: string[];
@@ -83,6 +110,7 @@ export interface ResearchSynthesisView {
 export interface ResearchProjectWorkspace {
   id: ResearchProjectId;
   title: string;
+  icon?: ResearchProjectIcon;
   question: string;
   platformFilter: ResearchPlatform;
   pinned: boolean;
@@ -95,11 +123,20 @@ export interface ResearchProjectWorkspace {
   synthesis?: ResearchSynthesisView;
   createdAt: string;
   updatedAt: string;
+  organization?: ResearchProjectOrganization;
+  access?: ResearchProjectAccess;
+}
+
+export interface ResearchProjectCanvas {
+  snapshot: Record<string, unknown> | null;
+  revision: number;
+  updatedAt?: string;
 }
 
 export interface ResearchProjectSummary {
   id: ResearchProjectId;
   title: string;
+  icon?: ResearchProjectIcon;
   question: string;
   platformFilter: ResearchPlatform;
   pinned: boolean;
@@ -107,16 +144,47 @@ export interface ResearchProjectSummary {
   evidenceCount: number;
   synthesisState: "none" | "current" | "stale";
   updatedAt: string;
+  organization?: ResearchProjectOrganization;
+  access?: ResearchProjectAccess;
+}
+
+export interface ResearchProjectOrganization {
+  id: number;
+  name: string;
+  role?: "owner" | "admin" | "member";
+}
+
+export type ResearchProjectMemberRole = "editor" | "viewer";
+
+export interface ResearchProjectAccess {
+  role: "owner" | ResearchProjectMemberRole;
+  source: "personal" | "team" | "direct";
+  canManage: boolean;
+}
+
+export interface ResearchProjectMember {
+  userId: number;
+  email: string;
+  role: ResearchProjectMemberRole;
+  createdAt: string;
+}
+
+export interface ResearchProjectMembersView {
+  members: ResearchProjectMember[];
+  canManage: boolean;
+  organization?: Pick<ResearchProjectOrganization, "id" | "name">;
 }
 
 export interface CreateResearchProjectInput {
   title: string;
   question?: string;
   platformFilter?: ResearchPlatform;
+  organizationId?: number;
 }
 
 export interface ProjectPatch {
   title?: string;
+  icon?: ResearchProjectIcon;
   question?: string;
   platformFilter?: ResearchPlatform;
   pinned?: boolean;

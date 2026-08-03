@@ -1,0 +1,2043 @@
+{
+  "schemaVersion": 1,
+  "id": "6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+  "sourceUrl": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+  "sitemapLastModified": "2026-06-03T20:26:35.707Z",
+  "fetchedAt": "2026-08-02T18:08:40.654Z",
+  "contentHash": "2cdcca081d23d5c2b664e32e07edfb9934b6e69527729ed6753a7890cd5bf646",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Glyphy design system",
+            "item": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75#style-reference",
+        "name": "Glyphy design system reference",
+        "headline": "Glyphy design system | Refero Styles",
+        "description": "Explore Glyphy's light Design design system: Buttercream #fef9e6, Ink #000000 colors, Arial, Neue Machina typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+        "mainEntityOfPage": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Glyphy",
+          "url": "https://glyphy.io"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/5f09e15d-7f82-4b1c-b834-9aa4e226e301.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/5f09e15d-7f82-4b1c-b834-9aa4e226e301.jpg",
+          "caption": "Screenshot of Glyphy"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/5f09e15d-7f82-4b1c-b834-9aa4e226e301.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Glyphy design system",
+          "Glyphy website design",
+          "Glyphy colors",
+          "Glyphy typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Design design system",
+          "Buttercream",
+          "Ink",
+          "Carbon",
+          "Driftwood",
+          "Arial",
+          "Neue Machina",
+          "System85"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Glyphy design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Glyphy website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Glyphy colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Glyphy typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Design design system"
+          }
+        ],
+        "datePublished": "2026-05-07T22:01:47.505Z",
+        "dateModified": "2026-05-07T22:01:47.505Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://glyphy.io",
+      "siteName": "Glyphy",
+      "extractedAt": "2026-06-03T20:26:35.703Z",
+      "durationMs": 34254,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 875,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "heading",
+              "body",
+              "list",
+              "link",
+              "hero",
+              "button",
+              "card"
+            ],
+            "frequency": 3401,
+            "confidence": 1,
+            "prominence": 110155044.5881651,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "nav/color": 11,
+              "body/color": 87,
+              "card/color": 25,
+              "hero/color": 2,
+              "link/color": 56,
+              "list/color": 58,
+              "other/color": 487,
+              "button/color": 10,
+              "heading/color": 5,
+              "nav/borderColor": 44,
+              "body/borderColor": 348,
+              "card/borderColor": 100,
+              "hero/borderColor": 8,
+              "link/borderColor": 224,
+              "list/borderColor": 184,
+              "other/borderColor": 1732,
+              "heading/borderColor": 20
+            }
+          },
+          {
+            "hex": "#fef9e6",
+            "oklch": {
+              "c": 0.02546305295630307,
+              "h": 94.72936623396212,
+              "l": 0.9809265586586272
+            },
+            "contexts": [
+              "nav",
+              "other",
+              "button",
+              "card",
+              "body",
+              "footer",
+              "link",
+              "list"
+            ],
+            "frequency": 505,
+            "confidence": 1,
+            "prominence": 2828187.731069607,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/color": 8,
+              "body/color": 52,
+              "card/color": 8,
+              "link/color": 3,
+              "list/color": 5,
+              "other/color": 16,
+              "button/color": 6,
+              "footer/color": 1,
+              "nav/borderColor": 32,
+              "body/borderColor": 208,
+              "card/borderColor": 32,
+              "link/borderColor": 12,
+              "list/borderColor": 20,
+              "other/borderColor": 64,
+              "button/borderColor": 24,
+              "footer/borderColor": 4,
+              "button/backgroundColor": 10
+            }
+          },
+          {
+            "hex": "#c7c3b4",
+            "oklch": {
+              "c": 0.0210618156063883,
+              "h": 94.57043103553883,
+              "l": 0.8162495117891594
+            },
+            "contexts": [
+              "button",
+              "list",
+              "other"
+            ],
+            "frequency": 284,
+            "confidence": 1,
+            "prominence": 2567446.6238177465,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {
+              "list/borderColor": 48,
+              "other/borderColor": 216,
+              "button/borderColor": 20
+            }
+          },
+          {
+            "hex": "#060606",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.12211889111723348
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "card",
+              "body",
+              "footer"
+            ],
+            "frequency": 135,
+            "confidence": 1,
+            "prominence": 2231402.626013574,
+            "properties": [
+              "backgroundColor",
+              "borderColor",
+              "color"
+            ],
+            "usageCounts": {
+              "body/color": 3,
+              "card/color": 3,
+              "button/color": 5,
+              "body/borderColor": 12,
+              "card/borderColor": 12,
+              "button/borderColor": 40,
+              "nav/backgroundColor": 1,
+              "body/backgroundColor": 48,
+              "button/backgroundColor": 10,
+              "footer/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#8d8b80",
+            "oklch": {
+              "c": 0.016241026086807754,
+              "h": 98.41871334543704,
+              "l": 0.635213506935744
+            },
+            "contexts": [
+              "other",
+              "card"
+            ],
+            "frequency": 120,
+            "confidence": 1,
+            "prominence": 225997.74878233735,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "card/color": 20,
+              "other/color": 4,
+              "card/borderColor": 80,
+              "other/borderColor": 16
+            }
+          },
+          {
+            "hex": "#fdc331",
+            "oklch": {
+              "c": 0.16149980457767496,
+              "h": 84.88989435090022,
+              "l": 0.8471399173705243
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 171000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "list/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#fe5722",
+            "oklch": {
+              "c": 0.2118011618427931,
+              "h": 36.60357894904766,
+              "l": 0.6775764808937415
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 171000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "list/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#f0353c",
+            "oklch": {
+              "c": 0.22133100164673547,
+              "h": 24.855232495059518,
+              "l": 0.6250332753627948
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 171000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "list/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#b4213d",
+            "oklch": {
+              "c": 0.18043467015521558,
+              "h": 17.09402307888931,
+              "l": 0.5037342014002403
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 171000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "list/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#671c3b",
+            "oklch": {
+              "c": 0.11067258301614727,
+              "h": 359.0562147229481,
+              "l": 0.3573443752535538
+            },
+            "contexts": [
+              "list"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 171000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "list/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#333333",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3210925111636326
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 784,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/backgroundColor": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.013161366547938102,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 19.91,
+            "background": "#fef9e6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.21,
+            "background": "#060606",
+            "foreground": "#fef9e6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.03,
+            "background": "#fdc331",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.57,
+            "background": "#fdc331",
+            "foreground": "#060606"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.98,
+            "background": "#333333",
+            "foreground": "#fef9e6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.89,
+            "background": "#c7c3b4",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.48,
+            "background": "#c7c3b4",
+            "foreground": "#060606"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.02,
+            "background": "#671c3b",
+            "foreground": "#fef9e6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.84,
+            "background": "#fdc331",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.21,
+            "background": "#fdc331",
+            "foreground": "#671c3b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.16,
+            "background": "#c7c3b4",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.6,
+            "background": "#fe5722",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.59,
+            "background": "#c7c3b4",
+            "foreground": "#671c3b"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.37,
+            "background": "#fe5722",
+            "foreground": "#060606"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.17,
+            "background": "#b4213d",
+            "foreground": "#fef9e6"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.92,
+            "background": "#060606",
+            "foreground": "#8d8b80"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.28,
+            "background": "#f0353c",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.09,
+            "background": "#f0353c",
+            "foreground": "#060606"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.77,
+            "background": "#f0353c",
+            "foreground": "#fef9e6"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.69,
+            "background": "#333333",
+            "foreground": "#8d8b80"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 28,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 208
+          },
+          {
+            "value": 14,
+            "contexts": [
+              "nav",
+              "body",
+              "other",
+              "button"
+            ],
+            "frequency": 70
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "contexts": [
+              "nav",
+              "link"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "marginTop|nav",
+              "rowGap|nav",
+              "columnGap|nav",
+              "marginTop|link"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "marginRight|card"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "card",
+              "other",
+              "list"
+            ],
+            "frequency": 23,
+            "properties": [
+              "marginRight",
+              "marginTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "marginRight|card",
+              "marginTop|other",
+              "rowGap|list",
+              "columnGap|list"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "button"
+            ],
+            "frequency": 30,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "marginTop|heading"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "list"
+            ],
+            "frequency": 17,
+            "properties": [
+              "columnGap",
+              "rowGap"
+            ],
+            "propertyContextPairs": [
+              "columnGap|other",
+              "rowGap|other",
+              "columnGap|list"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 78,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingRight|button",
+              "paddingBottom|button",
+              "marginRight|body"
+            ]
+          },
+          {
+            "value": 27,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 108,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "nav",
+              "other",
+              "list",
+              "link",
+              "body",
+              "hero",
+              "button",
+              "footer"
+            ],
+            "frequency": 41,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginRight",
+              "marginTop",
+              "marginLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "marginRight|nav",
+              "marginTop|other",
+              "marginRight|other",
+              "marginLeft|other",
+              "marginTop|list",
+              "paddingRight|link",
+              "paddingLeft|link",
+              "paddingRight|body",
+              "paddingLeft|body",
+              "marginRight|hero",
+              "marginLeft|hero",
+              "marginBottom|other",
+              "paddingLeft|button",
+              "paddingRight|footer",
+              "paddingLeft|footer"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "body",
+              "link",
+              "card"
+            ],
+            "frequency": 101,
+            "properties": [
+              "marginTop",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "marginTop|body",
+              "paddingTop|link",
+              "paddingBottom|link",
+              "marginTop|card"
+            ]
+          },
+          {
+            "value": 80,
+            "contexts": [
+              "other",
+              "footer"
+            ],
+            "frequency": 5,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "marginTop|footer"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "__system85_8a4f0d",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 699,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "__pixelMPlus10_ff679b",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 85,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Arial",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 60,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "__system85Mono_15db00",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 20,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Neue Machina",
+            "source": "custom",
+            "weights": [
+              400,
+              700,
+              800
+            ],
+            "frequency": 11,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 18,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 700,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "__system85_8a4f0d",
+            "weight": 700,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "__system85Mono_15db00",
+            "weight": 400,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 20,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "card",
+              "body"
+            ],
+            "frequency": 22,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 48,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "list",
+              "link",
+              "body",
+              "hero",
+              "button",
+              "card",
+              "footer"
+            ],
+            "frequency": 190,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "list"
+            ],
+            "frequency": 14,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 18,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "link",
+              "button"
+            ],
+            "frequency": 5,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 21,
+            "family": "Neue Machina",
+            "weight": 800,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 21,
+            "family": "Neue Machina",
+            "weight": 400,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 24,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "body"
+            ],
+            "frequency": 132,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 32,
+            "family": "__system85_8a4f0d",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 342,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 32,
+            "family": "Arial",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 54,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "__system85_8a4f0d",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "Neue Machina",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "link"
+            ],
+            "frequency": 8,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 64,
+            "family": "Arial",
+            "weight": 400,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "__pixelMPlus10_ff679b",
+            "weight": 400,
+            "contexts": [
+              "card"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 120,
+            "family": "Neue Machina",
+            "weight": 800,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.75,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Stack the five sunset colors (Amber Pulse → Ember Glow → Signal Red → Merlot Depth → Plum Shadow) in that exact order as full-width category bands — do not reorder or substitute hues",
+        "Use Neue Machina at 120px with line-height 0.75 for the hero wordmark and any 64px+ display headlines — the condensed line-height is what makes it monumental",
+        "Pair every English section title with a tiny Pixel M Plus Japanese eyebrow (12-14px) sitting 4-8px above it",
+        "Use 28px border-radius for all pill buttons and 14px for all cards, nav, and body containers — the two-radius system is the only rounding vocabulary",
+        "Set card padding to 27px horizontal and 24-40px vertical — generous, never tight, matching the spacious density",
+        "Separate symbol grid cells with 1px Driftwood (#c7c3b4) hairlines forming a continuous grid — never add card containers or gaps that break the specimen-sheet feel",
+        "Use 1px Ink borders at 14px radius for all card and button outlines — flat, no shadows, no fills beyond the cream canvas or the five band colors"
+      ],
+      "donts": [
+        "Do not add drop shadows, elevation, or blur effects — the design is deliberately flat and relies only on hairlines and color bands for separation",
+        "Do not introduce additional chromatic colors outside the five-band sunset palette — the site is 99% achromatic, with color appearing only as those full-width category stripes",
+        "Do not use System85 or Arial for display sizes above 40px — Neue Machina owns everything 64px+; mixing faces at display sizes breaks the monumentality",
+        "Do not round card corners to anything other than 14px — 28px on cards would look like buttons, 0px would clash with the pill button vocabulary",
+        "Do not use any background color other than Buttercream (#fef9e6) on the page canvas — even 'white' breaks the warm-tone system",
+        "Do not center-align category band content — left-aligned name + right-aligned pill button is the signature rhythm",
+        "Do not use line-height above 1.2 for body or 1.0 for display — the tight tracking is part of the visual identity"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#fef9e6",
+          "name": "Buttercream",
+          "role": "Page canvas, card surfaces, light text on dark — the warm cream ground that unifies the entire site",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Ink",
+          "role": "Primary text, hairlines, card borders, outlined button borders, link strokes — the only structural non-cream color in the neutral stack",
+          "group": "neutral"
+        },
+        {
+          "hex": "#060606",
+          "name": "Carbon",
+          "role": "Near-black surface for dark cards, filled button background, nav strip — slightly softer than pure ink for large fills",
+          "group": "neutral"
+        },
+        {
+          "hex": "#c7c3b4",
+          "name": "Driftwood",
+          "role": "Muted hairline borders on cards and lists, warm gray that sits between buttercream and ink without breaking the warmth",
+          "group": "neutral"
+        },
+        {
+          "hex": "#8d8b80",
+          "name": "Stone",
+          "role": "Secondary card text and tertiary borders — the warm mid-gray for de-emphasized copy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#fdc331",
+          "name": "Amber Pulse",
+          "role": "First sunset band (Font Generator) — warm yellow stripe signaling the start of the category stack",
+          "group": "brand"
+        },
+        {
+          "hex": "#fe5722",
+          "name": "Ember Glow",
+          "role": "Second sunset band (Cool Symbols) — saturated orange that pushes the stack hotter",
+          "group": "brand"
+        },
+        {
+          "hex": "#f0353c",
+          "name": "Signal Red",
+          "role": "Third sunset band (Name Generator) — true red midway through the gradient",
+          "group": "brand"
+        },
+        {
+          "hex": "#b4213d",
+          "name": "Merlot Depth",
+          "role": "Fourth sunset band (Emoticons) — deep crimson cooling the stack",
+          "group": "brand"
+        },
+        {
+          "hex": "#671c3b",
+          "name": "Plum Shadow",
+          "role": "Fifth sunset band (PFP Maker) — the darkest plum, the bottom of the heat-map",
+          "group": "brand"
+        }
+      ],
+      "layout": "Full-bleed layout with no max-width constraint — content extends to viewport edges. The page reads as a vertical stack of horizontal bands: dark nav strip → cream hero with oversized wordmark → five colored category bands (yellow to plum) → cream content sections with card grids → footer. Card grids use a 3-column layout on desktop for font previews. The symbol browser is a dense continuous grid with hairline dividers, no card containers. Navigation is a single horizontal dark bar at the top with inline links. All vertical rhythm is generous (40-80px section padding) while card-internal padding is tighter (24-27px).",
+      "imagery": "No photography, no illustrations, no product screenshots. The site is a pure typographic specimen system: the 'imagery' is the display fonts themselves (Instagram, GLITCH, Fansy, Discord, Zaigo, Stylish) rendered at large size inside specimen cards, and the symbol grid where hundreds of unicode glyphs are arranged in a continuous grid. Japanese pixel-font eyebrows add a retro-arcade decorative layer. The sunset color bands serve as the only atmospheric/decorative visual element.",
+      "similar": [
+        {
+          "why": "Same specimen-sheet symbol grid approach with continuous hairlines and cream canvas",
+          "business": "Cool Symbol / Lingojam"
+        },
+        {
+          "why": "Full-bleed horizontal color bands as navigation/entry pattern, pill ghost buttons on colored grounds",
+          "business": "Yatopia / Lapa Ninja"
+        },
+        {
+          "why": "Typography-first layouts where display type IS the visual content inside bordered specimen cards",
+          "business": "Typewolf specimen pages"
+        },
+        {
+          "why": "Continuous grid with hairline dividers and no card padding for dense visual browsing",
+          "business": "Pinterest (old grid)"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "nav": "14px",
+          "body": "14px",
+          "cards": "14px",
+          "buttons": "28px"
+        },
+        "elementGap": "24px",
+        "sectionGap": "32px",
+        "cardPadding": "27px",
+        "pageMaxWidth": null
+      },
+      "industry": "design",
+      "surfaces": [
+        {
+          "hex": "#fef9e6",
+          "name": "Canvas",
+          "level": 1,
+          "purpose": "Page background — the warm cream ground"
+        },
+        {
+          "hex": "#fdc331",
+          "name": "Category Band",
+          "level": 2,
+          "purpose": "Full-width colored stripe for category entry"
+        },
+        {
+          "hex": "#060606",
+          "name": "Dark Card",
+          "level": 3,
+          "purpose": "Inverted specimen cards with buttercream text"
+        },
+        {
+          "hex": "#fef9e6",
+          "name": "Light Card",
+          "level": 4,
+          "purpose": "Same as canvas but with driftwood/ink border to define card edge"
+        }
+      ],
+      "elevation": [],
+      "northStar": "buttercream specimen sheet beneath sunset bands. A warm cream page sliced by yellow-to-plum horizontal stripes, anchored by an oversized neo-grotesque wordmark and tiny pixel Japanese eyebrows.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 32,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading-lg",
+          "size": 40,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "display",
+          "size": 64,
+          "lineHeight": 1
+        },
+        {
+          "role": "hero",
+          "size": 120,
+          "lineHeight": 0.75
+        }
+      ],
+      "components": [
+        {
+          "name": "Category Band Row",
+          "role": "Full-bleed horizontal entry for each major tool (Font Generator, Cool Symbols, Name Generator, Emoticons, PFP Maker)",
+          "description": "Full-width strip filled with one of the five sunset colors (Amber Pulse, Ember Glow, Signal Red, Merlot Depth, Plum Shadow). Left-aligned category name in 32px Ink/Butttercream. Right-aligned pill button. No rounded corners on the band itself — the color bleeds to viewport edges. Vertical padding ~40px."
+        },
+        {
+          "name": "Pill Ghost Button",
+          "role": "Primary action on category bands and specimen cards",
+          "description": "28px border-radius pill, 1px Ink border, Buttercream/white fill, 24px vertical padding, 27px horizontal padding. Label in 14-18px System85 weight 400 Ink, with right-arrow → icon. Transparent interior on colored bands, opaque on cream sections."
+        },
+        {
+          "name": "Dark Specimen Card",
+          "role": "Font preview tile in the Popular Font Generators grid",
+          "description": "Carbon (#060606) background, 14px radius, ~27px padding. Large display font sample centered (Instagram, GLITCH, Fansy, etc.) in Buttercream. Top-left label 'Font Generator' in 14px Mono Buttercream. Top-right pill 'VIEW →' button with 1px Buttercream border."
+        },
+        {
+          "name": "Light Specimen Card",
+          "role": "Alternating specimen tile in the font grid",
+          "description": "Buttercream background, 14px radius, 1px Ink or Driftwood border, 27px padding. Display font sample in Ink. Same label and VIEW button pattern as dark variant, with Ink text/border."
+        },
+        {
+          "name": "Top Nav Bar",
+          "role": "Sticky header with brand mark and tool links",
+          "description": "Carbon (#060606) background full-width. Left: GLYPHY wordmark in System85 weight 700 Buttercream. Center-left: nav links (Font Generator, Cool Symbols, Name Generator, Emoticons, Blog) in 14px System85 Buttercream with 32px horizontal padding and 4-8px gaps. Right: language toggle. 14px radius on any nested containers."
+        },
+        {
+          "name": "Symbol Grid Cell",
+          "role": "Individual symbol tile in the Browse Cool Symbols grid",
+          "description": "Square cell on Buttercream canvas, separated by 1px Driftwood/ink hairlines forming a continuous grid. Single glyph centered in Ink, ~32-40px display size. No padding beyond the implicit cell margins. The grid is the visual — no card containers, just lines."
+        },
+        {
+          "name": "Hero Wordmark Block",
+          "role": "The brand's signature opening element",
+          "description": "Tiny pixel Japanese eyebrow (グリフィー) in Pixel M Plus at 14-18px Buttercream. Below: GL YPHY in Neue Machina weight 700-800 at 120px, line-height 0.75, Ink on Buttercream. Right-aligned tagline 'Copy & paste fancy fonts + cool symbols' in 18px System85. Spans the full cream canvas with generous 40-80px top/bottom padding."
+        },
+        {
+          "name": "Section Header",
+          "role": "Section titles for content blocks (POPULAR FONT GENERATORS, BROWSE COOL SYMBOLS)",
+          "description": "Pixel Japanese eyebrow label in 14-18px Pixel M Plus Buttercream/Stone above. English display headline in 40px Neue Machina or System85 weight 700, Ink, left-aligned. Tight 4-8px gap between eyebrow and headline."
+        },
+        {
+          "name": "Font Card Meta Strip",
+          "role": "Sub-label below each specimen card",
+          "description": "Small 14px Mono caption in Stone (e.g. 'Instagram Fonts', 'Glitch Text', 'Discord Fonts') — identifies the font style category underneath each preview."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Arial — detected in extracted data but not described by AI",
+          "sizes": "32px, 64px",
+          "family": "Arial",
+          "weight": "400",
+          "lineHeight": "1, 1.33"
+        },
+        {
+          "role": "Display and wordmark only — the 120px hero at line-height 0.75 creates the condensed, monumental block that defines the brand. Tighter than default, almost stack-cut. Used for the GL YPHY logotype and section display headlines.",
+          "sizes": "21px, 64px, 120px",
+          "family": "Neue Machina",
+          "weight": "400, 700, 800",
+          "lineHeight": "0.75, 1.00",
+          "substitute": "Space Grotesk (700) or any wide geometric grotesque"
+        },
+        {
+          "role": "Primary UI and body sans — handles nav links, button labels, card text, section headers, and list items. The workhorse family covering 90% of text.",
+          "sizes": "14px, 16px, 18px, 24px, 32px, 40px",
+          "family": "System85",
+          "weight": "400, 700",
+          "lineHeight": "1.00, 1.20",
+          "substitute": "Inter or Söhne"
+        },
+        {
+          "role": "Japanese pixel-font eyebrows above English headlines (フォント, シンボル, グリフィー) and occasional decorative bits — a deliberate retro-arcade accent that contrasts the modern grotesque body face",
+          "sizes": "12px, 14px, 18px, 24px, 64px",
+          "family": "Pixel M Plus 10",
+          "weight": "400, 700",
+          "lineHeight": "1.00, 1.33",
+          "substitute": "Press Start 2P or Misaki Gothic pixel"
+        },
+        {
+          "role": "Card labels and small metadata (Font Generator, Instagram Fonts captions) — monospace signals data/specimen identity",
+          "sizes": "14px",
+          "family": "System85 Mono",
+          "weight": "400",
+          "lineHeight": "1.00",
+          "substitute": "JetBrains Mono or IBM Plex Mono"
+        }
+      ],
+      "description": "Glyphy is a warm-cream canvas cut by horizontal sunset bands: yellow, orange, red, burgundy, plum stacked top-to-bottom like a heat map. The interface stays almost entirely achromatic (ink on buttercream) with chromatic color appearing only as full-width category strips. Typography carries the personality: a monumental neo-grotesque display face (Neue Machina) anchors the wordmark at 120px with line-height 0.75, paired with pixel-accurate Japanese eyebrows and a clean system sans for everything else. Components are pill-shaped and minimal — outlined ghost buttons on colored bands, flat dark or cream cards with 14px corners, and dense symbol grids that feel like a typographic specimen book.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "Flat by design — no shadows anywhere. The only depth cues are 1px hairline borders in ink or driftwood, and full-bleed color bands that create rhythm without shadow lift. Cards sit on the same plane as their surroundings."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/ce073fd5-ff2e-44ab-a88d-d6f747feafc0.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/5f09e15d-7f82-4b1c-b834-9aa4e226e301.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "glyphy",
+    "generatedAt": "2026-06-03T20:26:35.703Z",
+    "summary": "Glyphy is a warm-cream canvas cut by horizontal sunset bands: yellow, orange, red, burgundy, plum stacked top-to-bottom like a heat map. The interface stays almost entirely achromatic (ink on buttercream) with chromatic color appearing only as full-width category strips. Typography carries the personality: a monumental neo-grotesque display face (Neue Machina) anchors the wordmark at 120px with line-height 0.75, paired with pixel-accurate Japanese eyebrows and a clean system sans for everything else. Components are pill-shaped and minimal — outlined ghost buttons on colored bands, flat dark or cream cards with 14px corners, and dense symbol grids that feel like a typographic specimen book.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+      "sourceUrl": "https://styles.refero.design/style/6ec18fa7-41ff-41e0-8824-94f6fa104a75",
+      "originalUrl": "https://glyphy.io",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/ce073fd5-ff2e-44ab-a88d-d6f747feafc0.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/5f09e15d-7f82-4b1c-b834-9aa4e226e301.jpg",
+      "importedAt": "2026-08-02T18:08:40.654Z",
+      "upstreamModifiedAt": "2026-06-03T20:26:35.707Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "buttercream specimen sheet beneath sunset bands. A warm cream page sliced by yellow-to-plum horizontal stripes, anchored by an oversized neo-grotesque wordmark and tiny pixel Japanese eyebrows.",
+      "industry": "design"
+    },
+    "tokens": [
+      {
+        "id": "color-buttercream",
+        "kind": "color",
+        "name": "Buttercream",
+        "value": "#fef9e6",
+        "role": "Page canvas, card surfaces, light text on dark — the warm cream ground that unifies the entire site",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#000000",
+        "role": "Primary text, hairlines, card borders, outlined button borders, link strokes — the only structural non-cream color in the neutral stack",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-carbon",
+        "kind": "color",
+        "name": "Carbon",
+        "value": "#060606",
+        "role": "Near-black surface for dark cards, filled button background, nav strip — slightly softer than pure ink for large fills",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-driftwood",
+        "kind": "color",
+        "name": "Driftwood",
+        "value": "#c7c3b4",
+        "role": "Muted hairline borders on cards and lists, warm gray that sits between buttercream and ink without breaking the warmth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-stone",
+        "kind": "color",
+        "name": "Stone",
+        "value": "#8d8b80",
+        "role": "Secondary card text and tertiary borders — the warm mid-gray for de-emphasized copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-amber-pulse",
+        "kind": "color",
+        "name": "Amber Pulse",
+        "value": "#fdc331",
+        "role": "First sunset band (Font Generator) — warm yellow stripe signaling the start of the category stack",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ember-glow",
+        "kind": "color",
+        "name": "Ember Glow",
+        "value": "#fe5722",
+        "role": "Second sunset band (Cool Symbols) — saturated orange that pushes the stack hotter",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signal-red",
+        "kind": "color",
+        "name": "Signal Red",
+        "value": "#f0353c",
+        "role": "Third sunset band (Name Generator) — true red midway through the gradient",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-merlot-depth",
+        "kind": "color",
+        "name": "Merlot Depth",
+        "value": "#b4213d",
+        "role": "Fourth sunset band (Emoticons) — deep crimson cooling the stack",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-plum-shadow",
+        "kind": "color",
+        "name": "Plum Shadow",
+        "value": "#671c3b",
+        "role": "Fifth sunset band (PFP Maker) — the darkest plum, the bottom of the heat-map",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-arial",
+        "kind": "typography",
+        "name": "Arial",
+        "value": "font-family: Arial; font-weight: 400; font-size: 32px, 64px; line-height: 1, 1.33",
+        "role": "Arial — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-neue-machina",
+        "kind": "typography",
+        "name": "Neue Machina",
+        "value": "font-family: Neue Machina; font-weight: 400, 700, 800; font-size: 21px, 64px, 120px; line-height: 0.75, 1.00",
+        "role": "Display and wordmark only — the 120px hero at line-height 0.75 creates the condensed, monumental block that defines the brand. Tighter than default, almost stack-cut. Used for the GL YPHY logotype and section display headlines.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system85",
+        "kind": "typography",
+        "name": "System85",
+        "value": "font-family: System85; font-weight: 400, 700; font-size: 14px, 16px, 18px, 24px, 32px, 40px; line-height: 1.00, 1.20",
+        "role": "Primary UI and body sans — handles nav links, button labels, card text, section headers, and list items. The workhorse family covering 90% of text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-pixel-m-plus-10",
+        "kind": "typography",
+        "name": "Pixel M Plus 10",
+        "value": "font-family: Pixel M Plus 10; font-weight: 400, 700; font-size: 12px, 14px, 18px, 24px, 64px; line-height: 1.00, 1.33",
+        "role": "Japanese pixel-font eyebrows above English headlines (フォント, シンボル, グリフィー) and occasional decorative bits — a deliberate retro-arcade accent that contrasts the modern grotesque body face",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system85-mono",
+        "kind": "typography",
+        "name": "System85 Mono",
+        "value": "font-family: System85 Mono; font-weight: 400; font-size: 14px; line-height: 1.00",
+        "role": "Card labels and small metadata (Font Generator, Instagram Fonts captions) — monospace signals data/specimen identity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.2",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.2",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.2",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 32px; line-height: 1.2",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 40px; line-height: 1.2",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 64px; line-height: 1",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-hero-scale",
+        "kind": "typography",
+        "name": "hero",
+        "value": "font-size: 120px; line-height: 0.75",
+        "role": "Imported hero type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "24px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "32px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "27px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-nav",
+        "kind": "radius",
+        "name": "nav",
+        "value": "14px",
+        "role": "Imported nav radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-body",
+        "kind": "radius",
+        "name": "body",
+        "value": "14px",
+        "role": "Imported body radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "14px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "28px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Flat by design — no shadows anywhere. The only depth cues are 1px hairline borders in ink or driftwood, and full-bleed color bands that create rhythm without shadow lift. Cards sit on the same plane as their surroundings.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "category-band-row",
+        "name": "Category Band Row",
+        "category": "Refero components",
+        "description": "Full-width strip filled with one of the five sunset colors (Amber Pulse, Ember Glow, Signal Red, Merlot Depth, Plum Shadow). Left-aligned category name in 32px Ink/Butttercream. Right-aligned pill button. No rounded corners on the band itself — the color bleeds to viewport edges. Vertical padding ~40px.",
+        "variants": [
+          {
+            "id": "category-band-row-reference",
+            "name": "Reference",
+            "description": "Full-width strip filled with one of the five sunset colors (Amber Pulse, Ember Glow, Signal Red, Merlot Depth, Plum Shadow). Left-aligned category name in 32px Ink/Butttercream. Right-aligned pill button. No rounded corners on the band itself — the color bleeds to viewport edges. Vertical padding ~40px.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed horizontal entry for each major tool (Font Generator, Cool Symbols, Name Generator, Emoticons, PFP Maker)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pill-ghost-button",
+        "name": "Pill Ghost Button",
+        "category": "Refero components",
+        "description": "28px border-radius pill, 1px Ink border, Buttercream/white fill, 24px vertical padding, 27px horizontal padding. Label in 14-18px System85 weight 400 Ink, with right-arrow → icon. Transparent interior on colored bands, opaque on cream sections.",
+        "variants": [
+          {
+            "id": "pill-ghost-button-reference",
+            "name": "Reference",
+            "description": "28px border-radius pill, 1px Ink border, Buttercream/white fill, 24px vertical padding, 27px horizontal padding. Label in 14-18px System85 weight 400 Ink, with right-arrow → icon. Transparent interior on colored bands, opaque on cream sections.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary action on category bands and specimen cards"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "dark-specimen-card",
+        "name": "Dark Specimen Card",
+        "category": "Refero components",
+        "description": "Carbon (#060606) background, 14px radius, ~27px padding. Large display font sample centered (Instagram, GLITCH, Fansy, etc.) in Buttercream. Top-left label 'Font Generator' in 14px Mono Buttercream. Top-right pill 'VIEW →' button with 1px Buttercream border.",
+        "variants": [
+          {
+            "id": "dark-specimen-card-reference",
+            "name": "Reference",
+            "description": "Carbon (#060606) background, 14px radius, ~27px padding. Large display font sample centered (Instagram, GLITCH, Fansy, etc.) in Buttercream. Top-left label 'Font Generator' in 14px Mono Buttercream. Top-right pill 'VIEW →' button with 1px Buttercream border.",
+            "evidence": [],
+            "observedProperties": [
+              "Font preview tile in the Popular Font Generators grid"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "light-specimen-card",
+        "name": "Light Specimen Card",
+        "category": "Refero components",
+        "description": "Buttercream background, 14px radius, 1px Ink or Driftwood border, 27px padding. Display font sample in Ink. Same label and VIEW button pattern as dark variant, with Ink text/border.",
+        "variants": [
+          {
+            "id": "light-specimen-card-reference",
+            "name": "Reference",
+            "description": "Buttercream background, 14px radius, 1px Ink or Driftwood border, 27px padding. Display font sample in Ink. Same label and VIEW button pattern as dark variant, with Ink text/border.",
+            "evidence": [],
+            "observedProperties": [
+              "Alternating specimen tile in the font grid"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-nav-bar",
+        "name": "Top Nav Bar",
+        "category": "Refero components",
+        "description": "Carbon (#060606) background full-width. Left: GLYPHY wordmark in System85 weight 700 Buttercream. Center-left: nav links (Font Generator, Cool Symbols, Name Generator, Emoticons, Blog) in 14px System85 Buttercream with 32px horizontal padding and 4-8px gaps. Right: language toggle. 14px radius on any nested containers.",
+        "variants": [
+          {
+            "id": "top-nav-bar-reference",
+            "name": "Reference",
+            "description": "Carbon (#060606) background full-width. Left: GLYPHY wordmark in System85 weight 700 Buttercream. Center-left: nav links (Font Generator, Cool Symbols, Name Generator, Emoticons, Blog) in 14px System85 Buttercream with 32px horizontal padding and 4-8px gaps. Right: language toggle. 14px radius on any nested containers.",
+            "evidence": [],
+            "observedProperties": [
+              "Sticky header with brand mark and tool links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "symbol-grid-cell",
+        "name": "Symbol Grid Cell",
+        "category": "Refero components",
+        "description": "Square cell on Buttercream canvas, separated by 1px Driftwood/ink hairlines forming a continuous grid. Single glyph centered in Ink, ~32-40px display size. No padding beyond the implicit cell margins. The grid is the visual — no card containers, just lines.",
+        "variants": [
+          {
+            "id": "symbol-grid-cell-reference",
+            "name": "Reference",
+            "description": "Square cell on Buttercream canvas, separated by 1px Driftwood/ink hairlines forming a continuous grid. Single glyph centered in Ink, ~32-40px display size. No padding beyond the implicit cell margins. The grid is the visual — no card containers, just lines.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual symbol tile in the Browse Cool Symbols grid"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-wordmark-block",
+        "name": "Hero Wordmark Block",
+        "category": "Refero components",
+        "description": "Tiny pixel Japanese eyebrow (グリフィー) in Pixel M Plus at 14-18px Buttercream. Below: GL YPHY in Neue Machina weight 700-800 at 120px, line-height 0.75, Ink on Buttercream. Right-aligned tagline 'Copy & paste fancy fonts + cool symbols' in 18px System85. Spans the full cream canvas with generous 40-80px top/bottom padding.",
+        "variants": [
+          {
+            "id": "hero-wordmark-block-reference",
+            "name": "Reference",
+            "description": "Tiny pixel Japanese eyebrow (グリフィー) in Pixel M Plus at 14-18px Buttercream. Below: GL YPHY in Neue Machina weight 700-800 at 120px, line-height 0.75, Ink on Buttercream. Right-aligned tagline 'Copy & paste fancy fonts + cool symbols' in 18px System85. Spans the full cream canvas with generous 40-80px top/bottom padding.",
+            "evidence": [],
+            "observedProperties": [
+              "The brand's signature opening element"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-header",
+        "name": "Section Header",
+        "category": "Refero components",
+        "description": "Pixel Japanese eyebrow label in 14-18px Pixel M Plus Buttercream/Stone above. English display headline in 40px Neue Machina or System85 weight 700, Ink, left-aligned. Tight 4-8px gap between eyebrow and headline.",
+        "variants": [
+          {
+            "id": "section-header-reference",
+            "name": "Reference",
+            "description": "Pixel Japanese eyebrow label in 14-18px Pixel M Plus Buttercream/Stone above. English display headline in 40px Neue Machina or System85 weight 700, Ink, left-aligned. Tight 4-8px gap between eyebrow and headline.",
+            "evidence": [],
+            "observedProperties": [
+              "Section titles for content blocks (POPULAR FONT GENERATORS, BROWSE COOL SYMBOLS)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "font-card-meta-strip",
+        "name": "Font Card Meta Strip",
+        "category": "Refero components",
+        "description": "Small 14px Mono caption in Stone (e.g. 'Instagram Fonts', 'Glitch Text', 'Discord Fonts') — identifies the font style category underneath each preview.",
+        "variants": [
+          {
+            "id": "font-card-meta-strip-reference",
+            "name": "Reference",
+            "description": "Small 14px Mono caption in Stone (e.g. 'Instagram Fonts', 'Glitch Text', 'Discord Fonts') — identifies the font style category underneath each preview.",
+            "evidence": [],
+            "observedProperties": [
+              "Sub-label below each specimen card"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed layout with no max-width constraint — content extends to viewport edges. The page reads as a vertical stack of horizontal bands: dark nav strip → cream hero with oversized wordmark → five colored category bands (yellow to plum) → cream content sections with card grids → footer. Card grids use a 3-column layout on desktop for font previews. The symbol browser is a dense continuous grid with hairline dividers, no card containers. Navigation is a single horizontal dark bar at the top with inline links. All vertical rhythm is generous (40-80px section padding) while card-internal padding is tighter (24-27px).",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "No photography, no illustrations, no product screenshots. The site is a pure typographic specimen system: the 'imagery' is the display fonts themselves (Instagram, GLITCH, Fansy, Discord, Zaigo, Stylish) rendered at large size inside specimen cards, and the symbol grid where hundreds of unicode glyphs are arranged in a continuous grid. Japanese pixel-font eyebrows add a retro-arcade decorative layer. The sunset color bands serve as the only atmospheric/decorative visual element.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Flat by design — no shadows anywhere. The only depth cues are 1px hairline borders in ink or driftwood, and full-bleed color bands that create rhythm without shadow lift. Cards sit on the same plane as their surroundings.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Stack the five sunset colors (Amber Pulse → Ember Glow → Signal Red → Merlot Depth → Plum Shadow) in that exact order as full-width category bands — do not reorder or substitute hues",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Neue Machina at 120px with line-height 0.75 for the hero wordmark and any 64px+ display headlines — the condensed line-height is what makes it monumental",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair every English section title with a tiny Pixel M Plus Japanese eyebrow (12-14px) sitting 4-8px above it",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 28px border-radius for all pill buttons and 14px for all cards, nav, and body containers — the two-radius system is the only rounding vocabulary",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set card padding to 27px horizontal and 24-40px vertical — generous, never tight, matching the spacious density",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Separate symbol grid cells with 1px Driftwood (#c7c3b4) hairlines forming a continuous grid — never add card containers or gaps that break the specimen-sheet feel",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 1px Ink borders at 14px radius for all card and button outlines — flat, no shadows, no fills beyond the cream canvas or the five band colors",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add drop shadows, elevation, or blur effects — the design is deliberately flat and relies only on hairlines and color bands for separation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce additional chromatic colors outside the five-band sunset palette — the site is 99% achromatic, with color appearing only as those full-width category stripes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use System85 or Arial for display sizes above 40px — Neue Machina owns everything 64px+; mixing faces at display sizes breaks the monumentality",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not round card corners to anything other than 14px — 28px on cards would look like buttons, 0px would clash with the pill button vocabulary",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use any background color other than Buttercream (#fef9e6) on the page canvas — even 'white' breaks the warm-tone system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not center-align category band content — left-aligned name + right-aligned pill button is the signature rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use line-height above 1.2 for body or 1.0 for display — the tight tracking is part of the visual identity",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

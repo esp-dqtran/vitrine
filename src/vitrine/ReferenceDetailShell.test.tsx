@@ -89,10 +89,10 @@ test('renders real identity media on mobile with a letter fallback', async () =>
   assert.doesNotMatch(html, /reference-detail__logo[^>]+style=/);
   assert.match(fallbackRule, /display:\s*grid/);
   assert.match(imageLogoRule, /border:\s*1px solid var\(--color-border-subtle\)/);
-  assert.match(imageLogoRule, /background:\s*#fff/);
+  assert.match(imageLogoRule, /background:\s*var\(--project-canvas-surface,\s*#fff\)/);
   assert.match(pictureRule, /width:\s*100%/);
   assert.match(pictureRule, /height:\s*100%/);
-  assert.match(imageFallbackRule, /background:\s*#fff/);
+  assert.match(imageFallbackRule, /background:\s*var\(--project-canvas-surface,\s*#fff\)/);
   assert.match(imageFallbackRule, /opacity:\s*0/);
   assert.match(darkImageLogoRule, /background:\s*#000/);
   assert.match(darkImageFallbackRule, /background:\s*#000/);
@@ -142,11 +142,11 @@ test('renders Vitrine primary actions as white buttons with black content', asyn
   assert.match(primaryActionRule, /color:\s*var\(--vitrine-color-on-action-primary\)\s*!important/);
   assert.match(
     styles,
-    /button\[data-variant=["']primary["']\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*#f1f1f1\s*!important/,
+    /button\[data-variant=["']primary["']\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--vitrine-color-action-primary\) 94%,\s*var\(--vitrine-color-on-action-primary\)\)\s*!important/,
   );
   assert.match(
     styles,
-    /button\[data-variant=["']primary["']\]:active:not\(:disabled\)\s*\{[^}]*background:\s*#e5e5e5\s*!important/,
+    /button\[data-variant=["']primary["']\]:active:not\(:disabled\)\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--vitrine-color-action-primary\) 90%,\s*var\(--vitrine-color-on-action-primary\)\)\s*!important/,
   );
   assert.doesNotMatch(
     styles,
@@ -184,7 +184,7 @@ test('shares the compact Apps detail presentation with Sites', async () => {
     /\.reference-detail__tabs > button\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const activeRule = styles.match(
-    /\.reference-detail__tabs > button:hover,[\s\S]*?\.reference-detail__tabs > button\[aria-selected='true'\]\s*\{[^}]+\}/,
+    /\.reference-detail__tabs > button:hover,[\s\S]*?\.reference-detail__tabs > button\[aria-selected=["']true["']\]\s*\{[^}]+\}/,
   )?.[0] ?? '';
   const indicatorRule = styles.match(
     /\.reference-detail__tab-indicator\s*\{[^}]+\}/,
@@ -199,9 +199,9 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(logoRule, /height:\s*80px/);
   assert.match(logoRule, /border-radius:\s*20px/);
 
-  assert.match(headingRule, /font-size:\s*clamp\(32px,\s*3vw,\s*38px\)/);
+  assert.match(headingRule, /font:\s*var\(--vitrine-presentation-display\)/);
   assert.match(descriptionRule, /color:\s*var\(--color-text-secondary\)/);
-  assert.match(descriptionRule, /font-size:\s*clamp\(18px,\s*1\.7vw,\s*24px\)/);
+  assert.match(descriptionRule, /font:\s*var\(--vitrine-presentation-lead\)/);
 
   assert.match(metadataRule, /gap:\s*32px/);
   assert.match(metadataRule, /padding-top:\s*0/);
@@ -209,7 +209,7 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(actionsRule, /padding:\s*0/);
 
   assert.match(navigationRule, /min-height:\s*64px/);
-  assert.match(navigationRule, /border-top:\s*1px solid var\(--color-border-subtle\)/);
+  assert.doesNotMatch(navigationRule, /border-top:/);
   assert.match(tabsRule, /gap:\s*24px/);
   assert.match(tabsRule, /justify-content:\s*flex-start/);
   assert.match(tabsRule, /flex:\s*0 1 auto/);
@@ -218,7 +218,7 @@ test('shares the compact Apps detail presentation with Sites', async () => {
   assert.match(tabRule, /min-width:\s*max-content/);
   assert.match(tabRule, /min-height:\s*64px/);
   assert.match(tabRule, /height:\s*56px/);
-  assert.match(tabRule, /font-size:\s*16px/);
+  assert.match(tabRule, /font:\s*var\(--vitrine-presentation-body-large\)\s*!important/);
   assert.match(activeRule, /background:\s*transparent/);
   assert.match(activeRule, /color:\s*var\(--color-text-primary\)/);
   assert.match(indicatorRule, /bottom:\s*0/);
@@ -241,15 +241,15 @@ test('shares metadata and action scale without leaking App controls into Sites',
     /\.reference-detail__tab-leading\s*\{[^}]+\}/,
   )?.[0] ?? '';
 
-  assert.match(metadataLabelRule, /font-size:\s*16px/);
-  assert.match(metadataValueRule, /font-size:\s*17px/);
+  assert.match(metadataLabelRule, /font:\s*var\(--vitrine-presentation-body-large\)/);
+  assert.match(metadataValueRule, /font:\s*var\(--vitrine-presentation-subheading\)/);
   assert.match(actionRule, /min-height:\s*44px/);
-  assert.match(actionRule, /font-size:\s*16px/);
+  assert.match(actionRule, /font:\s*var\(--vitrine-presentation-body-large\)\s*!important/);
   assert.match(leadingRule, /padding-bottom:\s*0/);
 
   assert.match(
     styles,
-    /\.reference-detail\[data-reference-detail='app'\] \.reference-detail__metadata-item \.apps-platform-switcher/,
+    /\.reference-detail\[data-reference-detail=["']app["']\]\s+\.reference-detail__metadata-item\s+\.apps-platform-switcher/,
   );
   assert.doesNotMatch(
     styles,

@@ -1,0 +1,2121 @@
+{
+  "schemaVersion": 1,
+  "id": "0dad8530-9422-4d9e-8622-1f50ee4bc702",
+  "sourceUrl": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702",
+  "sitemapLastModified": "2026-06-05T12:45:54.537Z",
+  "fetchedAt": "2026-08-02T18:06:56.500Z",
+  "contentHash": "61a5fd3d4d98c4f460bfa3fbecd3e05e29ab307468a2122e5373ba3293cf79d4",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Klim design system",
+            "item": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702#style-reference",
+        "name": "Klim design system reference",
+        "headline": "Klim design system | Refero Styles",
+        "description": "Explore Klim's mixed Design design system: Studio Charcoal #101c19, Gallery Black #000000 colors, SOEHNE, Söhne typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702",
+        "mainEntityOfPage": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Klim",
+          "url": "https://klim.co.nz"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/65a4edb2-53a5-44b5-9c74-2743755d4777.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/65a4edb2-53a5-44b5-9c74-2743755d4777.jpg",
+          "caption": "Screenshot of Klim"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/65a4edb2-53a5-44b5-9c74-2743755d4777.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Klim design system",
+          "Klim website design",
+          "Klim colors",
+          "Klim typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Design design system",
+          "Studio Charcoal",
+          "Gallery Black",
+          "Charcoal Surface",
+          "Slate Mist",
+          "SOEHNE",
+          "Söhne",
+          "Söhne Ikon"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Klim design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Klim website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Klim colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Klim typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Design design system"
+          }
+        ],
+        "datePublished": "2026-04-30T03:34:36.029Z",
+        "dateModified": "2026-04-30T03:34:36.029Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://klim.co.nz",
+      "siteName": "Klim",
+      "extractedAt": "2026-06-03T21:59:28.904Z",
+      "durationMs": 28482,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 465,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "button",
+              "link",
+              "body",
+              "image",
+              "heading",
+              "card",
+              "footer",
+              "input",
+              "list"
+            ],
+            "frequency": 1387,
+            "confidence": 1,
+            "prominence": 154985170.62569538,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/color": 14,
+              "body/color": 9,
+              "card/color": 6,
+              "link/color": 38,
+              "list/color": 51,
+              "other/fill": 12,
+              "image/color": 9,
+              "input/color": 1,
+              "other/color": 149,
+              "button/color": 2,
+              "footer/color": 1,
+              "heading/color": 2,
+              "nav/borderColor": 48,
+              "body/borderColor": 36,
+              "card/borderColor": 24,
+              "link/borderColor": 140,
+              "list/borderColor": 204,
+              "image/borderColor": 36,
+              "other/borderColor": 592,
+              "footer/borderColor": 4,
+              "heading/borderColor": 8,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "link",
+              "other",
+              "footer"
+            ],
+            "frequency": 29,
+            "confidence": 1,
+            "prominence": 7586646.594572838,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "fill",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "link/color": 1,
+              "other/fill": 6,
+              "other/color": 2,
+              "other/borderColor": 8,
+              "nav/backgroundColor": 2,
+              "link/backgroundColor": 7,
+              "other/backgroundColor": 1,
+              "button/backgroundColor": 1,
+              "footer/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#24a7f2",
+            "oklch": {
+              "c": 0.15226697308401677,
+              "h": 240.91043675929873,
+              "l": 0.696475096520961
+            },
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 2592000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "link/backgroundColor": 1,
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#101c19",
+            "oklch": {
+              "c": 0.018097511458609866,
+              "h": 177.15484665428187,
+              "l": 0.21392592646918057
+            },
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 2592000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "link/backgroundColor": 1,
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#3c585f",
+            "oklch": {
+              "c": 0.03521605548513155,
+              "h": 215.00331912279935,
+              "l": 0.4409538317577262
+            },
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 2054111.4009346182,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "link/backgroundColor": 1,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#d33c03",
+            "oklch": {
+              "c": 0.19517026594258102,
+              "h": 36.21283564623015,
+              "l": 0.5767440208846041
+            },
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 1944558.792884772,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "link/backgroundColor": 1,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#1c1c1c",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.22644986475198373
+            },
+            "contexts": [
+              "other",
+              "input"
+            ],
+            "frequency": 17,
+            "confidence": 1,
+            "prominence": 1342770.0594894432,
+            "properties": [
+              "backgroundColor",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "input/borderColor": 4,
+              "input/backgroundColor": 1,
+              "other/backgroundColor": 12
+            }
+          },
+          {
+            "hex": "#555555",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.4495331968941366
+            },
+            "contexts": [
+              "body",
+              "card",
+              "button"
+            ],
+            "frequency": 219,
+            "confidence": 1,
+            "prominence": 413657.0823709709,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 37,
+              "card/color": 6,
+              "body/borderColor": 148,
+              "card/borderColor": 24,
+              "button/borderColor": 4
+            }
+          },
+          {
+            "hex": "#7f7f7f",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.596489460818441
+            },
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 225,
+            "confidence": 1,
+            "prominence": 372498.58451672265,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 13,
+              "link/color": 26,
+              "other/color": 6,
+              "body/borderColor": 52,
+              "link/borderColor": 104,
+              "other/borderColor": 24
+            }
+          },
+          {
+            "hex": "#141414",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.1912512996316179
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 369801.86570575944,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#939393",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.663255002410531
+            },
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 320,
+            "confidence": 1,
+            "prominence": 237969.3547419554,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 5,
+              "link/color": 55,
+              "other/color": 4,
+              "body/borderColor": 20,
+              "link/borderColor": 220,
+              "other/borderColor": 16
+            }
+          },
+          {
+            "hex": "#f9f9f9",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9821176395629414
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 233319,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#cecece",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8514193414111833
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 233319,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#353535",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.328969281337264
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "confidence": 1,
+            "prominence": 137008.78056417394,
+            "properties": [
+              "color",
+              "fill",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "other/fill": 3,
+              "other/color": 1,
+              "other/borderColor": 8
+            }
+          },
+          {
+            "hex": "#646464",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5032293384241285
+            },
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 40,
+            "confidence": 1,
+            "prominence": 102077.43834398835,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 2,
+              "link/color": 4,
+              "other/color": 2,
+              "body/borderColor": 8,
+              "link/borderColor": 16,
+              "other/borderColor": 8
+            }
+          },
+          {
+            "hex": "#e90702",
+            "oklch": {
+              "c": 0.23926856443128267,
+              "h": 29.359641278160737,
+              "l": 0.5879740055261832
+            },
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 6158,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "link/color": 1
+            }
+          },
+          {
+            "hex": "#93ffe6",
+            "oklch": {
+              "c": 0.10682833341407962,
+              "h": 177.16042965423753,
+              "l": 0.9279136600769605
+            },
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 4696,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "link/color": 1
+            }
+          },
+          {
+            "hex": "#ffe6d9",
+            "oklch": {
+              "c": 0.03259857831014532,
+              "h": 49.34213012321624,
+              "l": 0.9417323674444462
+            },
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 3568,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "link/color": 1
+            }
+          },
+          {
+            "hex": "#ffff79",
+            "oklch": {
+              "c": 0.1556691154679689,
+              "h": 108.97194949058135,
+              "l": 0.9742223560021173
+            },
+            "contexts": [
+              "link"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1753,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "link/color": 1
+            }
+          }
+        ],
+        "isDarkMode": true,
+        "colorfulness": 0.0017957184612439128,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#000000",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.95,
+            "background": "#f9f9f9",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.83,
+            "background": "#000000",
+            "foreground": "#ffff79"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.42,
+            "background": "#141414",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.69,
+            "background": "#000000",
+            "foreground": "#93ffe6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.57,
+            "background": "#000000",
+            "foreground": "#ffe6d9"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.5,
+            "background": "#f9f9f9",
+            "foreground": "#141414"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.47,
+            "background": "#101c19",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.4,
+            "background": "#141414",
+            "foreground": "#ffff79"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.04,
+            "background": "#1c1c1c",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.59,
+            "background": "#f9f9f9",
+            "foreground": "#101c19"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.5,
+            "background": "#101c19",
+            "foreground": "#ffff79"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.19,
+            "background": "#f9f9f9",
+            "foreground": "#1c1c1c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.09,
+            "background": "#1c1c1c",
+            "foreground": "#ffff79"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.52,
+            "background": "#141414",
+            "foreground": "#93ffe6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.42,
+            "background": "#141414",
+            "foreground": "#ffe6d9"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.71,
+            "background": "#101c19",
+            "foreground": "#93ffe6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.62,
+            "background": "#101c19",
+            "foreground": "#ffe6d9"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.35,
+            "background": "#1c1c1c",
+            "foreground": "#93ffe6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.26,
+            "background": "#1c1c1c",
+            "foreground": "#ffe6d9"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 2,
+            "contexts": [
+              "nav",
+              "button",
+              "link",
+              "other",
+              "image",
+              "input"
+            ],
+            "frequency": 33
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [
+              "heading",
+              "other",
+              "card"
+            ],
+            "frequency": 14,
+            "properties": [
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|heading",
+              "marginTop|other",
+              "marginTop|card"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 5,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 7,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 9,
+            "properties": [
+              "rowGap",
+              "paddingBottom",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "paddingBottom|other",
+              "marginBottom|other"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "nav",
+              "button",
+              "link",
+              "input"
+            ],
+            "frequency": 50,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingRight|link",
+              "paddingLeft|link",
+              "paddingRight|input",
+              "paddingLeft|input",
+              "paddingTop|link",
+              "paddingBottom|link"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "other",
+              "footer",
+              "list"
+            ],
+            "frequency": 34,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "paddingBottom|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "columnGap|footer",
+              "columnGap|list"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "nav",
+              "other",
+              "footer"
+            ],
+            "frequency": 19,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginRight",
+              "marginLeft",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "marginRight|other",
+              "marginLeft|other",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingRight|footer",
+              "paddingBottom|footer",
+              "paddingLeft|footer"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 10,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 34,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "properties": [
+              "marginTop",
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other",
+              "paddingTop|other"
+            ]
+          },
+          {
+            "value": 69,
+            "contexts": [
+              "link",
+              "list"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|link",
+              "marginBottom|list"
+            ]
+          },
+          {
+            "value": 137,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other"
+            ]
+          }
+        ],
+        "density": "compact",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "SOEHNE",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 431,
+            "fontFeatureSettings": [
+              "\"ordn\"",
+              "\"tnum\""
+            ]
+          },
+          {
+            "family": "SOEHNE_IKON",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 19,
+            "fontFeatureSettings": [
+              "\"tnum\"",
+              "\"calt\""
+            ]
+          }
+        ],
+        "scale": null,
+        "steps": [
+          {
+            "size": 16,
+            "family": "SOEHNE",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "link",
+              "body",
+              "image",
+              "card",
+              "footer",
+              "list"
+            ],
+            "frequency": 302,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "input"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE_IKON",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "body"
+            ],
+            "frequency": 87,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE_IKON",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE_IKON",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "SOEHNE",
+            "weight": 400,
+            "contexts": [
+              "card",
+              "link",
+              "body"
+            ],
+            "frequency": 37,
+            "lineHeight": 1.19,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 36,
+            "family": "SOEHNE",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 0.98,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Set all primary UI text in Söhne 16px/400 with Söhne 700 for emphasis only",
+        "Use Flare Orange (#d33c03) for label tags, collection names, and editorial annotations — this is the foundry's signature mark",
+        "Alternate specimen band backgrounds between #000000, #1c1c1c, #3c585f, and #f9f9f9 to create rhythm without dividers",
+        "Use 2px border-radius on all interactive elements (buttons, tags, inputs) — this near-sharp corner is the system's geometric signature",
+        "Set type specimens in the typeface they represent at 36px+ — the font IS the content",
+        "Enable tnum and ordn font features on all Söhne usage for consistent number and ordinal rendering",
+        "Maintain tight spacing: 8px component padding, 10px element gaps, 20px horizontal page padding"
+      ],
+      "donts": [
+        "Do not introduce drop shadows, gradients, or glow effects — the system is flat and shadowless",
+        "Do not use border-radius greater than 2px — the design is intentionally near-sharp",
+        "Do not use color on large background fills — chromatic colors are reserved for tiny label tags and text accents",
+        "Do not set body or display type in colors other than Bone (#ffffff on dark) or Graphite (#555555 on light) — chromatic type is for special emphasis only",
+        "Do not add visible section dividers or whitespace gaps larger than ~69px between bands — the background color shift IS the divider",
+        "Do not use system fonts for UI text — Söhne is the voice of the interface",
+        "Do not place more than one chromatic color in a single component — each color punch gets its own moment"
+      ],
+      "theme": "mixed",
+      "colors": [
+        {
+          "hex": "#101c19",
+          "name": "Studio Charcoal",
+          "role": "Page canvas, primary background — a near-black with a green undertone that reads as neutral but feels warmer than pure black",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Gallery Black",
+          "role": "Feature bands, specimen backgrounds, header bar — pure black for maximum type contrast",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1c1c1c",
+          "name": "Charcoal Surface",
+          "role": "Elevated surface, input fields, secondary panel backgrounds — one step lighter than the canvas",
+          "group": "neutral"
+        },
+        {
+          "hex": "#3c585f",
+          "name": "Slate Mist",
+          "role": "Muted accent band, tertiary surface — desaturated blue-gray used as an alternate section background",
+          "group": "neutral"
+        },
+        {
+          "hex": "#555555",
+          "name": "Graphite",
+          "role": "Mid-tone borders, muted body text on light sections, card outlines",
+          "group": "neutral"
+        },
+        {
+          "hex": "#646464",
+          "name": "Steel",
+          "role": "Secondary borders, subdued link text on dark backgrounds",
+          "group": "neutral"
+        },
+        {
+          "hex": "#7f7f7f",
+          "name": "Fog",
+          "role": "Tertiary borders, inactive UI elements, secondary text",
+          "group": "neutral"
+        },
+        {
+          "hex": "#939393",
+          "name": "Ash",
+          "role": "Medium-contrast borders, control outlines, and structural separators. Do not promote it to the primary CTA color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f9f9f9",
+          "name": "Marble",
+          "role": "Light-mode page canvas, pale gray that photographs cleanly for specimen presentations",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Bone",
+          "role": "Primary text on dark backgrounds, type specimen letterforms, button labels, high-contrast surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#d33c03",
+          "name": "Flare Orange",
+          "role": "Label tags, collection names, editorial annotations — a saturated vermilion that reads as the foundry's signature mark on light backgrounds",
+          "group": "brand"
+        },
+        {
+          "hex": "#e90702",
+          "name": "Signal Red",
+          "role": "Hot accent on dark surfaces, inline highlights, the reddest red in the palette for maximum voltage",
+          "group": "brand"
+        },
+        {
+          "hex": "#24a7f2",
+          "name": "Electric Blue",
+          "role": "Interactive highlights, active states, link emphasis — a bright cyan-blue that pops against black",
+          "group": "brand"
+        },
+        {
+          "hex": "#93ffe6",
+          "name": "Mint Pulse",
+          "role": "Decorative text accent, special-occasion highlights — a pale mint used sparingly for emphasis",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffff79",
+          "name": "Canary",
+          "role": "Rare chromatic accent, used for the highest-attention text moment on dark backgrounds",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffe6d9",
+          "name": "Blush",
+          "role": "Soft warm accent, subtle text tint — a cream-pink that warms dark sections without competing with type",
+          "group": "accent"
+        }
+      ],
+      "layout": "Full-bleed page model with no max-width container. The Top Bar spans the full viewport width. Below it, sections alternate between full-viewport image specimens and stacked specimen bands. The fonts catalogue uses a three-column structure within each band: family name left-aligned, variant list centered, Buy links right-aligned — no gutters, no card chrome. Vertical rhythm is driven by ~69px section gaps between type families. The page reads as a vertical exhibition: one artwork or typeface per band, stacked without interruption.",
+      "imagery": "Full-bleed object photography and editorial imagery serve as type-in-context specimens: industrial objects (crates), surreal material studies (bacon flag), and typographic compositions. Images fill the viewport edge-to-edge with zero border-radius and no framing. Color treatment is natural and unstylized — the objects speak for themselves against a pure black or pale-gray studio background. No illustrations, no icons beyond the hamburger glyph, no decorative graphics. The images function as both content and atmosphere.",
+      "similar": [
+        {
+          "why": "Same full-bleed specimen-band layout with type-as-content philosophy and minimal black header chrome",
+          "business": "Commercial Type"
+        },
+        {
+          "why": "Type-foundry presentation style: large display type, black/white alternation, photographic specimens with minimal overlay",
+          "business": "Grilli Type"
+        },
+        {
+          "why": "Editorial type showcase with alternating dark/light bands and near-zero border-radius geometry",
+          "business": "Dinamo (abcdinamo.com)"
+        },
+        {
+          "why": "Type catalogue structured as stacked horizontal bands, each typeface given its own colored strip",
+          "business": "Production Type"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "2px",
+          "cards": "0px",
+          "images": "0px",
+          "inputs": "2px",
+          "buttons": "2px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "69px",
+        "cardPadding": "20px",
+        "pageMaxWidth": "1440px"
+      },
+      "industry": "design",
+      "surfaces": [
+        {
+          "hex": "#000000",
+          "name": "Gallery Black",
+          "level": 1,
+          "purpose": "Feature band, specimen background"
+        },
+        {
+          "hex": "#101c19",
+          "name": "Studio Charcoal",
+          "level": 2,
+          "purpose": "Primary page canvas, page background"
+        },
+        {
+          "hex": "#1c1c1c",
+          "name": "Charcoal Surface",
+          "level": 3,
+          "purpose": "Elevated panel, input field"
+        },
+        {
+          "hex": "#3c585f",
+          "name": "Slate Mist",
+          "level": 4,
+          "purpose": "Alternate band background"
+        },
+        {
+          "hex": "#f9f9f9",
+          "name": "Marble",
+          "level": 5,
+          "purpose": "Light-mode page canvas"
+        }
+      ],
+      "northStar": "typographic gallery in a black box — a curator's vitrina where each specimen hangs in its own dark band",
+      "typeScale": [
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.4
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.3
+        },
+        {
+          "role": "heading",
+          "size": 36,
+          "lineHeight": 1.19
+        },
+        {
+          "role": "display",
+          "size": 56,
+          "lineHeight": 1.1
+        }
+      ],
+      "components": [
+        {
+          "name": "Top Bar",
+          "role": "Primary site navigation",
+          "description": "Full-width black bar (#000000), fixed/sticky, 8px vertical padding, 20px horizontal padding. Left-aligned: brand name 'Klim Type Foundry' in white Söhne 16px regular, then 'Fonts' as a 16px Söhne link in Flare Orange (#d33c03). Right-aligned: hamburger menu icon in white. No drop shadow, no border — the bar sits as a pure black strip."
+        },
+        {
+          "name": "Label Tag",
+          "role": "Collection or edition annotation",
+          "description": "Inline rectangular tag with Flare Orange (#d33c03) background, white Söhne 16px text, 2px border-radius, 8px horizontal and 4–5px vertical padding. Used to label specimen collections (e.g. 'Die Grotesk', 'American Grotesk Collection'). Positioned bottom-left of the image it annotates."
+        },
+        {
+          "name": "Typeface Specimen Band",
+          "role": "Full-width type showcase row in the font catalogue",
+          "description": "Full-bleed horizontal band, one per typeface family. Alternates between Gallery Black (#000000), Charcoal Surface (#1c1c1c), Slate Mist (#3c585f), and Marble (#f9f9f9). Contains three zones: (1) family name set in the typeface itself at 36px+ in Bone (#ffffff on dark bands) or Graphite (#555555 on light bands), left-aligned with ~20px left padding; (2) variant list in Söhne 16px regular, center-aligned, listing sub-styles (e.g. 'Founders Grotesk', 'Founders Grotesk Condensed'); (3) 'Buy' links in Söhne 16px, right-aligned, in Fog (#7f7f7f) on dark or Graphite on light. No card chrome, no borders between zones — the three columns float in the band."
+        },
+        {
+          "name": "Specimen Variant Row",
+          "role": "Individual sub-style entry within a typeface band",
+          "description": "Single line of Söhne 16px text listing one variant name (e.g. 'Founders Grotesk Condensed'). Text color matches the band's text tier: Bone on dark, Graphite on light. 7px row-gap between variant entries. No bullet, no chevron — pure text."
+        },
+        {
+          "name": "Buy Link",
+          "role": "Purchase action for a typeface variant",
+          "description": "Söhne 16px, right-aligned in the specimen band. Text color: Fog (#7f7f7f) on dark bands, Graphite (#555555) on light. No background fill, no border, no padding — the word 'Buy' alone, set as text. Hover state brightens to Bone or Electric Blue."
+        },
+        {
+          "name": "Image Specimen",
+          "role": "Full-bleed type-in-context or object photography",
+          "description": "Edge-to-edge image with no border-radius (0px), no frame, no caption. Fills the full viewport width. May be paired with a Label Tag in the bottom-left corner. Images sit on the page canvas (Marble for light sections, Gallery Black for dark sections) with no gutter."
+        },
+        {
+          "name": "Hamburger Menu Trigger",
+          "role": "Mobile and desktop menu toggle",
+          "description": "Three short horizontal lines in Bone (#ffffff), 2px thick, right-aligned in the Top Bar. No background, no border. Touch target approximately 24×24px."
+        },
+        {
+          "name": "Input Field",
+          "role": "Form input for search or filter",
+          "description": "Charcoal Surface (#1c1c1c) background, Graphite (#555555) 1px border, 2px border-radius, 8px horizontal padding, Söhne 16px text in Bone. No visible focus ring color specified — likely defaults to Electric Blue or a 1px border darken."
+        },
+        {
+          "name": "Text Link",
+          "role": "Inline hyperlink within body or navigation content",
+          "description": "Söhne 16px, no underline by default. Color varies by context: Flare Orange (#d33c03) for primary nav links, Electric Blue (#24a7f2), Signal Red (#e90702), Mint Pulse (#93ffe6), or Canary (#ffff79) for inline links on dark backgrounds. Ash (#939393) 1px border may appear on interactive containers."
+        },
+        {
+          "name": "Section Divider",
+          "role": "Horizontal rule between specimen bands",
+          "description": "Implicit — specimen bands stack directly with no visible divider. The color change of the background itself creates separation. No border, no line, no whitespace gap greater than the band padding."
+        },
+        {
+          "name": "Collection Annotation",
+          "role": "Editorial label overlaid on specimen imagery",
+          "description": "Identical visual treatment to the Label Tag — Flare Orange (#d33c03) background, white Söhne text, 2px radius, small padding. Anchored to bottom-left of the image it describes. Functions as a caption that can be clicked to enter a collection."
+        }
+      ],
+      "typography": [
+        {
+          "role": "SOEHNE — detected in extracted data but not described by AI",
+          "sizes": "16px, 36px",
+          "family": "SOEHNE",
+          "weight": "400, 700",
+          "lineHeight": "0.98, 1.19, 1.2, 1.33, 1.5",
+          "fontFeatureSettings": "\"ordn\"; \"tnum\""
+        },
+        {
+          "role": "Primary UI typeface — used for navigation, body text, buttons, form labels, and all functional interface text. Tight line-heights (0.98–1.20) at display sizes; generous (1.50) for body. Two weights only: regular for content, bold for emphasis. Tabular numerals via tnum for price alignment; ordinals via ordn.",
+          "sizes": "",
+          "family": "Söhne",
+          "weight": "400, 700",
+          "lineHeight": "1.19, 1.20, 1.33, 1.50",
+          "substitute": "Inter, Söhne (Klim's own)",
+          "fontFeatureSettings": "\"ordn\" on, \"tnum\" on"
+        },
+        {
+          "role": "Iconographic variant of Söhne for interface glyphs, special characters, and numeric UI elements. Same voice as Söhne but with alternate character forms via calt and tabular figures via tnum.",
+          "sizes": "",
+          "family": "Söhne Ikon",
+          "weight": "400",
+          "lineHeight": "1.20, 1.33, 1.50",
+          "substitute": "Söhne (Klim's own)",
+          "fontFeatureSettings": "\"tnum\" on, \"calt\" on"
+        },
+        {
+          "role": "SOEHNE_IKON — detected in extracted data but not described by AI",
+          "sizes": "16px",
+          "family": "SOEHNE_IKON",
+          "weight": "400",
+          "lineHeight": "1.2, 1.33, 1.5",
+          "fontFeatureSettings": "\"tnum\"; \"calt\""
+        }
+      ],
+      "description": "Klim Type Foundry presents its library as a typographic gallery: each typeface gets its own full-bleed band, set in itself, with no ornament. The site alternates between a matte black gallery mode and a pale studio-gray mode, letting the letterforms carry all the visual weight. UI chrome is reduced to a thin black header strip and small orange label tags; everything else is type. The accent system is deliberately loud — vivid orange-red, electric blue, mint teal — used as tiny color punches against an otherwise neutral monochrome canvas.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Specimen Band Color Rotation",
+          "content": "The specimen list cycles through four background states in a repeating rhythm: Gallery Black (#000000) → Charcoal Surface (#1c1c1c) → Slate Mist (#3c585f) → Marble (#f9f9f9). Text color inverts with background: Bone (#ffffff) on all dark bands, Graphite (#555555) on the Marble band. This rotation is the page's primary navigation device — the viewer tracks position by band color rather than by section headers."
+        }
+      ],
+      "elevationPhilosophy": "The system is deliberately flat: zero drop shadows, zero glow, zero gradient. Elevation is communicated entirely through background-color stacking (canvas → charcoal surface → elevated panel) and through the alternating band backgrounds. This is a poster-gallery approach where type and imagery carry all dimensional weight, not UI chrome."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/1852e0ae-6521-44f3-b111-cdf27418e4b5.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/65a4edb2-53a5-44b5-9c74-2743755d4777.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "klim",
+    "generatedAt": "2026-06-03T21:59:28.904Z",
+    "summary": "Klim Type Foundry presents its library as a typographic gallery: each typeface gets its own full-bleed band, set in itself, with no ornament. The site alternates between a matte black gallery mode and a pale studio-gray mode, letting the letterforms carry all the visual weight. UI chrome is reduced to a thin black header strip and small orange label tags; everything else is type. The accent system is deliberately loud — vivid orange-red, electric blue, mint teal — used as tiny color punches against an otherwise neutral monochrome canvas.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "0dad8530-9422-4d9e-8622-1f50ee4bc702",
+      "sourceUrl": "https://styles.refero.design/style/0dad8530-9422-4d9e-8622-1f50ee4bc702",
+      "originalUrl": "https://klim.co.nz",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/1852e0ae-6521-44f3-b111-cdf27418e4b5.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/65a4edb2-53a5-44b5-9c74-2743755d4777.jpg",
+      "importedAt": "2026-08-02T18:06:56.500Z",
+      "upstreamModifiedAt": "2026-06-05T12:45:54.537Z",
+      "attribution": "Imported from Refero Styles",
+      "northStar": "typographic gallery in a black box — a curator's vitrina where each specimen hangs in its own dark band",
+      "industry": "design"
+    },
+    "tokens": [
+      {
+        "id": "color-studio-charcoal",
+        "kind": "color",
+        "name": "Studio Charcoal",
+        "value": "#101c19",
+        "role": "Page canvas, primary background — a near-black with a green undertone that reads as neutral but feels warmer than pure black",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-gallery-black",
+        "kind": "color",
+        "name": "Gallery Black",
+        "value": "#000000",
+        "role": "Feature bands, specimen backgrounds, header bar — pure black for maximum type contrast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal-surface",
+        "kind": "color",
+        "name": "Charcoal Surface",
+        "value": "#1c1c1c",
+        "role": "Elevated surface, input fields, secondary panel backgrounds — one step lighter than the canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate-mist",
+        "kind": "color",
+        "name": "Slate Mist",
+        "value": "#3c585f",
+        "role": "Muted accent band, tertiary surface — desaturated blue-gray used as an alternate section background",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#555555",
+        "role": "Mid-tone borders, muted body text on light sections, card outlines",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-steel",
+        "kind": "color",
+        "name": "Steel",
+        "value": "#646464",
+        "role": "Secondary borders, subdued link text on dark backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog",
+        "kind": "color",
+        "name": "Fog",
+        "value": "#7f7f7f",
+        "role": "Tertiary borders, inactive UI elements, secondary text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#939393",
+        "role": "Medium-contrast borders, control outlines, and structural separators. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-marble",
+        "kind": "color",
+        "name": "Marble",
+        "value": "#f9f9f9",
+        "role": "Light-mode page canvas, pale gray that photographs cleanly for specimen presentations",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone",
+        "kind": "color",
+        "name": "Bone",
+        "value": "#ffffff",
+        "role": "Primary text on dark backgrounds, type specimen letterforms, button labels, high-contrast surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-flare-orange",
+        "kind": "color",
+        "name": "Flare Orange",
+        "value": "#d33c03",
+        "role": "Label tags, collection names, editorial annotations — a saturated vermilion that reads as the foundry's signature mark on light backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signal-red",
+        "kind": "color",
+        "name": "Signal Red",
+        "value": "#e90702",
+        "role": "Hot accent on dark surfaces, inline highlights, the reddest red in the palette for maximum voltage",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-electric-blue",
+        "kind": "color",
+        "name": "Electric Blue",
+        "value": "#24a7f2",
+        "role": "Interactive highlights, active states, link emphasis — a bright cyan-blue that pops against black",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mint-pulse",
+        "kind": "color",
+        "name": "Mint Pulse",
+        "value": "#93ffe6",
+        "role": "Decorative text accent, special-occasion highlights — a pale mint used sparingly for emphasis",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-canary",
+        "kind": "color",
+        "name": "Canary",
+        "value": "#ffff79",
+        "role": "Rare chromatic accent, used for the highest-attention text moment on dark backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-blush",
+        "kind": "color",
+        "name": "Blush",
+        "value": "#ffe6d9",
+        "role": "Soft warm accent, subtle text tint — a cream-pink that warms dark sections without competing with type",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-soehne",
+        "kind": "typography",
+        "name": "SOEHNE",
+        "value": "font-family: SOEHNE; font-weight: 400, 700; font-size: 16px, 36px; line-height: 0.98, 1.19, 1.2, 1.33, 1.5",
+        "role": "SOEHNE — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-so-hne",
+        "kind": "typography",
+        "name": "Söhne",
+        "value": "font-family: Söhne; font-weight: 400, 700; line-height: 1.19, 1.20, 1.33, 1.50",
+        "role": "Primary UI typeface — used for navigation, body text, buttons, form labels, and all functional interface text. Tight line-heights (0.98–1.20) at display sizes; generous (1.50) for body. Two weights only: regular for content, bold for emphasis. Tabular numerals via tnum for price alignment; ordinals via ordn.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-so-hne-ikon",
+        "kind": "typography",
+        "name": "Söhne Ikon",
+        "value": "font-family: Söhne Ikon; font-weight: 400; line-height: 1.20, 1.33, 1.50",
+        "role": "Iconographic variant of Söhne for interface glyphs, special characters, and numeric UI elements. Same voice as Söhne but with alternate character forms via calt and tabular figures via tnum.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-soehne-ikon",
+        "kind": "typography",
+        "name": "SOEHNE_IKON",
+        "value": "font-family: SOEHNE_IKON; font-weight: 400; font-size: 16px; line-height: 1.2, 1.33, 1.5",
+        "role": "SOEHNE_IKON — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.5",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.5",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.4",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.3",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 36px; line-height: 1.19",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 56px; line-height: 1.1",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "69px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1440px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "2px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "0px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "2px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "2px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system is deliberately flat: zero drop shadows, zero glow, zero gradient. Elevation is communicated entirely through background-color stacking (canvas → charcoal surface → elevated panel) and through the alternating band backgrounds. This is a poster-gallery approach where type and imagery carry all dimensional weight, not UI chrome.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "top-bar",
+        "name": "Top Bar",
+        "category": "Refero components",
+        "description": "Full-width black bar (#000000), fixed/sticky, 8px vertical padding, 20px horizontal padding. Left-aligned: brand name 'Klim Type Foundry' in white Söhne 16px regular, then 'Fonts' as a 16px Söhne link in Flare Orange (#d33c03). Right-aligned: hamburger menu icon in white. No drop shadow, no border — the bar sits as a pure black strip.",
+        "variants": [
+          {
+            "id": "top-bar-reference",
+            "name": "Reference",
+            "description": "Full-width black bar (#000000), fixed/sticky, 8px vertical padding, 20px horizontal padding. Left-aligned: brand name 'Klim Type Foundry' in white Söhne 16px regular, then 'Fonts' as a 16px Söhne link in Flare Orange (#d33c03). Right-aligned: hamburger menu icon in white. No drop shadow, no border — the bar sits as a pure black strip.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "label-tag",
+        "name": "Label Tag",
+        "category": "Refero components",
+        "description": "Inline rectangular tag with Flare Orange (#d33c03) background, white Söhne 16px text, 2px border-radius, 8px horizontal and 4–5px vertical padding. Used to label specimen collections (e.g. 'Die Grotesk', 'American Grotesk Collection'). Positioned bottom-left of the image it annotates.",
+        "variants": [
+          {
+            "id": "label-tag-reference",
+            "name": "Reference",
+            "description": "Inline rectangular tag with Flare Orange (#d33c03) background, white Söhne 16px text, 2px border-radius, 8px horizontal and 4–5px vertical padding. Used to label specimen collections (e.g. 'Die Grotesk', 'American Grotesk Collection'). Positioned bottom-left of the image it annotates.",
+            "evidence": [],
+            "observedProperties": [
+              "Collection or edition annotation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "typeface-specimen-band",
+        "name": "Typeface Specimen Band",
+        "category": "Refero components",
+        "description": "Full-bleed horizontal band, one per typeface family. Alternates between Gallery Black (#000000), Charcoal Surface (#1c1c1c), Slate Mist (#3c585f), and Marble (#f9f9f9). Contains three zones: (1) family name set in the typeface itself at 36px+ in Bone (#ffffff on dark bands) or Graphite (#555555 on light bands), left-aligned with ~20px left padding; (2) variant list in Söhne 16px regular, center-aligned, listing sub-styles (e.g. 'Founders Grotesk', 'Founders Grotesk Condensed'); (3) 'Buy' links in Söhne 16px, right-aligned, in Fog (#7f7f7f) on dark or Graphite on light. No card chrome, no borders between zones — the three columns float in the band.",
+        "variants": [
+          {
+            "id": "typeface-specimen-band-reference",
+            "name": "Reference",
+            "description": "Full-bleed horizontal band, one per typeface family. Alternates between Gallery Black (#000000), Charcoal Surface (#1c1c1c), Slate Mist (#3c585f), and Marble (#f9f9f9). Contains three zones: (1) family name set in the typeface itself at 36px+ in Bone (#ffffff on dark bands) or Graphite (#555555 on light bands), left-aligned with ~20px left padding; (2) variant list in Söhne 16px regular, center-aligned, listing sub-styles (e.g. 'Founders Grotesk', 'Founders Grotesk Condensed'); (3) 'Buy' links in Söhne 16px, right-aligned, in Fog (#7f7f7f) on dark or Graphite on light. No card chrome, no borders between zones — the three columns float in the band.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-width type showcase row in the font catalogue"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "specimen-variant-row",
+        "name": "Specimen Variant Row",
+        "category": "Refero components",
+        "description": "Single line of Söhne 16px text listing one variant name (e.g. 'Founders Grotesk Condensed'). Text color matches the band's text tier: Bone on dark, Graphite on light. 7px row-gap between variant entries. No bullet, no chevron — pure text.",
+        "variants": [
+          {
+            "id": "specimen-variant-row-reference",
+            "name": "Reference",
+            "description": "Single line of Söhne 16px text listing one variant name (e.g. 'Founders Grotesk Condensed'). Text color matches the band's text tier: Bone on dark, Graphite on light. 7px row-gap between variant entries. No bullet, no chevron — pure text.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual sub-style entry within a typeface band"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "buy-link",
+        "name": "Buy Link",
+        "category": "Refero components",
+        "description": "Söhne 16px, right-aligned in the specimen band. Text color: Fog (#7f7f7f) on dark bands, Graphite (#555555) on light. No background fill, no border, no padding — the word 'Buy' alone, set as text. Hover state brightens to Bone or Electric Blue.",
+        "variants": [
+          {
+            "id": "buy-link-reference",
+            "name": "Reference",
+            "description": "Söhne 16px, right-aligned in the specimen band. Text color: Fog (#7f7f7f) on dark bands, Graphite (#555555) on light. No background fill, no border, no padding — the word 'Buy' alone, set as text. Hover state brightens to Bone or Electric Blue.",
+            "evidence": [],
+            "observedProperties": [
+              "Purchase action for a typeface variant"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "image-specimen",
+        "name": "Image Specimen",
+        "category": "Refero components",
+        "description": "Edge-to-edge image with no border-radius (0px), no frame, no caption. Fills the full viewport width. May be paired with a Label Tag in the bottom-left corner. Images sit on the page canvas (Marble for light sections, Gallery Black for dark sections) with no gutter.",
+        "variants": [
+          {
+            "id": "image-specimen-reference",
+            "name": "Reference",
+            "description": "Edge-to-edge image with no border-radius (0px), no frame, no caption. Fills the full viewport width. May be paired with a Label Tag in the bottom-left corner. Images sit on the page canvas (Marble for light sections, Gallery Black for dark sections) with no gutter.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed type-in-context or object photography"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hamburger-menu-trigger",
+        "name": "Hamburger Menu Trigger",
+        "category": "Refero components",
+        "description": "Three short horizontal lines in Bone (#ffffff), 2px thick, right-aligned in the Top Bar. No background, no border. Touch target approximately 24×24px.",
+        "variants": [
+          {
+            "id": "hamburger-menu-trigger-reference",
+            "name": "Reference",
+            "description": "Three short horizontal lines in Bone (#ffffff), 2px thick, right-aligned in the Top Bar. No background, no border. Touch target approximately 24×24px.",
+            "evidence": [],
+            "observedProperties": [
+              "Mobile and desktop menu toggle"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "input-field",
+        "name": "Input Field",
+        "category": "Refero components",
+        "description": "Charcoal Surface (#1c1c1c) background, Graphite (#555555) 1px border, 2px border-radius, 8px horizontal padding, Söhne 16px text in Bone. No visible focus ring color specified — likely defaults to Electric Blue or a 1px border darken.",
+        "variants": [
+          {
+            "id": "input-field-reference",
+            "name": "Reference",
+            "description": "Charcoal Surface (#1c1c1c) background, Graphite (#555555) 1px border, 2px border-radius, 8px horizontal padding, Söhne 16px text in Bone. No visible focus ring color specified — likely defaults to Electric Blue or a 1px border darken.",
+            "evidence": [],
+            "observedProperties": [
+              "Form input for search or filter"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "text-link",
+        "name": "Text Link",
+        "category": "Refero components",
+        "description": "Söhne 16px, no underline by default. Color varies by context: Flare Orange (#d33c03) for primary nav links, Electric Blue (#24a7f2), Signal Red (#e90702), Mint Pulse (#93ffe6), or Canary (#ffff79) for inline links on dark backgrounds. Ash (#939393) 1px border may appear on interactive containers.",
+        "variants": [
+          {
+            "id": "text-link-reference",
+            "name": "Reference",
+            "description": "Söhne 16px, no underline by default. Color varies by context: Flare Orange (#d33c03) for primary nav links, Electric Blue (#24a7f2), Signal Red (#e90702), Mint Pulse (#93ffe6), or Canary (#ffff79) for inline links on dark backgrounds. Ash (#939393) 1px border may appear on interactive containers.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline hyperlink within body or navigation content"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-divider",
+        "name": "Section Divider",
+        "category": "Refero components",
+        "description": "Implicit — specimen bands stack directly with no visible divider. The color change of the background itself creates separation. No border, no line, no whitespace gap greater than the band padding.",
+        "variants": [
+          {
+            "id": "section-divider-reference",
+            "name": "Reference",
+            "description": "Implicit — specimen bands stack directly with no visible divider. The color change of the background itself creates separation. No border, no line, no whitespace gap greater than the band padding.",
+            "evidence": [],
+            "observedProperties": [
+              "Horizontal rule between specimen bands"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "collection-annotation",
+        "name": "Collection Annotation",
+        "category": "Refero components",
+        "description": "Identical visual treatment to the Label Tag — Flare Orange (#d33c03) background, white Söhne text, 2px radius, small padding. Anchored to bottom-left of the image it describes. Functions as a caption that can be clicked to enter a collection.",
+        "variants": [
+          {
+            "id": "collection-annotation-reference",
+            "name": "Reference",
+            "description": "Identical visual treatment to the Label Tag — Flare Orange (#d33c03) background, white Söhne text, 2px radius, small padding. Anchored to bottom-left of the image it describes. Functions as a caption that can be clicked to enter a collection.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial label overlaid on specimen imagery"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed page model with no max-width container. The Top Bar spans the full viewport width. Below it, sections alternate between full-viewport image specimens and stacked specimen bands. The fonts catalogue uses a three-column structure within each band: family name left-aligned, variant list centered, Buy links right-aligned — no gutters, no card chrome. Vertical rhythm is driven by ~69px section gaps between type families. The page reads as a vertical exhibition: one artwork or typeface per band, stacked without interruption.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Full-bleed object photography and editorial imagery serve as type-in-context specimens: industrial objects (crates), surreal material studies (bacon flag), and typographic compositions. Images fill the viewport edge-to-edge with zero border-radius and no framing. Color treatment is natural and unstylized — the objects speak for themselves against a pure black or pale-gray studio background. No illustrations, no icons beyond the hamburger glyph, no decorative graphics. The images function as both content and atmosphere.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system is deliberately flat: zero drop shadows, zero glow, zero gradient. Elevation is communicated entirely through background-color stacking (canvas → charcoal surface → elevated panel) and through the alternating band backgrounds. This is a poster-gallery approach where type and imagery carry all dimensional weight, not UI chrome.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all primary UI text in Söhne 16px/400 with Söhne 700 for emphasis only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Flare Orange (#d33c03) for label tags, collection names, and editorial annotations — this is the foundry's signature mark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Alternate specimen band backgrounds between #000000, #1c1c1c, #3c585f, and #f9f9f9 to create rhythm without dividers",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 2px border-radius on all interactive elements (buttons, tags, inputs) — this near-sharp corner is the system's geometric signature",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set type specimens in the typeface they represent at 36px+ — the font IS the content",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Enable tnum and ordn font features on all Söhne usage for consistent number and ordinal rendering",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain tight spacing: 8px component padding, 10px element gaps, 20px horizontal page padding",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce drop shadows, gradients, or glow effects — the system is flat and shadowless",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use border-radius greater than 2px — the design is intentionally near-sharp",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use color on large background fills — chromatic colors are reserved for tiny label tags and text accents",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not set body or display type in colors other than Bone (#ffffff on dark) or Graphite (#555555 on light) — chromatic type is for special emphasis only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add visible section dividers or whitespace gaps larger than ~69px between bands — the background color shift IS the divider",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use system fonts for UI text — Söhne is the voice of the interface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not place more than one chromatic color in a single component — each color punch gets its own moment",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

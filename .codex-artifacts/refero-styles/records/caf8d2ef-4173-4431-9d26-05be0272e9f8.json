@@ -1,0 +1,1958 @@
+{
+  "schemaVersion": 1,
+  "id": "caf8d2ef-4173-4431-9d26-05be0272e9f8",
+  "sourceUrl": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8",
+  "sitemapLastModified": "2026-06-03T16:14:29.451Z",
+  "fetchedAt": "2026-08-02T18:09:25.028Z",
+  "contentHash": "cce7d0b7196a969c89797faf30137acda7ebdba91cd47410ceca1b346ff93614",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Uber design system",
+            "item": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8#style-reference",
+        "name": "Uber design system reference",
+        "headline": "Uber design system | Refero Styles",
+        "description": "Explore Uber's light Other design system: Jet Black #000000, Paper White #ffffff colors, sans-serif, UberMove typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8",
+        "mainEntityOfPage": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Uber",
+          "url": "https://uber.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/cc84abdf-4dec-4f31-bd65-7158c0dcfd3c.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/cc84abdf-4dec-4f31-bd65-7158c0dcfd3c.jpg",
+          "caption": "Screenshot of Uber"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/cc84abdf-4dec-4f31-bd65-7158c0dcfd3c.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Uber design system",
+          "Uber website design",
+          "Uber colors",
+          "Uber typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Other design system",
+          "Jet Black",
+          "Paper White",
+          "Mist Gray",
+          "Charcoal",
+          "sans-serif",
+          "UberMove",
+          "UberMoveText"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Uber design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Uber website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Uber colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Uber typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Other design system"
+          }
+        ],
+        "datePublished": "2026-01-28T18:03:22.000Z",
+        "dateModified": "2026-01-28T18:03:22.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://uber.com",
+      "siteName": "Uber",
+      "extractedAt": "2026-06-03T16:14:29.443Z",
+      "durationMs": 28087,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 613,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "button",
+              "hero",
+              "icon",
+              "heading",
+              "body",
+              "input",
+              "image",
+              "list",
+              "link",
+              "footer"
+            ],
+            "frequency": 2275,
+            "confidence": 1,
+            "prominence": 84346570.38936366,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "button",
+              "hero",
+              "list",
+              "icon",
+              "link",
+              "body"
+            ],
+            "frequency": 476,
+            "confidence": 1,
+            "prominence": 67295873.32826991,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#f6f6f6",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9731459330353415
+            },
+            "contexts": [
+              "nav",
+              "other",
+              "button",
+              "list"
+            ],
+            "frequency": 29,
+            "confidence": 1,
+            "prominence": 2838881.5540893087,
+            "properties": [
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#333333",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3210925111636326
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 10,
+            "confidence": 1,
+            "prominence": 382211.84295352316,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#9dcdd6",
+            "oklch": {
+              "c": 0.051606806504766095,
+              "h": 210.33919758070098,
+              "l": 0.817512247414833
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 305568,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#767676",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5658363307995767
+            },
+            "contexts": [
+              "input"
+            ],
+            "frequency": 12,
+            "confidence": 1,
+            "prominence": 28167.747134489993,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#afafaf",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.7540172565886749
+            },
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 40,
+            "confidence": 1,
+            "prominence": 27966.4214641064,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#5e5e5e",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.4819314937343141
+            },
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 25,
+            "confidence": 1,
+            "prominence": 16639.556602219465,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#4b4b4b",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.41283401549257187
+            },
+            "contexts": [
+              "link"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 4797.690401338466,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#d6d6d6",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8767110099126372
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 2304,
+            "properties": [
+              "boxShadow"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.000048530916986181884,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.43,
+            "background": "#f6f6f6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.45,
+            "background": "#d6d6d6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.63,
+            "background": "#ffffff",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.14,
+            "background": "#9dcdd6",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.69,
+            "background": "#f6f6f6",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.57,
+            "background": "#000000",
+            "foreground": "#afafaf"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.72,
+            "background": "#ffffff",
+            "foreground": "#4b4b4b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.69,
+            "background": "#d6d6d6",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.07,
+            "background": "#f6f6f6",
+            "foreground": "#4b4b4b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.3,
+            "background": "#9dcdd6",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.48,
+            "background": "#ffffff",
+            "foreground": "#5e5e5e"
+          },
+          {
+            "level": "AA",
+            "ratio": 6,
+            "background": "#f6f6f6",
+            "foreground": "#5e5e5e"
+          },
+          {
+            "level": "AA",
+            "ratio": 6,
+            "background": "#d6d6d6",
+            "foreground": "#4b4b4b"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.76,
+            "background": "#afafaf",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.04,
+            "background": "#9dcdd6",
+            "foreground": "#4b4b4b"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.46,
+            "background": "#d6d6d6",
+            "foreground": "#5e5e5e"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.98,
+            "background": "#afafaf",
+            "foreground": "#4b4b4b"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.75,
+            "background": "#9dcdd6",
+            "foreground": "#5e5e5e"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.24,
+            "background": "#000000",
+            "foreground": "#5e5e5e"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "button",
+              "list",
+              "link"
+            ],
+            "frequency": 21
+          },
+          {
+            "value": 999,
+            "contexts": [
+              "nav",
+              "button",
+              "other"
+            ],
+            "frequency": 17
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 4,
+            "contexts": [],
+            "frequency": 22,
+            "properties": [
+              "paddingRight",
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "marginRight",
+              "marginBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 8,
+            "contexts": [],
+            "frequency": 37,
+            "properties": [
+              "marginLeft",
+              "marginRight",
+              "rowGap",
+              "marginBottom",
+              "columnGap",
+              "marginTop",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 9,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 35,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 66,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "marginBottom",
+              "marginLeft",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 14,
+            "contexts": [],
+            "frequency": 19,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 16,
+            "contexts": [],
+            "frequency": 77,
+            "properties": [
+              "marginTop",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 18,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginRight",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 10,
+            "properties": [
+              "marginLeft",
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 26,
+            "properties": [
+              "marginRight",
+              "marginLeft",
+              "marginBottom",
+              "marginTop",
+              "paddingTop",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 25,
+            "contexts": [],
+            "frequency": 10,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 28,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 30,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "marginBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 32,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingBottom",
+              "marginTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 36,
+            "contexts": [],
+            "frequency": 33,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 48,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "paddingLeft",
+              "paddingRight",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 64,
+            "contexts": [],
+            "frequency": 34,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 73,
+            "contexts": [],
+            "frequency": 10,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 150,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 372,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "UberMoveText",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 197,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "UberMove",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 14,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "UberMoveText",
+            "weight": 500,
+            "contexts": [
+              "nav",
+              "button",
+              "other",
+              "icon",
+              "body"
+            ],
+            "frequency": 29,
+            "lineHeight": 1.14,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 25,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "hero",
+              "icon",
+              "body",
+              "image",
+              "list",
+              "footer"
+            ],
+            "frequency": 372,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "button",
+              "body",
+              "other",
+              "icon",
+              "input",
+              "link"
+            ],
+            "frequency": 59,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "UberMoveText",
+            "weight": 500,
+            "contexts": [
+              "other",
+              "button",
+              "icon",
+              "body",
+              "link"
+            ],
+            "frequency": 28,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 8,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "link",
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "UberMoveText",
+            "weight": 500,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 28,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "UberMoveText",
+            "weight": 500,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "UberMove",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "UberMove",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "link"
+            ],
+            "frequency": 2,
+            "lineHeight": 4.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "UberMoveText",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "button"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "UberMove",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.33,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 36,
+            "family": "UberMove",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.22,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 52,
+            "family": "UberMove",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.23,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use #000000 for all filled buttons, the navigation bar, the footer, and the sticky bottom bar — these three black bands are the system's structural rhythm",
+        "Use UberMove at 52px weight 400 for the primary headline; never bold it to 700",
+        "Use 8px border-radius for all cards, inputs, and standard buttons; use 9999px only for nav CTAs and mode toggles",
+        "Keep all UI elements achromatic — let illustrations carry color, not controls or text",
+        "Use 1px #767676 hairline borders for input fields; never use box-shadows for separation",
+        "Apply 64px section gaps and 16px element gaps as the default vertical rhythm",
+        "Use #f6f6f6 for card backgrounds when the card sits directly on a #ffffff page surface"
+      ],
+      "donts": [
+        "Don't introduce chromatic accent colors into buttons, links, or interactive controls — the system is intentionally monochrome in its UI layer",
+        "Don't use box-shadows or drop shadows on cards, modals, or inputs — depth comes from surface color steps, not elevation",
+        "Don't bold UberMove headlines above weight 400; the system speaks at normal weight, not display-bold",
+        "Don't use 9999px radius on cards or inputs — pill radius is reserved for nav CTAs and trip-mode toggles",
+        "Don't use centered body copy; text is always left-aligned within the 1200px max-width container",
+        "Don't let illustrations bleed beyond their bounding panels or overlap surrounding type",
+        "Don't use the #9dcdd6 teal outside of the tab strip — it is a single-purpose active-state signal, not a general accent"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Jet Black",
+          "role": "Headings, body text, top navigation bar, footer background, filled controls, sticky bottom bar, location pin icons — the achromatic anchor that gives the white canvas its structure",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "role": "Page background, card surfaces, text on dark bars, input fields — the dominant canvas that every other element sits on",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f6f6f6",
+          "name": "Mist Gray",
+          "role": "Suggestion card backgrounds, subtle section washes, input field fills, nav hover states — a single step off white that creates depth without contrast",
+          "group": "neutral"
+        },
+        {
+          "hex": "#333333",
+          "name": "Charcoal",
+          "role": "Secondary headings, footer column titles, darker body text variant — used when pure black feels too heavy on dense surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#767676",
+          "name": "Iron Gray",
+          "role": "Input field borders, divider lines, placeholder-adjacent borders — the workhorse hairline color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#afafaf",
+          "name": "Ash Gray",
+          "role": "Muted helper text, disabled-link text, secondary metadata in body copy — disappears by design",
+          "group": "neutral"
+        },
+        {
+          "hex": "#5e5e5e",
+          "name": "Slate",
+          "role": "Body text on light surfaces where full black would feel aggressive, secondary paragraph copy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#4b4b4b",
+          "name": "Graphite",
+          "role": "Supporting neutral for secondary UI, dividers, and muted labels. Do not promote it to the primary CTA color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#9dcdd6",
+          "name": "Faded Teal",
+          "role": "Blue supporting accent for decorative details and low-frequency emphasis.",
+          "group": "accent"
+        }
+      ],
+      "layout": "Max-width ~1200px centered container with full-bleed black bars for nav and footer. Hero is a two-column split: left holds the headline + form stack (city picker, toggle, two inputs, CTA), right holds a square illustration panel. The 'Suggestions' section is a 3-column card grid with 16px gaps. The account section mirrors the hero split — text left, illustration right. 'Plan for later' is a full-width tabbed content area. Footer is a 4-column link grid on a black band. A sticky black 'See prices' bar persists at the viewport bottom across all scroll positions. Section gaps are ~64px, creating a calm vertical rhythm. The layout is strictly left-aligned for text — no centered body copy, no asymmetric text blocks.",
+      "imagery": "All visual color lives inside flat editorial illustrations — no photography, no 3D, no gradients. Illustrations are vector-flat with hard edges and a limited palette of warm oranges, deep teals, cobalt blue, sandy tans, and warm browns. Scenes depict service scenarios: a packed suitcase for travel, two riders in a car for the account section, a food bowl for delivery, a shopping basket for packages. Illustrations are always contained in bounded panels beside text — never full-bleed, never overlapping type. They serve as emotional anchors for each service category while the surrounding UI stays strictly achromatic. Icon style is minimal: solid black glyphs for location pins, clock, arrows, and social marks, with no multicolor or outlined alternatives.",
+      "similar": [
+        {
+          "why": "Same achromatic black-and-white transit-kiosk approach with pink as a single accent; identical split-hero layout with form left and illustration right",
+          "business": "Lyft"
+        },
+        {
+          "why": "Same monochrome mobility interface with solid black CTAs and flat editorial illustrations beside functional forms",
+          "business": "Bolt"
+        },
+        {
+          "why": "Same disciplined black-on-white system where all color is withheld from the UI and only appears in user content or illustrations",
+          "business": "Notion"
+        },
+        {
+          "why": "Same custom geometric typeface (Airbnb Cereal ↔ UberMove) with editorial flat illustrations carrying all the chromatic content",
+          "business": "Airbnb"
+        },
+        {
+          "why": "Same consumer-marketplace pattern of white canvas, black nav bar, three-column suggestion card grid with flat category illustrations",
+          "business": "DoorDash"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tabs": "8px",
+          "cards": "8px",
+          "pills": "9999px",
+          "inputs": "8px",
+          "buttons": "8px"
+        },
+        "elementGap": "16px",
+        "sectionGap": "64px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "other",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "level": 0,
+          "purpose": "Page canvas — every section defaults to pure white"
+        },
+        {
+          "hex": "#f6f6f6",
+          "name": "Mist Gray",
+          "level": 1,
+          "purpose": "Suggestion cards, input fills, subtle section differentiation"
+        },
+        {
+          "hex": "#000000",
+          "name": "Jet Black",
+          "level": 2,
+          "purpose": "Top navigation bar, footer, sticky bottom bar — the structural black bands that frame the white content"
+        }
+      ],
+      "elevation": [],
+      "northStar": "Black-and-white transit kiosk. Picture a monochrome wayfinding panel where the only color comes from editorial illustrations mounted beside the input form.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.67
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.43
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.33
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.33
+        },
+        {
+          "role": "heading",
+          "size": 36,
+          "lineHeight": 1.22
+        },
+        {
+          "role": "display",
+          "size": 52,
+          "lineHeight": 1.23
+        }
+      ],
+      "components": [
+        {
+          "name": "Black Filled Button",
+          "role": "Primary conversion control — 'See prices', 'Log in to your account'",
+          "description": "Solid #000000 background, #ffffff text in UberMoveText 16px weight 400. 8px border-radius, 12px vertical padding × 16px horizontal padding. No shadow, no border, no hover state variation visible. Text is left-padded to clear the label; on mobile it stretches full-width."
+        },
+        {
+          "name": "White Pill Button",
+          "role": "Navigation CTA — 'Sign up' in the top bar",
+          "description": "#ffffff background, #000000 text in UberMoveText 14px weight 400. 9999px border-radius (full pill), 6px vertical × 16px horizontal padding. Inverts the black-bar context it sits inside — the white pill is the only thing that breaks the black nav."
+        },
+        {
+          "name": "Location Input Field",
+          "role": "Pickup and dropoff entry in the hero form",
+          "description": "#ffffff background with a 1px #767676 border, 8px radius. 16px vertical padding. Left side has a vertical timeline track with a black filled circle (pickup) and black square (dropoff) connected by a thin line. Placeholder text in UberMoveText 16px weight 400, #000000. An arrow icon sits right-aligned in the pickup row."
+        },
+        {
+          "name": "Trip Type Toggle",
+          "role": "Switching between 'Pickup now' and 'Schedule ahead' modes",
+          "description": "Full-pill 9999px radius container with #f6f6f6 background. Active state shows a clock icon + 'Pickup now' label in UberMoveText 16px. Inactive state is bare text. Sits directly above the input stack as a compact mode selector."
+        },
+        {
+          "name": "Suggestion Card",
+          "role": "Service category tiles — Ride, Reserve, Food, Package",
+          "description": "#f6f6f6 background, 8px border-radius, no border, no shadow. Two-column internal layout: left column holds an UberMoveText 16px weight 500 title and 14px weight 400 description in #5e5e5, plus a 'Details' link in weight 500 underlined. Right column holds a flat illustration (~120px wide) showing a car, calendar, or food bowl. Cards sit in a 3-column grid with 16px gaps."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Global site navigation — persistent across all pages",
+          "description": "#000000 background, full-width, ~56px height. Left: Uber wordmark in white UberMove. Center: nav links (Ride, Earn, Business, Uber Eats, About) in UberMoveText 14px weight 400 #ffffff, with a dropdown chevron on About. Right: globe icon + 'EN', 'Help' link, 'Log in' link, then the white pill 'Sign up' button. 16px horizontal padding on the link cluster."
+        },
+        {
+          "name": "Sticky Bottom Bar",
+          "role": "Persistent conversion anchor that follows scroll",
+          "description": "#000000 background, full-width, ~56px height, position fixed to viewport bottom. Single centered label 'See prices' in #ffffff UberMoveText 16px weight 400. No button chrome — the entire bar IS the button. Overlays content with no shadow separator."
+        },
+        {
+          "name": "Section Heading",
+          "role": "Page section titles — 'Suggestions', 'Log in to see your account details', 'Plan for later'",
+          "description": "UberMove 36px weight 400 in #000000, line-height 1.22. Left-aligned, sits at the start of each section with 32–48px of top margin. No decorative elements, no accent color, no underline — the weight of the size and the cleanness of the typeface do all the work."
+        },
+        {
+          "name": "Tab Strip",
+          "role": "Mode switching in the 'Plan for later' section",
+          "description": "Horizontal row of tabs in UberMoveText 16px weight 400 #000000. Active tab has a #9dcdd6 background fill spanning the tab width with 8px radius; inactive tabs are bare text with 16px horizontal padding. Single chromatic UI element in the entire system."
+        },
+        {
+          "name": "Footer",
+          "role": "Site-wide link directory, social, app downloads, legal",
+          "description": "#000000 background spanning full width. Top region has a 'Visit Help Center' link in white. Four-column link grid (Company, Products, Global citizenship, Travel) with column titles in #ffffff weight 500 16px and links in #afafaf weight 400 14px, 12px row gap. Bottom row: social icons (LinkedIn, YouTube, Instagram, X) on the left, language/location selectors on the right, app store badges below. 64px vertical padding top and bottom."
+        },
+        {
+          "name": "Illustration Panel",
+          "role": "Editorial visual companion to text sections",
+          "description": "Contained rectangular panels (~480px wide) holding flat vector illustrations. The suitcase scene uses warm oranges (#c44a1 area), deep teals, and sandy tans. The rider portrait uses solid cobalt blue (#276ef1 area) and warm browns. No gradients, no 3D, no photography — all flat fills with hard edges. Illustrations carry all the color in the system; the UI around them stays strictly achromatic."
+        },
+        {
+          "name": "City Picker Pill",
+          "role": "Location selector in the hero — 'Barcelona, ES · Change city'",
+          "description": "Black filled circle (6px) followed by 'Barcelona, ES' in UberMoveText 18px weight 500 #000000, then a light gray pill containing 'Change city' in 14px weight 500. Sits above the hero headline as a compact location context."
+        }
+      ],
+      "typography": [
+        {
+          "role": "sans-serif — detected in extracted data but not described by AI",
+          "sizes": "16px",
+          "family": "sans-serif",
+          "weight": "400",
+          "lineHeight": "1.2"
+        },
+        {
+          "role": "Headlines, hero copy, display text. At 52px with 1.22 line-height and weight 400, it is the brand's voice — geometric, calm, never bold-display-loud. Weight 700 reserved for nav brand mark and emphasized headings",
+          "sizes": "20px, 24px, 36px, 52px",
+          "family": "UberMove",
+          "weight": "400, 700",
+          "lineHeight": "1.22, 1.23, 1.33, 1.40",
+          "substitute": "Inter, Helvetica Neue, system-ui",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Body copy, button labels, nav links, input text, helper text, footer links. The workhorse family at 14–18px / weight 400. Weight 500 is rare — used only for emphasis in nav or button labels that need to carry slightly more weight than surrounding text",
+          "sizes": "12px, 14px, 16px, 18px, 24px",
+          "family": "UberMoveText",
+          "weight": "400, 500",
+          "lineHeight": "1.14, 1.20, 1.25, 1.33, 1.43, 1.50, 1.67, 2.00",
+          "substitute": "Inter, system-ui, -apple-system",
+          "letterSpacing": "normal"
+        }
+      ],
+      "description": "Uber's interface is a disciplined black-on-white transit kiosk: every screen is a white canvas anchored by a single black navigation bar, a black footer, and solid black controls, with zero chromatic UI color. All color in the system lives inside flat editorial illustrations — a packed suitcase, two riders in a car, a bowl of food — that float beside the form rather than within it. Typography is custom and confident: UberMove at 52px for headlines with tight 1.22 line-height, UberMoveText at 14–18px for everything else, and a single weight (400) does the work that other systems spread across three. Components are flat, borders are 1px hairline grays, and radii are binary — 8px for cards, inputs, and standard buttons, or a full 999px pill for nav CTAs and toggles. The only structural rhythm break is the sticky black 'See prices' bar that follows scroll, a persistent commitment to the next conversion.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The system is deliberately flat — no component uses drop shadows or elevation stacking. Depth is created exclusively through the surface progression (#ffffff page → #f6f6f6 card → #000000 structural bar) and 1px hairline borders. This keeps the interface feeling like a printed transit poster rather than a software application."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/4174e4af-4a09-4a54-a2d7-5065aa3f59da.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/cc84abdf-4dec-4f31-bd65-7158c0dcfd3c.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "uber",
+    "generatedAt": "2026-06-03T16:14:29.443Z",
+    "summary": "Uber's interface is a disciplined black-on-white transit kiosk: every screen is a white canvas anchored by a single black navigation bar, a black footer, and solid black controls, with zero chromatic UI color. All color in the system lives inside flat editorial illustrations — a packed suitcase, two riders in a car, a bowl of food — that float beside the form rather than within it. Typography is custom and confident: UberMove at 52px for headlines with tight 1.22 line-height, UberMoveText at 14–18px for everything else, and a single weight (400) does the work that other systems spread across three. Components are flat, borders are 1px hairline grays, and radii are binary — 8px for cards, inputs, and standard buttons, or a full 999px pill for nav CTAs and toggles. The only structural rhythm break is the sticky black 'See prices' bar that follows scroll, a persistent commitment to the next conversion.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "caf8d2ef-4173-4431-9d26-05be0272e9f8",
+      "sourceUrl": "https://styles.refero.design/style/caf8d2ef-4173-4431-9d26-05be0272e9f8",
+      "originalUrl": "https://uber.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/4174e4af-4a09-4a54-a2d7-5065aa3f59da.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/cc84abdf-4dec-4f31-bd65-7158c0dcfd3c.jpg",
+      "importedAt": "2026-08-02T18:09:25.028Z",
+      "upstreamModifiedAt": "2026-06-03T16:14:29.451Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Black-and-white transit kiosk. Picture a monochrome wayfinding panel where the only color comes from editorial illustrations mounted beside the input form.",
+      "industry": "other"
+    },
+    "tokens": [
+      {
+        "id": "color-jet-black",
+        "kind": "color",
+        "name": "Jet Black",
+        "value": "#000000",
+        "role": "Headings, body text, top navigation bar, footer background, filled controls, sticky bottom bar, location pin icons — the achromatic anchor that gives the white canvas its structure",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper-white",
+        "kind": "color",
+        "name": "Paper White",
+        "value": "#ffffff",
+        "role": "Page background, card surfaces, text on dark bars, input fields — the dominant canvas that every other element sits on",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mist-gray",
+        "kind": "color",
+        "name": "Mist Gray",
+        "value": "#f6f6f6",
+        "role": "Suggestion card backgrounds, subtle section washes, input field fills, nav hover states — a single step off white that creates depth without contrast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#333333",
+        "role": "Secondary headings, footer column titles, darker body text variant — used when pure black feels too heavy on dense surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-iron-gray",
+        "kind": "color",
+        "name": "Iron Gray",
+        "value": "#767676",
+        "role": "Input field borders, divider lines, placeholder-adjacent borders — the workhorse hairline color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash-gray",
+        "kind": "color",
+        "name": "Ash Gray",
+        "value": "#afafaf",
+        "role": "Muted helper text, disabled-link text, secondary metadata in body copy — disappears by design",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate",
+        "kind": "color",
+        "name": "Slate",
+        "value": "#5e5e5e",
+        "role": "Body text on light surfaces where full black would feel aggressive, secondary paragraph copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#4b4b4b",
+        "role": "Supporting neutral for secondary UI, dividers, and muted labels. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-faded-teal",
+        "kind": "color",
+        "name": "Faded Teal",
+        "value": "#9dcdd6",
+        "role": "Blue supporting accent for decorative details and low-frequency emphasis.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sans-serif",
+        "kind": "typography",
+        "name": "sans-serif",
+        "value": "font-family: sans-serif; font-weight: 400; font-size: 16px; line-height: 1.2",
+        "role": "sans-serif — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-ubermove",
+        "kind": "typography",
+        "name": "UberMove",
+        "value": "font-family: UberMove; font-weight: 400, 700; font-size: 20px, 24px, 36px, 52px; line-height: 1.22, 1.23, 1.33, 1.40; letter-spacing: normal",
+        "role": "Headlines, hero copy, display text. At 52px with 1.22 line-height and weight 400, it is the brand's voice — geometric, calm, never bold-display-loud. Weight 700 reserved for nav brand mark and emphasized headings",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-ubermovetext",
+        "kind": "typography",
+        "name": "UberMoveText",
+        "value": "font-family: UberMoveText; font-weight: 400, 500; font-size: 12px, 14px, 16px, 18px, 24px; line-height: 1.14, 1.20, 1.25, 1.33, 1.43, 1.50, 1.67, 2.00; letter-spacing: normal",
+        "role": "Body copy, button labels, nav links, input text, helper text, footer links. The workhorse family at 14–18px / weight 400. Weight 500 is rare — used only for emphasis in nav or button labels that need to carry slightly more weight than surrounding text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.67",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.5",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.43",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.33",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.33",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 36px; line-height: 1.22",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 52px; line-height: 1.23",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tabs",
+        "kind": "radius",
+        "name": "tabs",
+        "value": "8px",
+        "role": "Imported tabs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "8px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-pills",
+        "kind": "radius",
+        "name": "pills",
+        "value": "9999px",
+        "role": "Imported pills radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "8px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "8px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system is deliberately flat — no component uses drop shadows or elevation stacking. Depth is created exclusively through the surface progression (#ffffff page → #f6f6f6 card → #000000 structural bar) and 1px hairline borders. This keeps the interface feeling like a printed transit poster rather than a software application.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "black-filled-button",
+        "name": "Black Filled Button",
+        "category": "Refero components",
+        "description": "Solid #000000 background, #ffffff text in UberMoveText 16px weight 400. 8px border-radius, 12px vertical padding × 16px horizontal padding. No shadow, no border, no hover state variation visible. Text is left-padded to clear the label; on mobile it stretches full-width.",
+        "variants": [
+          {
+            "id": "black-filled-button-reference",
+            "name": "Reference",
+            "description": "Solid #000000 background, #ffffff text in UberMoveText 16px weight 400. 8px border-radius, 12px vertical padding × 16px horizontal padding. No shadow, no border, no hover state variation visible. Text is left-padded to clear the label; on mobile it stretches full-width.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary conversion control — 'See prices', 'Log in to your account'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "white-pill-button",
+        "name": "White Pill Button",
+        "category": "Refero components",
+        "description": "#ffffff background, #000000 text in UberMoveText 14px weight 400. 9999px border-radius (full pill), 6px vertical × 16px horizontal padding. Inverts the black-bar context it sits inside — the white pill is the only thing that breaks the black nav.",
+        "variants": [
+          {
+            "id": "white-pill-button-reference",
+            "name": "Reference",
+            "description": "#ffffff background, #000000 text in UberMoveText 14px weight 400. 9999px border-radius (full pill), 6px vertical × 16px horizontal padding. Inverts the black-bar context it sits inside — the white pill is the only thing that breaks the black nav.",
+            "evidence": [],
+            "observedProperties": [
+              "Navigation CTA — 'Sign up' in the top bar"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "location-input-field",
+        "name": "Location Input Field",
+        "category": "Refero components",
+        "description": "#ffffff background with a 1px #767676 border, 8px radius. 16px vertical padding. Left side has a vertical timeline track with a black filled circle (pickup) and black square (dropoff) connected by a thin line. Placeholder text in UberMoveText 16px weight 400, #000000. An arrow icon sits right-aligned in the pickup row.",
+        "variants": [
+          {
+            "id": "location-input-field-reference",
+            "name": "Reference",
+            "description": "#ffffff background with a 1px #767676 border, 8px radius. 16px vertical padding. Left side has a vertical timeline track with a black filled circle (pickup) and black square (dropoff) connected by a thin line. Placeholder text in UberMoveText 16px weight 400, #000000. An arrow icon sits right-aligned in the pickup row.",
+            "evidence": [],
+            "observedProperties": [
+              "Pickup and dropoff entry in the hero form"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "trip-type-toggle",
+        "name": "Trip Type Toggle",
+        "category": "Refero components",
+        "description": "Full-pill 9999px radius container with #f6f6f6 background. Active state shows a clock icon + 'Pickup now' label in UberMoveText 16px. Inactive state is bare text. Sits directly above the input stack as a compact mode selector.",
+        "variants": [
+          {
+            "id": "trip-type-toggle-reference",
+            "name": "Reference",
+            "description": "Full-pill 9999px radius container with #f6f6f6 background. Active state shows a clock icon + 'Pickup now' label in UberMoveText 16px. Inactive state is bare text. Sits directly above the input stack as a compact mode selector.",
+            "evidence": [],
+            "observedProperties": [
+              "Switching between 'Pickup now' and 'Schedule ahead' modes"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "suggestion-card",
+        "name": "Suggestion Card",
+        "category": "Refero components",
+        "description": "#f6f6f6 background, 8px border-radius, no border, no shadow. Two-column internal layout: left column holds an UberMoveText 16px weight 500 title and 14px weight 400 description in #5e5e5, plus a 'Details' link in weight 500 underlined. Right column holds a flat illustration (~120px wide) showing a car, calendar, or food bowl. Cards sit in a 3-column grid with 16px gaps.",
+        "variants": [
+          {
+            "id": "suggestion-card-reference",
+            "name": "Reference",
+            "description": "#f6f6f6 background, 8px border-radius, no border, no shadow. Two-column internal layout: left column holds an UberMoveText 16px weight 500 title and 14px weight 400 description in #5e5e5, plus a 'Details' link in weight 500 underlined. Right column holds a flat illustration (~120px wide) showing a car, calendar, or food bowl. Cards sit in a 3-column grid with 16px gaps.",
+            "evidence": [],
+            "observedProperties": [
+              "Service category tiles — Ride, Reserve, Food, Package"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "#000000 background, full-width, ~56px height. Left: Uber wordmark in white UberMove. Center: nav links (Ride, Earn, Business, Uber Eats, About) in UberMoveText 14px weight 400 #ffffff, with a dropdown chevron on About. Right: globe icon + 'EN', 'Help' link, 'Log in' link, then the white pill 'Sign up' button. 16px horizontal padding on the link cluster.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "#000000 background, full-width, ~56px height. Left: Uber wordmark in white UberMove. Center: nav links (Ride, Earn, Business, Uber Eats, About) in UberMoveText 14px weight 400 #ffffff, with a dropdown chevron on About. Right: globe icon + 'EN', 'Help' link, 'Log in' link, then the white pill 'Sign up' button. 16px horizontal padding on the link cluster.",
+            "evidence": [],
+            "observedProperties": [
+              "Global site navigation — persistent across all pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "sticky-bottom-bar",
+        "name": "Sticky Bottom Bar",
+        "category": "Refero components",
+        "description": "#000000 background, full-width, ~56px height, position fixed to viewport bottom. Single centered label 'See prices' in #ffffff UberMoveText 16px weight 400. No button chrome — the entire bar IS the button. Overlays content with no shadow separator.",
+        "variants": [
+          {
+            "id": "sticky-bottom-bar-reference",
+            "name": "Reference",
+            "description": "#000000 background, full-width, ~56px height, position fixed to viewport bottom. Single centered label 'See prices' in #ffffff UberMoveText 16px weight 400. No button chrome — the entire bar IS the button. Overlays content with no shadow separator.",
+            "evidence": [],
+            "observedProperties": [
+              "Persistent conversion anchor that follows scroll"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading",
+        "name": "Section Heading",
+        "category": "Refero components",
+        "description": "UberMove 36px weight 400 in #000000, line-height 1.22. Left-aligned, sits at the start of each section with 32–48px of top margin. No decorative elements, no accent color, no underline — the weight of the size and the cleanness of the typeface do all the work.",
+        "variants": [
+          {
+            "id": "section-heading-reference",
+            "name": "Reference",
+            "description": "UberMove 36px weight 400 in #000000, line-height 1.22. Left-aligned, sits at the start of each section with 32–48px of top margin. No decorative elements, no accent color, no underline — the weight of the size and the cleanness of the typeface do all the work.",
+            "evidence": [],
+            "observedProperties": [
+              "Page section titles — 'Suggestions', 'Log in to see your account details', 'Plan for later'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "tab-strip",
+        "name": "Tab Strip",
+        "category": "Refero components",
+        "description": "Horizontal row of tabs in UberMoveText 16px weight 400 #000000. Active tab has a #9dcdd6 background fill spanning the tab width with 8px radius; inactive tabs are bare text with 16px horizontal padding. Single chromatic UI element in the entire system.",
+        "variants": [
+          {
+            "id": "tab-strip-reference",
+            "name": "Reference",
+            "description": "Horizontal row of tabs in UberMoveText 16px weight 400 #000000. Active tab has a #9dcdd6 background fill spanning the tab width with 8px radius; inactive tabs are bare text with 16px horizontal padding. Single chromatic UI element in the entire system.",
+            "evidence": [],
+            "observedProperties": [
+              "Mode switching in the 'Plan for later' section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer",
+        "name": "Footer",
+        "category": "Refero components",
+        "description": "#000000 background spanning full width. Top region has a 'Visit Help Center' link in white. Four-column link grid (Company, Products, Global citizenship, Travel) with column titles in #ffffff weight 500 16px and links in #afafaf weight 400 14px, 12px row gap. Bottom row: social icons (LinkedIn, YouTube, Instagram, X) on the left, language/location selectors on the right, app store badges below. 64px vertical padding top and bottom.",
+        "variants": [
+          {
+            "id": "footer-reference",
+            "name": "Reference",
+            "description": "#000000 background spanning full width. Top region has a 'Visit Help Center' link in white. Four-column link grid (Company, Products, Global citizenship, Travel) with column titles in #ffffff weight 500 16px and links in #afafaf weight 400 14px, 12px row gap. Bottom row: social icons (LinkedIn, YouTube, Instagram, X) on the left, language/location selectors on the right, app store badges below. 64px vertical padding top and bottom.",
+            "evidence": [],
+            "observedProperties": [
+              "Site-wide link directory, social, app downloads, legal"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "illustration-panel",
+        "name": "Illustration Panel",
+        "category": "Refero components",
+        "description": "Contained rectangular panels (~480px wide) holding flat vector illustrations. The suitcase scene uses warm oranges (#c44a1 area), deep teals, and sandy tans. The rider portrait uses solid cobalt blue (#276ef1 area) and warm browns. No gradients, no 3D, no photography — all flat fills with hard edges. Illustrations carry all the color in the system; the UI around them stays strictly achromatic.",
+        "variants": [
+          {
+            "id": "illustration-panel-reference",
+            "name": "Reference",
+            "description": "Contained rectangular panels (~480px wide) holding flat vector illustrations. The suitcase scene uses warm oranges (#c44a1 area), deep teals, and sandy tans. The rider portrait uses solid cobalt blue (#276ef1 area) and warm browns. No gradients, no 3D, no photography — all flat fills with hard edges. Illustrations carry all the color in the system; the UI around them stays strictly achromatic.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial visual companion to text sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "city-picker-pill",
+        "name": "City Picker Pill",
+        "category": "Refero components",
+        "description": "Black filled circle (6px) followed by 'Barcelona, ES' in UberMoveText 18px weight 500 #000000, then a light gray pill containing 'Change city' in 14px weight 500. Sits above the hero headline as a compact location context.",
+        "variants": [
+          {
+            "id": "city-picker-pill-reference",
+            "name": "Reference",
+            "description": "Black filled circle (6px) followed by 'Barcelona, ES' in UberMoveText 18px weight 500 #000000, then a light gray pill containing 'Change city' in 14px weight 500. Sits above the hero headline as a compact location context.",
+            "evidence": [],
+            "observedProperties": [
+              "Location selector in the hero — 'Barcelona, ES · Change city'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width ~1200px centered container with full-bleed black bars for nav and footer. Hero is a two-column split: left holds the headline + form stack (city picker, toggle, two inputs, CTA), right holds a square illustration panel. The 'Suggestions' section is a 3-column card grid with 16px gaps. The account section mirrors the hero split — text left, illustration right. 'Plan for later' is a full-width tabbed content area. Footer is a 4-column link grid on a black band. A sticky black 'See prices' bar persists at the viewport bottom across all scroll positions. Section gaps are ~64px, creating a calm vertical rhythm. The layout is strictly left-aligned for text — no centered body copy, no asymmetric text blocks.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "All visual color lives inside flat editorial illustrations — no photography, no 3D, no gradients. Illustrations are vector-flat with hard edges and a limited palette of warm oranges, deep teals, cobalt blue, sandy tans, and warm browns. Scenes depict service scenarios: a packed suitcase for travel, two riders in a car for the account section, a food bowl for delivery, a shopping basket for packages. Illustrations are always contained in bounded panels beside text — never full-bleed, never overlapping type. They serve as emotional anchors for each service category while the surrounding UI stays strictly achromatic. Icon style is minimal: solid black glyphs for location pins, clock, arrows, and social marks, with no multicolor or outlined alternatives.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system is deliberately flat — no component uses drop shadows or elevation stacking. Depth is created exclusively through the surface progression (#ffffff page → #f6f6f6 card → #000000 structural bar) and 1px hairline borders. This keeps the interface feeling like a printed transit poster rather than a software application.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #000000 for all filled buttons, the navigation bar, the footer, and the sticky bottom bar — these three black bands are the system's structural rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use UberMove at 52px weight 400 for the primary headline; never bold it to 700",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 8px border-radius for all cards, inputs, and standard buttons; use 9999px only for nav CTAs and mode toggles",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all UI elements achromatic — let illustrations carry color, not controls or text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 1px #767676 hairline borders for input fields; never use box-shadows for separation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply 64px section gaps and 16px element gaps as the default vertical rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #f6f6f6 for card backgrounds when the card sits directly on a #ffffff page surface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce chromatic accent colors into buttons, links, or interactive controls — the system is intentionally monochrome in its UI layer",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use box-shadows or drop shadows on cards, modals, or inputs — depth comes from surface color steps, not elevation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't bold UberMove headlines above weight 400; the system speaks at normal weight, not display-bold",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use 9999px radius on cards or inputs — pill radius is reserved for nav CTAs and trip-mode toggles",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use centered body copy; text is always left-aligned within the 1200px max-width container",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't let illustrations bleed beyond their bounding panels or overlap surrounding type",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use the #9dcdd6 teal outside of the tab strip — it is a single-purpose active-state signal, not a general accent",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

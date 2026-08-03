@@ -49,6 +49,11 @@ test("crawls one public page into Sites with mobile and analysis objects", async
     sectionCount: 2,
   });
   assert.equal(state.completed?.analysis.status, "evidence-only");
+  assert.equal(state.completed?.analysis.designSystem?.app, "Example");
+  assert.equal(
+    state.completed?.analysis.designSystem?.provenance?.sourceUrl,
+    "https://example.com/pricing",
+  );
   assert.equal(state.completed?.sections.length, 2);
   assert.deepEqual(
     state.completed?.sections.map((section) => section.sourceMetadata?.patterns),
@@ -196,6 +201,11 @@ test("derives a Dark style from the captured page pixels", async () => {
 
 test("derives Motion only from named animation technology evidence", async () => {
   const namedCapture = fixtureCapture();
+  namedCapture.analysis.evidence.push({
+    id: "TECHNOLOGY-EVIDENCE-0",
+    kind: "runtime",
+    value: "Framer Motion runtime",
+  });
   namedCapture.analysis.technology = [{
     id: "TECHNOLOGY-FINDING-0",
     name: "Framer Motion",
@@ -211,6 +221,11 @@ test("derives Motion only from named animation technology evidence", async () =>
   assert.deepEqual(named.beginInputs[0]?.styles, ["Motion"]);
 
   const genericCapture = fixtureCapture();
+  genericCapture.analysis.evidence.push({
+    id: "TECHNOLOGY-EVIDENCE-0",
+    kind: "runtime",
+    value: "Custom animation runtime",
+  });
   genericCapture.analysis.technology = [{
     id: "TECHNOLOGY-FINDING-0",
     name: "Custom JavaScript Motion",

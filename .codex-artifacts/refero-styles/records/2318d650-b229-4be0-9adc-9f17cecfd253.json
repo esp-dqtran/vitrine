@@ -1,0 +1,1793 @@
+{
+  "schemaVersion": 1,
+  "id": "2318d650-b229-4be0-9adc-9f17cecfd253",
+  "sourceUrl": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253",
+  "sitemapLastModified": "2026-06-03T16:09:05.664Z",
+  "fetchedAt": "2026-08-02T18:09:25.160Z",
+  "contentHash": "a1f565b6bd230530533d850de6d5174f9201633687d0bdd181e0508230e59e0f",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "New Genre design system",
+            "item": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253#style-reference",
+        "name": "New Genre design system reference",
+        "headline": "New Genre design system | Refero Styles",
+        "description": "Explore New Genre's light Agency design system: Parchment Canvas #ffffff, Onyx #0c1018 colors, sans-serif, Serrif Condensed typography, and DESIGN.md for AI...",
+        "url": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253",
+        "mainEntityOfPage": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "New Genre",
+          "url": "https://newgenre.studio"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/b4ec9eff-cfaa-4780-9074-20b0fe96563e.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/b4ec9eff-cfaa-4780-9074-20b0fe96563e.jpg",
+          "caption": "Screenshot of New Genre"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/b4ec9eff-cfaa-4780-9074-20b0fe96563e.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "New Genre design system",
+          "New Genre website design",
+          "New Genre colors",
+          "New Genre typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Parchment Canvas",
+          "Onyx",
+          "Pure Black",
+          "Charred Umber",
+          "sans-serif",
+          "Serrif Condensed",
+          "Saans Variable"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "New Genre design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "New Genre website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "New Genre colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "New Genre typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-03-30T15:37:58.000Z",
+        "dateModified": "2026-03-30T15:37:58.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://newgenre.studio",
+      "siteName": "New Genre",
+      "extractedAt": "2026-06-03T16:09:05.659Z",
+      "durationMs": 37516,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 904,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "icon",
+              "link",
+              "image",
+              "button",
+              "footer",
+              "body"
+            ],
+            "frequency": 1758,
+            "confidence": 1,
+            "prominence": 211325239.71729538,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "body",
+              "nav",
+              "link",
+              "button"
+            ],
+            "frequency": 252,
+            "confidence": 1,
+            "prominence": 156486416.0071187,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#1e1310",
+            "oklch": {
+              "c": 0.019360703285505005,
+              "h": 35.82123713694847,
+              "l": 0.20019358352684452
+            },
+            "contexts": [
+              "footer"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 3843664,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#6d7074",
+            "oklch": {
+              "c": 0.007992135772272532,
+              "h": 264.5000784638132,
+              "l": 0.5432910469962802
+            },
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 130,
+            "confidence": 1,
+            "prominence": 2079740.9810166147,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#0c1018",
+            "oklch": {
+              "c": 0.017939518145613068,
+              "h": 263.9328747755823,
+              "l": 0.1728704199473002
+            },
+            "contexts": [
+              "heading",
+              "body",
+              "input",
+              "other"
+            ],
+            "frequency": 292,
+            "confidence": 1,
+            "prominence": 605781.0109494559,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#9e9fa3",
+            "oklch": {
+              "c": 0.004984870563622845,
+              "h": 264.5285346132697,
+              "l": 0.7034792350213368
+            },
+            "contexts": [
+              "heading",
+              "body",
+              "link"
+            ],
+            "frequency": 495,
+            "confidence": 1,
+            "prominence": 360406.4014930717,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.00808982109473606,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.04,
+            "background": "#ffffff",
+            "foreground": "#0c1018"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.17,
+            "background": "#1e1310",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.94,
+            "background": "#9e9fa3",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.2,
+            "background": "#9e9fa3",
+            "foreground": "#0c1018"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.87,
+            "background": "#1e1310",
+            "foreground": "#9e9fa3"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.98,
+            "background": "#ffffff",
+            "foreground": "#6d7074"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.65,
+            "background": "#1e1310",
+            "foreground": "#6d7074"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.64,
+            "background": "#ffffff",
+            "foreground": "#9e9fa3"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.16,
+            "background": "#1e1310",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.05,
+            "background": "#1e1310",
+            "foreground": "#0c1018"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 8,
+            "contexts": [
+              "nav",
+              "other",
+              "link"
+            ],
+            "frequency": 31
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 25
+          },
+          {
+            "value": 50,
+            "contexts": [
+              "button",
+              "input"
+            ],
+            "frequency": 3
+          },
+          {
+            "value": 90,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 86,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 8,
+            "contexts": [],
+            "frequency": 53,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 124,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 35,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 16,
+            "contexts": [],
+            "frequency": 60,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 27,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingBottom",
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 10,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 26,
+            "contexts": [],
+            "frequency": 8,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 32,
+            "contexts": [],
+            "frequency": 37,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 48,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 52,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 56,
+            "contexts": [],
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 64,
+            "contexts": [],
+            "frequency": 10,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "compact",
+        "baseUnit": null
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgb(40, 14, 1) 0%, rgb(24, 38, 68) 15.2608%, rgb(90, 118, 159) 30.284%, rgb(135, 161, 196) 43.3787%, rgb(193, 211, 230) 58.8313%, rgb(254, 249, 225) 79.7139%, rgb(247, 243, 240) 100%)",
+          "colors": [
+            "rgb(40, 14, 1)",
+            "rgb(24, 38, 68)",
+            "rgb(90, 118, 159)",
+            "rgb(135, 161, 196)",
+            "rgb(193, 211, 230)",
+            "rgb(254, 249, 225)",
+            "rgb(247, 243, 240)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "radial",
+          "value": "radial-gradient(75% 300% at 109.6% 147.1%, rgb(255, 230, 0) 0%, rgb(237, 148, 84) 29.5837%, rgba(153, 161, 175, 0.06) 100%)",
+          "colors": [
+            "rgb(255, 230, 0)",
+            "rgb(237, 148, 84)",
+            "rgba(153, 161, 175, 0.06)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgba(247, 243, 240, 0) 0%, rgba(241, 189, 122, 0.97) 17.3899%, rgb(252, 190, 109) 32.9462%, rgb(228, 108, 68) 51.4622%, rgb(84, 37, 18) 78.2939%, rgb(30, 19, 16) 100%)",
+          "colors": [
+            "rgba(247, 243, 240, 0)",
+            "rgba(241, 189, 122, 0.97)",
+            "rgb(252, 190, 109)",
+            "rgb(228, 108, 68)",
+            "rgb(84, 37, 18)",
+            "rgb(30, 19, 16)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(rgb(30, 19, 16) 25.1883%, rgb(144, 60, 39) 50.2763%, rgb(228, 108, 68) 76.0487%, rgb(237, 148, 84) 100%)",
+          "colors": [
+            "rgb(30, 19, 16)",
+            "rgb(144, 60, 39)",
+            "rgb(228, 108, 68)",
+            "rgb(237, 148, 84)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 647,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Saans Variable",
+            "source": "custom",
+            "weights": [
+              300,
+              400,
+              500
+            ],
+            "frequency": 183,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Serrif Condensed Regular",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 46,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Inter",
+            "source": "google",
+            "weights": [
+              400
+            ],
+            "frequency": 4,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Saans Medium",
+            "source": "custom",
+            "weights": [
+              400,
+              570
+            ],
+            "frequency": 2,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Saans Regular",
+            "source": "custom",
+            "weights": [
+              380
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 12,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "button",
+              "icon",
+              "image",
+              "footer"
+            ],
+            "frequency": 647,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Inter",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 26,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Saans Variable",
+            "weight": 500,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.4,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "body"
+            ],
+            "frequency": 10,
+            "lineHeight": 1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Saans Medium",
+            "weight": 400,
+            "contexts": [
+              "input"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Saans Regular",
+            "weight": 380,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Saans Medium",
+            "weight": 570,
+            "contexts": [
+              "input"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 114,
+            "lineHeight": 1.15,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Saans Variable",
+            "weight": 300,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.15,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Saans Variable",
+            "weight": 300,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.15,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.15,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 32,
+            "family": "Saans Variable",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "Serrif Condensed Regular",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 33,
+            "lineHeight": 1.05,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 72,
+            "family": "Serrif Condensed Regular",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 13,
+            "lineHeight": 1.05,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use the dawn arc gradient (#1e1310 → #182644 → #5a769f → #87a1c4 → #c1d3e6 → #fef9e1 → #f7f3f0) as a full-bleed atmospheric wash for hero and transition sections — never as a small element background.",
+        "Set all display headlines in Serrif Condensed at 64-72px weight 400, line-height 1.05, letter-spacing -0.02em; the condensed forms and tight tracking are the signature.",
+        "Use Onyx (#0c1018) for all primary text rather than pure #000000 — the blue undertone keeps the palette coherent with the gradient's steel-blue midsection.",
+        "Apply the gradient-text dissolve effect on the final 20-40% of display headlines so text visually transitions into the background gradient.",
+        "Use 50-90px border-radius for all interactive elements (buttons, inputs) to create pill shapes; 16px radius for cards; 8px for small UI elements.",
+        "Maintain -0.01em letter-spacing on all Saans Variable text regardless of size — the slight tightening is part of the geometric precision.",
+        "Keep the interface monochromatic; let photographic content, the gradient, and typographic contrast carry all visual emotion."
+      ],
+      "donts": [
+        "Never introduce chromatic accent colors (no red, green, blue, or purple for buttons, badges, or tags) — the system is deliberately achromatic at the UI layer.",
+        "Never use Serrif Condensed below 48px — the condensed display forms need scale to read as editorial type; small sizes collapse into illegibility.",
+        "Never use bold weights (600-700) in Saans Variable — the system relies on 300-500; authority comes from size and spacing, not weight.",
+        "Never apply drop shadows or box-shadows to cards or buttons — elevation is expressed through the gradient and surface lightness, not shadows.",
+        "Never use pure black (#000000) for body text — always #0c1018; reserve #000000 for the footer text and maximum-contrast icon strokes.",
+        "Never use border-radius below 8px on any element — flat 0px corners conflict with the pill-shaped control language.",
+        "Never use line-height above 1.4 or below 1.0 in Saans Variable — the 1.0 ceiling creates compact UI labels, the 1.4 floor handles body copy; outside this range the geometric precision breaks."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#ffffff",
+          "name": "Parchment Canvas",
+          "role": "Page backgrounds, card surfaces, inverse text on dark fills",
+          "group": "neutral"
+        },
+        {
+          "hex": "#0c1018",
+          "name": "Onyx",
+          "role": "Primary body text, headings, input text, icon fills — blue-shifted near-black replaces pure #000 across the interface",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Pure Black",
+          "role": "Footer text, heavy display accents, icon strokes — reserved for maximum weight moments",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1e1310",
+          "name": "Charred Umber",
+          "role": "Footer surface, dark contrast bands, gradient origin stop — warm dark anchors the bottom of the spectrum",
+          "group": "neutral"
+        },
+        {
+          "hex": "#6d7074",
+          "name": "Slate Veil",
+          "role": "Secondary headings, subdued labels, inactive nav — desaturated mid-gray for quiet hierarchy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#9e9fa3",
+          "name": "Ash Mist",
+          "role": "Supporting neutral for secondary UI, dividers, and muted labels.",
+          "group": "neutral"
+        },
+        {
+          "hex": "#5a769f",
+          "name": "Dawn Arc",
+          "role": "Brand signature — represents the iconic hero gradient (charred umber → steel twilight → warm parchment); used in gradient washes, atmospheric overlays, and the gradient-text reveal effect on display headlines",
+          "group": "brand",
+          "gradient": "linear-gradient(rgb(40, 14, 1) 0%, rgb(24, 38, 68) 15.2608%, rgb(90, 118, 159) 30.284%, rgb(135, 161, 196) 43.3787%, rgb(193, 211, 230) 58.8313%, rgb(254, 249, 225) 79.7139%, rgb(247, 243, 240) 100%)"
+        },
+        {
+          "hex": "#ed9454",
+          "name": "Ember Radiance",
+          "role": "Accent warmth for radial gradient highlights and hover-state glows — the golden-hour counterpoint to the cool steel-blue arc",
+          "group": "accent",
+          "gradient": "radial-gradient(75% 300% at 109.6% 147.1%, rgb(255, 230, 0) 0%, rgb(237, 148, 84) 29.5837%, rgba(153, 161, 175, 0.06) 100%)"
+        }
+      ],
+      "layout": "$19",
+      "imagery": "Imagery strategy is photography-first, always full-bleed within card boundaries with no internal padding or framing. Subject matter is botanical and organic — flower buds, stems, petals in their life-cycle stages (closed bud, opening bloom, full flower), evoking growth, transformation, and emergence. Photographs are natural-light, warm-toned, with deep shadow detail rather than high-key or studio-lit. Treatment is raw and unfiltered — no duotone, no color grading overlay, no masking effects. Photography occupies the lower 50-60% of each process card, functioning as a visual cap rather than decorative ornament. No illustration, no abstract graphics, no product screenshots visible — the studio trusts photography to carry the brand's emotional weight while typography and gradient handle atmosphere.",
+      "similar": [
+        {
+          "why": "Same condensed display serif headlines at oversized scale against atmospheric gradient backgrounds, with botanical/organic photography as emotional counterpoint to typographic authority",
+          "business": "Resn"
+        },
+        {
+          "why": "Identical editorial serif + geometric sans pairing, full-bleed gradient hero sections that dissolve into white content, and the same achromatic interface palette that lets a single gradient carry all the color",
+          "business": "Locomotive (locomotive.ca)"
+        },
+        {
+          "why": "Cinematic full-viewport gradient washes, minimal achromatic UI, and oversized condensed type that reads as magazine masthead rather than web headline",
+          "business": "Active Theory"
+        },
+        {
+          "why": "Monochrome interface discipline with one signature atmospheric element (here, the gradient), condensed display serif, and the agency-portfolio pattern of letting work photography do the emotional heavy lifting",
+          "business": "Ueno"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "16px",
+          "inputs": "50px",
+          "buttons": "50px",
+          "nav-links": "8px",
+          "buttons-pill": "90px"
+        },
+        "elementGap": "10-16px",
+        "sectionGap": "64-96px",
+        "cardPadding": "32px",
+        "pageMaxWidth": "1400px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Default page background for content sections"
+        },
+        {
+          "hex": "#7ba1c4",
+          "name": "Gradient Atmosphere",
+          "level": 1,
+          "purpose": "Full-bleed hero and transition sections — the dawn arc gradient creates spatial drama without separate surface treatments"
+        },
+        {
+          "hex": "#f5f5f5",
+          "name": "Card Surface",
+          "level": 2,
+          "purpose": "Process and content cards — whisper-light off-white that recedes against the canvas"
+        },
+        {
+          "hex": "#1e1310",
+          "name": "Dark Ground",
+          "level": 3,
+          "purpose": "Footer and dark contrast bands — the gradient's terminal stop becomes a solid surface"
+        }
+      ],
+      "northStar": "Cinematic horizon at golden hour — a single gradient arc from charred umber through steel twilight to warm parchment, against which condensed serif headlines carve like editorial mastheads.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.12
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.4,
+          "letterSpacing": -0.14
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.3,
+          "letterSpacing": -0.16
+        },
+        {
+          "role": "subheading",
+          "size": 20,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.2
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.15,
+          "letterSpacing": -0.24
+        },
+        {
+          "role": "heading",
+          "size": 32,
+          "lineHeight": 1.1,
+          "letterSpacing": -0.32
+        },
+        {
+          "role": "display",
+          "size": 64,
+          "lineHeight": 1.05,
+          "letterSpacing": -1.28
+        },
+        {
+          "role": "display-lg",
+          "size": 72,
+          "lineHeight": 1.05,
+          "letterSpacing": -1.44
+        }
+      ],
+      "components": [
+        {
+          "name": "Hero Gradient Banner",
+          "role": "Full-bleed atmospheric section",
+          "description": "Full-viewport section using the dawn arc linear gradient (charred umber at 0% through steel twilight at 30-58% to warm cream at 80-100%). Contains a Serrif Condensed display headline at 64-72px, color Onyx (#0c1018), positioned left-aligned with generous left margin. Gradient-text effect applied to the final phrase so it fades into the background."
+        },
+        {
+          "name": "Gradient-Text Reveal",
+          "role": "Display headline accent",
+          "description": "Serrif Condensed at 64-72px where a trailing phrase (e.g. 'systems,') uses a CSS mask or color fade to dissolve from #0c1018 into the gradient background, creating a 'horizon line' effect where text becomes atmosphere."
+        },
+        {
+          "name": "Pill Action Button",
+          "role": "Primary navigation/action trigger",
+          "description": "50-90px border-radius, transparent or near-white background, Saans Variable 16px weight 400-500, Onyx (#0c1018) text, 12-16px horizontal padding, 6-10px vertical padding. Ghost style — no fill, no border. Example: 'Our work' in bottom-left of hero."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Primary site navigation",
+          "description": "Minimal horizontal nav. Logo 'NEW GENRE' left in Saans Variable 14-16px weight 500 uppercase, letter-spacing 0 or slight positive. Nav items (Work, Approach, Services, News, About, Join, Contact) in Saans 14-16px weight 400, #0c1018, with a thin horizontal rule separating 'About' and 'Join' to signal a functional break. No background, no border-bottom — floats on the gradient."
+        },
+        {
+          "name": "Awwwards Side Badge",
+          "role": "Third-party accolade display",
+          "description": "Vertically rotated fixed-position tab on right edge. Black (#0c1018) background, white text in Saans Variable 12px, showing 'W.' and 'Site of the Day'. 8px radius on the visible edge."
+        },
+        {
+          "name": "Process Card",
+          "role": "Three-column service/philosophy card",
+          "description": "16px border-radius, near-white surface (#f5f5f5 or canvas with subtle border). 32px padding. Heading 'Think' / 'Create' / 'Build' in Saans Variable 24px weight 500 Onyx. Body description in Saans 16px weight 400 #6d7074. Lower portion filled with a full-bleed photograph (botanical/flower imagery) that bleeds to the card edges, creating a visual cap."
+        },
+        {
+          "name": "Text Input",
+          "role": "Form field",
+          "description": "50px border-radius (pill shape), Saans Medium 16px weight 400, transparent or white background, Onyx text, subtle border in #9e9fa3 at 1px. No visible label — placeholder-driven."
+        },
+        {
+          "name": "Cookie Consent Dialog",
+          "role": "Bottom-right compliance notice",
+          "description": "White surface, 8-16px radius, fixed bottom-right. Body text in Saans 12-14px weight 400 #0c1018. 'Okay' button: ghost style with no fill, 50px radius, Saans 14px weight 500 Onyx text."
+        },
+        {
+          "name": "Footer Dark Band",
+          "role": "Site footer",
+          "description": "Charred Umber (#1e1310) background, white text. Likely contains navigation, legal, and contact info in Saans Variable 12-16px. The footer inherits the darkest stop of the hero gradient, creating a bookend effect with the page opening."
+        }
+      ],
+      "typography": [
+        {
+          "role": "sans-serif — detected in extracted data but not described by AI",
+          "sizes": "12px",
+          "family": "sans-serif",
+          "weight": "400",
+          "lineHeight": "1.2"
+        },
+        {
+          "role": "Display headlines — only used at 64-72px for hero and section-opening statements. Condensed letterforms with negative tracking create editorial masthead weight without boldness; the 1.05 line-height lets lines stack tightly into monumental blocks. This font carries the brand's voice at maximum volume.",
+          "sizes": "64px, 72px",
+          "family": "Serrif Condensed",
+          "weight": "400",
+          "lineHeight": "1.05",
+          "substitute": "Fraunces (condensed variant) or Playfair Display SC",
+          "letterSpacing": "-0.02em"
+        },
+        {
+          "role": "Body, navigation, buttons, inputs, subheadings — the workhorse. Weight 300 whispers, 400 speaks, 500-570 emphasi zes. Variable axis allows fluid weight shifts. Tight -0.01em tracking across all sizes; line-height tightens to 1.0 for UI labels and opens to 1.4 for paragraph body.",
+          "sizes": "12px, 14px, 16px, 20px, 24px, 32px",
+          "family": "Saans Variable",
+          "weight": "300, 380, 400, 500, 570",
+          "lineHeight": "1.00–1.40",
+          "substitute": "Söhne or General Sans",
+          "letterSpacing": "-0.01em"
+        },
+        {
+          "role": "Inter — detected in extracted data but not described by AI",
+          "sizes": "12px",
+          "family": "Inter",
+          "weight": "400",
+          "lineHeight": "1.2"
+        },
+        {
+          "role": "Saans Medium — detected in extracted data but not described by AI",
+          "sizes": "16px",
+          "family": "Saans Medium",
+          "weight": "400, 570",
+          "lineHeight": "1",
+          "letterSpacing": "-0.01"
+        },
+        {
+          "role": "Saans Regular — detected in extracted data but not described by AI",
+          "sizes": "16px",
+          "family": "Saans Regular",
+          "weight": "380",
+          "lineHeight": "1.3",
+          "letterSpacing": "-0.01"
+        }
+      ],
+      "description": "New Genre operates in a cinematic dawn-to-dusk register: near-white surfaces, a near-black text color, and one monumental gradient that arcs from charred brown through steel blue to warm cream — that gradient IS the brand. Typography is a two-voice conversation between a condensed display serif (Serrif Condensed) that fills the top of every page with editorial gravity, and a low-weight geometric sans (Saans Variable) that handles everything else with quiet precision. The system is deliberately monochromatic at the interface level — no accent buttons, no chromatic badges — letting photographic work, gradient washes, and typographic contrast carry all the emotion. Components are architectural: pill-shaped controls at 50-90px radius, 16px-radius cards, hairline dividers, and barely-there elevation. Space is compact and functional, never decorative.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1a"
+        },
+        {
+          "title": "Gradient System",
+          "content": "The gradient IS the brand identity at the atmospheric level. Two canonical gradients define the system's emotional range:\n\n1. **Dawn Arc** (linear, vertical): #1e1310 → #182644 → #5a769f → #87a1c4 → #c1d3e6 → #fef9e1 → #f7f3f0. This seven-stop gradient moves from charred umber through steel twilight to warm parchment. Used for full-bleed hero sections and transition bands. The gradient can be used as a mask on images, as a background, or as a text-color fill on the final words of a display headline.\n\n2. **Ember Radiance** (radial, off-center): #ffe600 → #ed9454 → transparent gray. A warm radial glow positioned at bottom-right (109.6% 147.1%), used for hover-state atmosphere and accent warmth. Never used as a primary background — it's a highlight, not a canvas.\n\nA secondary **Fire Line** linear gradient (#1e1310 → #903c27 → #e46c44 → #ed9454) appears to be a warm complementary to the Dawn Arc, likely for hover states on dark sections or for the gradient-text effect on warm-toned pages."
+        },
+        {
+          "title": "Elevation Philosophy",
+          "content": "This system has no box-shadows. Elevation is expressed entirely through the gradient and through near-white surface lightness shifts. Cards on a white canvas are #f5f5f5 — barely a shade darker, enough to create a perceptible boundary without casting a shadow. The gradient itself provides depth in hero sections. The 'elevated' state is achieved by moving from gradient atmosphere (level 1) to white canvas (level 0) to card surface (level 2) — a lightness-based hierarchy, not a shadow-based one. Any traditional drop shadow would feel foreign here."
+        }
+      ]
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/c092cd73-7fe5-442f-9094-9e1d4ce3771a.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/b4ec9eff-cfaa-4780-9074-20b0fe96563e.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "new-genre",
+    "generatedAt": "2026-06-03T16:09:05.659Z",
+    "summary": "New Genre operates in a cinematic dawn-to-dusk register: near-white surfaces, a near-black text color, and one monumental gradient that arcs from charred brown through steel blue to warm cream — that gradient IS the brand. Typography is a two-voice conversation between a condensed display serif (Serrif Condensed) that fills the top of every page with editorial gravity, and a low-weight geometric sans (Saans Variable) that handles everything else with quiet precision. The system is deliberately monochromatic at the interface level — no accent buttons, no chromatic badges — letting photographic work, gradient washes, and typographic contrast carry all the emotion. Components are architectural: pill-shaped controls at 50-90px radius, 16px-radius cards, hairline dividers, and barely-there elevation. Space is compact and functional, never decorative.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "2318d650-b229-4be0-9adc-9f17cecfd253",
+      "sourceUrl": "https://styles.refero.design/style/2318d650-b229-4be0-9adc-9f17cecfd253",
+      "originalUrl": "https://newgenre.studio",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/c092cd73-7fe5-442f-9094-9e1d4ce3771a.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/b4ec9eff-cfaa-4780-9074-20b0fe96563e.jpg",
+      "importedAt": "2026-08-02T18:09:25.160Z",
+      "upstreamModifiedAt": "2026-06-03T16:09:05.664Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Cinematic horizon at golden hour — a single gradient arc from charred umber through steel twilight to warm parchment, against which condensed serif headlines carve like editorial mastheads.",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-parchment-canvas",
+        "kind": "color",
+        "name": "Parchment Canvas",
+        "value": "#ffffff",
+        "role": "Page backgrounds, card surfaces, inverse text on dark fills",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-onyx",
+        "kind": "color",
+        "name": "Onyx",
+        "value": "#0c1018",
+        "role": "Primary body text, headings, input text, icon fills — blue-shifted near-black replaces pure #000 across the interface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-black",
+        "kind": "color",
+        "name": "Pure Black",
+        "value": "#000000",
+        "role": "Footer text, heavy display accents, icon strokes — reserved for maximum weight moments",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charred-umber",
+        "kind": "color",
+        "name": "Charred Umber",
+        "value": "#1e1310",
+        "role": "Footer surface, dark contrast bands, gradient origin stop — warm dark anchors the bottom of the spectrum",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate-veil",
+        "kind": "color",
+        "name": "Slate Veil",
+        "value": "#6d7074",
+        "role": "Secondary headings, subdued labels, inactive nav — desaturated mid-gray for quiet hierarchy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash-mist",
+        "kind": "color",
+        "name": "Ash Mist",
+        "value": "#9e9fa3",
+        "role": "Supporting neutral for secondary UI, dividers, and muted labels.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-dawn-arc",
+        "kind": "color",
+        "name": "Dawn Arc",
+        "value": "#5a769f",
+        "role": "Brand signature — represents the iconic hero gradient (charred umber → steel twilight → warm parchment); used in gradient washes, atmospheric overlays, and the gradient-text reveal effect on display headlines",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ember-radiance",
+        "kind": "color",
+        "name": "Ember Radiance",
+        "value": "#ed9454",
+        "role": "Accent warmth for radial gradient highlights and hover-state glows — the golden-hour counterpoint to the cool steel-blue arc",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sans-serif",
+        "kind": "typography",
+        "name": "sans-serif",
+        "value": "font-family: sans-serif; font-weight: 400; font-size: 12px; line-height: 1.2",
+        "role": "sans-serif — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-serrif-condensed",
+        "kind": "typography",
+        "name": "Serrif Condensed",
+        "value": "font-family: Serrif Condensed; font-weight: 400; font-size: 64px, 72px; line-height: 1.05; letter-spacing: -0.02em",
+        "role": "Display headlines — only used at 64-72px for hero and section-opening statements. Condensed letterforms with negative tracking create editorial masthead weight without boldness; the 1.05 line-height lets lines stack tightly into monumental blocks. This font carries the brand's voice at maximum volume.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-saans-variable",
+        "kind": "typography",
+        "name": "Saans Variable",
+        "value": "font-family: Saans Variable; font-weight: 300, 380, 400, 500, 570; font-size: 12px, 14px, 16px, 20px, 24px, 32px; line-height: 1.00–1.40; letter-spacing: -0.01em",
+        "role": "Body, navigation, buttons, inputs, subheadings — the workhorse. Weight 300 whispers, 400 speaks, 500-570 emphasi zes. Variable axis allows fluid weight shifts. Tight -0.01em tracking across all sizes; line-height tightens to 1.0 for UI labels and opens to 1.4 for paragraph body.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-inter",
+        "kind": "typography",
+        "name": "Inter",
+        "value": "font-family: Inter; font-weight: 400; font-size: 12px; line-height: 1.2",
+        "role": "Inter — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-saans-medium",
+        "kind": "typography",
+        "name": "Saans Medium",
+        "value": "font-family: Saans Medium; font-weight: 400, 570; font-size: 16px; line-height: 1; letter-spacing: -0.01",
+        "role": "Saans Medium — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-saans-regular",
+        "kind": "typography",
+        "name": "Saans Regular",
+        "value": "font-family: Saans Regular; font-weight: 380; font-size: 16px; line-height: 1.3; letter-spacing: -0.01",
+        "role": "Saans Regular — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.2; letter-spacing: -0.12px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.4; letter-spacing: -0.14px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.3; letter-spacing: -0.16px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 20px; line-height: 1.2; letter-spacing: -0.2px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.15; letter-spacing: -0.24px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 32px; line-height: 1.1; letter-spacing: -0.32px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 64px; line-height: 1.05; letter-spacing: -1.28px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-lg-scale",
+        "kind": "typography",
+        "name": "display-lg",
+        "value": "font-size: 72px; line-height: 1.05; letter-spacing: -1.44px",
+        "role": "Imported display-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10-16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64-96px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "32px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1400px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "16px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "50px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "50px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-nav-links",
+        "kind": "radius",
+        "name": "nav-links",
+        "value": "8px",
+        "role": "Imported nav-links radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons-pill",
+        "kind": "radius",
+        "name": "buttons-pill",
+        "value": "90px",
+        "role": "Imported buttons-pill radius",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "hero-gradient-banner",
+        "name": "Hero Gradient Banner",
+        "category": "Refero components",
+        "description": "Full-viewport section using the dawn arc linear gradient (charred umber at 0% through steel twilight at 30-58% to warm cream at 80-100%). Contains a Serrif Condensed display headline at 64-72px, color Onyx (#0c1018), positioned left-aligned with generous left margin. Gradient-text effect applied to the final phrase so it fades into the background.",
+        "variants": [
+          {
+            "id": "hero-gradient-banner-reference",
+            "name": "Reference",
+            "description": "Full-viewport section using the dawn arc linear gradient (charred umber at 0% through steel twilight at 30-58% to warm cream at 80-100%). Contains a Serrif Condensed display headline at 64-72px, color Onyx (#0c1018), positioned left-aligned with generous left margin. Gradient-text effect applied to the final phrase so it fades into the background.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed atmospheric section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "gradient-text-reveal",
+        "name": "Gradient-Text Reveal",
+        "category": "Refero components",
+        "description": "Serrif Condensed at 64-72px where a trailing phrase (e.g. 'systems,') uses a CSS mask or color fade to dissolve from #0c1018 into the gradient background, creating a 'horizon line' effect where text becomes atmosphere.",
+        "variants": [
+          {
+            "id": "gradient-text-reveal-reference",
+            "name": "Reference",
+            "description": "Serrif Condensed at 64-72px where a trailing phrase (e.g. 'systems,') uses a CSS mask or color fade to dissolve from #0c1018 into the gradient background, creating a 'horizon line' effect where text becomes atmosphere.",
+            "evidence": [],
+            "observedProperties": [
+              "Display headline accent"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pill-action-button",
+        "name": "Pill Action Button",
+        "category": "Refero components",
+        "description": "50-90px border-radius, transparent or near-white background, Saans Variable 16px weight 400-500, Onyx (#0c1018) text, 12-16px horizontal padding, 6-10px vertical padding. Ghost style — no fill, no border. Example: 'Our work' in bottom-left of hero.",
+        "variants": [
+          {
+            "id": "pill-action-button-reference",
+            "name": "Reference",
+            "description": "50-90px border-radius, transparent or near-white background, Saans Variable 16px weight 400-500, Onyx (#0c1018) text, 12-16px horizontal padding, 6-10px vertical padding. Ghost style — no fill, no border. Example: 'Our work' in bottom-left of hero.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary navigation/action trigger"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Minimal horizontal nav. Logo 'NEW GENRE' left in Saans Variable 14-16px weight 500 uppercase, letter-spacing 0 or slight positive. Nav items (Work, Approach, Services, News, About, Join, Contact) in Saans 14-16px weight 400, #0c1018, with a thin horizontal rule separating 'About' and 'Join' to signal a functional break. No background, no border-bottom — floats on the gradient.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Minimal horizontal nav. Logo 'NEW GENRE' left in Saans Variable 14-16px weight 500 uppercase, letter-spacing 0 or slight positive. Nav items (Work, Approach, Services, News, About, Join, Contact) in Saans 14-16px weight 400, #0c1018, with a thin horizontal rule separating 'About' and 'Join' to signal a functional break. No background, no border-bottom — floats on the gradient.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "awwwards-side-badge",
+        "name": "Awwwards Side Badge",
+        "category": "Refero components",
+        "description": "Vertically rotated fixed-position tab on right edge. Black (#0c1018) background, white text in Saans Variable 12px, showing 'W.' and 'Site of the Day'. 8px radius on the visible edge.",
+        "variants": [
+          {
+            "id": "awwwards-side-badge-reference",
+            "name": "Reference",
+            "description": "Vertically rotated fixed-position tab on right edge. Black (#0c1018) background, white text in Saans Variable 12px, showing 'W.' and 'Site of the Day'. 8px radius on the visible edge.",
+            "evidence": [],
+            "observedProperties": [
+              "Third-party accolade display"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "process-card",
+        "name": "Process Card",
+        "category": "Refero components",
+        "description": "16px border-radius, near-white surface (#f5f5f5 or canvas with subtle border). 32px padding. Heading 'Think' / 'Create' / 'Build' in Saans Variable 24px weight 500 Onyx. Body description in Saans 16px weight 400 #6d7074. Lower portion filled with a full-bleed photograph (botanical/flower imagery) that bleeds to the card edges, creating a visual cap.",
+        "variants": [
+          {
+            "id": "process-card-reference",
+            "name": "Reference",
+            "description": "16px border-radius, near-white surface (#f5f5f5 or canvas with subtle border). 32px padding. Heading 'Think' / 'Create' / 'Build' in Saans Variable 24px weight 500 Onyx. Body description in Saans 16px weight 400 #6d7074. Lower portion filled with a full-bleed photograph (botanical/flower imagery) that bleeds to the card edges, creating a visual cap.",
+            "evidence": [],
+            "observedProperties": [
+              "Three-column service/philosophy card"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "text-input",
+        "name": "Text Input",
+        "category": "Refero components",
+        "description": "50px border-radius (pill shape), Saans Medium 16px weight 400, transparent or white background, Onyx text, subtle border in #9e9fa3 at 1px. No visible label — placeholder-driven.",
+        "variants": [
+          {
+            "id": "text-input-reference",
+            "name": "Reference",
+            "description": "50px border-radius (pill shape), Saans Medium 16px weight 400, transparent or white background, Onyx text, subtle border in #9e9fa3 at 1px. No visible label — placeholder-driven.",
+            "evidence": [],
+            "observedProperties": [
+              "Form field"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "cookie-consent-dialog",
+        "name": "Cookie Consent Dialog",
+        "category": "Refero components",
+        "description": "White surface, 8-16px radius, fixed bottom-right. Body text in Saans 12-14px weight 400 #0c1018. 'Okay' button: ghost style with no fill, 50px radius, Saans 14px weight 500 Onyx text.",
+        "variants": [
+          {
+            "id": "cookie-consent-dialog-reference",
+            "name": "Reference",
+            "description": "White surface, 8-16px radius, fixed bottom-right. Body text in Saans 12-14px weight 400 #0c1018. 'Okay' button: ghost style with no fill, 50px radius, Saans 14px weight 500 Onyx text.",
+            "evidence": [],
+            "observedProperties": [
+              "Bottom-right compliance notice"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer-dark-band",
+        "name": "Footer Dark Band",
+        "category": "Refero components",
+        "description": "Charred Umber (#1e1310) background, white text. Likely contains navigation, legal, and contact info in Saans Variable 12-16px. The footer inherits the darkest stop of the hero gradient, creating a bookend effect with the page opening.",
+        "variants": [
+          {
+            "id": "footer-dark-band-reference",
+            "name": "Reference",
+            "description": "Charred Umber (#1e1310) background, white text. Likely contains navigation, legal, and contact info in Saans Variable 12-16px. The footer inherits the darkest stop of the hero gradient, creating a bookend effect with the page opening.",
+            "evidence": [],
+            "observedProperties": [
+              "Site footer"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "$19",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Imagery strategy is photography-first, always full-bleed within card boundaries with no internal padding or framing. Subject matter is botanical and organic — flower buds, stems, petals in their life-cycle stages (closed bud, opening bloom, full flower), evoking growth, transformation, and emergence. Photographs are natural-light, warm-toned, with deep shadow detail rather than high-key or studio-lit. Treatment is raw and unfiltered — no duotone, no color grading overlay, no masking effects. Photography occupies the lower 50-60% of each process card, functioning as a visual cap rather than decorative ornament. No illustration, no abstract graphics, no product screenshots visible — the studio trusts photography to carry the brand's emotional weight while typography and gradient handle atmosphere.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-3",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the dawn arc gradient (#1e1310 → #182644 → #5a769f → #87a1c4 → #c1d3e6 → #fef9e1 → #f7f3f0) as a full-bleed atmospheric wash for hero and transition sections — never as a small element background.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all display headlines in Serrif Condensed at 64-72px weight 400, line-height 1.05, letter-spacing -0.02em; the condensed forms and tight tracking are the signature.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Onyx (#0c1018) for all primary text rather than pure #000000 — the blue undertone keeps the palette coherent with the gradient's steel-blue midsection.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply the gradient-text dissolve effect on the final 20-40% of display headlines so text visually transitions into the background gradient.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 50-90px border-radius for all interactive elements (buttons, inputs) to create pill shapes; 16px radius for cards; 8px for small UI elements.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain -0.01em letter-spacing on all Saans Variable text regardless of size — the slight tightening is part of the geometric precision.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the interface monochromatic; let photographic content, the gradient, and typographic contrast carry all visual emotion.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never introduce chromatic accent colors (no red, green, blue, or purple for buttons, badges, or tags) — the system is deliberately achromatic at the UI layer.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use Serrif Condensed below 48px — the condensed display forms need scale to read as editorial type; small sizes collapse into illegibility.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use bold weights (600-700) in Saans Variable — the system relies on 300-500; authority comes from size and spacing, not weight.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply drop shadows or box-shadows to cards or buttons — elevation is expressed through the gradient and surface lightness, not shadows.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use pure black (#000000) for body text — always #0c1018; reserve #000000 for the footer text and maximum-contrast icon strokes.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use border-radius below 8px on any element — flat 0px corners conflict with the pill-shaped control language.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use line-height above 1.4 or below 1.0 in Saans Variable — the 1.0 ceiling creates compact UI labels, the 1.4 floor handles body copy; outside this range the geometric precision breaks.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

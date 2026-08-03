@@ -28,7 +28,10 @@ export function SearchResultCard({
     ? item.sourcePayload.steps as Array<{ label?: string }>
     : [];
   return (
-    <article className={`advanced-search-card advanced-search-card--${item.entityType}`}>
+    <article
+      className={`advanced-search-card advanced-search-card--${item.entityType}`}
+      data-selected={selected || undefined}
+    >
       <Button
         className="advanced-search-card__preview"
         label={`Preview ${item.title}`}

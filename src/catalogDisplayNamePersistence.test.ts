@@ -21,7 +21,8 @@ test("Mobbin metadata persists a human display name separately from the route sl
     /display_name = COALESCE\(display_name, \$2\)/,
   );
   assert.match(setAppMetaSource, /meta\.displayName \?\? null/);
-  assert.doesNotMatch(setAppMetaSource, /icon_url|iconUrl/);
+  assert.match(setAppMetaSource, /icon_url = COALESCE\(icon_url, \$5\)/);
+  assert.match(setAppMetaSource, /meta\.iconUrl \?\? null/);
   assert.match(setAppMetaSource, /assignNames/);
 });
 

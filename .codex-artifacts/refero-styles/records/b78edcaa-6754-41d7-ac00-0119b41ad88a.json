@@ -1,0 +1,1631 @@
+{
+  "schemaVersion": 1,
+  "id": "b78edcaa-6754-41d7-ac00-0119b41ad88a",
+  "sourceUrl": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a",
+  "sitemapLastModified": "2026-06-03T16:53:22.262Z",
+  "fetchedAt": "2026-08-02T18:09:21.880Z",
+  "contentHash": "8abc26f4ac129ccaa68e2c6e00dda0257492b96732f181e2d21ae07766be82f7",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Syllabus design system",
+            "item": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a#style-reference",
+        "name": "Syllabus design system reference",
+        "headline": "Syllabus design system | Refero Styles",
+        "description": "Explore Syllabus's light SaaS design system: Ink Violet #0d0129, Butter Yellow #fae59b colors, Roobert, Supply typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a",
+        "mainEntityOfPage": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Syllabus",
+          "url": "https://syllabus.io"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/f0d75b8e-e4ba-4ee4-974b-22104fa7b012.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/f0d75b8e-e4ba-4ee4-974b-22104fa7b012.jpg",
+          "caption": "Screenshot of Syllabus"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/f0d75b8e-e4ba-4ee4-974b-22104fa7b012.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Syllabus design system",
+          "Syllabus website design",
+          "Syllabus colors",
+          "Syllabus typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Ink Violet",
+          "Butter Yellow",
+          "Deep Teal",
+          "Cream Paper",
+          "Roobert",
+          "Supply"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Syllabus design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Syllabus website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Syllabus colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Syllabus typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-05-07T13:50:15.862Z",
+        "dateModified": "2026-05-07T13:50:15.862Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://syllabus.io",
+      "siteName": "Syllabus",
+      "extractedAt": "2026-06-03T16:53:22.258Z",
+      "durationMs": 56904,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 518,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#0d0129",
+            "oklch": {
+              "c": 0.07964143004917063,
+              "h": 289.8882283503635,
+              "l": 0.1490474044413792
+            },
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "heading",
+              "body",
+              "image"
+            ],
+            "frequency": 697,
+            "confidence": 1,
+            "prominence": 69827133.16987312,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/color": 7,
+              "body/color": 8,
+              "link/color": 4,
+              "other/fill": 194,
+              "image/color": 2,
+              "other/color": 71,
+              "heading/color": 8,
+              "nav/borderColor": 28,
+              "body/borderColor": 32,
+              "link/borderColor": 16,
+              "image/borderColor": 8,
+              "other/borderColor": 276,
+              "heading/borderColor": 32,
+              "nav/backgroundColor": 3,
+              "other/backgroundColor": 8
+            }
+          },
+          {
+            "hex": "#fffcf7",
+            "oklch": {
+              "c": 0.007338797422375004,
+              "h": 80.7213510313479,
+              "l": 0.991986405172177
+            },
+            "contexts": [
+              "other",
+              "heading",
+              "image"
+            ],
+            "frequency": 83,
+            "confidence": 1,
+            "prominence": 46755985.734125234,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "image/color": 1,
+              "other/color": 13,
+              "heading/color": 3,
+              "image/borderColor": 4,
+              "other/borderColor": 48,
+              "heading/borderColor": 12,
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#19615c",
+            "oklch": {
+              "c": 0.06902335346212972,
+              "h": 188.20798060957767,
+              "l": 0.44832722864844815
+            },
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 17,
+            "confidence": 1,
+            "prominence": 3872609.3488394753,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "nav/color": 3,
+              "nav/borderColor": 12,
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 215,
+            "confidence": 1,
+            "prominence": 1603865.8331974484,
+            "properties": [
+              "boxShadow",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 200,
+              "other/boxShadow": 3,
+              "other/borderColor": 12
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 384188,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#fae59b",
+            "oklch": {
+              "c": 0.0956264036660018,
+              "h": 94.13994360457112,
+              "l": 0.9223753688961819
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "confidence": 1,
+            "prominence": 53863.365624507765,
+            "properties": [
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6,
+              "other/backgroundColor": 2
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.15368506013847918,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 20.52,
+            "background": "#fffcf7",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.93,
+            "background": "#ffffff",
+            "foreground": "#0d0129"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.48,
+            "background": "#fffcf7",
+            "foreground": "#0d0129"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.75,
+            "background": "#fae59b",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.9,
+            "background": "#fae59b",
+            "foreground": "#0d0129"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.23,
+            "background": "#ffffff",
+            "foreground": "#19615c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.06,
+            "background": "#19615c",
+            "foreground": "#fffcf7"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.76,
+            "background": "#fae59b",
+            "foreground": "#19615c"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.76,
+            "background": "#19615c",
+            "foreground": "#0d0129"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.23,
+            "background": "#fae59b",
+            "foreground": "#fffcf7"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.02,
+            "background": "#ffffff",
+            "foreground": "#fffcf7"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": [
+          {
+            "value": "rgb(0, 0, 0) 1px 1px 3px 0px",
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other",
+              "rowGap|other",
+              "marginBottom|heading"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other",
+              "nav",
+              "heading"
+            ],
+            "frequency": 30,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingTop|other",
+              "marginTop|heading"
+            ]
+          },
+          {
+            "value": 64,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 80,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 104,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom",
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "paddingRight|other"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 7,
+            "properties": [
+              "rowGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other"
+            ]
+          },
+          {
+            "value": 150,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Roobert",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 112,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Supply",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 16,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "image"
+            ],
+            "frequency": 72,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "capitalize"
+          },
+          {
+            "size": 20,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "capitalize"
+          },
+          {
+            "size": 20,
+            "family": "Supply",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 20,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 3,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.67,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 48,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.27,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.27,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "Roobert",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Set page background to #fffcf7 — never use pure #ffffff as the canvas, the warm cream is the system's identity",
+        "Use #fae59b with the 1px 1px 3px #000000 hard-offset shadow for every primary in-page CTA — the shadow is non-negotiable, it creates the pressable sticker effect",
+        "Use the Roobert 700 / 400 weight pair at the 16→20→24→40→48→56→64px scale jumps — do not interpolate intermediate sizes, the jumps are the hierarchy",
+        "Outline cards and illustration containers with exactly 1px solid #0d0129 — no rounded corners (radius 0), no drop shadows",
+        "Switch section backgrounds to #19615c and text to #fffcf7 when a section needs tonal contrast — keep the switch full-bleed, not boxed",
+        "Use #fae59b for small interactive accents (dot decorations, illustration highlights) at 4–8px size — never as a large fill or background wash",
+        "Keep illustration strokes between 1–1.5px in #0d0129 and let selective yellow/teal fills do the color work — never add gradients or realistic shading to illustrations"
+      ],
+      "donts": [
+        "Don't use #ffffff as the page background — the cream #fffcf7 canvas is the signature; pure white flattens the entire system",
+        "Don't apply border-radius to buttons, cards, tags, or inputs — every container in this system is sharp-cornered (radius: 0)",
+        "Don't use soft, blurred, or multi-layer drop shadows — the only shadow is the 1px hard-offset black on yellow buttons",
+        "Don't use #0d0129 as a filled CTA button background on the cream canvas — the yellow button is the in-page CTA; violet-filled buttons are reserved for the nav",
+        "Don't introduce additional typefaces, weights between 400 and 700, or font sizes outside the 16–64px scale — the type system is deliberately narrow",
+        "Don't use photography, 3D renders, or realistic product mockups — all imagery is flat line-art with selective color fills",
+        "Don't use gradients of any kind — the system is entirely flat color, including illustrations and buttons"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#0d0129",
+          "name": "Ink Violet",
+          "role": "Violet accent for outlined action borders, linked labels, and lightweight interactive emphasis. Do not promote it to the primary CTA color",
+          "group": "brand"
+        },
+        {
+          "hex": "#fae59b",
+          "name": "Butter Yellow",
+          "role": "Yellow wash for highlight backgrounds, decorative bands, and soft emphasis behind content. Do not promote it to the primary CTA color",
+          "group": "brand"
+        },
+        {
+          "hex": "#19615c",
+          "name": "Deep Teal",
+          "role": "Dark section backgrounds for contrasting content blocks and nav text. Used as a full-bleed band color when a section needs to shift away from the cream canvas into a more saturated, grounded tone",
+          "group": "brand"
+        },
+        {
+          "hex": "#fffcf7",
+          "name": "Cream Paper",
+          "role": "Primary page canvas and card surface — replaces the default pure white. The slight warm tint is the most distinctive choice in the system; it makes the violet ink and yellow accent feel intentional rather than stark",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "role": "Inset card surfaces and elevated panels layered over the cream canvas. Used when a component needs to feel lifted off the paper without introducing a tint",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Shadow Black",
+          "role": "Hard-offset button shadow color and SVG illustration fills. Never used as text or large surface — only as the 1–3px offset shadow behind Butter Yellow buttons and as fill on line-art elements that need maximum contrast",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Max-width 1200px centered container, with horizontal padding of 80–150px at large breakpoints. The hero is a two-column split: left side holds the headline, body text, and a single Butter Yellow CTA; right side contains a layered line-art illustration with overlapping mock elements that break the right edge. Sections stack vertically with 120px gaps, alternating between cream-canvas and full-bleed teal sections. Teal sections use a two-column body layout (supporting text left, product pitch right) with a smaller line-art illustration above. The navigation is a minimal top bar: logo left, two ghost links and one solid Ink Violet CTA right, no mega-menu, no sidebar. The overall rhythm is editorial-magazine: generous vertical space, large type, and one illustration per major section rather than a scroll of dense visuals.",
+      "imagery": "All visuals are flat line-art illustrations, not photography. The illustration system uses 1–1.5px Ink Violet strokes on white or cream fills, with selective Butter Yellow and Deep Teal color fills for highlights and data elements. Illustrations depict abstract product interfaces — browser windows, document outlines, bar charts, pie charts, workflow nodes — rendered as schematic wireframes rather than realistic mockups. The aesthetic is blueprint-meets-editorial: confident geometry, no shadows, no gradients, no 3D. Illustrations often overlap and break container boundaries to create layered compositions. No photography or product photography appears anywhere; the visual world is 100% drawn. Icon style within illustrations: outlined, thin stroke, monochrome Ink Violet with occasional yellow accent.",
+      "similar": [
+        {
+          "why": "Same sharp-cornered 0px-radius cards, thin 1px borders for structural definition, and custom geometric sans-serif typography carrying the brand voice",
+          "business": "Linear"
+        },
+        {
+          "why": "Same editorial-meets-product feel with flat line-art illustrations, warm off-white surfaces, and a single accent color used sparingly for interactive elements",
+          "business": "Notion"
+        },
+        {
+          "why": "Same cream-paper canvas treatment, large confident display headlines in a custom geometric sans, and flat schematic-style illustrations in place of product photography",
+          "business": "Pitch"
+        },
+        {
+          "why": "Same commitment to a warm non-white canvas, hard-offset shadows on interactive elements, and a near-black brand color that reads as black but carries a subtle chromatic undertone",
+          "business": "Arc"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "0px",
+          "cards": "0px",
+          "inputs": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "24px",
+        "sectionGap": "120px",
+        "cardPadding": "40px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "saas",
+      "surfaces": [
+        {
+          "hex": "#fffcf7",
+          "name": "Cream Canvas",
+          "level": 0,
+          "purpose": "Base page background — warm off-white that replaces pure white throughout the site"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "White Card",
+          "level": 1,
+          "purpose": "Inset card and panel surfaces layered over the cream canvas for quiet elevation"
+        },
+        {
+          "hex": "#19615c",
+          "name": "Teal Block",
+          "level": 2,
+          "purpose": "Full-bleed dark section backgrounds when content needs a tonal shift"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "1px 1px 3px 0px #000000",
+          "element": "Butter Yellow CTA Button"
+        }
+      ],
+      "northStar": "cream-paper magazine meets geometric sans-serif. Warm off-white surfaces, near-black violet ink, and one buttery yellow accent that functions as the page's only raised voice — like a sticky note pressed onto fine stationery.",
+      "typeScale": [
+        {
+          "role": "body-sm",
+          "size": 16,
+          "lineHeight": 1.6
+        },
+        {
+          "role": "body",
+          "size": 20,
+          "lineHeight": 1.6
+        },
+        {
+          "role": "subheading",
+          "size": 24,
+          "lineHeight": 1.4
+        },
+        {
+          "role": "heading-sm",
+          "size": 40,
+          "lineHeight": 1.27
+        },
+        {
+          "role": "heading",
+          "size": 48,
+          "lineHeight": 1.25
+        },
+        {
+          "role": "heading-lg",
+          "size": 56,
+          "lineHeight": 1.25
+        },
+        {
+          "role": "display",
+          "size": 64,
+          "lineHeight": 1.25
+        }
+      ],
+      "components": [
+        {
+          "name": "Primary CTA Button (Butter Yellow)",
+          "role": "The signature action button for in-page conversions",
+          "description": "Fill: #fae59b. Border: 1px solid #0d0129. Text: 'JOIN WAITLIST' in Roobert 700, uppercase, tracked, ~14–16px, color #0d0129. Padding: ~16px 32px. Box-shadow: 1px 1px 3px 0px #000000 (hard offset, not soft). Radius: 0px (sharp corners). The shadow offset and 1px border combine to make the button feel like a physical sticker pressed onto the cream surface."
+        },
+        {
+          "name": "Navigation CTA Button (Ink Violet)",
+          "role": "Top-bar 'Join Waitlist' button in the header",
+          "description": "Fill: #0d0129. Text: 'Join Waitlist' in Roobert 700, white or cream, ~16px. Padding: ~10px 20px. Radius: 0px. No shadow. Reads as a solid, confident block against the cream nav — the inverse of the yellow in-page button."
+        },
+        {
+          "name": "Ghost Nav Link",
+          "role": "Standard navigation text links ('Request a Demo', 'Log In')",
+          "description": "No background, no border. Text: Roobert 400, ~16px, color #0d0129. Hover state likely darkens or underlines. Sits flush left/right in the nav bar with the solid CTA button at the far end."
+        },
+        {
+          "name": "Cream Card",
+          "role": "Content blocks and feature containers on the cream canvas",
+          "description": "Background: #fffcf7 (matches canvas, so cards are defined by border alone) or #ffffff for lifted panels. Border: 1px solid #0d0129. Radius: 0px. Padding: 40px. The 1px Ink Violet border is the primary structural device — it outlines content blocks like a print frame."
+        },
+        {
+          "name": "Teal Section Block",
+          "role": "Full-bleed dark section that shifts the page from cream to teal",
+          "description": "Background: #19615c. Text: #fffcf7 (cream) for headlines and body. Yellow (#fae59b) used for accent dots, illustration highlights, and small labels inside the block. Typically used for problem-statement or contrast sections. Padding: 64–80px vertical, 80–150px horizontal."
+        },
+        {
+          "name": "Hero Headline",
+          "role": "Primary page-level display text",
+          "description": "Roobert 700, 48–64px, line-height 1.25, color #0d0129. Sentence-case or title-case depending on context. The headline is the largest typographic event on any page; no decorative elements precede or follow it — pure type on cream."
+        },
+        {
+          "name": "Body Paragraph",
+          "role": "Standard descriptive text in hero, sections, and feature descriptions",
+          "description": "Roobert 400, 20px, line-height 1.6, color #0d0129. On teal sections, color shifts to #fffcf7. Maximum measure should stay around 60–70 characters for readability."
+        },
+        {
+          "name": "Line-Art Illustration Panel",
+          "role": "Decorative and explanatory graphics (dashboard mocks, workflow diagrams, data charts)",
+          "description": "Stroke: 1–1.5px #0d0129 lines on #fffcf7 or #ffffff fills. Selective color fills: #fae59b for highlighted areas, #19615c for secondary elements. No gradients, no shadows. Illustrations are flat, geometric, and read as schematic diagrams — wireframe quality, not polished marketing renders."
+        },
+        {
+          "name": "Illustration Container Card",
+          "role": "Outlined frame wrapping a complex illustration in the hero or feature sections",
+          "description": "Background: #ffffff. Border: 1px solid #0d0129. Radius: 0px. Contains overlapping illustration elements (browser mock, document, chart) that visually break past the card edges to suggest depth — a flat-design 'isometric explosion' pattern."
+        },
+        {
+          "name": "Accent Dot",
+          "role": "Small decorative marks within illustrations and diagrams",
+          "description": "Circles ~4–8px diameter, fill #fae59b. Scattered around line-art illustrations to add visual interest and guide the eye. On teal sections, they may also appear as #fffcf7 dots."
+        },
+        {
+          "name": "Teal Section Heading",
+          "role": "Headlines within dark teal content blocks",
+          "description": "Roobert 700, 40–48px, line-height 1.27, color #fffcf7. Two-column body layout below: one column is supporting text, the other is the product value proposition — both in cream on teal."
+        }
+      ],
+      "typography": [
+        {
+          "role": "The sole typeface across the system. Weight 700 reserved for display headlines and button labels; weight 400 for body, nav, and subheadings. The custom geometric forms give the cream-paper palette its modern editorial backbone — a system font would flatten the identity.",
+          "sizes": "16, 20, 24, 40, 48, 56, 64",
+          "family": "Roobert",
+          "weight": "400, 700",
+          "lineHeight": "1.25–2.0 (tight for display, generous for body)",
+          "substitute": "Inter, Söhne, General Sans",
+          "letterSpacing": "normal at all sizes; the wide size jumps carry visual hierarchy instead of tracking"
+        },
+        {
+          "role": "Secondary use at 20px body size for supporting paragraphs in illustration-adjacent contexts. The monospace-adjacent quality suggests a technical or data-oriented voice; treat it as a sparing accent, not a co-equal voice.",
+          "sizes": "20",
+          "family": "Supply",
+          "weight": "400",
+          "lineHeight": "1.60",
+          "substitute": "JetBrains Mono, IBM Plex Mono"
+        }
+      ],
+      "description": "Syllabus operates as a warm, editorial-tech environment: a cream paper-like canvas with deep violet as the near-black structural color, punctuated by buttery yellow interactive surfaces and teal section blocks. The aesthetic reads like a premium print magazine reinterpreted as a product — flat illustrations with selective color fills, generous vertical breathing room, and confident oversized headlines. Typography is restrained to one custom geometric sans (Roobert) that carries personality through scale jumps rather than weight contrast. The single signature trick: yellow CTA buttons with a hard offset shadow, turning every action into a physical, pressable artifact against the cream.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The system deliberately avoids soft, layered drop shadows. The only shadow in the design is a hard 1px offset black shadow behind yellow CTA buttons, creating a printed/letterpress effect. All other elevation is achieved through surface color contrast (cream → white → teal) and 1px Ink Violet borders on cards and illustration containers. This is a flat, editorial design language — shadows would soften the printed-paper feel."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/268ddcba-e855-4a7e-a7ad-40fd83a3ca03.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/f0d75b8e-e4ba-4ee4-974b-22104fa7b012.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "syllabus",
+    "generatedAt": "2026-06-03T16:53:22.258Z",
+    "summary": "Syllabus operates as a warm, editorial-tech environment: a cream paper-like canvas with deep violet as the near-black structural color, punctuated by buttery yellow interactive surfaces and teal section blocks. The aesthetic reads like a premium print magazine reinterpreted as a product — flat illustrations with selective color fills, generous vertical breathing room, and confident oversized headlines. Typography is restrained to one custom geometric sans (Roobert) that carries personality through scale jumps rather than weight contrast. The single signature trick: yellow CTA buttons with a hard offset shadow, turning every action into a physical, pressable artifact against the cream.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "b78edcaa-6754-41d7-ac00-0119b41ad88a",
+      "sourceUrl": "https://styles.refero.design/style/b78edcaa-6754-41d7-ac00-0119b41ad88a",
+      "originalUrl": "https://syllabus.io",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/268ddcba-e855-4a7e-a7ad-40fd83a3ca03.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/f0d75b8e-e4ba-4ee4-974b-22104fa7b012.jpg",
+      "importedAt": "2026-08-02T18:09:21.880Z",
+      "upstreamModifiedAt": "2026-06-03T16:53:22.262Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "cream-paper magazine meets geometric sans-serif. Warm off-white surfaces, near-black violet ink, and one buttery yellow accent that functions as the page's only raised voice — like a sticky note pressed onto fine stationery.",
+      "industry": "saas"
+    },
+    "tokens": [
+      {
+        "id": "color-ink-violet",
+        "kind": "color",
+        "name": "Ink Violet",
+        "value": "#0d0129",
+        "role": "Violet accent for outlined action borders, linked labels, and lightweight interactive emphasis. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-butter-yellow",
+        "kind": "color",
+        "name": "Butter Yellow",
+        "value": "#fae59b",
+        "role": "Yellow wash for highlight backgrounds, decorative bands, and soft emphasis behind content. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-teal",
+        "kind": "color",
+        "name": "Deep Teal",
+        "value": "#19615c",
+        "role": "Dark section backgrounds for contrasting content blocks and nav text. Used as a full-bleed band color when a section needs to shift away from the cream canvas into a more saturated, grounded tone",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-cream-paper",
+        "kind": "color",
+        "name": "Cream Paper",
+        "value": "#fffcf7",
+        "role": "Primary page canvas and card surface — replaces the default pure white. The slight warm tint is the most distinctive choice in the system; it makes the violet ink and yellow accent feel intentional rather than stark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-white",
+        "kind": "color",
+        "name": "Pure White",
+        "value": "#ffffff",
+        "role": "Inset card surfaces and elevated panels layered over the cream canvas. Used when a component needs to feel lifted off the paper without introducing a tint",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-shadow-black",
+        "kind": "color",
+        "name": "Shadow Black",
+        "value": "#000000",
+        "role": "Hard-offset button shadow color and SVG illustration fills. Never used as text or large surface — only as the 1–3px offset shadow behind Butter Yellow buttons and as fill on line-art elements that need maximum contrast",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-roobert",
+        "kind": "typography",
+        "name": "Roobert",
+        "value": "font-family: Roobert; font-weight: 400, 700; font-size: 16, 20, 24, 40, 48, 56, 64; line-height: 1.25–2.0 (tight for display, generous for body); letter-spacing: normal at all sizes; the wide size jumps carry visual hierarchy instead of tracking",
+        "role": "The sole typeface across the system. Weight 700 reserved for display headlines and button labels; weight 400 for body, nav, and subheadings. The custom geometric forms give the cream-paper palette its modern editorial backbone — a system font would flatten the identity.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-supply",
+        "kind": "typography",
+        "name": "Supply",
+        "value": "font-family: Supply; font-weight: 400; font-size: 20; line-height: 1.60",
+        "role": "Secondary use at 20px body size for supporting paragraphs in illustration-adjacent contexts. The monospace-adjacent quality suggests a technical or data-oriented voice; treat it as a sparing accent, not a co-equal voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 16px; line-height: 1.6",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 20px; line-height: 1.6",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 24px; line-height: 1.4",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 40px; line-height: 1.27",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 48px; line-height: 1.25",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 56px; line-height: 1.25",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 64px; line-height: 1.25",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "24px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "40px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "0px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system deliberately avoids soft, layered drop shadows. The only shadow in the design is a hard 1px offset black shadow behind yellow CTA buttons, creating a printed/letterpress effect. All other elevation is achieved through surface color contrast (cream → white → teal) and 1px Ink Violet borders on cards and illustration containers. This is a flat, editorial design language — shadows would soften the printed-paper feel.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "primary-cta-button-butter-yellow",
+        "name": "Primary CTA Button (Butter Yellow)",
+        "category": "Refero components",
+        "description": "Fill: #fae59b. Border: 1px solid #0d0129. Text: 'JOIN WAITLIST' in Roobert 700, uppercase, tracked, ~14–16px, color #0d0129. Padding: ~16px 32px. Box-shadow: 1px 1px 3px 0px #000000 (hard offset, not soft). Radius: 0px (sharp corners). The shadow offset and 1px border combine to make the button feel like a physical sticker pressed onto the cream surface.",
+        "variants": [
+          {
+            "id": "primary-cta-button-butter-yellow-reference",
+            "name": "Reference",
+            "description": "Fill: #fae59b. Border: 1px solid #0d0129. Text: 'JOIN WAITLIST' in Roobert 700, uppercase, tracked, ~14–16px, color #0d0129. Padding: ~16px 32px. Box-shadow: 1px 1px 3px 0px #000000 (hard offset, not soft). Radius: 0px (sharp corners). The shadow offset and 1px border combine to make the button feel like a physical sticker pressed onto the cream surface.",
+            "evidence": [],
+            "observedProperties": [
+              "The signature action button for in-page conversions"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "navigation-cta-button-ink-violet",
+        "name": "Navigation CTA Button (Ink Violet)",
+        "category": "Refero components",
+        "description": "Fill: #0d0129. Text: 'Join Waitlist' in Roobert 700, white or cream, ~16px. Padding: ~10px 20px. Radius: 0px. No shadow. Reads as a solid, confident block against the cream nav — the inverse of the yellow in-page button.",
+        "variants": [
+          {
+            "id": "navigation-cta-button-ink-violet-reference",
+            "name": "Reference",
+            "description": "Fill: #0d0129. Text: 'Join Waitlist' in Roobert 700, white or cream, ~16px. Padding: ~10px 20px. Radius: 0px. No shadow. Reads as a solid, confident block against the cream nav — the inverse of the yellow in-page button.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-bar 'Join Waitlist' button in the header"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-nav-link",
+        "name": "Ghost Nav Link",
+        "category": "Refero components",
+        "description": "No background, no border. Text: Roobert 400, ~16px, color #0d0129. Hover state likely darkens or underlines. Sits flush left/right in the nav bar with the solid CTA button at the far end.",
+        "variants": [
+          {
+            "id": "ghost-nav-link-reference",
+            "name": "Reference",
+            "description": "No background, no border. Text: Roobert 400, ~16px, color #0d0129. Hover state likely darkens or underlines. Sits flush left/right in the nav bar with the solid CTA button at the far end.",
+            "evidence": [],
+            "observedProperties": [
+              "Standard navigation text links ('Request a Demo', 'Log In')"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "cream-card",
+        "name": "Cream Card",
+        "category": "Refero components",
+        "description": "Background: #fffcf7 (matches canvas, so cards are defined by border alone) or #ffffff for lifted panels. Border: 1px solid #0d0129. Radius: 0px. Padding: 40px. The 1px Ink Violet border is the primary structural device — it outlines content blocks like a print frame.",
+        "variants": [
+          {
+            "id": "cream-card-reference",
+            "name": "Reference",
+            "description": "Background: #fffcf7 (matches canvas, so cards are defined by border alone) or #ffffff for lifted panels. Border: 1px solid #0d0129. Radius: 0px. Padding: 40px. The 1px Ink Violet border is the primary structural device — it outlines content blocks like a print frame.",
+            "evidence": [],
+            "observedProperties": [
+              "Content blocks and feature containers on the cream canvas"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "teal-section-block",
+        "name": "Teal Section Block",
+        "category": "Refero components",
+        "description": "Background: #19615c. Text: #fffcf7 (cream) for headlines and body. Yellow (#fae59b) used for accent dots, illustration highlights, and small labels inside the block. Typically used for problem-statement or contrast sections. Padding: 64–80px vertical, 80–150px horizontal.",
+        "variants": [
+          {
+            "id": "teal-section-block-reference",
+            "name": "Reference",
+            "description": "Background: #19615c. Text: #fffcf7 (cream) for headlines and body. Yellow (#fae59b) used for accent dots, illustration highlights, and small labels inside the block. Typically used for problem-statement or contrast sections. Padding: 64–80px vertical, 80–150px horizontal.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed dark section that shifts the page from cream to teal"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-headline",
+        "name": "Hero Headline",
+        "category": "Refero components",
+        "description": "Roobert 700, 48–64px, line-height 1.25, color #0d0129. Sentence-case or title-case depending on context. The headline is the largest typographic event on any page; no decorative elements precede or follow it — pure type on cream.",
+        "variants": [
+          {
+            "id": "hero-headline-reference",
+            "name": "Reference",
+            "description": "Roobert 700, 48–64px, line-height 1.25, color #0d0129. Sentence-case or title-case depending on context. The headline is the largest typographic event on any page; no decorative elements precede or follow it — pure type on cream.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary page-level display text"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "body-paragraph",
+        "name": "Body Paragraph",
+        "category": "Refero components",
+        "description": "Roobert 400, 20px, line-height 1.6, color #0d0129. On teal sections, color shifts to #fffcf7. Maximum measure should stay around 60–70 characters for readability.",
+        "variants": [
+          {
+            "id": "body-paragraph-reference",
+            "name": "Reference",
+            "description": "Roobert 400, 20px, line-height 1.6, color #0d0129. On teal sections, color shifts to #fffcf7. Maximum measure should stay around 60–70 characters for readability.",
+            "evidence": [],
+            "observedProperties": [
+              "Standard descriptive text in hero, sections, and feature descriptions"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "line-art-illustration-panel",
+        "name": "Line-Art Illustration Panel",
+        "category": "Refero components",
+        "description": "Stroke: 1–1.5px #0d0129 lines on #fffcf7 or #ffffff fills. Selective color fills: #fae59b for highlighted areas, #19615c for secondary elements. No gradients, no shadows. Illustrations are flat, geometric, and read as schematic diagrams — wireframe quality, not polished marketing renders.",
+        "variants": [
+          {
+            "id": "line-art-illustration-panel-reference",
+            "name": "Reference",
+            "description": "Stroke: 1–1.5px #0d0129 lines on #fffcf7 or #ffffff fills. Selective color fills: #fae59b for highlighted areas, #19615c for secondary elements. No gradients, no shadows. Illustrations are flat, geometric, and read as schematic diagrams — wireframe quality, not polished marketing renders.",
+            "evidence": [],
+            "observedProperties": [
+              "Decorative and explanatory graphics (dashboard mocks, workflow diagrams, data charts)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "illustration-container-card",
+        "name": "Illustration Container Card",
+        "category": "Refero components",
+        "description": "Background: #ffffff. Border: 1px solid #0d0129. Radius: 0px. Contains overlapping illustration elements (browser mock, document, chart) that visually break past the card edges to suggest depth — a flat-design 'isometric explosion' pattern.",
+        "variants": [
+          {
+            "id": "illustration-container-card-reference",
+            "name": "Reference",
+            "description": "Background: #ffffff. Border: 1px solid #0d0129. Radius: 0px. Contains overlapping illustration elements (browser mock, document, chart) that visually break past the card edges to suggest depth — a flat-design 'isometric explosion' pattern.",
+            "evidence": [],
+            "observedProperties": [
+              "Outlined frame wrapping a complex illustration in the hero or feature sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "accent-dot",
+        "name": "Accent Dot",
+        "category": "Refero components",
+        "description": "Circles ~4–8px diameter, fill #fae59b. Scattered around line-art illustrations to add visual interest and guide the eye. On teal sections, they may also appear as #fffcf7 dots.",
+        "variants": [
+          {
+            "id": "accent-dot-reference",
+            "name": "Reference",
+            "description": "Circles ~4–8px diameter, fill #fae59b. Scattered around line-art illustrations to add visual interest and guide the eye. On teal sections, they may also appear as #fffcf7 dots.",
+            "evidence": [],
+            "observedProperties": [
+              "Small decorative marks within illustrations and diagrams"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "teal-section-heading",
+        "name": "Teal Section Heading",
+        "category": "Refero components",
+        "description": "Roobert 700, 40–48px, line-height 1.27, color #fffcf7. Two-column body layout below: one column is supporting text, the other is the product value proposition — both in cream on teal.",
+        "variants": [
+          {
+            "id": "teal-section-heading-reference",
+            "name": "Reference",
+            "description": "Roobert 700, 40–48px, line-height 1.27, color #fffcf7. Two-column body layout below: one column is supporting text, the other is the product value proposition — both in cream on teal.",
+            "evidence": [],
+            "observedProperties": [
+              "Headlines within dark teal content blocks"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width 1200px centered container, with horizontal padding of 80–150px at large breakpoints. The hero is a two-column split: left side holds the headline, body text, and a single Butter Yellow CTA; right side contains a layered line-art illustration with overlapping mock elements that break the right edge. Sections stack vertically with 120px gaps, alternating between cream-canvas and full-bleed teal sections. Teal sections use a two-column body layout (supporting text left, product pitch right) with a smaller line-art illustration above. The navigation is a minimal top bar: logo left, two ghost links and one solid Ink Violet CTA right, no mega-menu, no sidebar. The overall rhythm is editorial-magazine: generous vertical space, large type, and one illustration per major section rather than a scroll of dense visuals.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "All visuals are flat line-art illustrations, not photography. The illustration system uses 1–1.5px Ink Violet strokes on white or cream fills, with selective Butter Yellow and Deep Teal color fills for highlights and data elements. Illustrations depict abstract product interfaces — browser windows, document outlines, bar charts, pie charts, workflow nodes — rendered as schematic wireframes rather than realistic mockups. The aesthetic is blueprint-meets-editorial: confident geometry, no shadows, no gradients, no 3D. Illustrations often overlap and break container boundaries to create layered compositions. No photography or product photography appears anywhere; the visual world is 100% drawn. Icon style within illustrations: outlined, thin stroke, monochrome Ink Violet with occasional yellow accent.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system deliberately avoids soft, layered drop shadows. The only shadow in the design is a hard 1px offset black shadow behind yellow CTA buttons, creating a printed/letterpress effect. All other elevation is achieved through surface color contrast (cream → white → teal) and 1px Ink Violet borders on cards and illustration containers. This is a flat, editorial design language — shadows would soften the printed-paper feel.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set page background to #fffcf7 — never use pure #ffffff as the canvas, the warm cream is the system's identity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #fae59b with the 1px 1px 3px #000000 hard-offset shadow for every primary in-page CTA — the shadow is non-negotiable, it creates the pressable sticker effect",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the Roobert 700 / 400 weight pair at the 16→20→24→40→48→56→64px scale jumps — do not interpolate intermediate sizes, the jumps are the hierarchy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Outline cards and illustration containers with exactly 1px solid #0d0129 — no rounded corners (radius 0), no drop shadows",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Switch section backgrounds to #19615c and text to #fffcf7 when a section needs tonal contrast — keep the switch full-bleed, not boxed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #fae59b for small interactive accents (dot decorations, illustration highlights) at 4–8px size — never as a large fill or background wash",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep illustration strokes between 1–1.5px in #0d0129 and let selective yellow/teal fills do the color work — never add gradients or realistic shading to illustrations",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use #ffffff as the page background — the cream #fffcf7 canvas is the signature; pure white flattens the entire system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't apply border-radius to buttons, cards, tags, or inputs — every container in this system is sharp-cornered (radius: 0)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use soft, blurred, or multi-layer drop shadows — the only shadow is the 1px hard-offset black on yellow buttons",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use #0d0129 as a filled CTA button background on the cream canvas — the yellow button is the in-page CTA; violet-filled buttons are reserved for the nav",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce additional typefaces, weights between 400 and 700, or font sizes outside the 16–64px scale — the type system is deliberately narrow",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use photography, 3D renders, or realistic product mockups — all imagery is flat line-art with selective color fills",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use gradients of any kind — the system is entirely flat color, including illustrations and buttons",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

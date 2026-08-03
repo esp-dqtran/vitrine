@@ -1,0 +1,2456 @@
+{
+  "schemaVersion": 1,
+  "id": "fabacd2a-acb6-46c4-939c-4a464df15440",
+  "sourceUrl": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440",
+  "sitemapLastModified": "2026-06-03T18:06:00.779Z",
+  "fetchedAt": "2026-08-02T18:09:11.051Z",
+  "contentHash": "b7db953988c6174ca251417db20f745c522cdcbe1fda085af66197a7283b46be",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Aboard design system",
+            "item": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440#style-reference",
+        "name": "Aboard design system reference",
+        "headline": "Aboard design system | Refero Styles",
+        "description": "Explore Aboard's light SaaS design system: Canvas #fafafa, Pure White #ffffff colors, system-ui, sans-serif typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440",
+        "mainEntityOfPage": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Aboard",
+          "url": "https://aboardhr.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/7492c57b-b907-49c4-b4bb-e2c067861cfe.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/7492c57b-b907-49c4-b4bb-e2c067861cfe.jpg",
+          "caption": "Screenshot of Aboard"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/7492c57b-b907-49c4-b4bb-e2c067861cfe.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Aboard design system",
+          "Aboard website design",
+          "Aboard colors",
+          "Aboard typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Canvas",
+          "Pure White",
+          "Ink",
+          "Graphite",
+          "system-ui",
+          "sans-serif"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Aboard design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Aboard website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Aboard colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Aboard typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-04-30T00:53:07.055Z",
+        "dateModified": "2026-04-30T00:53:07.055Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://aboardhr.com",
+      "siteName": "Aboard",
+      "extractedAt": "2026-06-03T18:06:00.772Z",
+      "durationMs": 45492,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 521,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "nav",
+              "icon",
+              "heading",
+              "card",
+              "image"
+            ],
+            "frequency": 1525,
+            "confidence": 1,
+            "prominence": 110358892.97587463,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "nav/fill": 3,
+              "icon/fill": 36,
+              "nav/color": 16,
+              "card/color": 5,
+              "icon/color": 17,
+              "other/fill": 51,
+              "image/color": 7,
+              "other/color": 240,
+              "heading/color": 2,
+              "nav/borderColor": 64,
+              "card/borderColor": 20,
+              "icon/borderColor": 68,
+              "image/borderColor": 28,
+              "other/borderColor": 960,
+              "heading/borderColor": 8
+            }
+          },
+          {
+            "hex": "#fafafa",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9851036517304731
+            },
+            "contexts": [
+              "other",
+              "body",
+              "heading"
+            ],
+            "frequency": 21,
+            "confidence": 1,
+            "prominence": 46535493.391670935,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 2,
+              "other/fill": 3,
+              "heading/color": 1,
+              "body/borderColor": 8,
+              "heading/borderColor": 4,
+              "other/backgroundColor": 3
+            }
+          },
+          {
+            "hex": "#cdcdcd",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.8483222133157919
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "confidence": 1,
+            "prominence": 1810172.9923736267,
+            "properties": [
+              "boxShadow"
+            ],
+            "usageCounts": {
+              "other/boxShadow": 8
+            }
+          },
+          {
+            "hex": "#fbcfe8",
+            "oklch": {
+              "c": 0.05922517475473405,
+              "h": 343.12571140399973,
+              "l": 0.8986356561576819
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1058052,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#262626",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.26861827698438745
+            },
+            "contexts": [
+              "heading",
+              "body",
+              "other",
+              "image"
+            ],
+            "frequency": 228,
+            "confidence": 1,
+            "prominence": 775744.0892587092,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 23,
+              "other/fill": 28,
+              "image/color": 1,
+              "other/color": 2,
+              "heading/color": 14,
+              "body/borderColor": 92,
+              "image/borderColor": 4,
+              "other/borderColor": 8,
+              "heading/borderColor": 56
+            }
+          },
+          {
+            "hex": "#e6dafd",
+            "oklch": {
+              "c": 0.04869548904375078,
+              "h": 301.2698883385274,
+              "l": 0.9087520380665459
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 661072,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#b6edee",
+            "oklch": {
+              "c": 0.05605611459625959,
+              "h": 197.47771023622312,
+              "l": 0.909419471312156
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 661072,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#757577",
+            "oklch": {
+              "c": 0.0031914012840625946,
+              "h": 286.2966975841623,
+              "l": 0.5630860769021288
+            },
+            "contexts": [
+              "nav",
+              "body",
+              "heading",
+              "other",
+              "link"
+            ],
+            "frequency": 158,
+            "confidence": 1,
+            "prominence": 477384.99932096276,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "nav/color": 4,
+              "body/color": 19,
+              "link/color": 6,
+              "other/fill": 2,
+              "heading/color": 2,
+              "nav/borderColor": 16,
+              "body/borderColor": 76,
+              "link/borderColor": 24,
+              "heading/borderColor": 8,
+              "body/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#afe4ff",
+            "oklch": {
+              "c": 0.06594605985538186,
+              "h": 230.31350734459411,
+              "l": 0.8924658039968976
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 295120,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ffe77a",
+            "oklch": {
+              "c": 0.13218416986198936,
+              "h": 96.08636295375993,
+              "l": 0.9281756071023308
+            },
+            "contexts": [
+              "card"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 295120,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "card/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#aeaeaf",
+            "oklch": {
+              "c": 0.001695361685944077,
+              "h": 286.35873396270017,
+              "l": 0.7511842296426652
+            },
+            "contexts": [
+              "heading",
+              "body",
+              "link",
+              "other"
+            ],
+            "frequency": 16,
+            "confidence": 1,
+            "prominence": 193079.48223214227,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 1,
+              "other/fill": 1,
+              "heading/color": 1,
+              "body/borderColor": 4,
+              "link/borderColor": 4,
+              "heading/borderColor": 4
+            }
+          },
+          {
+            "hex": "#975aff",
+            "oklch": {
+              "c": 0.2426534885627949,
+              "h": 294.27739658769354,
+              "l": 0.6273922456395359
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 52733.23501471159,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "body/borderColor": 4
+            }
+          },
+          {
+            "hex": "#ff6800",
+            "oklch": {
+              "c": 0.22111360333230023,
+              "h": 46.05948236892774,
+              "l": 0.7168589319619129
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 52733.23501471159,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "body/borderColor": 4
+            }
+          },
+          {
+            "hex": "#00babf",
+            "oklch": {
+              "c": 0.15791739605162178,
+              "h": 196.5657882271951,
+              "l": 0.6986114745011743
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 52733.23501471159,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "body/borderColor": 4
+            }
+          },
+          {
+            "hex": "#008ae8",
+            "oklch": {
+              "c": 0.18900118306352656,
+              "h": 242.30094902267507,
+              "l": 0.6079990873801958
+            },
+            "contexts": [
+              "body",
+              "other"
+            ],
+            "frequency": 16,
+            "confidence": 1,
+            "prominence": 22456.52084982936,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 3,
+              "other/fill": 1,
+              "body/borderColor": 12
+            }
+          },
+          {
+            "hex": "#e0f2fe",
+            "oklch": {
+              "c": 0.025191799509548234,
+              "h": 236.38206990464386,
+              "l": 0.9506581295529855
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 18160,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "button/backgroundColor": 3
+            }
+          },
+          {
+            "hex": "#009cff",
+            "oklch": {
+              "c": 0.2084285440901605,
+              "h": 242.6237522337196,
+              "l": 0.6662763992546471
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 7433,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ddd3ff",
+            "oklch": {
+              "c": 0.06145721289908835,
+              "h": 295.0498855762634,
+              "l": 0.8897728895341265
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 6777,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#fed5ab",
+            "oklch": {
+              "c": 0.07191913380656473,
+              "h": 67.140577888539,
+              "l": 0.8971424488716658
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 6777,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#a5efeb",
+            "oklch": {
+              "c": 0.07351775283284884,
+              "h": 191.8412179907531,
+              "l": 0.9029805236807317
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 6777,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.010162937697059919,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 20.12,
+            "background": "#fafafa",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 18.3,
+            "background": "#e0f2fe",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.96,
+            "background": "#ffe77a",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.34,
+            "background": "#b6edee",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.15,
+            "background": "#a5efeb",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.81,
+            "background": "#e6dafd",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.36,
+            "background": "#afe4ff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.32,
+            "background": "#fed5ab",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.19,
+            "background": "#fbcfe8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.84,
+            "background": "#ddd3ff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.5,
+            "background": "#fafafa",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.21,
+            "background": "#cdcdcd",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.19,
+            "background": "#e0f2fe",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.22,
+            "background": "#ffe77a",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.77,
+            "background": "#b6edee",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.64,
+            "background": "#a5efeb",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.39,
+            "background": "#e6dafd",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.07,
+            "background": "#afe4ff",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.04,
+            "background": "#fed5ab",
+            "foreground": "#262626"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.95,
+            "background": "#fbcfe8",
+            "foreground": "#262626"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 24,
+            "contexts": [
+              "card",
+              "other",
+              "image"
+            ],
+            "frequency": 12
+          },
+          {
+            "value": 10,
+            "corners": [
+              10,
+              10,
+              0,
+              0
+            ],
+            "contexts": [
+              "other",
+              "image",
+              "nav"
+            ],
+            "frequency": 11,
+            "asymmetric": true
+          },
+          {
+            "value": 99,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 7
+          },
+          {
+            "value": 2,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 16,
+            "corners": [
+              16,
+              0,
+              0,
+              0
+            ],
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "asymmetric": true
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|body",
+              "marginLeft|body"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "nav",
+              "button",
+              "heading"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav",
+              "paddingBottom|nav",
+              "paddingTop|button",
+              "paddingBottom|button",
+              "marginRight|heading",
+              "marginLeft|heading"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|button",
+              "columnGap|button",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "nav",
+              "other",
+              "button"
+            ],
+            "frequency": 108,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingTop|button",
+              "paddingBottom|button",
+              "rowGap|button",
+              "columnGap|button"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 34,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 13,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 13,
+            "properties": [
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 28,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other",
+              "button"
+            ],
+            "frequency": 38,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "nav",
+              "card",
+              "other"
+            ],
+            "frequency": 30,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "rowGap|card",
+              "columnGap|card",
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 36,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "card",
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingLeft|card",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 48,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 20,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 56,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 64,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 80,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 96,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 120,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 328,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "system-ui",
+            "source": "system",
+            "weights": [
+              400,
+              500,
+              600
+            ],
+            "frequency": 87,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "button",
+              "icon",
+              "card",
+              "image"
+            ],
+            "frequency": 328,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "system-ui",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "heading"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "system-ui",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "system-ui",
+            "weight": 500,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "lineHeight": 2,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 500,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 13,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.56,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "system-ui",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.6,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "body",
+              "heading"
+            ],
+            "frequency": 15,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 44,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "heading",
+              "other",
+              "image"
+            ],
+            "frequency": 11,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 56,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.009,
+            "textTransform": "none"
+          },
+          {
+            "size": 64,
+            "family": "system-ui",
+            "weight": 600,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Signal Blue (#008ae8) for exactly one filled button per viewport — scarcity is what makes it pop",
+        "Reach for the pastel card surfaces (Blush, Lavender Mist, Mint Foam, Powder Blue, Butter) instead of drop shadows when you need to frame a product screenshot or feature block",
+        "Set all headlines at their extracted sizes with the matching negative letter-spacing — 64px gets -0.64px, 44px gets -0.26px, 24px gets -0.14px",
+        "Use 99px radius on every button, tag, and notification pill — the pill shape is the system's signature",
+        "Keep 24px radius on every card and product mockup container; use 10px radius only on inner product UI panels",
+        "Set 40px padding on pastel product cards and 32px gap between feature columns",
+        "Keep the canvas at #fafafa (off-white) rather than pure white — the warmth is what makes the pastels sing"
+      ],
+      "donts": [
+        "Do not introduce a second saturated accent color — Signal Blue is the lone chromatic voice in the system",
+        "Do not use heavy multi-layer drop shadows; the system relies on a single #cdcdcd shadow at 0 2px 8px and only for floating panels",
+        "Do not use straight (0px) letter-spacing on any headline above 20px — the negative tracking is load-bearing for the editorial feel",
+        "Do not pair the ghost button with anything other than the filled blue button — the two are a pair, not alternatives",
+        "Do not put pure white cards on the pastel washes with hard edges; soften with the 24px radius and let the pastel bleed",
+        "Do not use emoji in body copy — they only appear inside the display headline of the value-prop section",
+        "Do not exceed 1200px page max-width; the system is designed for a centered, contained reading column"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#fafafa",
+          "name": "Canvas",
+          "role": "Page background, default surface — sets the off-white, paper-like base for the entire system",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "role": "Product UI panels, card surfaces, elevated content blocks — keeps content crisp against the off-white canvas",
+          "group": "neutral"
+        },
+        {
+          "hex": "#262626",
+          "name": "Ink",
+          "role": "Primary headings and body text — softened black that reads warm rather than harsh",
+          "group": "neutral"
+        },
+        {
+          "hex": "#757577",
+          "name": "Graphite",
+          "role": "Secondary text, captions, nav labels, muted borders — the everyday gray for supporting copy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#aeaeaf",
+          "name": "Ash",
+          "role": "Tertiary text, disabled labels, faint dividers — the quietest gray in the system",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Outline",
+          "role": "Hairline borders, icon strokes, divider lines at thin weights — provides structural edges without tonal noise",
+          "group": "neutral"
+        },
+        {
+          "hex": "#cdcdcd",
+          "name": "Shadow",
+          "role": "Rare single-layer drop-shadow tone used for floating panels and the AI chat popover",
+          "group": "neutral"
+        },
+        {
+          "hex": "#008ae8",
+          "name": "Signal Blue",
+          "role": "Blue outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color",
+          "group": "brand"
+        },
+        {
+          "hex": "#e0f2fe",
+          "name": "Sky Tint",
+          "role": "Notification pill background, subtle blue wash on interactive surfaces — the muted echo of Signal Blue used for non-action highlights",
+          "group": "accent"
+        },
+        {
+          "hex": "#fbcfe8",
+          "name": "Blush",
+          "role": "Decorative card surface — warm pink wash that frames product screenshots and feature blocks",
+          "group": "accent"
+        },
+        {
+          "hex": "#e6dafd",
+          "name": "Lavender Mist",
+          "role": "Decorative card surface — soft purple wash for variety blocks and callout cards",
+          "group": "accent"
+        },
+        {
+          "hex": "#b6edee",
+          "name": "Mint Foam",
+          "role": "Decorative card surface — cool teal wash for product mockup containers and accent cards",
+          "group": "accent"
+        },
+        {
+          "hex": "#afe4ff",
+          "name": "Powder Blue",
+          "role": "Decorative card surface — light blue wash used alongside the other pastels for tonal rhythm",
+          "group": "accent"
+        },
+        {
+          "hex": "#ffe77a",
+          "name": "Butter",
+          "role": "Decorative card surface — warm yellow wash, the highest-contrast pastel used sparingly for emphasis cards",
+          "group": "accent"
+        }
+      ],
+      "layout": "Centered, max-width 1200px page model with generous vertical breathing room. The hero is a centered stack on canvas: announcement pill → display headline (two lines, 56–64px) → supporting paragraph → dual-button pair → full-bleed pastel product card below. Mid-page uses a single full-width three-column value grid (32px gaps) under a centered display headline with inline emoji. Section gap is 64px between major blocks. The sticky nav remains a fixed 64px white bar; a floating pill-shaped mini nav appears once the user scrolls into the product mockup section. The overall rhythm is: white → pastel card → white → pastel card → white, creating a paper-stack cadence rather than alternating dark/light bands.",
+      "imagery": "Imagery is dominated by product UI mockups presented inside pastel card frames rather than standalone photography. The product screenshots show the Aboard application — nav bar, task lists, employee cards, AI chat panel — rendered crisp at 1x with thin 1px borders. Decorative emoji inlined into the display headline adds personality without committing to an illustration system. No lifestyle photography, no 3D renders, no abstract graphics. When the system needs atmosphere it uses a pastel wash + product UI, not stock imagery.",
+      "similar": [
+        {
+          "why": "Same centered-display-headline hero pattern, tight negative letter-spacing on large type, and pastel accent washes replacing drop shadows",
+          "business": "Linear"
+        },
+        {
+          "why": "System-ui type stack, off-white canvas, and a single accent color doing all the chromatic work while decorative surfaces stay pale and paper-like",
+          "business": "Notion"
+        },
+        {
+          "why": "Light airy layout with product mockups framed in colored card backgrounds and a single vivid primary action color",
+          "business": "Loom"
+        },
+        {
+          "why": "Parent brand affinity — same HR/people-ops category, same friendly pastel card vocabulary, same pill-button CTA pattern",
+          "business": "Teamtailor"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "99px",
+          "cards": "24px",
+          "inputs": "10px",
+          "buttons": "99px",
+          "productMockup": "24px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "64px",
+        "cardPadding": "40px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "saas",
+      "surfaces": [
+        {
+          "hex": "#fafafa",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page-level background, the off-white desk surface"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Pure White",
+          "level": 1,
+          "purpose": "Product UI panels, white cards, and elevated content blocks"
+        },
+        {
+          "hex": "#fbcfe8",
+          "name": "Pastel Wash",
+          "level": 2,
+          "purpose": "Decorative product-mockup card frames and feature highlight blocks"
+        },
+        {
+          "hex": "#e0f2fe",
+          "name": "Pastel Wash Alt",
+          "level": 2,
+          "purpose": "Notification pill and soft interactive highlight backgrounds"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "0 4px 16px rgba(205, 205, 205, 0.5)",
+          "element": "AI Chat Panel"
+        },
+        {
+          "style": "0 2px 8px rgba(205, 205, 205, 0.6)",
+          "element": "Sticky Mini Nav"
+        },
+        {
+          "style": "0 2px 8px rgba(205, 205, 205, 0.4)",
+          "element": "In-Product App Card"
+        }
+      ],
+      "northStar": "pastel paper notebook on a white desk",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.2,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body-sm",
+          "size": 15,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.08
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.09
+        },
+        {
+          "role": "subheading-lg",
+          "size": 20,
+          "lineHeight": 1.4,
+          "letterSpacing": -0.1
+        },
+        {
+          "role": "heading",
+          "size": 24,
+          "lineHeight": 1.3,
+          "letterSpacing": -0.14
+        },
+        {
+          "role": "heading-lg",
+          "size": 44,
+          "lineHeight": 1.1,
+          "letterSpacing": -0.26
+        },
+        {
+          "role": "display",
+          "size": 56,
+          "lineHeight": 1.05,
+          "letterSpacing": -0.5
+        },
+        {
+          "role": "display-xl",
+          "size": 64,
+          "lineHeight": 1,
+          "letterSpacing": -0.64
+        }
+      ],
+      "components": [
+        {
+          "name": "Primary Filled Button",
+          "role": "Single dominant call-to-action in the hero and section leads",
+          "description": "Pill shape (99px radius), Signal Blue (#008ae8) background, white text, 12px vertical padding × 24px horizontal padding, system-ui at 16px/500. Two instances only per viewport — the loudness of blue is preserved by scarcity."
+        },
+        {
+          "name": "Ghost Outlined Button",
+          "role": "Secondary action that sits beside the primary CTA",
+          "description": "Pill shape (99px radius), transparent background, 1px Signal Blue (#008ae8) border, Signal Blue text, same 12×24px padding as the filled button. Always paired with the filled variant to create a clear primary/secondary tension."
+        },
+        {
+          "name": "Header CTA Pill",
+          "role": "Persistent book-demo action in the sticky nav",
+          "description": "Same construction as the Primary Filled Button but slightly smaller (10px padding) and uses the Sky Tint (#e0f2fe) background with Signal Blue text — a softer nav-level call that doesn't compete with hero buttons."
+        },
+        {
+          "name": "Notification Badge",
+          "role": "Compact announcement pill above the hero headline",
+          "description": "Sky Tint (#e0f2fe) background, 99px radius, 4px vertical × 12px horizontal padding, 12px system-ui text in Signal Blue, with a small sparkle/dot prefix character. Sits centered above the hero headline."
+        },
+        {
+          "name": "Pastel Product Card",
+          "role": "Full-bleed product mockup container in the hero and section transitions",
+          "description": "A pastel background wash (Blush, Lavender Mist, Mint Foam, Powder Blue, or Butter — rotate between them) with a 24px radius, generous 40px internal padding, and a white product screenshot inset that breaks slightly below the card edge to feel hand-placed. The pastel card is the system's signature substitute for drop shadows."
+        },
+        {
+          "name": "Feature Column",
+          "role": "Three-up value-prop block in the mid-page section",
+          "description": "Centered stack: a small custom line-icon (thin stroke, Ink color) at ~32px, then a 16–18px subheading in Ink, then a body-sm supporting line in Graphite. 32px vertical gap between icon and label, 8px between label and body. No card chrome — sits directly on canvas."
+        },
+        {
+          "name": "In-Product App Card",
+          "role": "White panel representing the Aboard application UI in mockups",
+          "description": "Pure white surface, 10px radius, 1px #fafafa-tinted border, soft 0 2px 8px #cdcdcd shadow. Used inside pastel product cards to make the app feel like a real product rather than a flat illustration."
+        },
+        {
+          "name": "Task Checklist Card",
+          "role": "In-product component shown in mockups — assigned-tasks list",
+          "description": "White card, 10px radius, thin top border accent, left-edge success-green check icon, title row in Ink/500, progress counter in Graphite, checklist items as 16px rows with small left-side dot indicators."
+        },
+        {
+          "name": "AI Chat Panel",
+          "role": "Floating assistant drawer shown on the right edge of mockups",
+          "description": "White panel, 10px radius, single 0 4px 16px #cdcdcd shadow, 320px wide. User message bubbles in Sky Tint (#e0f2fe) with Ink text, assistant replies as plain text rows, input field at the bottom with a 10px radius and Signal Blue send icon."
+        },
+        {
+          "name": "Sticky Top Navigation",
+          "role": "Persistent header across all pages",
+          "description": "White background, 1px bottom border in #fafafa-tone, 64px tall, Aboard logo (with 'by Teamtailor' lockup at 12px) left, three text links (Product / Price / Resources) centered in Graphite 15px/500, and a small blue CTA pill on the right. No mega-menu — nav stays minimal."
+        },
+        {
+          "name": "Sticky Mini Nav",
+          "role": "Compact scroll-triggered navigation that appears on top of pastel product mockup sections",
+          "description": "White pill-shaped bar (99px radius), 0 2px 8px #cdcdcd shadow, contains a mini logo lockup, three text links, and a filled Book demo button. Floats centered, 16px from the top of the viewport."
+        },
+        {
+          "name": "Three-Column Value Grid",
+          "role": "Section-level layout for the 'Built for people' block",
+          "description": "Three equal columns with 32px column gap, centered content, and the headline spanning the full width above. Emoji inlined into the headline (💜 😎 🦋 style) set at the same 44px display size in full color — the brand's one concession to ornamentation."
+        },
+        {
+          "name": "Outlined Action Link",
+          "role": "Inline text link used in body copy",
+          "description": "Ink color (#262626) by default, Signal Blue (#008ae8) on hover, no underline by default, 1px Signal Blue underline on hover. Inherits the surrounding body size and weight."
+        }
+      ],
+      "typography": [
+        {
+          "role": "All UI and editorial copy — body at 16/400, subheadings at 18–20/500, section headings at 24–44/600, hero display at 56–64/600. The stack is system-ui (San Francisco / Segoe UI / Inter fallback) so the brand inherits the OS-native feel without licensing a webfont.",
+          "sizes": "12, 15, 16, 18, 20, 24, 44, 56, 64",
+          "family": "system-ui",
+          "weight": "400, 500, 600",
+          "lineHeight": "1.20–1.60",
+          "substitute": "Inter, -apple-system, Segoe UI, Roboto, sans-serif",
+          "letterSpacing": "Tightens as size grows: -0.64px at 64px, -0.50px at 56px, -0.26px at 44px, -0.14px at 24px, -0.10px at 20px, normal at 12px. The negative tracking on display sizes is signature — headlines feel set in metal type, not screen-default spaced."
+        },
+        {
+          "role": "Caption-level fallback / metadata text at 12px",
+          "sizes": "12",
+          "family": "sans-serif",
+          "weight": "400",
+          "lineHeight": "1.20",
+          "substitute": "system-ui"
+        }
+      ],
+      "description": "Aboard is a light, airy people-ops workspace that lives on a near-white canvas with a single vivid blue doing the work of a brand color and a palette of five pastel card surfaces doing the work of warmth. Typography leans on system-ui at compressed tracking: very large, very tight headlines (64px at -0.64px) sit above a neutral gray body, so the page reads confident and editorial rather than marketing-loud. Components are soft and rounded — 24px card radius, 99px pill buttons, 10px on small elements — and elevation is replaced by pastel color washes instead of shadows, which keeps the interface feeling like paper stationery rather than glass. Decorative emoji inlined into copy and pastel product-mockup cards give the brand a playful, almost notebook-like personality.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "Elevation is intentionally minimal. The system replaces the need for drop shadows with pastel color washes — a pink or mint card behind a white product mockup does the work of separating content from canvas without any shadow at all. The few shadows that do exist are single-layer, very low contrast (#cdcdcd at low opacity), and reserved for genuinely floating elements (chat panel, sticky mini nav, in-product app card). Never stack two shadows on the same element."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/e69a8242-71bb-43b4-abc4-777ea9b3a109.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/7492c57b-b907-49c4-b4bb-e2c067861cfe.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "aboard",
+    "generatedAt": "2026-06-03T18:06:00.772Z",
+    "summary": "Aboard is a light, airy people-ops workspace that lives on a near-white canvas with a single vivid blue doing the work of a brand color and a palette of five pastel card surfaces doing the work of warmth. Typography leans on system-ui at compressed tracking: very large, very tight headlines (64px at -0.64px) sit above a neutral gray body, so the page reads confident and editorial rather than marketing-loud. Components are soft and rounded — 24px card radius, 99px pill buttons, 10px on small elements — and elevation is replaced by pastel color washes instead of shadows, which keeps the interface feeling like paper stationery rather than glass. Decorative emoji inlined into copy and pastel product-mockup cards give the brand a playful, almost notebook-like personality.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "fabacd2a-acb6-46c4-939c-4a464df15440",
+      "sourceUrl": "https://styles.refero.design/style/fabacd2a-acb6-46c4-939c-4a464df15440",
+      "originalUrl": "https://aboardhr.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/e69a8242-71bb-43b4-abc4-777ea9b3a109.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/7492c57b-b907-49c4-b4bb-e2c067861cfe.jpg",
+      "importedAt": "2026-08-02T18:09:11.051Z",
+      "upstreamModifiedAt": "2026-06-03T18:06:00.779Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "pastel paper notebook on a white desk",
+      "industry": "saas"
+    },
+    "tokens": [
+      {
+        "id": "color-canvas",
+        "kind": "color",
+        "name": "Canvas",
+        "value": "#fafafa",
+        "role": "Page background, default surface — sets the off-white, paper-like base for the entire system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-white",
+        "kind": "color",
+        "name": "Pure White",
+        "value": "#ffffff",
+        "role": "Product UI panels, card surfaces, elevated content blocks — keeps content crisp against the off-white canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#262626",
+        "role": "Primary headings and body text — softened black that reads warm rather than harsh",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#757577",
+        "role": "Secondary text, captions, nav labels, muted borders — the everyday gray for supporting copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#aeaeaf",
+        "role": "Tertiary text, disabled labels, faint dividers — the quietest gray in the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-outline",
+        "kind": "color",
+        "name": "Outline",
+        "value": "#000000",
+        "role": "Hairline borders, icon strokes, divider lines at thin weights — provides structural edges without tonal noise",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-shadow",
+        "kind": "color",
+        "name": "Shadow",
+        "value": "#cdcdcd",
+        "role": "Rare single-layer drop-shadow tone used for floating panels and the AI chat popover",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-signal-blue",
+        "kind": "color",
+        "name": "Signal Blue",
+        "value": "#008ae8",
+        "role": "Blue outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-sky-tint",
+        "kind": "color",
+        "name": "Sky Tint",
+        "value": "#e0f2fe",
+        "role": "Notification pill background, subtle blue wash on interactive surfaces — the muted echo of Signal Blue used for non-action highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-blush",
+        "kind": "color",
+        "name": "Blush",
+        "value": "#fbcfe8",
+        "role": "Decorative card surface — warm pink wash that frames product screenshots and feature blocks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-lavender-mist",
+        "kind": "color",
+        "name": "Lavender Mist",
+        "value": "#e6dafd",
+        "role": "Decorative card surface — soft purple wash for variety blocks and callout cards",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mint-foam",
+        "kind": "color",
+        "name": "Mint Foam",
+        "value": "#b6edee",
+        "role": "Decorative card surface — cool teal wash for product mockup containers and accent cards",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-powder-blue",
+        "kind": "color",
+        "name": "Powder Blue",
+        "value": "#afe4ff",
+        "role": "Decorative card surface — light blue wash used alongside the other pastels for tonal rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-butter",
+        "kind": "color",
+        "name": "Butter",
+        "value": "#ffe77a",
+        "role": "Decorative card surface — warm yellow wash, the highest-contrast pastel used sparingly for emphasis cards",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system-ui",
+        "kind": "typography",
+        "name": "system-ui",
+        "value": "font-family: system-ui; font-weight: 400, 500, 600; font-size: 12, 15, 16, 18, 20, 24, 44, 56, 64; line-height: 1.20–1.60; letter-spacing: Tightens as size grows: -0.64px at 64px, -0.50px at 56px, -0.26px at 44px, -0.14px at 24px, -0.10px at 20px, normal at 12px. The negative tracking on display sizes is signature — headlines feel set in metal type, not screen-default spaced.",
+        "role": "All UI and editorial copy — body at 16/400, subheadings at 18–20/500, section headings at 24–44/600, hero display at 56–64/600. The stack is system-ui (San Francisco / Segoe UI / Inter fallback) so the brand inherits the OS-native feel without licensing a webfont.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sans-serif",
+        "kind": "typography",
+        "name": "sans-serif",
+        "value": "font-family: sans-serif; font-weight: 400; font-size: 12; line-height: 1.20",
+        "role": "Caption-level fallback / metadata text at 12px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.2; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 15px; line-height: 1.5; letter-spacing: -0.08px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.5; letter-spacing: -0.09px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-lg-scale",
+        "kind": "typography",
+        "name": "subheading-lg",
+        "value": "font-size: 20px; line-height: 1.4; letter-spacing: -0.1px",
+        "role": "Imported subheading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 24px; line-height: 1.3; letter-spacing: -0.14px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 44px; line-height: 1.1; letter-spacing: -0.26px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 56px; line-height: 1.05; letter-spacing: -0.5px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-xl-scale",
+        "kind": "typography",
+        "name": "display-xl",
+        "value": "font-size: 64px; line-height: 1; letter-spacing: -0.64px",
+        "role": "Imported display-xl type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "40px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "99px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "24px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "10px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "99px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-productmockup",
+        "kind": "radius",
+        "name": "productMockup",
+        "value": "24px",
+        "role": "Imported productMockup radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Elevation is intentionally minimal. The system replaces the need for drop shadows with pastel color washes — a pink or mint card behind a white product mockup does the work of separating content from canvas without any shadow at all. The few shadows that do exist are single-layer, very low contrast (#cdcdcd at low opacity), and reserved for genuinely floating elements (chat panel, sticky mini nav, in-product app card). Never stack two shadows on the same element.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "primary-filled-button",
+        "name": "Primary Filled Button",
+        "category": "Refero components",
+        "description": "Pill shape (99px radius), Signal Blue (#008ae8) background, white text, 12px vertical padding × 24px horizontal padding, system-ui at 16px/500. Two instances only per viewport — the loudness of blue is preserved by scarcity.",
+        "variants": [
+          {
+            "id": "primary-filled-button-reference",
+            "name": "Reference",
+            "description": "Pill shape (99px radius), Signal Blue (#008ae8) background, white text, 12px vertical padding × 24px horizontal padding, system-ui at 16px/500. Two instances only per viewport — the loudness of blue is preserved by scarcity.",
+            "evidence": [],
+            "observedProperties": [
+              "Single dominant call-to-action in the hero and section leads"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-outlined-button",
+        "name": "Ghost Outlined Button",
+        "category": "Refero components",
+        "description": "Pill shape (99px radius), transparent background, 1px Signal Blue (#008ae8) border, Signal Blue text, same 12×24px padding as the filled button. Always paired with the filled variant to create a clear primary/secondary tension.",
+        "variants": [
+          {
+            "id": "ghost-outlined-button-reference",
+            "name": "Reference",
+            "description": "Pill shape (99px radius), transparent background, 1px Signal Blue (#008ae8) border, Signal Blue text, same 12×24px padding as the filled button. Always paired with the filled variant to create a clear primary/secondary tension.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action that sits beside the primary CTA"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "header-cta-pill",
+        "name": "Header CTA Pill",
+        "category": "Refero components",
+        "description": "Same construction as the Primary Filled Button but slightly smaller (10px padding) and uses the Sky Tint (#e0f2fe) background with Signal Blue text — a softer nav-level call that doesn't compete with hero buttons.",
+        "variants": [
+          {
+            "id": "header-cta-pill-reference",
+            "name": "Reference",
+            "description": "Same construction as the Primary Filled Button but slightly smaller (10px padding) and uses the Sky Tint (#e0f2fe) background with Signal Blue text — a softer nav-level call that doesn't compete with hero buttons.",
+            "evidence": [],
+            "observedProperties": [
+              "Persistent book-demo action in the sticky nav"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "notification-badge",
+        "name": "Notification Badge",
+        "category": "Refero components",
+        "description": "Sky Tint (#e0f2fe) background, 99px radius, 4px vertical × 12px horizontal padding, 12px system-ui text in Signal Blue, with a small sparkle/dot prefix character. Sits centered above the hero headline.",
+        "variants": [
+          {
+            "id": "notification-badge-reference",
+            "name": "Reference",
+            "description": "Sky Tint (#e0f2fe) background, 99px radius, 4px vertical × 12px horizontal padding, 12px system-ui text in Signal Blue, with a small sparkle/dot prefix character. Sits centered above the hero headline.",
+            "evidence": [],
+            "observedProperties": [
+              "Compact announcement pill above the hero headline"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pastel-product-card",
+        "name": "Pastel Product Card",
+        "category": "Refero components",
+        "description": "A pastel background wash (Blush, Lavender Mist, Mint Foam, Powder Blue, or Butter — rotate between them) with a 24px radius, generous 40px internal padding, and a white product screenshot inset that breaks slightly below the card edge to feel hand-placed. The pastel card is the system's signature substitute for drop shadows.",
+        "variants": [
+          {
+            "id": "pastel-product-card-reference",
+            "name": "Reference",
+            "description": "A pastel background wash (Blush, Lavender Mist, Mint Foam, Powder Blue, or Butter — rotate between them) with a 24px radius, generous 40px internal padding, and a white product screenshot inset that breaks slightly below the card edge to feel hand-placed. The pastel card is the system's signature substitute for drop shadows.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-bleed product mockup container in the hero and section transitions"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "feature-column",
+        "name": "Feature Column",
+        "category": "Refero components",
+        "description": "Centered stack: a small custom line-icon (thin stroke, Ink color) at ~32px, then a 16–18px subheading in Ink, then a body-sm supporting line in Graphite. 32px vertical gap between icon and label, 8px between label and body. No card chrome — sits directly on canvas.",
+        "variants": [
+          {
+            "id": "feature-column-reference",
+            "name": "Reference",
+            "description": "Centered stack: a small custom line-icon (thin stroke, Ink color) at ~32px, then a 16–18px subheading in Ink, then a body-sm supporting line in Graphite. 32px vertical gap between icon and label, 8px between label and body. No card chrome — sits directly on canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Three-up value-prop block in the mid-page section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "in-product-app-card",
+        "name": "In-Product App Card",
+        "category": "Refero components",
+        "description": "Pure white surface, 10px radius, 1px #fafafa-tinted border, soft 0 2px 8px #cdcdcd shadow. Used inside pastel product cards to make the app feel like a real product rather than a flat illustration.",
+        "variants": [
+          {
+            "id": "in-product-app-card-reference",
+            "name": "Reference",
+            "description": "Pure white surface, 10px radius, 1px #fafafa-tinted border, soft 0 2px 8px #cdcdcd shadow. Used inside pastel product cards to make the app feel like a real product rather than a flat illustration.",
+            "evidence": [],
+            "observedProperties": [
+              "White panel representing the Aboard application UI in mockups"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "task-checklist-card",
+        "name": "Task Checklist Card",
+        "category": "Refero components",
+        "description": "White card, 10px radius, thin top border accent, left-edge success-green check icon, title row in Ink/500, progress counter in Graphite, checklist items as 16px rows with small left-side dot indicators.",
+        "variants": [
+          {
+            "id": "task-checklist-card-reference",
+            "name": "Reference",
+            "description": "White card, 10px radius, thin top border accent, left-edge success-green check icon, title row in Ink/500, progress counter in Graphite, checklist items as 16px rows with small left-side dot indicators.",
+            "evidence": [],
+            "observedProperties": [
+              "In-product component shown in mockups — assigned-tasks list"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ai-chat-panel",
+        "name": "AI Chat Panel",
+        "category": "Refero components",
+        "description": "White panel, 10px radius, single 0 4px 16px #cdcdcd shadow, 320px wide. User message bubbles in Sky Tint (#e0f2fe) with Ink text, assistant replies as plain text rows, input field at the bottom with a 10px radius and Signal Blue send icon.",
+        "variants": [
+          {
+            "id": "ai-chat-panel-reference",
+            "name": "Reference",
+            "description": "White panel, 10px radius, single 0 4px 16px #cdcdcd shadow, 320px wide. User message bubbles in Sky Tint (#e0f2fe) with Ink text, assistant replies as plain text rows, input field at the bottom with a 10px radius and Signal Blue send icon.",
+            "evidence": [],
+            "observedProperties": [
+              "Floating assistant drawer shown on the right edge of mockups"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "sticky-top-navigation",
+        "name": "Sticky Top Navigation",
+        "category": "Refero components",
+        "description": "White background, 1px bottom border in #fafafa-tone, 64px tall, Aboard logo (with 'by Teamtailor' lockup at 12px) left, three text links (Product / Price / Resources) centered in Graphite 15px/500, and a small blue CTA pill on the right. No mega-menu — nav stays minimal.",
+        "variants": [
+          {
+            "id": "sticky-top-navigation-reference",
+            "name": "Reference",
+            "description": "White background, 1px bottom border in #fafafa-tone, 64px tall, Aboard logo (with 'by Teamtailor' lockup at 12px) left, three text links (Product / Price / Resources) centered in Graphite 15px/500, and a small blue CTA pill on the right. No mega-menu — nav stays minimal.",
+            "evidence": [],
+            "observedProperties": [
+              "Persistent header across all pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "sticky-mini-nav",
+        "name": "Sticky Mini Nav",
+        "category": "Refero components",
+        "description": "White pill-shaped bar (99px radius), 0 2px 8px #cdcdcd shadow, contains a mini logo lockup, three text links, and a filled Book demo button. Floats centered, 16px from the top of the viewport.",
+        "variants": [
+          {
+            "id": "sticky-mini-nav-reference",
+            "name": "Reference",
+            "description": "White pill-shaped bar (99px radius), 0 2px 8px #cdcdcd shadow, contains a mini logo lockup, three text links, and a filled Book demo button. Floats centered, 16px from the top of the viewport.",
+            "evidence": [],
+            "observedProperties": [
+              "Compact scroll-triggered navigation that appears on top of pastel product mockup sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "three-column-value-grid",
+        "name": "Three-Column Value Grid",
+        "category": "Refero components",
+        "description": "Three equal columns with 32px column gap, centered content, and the headline spanning the full width above. Emoji inlined into the headline (💜 😎 🦋 style) set at the same 44px display size in full color — the brand's one concession to ornamentation.",
+        "variants": [
+          {
+            "id": "three-column-value-grid-reference",
+            "name": "Reference",
+            "description": "Three equal columns with 32px column gap, centered content, and the headline spanning the full width above. Emoji inlined into the headline (💜 😎 🦋 style) set at the same 44px display size in full color — the brand's one concession to ornamentation.",
+            "evidence": [],
+            "observedProperties": [
+              "Section-level layout for the 'Built for people' block"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-action-link",
+        "name": "Outlined Action Link",
+        "category": "Refero components",
+        "description": "Ink color (#262626) by default, Signal Blue (#008ae8) on hover, no underline by default, 1px Signal Blue underline on hover. Inherits the surrounding body size and weight.",
+        "variants": [
+          {
+            "id": "outlined-action-link-reference",
+            "name": "Reference",
+            "description": "Ink color (#262626) by default, Signal Blue (#008ae8) on hover, no underline by default, 1px Signal Blue underline on hover. Inherits the surrounding body size and weight.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline text link used in body copy"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Centered, max-width 1200px page model with generous vertical breathing room. The hero is a centered stack on canvas: announcement pill → display headline (two lines, 56–64px) → supporting paragraph → dual-button pair → full-bleed pastel product card below. Mid-page uses a single full-width three-column value grid (32px gaps) under a centered display headline with inline emoji. Section gap is 64px between major blocks. The sticky nav remains a fixed 64px white bar; a floating pill-shaped mini nav appears once the user scrolls into the product mockup section. The overall rhythm is: white → pastel card → white → pastel card → white, creating a paper-stack cadence rather than alternating dark/light bands.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Imagery is dominated by product UI mockups presented inside pastel card frames rather than standalone photography. The product screenshots show the Aboard application — nav bar, task lists, employee cards, AI chat panel — rendered crisp at 1x with thin 1px borders. Decorative emoji inlined into the display headline adds personality without committing to an illustration system. No lifestyle photography, no 3D renders, no abstract graphics. When the system needs atmosphere it uses a pastel wash + product UI, not stock imagery.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Elevation is intentionally minimal. The system replaces the need for drop shadows with pastel color washes — a pink or mint card behind a white product mockup does the work of separating content from canvas without any shadow at all. The few shadows that do exist are single-layer, very low contrast (#cdcdcd at low opacity), and reserved for genuinely floating elements (chat panel, sticky mini nav, in-product app card). Never stack two shadows on the same element.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Signal Blue (#008ae8) for exactly one filled button per viewport — scarcity is what makes it pop",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reach for the pastel card surfaces (Blush, Lavender Mist, Mint Foam, Powder Blue, Butter) instead of drop shadows when you need to frame a product screenshot or feature block",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all headlines at their extracted sizes with the matching negative letter-spacing — 64px gets -0.64px, 44px gets -0.26px, 24px gets -0.14px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 99px radius on every button, tag, and notification pill — the pill shape is the system's signature",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep 24px radius on every card and product mockup container; use 10px radius only on inner product UI panels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set 40px padding on pastel product cards and 32px gap between feature columns",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the canvas at #fafafa (off-white) rather than pure white — the warmth is what makes the pastels sing",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce a second saturated accent color — Signal Blue is the lone chromatic voice in the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use heavy multi-layer drop shadows; the system relies on a single #cdcdcd shadow at 0 2px 8px and only for floating panels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use straight (0px) letter-spacing on any headline above 20px — the negative tracking is load-bearing for the editorial feel",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not pair the ghost button with anything other than the filled blue button — the two are a pair, not alternatives",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not put pure white cards on the pastel washes with hard edges; soften with the 24px radius and let the pastel bleed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use emoji in body copy — they only appear inside the display headline of the value-prop section",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not exceed 1200px page max-width; the system is designed for a centered, contained reading column",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

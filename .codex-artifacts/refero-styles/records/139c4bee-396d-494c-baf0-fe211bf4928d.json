@@ -1,0 +1,1299 @@
+{
+  "schemaVersion": 1,
+  "id": "139c4bee-396d-494c-baf0-fe211bf4928d",
+  "sourceUrl": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d",
+  "sitemapLastModified": "2026-06-03T16:07:43.020Z",
+  "fetchedAt": "2026-08-02T18:09:25.716Z",
+  "contentHash": "f53cd0f591a25e167ad25664d92191c839864fc6867aff6bc2dcc507d6029252",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "14islands design system",
+            "item": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d#style-reference",
+        "name": "14islands design system reference",
+        "headline": "14islands design system | Refero Styles",
+        "description": "Explore 14islands's light Agency design system: Ink #070707, Paper #ffffff colors, BentonSans, AftenScreen typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d",
+        "mainEntityOfPage": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "14islands",
+          "url": "https://14islands.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/5af245b1-892a-42f6-a9a9-c0940dd3b9d2.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/5af245b1-892a-42f6-a9a9-c0940dd3b9d2.jpg",
+          "caption": "Screenshot of 14islands"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/5af245b1-892a-42f6-a9a9-c0940dd3b9d2.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "14islands design system",
+          "14islands website design",
+          "14islands colors",
+          "14islands typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Ink",
+          "Paper",
+          "Fog",
+          "Stone",
+          "BentonSans",
+          "AftenScreen"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "14islands design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "14islands website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "14islands colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "14islands typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-02-22T12:34:58.000Z",
+        "dateModified": "2026-02-22T12:34:58.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://14islands.com",
+      "siteName": "14islands",
+      "extractedAt": "2026-06-03T16:07:43.014Z",
+      "durationMs": 32690,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 494,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#070707",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.12855780499391534
+            },
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "hero",
+              "body",
+              "heading",
+              "list",
+              "icon",
+              "footer",
+              "button"
+            ],
+            "frequency": 1912,
+            "confidence": 1,
+            "prominence": 153872534.37778646,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "footer",
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 2032714.4071748827,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#a2a2a9",
+            "oklch": {
+              "c": 0.010043835435212537,
+              "h": 286.1427140315202,
+              "l": 0.7144099629076452
+            },
+            "contexts": [
+              "heading",
+              "list",
+              "body",
+              "button"
+            ],
+            "frequency": 555,
+            "confidence": 1,
+            "prominence": 1728960.3463294497,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#f2f2f2",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9611513666441094
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1282500,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#797979",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5760991529940905
+            },
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 28367.378482913966,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.006087172991037901,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 20.14,
+            "background": "#ffffff",
+            "foreground": "#070707"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.99,
+            "background": "#f2f2f2",
+            "foreground": "#070707"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.94,
+            "background": "#a2a2a9",
+            "foreground": "#070707"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.35,
+            "background": "#ffffff",
+            "foreground": "#797979"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.89,
+            "background": "#f2f2f2",
+            "foreground": "#797979"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.54,
+            "background": "#ffffff",
+            "foreground": "#a2a2a9"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.27,
+            "background": "#f2f2f2",
+            "foreground": "#a2a2a9"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.72,
+            "background": "#a2a2a9",
+            "foreground": "#797979"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 4.16667,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 21
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "contexts": [],
+            "frequency": 33,
+            "properties": [
+              "marginLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 5,
+            "contexts": [],
+            "frequency": 60,
+            "properties": [
+              "marginRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 10,
+            "contexts": [],
+            "frequency": 13,
+            "properties": [
+              "columnGap",
+              "rowGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 15,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 20,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "marginTop",
+              "marginLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 21,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 25,
+            "contexts": [],
+            "frequency": 21,
+            "properties": [
+              "rowGap",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 42,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 54,
+            "contexts": [],
+            "frequency": 14,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 100,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 108,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 160,
+            "contexts": [],
+            "frequency": 3,
+            "properties": [
+              "paddingBottom",
+              "marginTop"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "compact",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "BentonSans",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 306,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "AftenScreen",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 181,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 20,
+          "name": "Major Third",
+          "ratio": 1.25,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "BentonSans",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "heading",
+              "body",
+              "icon",
+              "link"
+            ],
+            "frequency": 132,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 16,
+            "family": "BentonSans",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "hero",
+              "heading",
+              "list",
+              "link",
+              "footer",
+              "body"
+            ],
+            "frequency": 157,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "BentonSans",
+            "weight": 400,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 27,
+            "family": "AftenScreen",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "body"
+            ],
+            "frequency": 140,
+            "lineHeight": 1.3,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 75,
+            "family": "AftenScreen",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 24,
+            "lineHeight": 1,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 100,
+            "family": "AftenScreen",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "other",
+              "list"
+            ],
+            "frequency": 15,
+            "lineHeight": 1,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 180,
+            "family": "AftenScreen",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 0.8,
+            "letterSpacing": -0.05,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use only the five neutral tokens — Ink, Paper, Fog, Stone, Graphite. Never introduce chromatic color.",
+        "Set display type at 75-180px with line-height 0.80-1.00 and letter-spacing -0.04em; weight stays at 400.",
+        "Keep all border-radius at 4px — for cards, buttons, tags, inputs, and image frames.",
+        "Maintain a 10× scale ratio between body (16px) and display (180px) to preserve editorial hierarchy.",
+        "Use Stone (#a2a2a9) for the ampersand, category labels, and any secondary text — never for body paragraphs.",
+        "Space major sections with 100-160px vertical padding; element gaps stay in the 5-25px compact range.",
+        "Render case study images edge-to-edge with no border, no radius, no shadow — the image is the card."
+      ],
+      "donts": [
+        "Do not introduce any color — no blue, red, green, or accent hue of any kind.",
+        "Do not use shadows, glows, or any CSS box-shadow. Depth comes from scale and contrast only.",
+        "Do not use border-radius above 4px — the 4px value is the ceiling, not the floor.",
+        "Do not use display type at body sizes. AftenScreen under 50px should be paired with lower line-height to feel intentional, not just oversized body text.",
+        "Do not use bold or semibold weights for emphasis — weight 400 + size does all the work.",
+        "Do not fill buttons with Ink as a primary action. The system has no filled button; navigation and CTAs are text-only.",
+        "Do not use 3+ column grids for case studies. The layout is always pairs."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#070707",
+          "name": "Ink",
+          "role": "Primary text, display headlines, full-bleed dark media blocks, nav wordmark — the single near-black that anchors every interface",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Default canvas, card surfaces, text on dark sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f2f2f2",
+          "name": "Fog",
+          "role": "Subtle surface differentiation for alternating sections or inset panels — barely visible, used to create quiet separation without borders",
+          "group": "neutral"
+        },
+        {
+          "hex": "#a2a2a9",
+          "name": "Stone",
+          "role": "Secondary text, category labels, decorative ampersand, muted button text — the entire chromatic-like hierarchy comes from this one gray",
+          "group": "neutral"
+        },
+        {
+          "hex": "#797979",
+          "name": "Graphite",
+          "role": "Muted body text, helper copy, tertiary metadata — deeper than Stone for occasional emphasis on small text",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed page canvas with no persistent side margins on the outermost sections. Top navigation spans edge-to-edge. The display headline bleeds across the full viewport width. Section rhythm is: short typographic intro → full-bleed media block → grid of case studies → typographic transition. The case study grid is a strict 2-column layout (10-25px gaps) that always reads as pairs, never as a 3+ column matrix. Vertical breathing room is extreme (100-160px between major sections) — the layout is generous and editorial, never information-dense.",
+      "imagery": "Photography is the only visual medium beyond type. Case study images are high-production editorial photography — fashion, lifestyle, product, and luxury — often full-bleed with no treatment overlay. Portrait-oriented crops for people, product crops for objects. Full-bleed video blocks in Ink act as movement punctuation. The aesthetic is gallery-curated, not stock — every image looks commissioned. No illustrations, no abstract graphics, no decorative shapes. The interface itself is the negative space; imagery is the content.",
+      "similar": [
+        {
+          "why": "Same monochrome editorial aesthetic, oversized display type, and case-study-as-poster card grid with no border-radius beyond 4px",
+          "business": "Locomotive"
+        },
+        {
+          "why": "Full-bleed video blocks, white canvas, single-font type system where scale alone drives hierarchy",
+          "business": "Active Theory"
+        },
+        {
+          "why": "Creative agency portfolio with extreme typographic scale, no chromatic palette, and full-bleed media as section dividers",
+          "business": "Resn"
+        },
+        {
+          "why": "Near-identical monochrome discipline, display-serif-on-white-canvas presentation, and gallery-style project grid",
+          "business": "DIA Studio"
+        },
+        {
+          "why": "Editorial-agency restraint with large display type, minimal UI chrome, and photography carrying all the color and visual weight",
+          "business": "Pentagram"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "4px",
+          "cards": "4px",
+          "inputs": "4px",
+          "buttons": "4px"
+        },
+        "elementGap": "5-10px",
+        "sectionGap": "100-160px",
+        "cardPadding": "20-25px",
+        "pageMaxWidth": "1400px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "level": 0,
+          "purpose": "Default page canvas — the overwhelming majority of the interface"
+        },
+        {
+          "hex": "#f2f2f2",
+          "name": "Fog",
+          "level": 1,
+          "purpose": "Quiet surface for alternating sections or subtle card differentiation"
+        },
+        {
+          "hex": "#070707",
+          "name": "Ink",
+          "level": 2,
+          "purpose": "Full-bleed media blocks, dark inversions, footer or featured content panels"
+        }
+      ],
+      "elevation": [],
+      "northStar": "Monochrome editorial gallery — A pristine gallery wall where oversized black typography and full-bleed photography exist without decoration, color, or UI noise.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.2,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.4,
+          "letterSpacing": 0
+        },
+        {
+          "role": "subheading",
+          "size": 27,
+          "lineHeight": 1.3,
+          "letterSpacing": -1.08
+        },
+        {
+          "role": "heading",
+          "size": 75,
+          "lineHeight": 1,
+          "letterSpacing": -3
+        },
+        {
+          "role": "heading-lg",
+          "size": 100,
+          "lineHeight": 0.8,
+          "letterSpacing": -4
+        },
+        {
+          "role": "display",
+          "size": 180,
+          "lineHeight": 0.8,
+          "letterSpacing": -7.2
+        }
+      ],
+      "components": [
+        {
+          "name": "Top Navigation Bar",
+          "role": "Primary site chrome",
+          "description": "Full-bleed white bar, 16px BentonSans. Three-zone layout: wordmark \"14islands\" left-aligned in Ink, nav links (WORK, SERVICES, CULTURE, JOURNAL, AI) center-aligned and spaced, CONTACT right-aligned. No background fill, no border, no shadow. Links are Ink at 16px; CONTACT carries the same weight and color but sits in the right zone to read as a soft CTA through position, not styling."
+        },
+        {
+          "name": "Uppercase Eyebrow Tag",
+          "role": "Section label / category intro",
+          "description": "BentonSans 12px, Stone (#a2a2a9), uppercase, letter-spacing slight. Two-line block with a label (e.g. \"CREATIVE AGENCY\") over a short sentence. Functions as the quiet lead-in to any major section. No background, no border."
+        },
+        {
+          "name": "Display Headline Block",
+          "role": "Hero-level typographic moment",
+          "description": "AftenScreen 180px, weight 400, line-height 0.80, letter-spacing -0.04em, color Ink. Can span one or two lines; ampersand or connecting words rendered in Stone (#a2a2a9) as a typographic device. No max-width constraint on the type itself — it bleeds to the viewport edges, reading as a poster rather than a paragraph."
+        },
+        {
+          "name": "Case Study Card",
+          "role": "Project portfolio entry",
+          "description": "Two-column grid (gap 25px row / 10px column). Image fills card edge-to-edge with no radius. Below image: project name in AftenScreen ~27px Ink, followed by em-dash and category label in Stone BentonSans 16px. No card background, no border, no shadow — the image IS the card surface."
+        },
+        {
+          "name": "Full-Bleed Media Block",
+          "role": "Hero video / feature showcase",
+          "description": "Rectangular block, 100% viewport width, 0px radius, Ink (#070707) background. Typically hosts video or oversized photography. Sits between text sections as a visual breather. No overlay, no caption within the block — context lives above and below in surrounding text."
+        },
+        {
+          "name": "Section Heading (Lighter)",
+          "role": "Mid-page editorial heading",
+          "description": "AftenScreen 100px, weight 400, line-height 0.80, color Stone (#a2a2a9). Appears as a quiet alternative to the full-strength Ink display — used for transition sections (\"Lovable Products / from vision to launch\") where the content is still introducing itself."
+        },
+        {
+          "name": "Nav Link (Ghost)",
+          "role": "Primary navigation and footer links",
+          "description": "BentonSans 16px, weight 400, color Ink (top nav) or Stone (footer). No underline by default, no background. On hover: opacity shift or color transition to Stone. The link IS the button — there is no filled alternative."
+        },
+        {
+          "name": "Footer",
+          "role": "Site footer with contact and metadata",
+          "description": "Ink (#070707) background, Paper (#ffffff) text. BentonSans 16px body, 12px caption for fine print. Spacious padding (54-100px vertical). No social icons styled prominently — links live as text only."
+        }
+      ],
+      "typography": [
+        {
+          "role": "All UI and body text — navigation links, body copy, footer, buttons, tags, small uppercase eyebrows. A custom grotesque that reads neutral and workmanlike; the substitute should preserve its clean even stroke and wide x-height.",
+          "sizes": "12px, 16px",
+          "family": "BentonSans",
+          "weight": "400",
+          "lineHeight": "1.20 / 1.40",
+          "substitute": "Inter or Söhne",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Display and editorial headlines only. Line-height collapses to 0.80 at the largest sizes — the letters of \"Design\" and \"Technology\" nearly touch, creating a condensed mass of ink. Weight stays at 400; scale alone provides emphasis. The tight tracking (-0.05em to -0.04em) tightens the optical spacing so oversized type doesn't feel airy.",
+          "sizes": "27px, 75px, 100px, 180px",
+          "family": "AftenScreen",
+          "weight": "400",
+          "lineHeight": "0.80 / 1.00 / 1.30",
+          "substitute": "Fraunces or Editorial Old",
+          "letterSpacing": "-0.04em to -0.05em"
+        }
+      ],
+      "description": "14islands operates as a gallery space for digital work: pure white canvas, near-black text, and a single mid-gray for quiet secondary information. The visual hierarchy is built entirely through scale — display type swells to 180px while body text stays at a disciplined 16px, creating a 10× relationship that feels editorial rather than digital. Components are barely there: hairline borders, 4px corners, no shadows, no chromatic color anywhere in the interface. Photography and full-bleed dark media blocks carry the visual weight that color would in a more conventional system. The single design device that breaks the monochrome discipline is the lighter-gray ampersand or category label — a whisper of contrast that structures typographic relationships without adding hue.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "This system is strictly flat. No shadows, no glows, no elevation tokens. Depth is communicated exclusively through scale (type size), contrast (black blocks against white), and the 4px corner radius — the only concession to softness in an otherwise sharp-edged interface. Any drop shadow would immediately break the editorial gallery feel."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/7eaab214-4218-430d-a091-6ac6554c1415.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/5af245b1-892a-42f6-a9a9-c0940dd3b9d2.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "14islands",
+    "generatedAt": "2026-06-03T16:07:43.014Z",
+    "summary": "14islands operates as a gallery space for digital work: pure white canvas, near-black text, and a single mid-gray for quiet secondary information. The visual hierarchy is built entirely through scale — display type swells to 180px while body text stays at a disciplined 16px, creating a 10× relationship that feels editorial rather than digital. Components are barely there: hairline borders, 4px corners, no shadows, no chromatic color anywhere in the interface. Photography and full-bleed dark media blocks carry the visual weight that color would in a more conventional system. The single design device that breaks the monochrome discipline is the lighter-gray ampersand or category label — a whisper of contrast that structures typographic relationships without adding hue.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "139c4bee-396d-494c-baf0-fe211bf4928d",
+      "sourceUrl": "https://styles.refero.design/style/139c4bee-396d-494c-baf0-fe211bf4928d",
+      "originalUrl": "https://14islands.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/7eaab214-4218-430d-a091-6ac6554c1415.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/5af245b1-892a-42f6-a9a9-c0940dd3b9d2.jpg",
+      "importedAt": "2026-08-02T18:09:25.716Z",
+      "upstreamModifiedAt": "2026-06-03T16:07:43.020Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Monochrome editorial gallery — A pristine gallery wall where oversized black typography and full-bleed photography exist without decoration, color, or UI noise.",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#070707",
+        "role": "Primary text, display headlines, full-bleed dark media blocks, nav wordmark — the single near-black that anchors every interface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Default canvas, card surfaces, text on dark sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog",
+        "kind": "color",
+        "name": "Fog",
+        "value": "#f2f2f2",
+        "role": "Subtle surface differentiation for alternating sections or inset panels — barely visible, used to create quiet separation without borders",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-stone",
+        "kind": "color",
+        "name": "Stone",
+        "value": "#a2a2a9",
+        "role": "Secondary text, category labels, decorative ampersand, muted button text — the entire chromatic-like hierarchy comes from this one gray",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#797979",
+        "role": "Muted body text, helper copy, tertiary metadata — deeper than Stone for occasional emphasis on small text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-bentonsans",
+        "kind": "typography",
+        "name": "BentonSans",
+        "value": "font-family: BentonSans; font-weight: 400; font-size: 12px, 16px; line-height: 1.20 / 1.40; letter-spacing: normal",
+        "role": "All UI and body text — navigation links, body copy, footer, buttons, tags, small uppercase eyebrows. A custom grotesque that reads neutral and workmanlike; the substitute should preserve its clean even stroke and wide x-height.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-aftenscreen",
+        "kind": "typography",
+        "name": "AftenScreen",
+        "value": "font-family: AftenScreen; font-weight: 400; font-size: 27px, 75px, 100px, 180px; line-height: 0.80 / 1.00 / 1.30; letter-spacing: -0.04em to -0.05em",
+        "role": "Display and editorial headlines only. Line-height collapses to 0.80 at the largest sizes — the letters of \"Design\" and \"Technology\" nearly touch, creating a condensed mass of ink. Weight stays at 400; scale alone provides emphasis. The tight tracking (-0.05em to -0.04em) tightens the optical spacing so oversized type doesn't feel airy.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.2; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.4; letter-spacing: 0px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 27px; line-height: 1.3; letter-spacing: -1.08px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 75px; line-height: 1; letter-spacing: -3px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 100px; line-height: 0.8; letter-spacing: -4px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 180px; line-height: 0.8; letter-spacing: -7.2px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "5-10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "100-160px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20-25px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1400px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "4px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "4px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "4px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "4px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "This system is strictly flat. No shadows, no glows, no elevation tokens. Depth is communicated exclusively through scale (type size), contrast (black blocks against white), and the 4px corner radius — the only concession to softness in an otherwise sharp-edged interface. Any drop shadow would immediately break the editorial gallery feel.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Full-bleed white bar, 16px BentonSans. Three-zone layout: wordmark \"14islands\" left-aligned in Ink, nav links (WORK, SERVICES, CULTURE, JOURNAL, AI) center-aligned and spaced, CONTACT right-aligned. No background fill, no border, no shadow. Links are Ink at 16px; CONTACT carries the same weight and color but sits in the right zone to read as a soft CTA through position, not styling.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Full-bleed white bar, 16px BentonSans. Three-zone layout: wordmark \"14islands\" left-aligned in Ink, nav links (WORK, SERVICES, CULTURE, JOURNAL, AI) center-aligned and spaced, CONTACT right-aligned. No background fill, no border, no shadow. Links are Ink at 16px; CONTACT carries the same weight and color but sits in the right zone to read as a soft CTA through position, not styling.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site chrome"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "uppercase-eyebrow-tag",
+        "name": "Uppercase Eyebrow Tag",
+        "category": "Refero components",
+        "description": "BentonSans 12px, Stone (#a2a2a9), uppercase, letter-spacing slight. Two-line block with a label (e.g. \"CREATIVE AGENCY\") over a short sentence. Functions as the quiet lead-in to any major section. No background, no border.",
+        "variants": [
+          {
+            "id": "uppercase-eyebrow-tag-reference",
+            "name": "Reference",
+            "description": "BentonSans 12px, Stone (#a2a2a9), uppercase, letter-spacing slight. Two-line block with a label (e.g. \"CREATIVE AGENCY\") over a short sentence. Functions as the quiet lead-in to any major section. No background, no border.",
+            "evidence": [],
+            "observedProperties": [
+              "Section label / category intro"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "display-headline-block",
+        "name": "Display Headline Block",
+        "category": "Refero components",
+        "description": "AftenScreen 180px, weight 400, line-height 0.80, letter-spacing -0.04em, color Ink. Can span one or two lines; ampersand or connecting words rendered in Stone (#a2a2a9) as a typographic device. No max-width constraint on the type itself — it bleeds to the viewport edges, reading as a poster rather than a paragraph.",
+        "variants": [
+          {
+            "id": "display-headline-block-reference",
+            "name": "Reference",
+            "description": "AftenScreen 180px, weight 400, line-height 0.80, letter-spacing -0.04em, color Ink. Can span one or two lines; ampersand or connecting words rendered in Stone (#a2a2a9) as a typographic device. No max-width constraint on the type itself — it bleeds to the viewport edges, reading as a poster rather than a paragraph.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero-level typographic moment"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "case-study-card",
+        "name": "Case Study Card",
+        "category": "Refero components",
+        "description": "Two-column grid (gap 25px row / 10px column). Image fills card edge-to-edge with no radius. Below image: project name in AftenScreen ~27px Ink, followed by em-dash and category label in Stone BentonSans 16px. No card background, no border, no shadow — the image IS the card surface.",
+        "variants": [
+          {
+            "id": "case-study-card-reference",
+            "name": "Reference",
+            "description": "Two-column grid (gap 25px row / 10px column). Image fills card edge-to-edge with no radius. Below image: project name in AftenScreen ~27px Ink, followed by em-dash and category label in Stone BentonSans 16px. No card background, no border, no shadow — the image IS the card surface.",
+            "evidence": [],
+            "observedProperties": [
+              "Project portfolio entry"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "full-bleed-media-block",
+        "name": "Full-Bleed Media Block",
+        "category": "Refero components",
+        "description": "Rectangular block, 100% viewport width, 0px radius, Ink (#070707) background. Typically hosts video or oversized photography. Sits between text sections as a visual breather. No overlay, no caption within the block — context lives above and below in surrounding text.",
+        "variants": [
+          {
+            "id": "full-bleed-media-block-reference",
+            "name": "Reference",
+            "description": "Rectangular block, 100% viewport width, 0px radius, Ink (#070707) background. Typically hosts video or oversized photography. Sits between text sections as a visual breather. No overlay, no caption within the block — context lives above and below in surrounding text.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero video / feature showcase"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading-lighter",
+        "name": "Section Heading (Lighter)",
+        "category": "Refero components",
+        "description": "AftenScreen 100px, weight 400, line-height 0.80, color Stone (#a2a2a9). Appears as a quiet alternative to the full-strength Ink display — used for transition sections (\"Lovable Products / from vision to launch\") where the content is still introducing itself.",
+        "variants": [
+          {
+            "id": "section-heading-lighter-reference",
+            "name": "Reference",
+            "description": "AftenScreen 100px, weight 400, line-height 0.80, color Stone (#a2a2a9). Appears as a quiet alternative to the full-strength Ink display — used for transition sections (\"Lovable Products / from vision to launch\") where the content is still introducing itself.",
+            "evidence": [],
+            "observedProperties": [
+              "Mid-page editorial heading"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "nav-link-ghost",
+        "name": "Nav Link (Ghost)",
+        "category": "Refero components",
+        "description": "BentonSans 16px, weight 400, color Ink (top nav) or Stone (footer). No underline by default, no background. On hover: opacity shift or color transition to Stone. The link IS the button — there is no filled alternative.",
+        "variants": [
+          {
+            "id": "nav-link-ghost-reference",
+            "name": "Reference",
+            "description": "BentonSans 16px, weight 400, color Ink (top nav) or Stone (footer). No underline by default, no background. On hover: opacity shift or color transition to Stone. The link IS the button — there is no filled alternative.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary navigation and footer links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer",
+        "name": "Footer",
+        "category": "Refero components",
+        "description": "Ink (#070707) background, Paper (#ffffff) text. BentonSans 16px body, 12px caption for fine print. Spacious padding (54-100px vertical). No social icons styled prominently — links live as text only.",
+        "variants": [
+          {
+            "id": "footer-reference",
+            "name": "Reference",
+            "description": "Ink (#070707) background, Paper (#ffffff) text. BentonSans 16px body, 12px caption for fine print. Spacious padding (54-100px vertical). No social icons styled prominently — links live as text only.",
+            "evidence": [],
+            "observedProperties": [
+              "Site footer with contact and metadata"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed page canvas with no persistent side margins on the outermost sections. Top navigation spans edge-to-edge. The display headline bleeds across the full viewport width. Section rhythm is: short typographic intro → full-bleed media block → grid of case studies → typographic transition. The case study grid is a strict 2-column layout (10-25px gaps) that always reads as pairs, never as a 3+ column matrix. Vertical breathing room is extreme (100-160px between major sections) — the layout is generous and editorial, never information-dense.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Photography is the only visual medium beyond type. Case study images are high-production editorial photography — fashion, lifestyle, product, and luxury — often full-bleed with no treatment overlay. Portrait-oriented crops for people, product crops for objects. Full-bleed video blocks in Ink act as movement punctuation. The aesthetic is gallery-curated, not stock — every image looks commissioned. No illustrations, no abstract graphics, no decorative shapes. The interface itself is the negative space; imagery is the content.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "This system is strictly flat. No shadows, no glows, no elevation tokens. Depth is communicated exclusively through scale (type size), contrast (black blocks against white), and the 4px corner radius — the only concession to softness in an otherwise sharp-edged interface. Any drop shadow would immediately break the editorial gallery feel.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use only the five neutral tokens — Ink, Paper, Fog, Stone, Graphite. Never introduce chromatic color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set display type at 75-180px with line-height 0.80-1.00 and letter-spacing -0.04em; weight stays at 400.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all border-radius at 4px — for cards, buttons, tags, inputs, and image frames.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain a 10× scale ratio between body (16px) and display (180px) to preserve editorial hierarchy.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Stone (#a2a2a9) for the ampersand, category labels, and any secondary text — never for body paragraphs.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Space major sections with 100-160px vertical padding; element gaps stay in the 5-25px compact range.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Render case study images edge-to-edge with no border, no radius, no shadow — the image is the card.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce any color — no blue, red, green, or accent hue of any kind.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use shadows, glows, or any CSS box-shadow. Depth comes from scale and contrast only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use border-radius above 4px — the 4px value is the ceiling, not the floor.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use display type at body sizes. AftenScreen under 50px should be paired with lower line-height to feel intentional, not just oversized body text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use bold or semibold weights for emphasis — weight 400 + size does all the work.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not fill buttons with Ink as a primary action. The system has no filled button; navigation and CTAs are text-only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use 3+ column grids for case studies. The layout is always pairs.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

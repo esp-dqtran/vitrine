@@ -19,7 +19,11 @@ import {
 import { createSitesStore } from "../../../src/sitesStore.ts";
 import { createWappalyzerTechnologyDetector } from "../../../src/wappalyzerBrowser.ts";
 import { createSitesPipelineHandler } from "./pipeline.ts";
-import { startSitesImportWorker } from "./start.ts";
+import {
+  runSitesCrawlWithTimeout,
+  sitesCrawlTimeoutMs,
+  startSitesImportWorker,
+} from "./start.ts";
 import { wappalyzerOptionsFromEnvironment } from "./wappalyzerConfig.ts";
 
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -45,6 +49,7 @@ const technologyDetector = wappalyzerOptions
   ? await createWappalyzerTechnologyDetector(wappalyzerOptions)
   : undefined;
 const queueScope = parseSitesQueueScope(process.env.MOBBIN_SITES_QUEUE_SCOPE);
+const crawlTimeoutMs = sitesCrawlTimeoutMs(process.env.SITES_CRAWL_TIMEOUT_MS);
 const handler = createSitesPipelineHandler({
   crawl: async (url, controls) => {
     const identity = classifySiteImportUrl(url);
@@ -52,8 +57,8 @@ const handler = createSitesPipelineHandler({
       const browser = await createPublicPageBrowser({
         headless: process.env.HEADLESS !== "false",
       });
-      try {
-        return await crawlGenericSite(identity.canonicalUrl, {
+      return runSitesCrawlWithTimeout(
+        () => crawlGenericSite(identity.canonicalUrl, {
           browser,
           objectStore,
           sitesStore: genericSitesStore,
@@ -61,18 +66,18 @@ const handler = createSitesPipelineHandler({
           ...(technologyDetector ? { technologyDetector } : {}),
           isCancelled: controls.isCancelled,
           report: controls.report,
-        });
-      } finally {
-        await browser.close();
-      }
+        }),
+        () => browser.close(),
+        crawlTimeoutMs,
+      );
     }
     const browser = await createMobbinSitesBrowserPorts({
       profileDir: process.env.MOBBIN_SITES_PROFILE_DIR ?? "data/browser-profile-mobbin-sites",
       storageStatePath: process.env.MOBBIN_SITES_STORAGE_STATE_PATH,
       headless: process.env.HEADLESS === "true",
     });
-    try {
-      return await crawlMobbinSite(url, {
+    return runSitesCrawlWithTimeout(
+      () => crawlMobbinSite(url, {
         captureSource: browser.captureSource,
         resolveSiteIcon: async (sourceUrl, name) =>
           (await resolveAppIcon(sourceUrl, name))?.url ?? null,
@@ -81,10 +86,10 @@ const handler = createSitesPipelineHandler({
         sitesStore,
         isCancelled: controls.isCancelled,
         report: controls.report,
-      });
-    } finally {
-      await browser.close();
-    }
+      }),
+      () => browser.close(),
+      crawlTimeoutMs,
+    );
   },
 });
 

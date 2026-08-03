@@ -1,3 +1,6 @@
+import type { DesignSystemSnapshot } from "./designSystem.ts";
+import { parseSiteDesignSystem } from "./siteDesignSystem.ts";
+
 const MAX_TEXT = 2_048;
 const MAX_EVIDENCE = 2_000;
 const MAX_FINDINGS = 500;
@@ -104,6 +107,7 @@ export interface SiteAnalysis {
   technology: SiteTechnologyFinding[];
   responsive: Array<Record<string, unknown> & { id: string }>;
   synthesis: SiteAnalysisSynthesis | null;
+  designSystem?: DesignSystemSnapshot<string>;
   warnings: string[];
 }
 
@@ -136,7 +140,7 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
     "responsive",
     "synthesis",
     "warnings",
-  ]);
+  ], ["designSystem"]);
   if (input.schemaVersion !== 1 && input.schemaVersion !== 2) {
     throw new Error("Invalid Site analysis schema version");
   }
@@ -159,6 +163,9 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
   const synthesis = input.synthesis === null
     ? null
     : parseSynthesis(input.synthesis, evidenceIds);
+  const designSystem = input.designSystem === undefined || input.designSystem === null
+    ? undefined
+    : parseSiteDesignSystem(input.designSystem, evidenceIds);
   const warnings = boundedArray(input.warnings, MAX_WARNINGS, "Site analysis warnings")
     .map((item) => text(item, MAX_TEXT, false));
   return {
@@ -171,6 +178,7 @@ export function parseSiteAnalysis(value: unknown): SiteAnalysis {
     technology,
     responsive,
     synthesis,
+    ...(designSystem ? { designSystem } : {}),
     warnings,
   };
 }

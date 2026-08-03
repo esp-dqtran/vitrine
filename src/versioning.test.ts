@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canTransitionVersion, validatePublication } from './versioning.ts';
+import { canTransitionVersion, isAppVersionProvider, validatePublication } from './versioning.ts';
 
 const analyzed = { id: 7, kind: 'screen' as const, analysis: { pageType: 'Workspace' } };
 const snapshot = {
@@ -36,4 +36,12 @@ test('allows only the curator draft-review-publish sequence', () => {
   assert.equal(canTransitionVersion('in_review', 'published'), true);
   assert.equal(canTransitionVersion('draft', 'published'), false);
   assert.equal(canTransitionVersion('published', 'draft'), false);
+});
+
+test('accepts only the compact Mobbin and Refero provider codes', () => {
+  assert.equal(isAppVersionProvider('m'), true);
+  assert.equal(isAppVersionProvider('f'), true);
+  assert.equal(isAppVersionProvider('mobbin'), false);
+  assert.equal(isAppVersionProvider('refero'), false);
+  assert.equal(isAppVersionProvider(undefined), false);
 });

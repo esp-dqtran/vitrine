@@ -1,0 +1,1922 @@
+{
+  "schemaVersion": 1,
+  "id": "78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+  "sourceUrl": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+  "sitemapLastModified": "2026-06-05T05:42:57.202Z",
+  "fetchedAt": "2026-08-02T18:07:35.057Z",
+  "contentHash": "d9bc5bcd493e138d920b64f97f03cb8e125e7565a25a936710dd4a2ed86c542a",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Face Formula design system",
+            "item": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa#style-reference",
+        "name": "Face Formula design system reference",
+        "headline": "Face Formula design system | Refero Styles",
+        "description": "Explore Face Formula's light E-commerce design system: White Canvas #ffffff, Mist #f2f5f8 colors, Libre Caslon Condensed, Circular Pro typography, and...",
+        "url": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+        "mainEntityOfPage": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Face Formula",
+          "url": "https://faceformula.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/c39d63ff-b540-45a5-8e97-67913c3bf135.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/c39d63ff-b540-45a5-8e97-67913c3bf135.jpg",
+          "caption": "Screenshot of Face Formula"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/c39d63ff-b540-45a5-8e97-67913c3bf135.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Face Formula design system",
+          "Face Formula website design",
+          "Face Formula colors",
+          "Face Formula typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "E-commerce design system",
+          "White Canvas",
+          "Mist",
+          "Soft Mist",
+          "Pale Slate",
+          "Libre Caslon Condensed",
+          "Circular Pro"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Face Formula design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Face Formula website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Face Formula colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Face Formula typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "E-commerce design system"
+          }
+        ],
+        "datePublished": "2026-04-30T00:38:56.879Z",
+        "dateModified": "2026-04-30T00:38:56.879Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://faceformula.com",
+      "siteName": "Face Formula",
+      "extractedAt": "2026-06-03T18:52:54.465Z",
+      "durationMs": 41839,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 502,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "skipped",
+          "attempts": 1
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#3b505a",
+            "oklch": {
+              "c": 0.03082761952346304,
+              "h": 228.78134484560587,
+              "l": 0.417816861349031
+            },
+            "contexts": [
+              "other",
+              "image",
+              "heading",
+              "link",
+              "card",
+              "body",
+              "button",
+              "footer",
+              "nav",
+              "input",
+              "icon",
+              "list"
+            ],
+            "frequency": 1422,
+            "confidence": 1,
+            "prominence": 101605799.5291417,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "nav/fill": 1,
+              "nav/color": 141,
+              "body/color": 12,
+              "card/color": 4,
+              "icon/color": 2,
+              "link/color": 13,
+              "list/color": 1,
+              "other/fill": 12,
+              "image/color": 18,
+              "input/color": 2,
+              "other/color": 78,
+              "button/color": 2,
+              "footer/color": 1,
+              "other/stroke": 4,
+              "heading/color": 14,
+              "nav/borderColor": 536,
+              "body/borderColor": 48,
+              "card/borderColor": 16,
+              "icon/borderColor": 8,
+              "link/borderColor": 52,
+              "list/borderColor": 4,
+              "image/borderColor": 72,
+              "input/borderColor": 8,
+              "other/borderColor": 304,
+              "button/borderColor": 8,
+              "footer/borderColor": 4,
+              "heading/borderColor": 56,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#f2f5f8",
+            "oklch": {
+              "c": 0.005139478366327116,
+              "h": 247.87712768468225,
+              "l": 0.9687254300325229
+            },
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "input",
+              "body",
+              "icon",
+              "button",
+              "image",
+              "heading",
+              "list",
+              "card"
+            ],
+            "frequency": 568,
+            "confidence": 1,
+            "prominence": 17606707.965387285,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "nav/color": 10,
+              "body/color": 5,
+              "card/color": 5,
+              "icon/color": 1,
+              "link/color": 9,
+              "list/color": 8,
+              "other/fill": 12,
+              "image/color": 6,
+              "input/color": 1,
+              "other/color": 47,
+              "button/color": 2,
+              "other/stroke": 12,
+              "heading/color": 15,
+              "nav/borderColor": 40,
+              "body/borderColor": 20,
+              "card/borderColor": 20,
+              "icon/borderColor": 4,
+              "link/borderColor": 36,
+              "list/borderColor": 32,
+              "image/borderColor": 24,
+              "input/borderColor": 4,
+              "other/borderColor": 184,
+              "button/borderColor": 8,
+              "heading/borderColor": 60,
+              "other/backgroundColor": 2,
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "button",
+              "icon"
+            ],
+            "frequency": 155,
+            "confidence": 1,
+            "prominence": 14015292.518536251,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "icon/fill": 8,
+              "icon/color": 8,
+              "other/fill": 12,
+              "other/color": 16,
+              "button/color": 4,
+              "other/stroke": 8,
+              "icon/borderColor": 32,
+              "other/borderColor": 64,
+              "other/backgroundColor": 3
+            }
+          },
+          {
+            "hex": "#cfdce7",
+            "oklch": {
+              "c": 0.020704477434210392,
+              "h": 241.14195878513652,
+              "l": 0.8879984847383037
+            },
+            "contexts": [
+              "button",
+              "nav",
+              "other"
+            ],
+            "frequency": 52,
+            "confidence": 1,
+            "prominence": 5432256.656539556,
+            "properties": [
+              "borderColor"
+            ],
+            "usageCounts": {
+              "nav/borderColor": 28,
+              "other/borderColor": 8,
+              "button/borderColor": 16
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 2639768,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 3
+            }
+          },
+          {
+            "hex": "#202f3b",
+            "oklch": {
+              "c": 0.029731840707828153,
+              "h": 243.09075314537796,
+              "l": 0.29728351630498934
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1923750,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#e6ebee",
+            "oklch": {
+              "c": 0.0067395486538390295,
+              "h": 233.64465419262177,
+              "l": 0.93712309509836
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "confidence": 1,
+            "prominence": 309956.5033146089,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 4
+            }
+          },
+          {
+            "hex": "#58737e",
+            "oklch": {
+              "c": 0.03582539872684432,
+              "h": 224.80038402502754,
+              "l": 0.5383459633272403
+            },
+            "contexts": [
+              "other",
+              "body",
+              "nav",
+              "button"
+            ],
+            "frequency": 62,
+            "confidence": 1,
+            "prominence": 15696.33707911078,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "nav/color": 7,
+              "body/color": 4,
+              "button/color": 1,
+              "nav/borderColor": 28,
+              "body/borderColor": 16,
+              "button/borderColor": 4,
+              "other/backgroundColor": 2
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.05974152798364874,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 19.19,
+            "background": "#000000",
+            "foreground": "#f2f5f8"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.48,
+            "background": "#e6ebee",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.04,
+            "background": "#cfdce7",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.71,
+            "background": "#ffffff",
+            "foreground": "#202f3b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.53,
+            "background": "#202f3b",
+            "foreground": "#f2f5f8"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.42,
+            "background": "#e6ebee",
+            "foreground": "#202f3b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.83,
+            "background": "#cfdce7",
+            "foreground": "#202f3b"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.46,
+            "background": "#ffffff",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.74,
+            "background": "#f2f5f8",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.05,
+            "background": "#e6ebee",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.06,
+            "background": "#cfdce7",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.04,
+            "background": "#ffffff",
+            "foreground": "#58737e"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.6,
+            "background": "#58737e",
+            "foreground": "#f2f5f8"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.19,
+            "background": "#e6ebee",
+            "foreground": "#58737e"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.17,
+            "background": "#58737e",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.72,
+            "background": "#202f3b",
+            "foreground": "#58737e"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.48,
+            "background": "#000000",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.68,
+            "background": "#58737e",
+            "foreground": "#3b505a"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.62,
+            "background": "#202f3b",
+            "foreground": "#3b505a"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|nav"
+            ]
+          },
+          {
+            "value": 2,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "marginTop|other"
+            ]
+          },
+          {
+            "value": 3,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "button",
+              "body",
+              "heading"
+            ],
+            "frequency": 15,
+            "properties": [
+              "marginLeft",
+              "marginTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "marginLeft|button",
+              "marginTop|body",
+              "rowGap|heading",
+              "columnGap|heading"
+            ]
+          },
+          {
+            "value": 5,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "other",
+              "list"
+            ],
+            "frequency": 7,
+            "properties": [
+              "columnGap",
+              "paddingTop",
+              "paddingRight",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "columnGap|other",
+              "paddingTop|other",
+              "paddingRight|other",
+              "marginTop|list"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingLeft",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "columnGap|body"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 14,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 15,
+            "contexts": [
+              "input",
+              "heading"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|input",
+              "marginLeft|heading"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "link",
+              "card",
+              "button",
+              "nav"
+            ],
+            "frequency": 26,
+            "properties": [
+              "paddingTop",
+              "rowGap",
+              "columnGap",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "rowGap|other",
+              "columnGap|other",
+              "marginTop|link",
+              "rowGap|card",
+              "columnGap|card",
+              "marginTop|button",
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 18,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|nav"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 12,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "nav",
+              "other",
+              "link"
+            ],
+            "frequency": 15,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginTop",
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav",
+              "rowGap|other",
+              "columnGap|other",
+              "marginTop|link",
+              "paddingTop|nav",
+              "paddingBottom|nav",
+              "marginBottom|nav"
+            ]
+          },
+          {
+            "value": 32,
+            "contexts": [
+              "other",
+              "heading",
+              "list",
+              "nav"
+            ],
+            "frequency": 78,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap",
+              "columnGap",
+              "marginBottom",
+              "marginLeft",
+              "marginTop",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "rowGap|other",
+              "columnGap|other",
+              "marginBottom|heading",
+              "marginLeft|heading",
+              "paddingRight|list",
+              "paddingLeft|list",
+              "marginTop|other",
+              "paddingRight|nav",
+              "paddingLeft|nav",
+              "paddingTop|other",
+              "rowGap|nav",
+              "columnGap|nav",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 47,
+            "contexts": [
+              "other",
+              "button",
+              "nav"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingBottom",
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "paddingTop|other",
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingBottom|nav"
+            ]
+          },
+          {
+            "value": 84,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 95,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Circular Pro",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 409,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Libre Caslon Condensed",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 28,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Third",
+          "ratio": 1.25,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "button",
+              "link",
+              "body",
+              "other",
+              "icon",
+              "heading"
+            ],
+            "frequency": 129,
+            "lineHeight": 1.4,
+            "letterSpacing": 0.2,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.4,
+            "letterSpacing": 0.2,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 8,
+            "lineHeight": 1,
+            "letterSpacing": 0.2,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 13,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body",
+              "icon",
+              "button",
+              "nav"
+            ],
+            "frequency": 49,
+            "lineHeight": 1.4,
+            "letterSpacing": 0.02,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "input"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.4,
+            "letterSpacing": 0.02,
+            "textTransform": "capitalize"
+          },
+          {
+            "size": 15,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "body",
+              "other",
+              "heading"
+            ],
+            "frequency": 7,
+            "lineHeight": 1.4,
+            "letterSpacing": 0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Circular Pro",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "image",
+              "card",
+              "list",
+              "footer",
+              "heading"
+            ],
+            "frequency": 208,
+            "lineHeight": 1.4,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 32,
+            "family": "Libre Caslon Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 52,
+            "family": "Libre Caslon Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 120,
+            "family": "Libre Caslon Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 22,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Libre Caslon Condensed weight 400 at 32px, 52px, or 120px only — no other sizes, no bold variants, no italics",
+        "Apply 0px border-radius to every surface, button, card, input, badge, and image — sharpness is non-negotiable",
+        "Use ghost text links (Circular Pro 13px, uppercase, 1px underline, Deep Slate #3b505a) as the primary CTA pattern instead of filled buttons",
+        "Maintain 8px as the base spacing unit with multiples of 8 for section and card padding, and 4-16px increments for micro-spacing",
+        "Set the wordmark at 120px on the hero with letter-spacing -2.4px and the em-dash between FACE and FORMULA as a fixed compositional device",
+        "Limit the palette to the eight neutral tones — no accent colors, no gradients, no chromatic highlights",
+        "Use Mist (#f2f5f8) as the only light surface tone and Deep Slate (#3b505a) as the only dark surface tone; Soft Mist (#e6ebee) is the single step between them"
+      ],
+      "donts": [
+        "Do not introduce any chromatic color — no greens, blues, reds, or warm accents; the 6% colorfulness is the brand",
+        "Do not use filled buttons, pill shapes, or rounded corners — the system is entirely sharp-edged and ghost-by-default",
+        "Do not add shadows, glows, or blur effects — depth comes from surface color contrast alone, never from elevation",
+        "Do not use Circular Pro above 16px or in bold weight — if you need larger text, switch to Libre Caslon Condensed",
+        "Do not use Libre Caslon Condensed below 32px — the condensed proportions become illegible at small sizes and strip the editorial signal",
+        "Do not center body copy or multi-line text blocks — editorial layouts left-align; center only for section headlines and short labels",
+        "Do not stack more than two typefaces on a single screen in a way that competes — the wordmark dominates or body text dominates, never both equally"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#ffffff",
+          "name": "White Canvas",
+          "role": "Page background, product photography backdrop, hero base layer",
+          "group": "neutral"
+        },
+        {
+          "hex": "#f2f5f8",
+          "name": "Mist",
+          "role": "Primary light surface for cards, product tiles, section bands, input fills, hairline borders — the most-used non-white color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#e6ebee",
+          "name": "Soft Mist",
+          "role": "Elevated surface layer one step above Mist for nested cards or secondary content blocks",
+          "group": "neutral"
+        },
+        {
+          "hex": "#cfdce7",
+          "name": "Pale Slate",
+          "role": "Button and navigation borders, subtle dividers, outlined-control stroke",
+          "group": "neutral"
+        },
+        {
+          "hex": "#58737e",
+          "name": "Steel",
+          "role": "Secondary text, muted helper labels, subdued body copy where Deep Slate would feel too heavy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#3b505a",
+          "name": "Deep Slate",
+          "role": "The signature brand color — primary text, all hairline borders (536 nav + 304 misc border uses), nav link color, footer text, and the single dark surface tone that anchors the otherwise pale system",
+          "group": "neutral"
+        },
+        {
+          "hex": "#202f3b",
+          "name": "Deep Ink",
+          "role": "Heaviest heading text where maximum contrast against white is needed",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Carbon",
+          "role": "Icon strokes, strict-contrast text, and occasional fill — used sparingly only when absolute black is required",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed hero with a massive overlaid wordmark logo, navigation transparent over photography. Interior pages use a max-width ~1400px content area centered on a white canvas. Section rhythm is generous: 64px vertical gaps between bands, with sections alternating between White Canvas and Mist (#f2f5f8) surface tones to create visual breaks without dividers. Content blocks are two-column or centered single-column — never three or more columns at the body level. Product showcases use a 2-column grid with generous internal padding. Navigation is a single horizontal bar: left utility links, center wordmark, right account/cart, with a 1px hairline bottom border. The layout philosophy is magazine-spread: the hero is the cover, the interior is sequential editorial sections that read top-to-bottom with breathing room, and the footer is a compact dark-slate band. Everything is left-aligned or centered — no asymmetric or offset compositions.",
+      "imagery": "Full-bleed editorial portraiture dominates the hero: close-cropped, high-key, natural-light photography of faces with visible skin texture, freckles, and natural hair movement — no retouching cues, no studio gloss. The model is the atmosphere, not the product. Product photography is equally unstyled: bottles and jars shot on pure white or light neutral backgrounds with soft natural shadows, no lifestyle context, no props, no hands. The product is presented like a museum object. Secondary editorial imagery shows Norwegian landscape (foggy fjords, muted greens and grays) with a desaturated, slightly cool color grade that matches the UI palette. Iconography is minimal — thin-line circular icons in the navigation at near-iconographic scale, barely registering as graphic elements. Overall the visual system is image-heavy in the hero but text-dominant in the body, with photography used as atmosphere rather than explanation.",
+      "similar": [
+        {
+          "why": "Same editorial minimalism with near-monochromatic palette, serif display type, ghost text-link CTAs, and full-bleed portrait photography on white canvas",
+          "business": "Aesop"
+        },
+        {
+          "why": "Similar achromatic light theme with sparse layouts, thin-line navigation, and product photography on pure white backgrounds — though Glossier leans pinker, the structural restraint is the shared trait",
+          "business": "Glossier"
+        },
+        {
+          "why": "Same condensed serif wordmark treatment, editorial spread layout, and hairline-border minimal navigation",
+          "business": "By Far"
+        },
+        {
+          "why": "Same Scandinavian quiet-luxury language: oversized serif type, full-bleed editorial photography, zero accent color, and text-link-only CTAs",
+          "business": "Toteme"
+        },
+        {
+          "why": "Same Norwegian minimal heritage, muted slate-and-mist palette, and utilitarian Circular/Inter-class sans-serif paired with editorial display type",
+          "business": "Norse Projects"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "0px",
+          "badges": "0px",
+          "images": "0px",
+          "inputs": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "16px",
+        "sectionGap": "64px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1400px"
+      },
+      "industry": "ecommerce",
+      "surfaces": [
+        {
+          "hex": "#ffffff",
+          "name": "White Canvas",
+          "level": 0,
+          "purpose": "Page background, full-bleed photography base"
+        },
+        {
+          "hex": "#f2f5f8",
+          "name": "Mist",
+          "level": 1,
+          "purpose": "Primary light surface — product cards, section bands, input fields"
+        },
+        {
+          "hex": "#e6ebee",
+          "name": "Soft Mist",
+          "level": 2,
+          "purpose": "Elevated surface for nested or secondary content blocks"
+        },
+        {
+          "hex": "#3b505a",
+          "name": "Deep Slate",
+          "level": 3,
+          "purpose": "Dark accent surface for footer or inverted sections"
+        }
+      ],
+      "northStar": "Nordic editorial portrait. A quiet Scandinavian magazine spread where the model's gaze and a 120px condensed-serif masthead do all the talking against walls of cool mist.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.4,
+          "letterSpacing": 2.4
+        },
+        {
+          "role": "body-lg",
+          "size": 16,
+          "lineHeight": 1.4,
+          "letterSpacing": 0.32
+        },
+        {
+          "role": "subheading",
+          "size": 32,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.32
+        },
+        {
+          "role": "heading",
+          "size": 52,
+          "lineHeight": 1.1,
+          "letterSpacing": -0.52
+        },
+        {
+          "role": "display",
+          "size": 120,
+          "lineHeight": 1,
+          "letterSpacing": -2.4
+        }
+      ],
+      "components": [
+        {
+          "name": "Wordmark Logo",
+          "role": "Primary brand identity — overlaid on hero photography and centered in navigation",
+          "description": "120px Libre Caslon Condensed weight 400, letter-spacing -2.4px, white (#ffffff) on dark photography. The em-dash between FACE and FORMULA is a signature compositional device. Functions as the dominant visual element on every screen — it is both logo and hero typography."
+        },
+        {
+          "name": "Ghost Text Link",
+          "role": "Primary CTA pattern — used for SHOP NOW, READ MORE, FIND YOUR FORMULA",
+          "description": "Circular Pro 13px weight 400, letter-spacing 0.13px, color Deep Slate (#3b505a), uppercase, with a 1px underline. No background, no border, no padding beyond a small click target. The underline is the entire visual mechanism. This replaces what other sites would use a filled button for."
+        },
+        {
+          "name": "Outlined Navigation Button",
+          "role": "Secondary action — language/region selector (Ship to: Europa / EUR)",
+          "description": "Circular Pro 12-13px, color Deep Slate (#3b505a), 1px border in Pale Slate (#cfdce7) or Deep Slate, no fill, no radius, inline with surrounding text. Behaves like a text element with a hairline outline."
+        },
+        {
+          "name": "Bestseller Tag",
+          "role": "Product status indicator — appears on featured product cards",
+          "description": "Circular Pro 12px weight 400, uppercase, letter-spacing 2.4px (0.2em), color Deep Slate (#3b505a) or Deep Ink, on a Mist (#f2f5f8) rectangular fill. No border, no radius. Positioned as a small horizontal label at the top of product cards. The wide tracking turns a functional label into editorial typography."
+        },
+        {
+          "name": "Product Card",
+          "role": "Product showcase unit in grid sections",
+          "description": "Mist (#f2f5f8) background, 0px radius, generous internal padding (~24px). Product image centered on a white or light surface within the card. Bestseller tag top-left. Product name and category in Circular Pro 13-15px Deep Slate below or beside the image. No shadow, no border — the surface color contrast alone defines the card boundary."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Primary site navigation — overlaid on hero, solid on interior pages",
+          "description": "Three-zone horizontal layout: left-aligned utility links (SHOP, COLLECTIONS, ABOUT US, SIGNATURE TREATMENTS) in Circular Pro 13px Deep Slate; centered wordmark logo in white or Deep Slate depending on context; right-aligned account/cart utilities with 12px uppercase labels and uppercase region selector. 1px hairline Deep Slate bottom border. 12px row-gap between nav groups. Transparent over hero, white on interior pages."
+        },
+        {
+          "name": "Hero Overlay Block",
+          "role": "Headline + subtext + CTA stack positioned over full-bleed photography",
+          "description": "Left-aligned, bottom-left positioned. Headline: Circular Pro or Libre Caslon at 32-52px, white (#ffffff), letter-spacing tight. Subtext: 15px Circular Pro white at 80% opacity. CTA: ghost text link in white with underline. No background card — the text floats directly on the photograph."
+        },
+        {
+          "name": "Section Heading",
+          "role": "Editorial section titles — \"Rooted in Norway. Guided by biology.\"",
+          "description": "Libre Caslon Condensed 52px weight 400, color Deep Ink (#202f3b), letter-spacing -0.52px, line-height 1.1. Two-line stacking is a signature compositional pattern. Centered or left-aligned depending on section. No underline, no decoration."
+        },
+        {
+          "name": "Image Grid Tile",
+          "role": "Editorial imagery block in content sections",
+          "description": "Two side-by-side images with 16px column-gap, 0px radius, raw edges. One image is landscape photography (Norwegian landscape), the other is a product hero shot on neutral background. Aspect ratios vary — the irregularity is intentional, mimicking editorial layout."
+        },
+        {
+          "name": "Input Field",
+          "role": "Form input — newsletter signup, search",
+          "description": "0px radius, 1px border in Deep Slate (#3b505a) or Pale Slate (#cfdce7), Mist (#f2f5f8) fill, Circular Pro 13-15px Deep Slate text. No focus ring glow — focus likely intensifies the border. Minimal padding ~12px vertical."
+        },
+        {
+          "name": "Inline Underline Link",
+          "role": "Text-level navigation and reference links in body copy",
+          "description": "Circular Pro 15px Deep Slate with 1px Deep Slate underline. The underline sits below the baseline with small offset. No color change on hover — weight or opacity shift only. This is the most-used interactive element after ghost buttons."
+        },
+        {
+          "name": "Footer",
+          "role": "Site footer with link columns and legal text",
+          "description": "Likely Deep Slate (#3b505a) background with white (#ffffff) or Mist text. Circular Pro 12-13px. Organized in multi-column link groups with uppercase column headers. Hairline 1px dividers in a lighter slate between groups."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Editorial display — the wordmark, section headings, and any text that needs to feel like a magazine title. Used at only three sizes, all dramatic, all in a single weight 400. The condensed proportions and negative tracking make the brand name feel architectural and permanent rather than decorative.",
+          "sizes": "32px, 52px, 120px",
+          "family": "Libre Caslon Condensed",
+          "weight": "400",
+          "lineHeight": "1.00, 1.10, 1.20",
+          "substitute": "Playfair Display SC, Bodoni Moda, Cormorant Garamond Condensed",
+          "letterSpacing": "-0.0200em at 120px, -0.0100em at 52px and 32px"
+        },
+        {
+          "role": "The single workhorse sans for all navigation, body copy, buttons, links, inputs, icons, and utility UI. The geometric neutrality and slightly wide letterforms give the system a calm, clinical tone appropriate to a biology-driven skincare brand. Never goes above 16px, never goes bold — the 400 weight at small sizes is the only voice UI text gets.",
+          "sizes": "12px, 13px, 15px, 16px",
+          "family": "Circular Pro",
+          "weight": "400",
+          "lineHeight": "1.00, 1.40",
+          "substitute": "Inter, Söhne, Manrope",
+          "letterSpacing": "0.0100em to 0.2000em — the 0.2em tracking at 12px is for uppercase micro-labels like BESTSELLER, turning functional text into quiet typographic punctuation"
+        }
+      ],
+      "description": "Face Formula reads like a Scandinavian editorial spread translated into a storefront: a near-monochromatic canvas of warm grays and cool mists, anchored by a colossal condensed-serif wordmark that makes the brand name feel like a magazine masthead rather than a logo. The palette is deliberately desaturated — 94% achromatic — so the only color the eye registers is the cool slate (#3b505a) that defines borders, navigation, and primary text against washes of mist (#f2f5f8) and white. Every interface decision whispers: ghost text links with hairline underlines instead of filled buttons, hairline 1px dividers, generous 8px-base vertical rhythm, and product surfaces that feel like gallery plinths. Two typefaces do all the work — Libre Caslon Condensed for editorial authority at display sizes, Circular Pro for every utilitarian surface — and the absence of shadows, gradients, or accent color forces the photography to carry all warmth and emotion.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "This design system deliberately avoids all shadows and elevation effects. Depth and hierarchy are created exclusively through surface color layering (White Canvas → Mist → Soft Mist → Deep Slate) and 1px hairline borders in Deep Slate or Pale Slate. There are no box-shadows, no glows, no blur effects, and no z-axis signaling — the flatness is a core brand expression of clinical, honest, science-led design."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/bf185026-823f-4b6d-bf49-e31b1156cf35.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/c39d63ff-b540-45a5-8e97-67913c3bf135.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "face-formula",
+    "generatedAt": "2026-06-03T18:52:54.465Z",
+    "summary": "Face Formula reads like a Scandinavian editorial spread translated into a storefront: a near-monochromatic canvas of warm grays and cool mists, anchored by a colossal condensed-serif wordmark that makes the brand name feel like a magazine masthead rather than a logo. The palette is deliberately desaturated — 94% achromatic — so the only color the eye registers is the cool slate (#3b505a) that defines borders, navigation, and primary text against washes of mist (#f2f5f8) and white. Every interface decision whispers: ghost text links with hairline underlines instead of filled buttons, hairline 1px dividers, generous 8px-base vertical rhythm, and product surfaces that feel like gallery plinths. Two typefaces do all the work — Libre Caslon Condensed for editorial authority at display sizes, Circular Pro for every utilitarian surface — and the absence of shadows, gradients, or accent color forces the photography to carry all warmth and emotion.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+      "sourceUrl": "https://styles.refero.design/style/78ac71e1-cd4c-4b4d-bac5-e7e6c65cd3fa",
+      "originalUrl": "https://faceformula.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/bf185026-823f-4b6d-bf49-e31b1156cf35.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/c39d63ff-b540-45a5-8e97-67913c3bf135.jpg",
+      "importedAt": "2026-08-02T18:07:35.057Z",
+      "upstreamModifiedAt": "2026-06-05T05:42:57.202Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Nordic editorial portrait. A quiet Scandinavian magazine spread where the model's gaze and a 120px condensed-serif masthead do all the talking against walls of cool mist.",
+      "industry": "ecommerce"
+    },
+    "tokens": [
+      {
+        "id": "color-white-canvas",
+        "kind": "color",
+        "name": "White Canvas",
+        "value": "#ffffff",
+        "role": "Page background, product photography backdrop, hero base layer",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mist",
+        "kind": "color",
+        "name": "Mist",
+        "value": "#f2f5f8",
+        "role": "Primary light surface for cards, product tiles, section bands, input fills, hairline borders — the most-used non-white color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-soft-mist",
+        "kind": "color",
+        "name": "Soft Mist",
+        "value": "#e6ebee",
+        "role": "Elevated surface layer one step above Mist for nested cards or secondary content blocks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pale-slate",
+        "kind": "color",
+        "name": "Pale Slate",
+        "value": "#cfdce7",
+        "role": "Button and navigation borders, subtle dividers, outlined-control stroke",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-steel",
+        "kind": "color",
+        "name": "Steel",
+        "value": "#58737e",
+        "role": "Secondary text, muted helper labels, subdued body copy where Deep Slate would feel too heavy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-slate",
+        "kind": "color",
+        "name": "Deep Slate",
+        "value": "#3b505a",
+        "role": "The signature brand color — primary text, all hairline borders (536 nav + 304 misc border uses), nav link color, footer text, and the single dark surface tone that anchors the otherwise pale system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-deep-ink",
+        "kind": "color",
+        "name": "Deep Ink",
+        "value": "#202f3b",
+        "role": "Heaviest heading text where maximum contrast against white is needed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-carbon",
+        "kind": "color",
+        "name": "Carbon",
+        "value": "#000000",
+        "role": "Icon strokes, strict-contrast text, and occasional fill — used sparingly only when absolute black is required",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-libre-caslon-condensed",
+        "kind": "typography",
+        "name": "Libre Caslon Condensed",
+        "value": "font-family: Libre Caslon Condensed; font-weight: 400; font-size: 32px, 52px, 120px; line-height: 1.00, 1.10, 1.20; letter-spacing: -0.0200em at 120px, -0.0100em at 52px and 32px",
+        "role": "Editorial display — the wordmark, section headings, and any text that needs to feel like a magazine title. Used at only three sizes, all dramatic, all in a single weight 400. The condensed proportions and negative tracking make the brand name feel architectural and permanent rather than decorative.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-circular-pro",
+        "kind": "typography",
+        "name": "Circular Pro",
+        "value": "font-family: Circular Pro; font-weight: 400; font-size: 12px, 13px, 15px, 16px; line-height: 1.00, 1.40; letter-spacing: 0.0100em to 0.2000em — the 0.2em tracking at 12px is for uppercase micro-labels like BESTSELLER, turning functional text into quiet typographic punctuation",
+        "role": "The single workhorse sans for all navigation, body copy, buttons, links, inputs, icons, and utility UI. The geometric neutrality and slightly wide letterforms give the system a calm, clinical tone appropriate to a biology-driven skincare brand. Never goes above 16px, never goes bold — the 400 weight at small sizes is the only voice UI text gets.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.4; letter-spacing: 2.4px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-lg-scale",
+        "kind": "typography",
+        "name": "body-lg",
+        "value": "font-size: 16px; line-height: 1.4; letter-spacing: 0.32px",
+        "role": "Imported body-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 32px; line-height: 1.2; letter-spacing: -0.32px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 52px; line-height: 1.1; letter-spacing: -0.52px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 120px; line-height: 1; letter-spacing: -2.4px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1400px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-badges",
+        "kind": "radius",
+        "name": "badges",
+        "value": "0px",
+        "role": "Imported badges radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "0px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "This design system deliberately avoids all shadows and elevation effects. Depth and hierarchy are created exclusively through surface color layering (White Canvas → Mist → Soft Mist → Deep Slate) and 1px hairline borders in Deep Slate or Pale Slate. There are no box-shadows, no glows, no blur effects, and no z-axis signaling — the flatness is a core brand expression of clinical, honest, science-led design.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "wordmark-logo",
+        "name": "Wordmark Logo",
+        "category": "Refero components",
+        "description": "120px Libre Caslon Condensed weight 400, letter-spacing -2.4px, white (#ffffff) on dark photography. The em-dash between FACE and FORMULA is a signature compositional device. Functions as the dominant visual element on every screen — it is both logo and hero typography.",
+        "variants": [
+          {
+            "id": "wordmark-logo-reference",
+            "name": "Reference",
+            "description": "120px Libre Caslon Condensed weight 400, letter-spacing -2.4px, white (#ffffff) on dark photography. The em-dash between FACE and FORMULA is a signature compositional device. Functions as the dominant visual element on every screen — it is both logo and hero typography.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary brand identity — overlaid on hero photography and centered in navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-text-link",
+        "name": "Ghost Text Link",
+        "category": "Refero components",
+        "description": "Circular Pro 13px weight 400, letter-spacing 0.13px, color Deep Slate (#3b505a), uppercase, with a 1px underline. No background, no border, no padding beyond a small click target. The underline is the entire visual mechanism. This replaces what other sites would use a filled button for.",
+        "variants": [
+          {
+            "id": "ghost-text-link-reference",
+            "name": "Reference",
+            "description": "Circular Pro 13px weight 400, letter-spacing 0.13px, color Deep Slate (#3b505a), uppercase, with a 1px underline. No background, no border, no padding beyond a small click target. The underline is the entire visual mechanism. This replaces what other sites would use a filled button for.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary CTA pattern — used for SHOP NOW, READ MORE, FIND YOUR FORMULA"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-navigation-button",
+        "name": "Outlined Navigation Button",
+        "category": "Refero components",
+        "description": "Circular Pro 12-13px, color Deep Slate (#3b505a), 1px border in Pale Slate (#cfdce7) or Deep Slate, no fill, no radius, inline with surrounding text. Behaves like a text element with a hairline outline.",
+        "variants": [
+          {
+            "id": "outlined-navigation-button-reference",
+            "name": "Reference",
+            "description": "Circular Pro 12-13px, color Deep Slate (#3b505a), 1px border in Pale Slate (#cfdce7) or Deep Slate, no fill, no radius, inline with surrounding text. Behaves like a text element with a hairline outline.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action — language/region selector (Ship to: Europa / EUR)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "bestseller-tag",
+        "name": "Bestseller Tag",
+        "category": "Refero components",
+        "description": "Circular Pro 12px weight 400, uppercase, letter-spacing 2.4px (0.2em), color Deep Slate (#3b505a) or Deep Ink, on a Mist (#f2f5f8) rectangular fill. No border, no radius. Positioned as a small horizontal label at the top of product cards. The wide tracking turns a functional label into editorial typography.",
+        "variants": [
+          {
+            "id": "bestseller-tag-reference",
+            "name": "Reference",
+            "description": "Circular Pro 12px weight 400, uppercase, letter-spacing 2.4px (0.2em), color Deep Slate (#3b505a) or Deep Ink, on a Mist (#f2f5f8) rectangular fill. No border, no radius. Positioned as a small horizontal label at the top of product cards. The wide tracking turns a functional label into editorial typography.",
+            "evidence": [],
+            "observedProperties": [
+              "Product status indicator — appears on featured product cards"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-card",
+        "name": "Product Card",
+        "category": "Refero components",
+        "description": "Mist (#f2f5f8) background, 0px radius, generous internal padding (~24px). Product image centered on a white or light surface within the card. Bestseller tag top-left. Product name and category in Circular Pro 13-15px Deep Slate below or beside the image. No shadow, no border — the surface color contrast alone defines the card boundary.",
+        "variants": [
+          {
+            "id": "product-card-reference",
+            "name": "Reference",
+            "description": "Mist (#f2f5f8) background, 0px radius, generous internal padding (~24px). Product image centered on a white or light surface within the card. Bestseller tag top-left. Product name and category in Circular Pro 13-15px Deep Slate below or beside the image. No shadow, no border — the surface color contrast alone defines the card boundary.",
+            "evidence": [],
+            "observedProperties": [
+              "Product showcase unit in grid sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Three-zone horizontal layout: left-aligned utility links (SHOP, COLLECTIONS, ABOUT US, SIGNATURE TREATMENTS) in Circular Pro 13px Deep Slate; centered wordmark logo in white or Deep Slate depending on context; right-aligned account/cart utilities with 12px uppercase labels and uppercase region selector. 1px hairline Deep Slate bottom border. 12px row-gap between nav groups. Transparent over hero, white on interior pages.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Three-zone horizontal layout: left-aligned utility links (SHOP, COLLECTIONS, ABOUT US, SIGNATURE TREATMENTS) in Circular Pro 13px Deep Slate; centered wordmark logo in white or Deep Slate depending on context; right-aligned account/cart utilities with 12px uppercase labels and uppercase region selector. 1px hairline Deep Slate bottom border. 12px row-gap between nav groups. Transparent over hero, white on interior pages.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation — overlaid on hero, solid on interior pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-overlay-block",
+        "name": "Hero Overlay Block",
+        "category": "Refero components",
+        "description": "Left-aligned, bottom-left positioned. Headline: Circular Pro or Libre Caslon at 32-52px, white (#ffffff), letter-spacing tight. Subtext: 15px Circular Pro white at 80% opacity. CTA: ghost text link in white with underline. No background card — the text floats directly on the photograph.",
+        "variants": [
+          {
+            "id": "hero-overlay-block-reference",
+            "name": "Reference",
+            "description": "Left-aligned, bottom-left positioned. Headline: Circular Pro or Libre Caslon at 32-52px, white (#ffffff), letter-spacing tight. Subtext: 15px Circular Pro white at 80% opacity. CTA: ghost text link in white with underline. No background card — the text floats directly on the photograph.",
+            "evidence": [],
+            "observedProperties": [
+              "Headline + subtext + CTA stack positioned over full-bleed photography"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-heading",
+        "name": "Section Heading",
+        "category": "Refero components",
+        "description": "Libre Caslon Condensed 52px weight 400, color Deep Ink (#202f3b), letter-spacing -0.52px, line-height 1.1. Two-line stacking is a signature compositional pattern. Centered or left-aligned depending on section. No underline, no decoration.",
+        "variants": [
+          {
+            "id": "section-heading-reference",
+            "name": "Reference",
+            "description": "Libre Caslon Condensed 52px weight 400, color Deep Ink (#202f3b), letter-spacing -0.52px, line-height 1.1. Two-line stacking is a signature compositional pattern. Centered or left-aligned depending on section. No underline, no decoration.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial section titles — \"Rooted in Norway. Guided by biology.\""
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "image-grid-tile",
+        "name": "Image Grid Tile",
+        "category": "Refero components",
+        "description": "Two side-by-side images with 16px column-gap, 0px radius, raw edges. One image is landscape photography (Norwegian landscape), the other is a product hero shot on neutral background. Aspect ratios vary — the irregularity is intentional, mimicking editorial layout.",
+        "variants": [
+          {
+            "id": "image-grid-tile-reference",
+            "name": "Reference",
+            "description": "Two side-by-side images with 16px column-gap, 0px radius, raw edges. One image is landscape photography (Norwegian landscape), the other is a product hero shot on neutral background. Aspect ratios vary — the irregularity is intentional, mimicking editorial layout.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial imagery block in content sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "input-field",
+        "name": "Input Field",
+        "category": "Refero components",
+        "description": "0px radius, 1px border in Deep Slate (#3b505a) or Pale Slate (#cfdce7), Mist (#f2f5f8) fill, Circular Pro 13-15px Deep Slate text. No focus ring glow — focus likely intensifies the border. Minimal padding ~12px vertical.",
+        "variants": [
+          {
+            "id": "input-field-reference",
+            "name": "Reference",
+            "description": "0px radius, 1px border in Deep Slate (#3b505a) or Pale Slate (#cfdce7), Mist (#f2f5f8) fill, Circular Pro 13-15px Deep Slate text. No focus ring glow — focus likely intensifies the border. Minimal padding ~12px vertical.",
+            "evidence": [],
+            "observedProperties": [
+              "Form input — newsletter signup, search"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "inline-underline-link",
+        "name": "Inline Underline Link",
+        "category": "Refero components",
+        "description": "Circular Pro 15px Deep Slate with 1px Deep Slate underline. The underline sits below the baseline with small offset. No color change on hover — weight or opacity shift only. This is the most-used interactive element after ghost buttons.",
+        "variants": [
+          {
+            "id": "inline-underline-link-reference",
+            "name": "Reference",
+            "description": "Circular Pro 15px Deep Slate with 1px Deep Slate underline. The underline sits below the baseline with small offset. No color change on hover — weight or opacity shift only. This is the most-used interactive element after ghost buttons.",
+            "evidence": [],
+            "observedProperties": [
+              "Text-level navigation and reference links in body copy"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer",
+        "name": "Footer",
+        "category": "Refero components",
+        "description": "Likely Deep Slate (#3b505a) background with white (#ffffff) or Mist text. Circular Pro 12-13px. Organized in multi-column link groups with uppercase column headers. Hairline 1px dividers in a lighter slate between groups.",
+        "variants": [
+          {
+            "id": "footer-reference",
+            "name": "Reference",
+            "description": "Likely Deep Slate (#3b505a) background with white (#ffffff) or Mist text. Circular Pro 12-13px. Organized in multi-column link groups with uppercase column headers. Hairline 1px dividers in a lighter slate between groups.",
+            "evidence": [],
+            "observedProperties": [
+              "Site footer with link columns and legal text"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed hero with a massive overlaid wordmark logo, navigation transparent over photography. Interior pages use a max-width ~1400px content area centered on a white canvas. Section rhythm is generous: 64px vertical gaps between bands, with sections alternating between White Canvas and Mist (#f2f5f8) surface tones to create visual breaks without dividers. Content blocks are two-column or centered single-column — never three or more columns at the body level. Product showcases use a 2-column grid with generous internal padding. Navigation is a single horizontal bar: left utility links, center wordmark, right account/cart, with a 1px hairline bottom border. The layout philosophy is magazine-spread: the hero is the cover, the interior is sequential editorial sections that read top-to-bottom with breathing room, and the footer is a compact dark-slate band. Everything is left-aligned or centered — no asymmetric or offset compositions.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Full-bleed editorial portraiture dominates the hero: close-cropped, high-key, natural-light photography of faces with visible skin texture, freckles, and natural hair movement — no retouching cues, no studio gloss. The model is the atmosphere, not the product. Product photography is equally unstyled: bottles and jars shot on pure white or light neutral backgrounds with soft natural shadows, no lifestyle context, no props, no hands. The product is presented like a museum object. Secondary editorial imagery shows Norwegian landscape (foggy fjords, muted greens and grays) with a desaturated, slightly cool color grade that matches the UI palette. Iconography is minimal — thin-line circular icons in the navigation at near-iconographic scale, barely registering as graphic elements. Overall the visual system is image-heavy in the hero but text-dominant in the body, with photography used as atmosphere rather than explanation.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "This design system deliberately avoids all shadows and elevation effects. Depth and hierarchy are created exclusively through surface color layering (White Canvas → Mist → Soft Mist → Deep Slate) and 1px hairline borders in Deep Slate or Pale Slate. There are no box-shadows, no glows, no blur effects, and no z-axis signaling — the flatness is a core brand expression of clinical, honest, science-led design.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Libre Caslon Condensed weight 400 at 32px, 52px, or 120px only — no other sizes, no bold variants, no italics",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply 0px border-radius to every surface, button, card, input, badge, and image — sharpness is non-negotiable",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use ghost text links (Circular Pro 13px, uppercase, 1px underline, Deep Slate #3b505a) as the primary CTA pattern instead of filled buttons",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain 8px as the base spacing unit with multiples of 8 for section and card padding, and 4-16px increments for micro-spacing",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set the wordmark at 120px on the hero with letter-spacing -2.4px and the em-dash between FACE and FORMULA as a fixed compositional device",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Limit the palette to the eight neutral tones — no accent colors, no gradients, no chromatic highlights",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Mist (#f2f5f8) as the only light surface tone and Deep Slate (#3b505a) as the only dark surface tone; Soft Mist (#e6ebee) is the single step between them",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce any chromatic color — no greens, blues, reds, or warm accents; the 6% colorfulness is the brand",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use filled buttons, pill shapes, or rounded corners — the system is entirely sharp-edged and ghost-by-default",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add shadows, glows, or blur effects — depth comes from surface color contrast alone, never from elevation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use Circular Pro above 16px or in bold weight — if you need larger text, switch to Libre Caslon Condensed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use Libre Caslon Condensed below 32px — the condensed proportions become illegible at small sizes and strip the editorial signal",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not center body copy or multi-line text blocks — editorial layouts left-align; center only for section headlines and short labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not stack more than two typefaces on a single screen in a way that competes — the wordmark dominates or body text dominates, never both equally",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

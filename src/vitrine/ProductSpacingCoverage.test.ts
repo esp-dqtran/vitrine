@@ -94,14 +94,15 @@ test('normalizes relationships while preserving flow, evidence, and canvas geome
   assert.match(styles, /excalidraw \*/);
 });
 
-test('keeps the Flow workspace under its existing domain-owned spacing rules', async () => {
+test('keeps Flow internals domain-owned while sharing the App-detail body container', async () => {
   const styles = await read('./productSpacing.css');
   const flowWorkspaceExclusions = styles.match(/\.flow-workspace \*/g) ?? [];
   const flowDiscoveryExclusions = styles.match(/\.flows-discovery \*/g) ?? [];
 
   assert.equal(flowWorkspaceExclusions.length, 5);
   assert.equal(flowDiscoveryExclusions.length, 5);
-  assert.match(styles, /\.reference-detail__body-inner:has\(\.flow-workspace\)\s*\{[\s\S]*?padding-block:\s*0\s*!important/);
+  assert.doesNotMatch(styles, /\.reference-detail__body-inner:has\(\.flow-workspace\)/);
+  assert.match(styles, /\.reference-detail__body-inner\s*\{[\s\S]*?padding:\s*var\(--spacing-8\) var\(--spacing-6\) var\(--spacing-12\)\s*!important/);
   assert.match(styles, /\.reference-discovery__content:not\(\.flows-discovery__content\)/);
   assert.match(styles, /\.reference-discovery__taxonomy:not\(\.flows-discovery__taxonomy\)/);
 });
@@ -118,9 +119,10 @@ test('balances App-detail tab height, label size, and secondary controls', async
 
   assert.match(styles, /\.reference-detail__navigation\s*\{[\s\S]*?min-height:\s*var\(--spacing-12\)\s*!important/);
   assert.match(styles, /\.reference-detail \.reference-detail__tabs > button\s*\{[\s\S]*?height:\s*var\(--spacing-12\)\s*!important[\s\S]*?font-size:\s*15px\s*!important/);
+  assert.match(styles, /\.reference-detail__tab-controls\s*\{[\s\S]*?min-height:\s*var\(--spacing-12\)\s*!important/);
   assert.match(styles, /\.reference-detail__tab-leading :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\),/);
   assert.match(styles, /\.reference-detail__tab-controls :is\([\s\S]*?\.astryx-button\.astryx-button\.astryx-button,[\s\S]*?\.astryx-selector\.astryx-selector\.astryx-selector[\s\S]*?\)\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important/);
-  assert.match(styles, /\.apps-platform-switcher\s+button\.astryx-button\s*\{[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important/);
+  assert.match(styles, /\.apps-platform-switcher\s+button\.astryx-button\s*\{[\s\S]*?height:\s*auto\s*!important[\s\S]*?min-height:\s*0\s*!important/);
   assert.match(styles, /@media \(max-width:\s*720px\)[\s\S]*?\.reference-detail__navigation\s*\{[\s\S]*?min-height:\s*calc\(var\(--spacing-12\) \* 2\)\s*!important/);
 });
 

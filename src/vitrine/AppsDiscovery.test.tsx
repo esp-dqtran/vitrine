@@ -570,7 +570,7 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /\.astryx-input-text\s*\{[^}]*background:\s*var\(--reference-chrome-surface-raised\)\s*!important/);
   assert.match(css, /\.reference-search-trigger__shortcut\s*\{[^}]*display:\s*none/);
   assert.match(css, /\.reference-discovery-toolbar\s*\{[^}]*min-height:\s*var\(--reference-toolbar-height\)/);
-  assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*var\(--reference-font-family\)/);
+  assert.match(css, /\.reference-discovery__facet h2\s*\{[^}]*font-family:\s*inherit\s*!important/);
   assert.match(css, /\.reference-discovery__facet button\s*\{[^}]*transition:[^}]*transform/);
   assert.match(css, /\.reference-discovery__facet button:hover,[\s\S]*\.reference-discovery__facet button:focus-visible\s*\{[^}]*transform:\s*translateX\(4px\)/);
   assert.match(css, /\.discovery-card\s*\{[^}]*border-radius:\s*var\(--reference-card-radius\)/);
@@ -651,8 +651,10 @@ test('renders the Apps platform as a single-select filter using the shared dropd
   assert.match(source, /triggerVariant="primary"/);
   assert.match(
     discoveryCss,
-    /\.apps-filterbar__search\s*\{[\s\S]*background:\s*var\(--reference-chrome-surface-raised\);/,
+    /\.apps-filterbar__search\s*\{[\s\S]*min-height:\s*var\(--vitrine-form-input-height\);/,
   );
+  assert.match(source, /startIcon=\{<Icon icon="search" size="sm" \/>\}/);
+  assert.match(source, /hasClear/);
 });
 
 test('restores the animated Apps taxonomy hover preview without eager requests', async () => {

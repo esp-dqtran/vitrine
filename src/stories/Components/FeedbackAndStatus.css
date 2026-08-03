@@ -1,0 +1,262 @@
+.feedback-review {
+  min-height: 100vh;
+  padding: var(--vitrine-page-gutter-wide);
+  color: var(--color-text-primary);
+  background: var(--color-background-body);
+}
+
+.feedback-review__intro,
+.feedback-review__section {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.feedback-review__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--spacing-8);
+  align-items: end;
+  padding: var(--spacing-3) 0 var(--spacing-8);
+}
+
+.feedback-review__eyebrow,
+.feedback-review__lede,
+.feedback-review__section-header p,
+.feedback-review__card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.feedback-review__eyebrow {
+  margin-bottom: var(--spacing-2);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feedback-review__intro h1 {
+  margin: 0 0 var(--spacing-2);
+  font: var(--vitrine-presentation-display);
+  letter-spacing: -0.045em;
+}
+
+.feedback-review__lede {
+  max-width: 64ch;
+  font: var(--vitrine-type-body);
+}
+
+.feedback-review__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: 999px;
+  background: var(--color-background-surface);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.feedback-review__status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+  content: '';
+}
+
+.feedback-review__section {
+  padding: var(--spacing-8) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.feedback-review__section-header {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+}
+
+.feedback-review__section-header > span {
+  padding-top: 3px;
+  color: var(--color-text-disabled);
+  font: var(--vitrine-type-supporting);
+}
+
+.feedback-review__section-header h2 {
+  margin: 0 0 var(--spacing-1);
+  font: var(--vitrine-type-title);
+}
+
+.feedback-review__section-header p {
+  font: var(--vitrine-type-detail);
+}
+
+.feedback-review__banner-grid,
+.feedback-review__progress-layout,
+.feedback-review__toast-layout,
+.feedback-review__ending-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.feedback-review__card,
+.feedback-review__progress-card,
+.feedback-review__empty-card,
+.feedback-review__dialog-card {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+
+.feedback-review__card,
+.feedback-review__progress-card {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+}
+
+.feedback-review__card-label {
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.feedback-review__badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.feedback-review__card p {
+  font: var(--vitrine-type-supporting);
+  line-height: 1.5;
+}
+
+.feedback-review__progress-card > [aria-label='Crawl progress'] {
+  margin-top: 0 !important;
+}
+
+.feedback-review__progress-card .astryx-progressbar-track {
+  height: 20px;
+  min-height: 20px;
+}
+
+main.feedback-review
+  .feedback-review__banner-grid
+  .astryx-banner
+  button.astryx-button.primary,
+main.feedback-review
+  .feedback-review__banner-grid
+  .astryx-banner
+  button.astryx-button.destructive {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: var(--radius-full) !important;
+  font: var(--vitrine-presentation-body-large) !important;
+  font-weight: 500 !important;
+}
+
+.feedback-review__banner-grid > :first-child .astryx-banner {
+  background: var(--vitrine-color-action-primary) !important;
+  color: var(--vitrine-color-on-action-primary) !important;
+}
+
+.feedback-review__banner-grid > :first-child .astryx-banner * {
+  color: var(--vitrine-color-on-action-primary) !important;
+}
+
+.feedback-review__banner-grid > :first-child .astryx-banner :is(.astryx-icon, svg) {
+  width: var(--vitrine-icon-size-emphasis) !important;
+  height: var(--vitrine-icon-size-emphasis) !important;
+  font-size: var(--vitrine-icon-size-emphasis) !important;
+}
+
+.feedback-review__application-toast {
+  position: static;
+  inset: auto;
+  width: max-content;
+  max-width: 100%;
+  transform: none;
+  animation: none;
+  pointer-events: auto;
+}
+
+.feedback-review__application-toast--error {
+  border-color: var(--vitrine-color-status-error);
+  background: var(--vitrine-color-status-error);
+  color: var(--vitrine-color-action-primary);
+}
+
+.feedback-review__application-toast--error svg {
+  color: inherit;
+}
+
+.feedback-review__toast-frame {
+  min-height: 52px;
+}
+
+.feedback-review__toast-frame > * {
+  width: 100%;
+}
+
+.feedback-review__empty-card,
+.feedback-review__dialog-card {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  padding: var(--spacing-5);
+}
+
+.feedback-review__dialog-card > dialog {
+  width: min(420px, 100%);
+}
+
+.feedback-review__dialog-card .astryx-button.ghost {
+  border-color: var(--vitrine-color-action-primary) !important;
+  background: var(--vitrine-color-action-primary) !important;
+  color: var(--vitrine-color-on-action-primary) !important;
+}
+
+@media (max-width: 760px) {
+  .feedback-review {
+    padding: var(--vitrine-page-gutter-compact);
+  }
+
+  .feedback-review__intro,
+  .feedback-review__banner-grid,
+  .feedback-review__progress-layout,
+  .feedback-review__toast-layout,
+  .feedback-review__ending-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-review__intro {
+    align-items: start;
+  }
+
+  .feedback-review__status {
+    width: max-content;
+  }
+
+  .feedback-review__application-toast {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-review *,
+  .feedback-review *::before,
+  .feedback-review *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

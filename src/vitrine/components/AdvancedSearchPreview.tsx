@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@astryxdesign/core";
+import { Icon, IconButton } from "@astryxdesign/core";
 import type { ResearchCollection } from "../../db.ts";
 import type { SearchResultItem } from "../../searchTypes.ts";
 import { loadRelatedSearchResults } from "../advancedSearchApi.ts";
@@ -49,7 +49,14 @@ export function AdvancedSearchPreview({
     >
       <div className="advanced-search-preview">
       <AstryxModalSurface className="advanced-search-preview__panel">
-        <Button ref={close} label="Close preview" variant="ghost" onClick={onClose} />
+        <IconButton
+          ref={close}
+          label="Close preview"
+          icon={<Icon icon="close" size="sm" />}
+          variant="ghost"
+          className="astryx-modal__icon-action"
+          onClick={onClose}
+        />
         <div className="advanced-search-preview__media"><PlaceholderImage src={item.imageUrl} /></div>
         <header><span>{item.catalogName} · {item.platform}</span><h2>{item.title}</h2><p>{item.description}</p></header>
         {item.flowName ? <p>Surrounding flow: {item.flowName}{item.flowStepIndex !== undefined ? ` · Step ${item.flowStepIndex + 1}` : ""}</p> : null}

@@ -1,0 +1,1552 @@
+{
+  "schemaVersion": 1,
+  "id": "f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+  "sourceUrl": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+  "sitemapLastModified": "2026-06-03T22:04:07.524Z",
+  "fetchedAt": "2026-08-02T18:08:12.786Z",
+  "contentHash": "c2eea01d0950406a39c815d3c9bd4226837cf870963ddfc2e8518de5e34745e6",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Akash Tyagi design system",
+            "item": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf#style-reference",
+        "name": "Akash Tyagi design system reference",
+        "headline": "Akash Tyagi design system | Refero Styles",
+        "description": "Explore Akash Tyagi's dark Agency design system: Obsidian Canvas #000000, Parchment #efe6d8 colors, sans-serif, Geist typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+        "mainEntityOfPage": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Akash Tyagi",
+          "url": "https://akashtyagi.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/16eac01e-2ab1-496d-b5b9-80e2a83c3cdf.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/16eac01e-2ab1-496d-b5b9-80e2a83c3cdf.jpg",
+          "caption": "Screenshot of Akash Tyagi"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/16eac01e-2ab1-496d-b5b9-80e2a83c3cdf.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Akash Tyagi design system",
+          "Akash Tyagi website design",
+          "Akash Tyagi colors",
+          "Akash Tyagi typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Obsidian Canvas",
+          "Parchment",
+          "Bone",
+          "Ash",
+          "sans-serif",
+          "Geist",
+          "Geist Pixel Triangle"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Akash Tyagi design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Akash Tyagi website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Akash Tyagi colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Akash Tyagi typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-05-10T22:34:05.662Z",
+        "dateModified": "2026-05-10T22:34:05.662Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://akashtyagi.com",
+      "siteName": "Akash Tyagi",
+      "extractedAt": "2026-06-03T22:04:07.519Z",
+      "durationMs": 57345,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 139,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "body",
+              "image"
+            ],
+            "frequency": 450,
+            "confidence": 1,
+            "prominence": 127577494.42541532,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "other/fill": 3,
+              "image/color": 12,
+              "other/color": 75,
+              "body/borderColor": 4,
+              "image/borderColor": 48,
+              "other/borderColor": 300,
+              "other/backgroundColor": 7
+            }
+          },
+          {
+            "hex": "#605c56",
+            "oklch": {
+              "c": 0.009975962366201102,
+              "h": 79.09875067098129,
+              "l": 0.4763263203078388
+            },
+            "contexts": [
+              "body",
+              "heading"
+            ],
+            "frequency": 25,
+            "confidence": 1,
+            "prominence": 253522.91663765794,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "heading/color": 4,
+              "body/borderColor": 4,
+              "heading/borderColor": 16
+            }
+          },
+          {
+            "hex": "#736e68",
+            "oklch": {
+              "c": 0.01159212680968369,
+              "h": 79.09680699807397,
+              "l": 0.541425553978094
+            },
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 55,
+            "confidence": 1,
+            "prominence": 235197.87434333295,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 8,
+              "link/color": 3,
+              "body/borderColor": 32,
+              "link/borderColor": 12
+            }
+          },
+          {
+            "hex": "#ffa1f7",
+            "oklch": {
+              "c": 0.15398526506222304,
+              "h": 329.9121840254043,
+              "l": 0.8306336740686971
+            },
+            "contexts": [
+              "button",
+              "heading",
+              "link",
+              "other"
+            ],
+            "frequency": 40,
+            "confidence": 1,
+            "prominence": 136285.40789347482,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "link/color": 1,
+              "other/fill": 14,
+              "heading/color": 4,
+              "link/borderColor": 4,
+              "heading/borderColor": 16,
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#aca69c",
+            "oklch": {
+              "c": 0.016152221826346024,
+              "h": 79.09330773498681,
+              "l": 0.72638649326891
+            },
+            "contexts": [
+              "body",
+              "link",
+              "button",
+              "heading"
+            ],
+            "frequency": 40,
+            "confidence": 1,
+            "prominence": 100057.64123824734,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 5,
+              "link/color": 1,
+              "button/color": 1,
+              "heading/color": 1,
+              "body/borderColor": 20,
+              "link/borderColor": 4,
+              "button/borderColor": 4,
+              "heading/borderColor": 4
+            }
+          },
+          {
+            "hex": "#efe6d8",
+            "oklch": {
+              "c": 0.02109639259011556,
+              "h": 79.09119109911992,
+              "l": 0.9282365876309824
+            },
+            "contexts": [
+              "heading",
+              "link",
+              "body"
+            ],
+            "frequency": 15,
+            "confidence": 1,
+            "prominence": 6732,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 1,
+              "heading/color": 1,
+              "body/borderColor": 4,
+              "link/borderColor": 4,
+              "heading/borderColor": 4
+            }
+          },
+          {
+            "hex": "#4dff00",
+            "oklch": {
+              "c": 0.2833543835564695,
+              "h": 140.2797880945237,
+              "l": 0.874945542193031
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 36,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          }
+        ],
+        "isDarkMode": true,
+        "colorfulness": 0.03580116475968654,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 16.98,
+            "background": "#000000",
+            "foreground": "#efe6d8"
+          },
+          {
+            "level": "AAA",
+            "ratio": 15.62,
+            "background": "#4dff00",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.69,
+            "background": "#ffa1f7",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.69,
+            "background": "#000000",
+            "foreground": "#aca69c"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.37,
+            "background": "#efe6d8",
+            "foreground": "#605c56"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.94,
+            "background": "#4dff00",
+            "foreground": "#605c56"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.16,
+            "background": "#000000",
+            "foreground": "#736e68"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.76,
+            "background": "#4dff00",
+            "foreground": "#736e68"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.7,
+            "background": "#ffa1f7",
+            "foreground": "#605c56"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.16,
+            "background": "#000000",
+            "foreground": "#605c56"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.81,
+            "background": "#ffa1f7",
+            "foreground": "#736e68"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.75,
+            "background": "#aca69c",
+            "foreground": "#605c56"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.8,
+            "background": "#4dff00",
+            "foreground": "#aca69c"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.45,
+            "background": "#ffa1f7",
+            "foreground": "#efe6d8"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.35,
+            "background": "#ffa1f7",
+            "foreground": "#aca69c"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.34,
+            "background": "#4dff00",
+            "foreground": "#ffa1f7"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.09,
+            "background": "#4dff00",
+            "foreground": "#efe6d8"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 40,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 1000,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 2,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "rowGap|button",
+              "columnGap|button",
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "button",
+              "other"
+            ],
+            "frequency": 6,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 10,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "paddingTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button"
+            ]
+          },
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 28,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "marginTop|body"
+            ]
+          },
+          {
+            "value": 18,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingRight",
+              "rowGap",
+              "columnGap",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "rowGap|other",
+              "columnGap|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 104,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "properties": [
+              "paddingBottom",
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "paddingTop|other"
+            ]
+          },
+          {
+            "value": 200,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 90,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Geist",
+            "source": "custom",
+            "weights": [
+              500,
+              600
+            ],
+            "frequency": 15,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "Geist Pixel Triangle",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 10,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          },
+          {
+            "family": "Geist Mono",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 8,
+            "fontFeatureSettings": [
+              "\"blwf\", \"cv03\", \"cv04\", \"cv09\", \"cv11\""
+            ]
+          }
+        ],
+        "scale": {
+          "base": 12,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "button",
+              "image"
+            ],
+            "frequency": 90,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Geist",
+            "weight": 500,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.23,
+            "letterSpacing": -0.031,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Geist Mono",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.23,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Geist Mono",
+            "weight": 500,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.23,
+            "letterSpacing": -0.031,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Geist Mono",
+            "weight": 400,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.54,
+            "letterSpacing": -0.031,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Geist",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.14,
+            "letterSpacing": -0.029,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "Geist",
+            "weight": 600,
+            "contexts": [
+              "heading",
+              "link"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.33,
+            "letterSpacing": -0.013,
+            "textTransform": "none"
+          },
+          {
+            "size": 30,
+            "family": "Geist Pixel Triangle",
+            "weight": 400,
+            "contexts": [
+              "heading",
+              "link"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.33,
+            "letterSpacing": -0.033,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use #000000 as the universal background for every screen — never introduce a lighter or colored canvas",
+        "Apply #ffa1f7 only to the single primary action per view; treat it as the system's only chromatic voice",
+        "Set section labels in Geist Pixel Triangle 30px with -0.033em tracking for editorial weight",
+        "Maintain 200px vertical gaps between major sections to preserve the gallery-wall rhythm",
+        "Use warm neutrals (#efe6d8 → #aca69c → #736e68 → #605c56) in descending tonal order for text hierarchy",
+        "Use the green dot (#4dff00) exclusively for live status/availability — never as a generic accent or button color",
+        "Render all project imagery edge-to-edge with no card chrome, radius, or shadow"
+      ],
+      "donts": [
+        "Never introduce box-shadows, gradients, or glow effects — flatness is the point",
+        "Never use #ffa1f7 for body text, backgrounds, or decorative purposes — it is an action color only",
+        "Never round image corners on project showcases — images must meet the canvas edge",
+        "Never add more than one filled CTA per screen — the system is single-action",
+        "Never use cool blue-grays or pure whites for text — the warm sepia palette is the identity",
+        "Never use icons in the header or footer — plain text links only",
+        "Never reduce section gaps below 104px — the generous whitespace is structural, not optional"
+      ],
+      "theme": "dark",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Obsidian Canvas",
+          "role": "Page background, card surfaces, inverted text on pink fills",
+          "group": "neutral"
+        },
+        {
+          "hex": "#efe6d8",
+          "name": "Parchment",
+          "role": "Primary body and heading text — warm near-white with sepia undertone, replaces the typical cool white of dark UIs",
+          "group": "neutral"
+        },
+        {
+          "hex": "#aca69c",
+          "name": "Bone",
+          "role": "Secondary text, button borders, metadata — mid-tone warm gray",
+          "group": "neutral"
+        },
+        {
+          "hex": "#736e68",
+          "name": "Ash",
+          "role": "Muted body text, subtle link borders, inactive labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#605c56",
+          "name": "Charcoal",
+          "role": "Hairline dividers, low-emphasis borders, heading underlines on dark",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffa1f7",
+          "name": "Neon Petal",
+          "role": "Primary action buttons, active nav states, selected markers, occasional heading accents — the single chromatic punctuation in the system",
+          "group": "brand"
+        },
+        {
+          "hex": "#4dff00",
+          "name": "Acid Lime",
+          "role": "Green wash for highlight backgrounds, decorative bands, and soft emphasis behind content. Use as a supporting accent, not as a status color",
+          "group": "accent"
+        }
+      ],
+      "layout": "Full-bleed dark canvas with max-width 1400px centered content. The page reads as a vertical scroll of alternating text and image bands with extreme vertical breathing room (200px between sections). No sidebar, no sticky nav, no mega-menu — the header is a single static line. Hero pattern: two-column asymmetric text block (bio left, CTA right) on pure black, no hero image. Content arrangement alternates between text-only sections and full-bleed project images, creating a gallery-wall rhythm. Section labels ('SELECTED WORK 2015 — 2026') act as horizontal typographic dividers. The grid is implicit — no visible columns or gutters, content flows in max-width containers with generous margins. Navigation is reduced to name + time + email in the header and three text links in the footer.",
+      "imagery": "Product photography dominates — large, high-fidelity device mockups (tablets, phones) shot in lifestyle or twilight contexts with dramatic sky gradients. Images are full-bleed, occupying the full viewport width within the project showcase cards. No rounded corners, no masks, no frames — images meet the dark canvas edge-to-edge. No illustration or iconography beyond a single green status dot. The visual rhythm is: text block → silence → massive product photograph → silence → text block. Photography is the only visual content; UI screenshots inside product shots show dark UIs with warm text, mirroring the portfolio's own aesthetic.",
+      "similar": [
+        {
+          "why": "Dark portfolio canvas with single accent color, all-caps section labels, generous vertical spacing, and minimal navigation reduced to name and contact",
+          "business": "Brittany Chiang"
+        },
+        {
+          "why": "Dark, near-black background with tight tracking, monospace metadata, and an editorial single-column scroll rhythm",
+          "business": "Rauno Freiberg"
+        },
+        {
+          "why": "Same flat-on-black surface treatment with no shadows or gradients, and tight negative letter-spacing on small body text",
+          "business": "Linear"
+        },
+        {
+          "why": "Personal portfolio with extreme whitespace, monospace timestamps, and text-only footer links without icons",
+          "business": "Cobe (Pieter Levels)"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "pills": "1000px",
+          "buttons": "40px",
+          "indicators": "1000px"
+        },
+        "elementGap": "16px",
+        "sectionGap": "200px",
+        "cardPadding": "0px",
+        "pageMaxWidth": "1400px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#000000",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Full-bleed page background — true black for maximum contrast against warm text"
+        },
+        {
+          "hex": "#000000",
+          "name": "Project Surface",
+          "level": 1,
+          "purpose": "Project image and content frames sit directly on canvas without card elevation"
+        },
+        {
+          "hex": "#ffa1f7",
+          "name": "Accent Surface",
+          "level": 2,
+          "purpose": "Inverted pill buttons and selected markers — the only chromatic surface"
+        }
+      ],
+      "elevation": [],
+      "northStar": "midnight gallery wall with hot pink markers",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.2,
+          "letterSpacing": 0
+        },
+        {
+          "role": "body-lg",
+          "size": 15,
+          "lineHeight": 1.4,
+          "letterSpacing": -0.2
+        },
+        {
+          "role": "display",
+          "size": 30,
+          "lineHeight": 1.33,
+          "letterSpacing": -1
+        }
+      ],
+      "components": [
+        {
+          "name": "Pill CTA Button",
+          "role": "Primary action trigger",
+          "description": "Filled pill button, #ffa1f7 background, Obsidian (#000000) text, 40px border-radius, 12px vertical padding × 24px horizontal padding. Geist 500 at 13px. Used for the single most important action on screen (e.g. 'Book an intro call')."
+        },
+        {
+          "name": "Ghost Text Link",
+          "role": "Secondary navigation and inline links",
+          "description": "No background, Parchment (#efe6d8) text with 1px Ash (#736e68) or Bone (#aca69c) border-bottom underline. Geist 500 at 13–14px. Underline appears only on hover, not at rest."
+        },
+        {
+          "name": "Status Availability Indicator",
+          "role": "Live availability signal",
+          "description": "8px Acid Lime (#4dff00) circle with 1000px border-radius, paired with Parchment (#efe6d8) text 'Available for work' at 13px Geist 500. The green dot is the only green element in the entire system."
+        },
+        {
+          "name": "Section Header with Date Range",
+          "role": "Editorial section divider",
+          "description": "Two-part label: section name left, date range right. Set in Geist Pixel Triangle 400 at 30px, Parchment (#efe6d8) for the label, Ash (#736e68) for the date range. Tight -0.033em letter-spacing. Separated from content by 104px of vertical space."
+        },
+        {
+          "name": "Project Showcase Card",
+          "role": "Portfolio project entry",
+          "description": "Full-width project image displayed edge-to-edge on the Obsidian canvas with no card chrome. No border, no shadow, no radius — the image IS the card. Caption/description appears below in Geist 500, 14px, Parchment text."
+        },
+        {
+          "name": "Minimal Header Bar",
+          "role": "Identity and time stamp",
+          "description": "Single-row layout: designer name left ('Akash Tyagi' in Geist 600, Parchment), current time and email right (Geist Mono 400, Ash). No logo, no nav links, no hamburger — the header is identity + clock, nothing more."
+        },
+        {
+          "name": "Two-Column Intro Block",
+          "role": "Personal statement",
+          "description": "Asymmetric two-column text block. Left column: condensed bio (2–3 short paragraphs). Right column: left empty or holds the CTA + status. Column gap 24–48px. Body text in Geist 500, 14px, Parchment with 16px paragraph spacing."
+        },
+        {
+          "name": "Footer Social Link",
+          "role": "External profile references",
+          "description": "Plain text links — 'X.com', 'LinkedIn', 'Dribbble' — set in Geist Mono 400, 13px, Ash (#736e68) color. No icons, no badges. Separated by consistent 24px gaps."
+        }
+      ],
+      "typography": [
+        {
+          "role": "sans-serif — detected in extracted data but not described by AI",
+          "sizes": "12px",
+          "family": "sans-serif",
+          "weight": "400",
+          "lineHeight": "1.2"
+        },
+        {
+          "role": "Primary UI and body typeface — medium and semibold weights, tight negative tracking at -0.013em to -0.031em. Used for body copy, links, navigation, and small headings.",
+          "sizes": "13px, 14px, 15px",
+          "family": "Geist",
+          "weight": "500, 600",
+          "lineHeight": "1.14, 1.23, 1.33",
+          "substitute": "Inter, Satoshi",
+          "letterSpacing": "-0.031em at 13px, -0.029em at 14px, -0.013em at 15px",
+          "fontFeatureSettings": "\"blwf\" on, \"cv03\" on, \"cv04\" on, \"cv09\" on, \"cv11\" on"
+        },
+        {
+          "role": "Display and section-label typeface — pixel/decorative variant used for all-caps section headers like 'SELECTED WORK' and the year range '2015 — 2026'. The pixel treatment gives editorial weight without serifs.",
+          "sizes": "30px",
+          "family": "Geist Pixel Triangle",
+          "weight": "400",
+          "lineHeight": "1.33",
+          "substitute": "Space Mono Bold, Departure Mono",
+          "letterSpacing": "-0.033em at 30px",
+          "fontFeatureSettings": "\"blwf\" on, \"cv03\" on, \"cv04\" on, \"cv09\" on, \"cv11\" on"
+        },
+        {
+          "role": "Metadata typeface — timestamps, email, technical labels, year stamps. The monospace signals system/data language against the proportional body.",
+          "sizes": "13px",
+          "family": "Geist Mono",
+          "weight": "400, 500",
+          "lineHeight": "1.23, 1.54",
+          "substitute": "JetBrains Mono, IBM Plex Mono",
+          "letterSpacing": "-0.031em at 13px",
+          "fontFeatureSettings": "\"blwf\" on, \"cv03\" on, \"cv04\" on, \"cv09\" on, \"cv11\" on"
+        }
+      ],
+      "description": "Akash Tyagi is a dark editorial portfolio rendered as a midnight canvas with warm parchment text and a single vivid pink accent that acts as functional punctuation rather than decoration. The layout breathes — 200px section gaps, generous asymmetric two-column compositions, and display labels set in Geist Pixel Triangle create a gallery-wall rhythm where each project is given the silence it needs. Every neutral carries a warm sepia undertone, deliberately steering away from the cool blue-grays of typical tech portfolios. Components are minimal and flat: pill CTAs, hairline dividers, status dots, and large unfettered project imagery — there is no elevation, no gradients, no ornamentation beyond typography and a single chromatic accent.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "No shadows. Surfaces are separated purely by tone and whitespace. Elevation is expressed through typographic scale and generous spacing, not box-shadow stacks. This flatness is deliberate — shadows would introduce visual noise on a portfolio that treats each project as a gallery frame."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/b56a3239-c6c5-46fd-8ccb-19f3578516af.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/16eac01e-2ab1-496d-b5b9-80e2a83c3cdf.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "akash-tyagi",
+    "generatedAt": "2026-06-03T22:04:07.519Z",
+    "summary": "Akash Tyagi is a dark editorial portfolio rendered as a midnight canvas with warm parchment text and a single vivid pink accent that acts as functional punctuation rather than decoration. The layout breathes — 200px section gaps, generous asymmetric two-column compositions, and display labels set in Geist Pixel Triangle create a gallery-wall rhythm where each project is given the silence it needs. Every neutral carries a warm sepia undertone, deliberately steering away from the cool blue-grays of typical tech portfolios. Components are minimal and flat: pill CTAs, hairline dividers, status dots, and large unfettered project imagery — there is no elevation, no gradients, no ornamentation beyond typography and a single chromatic accent.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+      "sourceUrl": "https://styles.refero.design/style/f3d2bfdb-ba92-42c4-91c6-58c829b094bf",
+      "originalUrl": "https://akashtyagi.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/b56a3239-c6c5-46fd-8ccb-19f3578516af.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/16eac01e-2ab1-496d-b5b9-80e2a83c3cdf.jpg",
+      "importedAt": "2026-08-02T18:08:12.786Z",
+      "upstreamModifiedAt": "2026-06-03T22:04:07.524Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "dark",
+      "northStar": "midnight gallery wall with hot pink markers",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-obsidian-canvas",
+        "kind": "color",
+        "name": "Obsidian Canvas",
+        "value": "#000000",
+        "role": "Page background, card surfaces, inverted text on pink fills",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-parchment",
+        "kind": "color",
+        "name": "Parchment",
+        "value": "#efe6d8",
+        "role": "Primary body and heading text — warm near-white with sepia undertone, replaces the typical cool white of dark UIs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone",
+        "kind": "color",
+        "name": "Bone",
+        "value": "#aca69c",
+        "role": "Secondary text, button borders, metadata — mid-tone warm gray",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#736e68",
+        "role": "Muted body text, subtle link borders, inactive labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#605c56",
+        "role": "Hairline dividers, low-emphasis borders, heading underlines on dark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-neon-petal",
+        "kind": "color",
+        "name": "Neon Petal",
+        "value": "#ffa1f7",
+        "role": "Primary action buttons, active nav states, selected markers, occasional heading accents — the single chromatic punctuation in the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-acid-lime",
+        "kind": "color",
+        "name": "Acid Lime",
+        "value": "#4dff00",
+        "role": "Green wash for highlight backgrounds, decorative bands, and soft emphasis behind content. Use as a supporting accent, not as a status color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-sans-serif",
+        "kind": "typography",
+        "name": "sans-serif",
+        "value": "font-family: sans-serif; font-weight: 400; font-size: 12px; line-height: 1.2",
+        "role": "sans-serif — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-geist",
+        "kind": "typography",
+        "name": "Geist",
+        "value": "font-family: Geist; font-weight: 500, 600; font-size: 13px, 14px, 15px; line-height: 1.14, 1.23, 1.33; letter-spacing: -0.031em at 13px, -0.029em at 14px, -0.013em at 15px",
+        "role": "Primary UI and body typeface — medium and semibold weights, tight negative tracking at -0.013em to -0.031em. Used for body copy, links, navigation, and small headings.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-geist-pixel-triangle",
+        "kind": "typography",
+        "name": "Geist Pixel Triangle",
+        "value": "font-family: Geist Pixel Triangle; font-weight: 400; font-size: 30px; line-height: 1.33; letter-spacing: -0.033em at 30px",
+        "role": "Display and section-label typeface — pixel/decorative variant used for all-caps section headers like 'SELECTED WORK' and the year range '2015 — 2026'. The pixel treatment gives editorial weight without serifs.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-geist-mono",
+        "kind": "typography",
+        "name": "Geist Mono",
+        "value": "font-family: Geist Mono; font-weight: 400, 500; font-size: 13px; line-height: 1.23, 1.54; letter-spacing: -0.031em at 13px",
+        "role": "Metadata typeface — timestamps, email, technical labels, year stamps. The monospace signals system/data language against the proportional body.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.2; letter-spacing: 0px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-lg-scale",
+        "kind": "typography",
+        "name": "body-lg",
+        "value": "font-size: 15px; line-height: 1.4; letter-spacing: -0.2px",
+        "role": "Imported body-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 30px; line-height: 1.33; letter-spacing: -1px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "200px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "0px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1400px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-pills",
+        "kind": "radius",
+        "name": "pills",
+        "value": "1000px",
+        "role": "Imported pills radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "40px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-indicators",
+        "kind": "radius",
+        "name": "indicators",
+        "value": "1000px",
+        "role": "Imported indicators radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "No shadows. Surfaces are separated purely by tone and whitespace. Elevation is expressed through typographic scale and generous spacing, not box-shadow stacks. This flatness is deliberate — shadows would introduce visual noise on a portfolio that treats each project as a gallery frame.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "pill-cta-button",
+        "name": "Pill CTA Button",
+        "category": "Refero components",
+        "description": "Filled pill button, #ffa1f7 background, Obsidian (#000000) text, 40px border-radius, 12px vertical padding × 24px horizontal padding. Geist 500 at 13px. Used for the single most important action on screen (e.g. 'Book an intro call').",
+        "variants": [
+          {
+            "id": "pill-cta-button-reference",
+            "name": "Reference",
+            "description": "Filled pill button, #ffa1f7 background, Obsidian (#000000) text, 40px border-radius, 12px vertical padding × 24px horizontal padding. Geist 500 at 13px. Used for the single most important action on screen (e.g. 'Book an intro call').",
+            "evidence": [],
+            "observedProperties": [
+              "Primary action trigger"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-text-link",
+        "name": "Ghost Text Link",
+        "category": "Refero components",
+        "description": "No background, Parchment (#efe6d8) text with 1px Ash (#736e68) or Bone (#aca69c) border-bottom underline. Geist 500 at 13–14px. Underline appears only on hover, not at rest.",
+        "variants": [
+          {
+            "id": "ghost-text-link-reference",
+            "name": "Reference",
+            "description": "No background, Parchment (#efe6d8) text with 1px Ash (#736e68) or Bone (#aca69c) border-bottom underline. Geist 500 at 13–14px. Underline appears only on hover, not at rest.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary navigation and inline links"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "status-availability-indicator",
+        "name": "Status Availability Indicator",
+        "category": "Refero components",
+        "description": "8px Acid Lime (#4dff00) circle with 1000px border-radius, paired with Parchment (#efe6d8) text 'Available for work' at 13px Geist 500. The green dot is the only green element in the entire system.",
+        "variants": [
+          {
+            "id": "status-availability-indicator-reference",
+            "name": "Reference",
+            "description": "8px Acid Lime (#4dff00) circle with 1000px border-radius, paired with Parchment (#efe6d8) text 'Available for work' at 13px Geist 500. The green dot is the only green element in the entire system.",
+            "evidence": [],
+            "observedProperties": [
+              "Live availability signal"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-header-with-date-range",
+        "name": "Section Header with Date Range",
+        "category": "Refero components",
+        "description": "Two-part label: section name left, date range right. Set in Geist Pixel Triangle 400 at 30px, Parchment (#efe6d8) for the label, Ash (#736e68) for the date range. Tight -0.033em letter-spacing. Separated from content by 104px of vertical space.",
+        "variants": [
+          {
+            "id": "section-header-with-date-range-reference",
+            "name": "Reference",
+            "description": "Two-part label: section name left, date range right. Set in Geist Pixel Triangle 400 at 30px, Parchment (#efe6d8) for the label, Ash (#736e68) for the date range. Tight -0.033em letter-spacing. Separated from content by 104px of vertical space.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial section divider"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-showcase-card",
+        "name": "Project Showcase Card",
+        "category": "Refero components",
+        "description": "Full-width project image displayed edge-to-edge on the Obsidian canvas with no card chrome. No border, no shadow, no radius — the image IS the card. Caption/description appears below in Geist 500, 14px, Parchment text.",
+        "variants": [
+          {
+            "id": "project-showcase-card-reference",
+            "name": "Reference",
+            "description": "Full-width project image displayed edge-to-edge on the Obsidian canvas with no card chrome. No border, no shadow, no radius — the image IS the card. Caption/description appears below in Geist 500, 14px, Parchment text.",
+            "evidence": [],
+            "observedProperties": [
+              "Portfolio project entry"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "minimal-header-bar",
+        "name": "Minimal Header Bar",
+        "category": "Refero components",
+        "description": "Single-row layout: designer name left ('Akash Tyagi' in Geist 600, Parchment), current time and email right (Geist Mono 400, Ash). No logo, no nav links, no hamburger — the header is identity + clock, nothing more.",
+        "variants": [
+          {
+            "id": "minimal-header-bar-reference",
+            "name": "Reference",
+            "description": "Single-row layout: designer name left ('Akash Tyagi' in Geist 600, Parchment), current time and email right (Geist Mono 400, Ash). No logo, no nav links, no hamburger — the header is identity + clock, nothing more.",
+            "evidence": [],
+            "observedProperties": [
+              "Identity and time stamp"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "two-column-intro-block",
+        "name": "Two-Column Intro Block",
+        "category": "Refero components",
+        "description": "Asymmetric two-column text block. Left column: condensed bio (2–3 short paragraphs). Right column: left empty or holds the CTA + status. Column gap 24–48px. Body text in Geist 500, 14px, Parchment with 16px paragraph spacing.",
+        "variants": [
+          {
+            "id": "two-column-intro-block-reference",
+            "name": "Reference",
+            "description": "Asymmetric two-column text block. Left column: condensed bio (2–3 short paragraphs). Right column: left empty or holds the CTA + status. Column gap 24–48px. Body text in Geist 500, 14px, Parchment with 16px paragraph spacing.",
+            "evidence": [],
+            "observedProperties": [
+              "Personal statement"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer-social-link",
+        "name": "Footer Social Link",
+        "category": "Refero components",
+        "description": "Plain text links — 'X.com', 'LinkedIn', 'Dribbble' — set in Geist Mono 400, 13px, Ash (#736e68) color. No icons, no badges. Separated by consistent 24px gaps.",
+        "variants": [
+          {
+            "id": "footer-social-link-reference",
+            "name": "Reference",
+            "description": "Plain text links — 'X.com', 'LinkedIn', 'Dribbble' — set in Geist Mono 400, 13px, Ash (#736e68) color. No icons, no badges. Separated by consistent 24px gaps.",
+            "evidence": [],
+            "observedProperties": [
+              "External profile references"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed dark canvas with max-width 1400px centered content. The page reads as a vertical scroll of alternating text and image bands with extreme vertical breathing room (200px between sections). No sidebar, no sticky nav, no mega-menu — the header is a single static line. Hero pattern: two-column asymmetric text block (bio left, CTA right) on pure black, no hero image. Content arrangement alternates between text-only sections and full-bleed project images, creating a gallery-wall rhythm. Section labels ('SELECTED WORK 2015 — 2026') act as horizontal typographic dividers. The grid is implicit — no visible columns or gutters, content flows in max-width containers with generous margins. Navigation is reduced to name + time + email in the header and three text links in the footer.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Product photography dominates — large, high-fidelity device mockups (tablets, phones) shot in lifestyle or twilight contexts with dramatic sky gradients. Images are full-bleed, occupying the full viewport width within the project showcase cards. No rounded corners, no masks, no frames — images meet the dark canvas edge-to-edge. No illustration or iconography beyond a single green status dot. The visual rhythm is: text block → silence → massive product photograph → silence → text block. Photography is the only visual content; UI screenshots inside product shots show dark UIs with warm text, mirroring the portfolio's own aesthetic.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "No shadows. Surfaces are separated purely by tone and whitespace. Elevation is expressed through typographic scale and generous spacing, not box-shadow stacks. This flatness is deliberate — shadows would introduce visual noise on a portfolio that treats each project as a gallery frame.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use #000000 as the universal background for every screen — never introduce a lighter or colored canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply #ffa1f7 only to the single primary action per view; treat it as the system's only chromatic voice",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set section labels in Geist Pixel Triangle 30px with -0.033em tracking for editorial weight",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain 200px vertical gaps between major sections to preserve the gallery-wall rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use warm neutrals (#efe6d8 → #aca69c → #736e68 → #605c56) in descending tonal order for text hierarchy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use the green dot (#4dff00) exclusively for live status/availability — never as a generic accent or button color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Render all project imagery edge-to-edge with no card chrome, radius, or shadow",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never introduce box-shadows, gradients, or glow effects — flatness is the point",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use #ffa1f7 for body text, backgrounds, or decorative purposes — it is an action color only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never round image corners on project showcases — images must meet the canvas edge",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add more than one filled CTA per screen — the system is single-action",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use cool blue-grays or pure whites for text — the warm sepia palette is the identity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use icons in the header or footer — plain text links only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never reduce section gaps below 104px — the generous whitespace is structural, not optional",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

@@ -282,8 +282,9 @@ export function PublicAppPreviewModal({
             label="Close preview"
             icon={<Icon icon="close" size="sm" />}
             variant="ghost"
+            className="astryx-modal__icon-action"
             onClick={onClose}
-            style={{ position: 'absolute', top: 8, right: 8, borderRadius: '50%', background: 'var(--color-background-muted)', color: 'var(--color-text-primary)' }}
+            style={{ position: 'absolute', top: 8, right: 8 }}
           />
         </div>
         {loading ? (

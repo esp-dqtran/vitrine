@@ -1,0 +1,1524 @@
+{
+  "schemaVersion": 1,
+  "id": "f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+  "sourceUrl": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+  "sitemapLastModified": "2026-06-03T18:31:51.785Z",
+  "fetchedAt": "2026-08-02T18:09:05.969Z",
+  "contentHash": "0d942e29afd5f6f8c432af728f62b7f692a2f70a399fc3500d0d3882b212f09b",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Maciej Zadykowicz design system",
+            "item": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68#style-reference",
+        "name": "Maciej Zadykowicz design system reference",
+        "headline": "Maciej Zadykowicz design system | Refero Styles",
+        "description": "Explore Maciej Zadykowicz's dark Agency design system: Bone White #f2f2f3, Slate Dark #25262d colors, Replica-Regular, Replica-Mono typography, and...",
+        "url": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+        "mainEntityOfPage": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Maciej Zadykowicz",
+          "url": "https://maciej.co"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/bdc1f655-d510-4e07-9b35-53483e1faec8.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/bdc1f655-d510-4e07-9b35-53483e1faec8.jpg",
+          "caption": "Screenshot of Maciej Zadykowicz"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/bdc1f655-d510-4e07-9b35-53483e1faec8.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Maciej Zadykowicz design system",
+          "Maciej Zadykowicz website design",
+          "Maciej Zadykowicz colors",
+          "Maciej Zadykowicz typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Bone White",
+          "Slate Dark",
+          "Graphite",
+          "Fog",
+          "Replica-Regular",
+          "Replica-Mono",
+          "Arial"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Maciej Zadykowicz design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Maciej Zadykowicz website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Maciej Zadykowicz colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Maciej Zadykowicz typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-03-03T09:26:47.000Z",
+        "dateModified": "2026-03-03T09:26:47.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://maciej.co",
+      "siteName": "Maciej Zadykowicz",
+      "extractedAt": "2026-06-03T18:31:51.783Z",
+      "durationMs": 33949,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 363,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#f2f2f3",
+            "oklch": {
+              "c": 0.0013279616523236093,
+              "h": 286.3746100420704,
+              "l": 0.9614328489272935
+            },
+            "contexts": [
+              "nav",
+              "other",
+              "image",
+              "heading",
+              "button",
+              "body",
+              "link",
+              "list",
+              "footer"
+            ],
+            "frequency": 1390,
+            "confidence": 1,
+            "prominence": 45036946.03973431,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#25262d",
+            "oklch": {
+              "c": 0.013011619669864668,
+              "h": 279.05606784781355,
+              "l": 0.2705297230805066
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 31,
+            "confidence": 1,
+            "prominence": 4156545,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#0c0c0c",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.15339039015678366
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 30,
+            "confidence": 1,
+            "prominence": 1432540.5425225375,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 30,
+            "confidence": 1,
+            "prominence": 1432540.5425225375,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#858893",
+            "oklch": {
+              "c": 0.016807117450331758,
+              "h": 273.7121920248329,
+              "l": 0.6278486536955407
+            },
+            "contexts": [
+              "nav",
+              "heading",
+              "body",
+              "link"
+            ],
+            "frequency": 190,
+            "confidence": 1,
+            "prominence": 744709.7052193534,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#384270",
+            "oklch": {
+              "c": 0.07896146195694675,
+              "h": 272.9954298674062,
+              "l": 0.3930241572513756
+            },
+            "contexts": [
+              "other",
+              "link",
+              "button"
+            ],
+            "frequency": 14,
+            "confidence": 1,
+            "prominence": 354308.09433454537,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#54565f",
+            "oklch": {
+              "c": 0.014803257786122926,
+              "h": 275.81732732452633,
+              "l": 0.45458040649100595
+            },
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 175,
+            "confidence": 1,
+            "prominence": 108087.16415405444,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#383a42",
+            "oklch": {
+              "c": 0.01413712509048524,
+              "h": 274.50278880345724,
+              "l": 0.3496448974806849
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 14,
+            "confidence": 1,
+            "prominence": 87826.9005892795,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": true,
+        "colorfulness": 0.013465242079803595,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 18.77,
+            "background": "#f2f2f3",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.48,
+            "background": "#f2f2f3",
+            "foreground": "#0c0c0c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.47,
+            "background": "#25262d",
+            "foreground": "#f2f2f3"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.14,
+            "background": "#383a42",
+            "foreground": "#f2f2f3"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.6,
+            "background": "#384270",
+            "foreground": "#f2f2f3"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.53,
+            "background": "#f2f2f3",
+            "foreground": "#54565f"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.26,
+            "background": "#25262d",
+            "foreground": "#858893"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.21,
+            "background": "#383a42",
+            "foreground": "#858893"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.72,
+            "background": "#384270",
+            "foreground": "#858893"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.18,
+            "background": "#384270",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.06,
+            "background": "#25262d",
+            "foreground": "#54565f"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.03,
+            "background": "#384270",
+            "foreground": "#0c0c0c"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.85,
+            "background": "#383a42",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.73,
+            "background": "#383a42",
+            "foreground": "#0c0c0c"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.55,
+            "background": "#383a42",
+            "foreground": "#54565f"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.39,
+            "background": "#25262d",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.32,
+            "background": "#384270",
+            "foreground": "#54565f"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.3,
+            "background": "#25262d",
+            "foreground": "#0c0c0c"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 16,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 69
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "button",
+              "link"
+            ],
+            "frequency": 24
+          },
+          {
+            "value": 64,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 3
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [],
+            "frequency": 24,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 2,
+            "contexts": [],
+            "frequency": 15,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 4,
+            "contexts": [],
+            "frequency": 148,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "columnGap",
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom",
+              "marginLeft",
+              "rowGap",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 6,
+            "contexts": [],
+            "frequency": 26,
+            "properties": [
+              "marginTop",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 12,
+            "contexts": [],
+            "frequency": 125,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingLeft",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 24,
+            "contexts": [],
+            "frequency": 30,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 90,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "compact",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Replica-Regular",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 301,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Replica-Mono",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 50,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Arial",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 12,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 13,
+            "family": "Arial",
+            "weight": 400,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 12,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Replica-Regular",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "other",
+              "image",
+              "button",
+              "body",
+              "link",
+              "list",
+              "footer"
+            ],
+            "frequency": 271,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "Replica-Mono",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 50,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 36,
+            "family": "Replica-Regular",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 30,
+            "lineHeight": 1,
+            "letterSpacing": -0.014,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Keep the page at 1% colorfulness — only the hero mural and the Indigo Dusk status pill introduce chromatic color",
+        "Use Replica-Regular weight 400 exclusively for content; never introduce bold, semibold, or light cuts",
+        "Apply -0.014em letter-spacing to all Replica text at every size — this tracking is the typographic identity",
+        "Communicate elevation through surface color stepping (#25262d → #383a42 → #384270), never through box-shadows",
+        "Use 16px radius for cards and images, 24px for buttons, 64px for status pills and tags — these three values define all rounding in the system",
+        "Let project artwork and the hero mural do the visual heavy lifting; keep all chrome flat and quiet",
+        "Set section gaps to 64px and card padding to 24px — the 4px base unit produces compact, information-dense rhythm"
+      ],
+      "donts": [
+        "Do not add box-shadows, glows, or blur effects to any component — the system is deliberately flat",
+        "Do not use bold or semibold weights — Replica-Regular at 400 is the only voice; hierarchy comes from size alone",
+        "Do not introduce additional accent colors — Indigo Dusk (#384270) is the only chromatic token and it signals live status",
+        "Do not use white (#ffffff) as text or background — Bone White (#f2f2f3) is the off-white that prevents harshness on the dark canvas",
+        "Do not add gradients to interface chrome — gradients belong only inside project artwork and the hero mural",
+        "Do not use sharp 0px corners anywhere — every surface must have at least 16px radius to soften the dark canvas",
+        "Do not use generic sans-serif fallbacks like Helvetica or Arial as visible type — always route through Inter or a geometric sans substitute at weight 400"
+      ],
+      "theme": "dark",
+      "colors": [
+        {
+          "hex": "#f2f2f3",
+          "name": "Bone White",
+          "role": "Primary text, nav links, button labels, footer copy — the only light on the page, used for everything that must be read",
+          "group": "neutral"
+        },
+        {
+          "hex": "#25262d",
+          "name": "Slate Dark",
+          "role": "Page canvas, base surface for all cards and sections",
+          "group": "neutral"
+        },
+        {
+          "hex": "#383a42",
+          "name": "Graphite",
+          "role": "Elevated surface — nested cards, button hover fills, secondary panels sitting on top of Slate Dark",
+          "group": "neutral"
+        },
+        {
+          "hex": "#858893",
+          "name": "Fog",
+          "role": "Secondary text, metadata labels, inactive nav items, muted descriptions",
+          "group": "neutral"
+        },
+        {
+          "hex": "#54565f",
+          "name": "Ash",
+          "role": "Tertiary text, timestamps, low-priority labels",
+          "group": "neutral"
+        },
+        {
+          "hex": "#0c0c0c",
+          "name": "Charcoal",
+          "role": "Outlined button borders, icon strokes on dark surfaces",
+          "group": "neutral"
+        },
+        {
+          "hex": "#384270",
+          "name": "Indigo Dusk",
+          "role": "Violet supporting accent for decorative details and low-frequency emphasis",
+          "group": "accent"
+        }
+      ],
+      "layout": "The page is a single scroll with max-width ~1200px centered content. Navigation is a flat text-link bar with no background container, items distributed across the full viewport. The hero is a massive typographic mural (120px+ display text) spanning the full content width. Below the hero, a compact stacked layout: bio card, then a horizontal action row of pills (status + CTAs), then the 'Selected Projects' section header, then project entry cards as horizontal rows (year | title | description | tags), then full-bleed project showcase embeds. The layout alternates between contained card surfaces and full-width project visuals, creating a rhythm of compressed metadata followed by expansive artwork. Sections are separated by 64px gaps with subtle 1px hairlines. No sidebar, no sticky header, no mega-menu.",
+      "imagery": "The site follows a strict visual hierarchy: the hero is the only space where color and illustration exist at scale, rendered as a massive multicolored typographic mural where organic red, blue, yellow, green, and pink shapes fill the letterforms of 'I build things'. This is signature artwork, not a repeating pattern. Project showcases below use full-bleed embeds of the actual product UI (like Metadrop's rainbow-gradient bordered interface) — never stock photography, never lifestyle imagery, never abstract decorative graphics. The rest of the page is pure typography on flat dark surfaces. The contrast between the riotous hero and the austere everything-else is the defining visual tension.",
+      "similar": [
+        {
+          "why": "Same dark canvas with single-purpose chromatic accent used for status/availability indicators, flat surfaces with no shadows, compact information-dense layout",
+          "business": "Linear"
+        },
+        {
+          "why": "Personal portfolio with dark monochrome canvas, oversized display type as the hero centerpiece, and extremely restrained interface chrome below",
+          "business": "Rauno Freiberg"
+        },
+        {
+          "why": "Dark mode with near-black canvas, single accent color for interactive states, flat card surfaces, tight typographic rhythm",
+          "business": "Vercel"
+        },
+        {
+          "why": "Portfolio platform with dark mode, minimal chrome, compact card-based project entries, text-first navigation",
+          "business": "Read.cv"
+        },
+        {
+          "why": "Designer portfolio with dramatic typographic hero, dark background, flat interface below, and custom geometric sans-serif throughout",
+          "business": "Pawel Huć"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "16px",
+          "pills": "64px",
+          "images": "16px",
+          "buttons": "24px"
+        },
+        "elementGap": "12px",
+        "sectionGap": "64px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#25262d",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page background, the base layer everything sits on"
+        },
+        {
+          "hex": "#383a42",
+          "name": "Card",
+          "level": 1,
+          "purpose": "Elevated content containers — project cards, bio blocks, nested panels"
+        },
+        {
+          "hex": "#384270",
+          "name": "Highlight",
+          "level": 2,
+          "purpose": "Status pills and active state surfaces"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "none — flat, no shadow, relies on Indigo Dusk fill for prominence",
+          "element": "Status pill (Open)"
+        },
+        {
+          "style": "none — flat Graphite surface, separation comes from color step not shadow",
+          "element": "Project cards"
+        },
+        {
+          "style": "none — flat surface, hairline 1px border optional",
+          "element": "Bio card"
+        }
+      ],
+      "northStar": "midnight gallery with a kaleidoscope mural — a near-black studio wall where one brilliantly colorful typographic artwork commands attention and everything else stays quiet and deliberate.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 14,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "body-sm",
+          "size": 16,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "body",
+          "size": 20,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "subheading",
+          "size": 24,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "heading-sm",
+          "size": 28,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "heading",
+          "size": 36,
+          "lineHeight": 1.2,
+          "letterSpacing": -0.014
+        },
+        {
+          "role": "display",
+          "size": 120,
+          "lineHeight": 1,
+          "letterSpacing": -0.014
+        }
+      ],
+      "components": [
+        {
+          "name": "Hero Typographic Mural",
+          "role": "First-screen centerpiece — the only decorative element in the system",
+          "description": "Display text at 120px+ in Replica-Regular weight 400, line-height 1.00, letter-spacing -0.014em. Letterforms filled with multicolored organic shapes (red, blue, yellow, green, pink — not system tokens, but illustration art). Spans full viewport width. This is the brand signature — no other element on the site uses color this way."
+        },
+        {
+          "name": "Top Navigation Bar",
+          "role": "Minimal text-link navigation spread across the viewport top",
+          "description": "Flat, no background bar — links sit directly on the Slate Dark canvas. 14px Replica-Regular, letter-spacing -0.014em. Items distributed: brand name left, role descriptor center-left, contact links (email, twitter, read.cv, so-so.eth) spread right. Fog (#858893) for inactive, Bone White (#f2f2f3) for active. No borders, no hamburger, no container."
+        },
+        {
+          "name": "Bio Card",
+          "role": "Personal introduction block below the hero",
+          "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding on all sides. 'Hello' prefix in Fog (#858893) 14px Replica-Regular. Body text in Bone White (#f2f2f3) at 20px Replica-Regular, line-height 1.20. No shadow, no border. A compact dark panel floating on the darker canvas."
+        },
+        {
+          "name": "Availability Status Pill",
+          "role": "Live 'Open' indicator showing the designer is accepting work",
+          "description": "Pill-shaped (64px border-radius) with Indigo Dusk (#384270) fill. Contains a small colored dot (8px, same Indigo Dusk) and 'Open' text in Bone White at 14px Replica-Regular. 8px 16px padding. Sits inline with CTA buttons as a horizontal action row."
+        },
+        {
+          "name": "CTA Pill Button",
+          "role": "Primary call-to-action — 'Get in touch →', 'Start a project →'",
+          "description": "Graphite (#383a42) fill, 24px border-radius (softly rounded, not full pill). Bone White (#f2f2f3) text at 14-16px Replica-Regular. 12px 24px padding. Arrow suffix (→) in same color. No shadow, no border. On hover, surface lightens to #4a4c55."
+        },
+        {
+          "name": "Outlined Ghost Button",
+          "role": "Secondary action or link with visual separation",
+          "description": "Transparent background with 1px Charcoal (#0c0c0c) border. 24px border-radius. Bone White text. Used for less prominent actions alongside filled CTAs."
+        },
+        {
+          "name": "Section Header",
+          "role": "Major section label like 'Selected Projects'",
+          "description": "36px Replica-Regular weight 400, Bone White (#f2f2f3), line-height 1.20. No underline, no decoration — just clean type sitting on the canvas. Generous 64px margin-top separating it from the previous section."
+        },
+        {
+          "name": "Project Entry Card",
+          "role": "Individual project entry in the Selected Projects list",
+          "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding. Structure: year in Fog (#858893) Replica-Mono (top-left), project name in Bone White Replica-Regular 36px (left column), description in Fog 20px (center column), tag list in Replica-Mono with '○' bullet prefix (right column). Tags: Art Direction, Branding, Design Systems, Product Design. No images in the list view — visual work appears as full-bleed embeds below."
+        },
+        {
+          "name": "Project Showcase Embed",
+          "role": "Full-width project visual — the Metadrop gradient-bordered interface",
+          "description": "Full container width, 16px border-radius. Project artwork sits on the Slate Dark canvas with no frame. Project title bar above uses 14px Replica-Mono with category tags (COINS, NFTS) in pill badges. This is where project-specific visual identity breaks through the system."
+        },
+        {
+          "name": "Category Tag Pill",
+          "role": "Small metadata badges for project categorization",
+          "description": "No background fill, 1px hairline border in Fog (#858893), 64px border-radius (full pill). Text in Replica-Mono 14px, Fog color. 2px 12px padding. Extremely minimal — just a border and text."
+        },
+        {
+          "name": "About/Bio Text Block",
+          "role": "Extended personal narrative in the lower page section",
+          "description": "Two-column asymmetric layout on Slate Dark canvas. Name 'Maciej' in 36px Bone White Replica-Regular with phonetic pronunciation ('pronounced \"much-yay\"') in Fog 14px Replica-Regular right-aligned. Body paragraphs in Bone White 20px, line-height 1.20, max-width ~480px per column. No card container — text sits directly on canvas."
+        },
+        {
+          "name": "Hairline Divider",
+          "role": "Section separator",
+          "description": "1px solid line in #2e2f37 (a tone between canvas and card). Full container width. Minimal visual noise — just enough to signal transition without adding weight."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary typeface for all body text, headings, navigation, and the hero display. The single weight (400) is the signature — no bold, no light, just one confident regular cut. The tight -0.014em tracking throughout gives geometric letters a slightly condensed, deliberate feel. Used at every size from 14px captions to the 120px+ hero mural.",
+          "sizes": "20px, 36px",
+          "family": "Replica-Regular",
+          "weight": "400",
+          "lineHeight": "1.00-1.20",
+          "substitute": "Inter, Söhne, or Suisse Int'l at weight 400",
+          "letterSpacing": "-0.0140em"
+        },
+        {
+          "role": "Reserved for metadata and structural labels: year markers, project tags (Art Direction, Branding, Design Systems), and small heading-like elements. Creates a clear typographic separation between content (Replica-Regular) and structural scaffolding (Replica-Mono).",
+          "sizes": "20px",
+          "family": "Replica-Mono",
+          "weight": "400",
+          "lineHeight": "1.20",
+          "substitute": "JetBrains Mono, IBM Plex Mono, or Geist Mono"
+        },
+        {
+          "role": "Arial — detected in extracted data but not described by AI",
+          "sizes": "13px",
+          "family": "Arial",
+          "weight": "400",
+          "lineHeight": "1.2"
+        }
+      ],
+      "description": "Maciej Zadykowicz's portfolio operates as a midnight design studio: a near-black canvas of deep slate (#25262d) that lets a single spectacular piece of typographic art — the multicolored 'I build things' mural — command the entire first impression. Below the hero, the system retreats into quiet restraint: light bone-white text (#f2f2f3) over flat dark cards, tight Replica typography, pill-shaped controls, and a single muted indigo (#384270) reserved for the live 'Open' status indicator. The page reads like a gallery wall — the work IS the decoration, so chrome stays compact, metadata is mono-typed, and the only chromatic accent carries semantic meaning (availability, live state). Information density is high but breathing — project entries stack as year/title/description/tags with generous 24px internal padding, and the 16px card radius softens the otherwise severe dark surface.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Color Discipline",
+          "content": "This system is built on radical chromatic restraint. The page is 99% achromatic — dark canvas, light text, gray hierarchy. The hero mural is the ONLY place where multiple colors appear, and it's artwork, not interface. In the interface itself, the single chromatic color (Indigo Dusk #384270) carries semantic weight: it means 'live', 'available', 'active'. Never use it for decoration, hover states, or generic emphasis. If you need to draw attention to something, change its size, weight of position — not its color."
+        }
+      ],
+      "elevationPhilosophy": "The design system deliberately avoids all shadows. Elevation is communicated exclusively through surface color stepping: Slate Dark (#25262d) → Graphite (#383a42) → Indigo Dusk (#384270). On a near-black canvas, shadows would be invisible noise — color stepping is the cleaner signal."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/c5ac1a71-0e78-4acf-8c51-6701ef4d3824.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/bdc1f655-d510-4e07-9b35-53483e1faec8.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "maciej-zadykowicz",
+    "generatedAt": "2026-06-03T18:31:51.783Z",
+    "summary": "Maciej Zadykowicz's portfolio operates as a midnight design studio: a near-black canvas of deep slate (#25262d) that lets a single spectacular piece of typographic art — the multicolored 'I build things' mural — command the entire first impression. Below the hero, the system retreats into quiet restraint: light bone-white text (#f2f2f3) over flat dark cards, tight Replica typography, pill-shaped controls, and a single muted indigo (#384270) reserved for the live 'Open' status indicator. The page reads like a gallery wall — the work IS the decoration, so chrome stays compact, metadata is mono-typed, and the only chromatic accent carries semantic meaning (availability, live state). Information density is high but breathing — project entries stack as year/title/description/tags with generous 24px internal padding, and the 16px card radius softens the otherwise severe dark surface.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+      "sourceUrl": "https://styles.refero.design/style/f1b76a42-050e-4c9e-96e3-a77fbd718c68",
+      "originalUrl": "https://maciej.co",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/c5ac1a71-0e78-4acf-8c51-6701ef4d3824.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/bdc1f655-d510-4e07-9b35-53483e1faec8.jpg",
+      "importedAt": "2026-08-02T18:09:05.969Z",
+      "upstreamModifiedAt": "2026-06-03T18:31:51.785Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "dark",
+      "northStar": "midnight gallery with a kaleidoscope mural — a near-black studio wall where one brilliantly colorful typographic artwork commands attention and everything else stays quiet and deliberate.",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-bone-white",
+        "kind": "color",
+        "name": "Bone White",
+        "value": "#f2f2f3",
+        "role": "Primary text, nav links, button labels, footer copy — the only light on the page, used for everything that must be read",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate-dark",
+        "kind": "color",
+        "name": "Slate Dark",
+        "value": "#25262d",
+        "role": "Page canvas, base surface for all cards and sections",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#383a42",
+        "role": "Elevated surface — nested cards, button hover fills, secondary panels sitting on top of Slate Dark",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog",
+        "kind": "color",
+        "name": "Fog",
+        "value": "#858893",
+        "role": "Secondary text, metadata labels, inactive nav items, muted descriptions",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#54565f",
+        "role": "Tertiary text, timestamps, low-priority labels",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#0c0c0c",
+        "role": "Outlined button borders, icon strokes on dark surfaces",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-indigo-dusk",
+        "kind": "color",
+        "name": "Indigo Dusk",
+        "value": "#384270",
+        "role": "Violet supporting accent for decorative details and low-frequency emphasis",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-replica-regular",
+        "kind": "typography",
+        "name": "Replica-Regular",
+        "value": "font-family: Replica-Regular; font-weight: 400; font-size: 20px, 36px; line-height: 1.00-1.20; letter-spacing: -0.0140em",
+        "role": "Primary typeface for all body text, headings, navigation, and the hero display. The single weight (400) is the signature — no bold, no light, just one confident regular cut. The tight -0.014em tracking throughout gives geometric letters a slightly condensed, deliberate feel. Used at every size from 14px captions to the 120px+ hero mural.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-replica-mono",
+        "kind": "typography",
+        "name": "Replica-Mono",
+        "value": "font-family: Replica-Mono; font-weight: 400; font-size: 20px; line-height: 1.20",
+        "role": "Reserved for metadata and structural labels: year markers, project tags (Art Direction, Branding, Design Systems), and small heading-like elements. Creates a clear typographic separation between content (Replica-Regular) and structural scaffolding (Replica-Mono).",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-arial",
+        "kind": "typography",
+        "name": "Arial",
+        "value": "font-family: Arial; font-weight: 400; font-size: 13px; line-height: 1.2",
+        "role": "Arial — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 14px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 16px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 20px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 24px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 28px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 36px; line-height: 1.2; letter-spacing: -0.014px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 120px; line-height: 1; letter-spacing: -0.014px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "12px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "64px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "16px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-pills",
+        "kind": "radius",
+        "name": "pills",
+        "value": "64px",
+        "role": "Imported pills radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "16px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "24px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The design system deliberately avoids all shadows. Elevation is communicated exclusively through surface color stepping: Slate Dark (#25262d) → Graphite (#383a42) → Indigo Dusk (#384270). On a near-black canvas, shadows would be invisible noise — color stepping is the cleaner signal.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "hero-typographic-mural",
+        "name": "Hero Typographic Mural",
+        "category": "Refero components",
+        "description": "Display text at 120px+ in Replica-Regular weight 400, line-height 1.00, letter-spacing -0.014em. Letterforms filled with multicolored organic shapes (red, blue, yellow, green, pink — not system tokens, but illustration art). Spans full viewport width. This is the brand signature — no other element on the site uses color this way.",
+        "variants": [
+          {
+            "id": "hero-typographic-mural-reference",
+            "name": "Reference",
+            "description": "Display text at 120px+ in Replica-Regular weight 400, line-height 1.00, letter-spacing -0.014em. Letterforms filled with multicolored organic shapes (red, blue, yellow, green, pink — not system tokens, but illustration art). Spans full viewport width. This is the brand signature — no other element on the site uses color this way.",
+            "evidence": [],
+            "observedProperties": [
+              "First-screen centerpiece — the only decorative element in the system"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation-bar",
+        "name": "Top Navigation Bar",
+        "category": "Refero components",
+        "description": "Flat, no background bar — links sit directly on the Slate Dark canvas. 14px Replica-Regular, letter-spacing -0.014em. Items distributed: brand name left, role descriptor center-left, contact links (email, twitter, read.cv, so-so.eth) spread right. Fog (#858893) for inactive, Bone White (#f2f2f3) for active. No borders, no hamburger, no container.",
+        "variants": [
+          {
+            "id": "top-navigation-bar-reference",
+            "name": "Reference",
+            "description": "Flat, no background bar — links sit directly on the Slate Dark canvas. 14px Replica-Regular, letter-spacing -0.014em. Items distributed: brand name left, role descriptor center-left, contact links (email, twitter, read.cv, so-so.eth) spread right. Fog (#858893) for inactive, Bone White (#f2f2f3) for active. No borders, no hamburger, no container.",
+            "evidence": [],
+            "observedProperties": [
+              "Minimal text-link navigation spread across the viewport top"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "bio-card",
+        "name": "Bio Card",
+        "category": "Refero components",
+        "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding on all sides. 'Hello' prefix in Fog (#858893) 14px Replica-Regular. Body text in Bone White (#f2f2f3) at 20px Replica-Regular, line-height 1.20. No shadow, no border. A compact dark panel floating on the darker canvas.",
+        "variants": [
+          {
+            "id": "bio-card-reference",
+            "name": "Reference",
+            "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding on all sides. 'Hello' prefix in Fog (#858893) 14px Replica-Regular. Body text in Bone White (#f2f2f3) at 20px Replica-Regular, line-height 1.20. No shadow, no border. A compact dark panel floating on the darker canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Personal introduction block below the hero"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "availability-status-pill",
+        "name": "Availability Status Pill",
+        "category": "Refero components",
+        "description": "Pill-shaped (64px border-radius) with Indigo Dusk (#384270) fill. Contains a small colored dot (8px, same Indigo Dusk) and 'Open' text in Bone White at 14px Replica-Regular. 8px 16px padding. Sits inline with CTA buttons as a horizontal action row.",
+        "variants": [
+          {
+            "id": "availability-status-pill-reference",
+            "name": "Reference",
+            "description": "Pill-shaped (64px border-radius) with Indigo Dusk (#384270) fill. Contains a small colored dot (8px, same Indigo Dusk) and 'Open' text in Bone White at 14px Replica-Regular. 8px 16px padding. Sits inline with CTA buttons as a horizontal action row.",
+            "evidence": [],
+            "observedProperties": [
+              "Live 'Open' indicator showing the designer is accepting work"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "cta-pill-button",
+        "name": "CTA Pill Button",
+        "category": "Refero components",
+        "description": "Graphite (#383a42) fill, 24px border-radius (softly rounded, not full pill). Bone White (#f2f2f3) text at 14-16px Replica-Regular. 12px 24px padding. Arrow suffix (→) in same color. No shadow, no border. On hover, surface lightens to #4a4c55.",
+        "variants": [
+          {
+            "id": "cta-pill-button-reference",
+            "name": "Reference",
+            "description": "Graphite (#383a42) fill, 24px border-radius (softly rounded, not full pill). Bone White (#f2f2f3) text at 14-16px Replica-Regular. 12px 24px padding. Arrow suffix (→) in same color. No shadow, no border. On hover, surface lightens to #4a4c55.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary call-to-action — 'Get in touch →', 'Start a project →'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-ghost-button",
+        "name": "Outlined Ghost Button",
+        "category": "Refero components",
+        "description": "Transparent background with 1px Charcoal (#0c0c0c) border. 24px border-radius. Bone White text. Used for less prominent actions alongside filled CTAs.",
+        "variants": [
+          {
+            "id": "outlined-ghost-button-reference",
+            "name": "Reference",
+            "description": "Transparent background with 1px Charcoal (#0c0c0c) border. 24px border-radius. Bone White text. Used for less prominent actions alongside filled CTAs.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action or link with visual separation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-header",
+        "name": "Section Header",
+        "category": "Refero components",
+        "description": "36px Replica-Regular weight 400, Bone White (#f2f2f3), line-height 1.20. No underline, no decoration — just clean type sitting on the canvas. Generous 64px margin-top separating it from the previous section.",
+        "variants": [
+          {
+            "id": "section-header-reference",
+            "name": "Reference",
+            "description": "36px Replica-Regular weight 400, Bone White (#f2f2f3), line-height 1.20. No underline, no decoration — just clean type sitting on the canvas. Generous 64px margin-top separating it from the previous section.",
+            "evidence": [],
+            "observedProperties": [
+              "Major section label like 'Selected Projects'"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-entry-card",
+        "name": "Project Entry Card",
+        "category": "Refero components",
+        "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding. Structure: year in Fog (#858893) Replica-Mono (top-left), project name in Bone White Replica-Regular 36px (left column), description in Fog 20px (center column), tag list in Replica-Mono with '○' bullet prefix (right column). Tags: Art Direction, Branding, Design Systems, Product Design. No images in the list view — visual work appears as full-bleed embeds below.",
+        "variants": [
+          {
+            "id": "project-entry-card-reference",
+            "name": "Reference",
+            "description": "Graphite (#383a42) surface, 16px border-radius, 24px padding. Structure: year in Fog (#858893) Replica-Mono (top-left), project name in Bone White Replica-Regular 36px (left column), description in Fog 20px (center column), tag list in Replica-Mono with '○' bullet prefix (right column). Tags: Art Direction, Branding, Design Systems, Product Design. No images in the list view — visual work appears as full-bleed embeds below.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual project entry in the Selected Projects list"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-showcase-embed",
+        "name": "Project Showcase Embed",
+        "category": "Refero components",
+        "description": "Full container width, 16px border-radius. Project artwork sits on the Slate Dark canvas with no frame. Project title bar above uses 14px Replica-Mono with category tags (COINS, NFTS) in pill badges. This is where project-specific visual identity breaks through the system.",
+        "variants": [
+          {
+            "id": "project-showcase-embed-reference",
+            "name": "Reference",
+            "description": "Full container width, 16px border-radius. Project artwork sits on the Slate Dark canvas with no frame. Project title bar above uses 14px Replica-Mono with category tags (COINS, NFTS) in pill badges. This is where project-specific visual identity breaks through the system.",
+            "evidence": [],
+            "observedProperties": [
+              "Full-width project visual — the Metadrop gradient-bordered interface"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "category-tag-pill",
+        "name": "Category Tag Pill",
+        "category": "Refero components",
+        "description": "No background fill, 1px hairline border in Fog (#858893), 64px border-radius (full pill). Text in Replica-Mono 14px, Fog color. 2px 12px padding. Extremely minimal — just a border and text.",
+        "variants": [
+          {
+            "id": "category-tag-pill-reference",
+            "name": "Reference",
+            "description": "No background fill, 1px hairline border in Fog (#858893), 64px border-radius (full pill). Text in Replica-Mono 14px, Fog color. 2px 12px padding. Extremely minimal — just a border and text.",
+            "evidence": [],
+            "observedProperties": [
+              "Small metadata badges for project categorization"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "about-bio-text-block",
+        "name": "About/Bio Text Block",
+        "category": "Refero components",
+        "description": "Two-column asymmetric layout on Slate Dark canvas. Name 'Maciej' in 36px Bone White Replica-Regular with phonetic pronunciation ('pronounced \"much-yay\"') in Fog 14px Replica-Regular right-aligned. Body paragraphs in Bone White 20px, line-height 1.20, max-width ~480px per column. No card container — text sits directly on canvas.",
+        "variants": [
+          {
+            "id": "about-bio-text-block-reference",
+            "name": "Reference",
+            "description": "Two-column asymmetric layout on Slate Dark canvas. Name 'Maciej' in 36px Bone White Replica-Regular with phonetic pronunciation ('pronounced \"much-yay\"') in Fog 14px Replica-Regular right-aligned. Body paragraphs in Bone White 20px, line-height 1.20, max-width ~480px per column. No card container — text sits directly on canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Extended personal narrative in the lower page section"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hairline-divider",
+        "name": "Hairline Divider",
+        "category": "Refero components",
+        "description": "1px solid line in #2e2f37 (a tone between canvas and card). Full container width. Minimal visual noise — just enough to signal transition without adding weight.",
+        "variants": [
+          {
+            "id": "hairline-divider-reference",
+            "name": "Reference",
+            "description": "1px solid line in #2e2f37 (a tone between canvas and card). Full container width. Minimal visual noise — just enough to signal transition without adding weight.",
+            "evidence": [],
+            "observedProperties": [
+              "Section separator"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "The page is a single scroll with max-width ~1200px centered content. Navigation is a flat text-link bar with no background container, items distributed across the full viewport. The hero is a massive typographic mural (120px+ display text) spanning the full content width. Below the hero, a compact stacked layout: bio card, then a horizontal action row of pills (status + CTAs), then the 'Selected Projects' section header, then project entry cards as horizontal rows (year | title | description | tags), then full-bleed project showcase embeds. The layout alternates between contained card surfaces and full-width project visuals, creating a rhythm of compressed metadata followed by expansive artwork. Sections are separated by 64px gaps with subtle 1px hairlines. No sidebar, no sticky header, no mega-menu.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "The site follows a strict visual hierarchy: the hero is the only space where color and illustration exist at scale, rendered as a massive multicolored typographic mural where organic red, blue, yellow, green, and pink shapes fill the letterforms of 'I build things'. This is signature artwork, not a repeating pattern. Project showcases below use full-bleed embeds of the actual product UI (like Metadrop's rainbow-gradient bordered interface) — never stock photography, never lifestyle imagery, never abstract decorative graphics. The rest of the page is pure typography on flat dark surfaces. The contrast between the riotous hero and the austere everything-else is the defining visual tension.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The design system deliberately avoids all shadows. Elevation is communicated exclusively through surface color stepping: Slate Dark (#25262d) → Graphite (#383a42) → Indigo Dusk (#384270). On a near-black canvas, shadows would be invisible noise — color stepping is the cleaner signal.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the page at 1% colorfulness — only the hero mural and the Indigo Dusk status pill introduce chromatic color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Replica-Regular weight 400 exclusively for content; never introduce bold, semibold, or light cuts",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply -0.014em letter-spacing to all Replica text at every size — this tracking is the typographic identity",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Communicate elevation through surface color stepping (#25262d → #383a42 → #384270), never through box-shadows",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 16px radius for cards and images, 24px for buttons, 64px for status pills and tags — these three values define all rounding in the system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let project artwork and the hero mural do the visual heavy lifting; keep all chrome flat and quiet",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set section gaps to 64px and card padding to 24px — the 4px base unit produces compact, information-dense rhythm",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add box-shadows, glows, or blur effects to any component — the system is deliberately flat",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use bold or semibold weights — Replica-Regular at 400 is the only voice; hierarchy comes from size alone",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce additional accent colors — Indigo Dusk (#384270) is the only chromatic token and it signals live status",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use white (#ffffff) as text or background — Bone White (#f2f2f3) is the off-white that prevents harshness on the dark canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add gradients to interface chrome — gradients belong only inside project artwork and the hero mural",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use sharp 0px corners anywhere — every surface must have at least 16px radius to soften the dark canvas",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use generic sans-serif fallbacks like Helvetica or Arial as visible type — always route through Inter or a geometric sans substitute at weight 400",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

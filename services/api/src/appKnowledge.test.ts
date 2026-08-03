@@ -243,6 +243,7 @@ const dependencies = {
       version_number: version ?? 2,
       label: "v2",
       source_url: null,
+      provider: "m",
       status: "published",
       notes: "",
       captured_at: "2026-07-23T00:00:00.000Z",

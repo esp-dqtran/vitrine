@@ -42,6 +42,8 @@ import {
   listPublishedDesignSystems,
   listPublishedFlowSets,
   appMetadata,
+  publishedAppPreviewMetadata,
+  publishedAppPreviewFlows,
   appEvidencePage,
   appUiElementSummary,
   appKnowledgeEvidenceSource,
@@ -74,7 +76,14 @@ import { isPlatform, platformFromUrl, type Platform } from "../../../src/platfor
 import { readProgress, requestCancel, subscribeProgress } from "../../../src/progress.ts";
 import { bulkImageHash, findBulkImage, isAppSlug, legacyRefSuffix, parseImageSource, publicImageUrl } from "../../../src/imageSource.ts";
 import { hydrateDesignSystem } from "../../../src/designSystem.ts";
-import { buildAdminGalleryApps, buildAppMetadata, buildEvidencePage, buildGalleryApps, buildPublishedCatalogPage } from "../../../src/gallery.ts";
+import {
+  buildAdminGalleryApps,
+  buildAppMetadata,
+  buildEvidencePage,
+  buildGalleryApps,
+  buildPublishedCatalogPage,
+  buildPublishedPreviewScreens,
+} from "../../../src/gallery.ts";
 import { adminCatalogPage, publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import {
@@ -158,6 +167,7 @@ import { createOrganizationStore } from "../../../src/organizationStore.ts";
 import { createResearchSynthesisProvider } from "../../../src/researchSynthesisProvider.ts";
 import type { ResearchSuggestionCandidate } from "../../../src/researchSuggestions.ts";
 import { mountResearchProjectRoutes } from "./researchProjects.ts";
+import { mountDesignerCanvasRoutes } from "./designerCanvases.ts";
 import { mountProjectDocumentRoutes } from "./projectDocuments.ts";
 import { mountOrganizationRoutes } from "./organizations.ts";
 import { createFeatureDocumentStore } from "../../../src/featureDocumentStore.ts";
@@ -378,6 +388,8 @@ const defaults = {
   listPublishedDesignSystems,
   listPublishedFlowSets,
   appMetadata,
+  publishedAppPreviewMetadata,
+  publishedAppPreviewFlows,
   appEvidencePage,
   appUiElementSummary,
   getVersionFlows,
@@ -1339,10 +1351,105 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     try {
-      await sendStoredObject(deps.objectStore, metadata, res);
+      await sendStoredObject(deps.objectStore, metadata, res, req.query.inline === "1");
     } catch {
       res.status(503).json({ error: "media storage unavailable" });
     }
+  });
+
+  app.get("/catalog/apps/:app/preview", async (req, res) => {
+    const appSlug = req.params.app;
+    if (!isAppSlug(appSlug)) {
+      res.status(400).json({ error: "invalid app slug" });
+      return;
+    }
+    const [row, previews] = await Promise.all([
+      deps.publishedAppPreviewMetadata(appSlug),
+      deps.publishedPreviewImages(appSlug),
+    ]);
+    if (!row) {
+      res.status(404).json({ error: "app preview not found" });
+      return;
+    }
+
+    const platform = row.available_platforms.includes("web")
+      ? "web"
+      : row.available_platforms.find(isPlatform);
+    const [uiElementsResult, flowsResult] = platform
+      ? await Promise.allSettled([
+          deps.appUiElementSummary({
+            app: appSlug,
+            platform,
+            publishedOnly: true,
+            limit: 3,
+          }),
+          deps.publishedAppPreviewFlows(appSlug, platform),
+        ])
+      : [];
+    const uiElementSummary = uiElementsResult?.status === "fulfilled"
+      ? uiElementsResult.value
+      : null;
+    const uiElements = uiElementSummary?.items.slice(0, 3) ?? [];
+    const flows = flowsResult?.status === "fulfilled" ? flowsResult.value : [];
+
+    void deps.recordAccessEvent({
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug,
+      featureKey: "library",
+      action: "preview_viewed",
+      outcome: "success",
+    }).catch(() => undefined);
+    res.setHeader("Cache-Control", "private, max-age=60, stale-while-revalidate=300");
+    res.json({
+      app: {
+        ...buildAppMetadata(row),
+        totalUiElements: uiElementSummary?.totalOccurrences ?? 0,
+      },
+      previewScreens: buildPublishedPreviewScreens(
+        appSlug,
+        previews.filter((preview) => preview.app === appSlug),
+      ).filter(
+        (screen): screen is typeof screen & { url: string } => typeof screen.url === "string",
+      ),
+      previewUiElements: uiElements.map((item) => ({
+        type: item.component_type,
+        group: item.component_group,
+        count: item.occurrence_count,
+        thumbnailUrl: [
+          "/api/catalog/facet-media",
+          encodeURIComponent(appSlug),
+          "elements",
+          encodeURIComponent(item.component_type),
+          encodeURIComponent(platform ?? "web"),
+          "1",
+        ].join("/"),
+      })),
+      previewFlows: flows.map((flow) => {
+        const observedSteps = flow.steps.filter((step) => (
+          Array.isArray(step.evidence)
+          && step.evidence.some((value) => Number.isSafeInteger(value) && Number(value) > 0)
+        ));
+        const mediaBase = [
+          "/api/catalog/flow-media",
+          encodeURIComponent(appSlug),
+          encodeURIComponent(platform ?? "web"),
+          String(flow.version_id),
+          String(flow.version_flow_id),
+        ].join("/");
+        return {
+          id: flow.source_flow_id,
+          title: flow.title,
+          description: flow.description || null,
+          stepCount: flow.steps.length,
+          screens: observedSteps.slice(0, 3).map((step, index) => ({
+            label: typeof step.label === "string" && step.label.trim()
+              ? step.label
+              : `Step ${index + 1}`,
+            thumbnailUrl: `${mediaBase}/${index + 1}?variant=thumb`,
+          })),
+        };
+      }),
+    });
   });
 
   mountPublicFeatureDocumentRoutes(app, {
@@ -1686,6 +1793,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     });
   });
 
+  mountDesignerCanvasRoutes(app, {
+    store: deps.researchProjectStore,
+    enabled: deps.researchProjectsEnabled,
+    objectStore: deps.objectStore,
+  });
+
   mountResearchProjectRoutes(app, {
     store: deps.researchProjectStore,
     enabled: deps.researchProjectsEnabled,
@@ -1695,6 +1808,9 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     listPublishedCandidates: listResearchCandidates,
     getPrivateObject: deps.researchProjectStore.getPrivateObject,
     recordEvent: deps.recordAccessEvent,
+    organizationRole: (organizationId, userId) => (
+      deps.organizationStore.membershipRole(organizationId, userId)
+    ),
   });
 
   mountProjectDocumentRoutes(app, {
@@ -2549,7 +2665,16 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     const result = await deps.billing.createCheckout(res.locals.user, interval);
     if (result.status === "already_subscribed") {
       res.status(409).json({ error: "Already subscribed", code: "already_subscribed" });
-    } else res.status(201).json({ url: result.url });
+    } else {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        ipPrefix: ipPrefix(req.ip ?? "unknown"),
+        action: "checkout_started",
+        outcome: "created",
+        metadata: { interval },
+      });
+      res.status(201).json({ url: result.url });
+    }
   });
 
   app.post("/billing/portal", async (_req, res) => {
@@ -2786,8 +2911,37 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const result = await deps.unlockFreeApp(res.locals.user.id, req.params.app);
+    if (result.status === "unlocked" || result.status === "already_unlocked") {
+      await deps.recordAccessEvent({
+        userId: res.locals.user.id,
+        ipPrefix: ipPrefix(req.ip ?? "unknown"),
+        appSlug: req.params.app,
+        featureKey: "library",
+        action: "unlock_completed",
+        outcome: result.status,
+        metadata: { remaining: result.remaining },
+      });
+    }
     const status = result.status === "unlocked" ? 201 : result.status === "app_not_found" ? 404 : 200;
     res.status(status).json(result);
+  });
+
+  const appFunnelActions = new Set(["unlock_clicked", "paywall_viewed"]);
+  app.post("/apps/:app/funnel-events", async (req, res) => {
+    const action = req.body?.action;
+    if (!isAppSlug(req.params.app) || typeof action !== "string" || !appFunnelActions.has(action)) {
+      res.status(400).json({ error: "invalid app funnel event" });
+      return;
+    }
+    await deps.recordAccessEvent({
+      userId: res.locals.user.id,
+      ipPrefix: ipPrefix(req.ip ?? "unknown"),
+      appSlug: req.params.app,
+      featureKey: "library",
+      action,
+      outcome: "viewed",
+    });
+    res.status(204).end();
   });
 
   const authorizeAppDetail = async (req: express.Request, res: express.Response): Promise<boolean> => {

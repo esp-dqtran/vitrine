@@ -110,6 +110,7 @@ export function SiteSectionInspector({
               label="Close"
               icon={<Icon icon="close" size="sm" />}
               variant="ghost"
+              className="astryx-modal__icon-action"
               onClick={(event) => { event.stopPropagation(); onClose(); }}
             />
           </div>

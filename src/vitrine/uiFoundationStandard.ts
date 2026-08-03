@@ -34,6 +34,95 @@ export const ICON_SIZE_SCALE = [
   },
 ] as const;
 
+export const MOTION_SCALE = [
+  {
+    token: '--vitrine-motion-fast',
+    value: '120ms',
+    use: 'Direct hover, press, focus, and selection feedback',
+  },
+  {
+    token: '--vitrine-motion-medium',
+    value: '180ms',
+    use: 'Dropdowns, tooltips, and local state transitions',
+  },
+  {
+    token: '--vitrine-motion-slow',
+    value: '240ms',
+    use: 'Dialogs, sheets, and deliberate context changes',
+  },
+] as const;
+
+export const RESPONSIVE_RANGES = [
+  {
+    id: 'compact',
+    range: '0–720px',
+    columns: 1,
+    gutter: '20px',
+    use: 'Phones and narrow split views',
+  },
+  {
+    id: 'medium',
+    range: '721–1100px',
+    columns: 2,
+    gutter: '24px',
+    use: 'Tablets and medium desktop windows',
+  },
+  {
+    id: 'wide',
+    range: '1101px and above',
+    columns: 3,
+    gutter: '32px',
+    use: 'Wide desktop workspaces',
+  },
+] as const;
+
+export const FORM_CONTROL_SCALE = [
+  {
+    token: '--vitrine-form-input-height',
+    value: '48px',
+    use: 'Editable single-line fields on wide and medium screens',
+  },
+  {
+    token: '--vitrine-form-input-height-compact',
+    value: '44px',
+    use: 'Editable single-line fields on compact screens',
+  },
+  {
+    token: '--vitrine-form-input-radius',
+    value: '999px',
+    use: 'The approved Apps Search shell for editable single-line fields',
+  },
+  {
+    token: '--vitrine-form-input-padding-inline',
+    value: '22px',
+    use: 'Horizontal inset for editable single-line fields',
+  },
+  {
+    token: '--vitrine-form-choice-size',
+    value: '18px',
+    use: 'Shared checkbox and radio control size',
+  },
+  {
+    token: '--vitrine-form-switch-width',
+    value: '40px',
+    use: 'Shared switch track width',
+  },
+  {
+    token: '--vitrine-form-switch-height',
+    value: '24px',
+    use: 'Shared switch track height',
+  },
+] as const;
+
+export const UI_COMPONENT_STANDARD = {
+  forms: {
+    source: 'Vitrines Apps header Search',
+    tokens: FORM_CONTROL_SCALE,
+    policy:
+      'Use the Apps header Search shell for editable single-line fields, share checkbox, radio, switch, validation, focus, and disabled states across product screens, preserve native input behavior, and keep editor or canvas geometry domain-owned.',
+  },
+} as const;
+
 export const FOUNDATION_TOKEN_CONTRACT = {
   color: [
     '--vitrine-color-page',
@@ -80,12 +169,18 @@ export const FOUNDATION_TOKEN_CONTRACT = {
   ],
   elevation: ['--shadow-low', '--shadow-med', '--shadow-high'],
   motion: [
-    '--duration-fast',
-    '--duration-medium',
-    '--duration-slow',
-    '--ease-standard',
-    '--transition-fast',
-    '--transition-normal',
+    ...MOTION_SCALE.map(({ token }) => token),
+    '--vitrine-motion-ease',
+    '--vitrine-transition-fast',
+    '--vitrine-transition-standard',
+    '--vitrine-transition-slow',
+  ],
+  responsive: [
+    '--vitrine-breakpoint-compact-max',
+    '--vitrine-breakpoint-medium-max',
+    '--vitrine-page-gutter-compact',
+    '--vitrine-page-gutter-medium',
+    '--vitrine-page-gutter-wide',
   ],
 } as const;
 
@@ -187,6 +282,12 @@ export const UI_FOUNDATION_STANDARD = {
   iconographySource: 'Vitrines App detail',
   iconographyPolicy:
     'Use one outline family with 16px inline, 20px control, and 24px emphasis sizes, a 2px rounded stroke, an 8px label gap, and accessible 40px icon-only controls. Brand marks and captured product evidence are not system icons.',
+  motionSource: 'Vitrines product screens',
+  motionPolicy:
+    'Use 120ms for direct feedback, 180ms for local overlays and state changes, and 240ms for deliberate context changes. Use the shared expressive easing, animate opacity and transform where possible, and preserve a fully usable reduced-motion state.',
+  responsiveSource: 'Vitrines Apps discovery',
+  responsivePolicy:
+    'Use compact through 720px, medium from 721px through 1100px, and wide above 1100px. Reflow before hiding, keep primary controls reachable, and verify real content without horizontal page overflow.',
   specializedColorPolicy:
     'Data visualization, syntax highlighting, and imported-reference palettes are domain implementation details, not product foundation choices.',
   areas: UI_FOUNDATION_AREAS,

@@ -1,0 +1,1594 @@
+{
+  "schemaVersion": 1,
+  "id": "dae7cbf2-0485-433b-8f63-eea8716ad14d",
+  "sourceUrl": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d",
+  "sitemapLastModified": "2026-05-11T16:26:20.547Z",
+  "fetchedAt": "2026-08-02T18:09:36.180Z",
+  "contentHash": "5613a16d1f0401984d4b9fee10e590f44db1ae2d06a6d27d4017be97eca958f9",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Equals design system",
+            "item": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d#style-reference",
+        "name": "Equals design system reference",
+        "headline": "Equals design system | Refero Styles",
+        "description": "Explore Equals's light SaaS design system: Analyst Yellow #FFCC00, Orchid CTA #B074CE colors, Serrif Condensed, Unica77 typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d",
+        "mainEntityOfPage": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Equals",
+          "url": "https://equals.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/41b47b5e-58b3-429c-aa3e-e99dab4ed9db.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/41b47b5e-58b3-429c-aa3e-e99dab4ed9db.jpg",
+          "caption": "Screenshot of Equals"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/41b47b5e-58b3-429c-aa3e-e99dab4ed9db.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Equals design system",
+          "Equals website design",
+          "Equals colors",
+          "Equals typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "SaaS design system",
+          "Analyst Yellow",
+          "Orchid CTA",
+          "Brand Green",
+          "Glacier",
+          "Serrif Condensed",
+          "Unica77",
+          "Aeonik Fono"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Equals design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Equals website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Equals colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Equals typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "SaaS design system"
+          }
+        ],
+        "datePublished": "2026-03-26T19:59:51.000Z",
+        "dateModified": "2026-03-26T19:59:51.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://equals.com",
+      "siteName": "Equals",
+      "extractedAt": "2026-04-11T19:03:11.531Z",
+      "durationMs": 112981,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 191,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "button",
+              "nav",
+              "heading",
+              "body",
+              "input",
+              "image",
+              "link",
+              "footer"
+            ],
+            "frequency": 817,
+            "confidence": 1,
+            "prominence": 36097609.10494414,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ]
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "nav",
+              "button",
+              "other"
+            ],
+            "frequency": 18,
+            "confidence": 1,
+            "prominence": 90395.8974860795,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#646462",
+            "oklch": {
+              "c": 0.002551318258433082,
+              "h": 95.09387245316115,
+              "l": 0.5016538218866095
+            },
+            "contexts": [
+              "nav",
+              "body"
+            ],
+            "frequency": 40,
+            "confidence": 1,
+            "prominence": 63695.935782904395,
+            "properties": [
+              "color",
+              "borderColor"
+            ]
+          },
+          {
+            "hex": "#ffcc00",
+            "oklch": {
+              "c": 0.17682820801718266,
+              "h": 90.3815564900439,
+              "l": 0.8652089977306622
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 51300,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#b074ce",
+            "oklch": {
+              "c": 0.14344809003452658,
+              "h": 313.6599499248708,
+              "l": 0.6558269688414499
+            },
+            "contexts": [
+              "button"
+            ],
+            "frequency": 3,
+            "confidence": 1,
+            "prominence": 10418,
+            "properties": [
+              "backgroundColor"
+            ]
+          },
+          {
+            "hex": "#cdccc9",
+            "oklch": {
+              "c": 0.004589754613122138,
+              "h": 95.0978546110879,
+              "l": 0.8454883567033699
+            },
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 7480,
+            "properties": [
+              "boxShadow"
+            ]
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.002192306397638845,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.89,
+            "background": "#ffcc00",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.08,
+            "background": "#cdccc9",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.24,
+            "background": "#b074ce",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.93,
+            "background": "#ffffff",
+            "foreground": "#646462"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.92,
+            "background": "#ffcc00",
+            "foreground": "#646462"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.37,
+            "background": "#b074ce",
+            "foreground": "#ffffff"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.76,
+            "background": "#b074ce",
+            "foreground": "#646462"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.51,
+            "background": "#ffcc00",
+            "foreground": "#ffffff"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 6,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 26
+          },
+          {
+            "value": 50,
+            "contexts": [
+              "nav",
+              "other"
+            ],
+            "frequency": 3
+          },
+          {
+            "value": 60,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 3
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgba(0, 0, 0, 0.1) 0px 0px 0px 0.5px, rgba(0, 0, 0, 0.05) 0px 2px 8px -2px, rgba(0, 0, 0, 0.14) 0px 2px 10px -4px",
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 4,
+            "frequency": 48,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 6,
+            "frequency": 5,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom"
+            ]
+          },
+          {
+            "value": 8,
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 10,
+            "frequency": 6,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 12,
+            "frequency": 77,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom",
+              "marginBottom",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 14,
+            "frequency": 8,
+            "properties": [
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 15,
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 16,
+            "frequency": 7,
+            "properties": [
+              "marginTop",
+              "rowGap",
+              "columnGap",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 18,
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 20,
+            "frequency": 19,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "rowGap"
+            ]
+          },
+          {
+            "value": 24,
+            "frequency": 3,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 28,
+            "frequency": 2,
+            "properties": [
+              "paddingLeft"
+            ]
+          },
+          {
+            "value": 30,
+            "frequency": 6,
+            "properties": [
+              "columnGap",
+              "marginBottom",
+              "rowGap"
+            ]
+          },
+          {
+            "value": 32,
+            "frequency": 2,
+            "properties": [
+              "marginTop",
+              "paddingBottom"
+            ]
+          },
+          {
+            "value": 40,
+            "frequency": 2,
+            "properties": [
+              "marginTop"
+            ]
+          },
+          {
+            "value": 48,
+            "frequency": 10,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "marginTop",
+              "marginBottom",
+              "rowGap",
+              "columnGap"
+            ]
+          },
+          {
+            "value": 60,
+            "frequency": 15,
+            "properties": [
+              "marginRight",
+              "marginLeft",
+              "marginTop"
+            ]
+          },
+          {
+            "value": 64,
+            "frequency": 2,
+            "properties": [
+              "paddingBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 80,
+            "frequency": 5,
+            "properties": [
+              "marginBottom",
+              "marginTop",
+              "paddingBottom",
+              "paddingTop"
+            ]
+          },
+          {
+            "value": 150,
+            "frequency": 2,
+            "properties": [
+              "paddingRight"
+            ]
+          }
+        ],
+        "density": "comfortable",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Unica77",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 165,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Serrif Condensed",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 6,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Aeonik Fono",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 4,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 18,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 13,
+            "family": "Aeonik Fono",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.54,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.71,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 75,
+            "lineHeight": 1.43,
+            "letterSpacing": -0.006,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "nav",
+              "button"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.29,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 14,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "footer",
+              "other",
+              "body",
+              "link"
+            ],
+            "frequency": 16,
+            "lineHeight": 1.14,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "input",
+              "button"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 13,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "nav",
+              "image",
+              "link",
+              "body"
+            ],
+            "frequency": 47,
+            "lineHeight": 1.33,
+            "letterSpacing": -0.005,
+            "textTransform": "none"
+          },
+          {
+            "size": 24,
+            "family": "Unica77",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.33,
+            "letterSpacing": -0.004,
+            "textTransform": "none"
+          },
+          {
+            "size": 40,
+            "family": "Serrif Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 48,
+            "family": "Serrif Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.04,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 110,
+            "family": "Serrif Condensed",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Serrif Condensed weight 400 (never bold) for all headings — the editorial authority comes from scale (up to 110px) and letter-spacing (-2.2px at display), not weight",
+        "Set the page background to #FAF9F5 (Warm Cream), never pure white — the warm tint is the canvas that makes black text feel typographic rather than digital",
+        "Reserve #FFCC00 exclusively for the announcement bar and #B074CE exclusively for CTA buttons — their power comes from appearing once each, never reused as decorative color",
+        "Use 60px border-radius on CTA buttons only; all other interactive elements (inputs, dropdowns, category pills) use 0px or 6px — the pill/sharp contrast is deliberate system tension",
+        "Separate sections with 1px solid #000000 horizontal rules instead of increased vertical whitespace — this references spreadsheet grid lines and is the primary structural rhythm device",
+        "Apply negative letter-spacing to Unica77 at all sizes: -0.084px at 14px, -0.08px at 16px — never use default tracking for UI text",
+        "Display category/role color blocks as flat 24×12px solid rectangles (no radius, no border) — the raw flat swatch is the icon; never substitute icons or illustrations for these"
+      ],
+      "tags": [
+        "editorial-serif",
+        "cream-background",
+        "spreadsheet-metaphor",
+        "pill-cta",
+        "typographic-hierarchy",
+        "pastel-accents",
+        "two-font-system",
+        "horizontal-rule-structure",
+        "minimal-color",
+        "data-tools"
+      ],
+      "donts": [
+        "Never use #B074CE or #FFCC00 as background for content sections or cards — both colors are single-purpose signal colors, not palette options",
+        "Never apply border-radius to inputs or horizontal dividers — the 0px sharp edge on form elements is the system's UI register; rounding them collapses the tension with pill CTAs",
+        "Never use Serrif Condensed at weights other than 400 — do not attempt to bold or italicize headings, even for emphasis",
+        "Never replace the floating color swatch decoratives with photography or illustrations — abstract flat rectangles are the hero visual language; anything representational breaks the spreadsheet metaphor",
+        "Never use #646462 (Slate Body) for headings or CTAs — it is body-only, maintaining a strict two-tier contrast system: black for structure, slate for supporting copy",
+        "Never stack multiple orchid (#B074CE) buttons in proximity — each page view should have a single dominant CTA moment, typically the email capture composite in the hero",
+        "Never add drop shadows or elevation to section containers or cards — the only permitted shadow is on nav dropdown panels; sections live flat on the cream surface"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#FFCC00",
+          "name": "Analyst Yellow",
+          "role": "Announcement bar background only — saturated yellow on near-black text creates maximum urgency at minimal surface area, never used elsewhere so it retains its alarm-signal quality",
+          "group": "brand"
+        },
+        {
+          "hex": "#B074CE",
+          "name": "Orchid CTA",
+          "role": "Primary CTA buttons — warm violet against cream background reads as inviting rather than urgent, distinguishing CTAs from the aggressive red/orange typical of SaaS",
+          "group": "brand"
+        },
+        {
+          "hex": "#20A277",
+          "name": "Brand Green",
+          "role": "Finance category accent swatch — one of three role-coded indicator blocks (RevOps red, Founders navy, Finance green) flanking solution rows",
+          "group": "accent"
+        },
+        {
+          "hex": "#2DCBDC",
+          "name": "Glacier",
+          "role": "Background decorative color block in hero, part of the floating pastel spreadsheet-cell visual language",
+          "group": "accent"
+        },
+        {
+          "hex": "#000000",
+          "name": "Midnight Ink",
+          "role": "All headings, body text, borders, nav links, icons — full black with zero softening; the high contrast against cream is deliberately old-media, not SaaS-neutral",
+          "group": "neutral"
+        },
+        {
+          "hex": "#FAF9F5",
+          "name": "Warm Cream",
+          "role": "Page background, section backgrounds — the slight warm yellow tint separates this from clinical white and reinforces the paper/spreadsheet metaphor",
+          "group": "neutral"
+        },
+        {
+          "hex": "#FFFFFF",
+          "name": "Cloud White",
+          "role": "Button text on orchid CTAs, nav hover states, input field backgrounds",
+          "group": "neutral"
+        },
+        {
+          "hex": "#646462",
+          "name": "Slate Body",
+          "role": "Body copy, nav secondary text, descriptive subtexts under headings",
+          "group": "neutral"
+        },
+        {
+          "hex": "#CDCCC9",
+          "name": "Fog Border",
+          "role": "Nav dropdown shadows, subtle divider lines",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Max-width centered layout (~1200px) on a full-bleed #FAF9F5 cream background. Hero is full-viewport-height centered stack: 110px display headline, 18px subtext, then the email+CTA composite unit. Floating color swatches appear left and right of the text column without containing structure — they bleed near the viewport edges. Below the hero, sections are separated exclusively by 1px black horizontal rules with no vertical gap between them, creating a dense spreadsheet-row rhythm. Solution rows use a two-column layout: text left, color swatch right. Customer logos appear in a 5-column grid row, then a second row, directly on the cream surface with no container. Navigation is a single sticky top bar with logo left, five nav links centered, sign-in + email input + CTA button right. Dropdown panels float below nav items with the layered shadow system.",
+      "imagery": "No photography anywhere on the visible page. The hero's visual field is occupied entirely by flat-color rectangular swatches — glacier teal, soft lavender, pastel yellow, mint green — arranged loosely in the background at varying sizes, without radius or border, mimicking unfilled spreadsheet cells. These are purely decorative and never contain content. The logo section uses monochrome customer wordmarks forced to black, no badges or containers. Category indicators are 24×12px solid color blocks — raw data visualization primitives rather than designed icons. The visual language is resolutely non-photographic: a product confident enough that its typography IS the visual.",
+      "similar": [
+        {
+          "why": "Same black-on-cream typographic approach with a primary CTA pill button in a single accent color against an otherwise achromatic UI",
+          "business": "Notion"
+        },
+        {
+          "why": "Same two-font editorial system pairing a display serif with a tight grotesque for UI chrome, with negative letter-spacing as a signature move",
+          "business": "Linear"
+        },
+        {
+          "why": "Directly comparable spreadsheet product visual language — editorial serif headlines, cream backgrounds, minimal color accents referencing data-cell aesthetics",
+          "business": "Rows.com"
+        },
+        {
+          "why": "Monochrome logo grid on cream with single-accent CTA buttons and horizontal-rule section dividers instead of card-based layouts",
+          "business": "Retool"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "50px",
+          "inputs": "0px",
+          "buttons": "60px",
+          "dropdowns": "6px"
+        },
+        "elementGap": "12-20px",
+        "sectionGap": "80-120px",
+        "cardPadding": "24px",
+        "pageMaxWidth": "1200px"
+      },
+      "category": "SaaS",
+      "northStar": "Broadsheet meets spreadsheet — editorial serif authority on warm cream, punctuated by floating pastel data cells.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 13,
+          "lineHeight": 1.54
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.5,
+          "letterSpacing": -0.08
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.33,
+          "letterSpacing": -0.072
+        },
+        {
+          "role": "heading-sm",
+          "size": 24,
+          "lineHeight": 1.29
+        },
+        {
+          "role": "heading",
+          "size": 40,
+          "lineHeight": 1.1,
+          "letterSpacing": -0.8
+        },
+        {
+          "role": "heading-lg",
+          "size": 48,
+          "lineHeight": 1.04,
+          "letterSpacing": -0.48
+        },
+        {
+          "role": "display",
+          "size": 110,
+          "lineHeight": 1,
+          "letterSpacing": -2.2
+        }
+      ],
+      "components": [
+        {
+          "html": "$19",
+          "name": "Orchid CTA Email Capture",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1a",
+          "name": "Solution Rows",
+          "role": "",
+          "description": ""
+        },
+        {
+          "html": "$1b",
+          "name": "Testimonial Pull Quote",
+          "role": "",
+          "description": ""
+        },
+        {
+          "name": "Orchid CTA Button",
+          "role": "Primary call-to-action",
+          "description": "Background #B074CE, white text, 60px border-radius (full pill), 4px 12px padding, Unica77 14px weight 400. The pill radius against the otherwise 0px-radius input it sits beside creates deliberate contrast. Used for 'Get a demo' globally."
+        },
+        {
+          "name": "Ghost Nav Link",
+          "role": "Primary navigation items",
+          "description": "Transparent background, #000000 text, 0px radius, 0px padding, Unica77 16px weight 400 with -0.08px letter-spacing. No underline at rest. Navigation links are completely unstyled except for hover state."
+        },
+        {
+          "name": "Solution Row",
+          "role": "Feature/use-case listing separated by horizontal rules",
+          "description": "Full-width row separated by 1px #000000 horizontal rule top and bottom. Left: heading in Serrif Condensed 40px + body in Unica77 16px #646462. Right: a 24×12px solid color block (red for RevOps #FF3716, navy #00B for Founders, green #20A277 for Finance) functioning as a category icon. No card background — content sits directly on #FAF9F5."
+        },
+        {
+          "name": "Nav Dropdown Panel",
+          "role": "Mega-menu navigation dropdown",
+          "description": "White #FFFFFF background, 6px border-radius, box-shadow rgba(0,0,0,0.1) 0 0 0 0.5px + rgba(0,0,0,0.05) 0 2px 8px -2px + rgba(0,0,0,0.14) 0 2px 10px -4px. Interior items use Unica77 14px-16px. The layered three-value shadow creates thin-bezel framing without aggressive depth."
+        },
+        {
+          "name": "Logo Tag",
+          "role": "Social proof / customer logo display",
+          "description": "Monochrome customer logos displayed at uniform size in a horizontal or grid layout directly on #FAF9F5. No card, no border, no padding container — logos float on the page surface. Brand names (Notion, Intercom, Cursor, etc.) rendered in their own logotype styling but forced to black."
+        },
+        {
+          "name": "Floating Color Swatch",
+          "role": "Hero background decorative element",
+          "description": "Rectangular blocks of flat color (glacier teal #2DCBDC, soft purple, warm yellow, pastel green) scattered in the hero background at varying sizes. No radius, no border, no shadow. They reference spreadsheet cell fills, creating an ambient visual field without interfering with foreground content."
+        },
+        {
+          "name": "Testimonial Pull Quote",
+          "role": "Social proof text block",
+          "description": "Large opening quotation mark in Serrif Condensed, quote body in Serrif Condensed 40-48px, attribution in Unica77 16px #646462. Placed on #FAF9F5 with no container or border. The serif quote type against the sans-serif attribution creates deliberate register shift."
+        }
+      ],
+      "typography": [
+        {
+          "role": "All display and section headings — single weight 400 across all sizes is the anti-convention choice; most SaaS headlines use 700-800, this regular-weight condensed serif whispers editorial authority. The 110px size is used only for hero display text.",
+          "sizes": "40px, 48px, 110px",
+          "family": "Serrif Condensed",
+          "weight": "400",
+          "lineHeight": "1.00–1.10",
+          "substitute": "Freight Display Condensed, or Playfair Display with condensed tracking",
+          "letterSpacing": "-2.2px at 110px, -0.48px at 48px, -0.4px at 40px"
+        },
+        {
+          "role": "Every non-heading element: nav links, body copy, buttons, footer, input placeholder, labels. The negative letter-spacing at all sizes tightens an already compact grotesque into something UI-precise — a signature move that makes UI chrome feel considered rather than default.",
+          "sizes": "14px, 16px, 18px, 24px",
+          "family": "Unica77",
+          "weight": "400",
+          "lineHeight": "1.00–1.71",
+          "substitute": "Inter, Aktiv Grotesk",
+          "letterSpacing": "-0.084px at 14px, -0.08px at 16px, -0.072px at 18px"
+        },
+        {
+          "role": "Fine-print body context — 13px utility text likely used for footnotes or micro-labels. Its presence alongside Unica77 suggests a tertiary voice for data footnotes or legal-adjacent content.",
+          "sizes": "13px",
+          "family": "Aeonik Fono",
+          "weight": "400",
+          "lineHeight": "1.54",
+          "substitute": "IBM Plex Mono",
+          "letterSpacing": "normal"
+        }
+      ],
+      "description": "Equals feels like a newspaper broadsheet that learned to breathe — authoritative serif headlines punching at 110px sit on a warm cream field (#FAF9F5), while playful pastel color swatches float loosely in the background like spreadsheet cells coming undone. The tension between Serrif Condensed's editorial weight and Unica77's tight UI precision creates a dual-register: serious data tool and approachable product. Yellow (#FFCC00) announces itself only on the top announcement bar, orchid purple (#B074CE) appears exclusively on CTA buttons — two accent colors that never compete because they never share the same zone. Thin horizontal rules divide sections instead of whitespace padding, referencing spreadsheet grid lines as a structural metaphor throughout the page.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1c"
+        },
+        {
+          "title": "Spreadsheet Color Block System",
+          "content": "The three use-case rows (RevOps, Founders, Finance) each carry a specific solid color block that functions as both a category identifier and a data-cell visual metaphor:\n- RevOps: #FF3716 (Amber) — aggressive pipeline urgency\n- Founders: #00B (Brand Blue) — institutional authority\n- Finance: #20A277 (Brand Green) — financial health signaling\nThese blocks are 24px wide × 12px tall, zero border-radius, no border, no shadow. When building new solution rows for additional personas, select a new color from the brand token set (--brand-glacier, --brand-peach, --brand-aquamarine, --brand-sky, --brand-purple) and maintain the same rectangular proportion. Never use #FFCC00 or #B074CE for these blocks — those colors are reserved for announcement and CTA roles respectively."
+        }
+      ],
+      "elevationPhilosophy": "Flat-first with a single exception: nav dropdown panels carry a three-value layered shadow (0.5px outline ring + 8px soft spread + 10px tight shadow) that simulates a physical panel lifted off the page. Everything else — content sections, cards, form elements — sits flush on the cream surface with no elevation. The absence of card shadows is structural: sections are divided by rules, not depth."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/626ed1af-aa0a-426c-a8a4-b9dc64dbd1a8.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/41b47b5e-58b3-429c-aa3e-e99dab4ed9db.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "equals",
+    "generatedAt": "2026-04-11T19:03:11.531Z",
+    "summary": "Equals feels like a newspaper broadsheet that learned to breathe — authoritative serif headlines punching at 110px sit on a warm cream field (#FAF9F5), while playful pastel color swatches float loosely in the background like spreadsheet cells coming undone. The tension between Serrif Condensed's editorial weight and Unica77's tight UI precision creates a dual-register: serious data tool and approachable product. Yellow (#FFCC00) announces itself only on the top announcement bar, orchid purple (#B074CE) appears exclusively on CTA buttons — two accent colors that never compete because they never share the same zone. Thin horizontal rules divide sections instead of whitespace padding, referencing spreadsheet grid lines as a structural metaphor throughout the page.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "dae7cbf2-0485-433b-8f63-eea8716ad14d",
+      "sourceUrl": "https://styles.refero.design/style/dae7cbf2-0485-433b-8f63-eea8716ad14d",
+      "originalUrl": "https://equals.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/626ed1af-aa0a-426c-a8a4-b9dc64dbd1a8.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/41b47b5e-58b3-429c-aa3e-e99dab4ed9db.jpg",
+      "importedAt": "2026-08-02T18:09:36.180Z",
+      "upstreamModifiedAt": "2026-05-11T16:26:20.547Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Broadsheet meets spreadsheet — editorial serif authority on warm cream, punctuated by floating pastel data cells."
+    },
+    "tokens": [
+      {
+        "id": "color-analyst-yellow",
+        "kind": "color",
+        "name": "Analyst Yellow",
+        "value": "#FFCC00",
+        "role": "Announcement bar background only — saturated yellow on near-black text creates maximum urgency at minimal surface area, never used elsewhere so it retains its alarm-signal quality",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-orchid-cta",
+        "kind": "color",
+        "name": "Orchid CTA",
+        "value": "#B074CE",
+        "role": "Primary CTA buttons — warm violet against cream background reads as inviting rather than urgent, distinguishing CTAs from the aggressive red/orange typical of SaaS",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-brand-green",
+        "kind": "color",
+        "name": "Brand Green",
+        "value": "#20A277",
+        "role": "Finance category accent swatch — one of three role-coded indicator blocks (RevOps red, Founders navy, Finance green) flanking solution rows",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-glacier",
+        "kind": "color",
+        "name": "Glacier",
+        "value": "#2DCBDC",
+        "role": "Background decorative color block in hero, part of the floating pastel spreadsheet-cell visual language",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-midnight-ink",
+        "kind": "color",
+        "name": "Midnight Ink",
+        "value": "#000000",
+        "role": "All headings, body text, borders, nav links, icons — full black with zero softening; the high contrast against cream is deliberately old-media, not SaaS-neutral",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-warm-cream",
+        "kind": "color",
+        "name": "Warm Cream",
+        "value": "#FAF9F5",
+        "role": "Page background, section backgrounds — the slight warm yellow tint separates this from clinical white and reinforces the paper/spreadsheet metaphor",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-cloud-white",
+        "kind": "color",
+        "name": "Cloud White",
+        "value": "#FFFFFF",
+        "role": "Button text on orchid CTAs, nav hover states, input field backgrounds",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-slate-body",
+        "kind": "color",
+        "name": "Slate Body",
+        "value": "#646462",
+        "role": "Body copy, nav secondary text, descriptive subtexts under headings",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-fog-border",
+        "kind": "color",
+        "name": "Fog Border",
+        "value": "#CDCCC9",
+        "role": "Nav dropdown shadows, subtle divider lines",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-serrif-condensed",
+        "kind": "typography",
+        "name": "Serrif Condensed",
+        "value": "font-family: Serrif Condensed; font-weight: 400; font-size: 40px, 48px, 110px; line-height: 1.00–1.10; letter-spacing: -2.2px at 110px, -0.48px at 48px, -0.4px at 40px",
+        "role": "All display and section headings — single weight 400 across all sizes is the anti-convention choice; most SaaS headlines use 700-800, this regular-weight condensed serif whispers editorial authority. The 110px size is used only for hero display text.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-unica77",
+        "kind": "typography",
+        "name": "Unica77",
+        "value": "font-family: Unica77; font-weight: 400; font-size: 14px, 16px, 18px, 24px; line-height: 1.00–1.71; letter-spacing: -0.084px at 14px, -0.08px at 16px, -0.072px at 18px",
+        "role": "Every non-heading element: nav links, body copy, buttons, footer, input placeholder, labels. The negative letter-spacing at all sizes tightens an already compact grotesque into something UI-precise — a signature move that makes UI chrome feel considered rather than default.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-aeonik-fono",
+        "kind": "typography",
+        "name": "Aeonik Fono",
+        "value": "font-family: Aeonik Fono; font-weight: 400; font-size: 13px; line-height: 1.54; letter-spacing: normal",
+        "role": "Fine-print body context — 13px utility text likely used for footnotes or micro-labels. Its presence alongside Unica77 suggests a tertiary voice for data footnotes or legal-adjacent content.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 13px; line-height: 1.54",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.5; letter-spacing: -0.08px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.33; letter-spacing: -0.072px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 24px; line-height: 1.29",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 40px; line-height: 1.1; letter-spacing: -0.8px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 48px; line-height: 1.04; letter-spacing: -0.48px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 110px; line-height: 1; letter-spacing: -2.2px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "12-20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80-120px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "24px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "50px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "0px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "60px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-dropdowns",
+        "kind": "radius",
+        "name": "dropdowns",
+        "value": "6px",
+        "role": "Imported dropdowns radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Flat-first with a single exception: nav dropdown panels carry a three-value layered shadow (0.5px outline ring + 8px soft spread + 10px tight shadow) that simulates a physical panel lifted off the page. Everything else — content sections, cards, form elements — sits flush on the cream surface with no elevation. The absence of card shadows is structural: sections are divided by rules, not depth.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "orchid-cta-email-capture",
+        "name": "Orchid CTA Email Capture",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "orchid-cta-email-capture-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-rows",
+        "name": "Solution Rows",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "solution-rows-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "testimonial-pull-quote",
+        "name": "Testimonial Pull Quote",
+        "category": "Refero components",
+        "description": "Imported Refero component guidance",
+        "variants": [
+          {
+            "id": "testimonial-pull-quote-reference",
+            "name": "Reference",
+            "description": "Imported Refero component guidance",
+            "evidence": [],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "orchid-cta-button",
+        "name": "Orchid CTA Button",
+        "category": "Refero components",
+        "description": "Background #B074CE, white text, 60px border-radius (full pill), 4px 12px padding, Unica77 14px weight 400. The pill radius against the otherwise 0px-radius input it sits beside creates deliberate contrast. Used for 'Get a demo' globally.",
+        "variants": [
+          {
+            "id": "orchid-cta-button-reference",
+            "name": "Reference",
+            "description": "Background #B074CE, white text, 60px border-radius (full pill), 4px 12px padding, Unica77 14px weight 400. The pill radius against the otherwise 0px-radius input it sits beside creates deliberate contrast. Used for 'Get a demo' globally.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary call-to-action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-nav-link",
+        "name": "Ghost Nav Link",
+        "category": "Refero components",
+        "description": "Transparent background, #000000 text, 0px radius, 0px padding, Unica77 16px weight 400 with -0.08px letter-spacing. No underline at rest. Navigation links are completely unstyled except for hover state.",
+        "variants": [
+          {
+            "id": "ghost-nav-link-reference",
+            "name": "Reference",
+            "description": "Transparent background, #000000 text, 0px radius, 0px padding, Unica77 16px weight 400 with -0.08px letter-spacing. No underline at rest. Navigation links are completely unstyled except for hover state.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary navigation items"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "solution-row",
+        "name": "Solution Row",
+        "category": "Refero components",
+        "description": "Full-width row separated by 1px #000000 horizontal rule top and bottom. Left: heading in Serrif Condensed 40px + body in Unica77 16px #646462. Right: a 24×12px solid color block (red for RevOps #FF3716, navy #00B for Founders, green #20A277 for Finance) functioning as a category icon. No card background — content sits directly on #FAF9F5.",
+        "variants": [
+          {
+            "id": "solution-row-reference",
+            "name": "Reference",
+            "description": "Full-width row separated by 1px #000000 horizontal rule top and bottom. Left: heading in Serrif Condensed 40px + body in Unica77 16px #646462. Right: a 24×12px solid color block (red for RevOps #FF3716, navy #00B for Founders, green #20A277 for Finance) functioning as a category icon. No card background — content sits directly on #FAF9F5.",
+            "evidence": [],
+            "observedProperties": [
+              "Feature/use-case listing separated by horizontal rules"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "nav-dropdown-panel",
+        "name": "Nav Dropdown Panel",
+        "category": "Refero components",
+        "description": "White #FFFFFF background, 6px border-radius, box-shadow rgba(0,0,0,0.1) 0 0 0 0.5px + rgba(0,0,0,0.05) 0 2px 8px -2px + rgba(0,0,0,0.14) 0 2px 10px -4px. Interior items use Unica77 14px-16px. The layered three-value shadow creates thin-bezel framing without aggressive depth.",
+        "variants": [
+          {
+            "id": "nav-dropdown-panel-reference",
+            "name": "Reference",
+            "description": "White #FFFFFF background, 6px border-radius, box-shadow rgba(0,0,0,0.1) 0 0 0 0.5px + rgba(0,0,0,0.05) 0 2px 8px -2px + rgba(0,0,0,0.14) 0 2px 10px -4px. Interior items use Unica77 14px-16px. The layered three-value shadow creates thin-bezel framing without aggressive depth.",
+            "evidence": [],
+            "observedProperties": [
+              "Mega-menu navigation dropdown"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "logo-tag",
+        "name": "Logo Tag",
+        "category": "Refero components",
+        "description": "Monochrome customer logos displayed at uniform size in a horizontal or grid layout directly on #FAF9F5. No card, no border, no padding container — logos float on the page surface. Brand names (Notion, Intercom, Cursor, etc.) rendered in their own logotype styling but forced to black.",
+        "variants": [
+          {
+            "id": "logo-tag-reference",
+            "name": "Reference",
+            "description": "Monochrome customer logos displayed at uniform size in a horizontal or grid layout directly on #FAF9F5. No card, no border, no padding container — logos float on the page surface. Brand names (Notion, Intercom, Cursor, etc.) rendered in their own logotype styling but forced to black.",
+            "evidence": [],
+            "observedProperties": [
+              "Social proof / customer logo display"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "floating-color-swatch",
+        "name": "Floating Color Swatch",
+        "category": "Refero components",
+        "description": "Rectangular blocks of flat color (glacier teal #2DCBDC, soft purple, warm yellow, pastel green) scattered in the hero background at varying sizes. No radius, no border, no shadow. They reference spreadsheet cell fills, creating an ambient visual field without interfering with foreground content.",
+        "variants": [
+          {
+            "id": "floating-color-swatch-reference",
+            "name": "Reference",
+            "description": "Rectangular blocks of flat color (glacier teal #2DCBDC, soft purple, warm yellow, pastel green) scattered in the hero background at varying sizes. No radius, no border, no shadow. They reference spreadsheet cell fills, creating an ambient visual field without interfering with foreground content.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero background decorative element"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "testimonial-pull-quote",
+        "name": "Testimonial Pull Quote",
+        "category": "Refero components",
+        "description": "Large opening quotation mark in Serrif Condensed, quote body in Serrif Condensed 40-48px, attribution in Unica77 16px #646462. Placed on #FAF9F5 with no container or border. The serif quote type against the sans-serif attribution creates deliberate register shift.",
+        "variants": [
+          {
+            "id": "testimonial-pull-quote-reference",
+            "name": "Reference",
+            "description": "Large opening quotation mark in Serrif Condensed, quote body in Serrif Condensed 40-48px, attribution in Unica77 16px #646462. Placed on #FAF9F5 with no container or border. The serif quote type against the sans-serif attribution creates deliberate register shift.",
+            "evidence": [],
+            "observedProperties": [
+              "Social proof text block"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Max-width centered layout (~1200px) on a full-bleed #FAF9F5 cream background. Hero is full-viewport-height centered stack: 110px display headline, 18px subtext, then the email+CTA composite unit. Floating color swatches appear left and right of the text column without containing structure — they bleed near the viewport edges. Below the hero, sections are separated exclusively by 1px black horizontal rules with no vertical gap between them, creating a dense spreadsheet-row rhythm. Solution rows use a two-column layout: text left, color swatch right. Customer logos appear in a 5-column grid row, then a second row, directly on the cream surface with no container. Navigation is a single sticky top bar with logo left, five nav links centered, sign-in + email input + CTA button right. Dropdown panels float below nav items with the layered shadow system.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "No photography anywhere on the visible page. The hero's visual field is occupied entirely by flat-color rectangular swatches — glacier teal, soft lavender, pastel yellow, mint green — arranged loosely in the background at varying sizes, without radius or border, mimicking unfilled spreadsheet cells. These are purely decorative and never contain content. The logo section uses monochrome customer wordmarks forced to black, no badges or containers. Category indicators are 24×12px solid color blocks — raw data visualization primitives rather than designed icons. The visual language is resolutely non-photographic: a product confident enough that its typography IS the visual.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Flat-first with a single exception: nav dropdown panels carry a three-value layered shadow (0.5px outline ring + 8px soft spread + 10px tight shadow) that simulates a physical panel lifted off the page. Everything else — content sections, cards, form elements — sits flush on the cream surface with no elevation. The absence of card shadows is structural: sections are divided by rules, not depth.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Serrif Condensed weight 400 (never bold) for all headings — the editorial authority comes from scale (up to 110px) and letter-spacing (-2.2px at display), not weight",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set the page background to #FAF9F5 (Warm Cream), never pure white — the warm tint is the canvas that makes black text feel typographic rather than digital",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve #FFCC00 exclusively for the announcement bar and #B074CE exclusively for CTA buttons — their power comes from appearing once each, never reused as decorative color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 60px border-radius on CTA buttons only; all other interactive elements (inputs, dropdowns, category pills) use 0px or 6px — the pill/sharp contrast is deliberate system tension",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Separate sections with 1px solid #000000 horizontal rules instead of increased vertical whitespace — this references spreadsheet grid lines and is the primary structural rhythm device",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply negative letter-spacing to Unica77 at all sizes: -0.084px at 14px, -0.08px at 16px — never use default tracking for UI text",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Display category/role color blocks as flat 24×12px solid rectangles (no radius, no border) — the raw flat swatch is the icon; never substitute icons or illustrations for these",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use #B074CE or #FFCC00 as background for content sections or cards — both colors are single-purpose signal colors, not palette options",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never apply border-radius to inputs or horizontal dividers — the 0px sharp edge on form elements is the system's UI register; rounding them collapses the tension with pill CTAs",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use Serrif Condensed at weights other than 400 — do not attempt to bold or italicize headings, even for emphasis",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never replace the floating color swatch decoratives with photography or illustrations — abstract flat rectangles are the hero visual language; anything representational breaks the spreadsheet metaphor",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never use #646462 (Slate Body) for headings or CTAs — it is body-only, maintaining a strict two-tier contrast system: black for structure, slate for supporting copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never stack multiple orchid (#B074CE) buttons in proximity — each page view should have a single dominant CTA moment, typically the email capture composite in the hero",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Never add drop shadows or elevation to section containers or cards — the only permitted shadow is on nav dropdown panels; sections live flat on the cream surface",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

@@ -1,11 +1,19 @@
 FROM node:22-slim
+
+ENV NODE_ENV=production \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    PORT=3000
+
 WORKDIR /app
-COPY package.json package-lock.json tsconfig.json ./
-RUN npm ci --omit=dev
+
+COPY services/api/package.json services/api/package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund \
+    && npm cache clean --force
+
 COPY src ./src
 COPY migrations ./migrations
 COPY scripts ./scripts
 COPY services/api/src ./services/api/src
-ENV PORT=3000
+
 EXPOSE 3000
 CMD ["node", "--experimental-strip-types", "services/api/src/index.ts"]

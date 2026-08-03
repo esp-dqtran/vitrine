@@ -32,6 +32,7 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
         label="Close"
         icon={<Icon icon="close" size="sm" />}
         variant="ghost"
+        className="astryx-modal__icon-action"
         onClick={(e) => {
           e.stopPropagation();
           onClose();
@@ -40,9 +41,6 @@ export function Lightbox({ item, index, total, onClose, onNavigate }: LightboxPr
           position: 'absolute',
           top: 20,
           right: 24,
-          borderRadius: '50%',
-          background: 'var(--color-background-muted)',
-          color: 'var(--color-text-primary)',
         }}
       />
       <div

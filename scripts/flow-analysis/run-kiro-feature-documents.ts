@@ -134,9 +134,15 @@ function evidenceCount(flow: DesignFlow): number {
   return flow.steps.reduce((total, step) => total + step.evidence.length, 0);
 }
 
-function representativeFlows(flows: DesignFlow[], limit: number): DesignFlow[] {
+// maxEvidence bounds how much a single provider call has to read. Raising it lets the
+// longest end-to-end journeys through, which are otherwise excluded from every run.
+function representativeFlows(
+  flows: DesignFlow[],
+  limit: number,
+  maxEvidence = 12,
+): DesignFlow[] {
   const eligible = flows
-    .filter((flow) => evidenceCount(flow) > 0 && evidenceCount(flow) <= 12)
+    .filter((flow) => evidenceCount(flow) > 0 && evidenceCount(flow) <= maxEvidence)
     .sort((left, right) =>
       evidenceCount(left) - evidenceCount(right)
       || left.title.localeCompare(right.title)
@@ -285,6 +291,7 @@ async function main(): Promise<void> {
     ],
   );
   const completedCatalogFlowIds = new Set(existingCatalog.rows.map(({ source_flow_id }) => source_flow_id));
+  const remainingLimit = Math.max(0, limit - completedCatalogFlowIds.size);
   const selectedFlows = requestedFlowIds
     ? requestedFlowIds.map((flowId) => {
       const flow = flows.find(({ id }) => id === flowId);
@@ -293,18 +300,39 @@ async function main(): Promise<void> {
     })
     : representativeFlows(
       flows.filter(({ id }) => !completedCatalogFlowIds.has(id)),
-      limit,
+      remainingLimit,
+      positiveInteger(argument("--max-evidence"), 12, "--max-evidence"),
     );
-  const prepared = (await Promise.all(selectedFlows.map((flow) => prepareFlow({
-    app,
-    platform: targetPlatform,
-    versionId: version.id,
-    versionNumber,
-    flow,
-  })))).filter((item): item is PreparedFlow => item !== undefined);
+  // Each prepareFlow issues one query per evidence image, so preparing every Flow in an
+  // app at once overwhelms the connection pool. Batch it rather than fanning out fully.
+  const prepared: PreparedFlow[] = [];
+  const prepareBatchSize = 4;
+  for (let offset = 0; offset < selectedFlows.length; offset += prepareBatchSize) {
+    const batch = await Promise.all(
+      selectedFlows.slice(offset, offset + prepareBatchSize).map((flow) =>
+        prepareFlow({
+          app,
+          platform: targetPlatform,
+          versionId: version.id,
+          versionNumber,
+          flow,
+        })
+      ),
+    );
+    for (const item of batch) if (item !== undefined) prepared.push(item);
+  }
   const expectedCount = selectedFlows.length;
   if (prepared.length !== expectedCount) {
-    throw new Error(`Only ${prepared.length}/${expectedCount} selected Flows have complete object-backed evidence`);
+    // Selecting every Flow in an app makes partially-captured Flows likely. Aborting the
+    // whole app over one of them loses all the others, so skip them and report instead.
+    if (!process.argv.includes("--skip-incomplete-evidence")) {
+      throw new Error(`Only ${prepared.length}/${expectedCount} selected Flows have complete object-backed evidence`);
+    }
+    console.log(JSON.stringify({
+      event: "skipped-incomplete-evidence",
+      skipped: expectedCount - prepared.length,
+      remaining: prepared.length,
+    }));
   }
   const user = await query<{ id: number }>(
     "SELECT id FROM users WHERE role = $1 ORDER BY id LIMIT 1",

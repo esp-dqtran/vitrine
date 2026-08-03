@@ -1,0 +1,1315 @@
+{
+  "schemaVersion": 1,
+  "id": "9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+  "sourceUrl": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+  "sitemapLastModified": "2026-06-05T08:36:58.558Z",
+  "fetchedAt": "2026-08-02T18:07:19.885Z",
+  "contentHash": "2d596dfc5cf31e3fae135c69e8cc592de16106bc93fa984824a600829844ef5c",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Elva design system",
+            "item": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6#style-reference",
+        "name": "Elva design system reference",
+        "headline": "Elva design system | Refero Styles",
+        "description": "Explore Elva's light Agency design system: Warm Obsidian #262523, Bone White #ececec colors, Basis Grotesque, Messina Sans typography, and DESIGN.md for AI...",
+        "url": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+        "mainEntityOfPage": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Elva",
+          "url": "https://helloelva.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/c3ca183c-84a1-4c71-b8b4-76b7ad6dc4b7.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/c3ca183c-84a1-4c71-b8b4-76b7ad6dc4b7.jpg",
+          "caption": "Screenshot of Elva"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/c3ca183c-84a1-4c71-b8b4-76b7ad6dc4b7.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Elva design system",
+          "Elva website design",
+          "Elva colors",
+          "Elva typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Warm Obsidian",
+          "Bone White",
+          "Pale Ash",
+          "Pure Black",
+          "Basis Grotesque",
+          "Messina Sans"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Elva design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Elva website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Elva colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Elva typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-02-15T14:11:52.000Z",
+        "dateModified": "2026-02-15T14:11:52.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://helloelva.com",
+      "siteName": "Elva",
+      "extractedAt": "2026-06-03T19:34:21.159Z",
+      "durationMs": 33117,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 236,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "complete",
+          "attempts": 2
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#262523",
+            "oklch": {
+              "c": 0.003950191618947839,
+              "h": 84.58333061706333,
+              "l": 0.2647945529886528
+            },
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "hero",
+              "heading",
+              "badge",
+              "body",
+              "image",
+              "list",
+              "footer"
+            ],
+            "frequency": 1057,
+            "confidence": 1,
+            "prominence": 218213845.94366536,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#ececec",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9430889073732058
+            },
+            "contexts": [
+              "other",
+              "nav"
+            ],
+            "frequency": 60,
+            "confidence": 1,
+            "prominence": 19215588.973703753,
+            "properties": [
+              "fill",
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 21,
+            "confidence": 1,
+            "prominence": 65486.75331968871,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {}
+          },
+          {
+            "hex": "#cfcdcd",
+            "oklch": {
+              "c": 0.0022122679379047334,
+              "h": 17.201076613018063,
+              "l": 0.8499066066440318
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 7200,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {}
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.009912832046047435,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 17.78,
+            "background": "#ececec",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 13.27,
+            "background": "#cfcdcd",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 12.96,
+            "background": "#ececec",
+            "foreground": "#262523"
+          },
+          {
+            "level": "AAA",
+            "ratio": 9.67,
+            "background": "#cfcdcd",
+            "foreground": "#262523"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.34,
+            "background": "#cfcdcd",
+            "foreground": "#ececec"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 10,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 70,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 16,
+            "contexts": [],
+            "frequency": 5,
+            "properties": [
+              "marginBottom",
+              "paddingTop"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 40,
+            "contexts": [],
+            "frequency": 17,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 60,
+            "contexts": [],
+            "frequency": 6,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 80,
+            "contexts": [],
+            "frequency": 20,
+            "properties": [
+              "marginRight",
+              "paddingRight",
+              "paddingLeft",
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 100,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 160,
+            "contexts": [],
+            "frequency": 7,
+            "properties": [
+              "marginBottom",
+              "marginRight",
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": []
+          },
+          {
+            "value": 240,
+            "contexts": [],
+            "frequency": 2,
+            "properties": [
+              "marginRight"
+            ],
+            "propertyContextPairs": []
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 8
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Basis",
+            "source": "custom",
+            "weights": [
+              400,
+              500,
+              700
+            ],
+            "frequency": 217,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Messina Sans",
+            "source": "custom",
+            "weights": [
+              500
+            ],
+            "frequency": 3,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Major Third",
+          "ratio": 1.25,
+          "confidence": 0.8
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "nav",
+              "hero",
+              "image",
+              "list",
+              "footer",
+              "body"
+            ],
+            "frequency": 91,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 10,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 4,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 10,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "list",
+              "other"
+            ],
+            "frequency": 16,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 6,
+            "lineHeight": 2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 12,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "badge",
+              "body",
+              "link"
+            ],
+            "frequency": 21,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 15,
+            "family": "Basis",
+            "weight": 700,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 32,
+            "family": "Basis",
+            "weight": 400,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 7,
+            "lineHeight": 0.8,
+            "letterSpacing": -0.02,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 40,
+            "family": "Basis",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 1,
+            "letterSpacing": -0.02,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 120,
+            "family": "Basis",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.9,
+            "letterSpacing": -0.04,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 160,
+            "family": "Basis",
+            "weight": 500,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 59,
+            "lineHeight": 0.82,
+            "letterSpacing": -0.04,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 240,
+            "family": "Messina Sans",
+            "weight": 500,
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 3,
+            "lineHeight": 1,
+            "letterSpacing": -0.08,
+            "textTransform": "capitalize"
+          },
+          {
+            "size": 640,
+            "family": "Basis",
+            "weight": 500,
+            "contexts": [
+              "heading",
+              "other"
+            ],
+            "frequency": 6,
+            "lineHeight": 1,
+            "letterSpacing": -0.06,
+            "textTransform": "uppercase"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Basis at 120px+ for every display moment, with line-height ≤ 0.90 and letter-spacing ≤ -0.06em — the compressed stacking is the signature",
+        "Keep the canvas at #ececec and all ink at #262523 — chromatic color breaks the printed-on-paper warmth",
+        "Maintain section gaps of at least 80px; use 160px+ for the gap above the hero headline",
+        "Replace individual letters in display text with pictogram glyphs (heart, asterisk, peace sign, victory hand) at matching cap-height",
+        "Set body text at 15px with 2.0 line-height — the airy leading is editorial, not utilitarian",
+        "Use 70px border-radius only for pill-shaped tags and section labels; use 10px for any nested surface",
+        "Make every interactive element a text link followed by a → arrow — never a filled or outlined button"
+      ],
+      "donts": [
+        "Don't introduce filled buttons, outlined buttons, or any button-shaped affordance — text links with arrows are the only interactive pattern",
+        "Don't add drop shadows, gradients, or any elevation effect — depth is communicated through type size and negative space only",
+        "Don't use #000000 for body or display text — always use #262523 to preserve the warm undertone",
+        "Don't center text or constrain it to a max-width container — content left-aligns to the viewport edge for an editorial spread feel",
+        "Don't use color to create hierarchy — use size and weight only",
+        "Don't set display type with line-height above 1.0 — the 0.80–0.90 compression is what makes the headline a monument",
+        "Don't use icons in the traditional UI sense (nav icons, button icons, status icons) — pictograms belong inline with display text only"
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#262523",
+          "name": "Warm Obsidian",
+          "role": "Primary text, logos, pictogram strokes, structural elements — the near-black with a brown undertone is the only ink in the system and gives the minimalism its printed-on-paper warmth",
+          "group": "brand"
+        },
+        {
+          "hex": "#ececec",
+          "name": "Bone White",
+          "role": "Page canvas and primary surface — the warm slightly-grayed white fills the entire viewport and provides the breathing room around monumental type",
+          "group": "neutral"
+        },
+        {
+          "hex": "#cfcdcd",
+          "name": "Pale Ash",
+          "role": "Secondary surface and hairline borders — one step darker than the canvas, used for subtle dividers and the rare nested surface",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Pure Black",
+          "role": "Sparing deep contrast for the smallest marks and AAA contrast anchors — never used for body text (that is always Warm Obsidian)",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed, edge-to-edge content with no max-width container. All text left-aligns to the viewport edge, creating a raw editorial spread rather than a centered web page. The navigation sits as a whisper at the very top — brand wordmark top-left, primary nav center-right, contact email far-right — with the entire upper third of the viewport left as negative space. The hero display headline begins at roughly 100px from the top and fills the remaining viewport. Sections flow vertically with 80–160px gaps, never alternating light and dark bands. There is no visible grid, no card system, no sidebar — just monumental type cascading down the page like a single column of poster art.",
+      "imagery": "No photography, no illustration, no decorative graphics. The visual language IS the typography — the Basis custom sans rendered at building-scale, with negative space as the composition. The only graphic elements are four hand-drawn pictogram glyphs (heart, asterisk, peace sign, victory hand) that replace individual letters in the display headline, acting as typographic flourishes rather than standalone icons. These glyphs are monochrome line-art, sized to match the x-height of the surrounding letters. The page is a poster, not a product page.",
+      "similar": [
+        {
+          "why": "Both treat type as architecture — monumental sans-serif headlines that function as visual identity rather than just content, with the wordmark carrying the entire brand",
+          "business": "Pentagram"
+        },
+        {
+          "why": "Same extreme monochrome palette and editorial spread layout — the page is a poster, not a product, with negative space doing the compositional work",
+          "business": "Manual"
+        },
+        {
+          "why": "Same custom-typographic approach and playful pictogram-as-letter substitution in display headlines",
+          "business": "Ueno"
+        },
+        {
+          "why": "Same integration of hand-drawn pictogram glyphs inline with oversized display text, treating icons as typographic ornaments rather than UI elements",
+          "business": "Resn"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "70px",
+          "cards": "10px",
+          "inputs": "10px",
+          "buttons": "10px"
+        },
+        "elementGap": "16px",
+        "sectionGap": "80px",
+        "cardPadding": "40px",
+        "pageMaxWidth": null
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#ececec",
+          "name": "Canvas",
+          "level": 0,
+          "purpose": "Page background — the warm bone-white that fills the entire viewport and provides the breathing room around monumental type"
+        },
+        {
+          "hex": "#cfcdcd",
+          "name": "Subtle Surface",
+          "level": 1,
+          "purpose": "Secondary surface for the rare nested element or alternating section band — just one step darker than the canvas"
+        }
+      ],
+      "northStar": "Monumental type on warm concrete",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 12,
+          "letterSpacing": -0.2
+        },
+        {
+          "role": "body",
+          "size": 15,
+          "lineHeight": 30,
+          "letterSpacing": -0.3
+        },
+        {
+          "role": "subheading",
+          "size": 32,
+          "lineHeight": 28.8,
+          "letterSpacing": -1.28
+        },
+        {
+          "role": "heading-sm",
+          "size": 40,
+          "lineHeight": 40,
+          "letterSpacing": -1.6
+        },
+        {
+          "role": "heading",
+          "size": 120,
+          "lineHeight": 108,
+          "letterSpacing": -7.2
+        },
+        {
+          "role": "heading-lg",
+          "size": 160,
+          "lineHeight": 131.2,
+          "letterSpacing": -9.6
+        },
+        {
+          "role": "display",
+          "size": 240,
+          "lineHeight": 240,
+          "letterSpacing": -19.2
+        }
+      ],
+      "components": [
+        {
+          "name": "Brand Wordmark",
+          "role": "Site identity lockup",
+          "description": "\"Elva\" set in Basis weight 700 at ~32px, with the subtitle \"A Third And Grove Company\" in Basis weight 400 at 10px below it. Color #262523. Sits at the top-left of the viewport with 40px padding from the edges. No symbol or mark — the wordmark is the entire identity."
+        },
+        {
+          "name": "Top Navigation",
+          "role": "Primary site navigation",
+          "description": "Horizontal row of text links (WORK, COMPANY, CAPABILITIES, CONTACT) in Basis weight 500 at 12px, uppercase, letter-spacing -0.24px, color #262523. Items separated by 40px gaps. No background, no border, no underline. Pinned to the top edge of the viewport, right-of-center alignment."
+        },
+        {
+          "name": "Contact Email Link",
+          "role": "Primary contact affordance",
+          "description": "Email address (e.g. INFO@HELLOELVA.COM) in Basis weight 500 at 12px, uppercase, color #262523, positioned at the far top-right of the viewport. Behaves as a plain text link with a 200ms opacity-to-0.6 hover state. No arrow glyph."
+        },
+        {
+          "name": "Display Hero Headline",
+          "role": "Monumental typographic statement",
+          "description": "The signature element. Full-bleed text in Basis weight 400 at 160px (or 640px for the absolute largest moments), line-height 0.82, letter-spacing -9.6px, color #262523. Left-aligned to the viewport edge (no max-width container), starting at roughly 100px from the top. Words stack as architectural blocks rather than flowing as prose. Individual letters may be replaced by pictogram glyphs. Always ends with a period."
+        },
+        {
+          "name": "Pictogram Glyph",
+          "role": "Typographic flourish replacing a letter",
+          "description": "Monochrome line-art icon (heart, asterisk, peace sign, victory hand) sized to match the cap-height of the surrounding 160–640px Basis text. Color #262523, no fill, stroke weight 6–8px. Inserted inline to substitute for a specific letter, never used standalone. Functions as a typographic ornament, not as a UI icon."
+        },
+        {
+          "name": "Section Label Pill",
+          "role": "Small marker for content sections",
+          "description": "Short text (e.g. \"HELLO\") in Basis weight 500 at 10px, uppercase, letter-spacing -0.2px, color #262523. Background #ececec with optional 1px #cfcdcd border. 70px border-radius (pill-shaped), 6px vertical / 12px horizontal padding. Functions as a quiet wayfinding marker, not a button."
+        },
+        {
+          "name": "Inline Newsletter Notice",
+          "role": "Compact contextual update with link",
+          "description": "Two stacked lines of body-sm text (12px Basis weight 400/500) in color #262523. First line is a statement, second line is a text link followed by a rightward arrow glyph (→) in the same color. No background, no border. Acts as the only contextual action surface on the page."
+        },
+        {
+          "name": "Text Link with Arrow",
+          "role": "Primary interactive element (replaces buttons)",
+          "description": "Inline text in Basis weight 500 at 12–15px, color #262523, no underline. Followed by a rightward arrow glyph (→) in the same color and size. Hover state: opacity transitions to 0.6 over 200ms. This is the only interactive pattern in the system — there are no filled buttons, no outlined buttons, no icon buttons."
+        },
+        {
+          "name": "Body Paragraph",
+          "role": "Long-form text content",
+          "description": "Basis weight 400 at 15px, line-height 2.0 (30px), letter-spacing -0.3px, color #262523. Max-width 480px for readability. No first-line indent, no bold emphasis within paragraphs, no drop caps. The 2.0 line-height is unusually airy and is a deliberate choice — it treats body text as editorial prose, not as UI copy."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary workhorse typeface — carries the entire system from 10px metadata to 640px hero statements. Weight 400 for body and display, 500 for navigation and small labels, 700 reserved for rare emphasis. The extreme size range is the signature: Basis is asked to perform as both a 10px caption and a building-scale poster without switching families.",
+          "sizes": "10, 12, 15, 16, 32, 40, 120, 160, 640",
+          "family": "Basis Grotesque",
+          "weight": "400, 500, 700",
+          "lineHeight": "0.80, 0.82, 0.90, 1.00, 1.20, 1.30, 2.00",
+          "substitute": "Inter or Manrope — a neo-grotesque with similar proportions and warm default tracking; the closest free match for the full weight range",
+          "letterSpacing": "-0.02em at 10–16px, -0.04em at 32–40px, -0.06em at 120–160px, -0.08em at 640px"
+        },
+        {
+          "role": "Secondary editorial display face — reserved for oversized moments at 240px+ where a slightly more humanist, wider-cut character set can break the Basis rhythm. The 1.0 line-height (versus Basis's 0.82) creates a more relaxed, poster-like cadence when both faces appear together.",
+          "sizes": "240",
+          "family": "Messina Sans",
+          "weight": "500",
+          "lineHeight": "1.00",
+          "substitute": "Editorial New or Druk Wide — a wide-cut editorial sans with similar humanist warmth at display scale",
+          "letterSpacing": "-0.08em"
+        }
+      ],
+      "description": "Elva is a typographic monument, not a typical agency site. The entire visual system is built on a custom Basis sans-serif rendered at extreme sizes — from 12px navigation to 640px hero headlines — on a warm bone-white canvas with near-zero color information. The signature moves are compressed display lines at line-height 0.82 with -0.06em tracking that force words to stack as architectural blocks, and generous 80–160px section gaps that make negative space the primary compositional tool. There are no buttons, cards, or shadows — only text links with arrows and a handful of pictogram glyphs (heart, asterisk, peace sign, victory hand) that replace individual letters in the display type, acting as typographic flourishes rather than traditional icons. The warm undertone of the #262523 text prevents the minimalism from feeling cold or clinical — the page reads as printed matter on warm paper.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        },
+        {
+          "title": "Typographic Scale Philosophy",
+          "content": "The type scale spans four orders of magnitude — from 10px captions to 640px hero statements — within a single font family (Basis). This is not a responsive scale; it is a fixed scale of dramatic size contrasts that forces every element on the page to declare its hierarchy through size alone. The smaller end (10–16px) uses -0.02em tracking and 1.2–2.0 line-height for editorial body text. The mid-range (32–40px) steps up to -0.04em tracking and 0.9–1.0 line-height. The display range (120–640px) tightens further to -0.06em to -0.08em tracking with line-height as low as 0.80, which forces words to stack as architectural blocks rather than flow as prose. The 2.0 line-height on 15px body text is deliberately airy — it treats paragraphs as editorial prose, not as UI copy. When in doubt, make it bigger and tighter."
+        }
+      ],
+      "elevationPhilosophy": "This design system is deliberately shadowless. All depth is communicated through type size, weight, and negative space — never through drop shadows, borders, or stacked surfaces. The flatness reinforces the printed-on-paper quality and keeps the type as the undisputed visual hierarchy. If a element needs to feel 'above' another, it gets larger and tighter, not elevated."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/51b3bf02-da1d-4f55-85bb-fdf058816532.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/c3ca183c-84a1-4c71-b8b4-76b7ad6dc4b7.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "elva",
+    "generatedAt": "2026-06-03T19:34:21.159Z",
+    "summary": "Elva is a typographic monument, not a typical agency site. The entire visual system is built on a custom Basis sans-serif rendered at extreme sizes — from 12px navigation to 640px hero headlines — on a warm bone-white canvas with near-zero color information. The signature moves are compressed display lines at line-height 0.82 with -0.06em tracking that force words to stack as architectural blocks, and generous 80–160px section gaps that make negative space the primary compositional tool. There are no buttons, cards, or shadows — only text links with arrows and a handful of pictogram glyphs (heart, asterisk, peace sign, victory hand) that replace individual letters in the display type, acting as typographic flourishes rather than traditional icons. The warm undertone of the #262523 text prevents the minimalism from feeling cold or clinical — the page reads as printed matter on warm paper.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+      "sourceUrl": "https://styles.refero.design/style/9568198a-5a51-4cbb-9dc3-b7610757cdd6",
+      "originalUrl": "https://helloelva.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/51b3bf02-da1d-4f55-85bb-fdf058816532.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/c3ca183c-84a1-4c71-b8b4-76b7ad6dc4b7.jpg",
+      "importedAt": "2026-08-02T18:07:19.885Z",
+      "upstreamModifiedAt": "2026-06-05T08:36:58.558Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Monumental type on warm concrete",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-warm-obsidian",
+        "kind": "color",
+        "name": "Warm Obsidian",
+        "value": "#262523",
+        "role": "Primary text, logos, pictogram strokes, structural elements — the near-black with a brown undertone is the only ink in the system and gives the minimalism its printed-on-paper warmth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-bone-white",
+        "kind": "color",
+        "name": "Bone White",
+        "value": "#ececec",
+        "role": "Page canvas and primary surface — the warm slightly-grayed white fills the entire viewport and provides the breathing room around monumental type",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pale-ash",
+        "kind": "color",
+        "name": "Pale Ash",
+        "value": "#cfcdcd",
+        "role": "Secondary surface and hairline borders — one step darker than the canvas, used for subtle dividers and the rare nested surface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pure-black",
+        "kind": "color",
+        "name": "Pure Black",
+        "value": "#000000",
+        "role": "Sparing deep contrast for the smallest marks and AAA contrast anchors — never used for body text (that is always Warm Obsidian)",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-basis-grotesque",
+        "kind": "typography",
+        "name": "Basis Grotesque",
+        "value": "font-family: Basis Grotesque; font-weight: 400, 500, 700; font-size: 10, 12, 15, 16, 32, 40, 120, 160, 640; line-height: 0.80, 0.82, 0.90, 1.00, 1.20, 1.30, 2.00; letter-spacing: -0.02em at 10–16px, -0.04em at 32–40px, -0.06em at 120–160px, -0.08em at 640px",
+        "role": "Primary workhorse typeface — carries the entire system from 10px metadata to 640px hero statements. Weight 400 for body and display, 500 for navigation and small labels, 700 reserved for rare emphasis. The extreme size range is the signature: Basis is asked to perform as both a 10px caption and a building-scale poster without switching families.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-messina-sans",
+        "kind": "typography",
+        "name": "Messina Sans",
+        "value": "font-family: Messina Sans; font-weight: 500; font-size: 240; line-height: 1.00; letter-spacing: -0.08em",
+        "role": "Secondary editorial display face — reserved for oversized moments at 240px+ where a slightly more humanist, wider-cut character set can break the Basis rhythm. The 1.0 line-height (versus Basis's 0.82) creates a more relaxed, poster-like cadence when both faces appear together.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 12; letter-spacing: -0.2px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 15px; line-height: 30; letter-spacing: -0.3px",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 32px; line-height: 28.8; letter-spacing: -1.28px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-sm-scale",
+        "kind": "typography",
+        "name": "heading-sm",
+        "value": "font-size: 40px; line-height: 40; letter-spacing: -1.6px",
+        "role": "Imported heading-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 120px; line-height: 108; letter-spacing: -7.2px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-lg-scale",
+        "kind": "typography",
+        "name": "heading-lg",
+        "value": "font-size: 160px; line-height: 131.2; letter-spacing: -9.6px",
+        "role": "Imported heading-lg type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 240px; line-height: 240; letter-spacing: -19.2px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "16px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "80px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "40px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "70px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "10px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-inputs",
+        "kind": "radius",
+        "name": "inputs",
+        "value": "10px",
+        "role": "Imported inputs radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "10px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "This design system is deliberately shadowless. All depth is communicated through type size, weight, and negative space — never through drop shadows, borders, or stacked surfaces. The flatness reinforces the printed-on-paper quality and keeps the type as the undisputed visual hierarchy. If a element needs to feel 'above' another, it gets larger and tighter, not elevated.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "brand-wordmark",
+        "name": "Brand Wordmark",
+        "category": "Refero components",
+        "description": "\"Elva\" set in Basis weight 700 at ~32px, with the subtitle \"A Third And Grove Company\" in Basis weight 400 at 10px below it. Color #262523. Sits at the top-left of the viewport with 40px padding from the edges. No symbol or mark — the wordmark is the entire identity.",
+        "variants": [
+          {
+            "id": "brand-wordmark-reference",
+            "name": "Reference",
+            "description": "\"Elva\" set in Basis weight 700 at ~32px, with the subtitle \"A Third And Grove Company\" in Basis weight 400 at 10px below it. Color #262523. Sits at the top-left of the viewport with 40px padding from the edges. No symbol or mark — the wordmark is the entire identity.",
+            "evidence": [],
+            "observedProperties": [
+              "Site identity lockup"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-navigation",
+        "name": "Top Navigation",
+        "category": "Refero components",
+        "description": "Horizontal row of text links (WORK, COMPANY, CAPABILITIES, CONTACT) in Basis weight 500 at 12px, uppercase, letter-spacing -0.24px, color #262523. Items separated by 40px gaps. No background, no border, no underline. Pinned to the top edge of the viewport, right-of-center alignment.",
+        "variants": [
+          {
+            "id": "top-navigation-reference",
+            "name": "Reference",
+            "description": "Horizontal row of text links (WORK, COMPANY, CAPABILITIES, CONTACT) in Basis weight 500 at 12px, uppercase, letter-spacing -0.24px, color #262523. Items separated by 40px gaps. No background, no border, no underline. Pinned to the top edge of the viewport, right-of-center alignment.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "contact-email-link",
+        "name": "Contact Email Link",
+        "category": "Refero components",
+        "description": "Email address (e.g. INFO@HELLOELVA.COM) in Basis weight 500 at 12px, uppercase, color #262523, positioned at the far top-right of the viewport. Behaves as a plain text link with a 200ms opacity-to-0.6 hover state. No arrow glyph.",
+        "variants": [
+          {
+            "id": "contact-email-link-reference",
+            "name": "Reference",
+            "description": "Email address (e.g. INFO@HELLOELVA.COM) in Basis weight 500 at 12px, uppercase, color #262523, positioned at the far top-right of the viewport. Behaves as a plain text link with a 200ms opacity-to-0.6 hover state. No arrow glyph.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary contact affordance"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "display-hero-headline",
+        "name": "Display Hero Headline",
+        "category": "Refero components",
+        "description": "The signature element. Full-bleed text in Basis weight 400 at 160px (or 640px for the absolute largest moments), line-height 0.82, letter-spacing -9.6px, color #262523. Left-aligned to the viewport edge (no max-width container), starting at roughly 100px from the top. Words stack as architectural blocks rather than flowing as prose. Individual letters may be replaced by pictogram glyphs. Always ends with a period.",
+        "variants": [
+          {
+            "id": "display-hero-headline-reference",
+            "name": "Reference",
+            "description": "The signature element. Full-bleed text in Basis weight 400 at 160px (or 640px for the absolute largest moments), line-height 0.82, letter-spacing -9.6px, color #262523. Left-aligned to the viewport edge (no max-width container), starting at roughly 100px from the top. Words stack as architectural blocks rather than flowing as prose. Individual letters may be replaced by pictogram glyphs. Always ends with a period.",
+            "evidence": [],
+            "observedProperties": [
+              "Monumental typographic statement"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "pictogram-glyph",
+        "name": "Pictogram Glyph",
+        "category": "Refero components",
+        "description": "Monochrome line-art icon (heart, asterisk, peace sign, victory hand) sized to match the cap-height of the surrounding 160–640px Basis text. Color #262523, no fill, stroke weight 6–8px. Inserted inline to substitute for a specific letter, never used standalone. Functions as a typographic ornament, not as a UI icon.",
+        "variants": [
+          {
+            "id": "pictogram-glyph-reference",
+            "name": "Reference",
+            "description": "Monochrome line-art icon (heart, asterisk, peace sign, victory hand) sized to match the cap-height of the surrounding 160–640px Basis text. Color #262523, no fill, stroke weight 6–8px. Inserted inline to substitute for a specific letter, never used standalone. Functions as a typographic ornament, not as a UI icon.",
+            "evidence": [],
+            "observedProperties": [
+              "Typographic flourish replacing a letter"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "section-label-pill",
+        "name": "Section Label Pill",
+        "category": "Refero components",
+        "description": "Short text (e.g. \"HELLO\") in Basis weight 500 at 10px, uppercase, letter-spacing -0.2px, color #262523. Background #ececec with optional 1px #cfcdcd border. 70px border-radius (pill-shaped), 6px vertical / 12px horizontal padding. Functions as a quiet wayfinding marker, not a button.",
+        "variants": [
+          {
+            "id": "section-label-pill-reference",
+            "name": "Reference",
+            "description": "Short text (e.g. \"HELLO\") in Basis weight 500 at 10px, uppercase, letter-spacing -0.2px, color #262523. Background #ececec with optional 1px #cfcdcd border. 70px border-radius (pill-shaped), 6px vertical / 12px horizontal padding. Functions as a quiet wayfinding marker, not a button.",
+            "evidence": [],
+            "observedProperties": [
+              "Small marker for content sections"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "inline-newsletter-notice",
+        "name": "Inline Newsletter Notice",
+        "category": "Refero components",
+        "description": "Two stacked lines of body-sm text (12px Basis weight 400/500) in color #262523. First line is a statement, second line is a text link followed by a rightward arrow glyph (→) in the same color. No background, no border. Acts as the only contextual action surface on the page.",
+        "variants": [
+          {
+            "id": "inline-newsletter-notice-reference",
+            "name": "Reference",
+            "description": "Two stacked lines of body-sm text (12px Basis weight 400/500) in color #262523. First line is a statement, second line is a text link followed by a rightward arrow glyph (→) in the same color. No background, no border. Acts as the only contextual action surface on the page.",
+            "evidence": [],
+            "observedProperties": [
+              "Compact contextual update with link"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "text-link-with-arrow",
+        "name": "Text Link with Arrow",
+        "category": "Refero components",
+        "description": "Inline text in Basis weight 500 at 12–15px, color #262523, no underline. Followed by a rightward arrow glyph (→) in the same color and size. Hover state: opacity transitions to 0.6 over 200ms. This is the only interactive pattern in the system — there are no filled buttons, no outlined buttons, no icon buttons.",
+        "variants": [
+          {
+            "id": "text-link-with-arrow-reference",
+            "name": "Reference",
+            "description": "Inline text in Basis weight 500 at 12–15px, color #262523, no underline. Followed by a rightward arrow glyph (→) in the same color and size. Hover state: opacity transitions to 0.6 over 200ms. This is the only interactive pattern in the system — there are no filled buttons, no outlined buttons, no icon buttons.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary interactive element (replaces buttons)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "body-paragraph",
+        "name": "Body Paragraph",
+        "category": "Refero components",
+        "description": "Basis weight 400 at 15px, line-height 2.0 (30px), letter-spacing -0.3px, color #262523. Max-width 480px for readability. No first-line indent, no bold emphasis within paragraphs, no drop caps. The 2.0 line-height is unusually airy and is a deliberate choice — it treats body text as editorial prose, not as UI copy.",
+        "variants": [
+          {
+            "id": "body-paragraph-reference",
+            "name": "Reference",
+            "description": "Basis weight 400 at 15px, line-height 2.0 (30px), letter-spacing -0.3px, color #262523. Max-width 480px for readability. No first-line indent, no bold emphasis within paragraphs, no drop caps. The 2.0 line-height is unusually airy and is a deliberate choice — it treats body text as editorial prose, not as UI copy.",
+            "evidence": [],
+            "observedProperties": [
+              "Long-form text content"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed, edge-to-edge content with no max-width container. All text left-aligns to the viewport edge, creating a raw editorial spread rather than a centered web page. The navigation sits as a whisper at the very top — brand wordmark top-left, primary nav center-right, contact email far-right — with the entire upper third of the viewport left as negative space. The hero display headline begins at roughly 100px from the top and fills the remaining viewport. Sections flow vertically with 80–160px gaps, never alternating light and dark bands. There is no visible grid, no card system, no sidebar — just monumental type cascading down the page like a single column of poster art.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "No photography, no illustration, no decorative graphics. The visual language IS the typography — the Basis custom sans rendered at building-scale, with negative space as the composition. The only graphic elements are four hand-drawn pictogram glyphs (heart, asterisk, peace sign, victory hand) that replace individual letters in the display headline, acting as typographic flourishes rather than standalone icons. These glyphs are monochrome line-art, sized to match the x-height of the surrounding letters. The page is a poster, not a product page.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "This design system is deliberately shadowless. All depth is communicated through type size, weight, and negative space — never through drop shadows, borders, or stacked surfaces. The flatness reinforces the printed-on-paper quality and keeps the type as the undisputed visual hierarchy. If a element needs to feel 'above' another, it gets larger and tighter, not elevated.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Basis at 120px+ for every display moment, with line-height ≤ 0.90 and letter-spacing ≤ -0.06em — the compressed stacking is the signature",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the canvas at #ececec and all ink at #262523 — chromatic color breaks the printed-on-paper warmth",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain section gaps of at least 80px; use 160px+ for the gap above the hero headline",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Replace individual letters in display text with pictogram glyphs (heart, asterisk, peace sign, victory hand) at matching cap-height",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set body text at 15px with 2.0 line-height — the airy leading is editorial, not utilitarian",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 70px border-radius only for pill-shaped tags and section labels; use 10px for any nested surface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Make every interactive element a text link followed by a → arrow — never a filled or outlined button",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce filled buttons, outlined buttons, or any button-shaped affordance — text links with arrows are the only interactive pattern",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add drop shadows, gradients, or any elevation effect — depth is communicated through type size and negative space only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use #000000 for body or display text — always use #262523 to preserve the warm undertone",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't center text or constrain it to a max-width container — content left-aligns to the viewport edge for an editorial spread feel",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use color to create hierarchy — use size and weight only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't set display type with line-height above 1.0 — the 0.80–0.90 compression is what makes the headline a monument",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use icons in the traditional UI sense (nav icons, button icons, status icons) — pictograms belong inline with display text only",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

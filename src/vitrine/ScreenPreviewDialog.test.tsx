@@ -38,7 +38,7 @@ test('renders a Mobbin-style app screen viewer with identity, navigation, action
   assert.match(html, />Save</);
   assert.match(html, />Copy image</);
   assert.doesNotMatch(html, /Copy as PNG/);
-  assert.match(html, /aria-label="More screen actions"/);
+  assert.doesNotMatch(html, /aria-label="More screen actions"/);
   assert.match(html, /iOS \(393×852\)/);
   assert.match(html, />More info</);
 });

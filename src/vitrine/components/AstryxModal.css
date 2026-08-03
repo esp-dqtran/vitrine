@@ -45,6 +45,27 @@ dialog.astryx-modal--drawer-right {
   box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow) 72%, transparent);
 }
 
+.astryx-modal__icon-action {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: var(--vitrine-color-on-action-primary) !important;
+  color: var(--vitrine-color-action-primary) !important;
+}
+
+.astryx-modal__icon-action:hover,
+.astryx-modal__icon-action:focus-visible {
+  background: color-mix(
+    in srgb,
+    var(--vitrine-color-on-action-primary) 88%,
+    var(--vitrine-color-action-primary)
+  ) !important;
+}
+
 @media (max-width: 680px) {
   dialog.astryx-modal--dialog {
     max-width: calc(100vw - 24px) !important;

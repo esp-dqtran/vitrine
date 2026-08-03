@@ -369,6 +369,31 @@ test('constrains long filter menus to the viewport and scrolls only their option
   );
 });
 
+test('keeps the shared filter panel themed when portalled from App Detail', async () => {
+  const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const sharedPanelRule = css.match(
+    /\.astryx-dropdown-panel:has\(\.apps-filterbar__menu\)\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+
+  assert.match(sharedPanelRule, /--reference-chrome-surface-raised:\s*var\(--vitrine-color-surface\)/);
+  assert.match(sharedPanelRule, /--reference-chrome-hover:\s*var\(--vitrine-color-surface-muted\)/);
+  assert.match(sharedPanelRule, /--reference-chrome-border:\s*var\(--vitrine-color-border\)/);
+  assert.match(sharedPanelRule, /--reference-chrome-text:\s*var\(--vitrine-color-text-primary\)/);
+  assert.match(sharedPanelRule, /--reference-chrome-disabled:\s*var\(--vitrine-color-text-disabled\)/);
+});
+
+test('matches unselected Apps dropdown triggers to the App Detail control', async () => {
+  const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const sharedTriggerRule = css.match(
+    /\.apps-filterbar \.apps-filterbar__filter:not\(\.apps-filterbar__filter--platform\):not\(\.apps-filterbar__filter--selected\) \.apps-filterbar__filter-button\.apps-filterbar__filter-button\s*\{[^}]+\}/,
+  )?.[0] ?? '';
+
+  assert.match(sharedTriggerRule, /height:\s*var\(--vitrine-control-height\)\s*!important/);
+  assert.match(sharedTriggerRule, /border:\s*1px solid var\(--vitrine-color-border-emphasized\)\s*!important/);
+  assert.match(sharedTriggerRule, /color:\s*var\(--reference-chrome-text\)\s*!important/);
+  assert.match(sharedTriggerRule, /font-weight:\s*600\s*!important/);
+});
+
 test('keeps selected Apps filters checked only in their grouped taxonomy with theme-aware controls', async () => {
   const [source, css] = await Promise.all([
     readFile(new URL('./components/AppsFilterBar.tsx', import.meta.url), 'utf8'),
@@ -389,7 +414,11 @@ test('keeps selected Apps filters checked only in their grouped taxonomy with th
   );
   assert.match(
     css,
-    /\.apps-filterbar__checkbox-option input\[type='checkbox'\]:checked \+ div\s*\{[^}]*background:\s*var\(--reference-chrome-hover\)\s*!important/,
+    /\.apps-filterbar__checkbox-option input\[type='checkbox'\] \+ div\s*\{[^}]*border-color:\s*var\(--vitrine-color-border-emphasized\)\s*!important/,
+  );
+  assert.match(
+    css,
+    /\.apps-filterbar__checkbox-option input\[type='checkbox'\]:checked \+ div\s*\{[^}]*border-color:\s*var\(--color-accent\)\s*!important;[^}]*background:\s*var\(--color-accent\)\s*!important;[^}]*color:\s*var\(--color-on-accent\)\s*!important/,
   );
   assert.match(
     css,

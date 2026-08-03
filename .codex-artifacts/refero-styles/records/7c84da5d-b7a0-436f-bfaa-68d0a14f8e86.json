@@ -1,0 +1,1775 @@
+{
+  "schemaVersion": 1,
+  "id": "7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+  "sourceUrl": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+  "sitemapLastModified": "2026-06-05T03:07:17.872Z",
+  "fetchedAt": "2026-08-02T18:07:54.220Z",
+  "contentHash": "84f2c45e4cd9b38033d0f016af0d60bcf0ea2a9563899f033074c86ce87ae6be",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "FRANKY'S design system",
+            "item": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86#style-reference",
+        "name": "FRANKY'S design system reference",
+        "headline": "FRANKY'S design system | Refero Styles",
+        "description": "Explore FRANKY'S's light E-commerce design system: Arcade Cream #f3e5df, Ink Black #000000 colors, Arcade typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+        "mainEntityOfPage": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "FRANKY'S",
+          "url": "https://frankys-hats.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/40fe58a2-1196-4e18-bb00-bf9d6f135dfb.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/40fe58a2-1196-4e18-bb00-bf9d6f135dfb.jpg",
+          "caption": "Screenshot of FRANKY'S"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/40fe58a2-1196-4e18-bb00-bf9d6f135dfb.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "FRANKY'S design system",
+          "FRANKY'S website design",
+          "FRANKY'S colors",
+          "FRANKY'S typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "E-commerce design system",
+          "Arcade Cream",
+          "Ink Black",
+          "Pixel Gray",
+          "Charcoal",
+          "Arcade"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "FRANKY'S design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "FRANKY'S website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "FRANKY'S colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "FRANKY'S typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "E-commerce design system"
+          }
+        ],
+        "datePublished": "2026-04-30T03:39:47.493Z",
+        "dateModified": "2026-04-30T03:39:47.493Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://frankys-hats.com",
+      "siteName": "FRANKY'S",
+      "extractedAt": "2026-06-03T22:39:52.730Z",
+      "durationMs": 31151,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 744,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "button",
+              "body",
+              "icon",
+              "card",
+              "heading"
+            ],
+            "frequency": 656,
+            "confidence": 1,
+            "prominence": 12130235.430177739,
+            "properties": [
+              "color",
+              "backgroundColor",
+              "boxShadow",
+              "borderColor",
+              "fill",
+              "stroke"
+            ],
+            "usageCounts": {
+              "icon/fill": 2,
+              "body/color": 26,
+              "card/color": 7,
+              "icon/color": 6,
+              "other/fill": 408,
+              "other/color": 105,
+              "button/color": 9,
+              "other/stroke": 4,
+              "heading/color": 6,
+              "other/boxShadow": 1,
+              "body/borderColor": 24,
+              "card/borderColor": 20,
+              "other/borderColor": 4,
+              "button/borderColor": 28,
+              "body/backgroundColor": 3,
+              "other/backgroundColor": 2,
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#e5e7eb",
+            "oklch": {
+              "c": 0.005813542372075684,
+              "h": 264.5313231484507,
+              "l": 0.9275823098127417
+            },
+            "contexts": [
+              "other",
+              "button",
+              "body",
+              "icon",
+              "card",
+              "heading"
+            ],
+            "frequency": 589,
+            "confidence": 1,
+            "prominence": 11929124.202946968,
+            "properties": [
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 5,
+              "body/borderColor": 88,
+              "card/borderColor": 8,
+              "icon/borderColor": 24,
+              "other/borderColor": 420,
+              "button/borderColor": 20,
+              "heading/borderColor": 24
+            }
+          },
+          {
+            "hex": "#f3e5df",
+            "oklch": {
+              "c": 0.017357856546797782,
+              "h": 44.798680626173535,
+              "l": 0.931374870503001
+            },
+            "contexts": [
+              "other",
+              "button",
+              "card",
+              "body",
+              "icon"
+            ],
+            "frequency": 137,
+            "confidence": 1,
+            "prominence": 6083581.857977609,
+            "properties": [
+              "color",
+              "backgroundColor",
+              "fill",
+              "boxShadow"
+            ],
+            "usageCounts": {
+              "icon/fill": 10,
+              "body/color": 1,
+              "other/fill": 103,
+              "other/color": 1,
+              "button/color": 2,
+              "button/boxShadow": 5,
+              "body/backgroundColor": 5,
+              "card/backgroundColor": 7,
+              "other/backgroundColor": 2,
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#333333",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.3210925111636326
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 9,
+            "confidence": 1,
+            "prominence": 4305218.810974021,
+            "properties": [
+              "boxShadow",
+              "backgroundColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6,
+              "other/boxShadow": 2,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#151515",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.19573496075691943
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 30,
+            "confidence": 1,
+            "prominence": 108833.78454657887,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 30
+            }
+          },
+          {
+            "hex": "#faa21f",
+            "oklch": {
+              "c": 0.16331718056599778,
+              "h": 69.2654648399756,
+              "l": 0.7821587226446649
+            },
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 60681.87430261018,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/backgroundColor": 1,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#128e44",
+            "oklch": {
+              "c": 0.1494978517842265,
+              "h": 150.36554684904863,
+              "l": 0.5675198080177131
+            },
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 45803.83130834069,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/backgroundColor": 1,
+              "button/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ec8e01",
+            "oklch": {
+              "c": 0.16354799052494556,
+              "h": 64.93494106830653,
+              "l": 0.7294048386248086
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 39951.46789580177,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6
+            }
+          },
+          {
+            "hex": "#e12222",
+            "oklch": {
+              "c": 0.2220420489325045,
+              "h": 27.688402730146347,
+              "l": 0.5836428320320325
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 39951.46789580177,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6
+            }
+          },
+          {
+            "hex": "#0f550f",
+            "oklch": {
+              "c": 0.12109071474585957,
+              "h": 142.83686983397104,
+              "l": 0.3931489759583533
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 39681.96182328423,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6
+            }
+          },
+          {
+            "hex": "#222c50",
+            "oklch": {
+              "c": 0.06649707066451814,
+              "h": 270.34879758362905,
+              "l": 0.3035561876405801
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 6,
+            "confidence": 1,
+            "prominence": 39681.96182328423,
+            "properties": [
+              "fill"
+            ],
+            "usageCounts": {
+              "other/fill": 6
+            }
+          },
+          {
+            "hex": "#737373",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5555267576690717
+            },
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 11017.074342512757,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "button/color": 1
+            }
+          }
+        ],
+        "isDarkMode": true,
+        "colorfulness": 0.018378564304154243,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 17.08,
+            "background": "#f3e5df",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 16.96,
+            "background": "#e5e7eb",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.86,
+            "background": "#f3e5df",
+            "foreground": "#151515"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.75,
+            "background": "#e5e7eb",
+            "foreground": "#151515"
+          },
+          {
+            "level": "AAA",
+            "ratio": 11.06,
+            "background": "#f3e5df",
+            "foreground": "#222c50"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.98,
+            "background": "#e5e7eb",
+            "foreground": "#222c50"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.28,
+            "background": "#333333",
+            "foreground": "#f3e5df"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.25,
+            "background": "#faa21f",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.2,
+            "background": "#e5e7eb",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.92,
+            "background": "#faa21f",
+            "foreground": "#151515"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.44,
+            "background": "#ec8e01",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.34,
+            "background": "#ec8e01",
+            "foreground": "#151515"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.34,
+            "background": "#f3e5df",
+            "foreground": "#0f550f"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7.29,
+            "background": "#e5e7eb",
+            "foreground": "#0f550f"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.64,
+            "background": "#faa21f",
+            "foreground": "#222c50"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.17,
+            "background": "#faa21f",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.46,
+            "background": "#ec8e01",
+            "foreground": "#222c50"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.08,
+            "background": "#ec8e01",
+            "foreground": "#333333"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.98,
+            "background": "#128e44",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.43,
+            "background": "#000000",
+            "foreground": "#737373"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "card"
+            ],
+            "frequency": 14
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "button",
+              "body"
+            ],
+            "frequency": 7
+          },
+          {
+            "value": 9999,
+            "corners": [
+              0,
+              9999,
+              9999,
+              0
+            ],
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "asymmetric": true
+          }
+        ],
+        "shadows": [
+          {
+            "value": "rgb(243, 229, 223) 0px 1px 0px 0px inset",
+            "contexts": [
+              "button"
+            ],
+            "frequency": 5
+          }
+        ]
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 1,
+            "contexts": [
+              "other",
+              "button",
+              "card"
+            ],
+            "frequency": 14,
+            "properties": [
+              "paddingTop",
+              "paddingBottom",
+              "columnGap",
+              "marginTop",
+              "rowGap",
+              "marginLeft",
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingBottom|other",
+              "columnGap|other",
+              "marginTop|other",
+              "rowGap|other",
+              "marginLeft|button",
+              "marginTop|card",
+              "paddingRight|other"
+            ]
+          },
+          {
+            "value": 2,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 4,
+            "contexts": [
+              "button",
+              "body",
+              "other"
+            ],
+            "frequency": 74,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom",
+              "marginTop",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|button",
+              "paddingLeft|button",
+              "paddingTop|body",
+              "paddingBottom|body",
+              "marginTop|body",
+              "paddingTop|button",
+              "paddingBottom|button",
+              "paddingRight|body",
+              "paddingLeft|body",
+              "marginLeft|body",
+              "marginTop|other",
+              "paddingTop|other",
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 6,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|button",
+              "paddingBottom|button"
+            ]
+          },
+          {
+            "value": 8,
+            "contexts": [
+              "other",
+              "body",
+              "button"
+            ],
+            "frequency": 35,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft",
+              "marginTop",
+              "rowGap",
+              "columnGap",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other",
+              "paddingRight|body",
+              "paddingLeft|body",
+              "paddingTop|button",
+              "paddingRight|button",
+              "paddingBottom|button",
+              "paddingLeft|button",
+              "marginTop|other",
+              "rowGap|other",
+              "columnGap|other",
+              "marginLeft|button"
+            ]
+          },
+          {
+            "value": 12,
+            "contexts": [
+              "other",
+              "button",
+              "card"
+            ],
+            "frequency": 35,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "paddingBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingLeft|button",
+              "paddingRight|button",
+              "paddingTop|card",
+              "paddingRight|card",
+              "paddingBottom|card",
+              "paddingLeft|card",
+              "paddingTop|other",
+              "paddingBottom|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 24,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 43,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 44,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 12,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 61,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          }
+        ],
+        "density": "compact",
+        "baseUnit": 4
+      },
+      "gradients": [
+        {
+          "type": "linear",
+          "value": "linear-gradient(to left bottom, rgba(43, 72, 147, 0.3), rgba(207, 67, 8, 0.3))",
+          "colors": [
+            "rgba(43, 72, 147, 0.3)",
+            "rgba(207, 67, 8, 0.3)"
+          ],
+          "frequency": 1
+        },
+        {
+          "type": "linear",
+          "value": "linear-gradient(to right, rgb(250, 162, 31), rgb(254, 243, 199), rgb(250, 162, 31))",
+          "colors": [
+            "rgb(250, 162, 31)",
+            "rgb(254, 243, 199)",
+            "rgb(250, 162, 31)"
+          ],
+          "frequency": 1
+        }
+      ],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Arcade",
+            "source": "custom",
+            "weights": [
+              400,
+              700
+            ],
+            "frequency": 165,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 10,
+          "name": "Minor Second",
+          "ratio": 1.067,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 10,
+            "family": "Arcade",
+            "weight": 700,
+            "contexts": [
+              "other",
+              "heading",
+              "body",
+              "button"
+            ],
+            "frequency": 22,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 10,
+            "family": "Arcade",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "button",
+              "body",
+              "icon",
+              "card"
+            ],
+            "frequency": 125,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 10,
+            "family": "Arcade",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.25,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "Arcade",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 14,
+            "family": "Arcade",
+            "weight": 700,
+            "contexts": [
+              "heading",
+              "button",
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.43,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 16,
+            "family": "Arcade",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1.5,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Arcade",
+            "weight": 700,
+            "contexts": [
+              "button"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.56,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use Arcade 400 for body, labels, prices, and captions; jump to Arcade 700 only for titles, nav items, and the footer links — the weight shift is the entire hierarchy.",
+        "Set every CTA, tag, and toggle to a 6px radius (or 9999px for the inline 'AR' pill) and add the 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset) to keep the arcade-button bevel.",
+        "Use Buy Green (#128e44) only for the filled Add-To-Cart button; never reuse it for links, borders, or hover states.",
+        "Anchor the page on Arcade Cream (#f3e5df); use Pixel Gray (#e5e7eb) for 1px structural rules and card borders, Ink Black (#000000) for text and checkerboard contrast.",
+        "Reserve Marquee Orange (#faa21f) for the top announcement bar and the optional Marquee Sheen gradient — it should never appear as a button fill or large text color.",
+        "Keep vertical rhythm in 4px increments; element gaps live at 4–8px, card padding at 12px, and section gaps at 43–61px.",
+        "Pair every product card with a Try-In-AR ghost button stacked above the Add-To-Cart (or Out-Of-Stock) button so the right-hand grid stays uniform."
+      ],
+      "donts": [
+        "Don't introduce a second typeface — no system fonts, no sans-serifs, no display scripts. Arcade is the brand.",
+        "Don't use soft drop shadows; the only shadow allowed is the 1px inset cream highlight on buttons and the flat #333333 under the floating cap.",
+        "Don't round cards above 12px or buttons below 6px — the 6/12/9999px triad is the only permitted radius vocabulary.",
+        "Don't place Buy Green (#128e44) on a non-purchase element, and don't pair it with the Marquee Sheen gradient in the same component.",
+        "Don't dilute the checkerboard — it must read as pure #000000 against #f3e5df (or #333333 for shadow tones), never as a tinted gray or blurred pattern.",
+        "Don't use dark-mode backgrounds; the canvas is always Arcade Cream, even inside cards and modals.",
+        "Don't exceed 18px on any text or drop below 10px — the Arcade font's bitmap grid breaks outside that range."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#f3e5df",
+          "name": "Arcade Cream",
+          "role": "Page background, product card surfaces, inset highlights on buttons",
+          "group": "neutral"
+        },
+        {
+          "hex": "#000000",
+          "name": "Ink Black",
+          "role": "Primary text, checkerboard tiles, all UI borders, card outlines, icon strokes",
+          "group": "neutral"
+        },
+        {
+          "hex": "#e5e7eb",
+          "name": "Pixel Gray",
+          "role": "Hairline borders, card dividers, structural rules between grid cells",
+          "group": "neutral"
+        },
+        {
+          "hex": "#333333",
+          "name": "Charcoal",
+          "role": "Secondary surface tone, checkerboard shadow squares, shadow color",
+          "group": "neutral"
+        },
+        {
+          "hex": "#151515",
+          "name": "Carbon",
+          "role": "Deep neutral for illustration fills and the densest checkerboard tiles",
+          "group": "neutral"
+        },
+        {
+          "hex": "#737373",
+          "name": "Muted Gray",
+          "role": "Disabled/muted text on buttons and body copy",
+          "group": "neutral"
+        },
+        {
+          "hex": "#faa21f",
+          "name": "Marquee Orange",
+          "role": "Top notification bar, marquee accents, brand signature",
+          "group": "brand"
+        },
+        {
+          "hex": "#128e44",
+          "name": "Buy Green",
+          "role": "Filled ADD TO CART button — the only green purchase action",
+          "group": "brand"
+        }
+      ],
+      "layout": "Full-bleed single-screen product page on desktop, max-width 1200px centered. Top-to-bottom rhythm: orange marquee bar → cream header with black rule → two-column split (55% hero checkerboard / 45% 2-column product card grid) → cream footer strip. On mobile, the hero collapses to a full-width checkerboard and the grid becomes a single column. Cards are evenly distributed in a 2-column grid with Pixel Gray (#e5e7eb) hairline dividers between them. Section gaps are tight (43–61px) and the interface never uses full-bleed dark bands — the cream canvas runs uninterrupted.",
+      "imagery": "Photography of caps on a pure cream backdrop, centered and tightly cropped, with a soft charcoal contact shadow beneath. No lifestyle, no models, no context — the cap is the hero. The checkerboard behind the hero doubles as a graphic surface. No illustrations, no 3D renders beyond the AR toggle, no decorative icons beyond the pixel cross in the wordmark.",
+      "similar": [
+        {
+          "why": "Same flat cream canvas, bold black-bordered product cards, and a single warm accent (Polar's red, Franky's orange) on a marquee bar",
+          "business": "Polar Skate Co."
+        },
+        {
+          "why": "Pixel/bitmap-influenced type system, checkerboard product framing, and the 6px-radius beveled button look",
+          "business": "Palace Skateboards"
+        },
+        {
+          "why": "Compact cream-and-black product grid with tight padding and a single chromatic CTA color",
+          "business": "Stüssy"
+        },
+        {
+          "why": "Warm off-white surfaces, monospaced/pixel-adjacent labels, and minimal-but-precise card radii",
+          "business": "Aimé Leon Dore"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "9999px",
+          "cards": "12px",
+          "buttons": "6px"
+        },
+        "elementGap": "4-8px",
+        "sectionGap": "43-61px",
+        "cardPadding": "12px",
+        "pageMaxWidth": "1200px"
+      },
+      "industry": "ecommerce",
+      "surfaces": [
+        {
+          "hex": "#f3e5df",
+          "name": "Arcade Cream",
+          "level": 1,
+          "purpose": "Page canvas — warm off-white that makes the pixel font breathe"
+        },
+        {
+          "hex": "#e5e7eb",
+          "name": "Pixel Gray",
+          "level": 2,
+          "purpose": "Grid gutter tone and product card background variation"
+        },
+        {
+          "hex": "#333333",
+          "name": "Charcoal",
+          "level": 3,
+          "purpose": "Checkerboard shadow squares and tertiary surface"
+        },
+        {
+          "hex": "#151515",
+          "name": "Carbon",
+          "level": 4,
+          "purpose": "Deepest checkerboard tone, near-black illustration fills"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "inset 0 1px 0 0 #f3e5df — 1px cream pixel-highlight at the top edge",
+          "element": "Add To Cart / Ghost buttons"
+        },
+        {
+          "style": "flat #333333 drop, no blur, sits directly under the product",
+          "element": "Floating product cap in hero"
+        }
+      ],
+      "gradients": [
+        {
+          "hex": "#faa21f",
+          "name": "Marquee Sheen",
+          "role": "Top announcement bar — orange fading through cream back to orange, the site's only non-flat chromatic surface",
+          "group": "brand",
+          "gradient": "linear-gradient(to right, rgb(250, 162, 31), rgb(254, 243, 199), rgb(250, 162, 31))"
+        },
+        {
+          "hex": "#2b4893",
+          "name": "Checkerboard Blue-Orange",
+          "role": "Subtle diagonal wash on the 3D product showcase",
+          "group": "accent",
+          "gradient": "linear-gradient(to left bottom, rgba(43, 72, 147, 0.3), rgba(207, 67, 8, 0.3))"
+        }
+      ],
+      "northStar": "Retro arcade kiosk on a skate-shop counter.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 10,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "body-sm",
+          "size": 14,
+          "lineHeight": 1.43
+        },
+        {
+          "role": "body",
+          "size": 16,
+          "lineHeight": 1.5
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.56
+        }
+      ],
+      "components": [
+        {
+          "name": "Marquee Announcement Bar",
+          "role": "Top-of-page strip",
+          "description": "Full-width band filled with the Marquee Sheen gradient (orange → cream → orange). Arcade 14px/400, letter-spacing normal, black or dark-brown text. Height ~36px, flush with the top of the viewport. It is the only decorative chromatic surface on the page."
+        },
+        {
+          "name": "Header Bar",
+          "role": "Primary navigation",
+          "description": "Cream (#f3e5df) background, 1px solid #000000 bottom border. Wordmark 'franky's' set in Arcade 18px/700 in #000000 with a small black cross pixel-icon. Hamburger menu on the right (three 2px black lines, 16px apart). No drop shadow, no sticky elevation — it sits flat on the cream canvas."
+        },
+        {
+          "name": "Product Showcase Panel (3D/AR)",
+          "role": "Hero product viewer",
+          "description": "Large left-hand panel (roughly 55% of viewport width) with a black-and-cream checkerboard floor receding in perspective. A charcoal (#333333) cap floats centered with a soft #333333 shadow. Bottom-center contains two pill toggles: '3D' and 'AR', each 6px radius, 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset), 2px 8px padding, Arcade 14px/400."
+        },
+        {
+          "name": "Product Card",
+          "role": "Grid cell for one SKU",
+          "description": "Cream (#f3e5df) background, 12px radius, 1px solid #e5e7eb border. Internal padding 12px. Product image fills the top ~70% of the card on a pure cream backdrop. Title (e.g. 'FRANKY'S GREEN 665') in Arcade 14px/700 #000000 at the bottom-left, price in Arcade 14px/400 #000000 at the bottom-right. Two stacked controls under the title area: ghost 'TRY IN AR' button and filled or ghost 'ADD TO CART' / 'OUT OF STOCK' button."
+        },
+        {
+          "name": "Try In AR Button (Ghost)",
+          "role": "3D/AR preview trigger",
+          "description": "6px radius, transparent fill, 1px solid #000000 border, Arcade 14px/400 #000000. Padding 4px 12px. The 'AR' suffix is wrapped in a tiny pill (9999px) to read as a badge."
+        },
+        {
+          "name": "Add To Cart Button (Filled Green)",
+          "role": "Primary purchase action",
+          "description": "6px radius, #128e44 background, Arcade 14px/700 #ffffff (white) text, fully uppercase. Padding 8px 12px. Optional 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset) to keep the arcade-button feel. This is the only green surface in the system."
+        },
+        {
+          "name": "Out Of Stock Button (Disabled Ghost)",
+          "role": "Depleted SKU state",
+          "description": "6px radius, transparent fill, 1px solid #737373 border, Arcade 14px/400 #737373 text. Same dimensions as the live Add-To-Cart button so the grid stays uniform."
+        },
+        {
+          "name": "Marquee Tag (Pill Badge)",
+          "role": "Inline label inside buttons and cards",
+          "description": "9999px radius, 1px solid #000000 border, Arcade 10px/400 #000000, padding 2px 8px. Used for suffixes like 'AR' or sub-tags inside cards."
+        },
+        {
+          "name": "Footer Strip",
+          "role": "Bottom-of-page info bar",
+          "description": "1px solid #e5e7eb top border on cream. Left: '© FRANKY'S AMSTERDAM 2023' in Arcade 14px/400 #000000. Right: 'SUBSCRIBE' and 'SHIPPING' in Arcade 14px/700 #000000 acting as ghost links."
+        },
+        {
+          "name": "Checkerboard Surface",
+          "role": "Hero texture / brand pattern",
+          "description": "Repeating two-tone square grid in #f3e5df and #000000 (or #333333 for shadowed variants). Square size ~48px. Used as the hero panel backdrop and as decorative banding; never as a functional UI surface."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Sole typeface across the entire interface — every heading, label, price, button, body and icon is set in Arcade. The 400/700 weight jump is the only hierarchy tool; using a second typeface would shatter the kiosk illusion.",
+          "sizes": "10px, 14px, 16px, 18px",
+          "family": "Arcade",
+          "weight": "400, 700",
+          "lineHeight": "1.25, 1.43, 1.50, 1.56",
+          "substitute": "VT323, Press Start 2P (Google Fonts pixel set) — match the 8-bit, all-caps-leaning look",
+          "letterSpacing": "normal across all sizes — the font's bitmap grid is the rhythm, not tracking"
+        }
+      ],
+      "description": "$19",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$1a"
+        }
+      ],
+      "elevationPhilosophy": "Elevation is intentionally absent. The system reads as 2D pixel art on cream paper — depth is implied by the receding checkerboard and the 1px inset button bevel, never by soft drop shadows or layered surfaces."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/7b4e1368-3159-4e4e-b090-dfc5d9aea7b5.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/40fe58a2-1196-4e18-bb00-bf9d6f135dfb.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "franky-s",
+    "generatedAt": "2026-06-03T22:39:52.730Z",
+    "summary": "$19",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+      "sourceUrl": "https://styles.refero.design/style/7c84da5d-b7a0-436f-bfaa-68d0a14f8e86",
+      "originalUrl": "https://frankys-hats.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/7b4e1368-3159-4e4e-b090-dfc5d9aea7b5.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/40fe58a2-1196-4e18-bb00-bf9d6f135dfb.jpg",
+      "importedAt": "2026-08-02T18:07:54.220Z",
+      "upstreamModifiedAt": "2026-06-05T03:07:17.872Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Retro arcade kiosk on a skate-shop counter.",
+      "industry": "ecommerce"
+    },
+    "tokens": [
+      {
+        "id": "color-arcade-cream",
+        "kind": "color",
+        "name": "Arcade Cream",
+        "value": "#f3e5df",
+        "role": "Page background, product card surfaces, inset highlights on buttons",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink-black",
+        "kind": "color",
+        "name": "Ink Black",
+        "value": "#000000",
+        "role": "Primary text, checkerboard tiles, all UI borders, card outlines, icon strokes",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pixel-gray",
+        "kind": "color",
+        "name": "Pixel Gray",
+        "value": "#e5e7eb",
+        "role": "Hairline borders, card dividers, structural rules between grid cells",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-charcoal",
+        "kind": "color",
+        "name": "Charcoal",
+        "value": "#333333",
+        "role": "Secondary surface tone, checkerboard shadow squares, shadow color",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-carbon",
+        "kind": "color",
+        "name": "Carbon",
+        "value": "#151515",
+        "role": "Deep neutral for illustration fills and the densest checkerboard tiles",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-muted-gray",
+        "kind": "color",
+        "name": "Muted Gray",
+        "value": "#737373",
+        "role": "Disabled/muted text on buttons and body copy",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-marquee-orange",
+        "kind": "color",
+        "name": "Marquee Orange",
+        "value": "#faa21f",
+        "role": "Top notification bar, marquee accents, brand signature",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-buy-green",
+        "kind": "color",
+        "name": "Buy Green",
+        "value": "#128e44",
+        "role": "Filled ADD TO CART button — the only green purchase action",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-arcade",
+        "kind": "typography",
+        "name": "Arcade",
+        "value": "font-family: Arcade; font-weight: 400, 700; font-size: 10px, 14px, 16px, 18px; line-height: 1.25, 1.43, 1.50, 1.56; letter-spacing: normal across all sizes — the font's bitmap grid is the rhythm, not tracking",
+        "role": "Sole typeface across the entire interface — every heading, label, price, button, body and icon is set in Arcade. The 400/700 weight jump is the only hierarchy tool; using a second typeface would shatter the kiosk illusion.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 10px; line-height: 1.5",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 14px; line-height: 1.43",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 16px; line-height: 1.5",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.56",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "4-8px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "43-61px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "12px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "1200px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "9999px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "12px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "6px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "Elevation is intentionally absent. The system reads as 2D pixel art on cream paper — depth is implied by the receding checkerboard and the 1px inset button bevel, never by soft drop shadows or layered surfaces.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "marquee-announcement-bar",
+        "name": "Marquee Announcement Bar",
+        "category": "Refero components",
+        "description": "Full-width band filled with the Marquee Sheen gradient (orange → cream → orange). Arcade 14px/400, letter-spacing normal, black or dark-brown text. Height ~36px, flush with the top of the viewport. It is the only decorative chromatic surface on the page.",
+        "variants": [
+          {
+            "id": "marquee-announcement-bar-reference",
+            "name": "Reference",
+            "description": "Full-width band filled with the Marquee Sheen gradient (orange → cream → orange). Arcade 14px/400, letter-spacing normal, black or dark-brown text. Height ~36px, flush with the top of the viewport. It is the only decorative chromatic surface on the page.",
+            "evidence": [],
+            "observedProperties": [
+              "Top-of-page strip"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "header-bar",
+        "name": "Header Bar",
+        "category": "Refero components",
+        "description": "Cream (#f3e5df) background, 1px solid #000000 bottom border. Wordmark 'franky's' set in Arcade 18px/700 in #000000 with a small black cross pixel-icon. Hamburger menu on the right (three 2px black lines, 16px apart). No drop shadow, no sticky elevation — it sits flat on the cream canvas.",
+        "variants": [
+          {
+            "id": "header-bar-reference",
+            "name": "Reference",
+            "description": "Cream (#f3e5df) background, 1px solid #000000 bottom border. Wordmark 'franky's' set in Arcade 18px/700 in #000000 with a small black cross pixel-icon. Hamburger menu on the right (three 2px black lines, 16px apart). No drop shadow, no sticky elevation — it sits flat on the cream canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-showcase-panel-3d-ar",
+        "name": "Product Showcase Panel (3D/AR)",
+        "category": "Refero components",
+        "description": "Large left-hand panel (roughly 55% of viewport width) with a black-and-cream checkerboard floor receding in perspective. A charcoal (#333333) cap floats centered with a soft #333333 shadow. Bottom-center contains two pill toggles: '3D' and 'AR', each 6px radius, 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset), 2px 8px padding, Arcade 14px/400.",
+        "variants": [
+          {
+            "id": "product-showcase-panel-3d-ar-reference",
+            "name": "Reference",
+            "description": "Large left-hand panel (roughly 55% of viewport width) with a black-and-cream checkerboard floor receding in perspective. A charcoal (#333333) cap floats centered with a soft #333333 shadow. Bottom-center contains two pill toggles: '3D' and 'AR', each 6px radius, 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset), 2px 8px padding, Arcade 14px/400.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero product viewer"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "product-card",
+        "name": "Product Card",
+        "category": "Refero components",
+        "description": "Cream (#f3e5df) background, 12px radius, 1px solid #e5e7eb border. Internal padding 12px. Product image fills the top ~70% of the card on a pure cream backdrop. Title (e.g. 'FRANKY'S GREEN 665') in Arcade 14px/700 #000000 at the bottom-left, price in Arcade 14px/400 #000000 at the bottom-right. Two stacked controls under the title area: ghost 'TRY IN AR' button and filled or ghost 'ADD TO CART' / 'OUT OF STOCK' button.",
+        "variants": [
+          {
+            "id": "product-card-reference",
+            "name": "Reference",
+            "description": "Cream (#f3e5df) background, 12px radius, 1px solid #e5e7eb border. Internal padding 12px. Product image fills the top ~70% of the card on a pure cream backdrop. Title (e.g. 'FRANKY'S GREEN 665') in Arcade 14px/700 #000000 at the bottom-left, price in Arcade 14px/400 #000000 at the bottom-right. Two stacked controls under the title area: ghost 'TRY IN AR' button and filled or ghost 'ADD TO CART' / 'OUT OF STOCK' button.",
+            "evidence": [],
+            "observedProperties": [
+              "Grid cell for one SKU"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "try-in-ar-button-ghost",
+        "name": "Try In AR Button (Ghost)",
+        "category": "Refero components",
+        "description": "6px radius, transparent fill, 1px solid #000000 border, Arcade 14px/400 #000000. Padding 4px 12px. The 'AR' suffix is wrapped in a tiny pill (9999px) to read as a badge.",
+        "variants": [
+          {
+            "id": "try-in-ar-button-ghost-reference",
+            "name": "Reference",
+            "description": "6px radius, transparent fill, 1px solid #000000 border, Arcade 14px/400 #000000. Padding 4px 12px. The 'AR' suffix is wrapped in a tiny pill (9999px) to read as a badge.",
+            "evidence": [],
+            "observedProperties": [
+              "3D/AR preview trigger"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "add-to-cart-button-filled-green",
+        "name": "Add To Cart Button (Filled Green)",
+        "category": "Refero components",
+        "description": "6px radius, #128e44 background, Arcade 14px/700 #ffffff (white) text, fully uppercase. Padding 8px 12px. Optional 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset) to keep the arcade-button feel. This is the only green surface in the system.",
+        "variants": [
+          {
+            "id": "add-to-cart-button-filled-green-reference",
+            "name": "Reference",
+            "description": "6px radius, #128e44 background, Arcade 14px/700 #ffffff (white) text, fully uppercase. Padding 8px 12px. Optional 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset) to keep the arcade-button feel. This is the only green surface in the system.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary purchase action"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "out-of-stock-button-disabled-ghost",
+        "name": "Out Of Stock Button (Disabled Ghost)",
+        "category": "Refero components",
+        "description": "6px radius, transparent fill, 1px solid #737373 border, Arcade 14px/400 #737373 text. Same dimensions as the live Add-To-Cart button so the grid stays uniform.",
+        "variants": [
+          {
+            "id": "out-of-stock-button-disabled-ghost-reference",
+            "name": "Reference",
+            "description": "6px radius, transparent fill, 1px solid #737373 border, Arcade 14px/400 #737373 text. Same dimensions as the live Add-To-Cart button so the grid stays uniform.",
+            "evidence": [],
+            "observedProperties": [
+              "Depleted SKU state"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "marquee-tag-pill-badge",
+        "name": "Marquee Tag (Pill Badge)",
+        "category": "Refero components",
+        "description": "9999px radius, 1px solid #000000 border, Arcade 10px/400 #000000, padding 2px 8px. Used for suffixes like 'AR' or sub-tags inside cards.",
+        "variants": [
+          {
+            "id": "marquee-tag-pill-badge-reference",
+            "name": "Reference",
+            "description": "9999px radius, 1px solid #000000 border, Arcade 10px/400 #000000, padding 2px 8px. Used for suffixes like 'AR' or sub-tags inside cards.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline label inside buttons and cards"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "footer-strip",
+        "name": "Footer Strip",
+        "category": "Refero components",
+        "description": "1px solid #e5e7eb top border on cream. Left: '© FRANKY'S AMSTERDAM 2023' in Arcade 14px/400 #000000. Right: 'SUBSCRIBE' and 'SHIPPING' in Arcade 14px/700 #000000 acting as ghost links.",
+        "variants": [
+          {
+            "id": "footer-strip-reference",
+            "name": "Reference",
+            "description": "1px solid #e5e7eb top border on cream. Left: '© FRANKY'S AMSTERDAM 2023' in Arcade 14px/400 #000000. Right: 'SUBSCRIBE' and 'SHIPPING' in Arcade 14px/700 #000000 acting as ghost links.",
+            "evidence": [],
+            "observedProperties": [
+              "Bottom-of-page info bar"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "checkerboard-surface",
+        "name": "Checkerboard Surface",
+        "category": "Refero components",
+        "description": "Repeating two-tone square grid in #f3e5df and #000000 (or #333333 for shadowed variants). Square size ~48px. Used as the hero panel backdrop and as decorative banding; never as a functional UI surface.",
+        "variants": [
+          {
+            "id": "checkerboard-surface-reference",
+            "name": "Reference",
+            "description": "Repeating two-tone square grid in #f3e5df and #000000 (or #333333 for shadowed variants). Square size ~48px. Used as the hero panel backdrop and as decorative banding; never as a functional UI surface.",
+            "evidence": [],
+            "observedProperties": [
+              "Hero texture / brand pattern"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed single-screen product page on desktop, max-width 1200px centered. Top-to-bottom rhythm: orange marquee bar → cream header with black rule → two-column split (55% hero checkerboard / 45% 2-column product card grid) → cream footer strip. On mobile, the hero collapses to a full-width checkerboard and the grid becomes a single column. Cards are evenly distributed in a 2-column grid with Pixel Gray (#e5e7eb) hairline dividers between them. Section gaps are tight (43–61px) and the interface never uses full-bleed dark bands — the cream canvas runs uninterrupted.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Photography of caps on a pure cream backdrop, centered and tightly cropped, with a soft charcoal contact shadow beneath. No lifestyle, no models, no context — the cap is the hero. The checkerboard behind the hero doubles as a graphic surface. No illustrations, no 3D renders beyond the AR toggle, no decorative icons beyond the pixel cross in the wordmark.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "Elevation is intentionally absent. The system reads as 2D pixel art on cream paper — depth is implied by the receding checkerboard and the 1px inset button bevel, never by soft drop shadows or layered surfaces.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Arcade 400 for body, labels, prices, and captions; jump to Arcade 700 only for titles, nav items, and the footer links — the weight shift is the entire hierarchy.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set every CTA, tag, and toggle to a 6px radius (or 9999px for the inline 'AR' pill) and add the 1px inset cream highlight (#f3e5df 0px 1px 0px 0px inset) to keep the arcade-button bevel.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use Buy Green (#128e44) only for the filled Add-To-Cart button; never reuse it for links, borders, or hover states.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Anchor the page on Arcade Cream (#f3e5df); use Pixel Gray (#e5e7eb) for 1px structural rules and card borders, Ink Black (#000000) for text and checkerboard contrast.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve Marquee Orange (#faa21f) for the top announcement bar and the optional Marquee Sheen gradient — it should never appear as a button fill or large text color.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep vertical rhythm in 4px increments; element gaps live at 4–8px, card padding at 12px, and section gaps at 43–61px.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Pair every product card with a Try-In-AR ghost button stacked above the Add-To-Cart (or Out-Of-Stock) button so the right-hand grid stays uniform.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce a second typeface — no system fonts, no sans-serifs, no display scripts. Arcade is the brand.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use soft drop shadows; the only shadow allowed is the 1px inset cream highlight on buttons and the flat #333333 under the floating cap.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't round cards above 12px or buttons below 6px — the 6/12/9999px triad is the only permitted radius vocabulary.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't place Buy Green (#128e44) on a non-purchase element, and don't pair it with the Marquee Sheen gradient in the same component.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't dilute the checkerboard — it must read as pure #000000 against #f3e5df (or #333333 for shadow tones), never as a tinted gray or blurred pattern.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use dark-mode backgrounds; the canvas is always Arcade Cream, even inside cards and modals.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't exceed 18px on any text or drop below 10px — the Arcade font's bitmap grid breaks outside that range.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

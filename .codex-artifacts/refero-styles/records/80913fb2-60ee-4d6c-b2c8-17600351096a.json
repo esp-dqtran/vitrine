@@ -1,0 +1,1152 @@
+{
+  "schemaVersion": 1,
+  "id": "80913fb2-60ee-4d6c-b2c8-17600351096a",
+  "sourceUrl": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a",
+  "sitemapLastModified": "2026-06-03T21:55:48.888Z",
+  "fetchedAt": "2026-08-02T18:08:14.758Z",
+  "contentHash": "d847c2586f574be7e1332b7e0266104de21b0f06e0cb88e52eaf40b22f9a3d6f",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "The Pop Manifesto design system",
+            "item": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a#style-reference",
+        "name": "The Pop Manifesto design system reference",
+        "headline": "The Pop Manifesto design system | Refero Styles",
+        "description": "Explore The Pop Manifesto's light Media design system: Manifesto Orange #ff7a00, Magenta Backdrop #ff29f1 colors, Roobert, Roobert (Bubble Display Cut)...",
+        "url": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a",
+        "mainEntityOfPage": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "The Pop Manifesto",
+          "url": "https://thepopmanifesto.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/9db37882-f897-4bae-9b5f-2c800f0a6246.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/9db37882-f897-4bae-9b5f-2c800f0a6246.jpg",
+          "caption": "Screenshot of The Pop Manifesto"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/9db37882-f897-4bae-9b5f-2c800f0a6246.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "The Pop Manifesto design system",
+          "The Pop Manifesto website design",
+          "The Pop Manifesto colors",
+          "The Pop Manifesto typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Media design system",
+          "Manifesto Orange",
+          "Magenta Backdrop",
+          "Cobalt Backdrop",
+          "Ink Black",
+          "Roobert",
+          "Roobert (Bubble Display Cut)",
+          "Roobert Bold"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "The Pop Manifesto design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "The Pop Manifesto website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "The Pop Manifesto colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "The Pop Manifesto typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Media design system"
+          }
+        ],
+        "datePublished": "2026-04-30T02:30:25.125Z",
+        "dateModified": "2026-04-30T02:30:25.125Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://thepopmanifesto.com",
+      "siteName": "The Pop Manifesto",
+      "extractedAt": "2026-06-03T21:55:48.882Z",
+      "durationMs": 31521,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 238,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "link",
+              "body",
+              "image"
+            ],
+            "frequency": 1119,
+            "confidence": 1,
+            "prominence": 12398242.41274064,
+            "properties": [
+              "color",
+              "borderColor",
+              "fill"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 70,
+              "other/fill": 19,
+              "image/color": 66,
+              "other/color": 83,
+              "body/borderColor": 4,
+              "link/borderColor": 280,
+              "image/borderColor": 264,
+              "other/borderColor": 332
+            }
+          },
+          {
+            "hex": "#287aea",
+            "oklch": {
+              "c": 0.18645996534127643,
+              "h": 257.7391459551089,
+              "l": 0.5927094043562902
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 315000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ff29f1",
+            "oklch": {
+              "c": 0.300208682468491,
+              "h": 331.4058358917285,
+              "l": 0.7036839076875541
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 2535.9400011538496,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 2
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0.0018954505233855046,
+        "contrastPairs": [
+          {
+            "level": "AA",
+            "ratio": 6.84,
+            "background": "#ff29f1",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AA",
+            "ratio": 5.06,
+            "background": "#287aea",
+            "foreground": "#000000"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 5,
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 5,
+            "properties": [
+              "rowGap",
+              "marginLeft",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "marginLeft|link",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 9,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 67,
+            "properties": [
+              "paddingBottom",
+              "marginRight"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "marginRight|other"
+            ]
+          },
+          {
+            "value": 25,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingTop",
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|body",
+              "paddingBottom|body"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "marginRight",
+              "marginBottom",
+              "marginLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "marginBottom|other",
+              "marginLeft|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "properties": [
+              "marginRight",
+              "marginLeft",
+              "columnGap",
+              "paddingRight",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "marginRight|other",
+              "marginLeft|other",
+              "columnGap|other",
+              "paddingRight|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 291,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 66,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Roobert",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 219,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Roobert Bold",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 1,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 22,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 12,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 8,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "Roobert Bold",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 15,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 22,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 10,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 22,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 33,
+            "family": "Roobert",
+            "weight": 400,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "lineHeight": 0.7,
+            "letterSpacing": 0,
+            "textTransform": "uppercase"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Flood the entire viewport with a single solid #ff7a00 orange — no gradients, no overlays, no panel differentiation.",
+        "Set all type in Roobert 400 at the five-step scale (12/15/22/33/120px); let size and uppercase transforms carry weight, never bold cuts.",
+        "Use 0px border-radius on all photos, buttons, tags, and cards — this system has no rounded corners anywhere.",
+        "Reserve the bubble/balloon display cut exclusively for the 'POP' wordmark; it must never appear in body, nav, or section labels.",
+        "Let photos bleed edge-to-edge with no gutters, no borders, and no drop shadows — the orange canvas is the only frame.",
+        "Keep all text pure #000000 on the orange canvas; reserve #ffffff only for reverse-out on dark photo backdrops.",
+        "Maintain ~291px of top padding before the photo grid to let the masthead breathe and signal editorial gravitas."
+      ],
+      "donts": [
+        "Don't introduce any new colors — the palette is orange, black, white, and the two photo backdrops (magenta + cobalt). No grays, no accent hues.",
+        "Don't add card surfaces, drop shadows, or elevation — the design is intentionally flat, direct, and unmediated.",
+        "Don't use bold or semibold weights — Roobert 400 at large sizes is the system's only voice.",
+        "Don't round corners on photos, buttons, or any container — 0px radius is structural, not negotiable.",
+        "Don't add body copy, paragraphs, or long-form text in the body type size — this is an editorial cover, not an article page.",
+        "Don't use the bubble display font for headlines, nav, or labels — it is wordmark-only.",
+        "Don't break the orange canvas with white sections, alternating bands, or boxed content — the orange must always reach all four edges."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#ff7a00",
+          "name": "Manifesto Orange",
+          "role": "Full-viewport canvas, page background — one unmodulated orange flood with no gradients, no overlays, no surface variation",
+          "group": "brand"
+        },
+        {
+          "hex": "#ff29f1",
+          "name": "Magenta Backdrop",
+          "role": "Photography studio backdrop — appears as flat color blocks behind models, not as UI chrome",
+          "group": "brand"
+        },
+        {
+          "hex": "#287aea",
+          "name": "Cobalt Backdrop",
+          "role": "Photography studio backdrop — second flat color block behind models in the photo grid",
+          "group": "brand"
+        },
+        {
+          "hex": "#000000",
+          "name": "Ink Black",
+          "role": "All text, wordmark, hairline borders, nav links, photo tile labels — pure black with no softening",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper White",
+          "role": "Inset text on dark photo backgrounds, photo label cards where reverse-out is needed",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Full-bleed edge-to-edge layout with no max-width constraint. The masthead occupies the top ~15% of the viewport with the wordmark anchored to the top-left and nav to the top-right. A single horizontal photo grid row follows after ~291px of vertical breathing space, with three tiles at a 1:2:1 width ratio. Labels sit in the orange margin beneath each tile. The page is a single editorial cover frame — no scrolling sections, no cards, no sidebar. Navigation is minimal (3 text links) and hugs the top-right corner.",
+      "imagery": "Photography is editorial fashion: tight to medium crops of male models in styled poses, shot against flat saturated studio backdrops (hot magenta, deep cobalt blue) or soft natural-light interiors. The model is always the subject; environment is reduced to a color field. Treatment is high-contrast and direct with no overlays, no duotones, no text-on-image — labels sit in the orange margin below each frame, never inside the photo. The central tile is given disproportionate scale (roughly 2x width) to create visual hierarchy within a simple 3-column grid.",
+      "similar": [
+        {
+          "why": "Same editorial-cover approach with oversized black sans-serif masthead and full-bleed photography on a single saturated field",
+          "business": "Apartamento Magazine"
+        },
+        {
+          "why": "Same fashion-editorial confidence with bold type, edge-to-edge imagery, and zero decorative chrome",
+          "business": "Ssense"
+        },
+        {
+          "why": "Same loud single-color canvas with black uppercase type and a minimal right-aligned nav",
+          "business": "Hypebeast"
+        },
+        {
+          "why": "Same restraint — letting photography and typography do all the work with no cards, shadows, or surface variation",
+          "business": "Acne Studios"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "tags": "0px",
+          "cards": "0px",
+          "photos": "0px",
+          "buttons": "0px"
+        },
+        "elementGap": "20px",
+        "sectionGap": "40px",
+        "cardPadding": "0px",
+        "pageMaxWidth": null
+      },
+      "industry": "media",
+      "northStar": "Orange editorial firehose",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 12,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "body",
+          "size": 15,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "subheading",
+          "size": 22,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "heading",
+          "size": 33,
+          "lineHeight": 1.2
+        },
+        {
+          "role": "display",
+          "size": 120,
+          "lineHeight": 0.7
+        }
+      ],
+      "components": [
+        {
+          "name": "Full-Bleed Orange Canvas",
+          "role": "Page background",
+          "description": "Single solid #ff7a00 fills the entire viewport with no gradient, texture, or banding. The orange is the page — no card surfaces, no white sections, no alternating bands. Body and padding sit directly on this color."
+        },
+        {
+          "name": "Masthead Wordmark",
+          "role": "Brand identity header",
+          "description": "'THE [POP] MANIFESTO' anchored to the very top edge of the viewport. 'THE' and 'MANIFESTO' set in Roobert 400 uppercase at ~120px, line-height 0.7, letter-spacing tight, in pure #000000. The 'POP' portion uses a custom bubble/balloon display cut in the same black, breaking the typographic grid as the only curved, soft element on the page."
+        },
+        {
+          "name": "Top-Right Nav",
+          "role": "Site navigation",
+          "description": "Right-aligned horizontal row: SHOP, ARCHIVE, NEWSLETTER. Roobert 400, 12px, uppercase, #000000, no separators or bullets. ~20px gap between items. Sits at the same baseline as the wordmark, optically aligned to the top edge."
+        },
+        {
+          "name": "Photo Grid Row",
+          "role": "Editorial content listing",
+          "description": "Three edge-to-edge photo tiles arranged horizontally with no gutters (or 0px gap). The center tile is roughly 2x the width of the flanking tiles. Photos are full-bleed with no border, radius (0px), or shadow. Each tile sits directly on the orange canvas."
+        },
+        {
+          "name": "Photo Tile Label",
+          "role": "Caption beneath photo",
+          "description": "Small uppercase Roobert 400, 12–15px, #000000, sits in the orange margin ~20–25px below each photo. Left-aligned to the photo edge. Text is the section name (INTERVIEW, connections, TOTAL LUXURY SPA, READ MORE) — mixed case acceptable, with some labels lowercase to create rhythm."
+        },
+        {
+          "name": "Magenta Studio Tile",
+          "role": "Photography variant",
+          "description": "Photo tile with flat #ff29f1 magenta as the studio backdrop behind a model. The magenta is a hard color block, not a gradient — it bleeds to all four edges of the crop."
+        },
+        {
+          "name": "Cobalt Studio Tile",
+          "role": "Photography variant",
+          "description": "Photo tile with flat #287aea deep blue as the studio backdrop. Same edge-bleed treatment as the magenta variant. Blue and magenta never appear together in the same tile."
+        },
+        {
+          "name": "Neutral Studio Tile",
+          "role": "Photography variant",
+          "description": "Photo tile with white/off-white interior backdrop (lifestyle, natural light). Provides visual rest between the two saturated studio tiles."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary typeface for all UI — navigation, body, subheadings, and display headlines. Used exclusively at weight 400; the design system gains its heaviness from size and uppercase transforms, not from font weight. A geometric humanist sans with high x-height and clean terminals that reads as modern European editorial. Free substitute: Inter or Söhne.",
+          "sizes": "12px, 15px, 22px, 33px",
+          "family": "Roobert",
+          "weight": "400",
+          "lineHeight": "1.2",
+          "substitute": "Inter",
+          "letterSpacing": "normal"
+        },
+        {
+          "role": "Reserved for the 'POP' wordmark in the masthead — a custom balloon/bubble script with rounded inflated letterforms that is the system's only counterpoint to the otherwise hard-edged sans-serif. Never use this style for body, nav, or section labels.",
+          "sizes": "12px, 15px, 22px, 33px",
+          "family": "Roobert (Bubble Display Cut)",
+          "weight": "400",
+          "lineHeight": "0.7",
+          "substitute": "Pangram Sans Rounded (display variant)"
+        },
+        {
+          "role": "Roobert Bold — detected in extracted data but not described by AI",
+          "sizes": "15px",
+          "family": "Roobert Bold",
+          "weight": "400",
+          "lineHeight": "1.2"
+        }
+      ],
+      "description": "The Pop Manifesto operates on editorial maximalism: a single saturated orange field floods the entire viewport, and the only typographic authority is raw black sans-serif at oversized display scale. Layout is brutally simple — full-bleed canvas, edge-to-edge photo grid, no card surfaces or shadows to soften the impact. The brand wordmark 'POP' uses a custom balloon/bubble script that punctures the otherwise austere type system with a single moment of softness. Color lives inside the photography (hot pink, electric blue backdrops) rather than in UI chrome, making the orange the only color the interface itself ever wears.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "This system intentionally uses zero shadows and zero elevation. The orange canvas is flat, the photos are flush against it, and the only depth comes from the typographic scale and the saturated color blocks inside the photography. Adding any drop shadow or card lift would soften the editorial directness that defines the look."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/88ee8f01-1511-4855-a4b8-dfbf2317cfb8.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/9db37882-f897-4bae-9b5f-2c800f0a6246.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "the-pop-manifesto",
+    "generatedAt": "2026-06-03T21:55:48.882Z",
+    "summary": "The Pop Manifesto operates on editorial maximalism: a single saturated orange field floods the entire viewport, and the only typographic authority is raw black sans-serif at oversized display scale. Layout is brutally simple — full-bleed canvas, edge-to-edge photo grid, no card surfaces or shadows to soften the impact. The brand wordmark 'POP' uses a custom balloon/bubble script that punctures the otherwise austere type system with a single moment of softness. Color lives inside the photography (hot pink, electric blue backdrops) rather than in UI chrome, making the orange the only color the interface itself ever wears.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "80913fb2-60ee-4d6c-b2c8-17600351096a",
+      "sourceUrl": "https://styles.refero.design/style/80913fb2-60ee-4d6c-b2c8-17600351096a",
+      "originalUrl": "https://thepopmanifesto.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/88ee8f01-1511-4855-a4b8-dfbf2317cfb8.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/9db37882-f897-4bae-9b5f-2c800f0a6246.jpg",
+      "importedAt": "2026-08-02T18:08:14.758Z",
+      "upstreamModifiedAt": "2026-06-03T21:55:48.888Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "Orange editorial firehose",
+      "industry": "media"
+    },
+    "tokens": [
+      {
+        "id": "color-manifesto-orange",
+        "kind": "color",
+        "name": "Manifesto Orange",
+        "value": "#ff7a00",
+        "role": "Full-viewport canvas, page background — one unmodulated orange flood with no gradients, no overlays, no surface variation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-magenta-backdrop",
+        "kind": "color",
+        "name": "Magenta Backdrop",
+        "value": "#ff29f1",
+        "role": "Photography studio backdrop — appears as flat color blocks behind models, not as UI chrome",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-cobalt-backdrop",
+        "kind": "color",
+        "name": "Cobalt Backdrop",
+        "value": "#287aea",
+        "role": "Photography studio backdrop — second flat color block behind models in the photo grid",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink-black",
+        "kind": "color",
+        "name": "Ink Black",
+        "value": "#000000",
+        "role": "All text, wordmark, hairline borders, nav links, photo tile labels — pure black with no softening",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper-white",
+        "kind": "color",
+        "name": "Paper White",
+        "value": "#ffffff",
+        "role": "Inset text on dark photo backgrounds, photo label cards where reverse-out is needed",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-roobert",
+        "kind": "typography",
+        "name": "Roobert",
+        "value": "font-family: Roobert; font-weight: 400; font-size: 12px, 15px, 22px, 33px; line-height: 1.2; letter-spacing: normal",
+        "role": "Primary typeface for all UI — navigation, body, subheadings, and display headlines. Used exclusively at weight 400; the design system gains its heaviness from size and uppercase transforms, not from font weight. A geometric humanist sans with high x-height and clean terminals that reads as modern European editorial. Free substitute: Inter or Söhne.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-roobert-bubble-display-cut",
+        "kind": "typography",
+        "name": "Roobert (Bubble Display Cut)",
+        "value": "font-family: Roobert (Bubble Display Cut); font-weight: 400; font-size: 12px, 15px, 22px, 33px; line-height: 0.7",
+        "role": "Reserved for the 'POP' wordmark in the masthead — a custom balloon/bubble script with rounded inflated letterforms that is the system's only counterpoint to the otherwise hard-edged sans-serif. Never use this style for body, nav, or section labels.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-roobert-bold",
+        "kind": "typography",
+        "name": "Roobert Bold",
+        "value": "font-family: Roobert Bold; font-weight: 400; font-size: 15px; line-height: 1.2",
+        "role": "Roobert Bold — detected in extracted data but not described by AI",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 12px; line-height: 1.2",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 15px; line-height: 1.2",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 22px; line-height: 1.2",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 33px; line-height: 1.2",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 120px; line-height: 0.7",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "20px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "40px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "0px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-tags",
+        "kind": "radius",
+        "name": "tags",
+        "value": "0px",
+        "role": "Imported tags radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "0px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-photos",
+        "kind": "radius",
+        "name": "photos",
+        "value": "0px",
+        "role": "Imported photos radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "0px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "This system intentionally uses zero shadows and zero elevation. The orange canvas is flat, the photos are flush against it, and the only depth comes from the typographic scale and the saturated color blocks inside the photography. Adding any drop shadow or card lift would soften the editorial directness that defines the look.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "full-bleed-orange-canvas",
+        "name": "Full-Bleed Orange Canvas",
+        "category": "Refero components",
+        "description": "Single solid #ff7a00 fills the entire viewport with no gradient, texture, or banding. The orange is the page — no card surfaces, no white sections, no alternating bands. Body and padding sit directly on this color.",
+        "variants": [
+          {
+            "id": "full-bleed-orange-canvas-reference",
+            "name": "Reference",
+            "description": "Single solid #ff7a00 fills the entire viewport with no gradient, texture, or banding. The orange is the page — no card surfaces, no white sections, no alternating bands. Body and padding sit directly on this color.",
+            "evidence": [],
+            "observedProperties": [
+              "Page background"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "masthead-wordmark",
+        "name": "Masthead Wordmark",
+        "category": "Refero components",
+        "description": "'THE [POP] MANIFESTO' anchored to the very top edge of the viewport. 'THE' and 'MANIFESTO' set in Roobert 400 uppercase at ~120px, line-height 0.7, letter-spacing tight, in pure #000000. The 'POP' portion uses a custom bubble/balloon display cut in the same black, breaking the typographic grid as the only curved, soft element on the page.",
+        "variants": [
+          {
+            "id": "masthead-wordmark-reference",
+            "name": "Reference",
+            "description": "'THE [POP] MANIFESTO' anchored to the very top edge of the viewport. 'THE' and 'MANIFESTO' set in Roobert 400 uppercase at ~120px, line-height 0.7, letter-spacing tight, in pure #000000. The 'POP' portion uses a custom bubble/balloon display cut in the same black, breaking the typographic grid as the only curved, soft element on the page.",
+            "evidence": [],
+            "observedProperties": [
+              "Brand identity header"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "top-right-nav",
+        "name": "Top-Right Nav",
+        "category": "Refero components",
+        "description": "Right-aligned horizontal row: SHOP, ARCHIVE, NEWSLETTER. Roobert 400, 12px, uppercase, #000000, no separators or bullets. ~20px gap between items. Sits at the same baseline as the wordmark, optically aligned to the top edge.",
+        "variants": [
+          {
+            "id": "top-right-nav-reference",
+            "name": "Reference",
+            "description": "Right-aligned horizontal row: SHOP, ARCHIVE, NEWSLETTER. Roobert 400, 12px, uppercase, #000000, no separators or bullets. ~20px gap between items. Sits at the same baseline as the wordmark, optically aligned to the top edge.",
+            "evidence": [],
+            "observedProperties": [
+              "Site navigation"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "photo-grid-row",
+        "name": "Photo Grid Row",
+        "category": "Refero components",
+        "description": "Three edge-to-edge photo tiles arranged horizontally with no gutters (or 0px gap). The center tile is roughly 2x the width of the flanking tiles. Photos are full-bleed with no border, radius (0px), or shadow. Each tile sits directly on the orange canvas.",
+        "variants": [
+          {
+            "id": "photo-grid-row-reference",
+            "name": "Reference",
+            "description": "Three edge-to-edge photo tiles arranged horizontally with no gutters (or 0px gap). The center tile is roughly 2x the width of the flanking tiles. Photos are full-bleed with no border, radius (0px), or shadow. Each tile sits directly on the orange canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Editorial content listing"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "photo-tile-label",
+        "name": "Photo Tile Label",
+        "category": "Refero components",
+        "description": "Small uppercase Roobert 400, 12–15px, #000000, sits in the orange margin ~20–25px below each photo. Left-aligned to the photo edge. Text is the section name (INTERVIEW, connections, TOTAL LUXURY SPA, READ MORE) — mixed case acceptable, with some labels lowercase to create rhythm.",
+        "variants": [
+          {
+            "id": "photo-tile-label-reference",
+            "name": "Reference",
+            "description": "Small uppercase Roobert 400, 12–15px, #000000, sits in the orange margin ~20–25px below each photo. Left-aligned to the photo edge. Text is the section name (INTERVIEW, connections, TOTAL LUXURY SPA, READ MORE) — mixed case acceptable, with some labels lowercase to create rhythm.",
+            "evidence": [],
+            "observedProperties": [
+              "Caption beneath photo"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "magenta-studio-tile",
+        "name": "Magenta Studio Tile",
+        "category": "Refero components",
+        "description": "Photo tile with flat #ff29f1 magenta as the studio backdrop behind a model. The magenta is a hard color block, not a gradient — it bleeds to all four edges of the crop.",
+        "variants": [
+          {
+            "id": "magenta-studio-tile-reference",
+            "name": "Reference",
+            "description": "Photo tile with flat #ff29f1 magenta as the studio backdrop behind a model. The magenta is a hard color block, not a gradient — it bleeds to all four edges of the crop.",
+            "evidence": [],
+            "observedProperties": [
+              "Photography variant"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "cobalt-studio-tile",
+        "name": "Cobalt Studio Tile",
+        "category": "Refero components",
+        "description": "Photo tile with flat #287aea deep blue as the studio backdrop. Same edge-bleed treatment as the magenta variant. Blue and magenta never appear together in the same tile.",
+        "variants": [
+          {
+            "id": "cobalt-studio-tile-reference",
+            "name": "Reference",
+            "description": "Photo tile with flat #287aea deep blue as the studio backdrop. Same edge-bleed treatment as the magenta variant. Blue and magenta never appear together in the same tile.",
+            "evidence": [],
+            "observedProperties": [
+              "Photography variant"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "neutral-studio-tile",
+        "name": "Neutral Studio Tile",
+        "category": "Refero components",
+        "description": "Photo tile with white/off-white interior backdrop (lifestyle, natural light). Provides visual rest between the two saturated studio tiles.",
+        "variants": [
+          {
+            "id": "neutral-studio-tile-reference",
+            "name": "Reference",
+            "description": "Photo tile with white/off-white interior backdrop (lifestyle, natural light). Provides visual rest between the two saturated studio tiles.",
+            "evidence": [],
+            "observedProperties": [
+              "Photography variant"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Full-bleed edge-to-edge layout with no max-width constraint. The masthead occupies the top ~15% of the viewport with the wordmark anchored to the top-left and nav to the top-right. A single horizontal photo grid row follows after ~291px of vertical breathing space, with three tiles at a 1:2:1 width ratio. Labels sit in the orange margin beneath each tile. The page is a single editorial cover frame — no scrolling sections, no cards, no sidebar. Navigation is minimal (3 text links) and hugs the top-right corner.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Photography is editorial fashion: tight to medium crops of male models in styled poses, shot against flat saturated studio backdrops (hot magenta, deep cobalt blue) or soft natural-light interiors. The model is always the subject; environment is reduced to a color field. Treatment is high-contrast and direct with no overlays, no duotones, no text-on-image — labels sit in the orange margin below each frame, never inside the photo. The central tile is given disproportionate scale (roughly 2x width) to create visual hierarchy within a simple 3-column grid.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "This system intentionally uses zero shadows and zero elevation. The orange canvas is flat, the photos are flush against it, and the only depth comes from the typographic scale and the saturated color blocks inside the photography. Adding any drop shadow or card lift would soften the editorial directness that defines the look.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Flood the entire viewport with a single solid #ff7a00 orange — no gradients, no overlays, no panel differentiation.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set all type in Roobert 400 at the five-step scale (12/15/22/33/120px); let size and uppercase transforms carry weight, never bold cuts.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 0px border-radius on all photos, buttons, tags, and cards — this system has no rounded corners anywhere.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Reserve the bubble/balloon display cut exclusively for the 'POP' wordmark; it must never appear in body, nav, or section labels.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let photos bleed edge-to-edge with no gutters, no borders, and no drop shadows — the orange canvas is the only frame.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep all text pure #000000 on the orange canvas; reserve #ffffff only for reverse-out on dark photo backdrops.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Maintain ~291px of top padding before the photo grid to let the masthead breathe and signal editorial gravitas.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce any new colors — the palette is orange, black, white, and the two photo backdrops (magenta + cobalt). No grays, no accent hues.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add card surfaces, drop shadows, or elevation — the design is intentionally flat, direct, and unmediated.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use bold or semibold weights — Roobert 400 at large sizes is the system's only voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't round corners on photos, buttons, or any container — 0px radius is structural, not negotiable.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add body copy, paragraphs, or long-form text in the body type size — this is an editorial cover, not an article page.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use the bubble display font for headlines, nav, or labels — it is wordmark-only.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't break the orange canvas with white sections, alternating bands, or boxed content — the orange must always reach all four edges.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

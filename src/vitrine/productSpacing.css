@@ -113,6 +113,7 @@
   .astryx-selector.astryx-selector.md,
   .astryx-selector.astryx-selector.lg
 ):not(
+  .reference-discovery__facet *,
   .reference-detail__tabs *,
   .project-document__editor *,
   .project-canvas-document-editor *,
@@ -183,8 +184,8 @@
   .reference-detail__metadata-item
   .apps-platform-switcher
   button.astryx-button {
-  height: var(--vitrine-control-height) !important;
-  min-height: var(--vitrine-control-height) !important;
+  height: auto !important;
+  min-height: 0 !important;
 }
 
 .reference-detail__actions {
@@ -210,7 +211,7 @@
 }
 
 .reference-detail__tab-controls {
-  min-height: var(--vitrine-control-height) !important;
+  min-height: var(--spacing-12) !important;
 }
 
 .reference-detail__tab-leading :is(
@@ -231,11 +232,6 @@
 
 .reference-detail__body-inner {
   padding: var(--spacing-8) var(--spacing-6) var(--spacing-12) !important;
-}
-
-/* Flow keeps the pre-rollout workspace geometry, including its body edge. */
-.reference-detail__body-inner:has(.flow-workspace) {
-  padding-block: 0 !important;
 }
 
 @media (max-width: 720px) {

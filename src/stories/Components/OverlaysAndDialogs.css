@@ -1,0 +1,290 @@
+.overlay-review {
+  min-height: 100vh;
+  padding: var(--vitrine-page-gutter-wide);
+  color: var(--color-text-primary);
+  background: var(--color-background-body);
+}
+
+.overlay-review__intro,
+.overlay-review__section {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.overlay-review__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--spacing-8);
+  align-items: end;
+  padding: var(--spacing-3) 0 var(--spacing-8);
+}
+
+.overlay-review__eyebrow,
+.overlay-review__lede,
+.overlay-review__section-header p,
+.overlay-review__decision-card p,
+.overlay-review__contract-grid p,
+.overlay-review__live-dialog p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.overlay-review__eyebrow {
+  margin-bottom: var(--spacing-2);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.overlay-review__intro h1 {
+  margin: 0 0 var(--spacing-2);
+  font: var(--vitrine-presentation-display);
+  letter-spacing: -.045em;
+}
+
+.overlay-review__lede {
+  max-width: 64ch;
+  font: var(--vitrine-type-body);
+}
+
+.overlay-review__status,
+.overlay-review__decision-card > span,
+.overlay-review__context-card > span {
+  width: max-content;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: 999px;
+  background: var(--color-background-surface);
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+}
+
+.overlay-review__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.overlay-review__status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+  content: '';
+}
+
+.overlay-review__section {
+  padding: var(--spacing-8) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.overlay-review__section-header {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+}
+
+.overlay-review__section-header > span {
+  padding-top: 3px;
+  color: var(--color-text-disabled);
+  font: var(--vitrine-type-supporting);
+}
+
+.overlay-review__section-header h2 {
+  margin: 0 0 var(--spacing-1);
+  font: var(--vitrine-type-title);
+}
+
+.overlay-review__section-header p {
+  font: var(--vitrine-type-detail);
+}
+
+.overlay-review__production-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+
+.overlay-review__production-launcher > div {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.overlay-review__production-launcher strong {
+  font: var(--vitrine-type-title);
+}
+
+.overlay-review__production-launcher p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-detail);
+}
+
+.overlay-review__decision-grid,
+.overlay-review__context-grid,
+.overlay-review__contract-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.overlay-review__decision-card,
+.overlay-review__context-card,
+.overlay-review__contract-grid > article {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+
+.overlay-review__dialog-specimen {
+  min-height: 260px;
+  display: grid;
+  align-content: space-between;
+  gap: var(--spacing-5);
+  padding: var(--spacing-5);
+  border-radius: 24px;
+}
+
+.overlay-review__dialog-specimen > div:first-child,
+.overlay-review__live-dialog > div:first-child {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.overlay-review__dialog-specimen strong,
+.overlay-review__contract-grid strong {
+  font: var(--vitrine-type-title);
+}
+
+.overlay-review__dialog-specimen p {
+  font: var(--vitrine-type-body);
+}
+
+.overlay-review__field-specimen {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding-inline: var(--vitrine-form-input-padding-inline);
+  border: 1px solid var(--vitrine-color-border-emphasized);
+  border-radius: var(--vitrine-form-input-radius);
+  background: var(--vitrine-form-control-hover);
+  font: var(--vitrine-type-action);
+}
+
+.overlay-review__dialog-specimen footer,
+.overlay-review__live-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+
+.overlay-review__dialog-specimen--alert {
+  min-height: 220px;
+}
+
+.overlay-review__context-grid {
+  grid-template-columns: 1.3fr .7fr;
+}
+
+.overlay-review__dropdown-menu {
+  width: min(320px, 100%);
+  max-height: none;
+  justify-self: stretch;
+  overflow: visible;
+}
+
+.overlay-review__dropdown-menu--popover {
+  width: 240px;
+}
+
+.overlay-review__tooltip-specimen {
+  width: max-content;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--vitrine-color-action-primary);
+  color: var(--vitrine-color-on-action-primary);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-shadow) 28%, transparent);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+}
+
+.overlay-review__contract-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.overlay-review__contract-grid > article {
+  gap: var(--spacing-2);
+}
+
+.overlay-review__contract-grid span {
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.overlay-review__contract-grid p {
+  font: var(--vitrine-type-supporting);
+  line-height: 1.5;
+}
+
+.overlay-review__live-dialog {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.overlay-review__live-dialog h2 {
+  margin: 0;
+  font: var(--vitrine-type-title);
+}
+
+@media (max-width: 760px) {
+  .overlay-review {
+    padding: var(--vitrine-page-gutter-compact);
+  }
+
+  .overlay-review__intro,
+  .overlay-review__decision-grid,
+  .overlay-review__context-grid,
+  .overlay-review__contract-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay-review__intro {
+    align-items: start;
+  }
+
+  .overlay-review__status {
+    width: max-content;
+  }
+
+  .overlay-review__production-launcher {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-review *,
+  .overlay-review *::before,
+  .overlay-review *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

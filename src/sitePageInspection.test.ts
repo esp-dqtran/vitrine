@@ -39,6 +39,9 @@ test("records components removed on mobile", () => {
 
 test("builds evidence-backed motion and technology findings", () => {
   const desktop = fixtureInspection("desktop");
+  desktop.visualTokens[0]!.customProperties = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => [`--token-${index}`, `${index}px`]),
+  );
   const analysis = buildSiteAnalysis(desktop);
 
   assert.equal(analysis.schemaVersion, 1);
@@ -55,6 +58,10 @@ test("builds evidence-backed motion and technology findings", () => {
         analysis.evidence.some((evidence) => evidence.id === id)
       )
     ),
+  );
+  assert.equal(
+    Object.keys(analysis.visualTokens[0]?.customProperties as object).length,
+    100,
   );
 });
 

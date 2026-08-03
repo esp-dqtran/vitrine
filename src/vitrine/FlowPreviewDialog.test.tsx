@@ -86,7 +86,7 @@ test('renders a dedicated Flow workspace with real app identity and full-resolut
   assert.match(html, />Save</);
   assert.match(html, />Copy image</);
   assert.doesNotMatch(html, /Copy image URL/);
-  assert.match(html, /aria-label="More screen actions"/);
+  assert.doesNotMatch(html, /aria-label="More screen actions"/);
   assert.match(html, />Web 1512×945</);
   assert.match(html, /aria-expanded="false"[^>]*>[\s\S]*More info/);
   assert.doesNotMatch(html, /aria-label="Previous Flow screen"/);
@@ -140,7 +140,7 @@ test('renders Mobbin-style prototype playback as a first-class mode', () => {
   assert.match(html, /aria-label="Next Flow screen"/);
   assert.doesNotMatch(html, /aria-label="Previous Flow screen"/);
   assert.match(html, />Restart prototype</);
-  assert.match(html, /aria-label="More prototype actions"/);
+  assert.doesNotMatch(html, /aria-label="More prototype actions"/);
   assert.match(html, />1 of 2</);
   assert.doesNotMatch(html, /aria-label="More screen actions"/);
 });

@@ -1,0 +1,143 @@
+/*
+ * Vitrines data-display contract.
+ *
+ * This layer standardizes reusable catalog cards, selectable result cards,
+ * compact discovery lists, and their text hierarchy. Flow evidence, document,
+ * and canvas geometry intentionally remain owned by their domain styles.
+ */
+
+.data-display-card {
+  position: relative;
+  border-radius: var(--reference-card-radius, var(--radius-container));
+}
+
+.data-display-card[data-selected="true"]::after,
+.inspiration-result-card[aria-selected="true"]::after,
+.advanced-search-card[data-selected="true"]::after,
+.screen-grid-card[data-selected="true"] .screen-grid-card__media::after {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  content: "";
+  pointer-events: none;
+  transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.screen-grid-card[data-selected="true"] .astryx-clickable-card {
+  outline: 0;
+  outline-offset: 0;
+}
+
+.app-detail--web .screen-grid-card__media {
+  border-radius: 12px;
+}
+
+.app-detail--ios .screen-grid-card__media,
+.app-detail--android .screen-grid-card__media {
+  border-radius: 28px;
+}
+
+.inspiration-result-card,
+.advanced-search-card {
+  position: relative;
+}
+
+.inspiration-result-card[aria-selected="true"] {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.inspiration-result-card[aria-selected="true"]::after,
+.advanced-search-card[data-selected="true"]::after {
+  border-radius: var(--radius-container);
+}
+
+.data-display-list {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.data-display-list .discovery-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(148px, 220px) minmax(0, 1fr);
+  align-items: center;
+  border-radius: var(--radius-container);
+}
+
+.data-display-list .discovery-card__media {
+  width: calc(100% - var(--spacing-4));
+  margin: var(--spacing-2);
+  aspect-ratio: 16 / 10;
+}
+
+.data-display-list .discovery-card__identity {
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--spacing-4);
+}
+
+.data-display-list .discovery-card__logo {
+  position: absolute;
+  bottom: var(--spacing-3);
+  left: var(--spacing-3);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  box-shadow: var(--shadow-low);
+}
+
+.data-display-list .discovery-card__copy strong,
+.project-file-row__meta strong,
+.collections-workspace__card-copy strong,
+.inspiration-result-copy strong,
+.advanced-search-card__body h3 {
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.data-display-list .discovery-card__copy > span,
+.inspiration-result-copy span,
+.advanced-search-card__body p {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.data-display-list .discovery-card__copy small,
+.project-file-row__meta small,
+.collections-workspace__card-copy small,
+.advanced-search-card__body small {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+@media (max-width: 640px) {
+  .data-display-list .discovery-card {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .data-display-list .discovery-card__identity {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--spacing-3);
+  }
+
+  .data-display-list .discovery-card__logo {
+    bottom: var(--spacing-2);
+    left: var(--spacing-2);
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-display-card[data-selected="true"]::after,
+  .inspiration-result-card[aria-selected="true"]::after,
+  .advanced-search-card[data-selected="true"]::after,
+  .screen-grid-card[data-selected="true"] .screen-grid-card__media::after,
+  .data-display-list .discovery-card,
+  .data-display-list .discovery-card__media {
+    transition: none;
+  }
+}

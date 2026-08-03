@@ -1,0 +1,1676 @@
+{
+  "schemaVersion": 1,
+  "id": "f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+  "sourceUrl": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+  "sitemapLastModified": "2026-06-03T19:41:45.791Z",
+  "fetchedAt": "2026-08-02T18:08:52.901Z",
+  "contentHash": "925445d9a1668b56cef62d28a0d4936056b6dcb78d73671586f194f899ed9509",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Analogue design system",
+            "item": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a#style-reference",
+        "name": "Analogue design system reference",
+        "headline": "Analogue design system | Refero Styles",
+        "description": "Explore Analogue's dark Agency design system: Ink #000000, Graphite #1c1c1c colors, Graphik Medium, LCDDot TR typography, and DESIGN.md for AI agents.",
+        "url": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+        "mainEntityOfPage": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Analogue",
+          "url": "https://analogueagency.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/425bb3f5-63ef-4fee-be5a-99f7536248ae.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/425bb3f5-63ef-4fee-be5a-99f7536248ae.jpg",
+          "caption": "Screenshot of Analogue"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/425bb3f5-63ef-4fee-be5a-99f7536248ae.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Analogue design system",
+          "Analogue website design",
+          "Analogue colors",
+          "Analogue typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Agency design system",
+          "Ink",
+          "Graphite",
+          "Paper",
+          "Mist",
+          "Graphik Medium",
+          "LCDDot TR",
+          "system sans-serif"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Analogue design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Analogue website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Analogue colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Analogue typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Agency design system"
+          }
+        ],
+        "datePublished": "2026-04-29T23:57:55.466Z",
+        "dateModified": "2026-04-29T23:57:55.466Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://analogueagency.com",
+      "siteName": "Analogue",
+      "extractedAt": "2026-06-03T19:41:45.785Z",
+      "durationMs": 37591,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 565,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "skipped",
+          "attempts": 1
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#000000",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0
+            },
+            "contexts": [
+              "other",
+              "link",
+              "body",
+              "image"
+            ],
+            "frequency": 491,
+            "confidence": 1,
+            "prominence": 124499922.57195923,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 2,
+              "image/color": 2,
+              "other/color": 93,
+              "body/borderColor": 4,
+              "link/borderColor": 8,
+              "image/borderColor": 8,
+              "other/borderColor": 372,
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#ededed",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9461052851327489
+            },
+            "contexts": [
+              "other",
+              "heading"
+            ],
+            "frequency": 340,
+            "confidence": 1,
+            "prominence": 117136631.43485679,
+            "properties": [
+              "backgroundColor",
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "heading/color": 66,
+              "heading/borderColor": 264,
+              "other/backgroundColor": 10
+            }
+          },
+          {
+            "hex": "#1c1c1c",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.22644986475198373
+            },
+            "contexts": [
+              "heading",
+              "other",
+              "body"
+            ],
+            "frequency": 1217,
+            "confidence": 1,
+            "prominence": 4197497.202132643,
+            "properties": [
+              "color",
+              "borderColor",
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "body/color": 17,
+              "heading/color": 226,
+              "body/borderColor": 68,
+              "heading/borderColor": 904,
+              "other/backgroundColor": 2
+            }
+          },
+          {
+            "hex": "#b8b8b8",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.7826037156503541
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "confidence": 1,
+            "prominence": 3544371.3328638133,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 5
+            }
+          },
+          {
+            "hex": "#ffffff",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 1.0000000000000002
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1282500,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#7a7a7a",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.5795099213745528
+            },
+            "contexts": [
+              "link",
+              "heading"
+            ],
+            "frequency": 170,
+            "confidence": 1,
+            "prominence": 232304.88720868167,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "link/color": 2,
+              "heading/color": 32,
+              "link/borderColor": 8,
+              "heading/borderColor": 128
+            }
+          },
+          {
+            "hex": "#a6a6a6",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.7235454824038354
+            },
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 100,
+            "confidence": 1,
+            "prominence": 94866.19720624757,
+            "properties": [
+              "color",
+              "borderColor"
+            ],
+            "usageCounts": {
+              "heading/color": 20,
+              "heading/borderColor": 80
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 21,
+            "background": "#ffffff",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.94,
+            "background": "#ededed",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 17.04,
+            "background": "#ffffff",
+            "foreground": "#1c1c1c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 14.56,
+            "background": "#1c1c1c",
+            "foreground": "#ededed"
+          },
+          {
+            "level": "AAA",
+            "ratio": 10.59,
+            "background": "#b8b8b8",
+            "foreground": "#000000"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.63,
+            "background": "#000000",
+            "foreground": "#a6a6a6"
+          },
+          {
+            "level": "AAA",
+            "ratio": 8.59,
+            "background": "#b8b8b8",
+            "foreground": "#1c1c1c"
+          },
+          {
+            "level": "AAA",
+            "ratio": 7,
+            "background": "#1c1c1c",
+            "foreground": "#a6a6a6"
+          },
+          {
+            "level": "AA",
+            "ratio": 4.89,
+            "background": "#000000",
+            "foreground": "#7a7a7a"
+          },
+          {
+            "level": "fail",
+            "ratio": 4.29,
+            "background": "#ffffff",
+            "foreground": "#7a7a7a"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.97,
+            "background": "#1c1c1c",
+            "foreground": "#7a7a7a"
+          },
+          {
+            "level": "fail",
+            "ratio": 3.67,
+            "background": "#ededed",
+            "foreground": "#7a7a7a"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.43,
+            "background": "#ffffff",
+            "foreground": "#a6a6a6"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.16,
+            "background": "#b8b8b8",
+            "foreground": "#7a7a7a"
+          },
+          {
+            "level": "fail",
+            "ratio": 2.08,
+            "background": "#ededed",
+            "foreground": "#a6a6a6"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.69,
+            "background": "#b8b8b8",
+            "foreground": "#ededed"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.23,
+            "background": "#1c1c1c",
+            "foreground": "#000000"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.23,
+            "background": "#b8b8b8",
+            "foreground": "#a6a6a6"
+          },
+          {
+            "level": "fail",
+            "ratio": 1.17,
+            "background": "#ffffff",
+            "foreground": "#ededed"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [
+          {
+            "value": 10,
+            "contexts": [
+              "other",
+              "image",
+              "link"
+            ],
+            "frequency": 13
+          },
+          {
+            "value": 13,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 6
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          },
+          {
+            "value": 1000,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1
+          }
+        ],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 3,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 5,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 4,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 10,
+            "contexts": [
+              "other",
+              "link"
+            ],
+            "frequency": 106,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingTop",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "rowGap|link",
+              "columnGap|link",
+              "paddingTop|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 11,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 13,
+            "contexts": [
+              "link"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|link",
+              "columnGap|link"
+            ]
+          },
+          {
+            "value": 20,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 11,
+            "properties": [
+              "paddingRight",
+              "paddingLeft",
+              "paddingTop",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "paddingLeft|other",
+              "paddingTop|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 29,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 30,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 20,
+            "properties": [
+              "paddingTop",
+              "paddingRight",
+              "paddingBottom",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|other",
+              "paddingRight|other",
+              "paddingBottom|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "properties": [
+              "paddingRight",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 50,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 3,
+            "properties": [
+              "rowGap",
+              "columnGap",
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other",
+              "paddingLeft|other"
+            ]
+          },
+          {
+            "value": 60,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          },
+          {
+            "value": 70,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 2,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other"
+            ]
+          },
+          {
+            "value": 100,
+            "contexts": [
+              "other"
+            ],
+            "frequency": 5,
+            "properties": [
+              "paddingBottom",
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|other",
+              "rowGap|other",
+              "columnGap|other"
+            ]
+          }
+        ],
+        "density": "compact",
+        "baseUnit": null
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "Graphik Medium",
+            "source": "custom",
+            "weights": [
+              400,
+              500
+            ],
+            "frequency": 360,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "sans-serif",
+            "source": "system",
+            "weights": [
+              400
+            ],
+            "frequency": 201,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "LCDDot TR Regular",
+            "source": "custom",
+            "weights": [
+              400
+            ],
+            "frequency": 4,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 16,
+          "name": "Minor Third",
+          "ratio": 1.2,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 11,
+            "family": "Graphik Medium",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.25,
+            "letterSpacing": -0.027,
+            "textTransform": "none"
+          },
+          {
+            "size": 12,
+            "family": "sans-serif",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "link",
+              "image"
+            ],
+            "frequency": 201,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "Graphik Medium",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 6,
+            "lineHeight": 1,
+            "letterSpacing": -0.031,
+            "textTransform": "none"
+          },
+          {
+            "size": 17,
+            "family": "Graphik Medium",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.18,
+            "letterSpacing": -0.035,
+            "textTransform": "none"
+          },
+          {
+            "size": 17,
+            "family": "Graphik Medium",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 3,
+            "lineHeight": 1.3,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 18,
+            "family": "Graphik Medium",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 9,
+            "lineHeight": 1.1,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          },
+          {
+            "size": 20,
+            "family": "LCDDot TR Regular",
+            "weight": 400,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0.025,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 20,
+            "family": "LCDDot TR Regular",
+            "weight": 400,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "lineHeight": 1,
+            "letterSpacing": 0.04,
+            "textTransform": "uppercase"
+          },
+          {
+            "size": 40,
+            "family": "Graphik Medium",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 66,
+            "lineHeight": 1.05,
+            "letterSpacing": -0.05,
+            "textTransform": "none"
+          },
+          {
+            "size": 60,
+            "family": "Graphik Medium",
+            "weight": 500,
+            "contexts": [
+              "heading",
+              "link"
+            ],
+            "frequency": 249,
+            "lineHeight": 1,
+            "letterSpacing": -0.05,
+            "textTransform": "none"
+          },
+          {
+            "size": 60,
+            "family": "Graphik Medium",
+            "weight": 500,
+            "contexts": [
+              "heading"
+            ],
+            "frequency": 20,
+            "lineHeight": 1,
+            "letterSpacing": -0.04,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Use only colors from the seven-step achromatic scale — Paper through Ink — with no chromatic accent at any point",
+        "Set display headlines at 60px with -3.0px letter-spacing and 1.00 line-height so they read as a single tight line of type",
+        "Anchor the nav as a 1000px-radius floating pill with frosted-glass background; never use a solid-bar or sidebar nav",
+        "Use 10px as the default element gap; reserve 40–70px for inter-section breathing room only",
+        "Apply 10px radius to images and cards, 13px to inline links, 100px to buttons, 1000px to the nav — radius is a role signal, not a style choice",
+        "Deploy the LCD dot font at most once per page as a 20px accent; treat it as a moment of digital interruption in an otherwise humanist system",
+        "Let photography carry all color and contrast; never apply duotone, saturation shifts, or color overlays to imagery"
+      ],
+      "donts": [
+        "Don't introduce any color — no blues, reds, greens, purples — the system is defined by its absolute achromatic discipline",
+        "Don't add shadows to cards, buttons, or content surfaces; depth comes from surface tone shifts, not elevation",
+        "Don't use bold or semibold weights — the system stays at 400 and 500 only, with weight shifts replacing color as the hierarchy tool",
+        "Don't wrap display headlines to multiple lines at desktop widths; the 60px / -3.0px / 1.00 setting is designed for single-line cinematic statements",
+        "Don't use 0px, 4px, or 8px radii — every container in the system sits at 10px, 13px, 100px, or 1000px",
+        "Don't add underlines to links; use opacity (0.6 → 1.0) or a 1px border shift instead",
+        "Don't use the LCD dot font for body copy, labels, or functional UI — reserve it strictly for editorial/digital-accent moments"
+      ],
+      "theme": "dark",
+      "colors": [
+        {
+          "hex": "#000000",
+          "name": "Ink",
+          "role": "Pure black — the structural anchor, used for hairlines, border strokes, and the deepest surface layer beneath imagery",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1c1c1c",
+          "name": "Graphite",
+          "role": "Primary text and dominant UI foreground — body copy, headings, and the off-black tone that softens pure black for large runs of type",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "role": "Primary page canvas and white card surfaces.",
+          "group": "neutral"
+        },
+        {
+          "hex": "#ededed",
+          "name": "Mist",
+          "role": "Subtle surface wash for cards and elevated panels — the gentlest step off Paper, used where a panel needs to register without shouting",
+          "group": "neutral"
+        },
+        {
+          "hex": "#b8b8b8",
+          "name": "Ash",
+          "role": "Tertiary surface and muted background fills — visible only as quiet backing for inactive states or low-emphasis blocks",
+          "group": "neutral"
+        },
+        {
+          "hex": "#7a7a7a",
+          "name": "Steel",
+          "role": "Secondary text and subtle UI borders — metadata, timestamps, supporting copy, the mid-gray that bridges Graphite and Ash",
+          "group": "neutral"
+        },
+        {
+          "hex": "#a6a6a6",
+          "name": "Pewter",
+          "role": "Tertiary text and the quietest dividers — labels, tag text, anywhere type needs to recede into the surface",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Every page opens with a full-viewport dark hero (100vw × 100vh) containing the single light-burst image and one centered white display headline. The floating nav pill sits absolutely positioned at top-center, outside the document flow. Below the hero, content sections live on a Paper (#ffffff) canvas at full width with internal max-width centering (no rigid grid — content blocks are placed loosely, often spanning 6–10 columns of a 12-column sense). Section gaps are generous (60–70px) but the body type stays compressed at 11–18px, so density varies between text-rich editorial blocks and wide photographic breaks. There is no consistent card grid — case studies appear as vertically stacked editorial pages with full-width images, not as uniform tiles. Navigation is a single global pill; no sidebar, no secondary nav, no footer menu visible. The overall page rhythm is: dark cinematic opening → one or more light editorial sections → dark or image-led closing.",
+      "imagery": "Analogue's visual language is dominated by a single recurring photographic motif: a high-contrast light burst radiating from a central point against near-black depth — visually equivalent to staring into a tunnel of light, a supernova, or a camera flash filling a void. The image is treated full-bleed with no overlay, no border, no rounded corners on the hero (sharp, cinematic, world-filling). It is not illustration or product photography; it is atmosphere, pure visual emotion, and the only color in an otherwise achromatic system (a cold blue-white cast against black). Supporting imagery, if present in case studies, is left unfiltered — no duotone, no saturation shift. The system contains no icon set of any size, no illustrations, no 3D renders. Photography is the sole visual instrument, and it is deployed once, at scale, as a hero — never as decoration.",
+      "similar": [
+        {
+          "why": "Same full-bleed dark immersive hero with a single luminous focal point and minimal monochrome interface",
+          "business": "Active Theory"
+        },
+        {
+          "why": "Same compact Graphik-family type, near-flat surfaces, and a black-canvas cinematic agency aesthetic",
+          "business": "Locomotive"
+        },
+        {
+          "why": "Same experimental monochrome agency language with a single dramatic visual moment carrying the page",
+          "business": "Resn"
+        },
+        {
+          "why": "Same tight 13–17px body type with aggressive negative tracking and a fully achromatic palette",
+          "business": "Ueno"
+        },
+        {
+          "why": "Same centered oversized display headline over a dark photographic field with a floating minimal nav",
+          "business": "Aristide Benoist"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "cards": "10px",
+          "links": "13px",
+          "images": "10px",
+          "buttons": "100px",
+          "navPill": "1000px"
+        },
+        "elementGap": "10px",
+        "sectionGap": "60-70px",
+        "cardPadding": "20-30px",
+        "pageMaxWidth": null
+      },
+      "industry": "agency",
+      "surfaces": [
+        {
+          "hex": "#000000",
+          "name": "Void",
+          "level": 0,
+          "purpose": "Hero photography field, deepest base layer"
+        },
+        {
+          "hex": "#1c1c1c",
+          "name": "Graphite",
+          "level": 1,
+          "purpose": "Off-black for dark sections, inverse text backgrounds"
+        },
+        {
+          "hex": "#ffffff",
+          "name": "Paper",
+          "level": 2,
+          "purpose": "Primary page canvas"
+        },
+        {
+          "hex": "#ededed",
+          "name": "Mist",
+          "level": 3,
+          "purpose": "Card surfaces, elevated panels, subtle section washes"
+        }
+      ],
+      "elevation": [
+        {
+          "style": "0 1px 0 rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.08) — barely-there frosted-glass depth, enough to lift the pill off the hero without breaking the flat aesthetic",
+          "element": "Floating Navigation Pill"
+        }
+      ],
+      "northStar": "Light tunnel through void",
+      "typeScale": [
+        {
+          "role": "micro",
+          "size": 11,
+          "lineHeight": 1.3,
+          "letterSpacing": -0.297
+        },
+        {
+          "role": "caption",
+          "size": 13,
+          "lineHeight": 1.25,
+          "letterSpacing": -0.351
+        },
+        {
+          "role": "subheading",
+          "size": 18,
+          "lineHeight": 1.1,
+          "letterSpacing": -0.558
+        },
+        {
+          "role": "heading",
+          "size": 40,
+          "lineHeight": 1.05,
+          "letterSpacing": -1.6
+        },
+        {
+          "role": "display",
+          "size": 60,
+          "lineHeight": 1,
+          "letterSpacing": -3
+        }
+      ],
+      "components": [
+        {
+          "name": "Floating Navigation Pill",
+          "role": "Primary site navigation — a single floating element at the top-center of every page",
+          "description": "1000px border-radius, horizontally centered, fixed position. Frosted background (rgba(255,255,255,0.15) with backdrop-blur) so it reads over both dark and light hero imagery. Three segments: left nav link (WORK), center wordmark (analogue, Graphik Medium 500, larger weight), right nav link (ABOUT). All text in Graphik 13px, white. Internal padding ~5px 20px. The pill's translucency is its identity — it must feel like glass hovering over the page, not a solid bar."
+        },
+        {
+          "name": "Hero Headline Overlay",
+          "role": "Opening statement set directly over a full-bleed photographic hero",
+          "description": "Display 60px Graphik Medium weight 500, color #ffffff, letter-spacing -3.0px, line-height 1.00 — text must fit on a single visual line at desktop widths. Center-aligned horizontally, vertically anchored to viewport center. No drop shadow, no background plate; the hero image provides its own contrast. Headlines should read like a single thought, not a wrapped paragraph."
+        },
+        {
+          "name": "Text Fragment Node",
+          "role": "Individual repositionable text elements used in animated/scroll-triggered sequences",
+          "description": "13–18px Graphik Medium, Graphite on light surfaces / white on dark. No container, no background, no border — each fragment is bare type positioned absolutely or via flex/grid. Opacity ranges from 0.15 to 1.0 to create depth in animated reveals. Multiple fragments form a complete sentence when read in order."
+        },
+        {
+          "name": "Ghost Navigation Link",
+          "role": "Text-only link inside the nav pill (WORK, ABOUT)",
+          "description": "Graphik Medium 13px, weight 400, color #ffffff at 0.6 opacity (resting) → 1.0 (hover). No underline, no background, no border. Letter-spacing -0.351px matches the caption scale. Hover transition is opacity-only, 200ms ease."
+        },
+        {
+          "name": "Outlined Link Button",
+          "role": "Secondary action — the system's only button shape",
+          "description": "Graphik Medium 13px, weight 500, Graphite text on transparent background, 1px border in Graphite, 100px border-radius (pill shape), padding 10px 20px. Hover inverts: Graphite background, Paper text. No shadow at any state."
+        },
+        {
+          "name": "Project Card",
+          "role": "Image-led work tile in case-study grids",
+          "description": "10px border-radius on the image (the container itself has no border or background). Caption below in 13px Graphik Medium 400, Steel color, no title styling above the image — the image carries the work's identity. Gap between image and caption: 10px. Card surface is transparent on the Paper canvas."
+        },
+        {
+          "name": "LCD Digital Readout",
+          "role": "Scarce pixel-font accent for timestamps, counters, or glitch text",
+          "description": "LCDDot TR 20px, line-height 1.00, letter-spacing +0.5px to +0.8px (positive — opposite of the rest of the system). Color: white on dark sections, Graphite on light. Padding 5px 10px in a 10px-radius container with no border, used as a single editorial accent, never as a button or functional control."
+        },
+        {
+          "name": "Hairline Divider",
+          "role": "Invisible architectural element — separates sections without declaring itself",
+          "description": "1px height, full container width, color Ink (#000000) at 0.08 opacity, or Steel (#7a7a7a) at 0.3 opacity on light surfaces. No margin above/below — sits flush within a section's vertical rhythm. Used sparingly; most sections should separate purely through whitespace."
+        },
+        {
+          "name": "Image Thumbnail",
+          "role": "Inline imagery in case studies and detail pages",
+          "description": "10px border-radius, full-bleed within its container (no padding inside the radius). Color treatment follows the source — no filters, no duotones, no overlays. Images are the only source of color and contrast in the system and should be left untouched."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Primary typeface for all body, headings, and links. The custom Graphik brings humanist warmth that prevents the monochrome palette from feeling cold — paired with aggressive negative tracking (-0.05em at 60px) it compresses headlines into a single film-credit-like line. Weights stay at 400 and 500 only; no bold jumps, only tonal shifts between regular and medium.",
+          "sizes": "11px, 13px, 17px, 18px, 40px, 60px",
+          "family": "Graphik Medium",
+          "weight": "400, 500",
+          "lineHeight": "1.00–1.30 (cinematically tight on display, roomier at caption)",
+          "substitute": "Inter (closest free match), General Sans, or Manrope",
+          "letterSpacing": "-0.0500em, -0.0400em, -0.0350em, -0.0310em, -0.0270em"
+        },
+        {
+          "role": "Rare digital accent — a pixel/dot-matrix display face used for at most one or two elements per page (counters, timestamps, glitch labels). Its positive tracking (+0.025em to +0.04em) and rigid grid construction create a single moment of machine voice in an otherwise humanist system, like a digital readout appearing in a dark room.",
+          "sizes": "20px",
+          "family": "LCDDot TR",
+          "weight": "400",
+          "lineHeight": "1.00",
+          "substitute": "VT323, DSEG7 Classic, or Major Mono Display",
+          "letterSpacing": "0.0250em – 0.0400em (positive; rare in a system dominated by negative tracking)"
+        },
+        {
+          "role": "Fallback micro-text — utility copy, browser-rendered labels, or fallback rendering when custom fonts fail to load",
+          "sizes": "12px",
+          "family": "system sans-serif",
+          "weight": "400",
+          "lineHeight": "1.20",
+          "substitute": "system-ui"
+        }
+      ],
+      "description": "Analogue operates as a cinematic void with a single luminous focal point: white type against near-black depth, interrupted only by a blue-white photographic light burst. The system is strictly achromatic — no chromatic accents, no shadows, no decorative gradients — so every emotional beat must come from typography, photography, and negative space. Type sits at a compressed 11–18px body register with whisper-tight tracking (-0.05em at display) and cinematically tight line-heights (1.00–1.05 on 40–60px display), making headlines feel like film titles rather than web headings. The LCD dot font appears as a single rare accent — digital punctuation in an otherwise humanist system. Navigation is a floating translucent pill, buttons are achromatic outlines or ghosts, and the architecture of the page (borders, surfaces, dividers) is so flat it disappears, forcing the photography and the type to do all the work.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "The system is intentionally shadowless on content surfaces — cards, text blocks, and sections share the same flat plane as the canvas, and depth is implied only through surface tone shifts (Paper → Mist). The single exception is the floating navigation pill, which earns its shadow by being the only element that must visually detach from the page to remain legible over any background. Never add shadow to cards or buttons; let tone and border do the work."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/913ba175-84fd-41b7-a537-6e7f30ee3bbb.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/425bb3f5-63ef-4fee-be5a-99f7536248ae.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "analogue",
+    "generatedAt": "2026-06-03T19:41:45.785Z",
+    "summary": "Analogue operates as a cinematic void with a single luminous focal point: white type against near-black depth, interrupted only by a blue-white photographic light burst. The system is strictly achromatic — no chromatic accents, no shadows, no decorative gradients — so every emotional beat must come from typography, photography, and negative space. Type sits at a compressed 11–18px body register with whisper-tight tracking (-0.05em at display) and cinematically tight line-heights (1.00–1.05 on 40–60px display), making headlines feel like film titles rather than web headings. The LCD dot font appears as a single rare accent — digital punctuation in an otherwise humanist system. Navigation is a floating translucent pill, buttons are achromatic outlines or ghosts, and the architecture of the page (borders, surfaces, dividers) is so flat it disappears, forcing the photography and the type to do all the work.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+      "sourceUrl": "https://styles.refero.design/style/f68dd3d8-e8fa-4d2c-8c59-28aba06c9d8a",
+      "originalUrl": "https://analogueagency.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/913ba175-84fd-41b7-a537-6e7f30ee3bbb.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/425bb3f5-63ef-4fee-be5a-99f7536248ae.jpg",
+      "importedAt": "2026-08-02T18:08:52.901Z",
+      "upstreamModifiedAt": "2026-06-03T19:41:45.791Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "dark",
+      "northStar": "Light tunnel through void",
+      "industry": "agency"
+    },
+    "tokens": [
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#000000",
+        "role": "Pure black — the structural anchor, used for hairlines, border strokes, and the deepest surface layer beneath imagery",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#1c1c1c",
+        "role": "Primary text and dominant UI foreground — body copy, headings, and the off-black tone that softens pure black for large runs of type",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-paper",
+        "kind": "color",
+        "name": "Paper",
+        "value": "#ffffff",
+        "role": "Primary page canvas and white card surfaces.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-mist",
+        "kind": "color",
+        "name": "Mist",
+        "value": "#ededed",
+        "role": "Subtle surface wash for cards and elevated panels — the gentlest step off Paper, used where a panel needs to register without shouting",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ash",
+        "kind": "color",
+        "name": "Ash",
+        "value": "#b8b8b8",
+        "role": "Tertiary surface and muted background fills — visible only as quiet backing for inactive states or low-emphasis blocks",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-steel",
+        "kind": "color",
+        "name": "Steel",
+        "value": "#7a7a7a",
+        "role": "Secondary text and subtle UI borders — metadata, timestamps, supporting copy, the mid-gray that bridges Graphite and Ash",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-pewter",
+        "kind": "color",
+        "name": "Pewter",
+        "value": "#a6a6a6",
+        "role": "Tertiary text and the quietest dividers — labels, tag text, anywhere type needs to recede into the surface",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-graphik-medium",
+        "kind": "typography",
+        "name": "Graphik Medium",
+        "value": "font-family: Graphik Medium; font-weight: 400, 500; font-size: 11px, 13px, 17px, 18px, 40px, 60px; line-height: 1.00–1.30 (cinematically tight on display, roomier at caption); letter-spacing: -0.0500em, -0.0400em, -0.0350em, -0.0310em, -0.0270em",
+        "role": "Primary typeface for all body, headings, and links. The custom Graphik brings humanist warmth that prevents the monochrome palette from feeling cold — paired with aggressive negative tracking (-0.05em at 60px) it compresses headlines into a single film-credit-like line. Weights stay at 400 and 500 only; no bold jumps, only tonal shifts between regular and medium.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-lcddot-tr",
+        "kind": "typography",
+        "name": "LCDDot TR",
+        "value": "font-family: LCDDot TR; font-weight: 400; font-size: 20px; line-height: 1.00; letter-spacing: 0.0250em – 0.0400em (positive; rare in a system dominated by negative tracking)",
+        "role": "Rare digital accent — a pixel/dot-matrix display face used for at most one or two elements per page (counters, timestamps, glitch labels). Its positive tracking (+0.025em to +0.04em) and rigid grid construction create a single moment of machine voice in an otherwise humanist system, like a digital readout appearing in a dark room.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-system-sans-serif",
+        "kind": "typography",
+        "name": "system sans-serif",
+        "value": "font-family: system sans-serif; font-weight: 400; font-size: 12px; line-height: 1.20",
+        "role": "Fallback micro-text — utility copy, browser-rendered labels, or fallback rendering when custom fonts fail to load",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-micro-scale",
+        "kind": "typography",
+        "name": "micro",
+        "value": "font-size: 11px; line-height: 1.3; letter-spacing: -0.297px",
+        "role": "Imported micro type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 13px; line-height: 1.25; letter-spacing: -0.351px",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-subheading-scale",
+        "kind": "typography",
+        "name": "subheading",
+        "value": "font-size: 18px; line-height: 1.1; letter-spacing: -0.558px",
+        "role": "Imported subheading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-heading-scale",
+        "kind": "typography",
+        "name": "heading",
+        "value": "font-size: 40px; line-height: 1.05; letter-spacing: -1.6px",
+        "role": "Imported heading type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-display-scale",
+        "kind": "typography",
+        "name": "display",
+        "value": "font-size: 60px; line-height: 1; letter-spacing: -3px",
+        "role": "Imported display type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "10px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "60-70px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "20-30px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-cards",
+        "kind": "radius",
+        "name": "cards",
+        "value": "10px",
+        "role": "Imported cards radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-links",
+        "kind": "radius",
+        "name": "links",
+        "value": "13px",
+        "role": "Imported links radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-images",
+        "kind": "radius",
+        "name": "images",
+        "value": "10px",
+        "role": "Imported images radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-buttons",
+        "kind": "radius",
+        "name": "buttons",
+        "value": "100px",
+        "role": "Imported buttons radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-navpill",
+        "kind": "radius",
+        "name": "navPill",
+        "value": "1000px",
+        "role": "Imported navPill radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "The system is intentionally shadowless on content surfaces — cards, text blocks, and sections share the same flat plane as the canvas, and depth is implied only through surface tone shifts (Paper → Mist). The single exception is the floating navigation pill, which earns its shadow by being the only element that must visually detach from the page to remain legible over any background. Never add shadow to cards or buttons; let tone and border do the work.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "floating-navigation-pill",
+        "name": "Floating Navigation Pill",
+        "category": "Refero components",
+        "description": "1000px border-radius, horizontally centered, fixed position. Frosted background (rgba(255,255,255,0.15) with backdrop-blur) so it reads over both dark and light hero imagery. Three segments: left nav link (WORK), center wordmark (analogue, Graphik Medium 500, larger weight), right nav link (ABOUT). All text in Graphik 13px, white. Internal padding ~5px 20px. The pill's translucency is its identity — it must feel like glass hovering over the page, not a solid bar.",
+        "variants": [
+          {
+            "id": "floating-navigation-pill-reference",
+            "name": "Reference",
+            "description": "1000px border-radius, horizontally centered, fixed position. Frosted background (rgba(255,255,255,0.15) with backdrop-blur) so it reads over both dark and light hero imagery. Three segments: left nav link (WORK), center wordmark (analogue, Graphik Medium 500, larger weight), right nav link (ABOUT). All text in Graphik 13px, white. Internal padding ~5px 20px. The pill's translucency is its identity — it must feel like glass hovering over the page, not a solid bar.",
+            "evidence": [],
+            "observedProperties": [
+              "Primary site navigation — a single floating element at the top-center of every page"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hero-headline-overlay",
+        "name": "Hero Headline Overlay",
+        "category": "Refero components",
+        "description": "Display 60px Graphik Medium weight 500, color #ffffff, letter-spacing -3.0px, line-height 1.00 — text must fit on a single visual line at desktop widths. Center-aligned horizontally, vertically anchored to viewport center. No drop shadow, no background plate; the hero image provides its own contrast. Headlines should read like a single thought, not a wrapped paragraph.",
+        "variants": [
+          {
+            "id": "hero-headline-overlay-reference",
+            "name": "Reference",
+            "description": "Display 60px Graphik Medium weight 500, color #ffffff, letter-spacing -3.0px, line-height 1.00 — text must fit on a single visual line at desktop widths. Center-aligned horizontally, vertically anchored to viewport center. No drop shadow, no background plate; the hero image provides its own contrast. Headlines should read like a single thought, not a wrapped paragraph.",
+            "evidence": [],
+            "observedProperties": [
+              "Opening statement set directly over a full-bleed photographic hero"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "text-fragment-node",
+        "name": "Text Fragment Node",
+        "category": "Refero components",
+        "description": "13–18px Graphik Medium, Graphite on light surfaces / white on dark. No container, no background, no border — each fragment is bare type positioned absolutely or via flex/grid. Opacity ranges from 0.15 to 1.0 to create depth in animated reveals. Multiple fragments form a complete sentence when read in order.",
+        "variants": [
+          {
+            "id": "text-fragment-node-reference",
+            "name": "Reference",
+            "description": "13–18px Graphik Medium, Graphite on light surfaces / white on dark. No container, no background, no border — each fragment is bare type positioned absolutely or via flex/grid. Opacity ranges from 0.15 to 1.0 to create depth in animated reveals. Multiple fragments form a complete sentence when read in order.",
+            "evidence": [],
+            "observedProperties": [
+              "Individual repositionable text elements used in animated/scroll-triggered sequences"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "ghost-navigation-link",
+        "name": "Ghost Navigation Link",
+        "category": "Refero components",
+        "description": "Graphik Medium 13px, weight 400, color #ffffff at 0.6 opacity (resting) → 1.0 (hover). No underline, no background, no border. Letter-spacing -0.351px matches the caption scale. Hover transition is opacity-only, 200ms ease.",
+        "variants": [
+          {
+            "id": "ghost-navigation-link-reference",
+            "name": "Reference",
+            "description": "Graphik Medium 13px, weight 400, color #ffffff at 0.6 opacity (resting) → 1.0 (hover). No underline, no background, no border. Letter-spacing -0.351px matches the caption scale. Hover transition is opacity-only, 200ms ease.",
+            "evidence": [],
+            "observedProperties": [
+              "Text-only link inside the nav pill (WORK, ABOUT)"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "outlined-link-button",
+        "name": "Outlined Link Button",
+        "category": "Refero components",
+        "description": "Graphik Medium 13px, weight 500, Graphite text on transparent background, 1px border in Graphite, 100px border-radius (pill shape), padding 10px 20px. Hover inverts: Graphite background, Paper text. No shadow at any state.",
+        "variants": [
+          {
+            "id": "outlined-link-button-reference",
+            "name": "Reference",
+            "description": "Graphik Medium 13px, weight 500, Graphite text on transparent background, 1px border in Graphite, 100px border-radius (pill shape), padding 10px 20px. Hover inverts: Graphite background, Paper text. No shadow at any state.",
+            "evidence": [],
+            "observedProperties": [
+              "Secondary action — the system's only button shape"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "project-card",
+        "name": "Project Card",
+        "category": "Refero components",
+        "description": "10px border-radius on the image (the container itself has no border or background). Caption below in 13px Graphik Medium 400, Steel color, no title styling above the image — the image carries the work's identity. Gap between image and caption: 10px. Card surface is transparent on the Paper canvas.",
+        "variants": [
+          {
+            "id": "project-card-reference",
+            "name": "Reference",
+            "description": "10px border-radius on the image (the container itself has no border or background). Caption below in 13px Graphik Medium 400, Steel color, no title styling above the image — the image carries the work's identity. Gap between image and caption: 10px. Card surface is transparent on the Paper canvas.",
+            "evidence": [],
+            "observedProperties": [
+              "Image-led work tile in case-study grids"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "lcd-digital-readout",
+        "name": "LCD Digital Readout",
+        "category": "Refero components",
+        "description": "LCDDot TR 20px, line-height 1.00, letter-spacing +0.5px to +0.8px (positive — opposite of the rest of the system). Color: white on dark sections, Graphite on light. Padding 5px 10px in a 10px-radius container with no border, used as a single editorial accent, never as a button or functional control.",
+        "variants": [
+          {
+            "id": "lcd-digital-readout-reference",
+            "name": "Reference",
+            "description": "LCDDot TR 20px, line-height 1.00, letter-spacing +0.5px to +0.8px (positive — opposite of the rest of the system). Color: white on dark sections, Graphite on light. Padding 5px 10px in a 10px-radius container with no border, used as a single editorial accent, never as a button or functional control.",
+            "evidence": [],
+            "observedProperties": [
+              "Scarce pixel-font accent for timestamps, counters, or glitch text"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "hairline-divider",
+        "name": "Hairline Divider",
+        "category": "Refero components",
+        "description": "1px height, full container width, color Ink (#000000) at 0.08 opacity, or Steel (#7a7a7a) at 0.3 opacity on light surfaces. No margin above/below — sits flush within a section's vertical rhythm. Used sparingly; most sections should separate purely through whitespace.",
+        "variants": [
+          {
+            "id": "hairline-divider-reference",
+            "name": "Reference",
+            "description": "1px height, full container width, color Ink (#000000) at 0.08 opacity, or Steel (#7a7a7a) at 0.3 opacity on light surfaces. No margin above/below — sits flush within a section's vertical rhythm. Used sparingly; most sections should separate purely through whitespace.",
+            "evidence": [],
+            "observedProperties": [
+              "Invisible architectural element — separates sections without declaring itself"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "image-thumbnail",
+        "name": "Image Thumbnail",
+        "category": "Refero components",
+        "description": "10px border-radius, full-bleed within its container (no padding inside the radius). Color treatment follows the source — no filters, no duotones, no overlays. Images are the only source of color and contrast in the system and should be left untouched.",
+        "variants": [
+          {
+            "id": "image-thumbnail-reference",
+            "name": "Reference",
+            "description": "10px border-radius, full-bleed within its container (no padding inside the radius). Color treatment follows the source — no filters, no duotones, no overlays. Images are the only source of color and contrast in the system and should be left untouched.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline imagery in case studies and detail pages"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Every page opens with a full-viewport dark hero (100vw × 100vh) containing the single light-burst image and one centered white display headline. The floating nav pill sits absolutely positioned at top-center, outside the document flow. Below the hero, content sections live on a Paper (#ffffff) canvas at full width with internal max-width centering (no rigid grid — content blocks are placed loosely, often spanning 6–10 columns of a 12-column sense). Section gaps are generous (60–70px) but the body type stays compressed at 11–18px, so density varies between text-rich editorial blocks and wide photographic breaks. There is no consistent card grid — case studies appear as vertically stacked editorial pages with full-width images, not as uniform tiles. Navigation is a single global pill; no sidebar, no secondary nav, no footer menu visible. The overall page rhythm is: dark cinematic opening → one or more light editorial sections → dark or image-led closing.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Analogue's visual language is dominated by a single recurring photographic motif: a high-contrast light burst radiating from a central point against near-black depth — visually equivalent to staring into a tunnel of light, a supernova, or a camera flash filling a void. The image is treated full-bleed with no overlay, no border, no rounded corners on the hero (sharp, cinematic, world-filling). It is not illustration or product photography; it is atmosphere, pure visual emotion, and the only color in an otherwise achromatic system (a cold blue-white cast against black). Supporting imagery, if present in case studies, is left unfiltered — no duotone, no saturation shift. The system contains no icon set of any size, no illustrations, no 3D renders. Photography is the sole visual instrument, and it is deployed once, at scale, as a hero — never as decoration.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "The system is intentionally shadowless on content surfaces — cards, text blocks, and sections share the same flat plane as the canvas, and depth is implied only through surface tone shifts (Paper → Mist). The single exception is the floating navigation pill, which earns its shadow by being the only element that must visually detach from the page to remain legible over any background. Never add shadow to cards or buttons; let tone and border do the work.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use only colors from the seven-step achromatic scale — Paper through Ink — with no chromatic accent at any point",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set display headlines at 60px with -3.0px letter-spacing and 1.00 line-height so they read as a single tight line of type",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Anchor the nav as a 1000px-radius floating pill with frosted-glass background; never use a solid-bar or sidebar nav",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use 10px as the default element gap; reserve 40–70px for inter-section breathing room only",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Apply 10px radius to images and cards, 13px to inline links, 100px to buttons, 1000px to the nav — radius is a role signal, not a style choice",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-9",
+        "kind": "content",
+        "name": "Do",
+        "description": "Deploy the LCD dot font at most once per page as a 20px accent; treat it as a moment of digital interruption in an otherwise humanist system",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-10",
+        "kind": "content",
+        "name": "Do",
+        "description": "Let photography carry all color and contrast; never apply duotone, saturation shifts, or color overlays to imagery",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't introduce any color — no blues, reds, greens, purples — the system is defined by its absolute achromatic discipline",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add shadows to cards, buttons, or content surfaces; depth comes from surface tone shifts, not elevation",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use bold or semibold weights — the system stays at 400 and 500 only, with weight shifts replacing color as the hierarchy tool",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't wrap display headlines to multiple lines at desktop widths; the 60px / -3.0px / 1.00 setting is designed for single-line cinematic statements",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-15",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use 0px, 4px, or 8px radii — every container in the system sits at 10px, 13px, 100px, or 1000px",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-16",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't add underlines to links; use opacity (0.6 → 1.0) or a 1px border shift instead",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-17",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Don't use the LCD dot font for body copy, labels, or functional UI — reserve it strictly for editorial/digital-accent moments",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

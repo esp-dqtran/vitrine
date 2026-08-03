@@ -1,0 +1,100 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - generic [ref=e7]:
+      - link "Vitrine Apps" [ref=e8] [cursor=pointer]:
+        - /url: /apps
+      - tablist "Reference type" [ref=e10]:
+        - tab "Apps" [selected] [ref=e11] [cursor=pointer]:
+          - status
+        - tab "Sites" [ref=e16] [cursor=pointer]:
+          - status
+        - tab "Flows" [ref=e21] [cursor=pointer]:
+          - status
+    - button "Search Apps…, Open search and filters" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: Search Apps…
+      - status
+    - button "Login" [ref=e38] [cursor=pointer]:
+      - status
+  - main [ref=e41]:
+    - generic [ref=e42]:
+      - generic "App discovery filters" [ref=e43]:
+        - generic [ref=e44]:
+          - heading "Categories" [level=2] [ref=e45]
+          - generic [ref=e46]:
+            - button "AI" [ref=e47] [cursor=pointer]:
+              - status
+            - button "Finance" [ref=e50] [cursor=pointer]:
+              - status
+            - button "CRM" [ref=e53] [cursor=pointer]:
+              - status
+            - button "Business" [ref=e56] [cursor=pointer]:
+              - status
+            - button "News" [ref=e59] [cursor=pointer]:
+              - status
+        - generic [ref=e62]:
+          - heading "Screens" [level=2] [ref=e63]
+          - generic [ref=e64]:
+            - button "My Account & Profile" [ref=e65] [cursor=pointer]:
+              - status
+            - button "Filter & Sort" [ref=e68] [cursor=pointer]:
+              - status
+            - button "Chat Bot" [ref=e71] [cursor=pointer]:
+              - status
+            - button "Signup" [ref=e74] [cursor=pointer]:
+              - status
+            - button "Settings & Preferences" [ref=e77] [cursor=pointer]:
+              - status
+            - button "Charts" [ref=e80] [cursor=pointer]:
+              - status
+        - generic [ref=e83]:
+          - heading "UI Elements" [level=2] [ref=e84]
+          - generic [ref=e85]:
+            - button "Navigation Menu" [ref=e86] [cursor=pointer]:
+              - status
+            - button "Dialog" [ref=e89] [cursor=pointer]:
+              - status
+            - button "Card" [ref=e92] [cursor=pointer]:
+              - status
+            - button "Dropdown Menu" [ref=e95] [cursor=pointer]:
+              - status
+            - button "Text Field" [ref=e98] [cursor=pointer]:
+              - status
+        - generic [ref=e101]:
+          - heading "Flows" [level=2] [ref=e102]
+          - generic [ref=e103]:
+            - button "Setting Up" [ref=e104] [cursor=pointer]:
+              - status
+            - button "Searching & Finding" [ref=e107] [cursor=pointer]:
+              - status
+            - button "Filtering & Sorting" [ref=e110] [cursor=pointer]:
+              - status
+            - button "Resetting Password" [ref=e113] [cursor=pointer]:
+              - status
+            - button "Reporting" [ref=e116] [cursor=pointer]:
+              - status
+      - region "App discovery controls" [ref=e119]:
+        - generic [ref=e120]:
+          - generic "App platform" [ref=e121]:
+            - 'button "App platform: Web" [ref=e122] [cursor=pointer]':
+              - generic [ref=e123]: Web
+              - status
+          - button "Open Categories filters" [ref=e131] [cursor=pointer]:
+            - generic [ref=e132]: Categories
+            - status
+          - button "Open Screens filters" [ref=e139] [cursor=pointer]:
+            - generic [ref=e140]: Screens
+            - status
+          - button "Open UI Elements filters" [ref=e147] [cursor=pointer]:
+            - generic [ref=e148]: UI Elements
+            - status
+          - button "Open Flows filters" [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: Flows
+            - status
+        - 'button "Sort: Latest" [ref=e164] [cursor=pointer]':
+          - generic [ref=e165]: Latest
+          - status
+      - region "apps results" [ref=e171]:
+        - alert [ref=e173]:
+          - paragraph [ref=e174]: "Could not load apps: /api/catalog?platform=web&facets=summary&sort=latest returned 500"
+          - button "Retry" [ref=e175] [cursor=pointer]:
+            - status

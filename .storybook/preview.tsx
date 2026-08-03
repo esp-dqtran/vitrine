@@ -7,6 +7,7 @@ import '@fontsource/figtree/500.css';
 import '@fontsource/figtree/600.css';
 import '@fontsource/figtree/700.css';
 import '../src/vitrine/uiFoundation.css';
+import '../src/vitrine/productForms.css';
 
 const preview: Preview = {
   parameters: {

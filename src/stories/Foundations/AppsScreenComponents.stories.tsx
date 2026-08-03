@@ -44,7 +44,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'A live inventory of the local composite components used by the Astryx Apps screen.',
+          'A live inventory of the local composite components used by the Vitrines Apps screen.',
       },
     },
   },
@@ -599,7 +599,7 @@ function AppsScreenComponents() {
     <main className="apps-components">
       <header className="apps-components__intro">
         <div>
-          <p className="apps-components__eyebrow">Astryx · Apps screen</p>
+          <p className="apps-components__eyebrow">Vitrines · Apps screen</p>
           <h1 className="apps-components__title">Actual component inventory</h1>
           <p className="apps-components__lede">
             This sheet renders the local composites used by the live Apps
@@ -612,7 +612,7 @@ function AppsScreenComponents() {
       <Section
         index="00"
         title="Standard controls"
-        description="The six canonical control roles used across Astryx product screens."
+        description="The six canonical control roles used across Vitrines product screens."
       >
         <ControlStandards />
       </Section>

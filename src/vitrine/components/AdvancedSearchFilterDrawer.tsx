@@ -1,4 +1,4 @@
-import { Button } from "@astryxdesign/core";
+import { Button, Icon, IconButton } from "@astryxdesign/core";
 import type { SearchFacets, SearchFilters } from "../../searchTypes.ts";
 import { AdvancedSearchFilters } from "./AdvancedSearchFilters.tsx";
 import { AstryxModal, AstryxModalSurface } from "./AstryxModal.tsx";
@@ -29,7 +29,16 @@ export function AdvancedSearchFilterDrawer({
       aria-label="Search filters"
     >
       <AstryxModalSurface className="advanced-search-drawer">
-        <header><h2>Filters</h2><Button label="Close" variant="ghost" onClick={onClose} /></header>
+        <header>
+          <h2>Filters</h2>
+          <IconButton
+            label="Close filters"
+            icon={<Icon icon="close" size="sm" />}
+            variant="ghost"
+            className="astryx-modal__icon-action"
+            onClick={onClose}
+          />
+        </header>
         <AdvancedSearchFilters filters={filters} facets={facets} keys={keys} onChange={onChange} />
         <footer>
           <Button label="Done" variant="primary" onClick={onClose} />

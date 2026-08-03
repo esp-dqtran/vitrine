@@ -21,7 +21,7 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   assert.match(evidenceBody, /occurrence\.cropped_image_id = i\.id/);
   assert.doesNotMatch(evidenceBody, /occurrence\.source_image_id = i\.id/);
   assert.match(evidenceBody, /'pageType', reference\.component_type/);
-  assert.match(evidenceBody, /\$2 <> 'ui_element' OR reference\.component_type IS NOT NULL/);
+  assert.doesNotMatch(evidenceBody, /\$2 <> 'ui_element' OR reference\.component_type IS NOT NULL/);
   assert.match(evidenceBody, /source_screen_id/);
   assert.doesNotMatch(evidenceBody, /\bappImages\(/);
   assert.doesNotMatch(evidenceBody, /\bversionImages\(/);
@@ -50,8 +50,8 @@ test("app metadata aggregates ordered Category records without a scalar read", (
   assert.match(body, /JOIN categories/);
   assert.match(body, /jsonb_agg/);
   assert.match(body, /ORDER BY lower\(category_rows\.name\), category_rows\.id/);
-  assert.match(body, /occurrence\.cropped_image_id = i\.id/);
-  assert.match(body, /occurrence\.review_status IN \('accepted', 'pending'\)/);
+  assert.match(body, /COUNT\(DISTINCT ei\.id\) FILTER \(WHERE ei\.kind = 'ui_element'\)/);
+  assert.doesNotMatch(body, /i\.kind <> 'ui_element' OR EXISTS/);
   assert.doesNotMatch(body, /\bt\.category\b/);
 });
 
@@ -72,6 +72,8 @@ test("app version and Flow reads use normalized rows after the hierarchical migr
   const versionBody = source.slice(versionStart, versionEnd);
   assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flows/);
   assert.match(versionBody, /SELECT COUNT\(\*\) FROM app_flow_versions/);
+  assert.match(versionBody, /COUNT\(\*\) FILTER \(WHERE i\.kind = 'ui_element'\)::int AS ui_element_count/);
+  assert.doesNotMatch(versionBody, /i\.kind = 'ui_element' AND EXISTS/);
   assert.doesNotMatch(versionBody, /\b(?:af|afv)\.flows\b/);
 
   const currentStart = source.indexOf("export async function getAppFlows(");

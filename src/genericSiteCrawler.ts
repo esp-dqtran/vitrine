@@ -13,6 +13,7 @@ import {
   parseSiteAnalysis,
   type SiteAnalysis,
 } from "./siteAnalysis.ts";
+import { createSiteDesignSystem } from "./siteDesignSystem.ts";
 import {
   analyzeSiteEvidence,
   type SiteAnalysisProvider,
@@ -177,10 +178,19 @@ export async function crawlGenericSite(
     deps.technologyDetector,
   );
   await deps.report?.("Analyzing structure and motion");
-  const { analysis, model } = await synthesizeAnalysis(
+  const synthesized = await synthesizeAnalysis(
     capture,
     deps.analysisProvider,
   );
+  const analysis = parseSiteAnalysis({
+    ...synthesized.analysis,
+    designSystem: createSiteDesignSystem({
+      app: capture.capture.metadata.name,
+      sourceUrl: identity.canonicalUrl,
+      analysis: synthesized.analysis,
+    }),
+  });
+  const model = synthesized.model;
   const contentHash = genericSiteCaptureHash(capture);
   await assertNotCancelled(deps);
   const categories = categoriesForPublicSite({

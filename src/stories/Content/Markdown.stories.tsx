@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Markdown } from '@astryxdesign/core';
 
-const sample = `# Astryx
+const sample = `# Vitrines
 
 A **design system** for how we build now.
 
@@ -9,7 +9,7 @@ A **design system** for how we build now.
 - Brand-level theming
 - Dark mode built in
 
-Learn more at [astryx.dev](https://example.com).`;
+Learn more in the [Vitrines documentation](https://example.com).`;
 
 const meta = {
   title: 'Components/Content/Markdown',

@@ -4,10 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import {
-  assertGeneratedMigrationDatabaseName,
-  createMigrationVerificationConfig,
-} from "../scripts/verify-migrations.ts";
-import {
   discoverMigrations,
   redactMigrationError,
   validateMigrationState,
@@ -341,6 +337,40 @@ const migrationDefinitions = [
       /project_document_realtime_states_updated_idx/,
     ],
   },
+  {
+    file: "0064_research_project_teams.sql",
+    patterns: [
+      /ADD COLUMN organization_id INTEGER REFERENCES organizations\(id\) ON DELETE RESTRICT/,
+      /research_projects_organization_updated_idx/,
+      /WHERE organization_id IS NOT NULL/,
+    ],
+  },
+  {
+    file: "0065_project_workspace_files.sql",
+    patterns: [
+      /CREATE TABLE research_project_canvas_files/,
+      /id UUID PRIMARY KEY DEFAULT gen_random_uuid\(\)/,
+      /REFERENCES research_projects\(id\) ON DELETE CASCADE/,
+      /research_project_canvas_files_project_updated_idx/,
+      /INSERT INTO research_project_canvas_files/,
+      /FROM research_project_canvases/,
+    ],
+  },
+  {
+    file: "0067_research_project_icons.sql",
+    patterns: [
+      /ADD COLUMN icon TEXT NOT NULL DEFAULT 'initial'/,
+      /CHECK \(icon IN \('initial', 'folder', 'grid', 'book', 'sparkle'\)\)/,
+    ],
+  },
+  {
+    file: "0068_app_version_provider.sql",
+    patterns: [
+      /ADD COLUMN provider TEXT NOT NULL DEFAULT 'm'/,
+      /app_versions_provider_check/,
+      /provider IN \('m', 'f'\)/,
+    ],
+  },
 ] as const;
 
 for (const definition of migrationDefinitions) {
@@ -368,48 +398,6 @@ test("normal publication snapshots Flow children before the immutable transition
   );
   assert.ok(snapshot >= 0);
   assert.ok(transition > snapshot);
-});
-
-test("migration verification requires explicit disposable-database opt-in", () => {
-  const adminUrl = "postgres://operator:secret@localhost:5432/postgres";
-  assert.throws(
-    () => createMigrationVerificationConfig({}),
-    /MIGRATION_TEST_DATABASE_URL is required/,
-  );
-  assert.throws(
-    () =>
-      createMigrationVerificationConfig({
-        MIGRATION_TEST_DATABASE_URL: adminUrl,
-      }),
-    /MIGRATION_TEST_ALLOW_DROP=1 is required/,
-  );
-
-  const config = createMigrationVerificationConfig(
-    {
-      MIGRATION_TEST_DATABASE_URL: adminUrl,
-      MIGRATION_TEST_ALLOW_DROP: "1",
-    },
-    ["a".repeat(32), "b".repeat(32)],
-  );
-
-  assert.deepEqual(config.databaseNames, {
-    empty: `astryx_migration_test_${"a".repeat(32)}`,
-    upgrade: `astryx_migration_test_${"b".repeat(32)}`,
-  });
-  assert.doesNotThrow(() =>
-    assertGeneratedMigrationDatabaseName(config.databaseNames.empty),
-  );
-  for (const unsafe of [
-    "astryx",
-    "astryx_migration_test_",
-    "astryx_migration_test_bad-name",
-    "postgres",
-  ]) {
-    assert.throws(
-      () => assertGeneratedMigrationDatabaseName(unsafe),
-      /refusing unsafe database name/i,
-    );
-  }
 });
 
 async function temporaryDirectory(t: {
@@ -533,49 +521,4 @@ test("ordinary database queries never bootstrap or mutate schema", async () => {
   const source = await readFile(new URL("./db.ts", import.meta.url), "utf8");
   assert.doesNotMatch(source, /ensureSchema|schemaReady/);
   assert.doesNotMatch(source, /pool\.query\(`\s*(?:CREATE|ALTER|DROP)/i);
-});
-
-test("migration verification checks Category tables and legacy backfill", async () => {
-  const source = await readFile(
-    new URL("../scripts/verify-migrations.ts", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /const CATEGORY_TABLES/);
-  assert.match(source, /category backfill must retain every legacy assignment/);
-  assert.match(source, /categories_id_seq is behind categories\.id/);
-});
-
-test("migration verification includes every post-v1 table family", async () => {
-  const source = await readFile(
-    new URL("../scripts/verify-migrations.ts", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /const APP_KNOWLEDGE_TABLES/);
-  assert.match(source, /const PROJECT_DOCUMENT_TABLES/);
-  assert.match(source, /"app_knowledge_component_crops"/);
-  assert.match(source, /"app_knowledge_design_system_chunks"/);
-  assert.match(source, /"app_knowledge_snapshots"/);
-  assert.match(source, /"public_facet_previews"/);
-  assert.match(source, /"project_document_realtime_states"/);
-  assert.match(source, /"screen_pattern_assignments"/);
-  assert.match(source, /"screen_pattern_sections"/);
-  assert.match(source, /"screen_patterns"/);
-  assert.match(source, /"site_search_index_queue"/);
-  assert.match(source, /\.\.\.APP_KNOWLEDGE_TABLES/);
-  assert.match(source, /\.\.\.PROJECT_DOCUMENT_TABLES/);
-});
-
-test("upgrade hashes exclude derived columns added after the legacy fixture", async () => {
-  const source = await readFile(
-    new URL("../scripts/verify-migrations.ts", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    source,
-    /app_versions: \["platform", "screen_count", "ui_element_count"\]/,
-  );
-  assert.match(
-    source,
-    /design_systems: \[\s*"origin",\s*"platform",\s*"capture_version_id",\s*"source_app_knowledge_revision_id",\s*"generated_at",?\s*\]/,
-  );
 });

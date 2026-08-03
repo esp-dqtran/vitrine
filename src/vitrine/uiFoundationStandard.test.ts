@@ -50,6 +50,39 @@ test('shared component colors bridge into the Vitrines foundation on every scree
   });
 });
 
+test('shared selection and pagination states use the approved contrast and motion', async () => {
+  const foundation = await readFile(new URL('./uiFoundation.css', import.meta.url), 'utf8');
+
+  assert.match(
+    foundation,
+    /\.astryx-segmented-control[\s\S]*?border-radius:\s*999px\s*!important[\s\S]*?background:\s*var\(--vitrine-color-on-action-primary\)\s*!important/,
+  );
+  assert.match(
+    foundation,
+    /\.astryx-segmented-control\s*>\s*button\[aria-checked='true'\][\s\S]*?background:\s*var\(--vitrine-color-action-primary\)\s*!important[\s\S]*?color:\s*var\(--vitrine-color-on-action-primary\)\s*!important/,
+  );
+  assert.match(
+    foundation,
+    /\.astryx-segmented-control\s*>\s*button\.astryx-segmented-control-item[\s\S]*?background-color var\(--vitrine-transition-standard\)/,
+  );
+  assert.match(
+    foundation,
+    /\.astryx-pagination\.pages[\s\S]*?background:\s*var\(--vitrine-color-on-action-primary\)/,
+  );
+  assert.match(
+    foundation,
+    /\.astryx-pagination\.pages button\.astryx-button[\s\S]*?width:\s*var\(--vitrine-control-height\)\s*!important[\s\S]*?height:\s*var\(--vitrine-control-height\)\s*!important[\s\S]*?border-radius:\s*50%\s*!important/,
+  );
+  assert.match(
+    foundation,
+    /\.astryx-pagination\.pages button\[aria-current='page'\][\s\S]*?background:\s*var\(--vitrine-color-action-primary\)\s*!important[\s\S]*?color:\s*var\(--vitrine-color-on-action-primary\)\s*!important/,
+  );
+  assert.match(
+    foundation,
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.astryx-segmented-control[\s\S]*?\.astryx-pagination\.pages[\s\S]*?transition:\s*none\s*!important/,
+  );
+});
+
 test('the public product palette stays intentionally small', () => {
   assert.equal(FOUNDATION_TOKEN_CONTRACT.color.length, 13);
   assert.ok(FOUNDATION_TOKEN_CONTRACT.color.length <= 13, 'product UI must not expose the full implementation palette');
@@ -62,7 +95,7 @@ test('the foundation standard covers every system decision before components', (
   assert.deepEqual(UI_FOUNDATION_STANDARD.modes, ['light', 'dark']);
   assert.deepEqual(
     UI_FOUNDATION_AREAS.map(({ id }) => id),
-    ['color', 'typography', 'spacing', 'shape', 'motion', 'responsive', 'accessibility'],
+    ['color', 'typography', 'spacing', 'shape', 'iconography', 'motion', 'responsive', 'accessibility'],
   );
   UI_FOUNDATION_AREAS.forEach((area) => {
     assert.ok(area.intent.length > 0, `${area.id} needs an intent`);

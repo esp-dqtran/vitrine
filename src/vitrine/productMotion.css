@@ -1,0 +1,253 @@
+/*
+ * Product-screen motion contract.
+ *
+ * Motion explains interaction and state. Flow results/workspaces, captured
+ * evidence, document editors, and canvas geometry remain domain-owned.
+ */
+
+:where(
+  .apps-discovery,
+  .sites-discovery,
+  .site-detail,
+  .reference-detail[data-reference-detail="app"],
+  .projects-workspace,
+  .settings-workspace,
+  .team-settings,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+) {
+  --reference-motion-fast: var(--vitrine-motion-fast);
+  --reference-motion-standard: var(--vitrine-motion-medium);
+  --reference-motion-easing: var(--vitrine-motion-ease);
+}
+
+/* Direct feedback stays fast on standard product controls. */
+:where(
+  body:has(.apps-discovery) .apps-top-nav .astryx-button,
+  body:has(.sites-discovery) .apps-top-nav .astryx-button,
+  body:has(.site-detail) .apps-top-nav .astryx-button,
+  body:has(.reference-detail[data-reference-detail="app"]) .apps-top-nav .astryx-button
+) {
+  transition-duration: var(--vitrine-motion-fast) !important;
+  transition-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+:where(
+  .apps-discovery,
+  .sites-discovery,
+  .site-detail,
+  .reference-detail[data-reference-detail="app"],
+  .projects-workspace,
+  .settings-workspace,
+  .team-settings,
+  [data-admin-dashboard="true"],
+  .admin-users-state
+)
+  :is(
+    .astryx-button,
+    .astryx-selector,
+    button,
+    [role="button"],
+    [role="tab"],
+    input,
+    select,
+    textarea
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .screen-grid-card__media *,
+    .excalidraw *
+  ) {
+  transition-duration: var(--vitrine-motion-fast) !important;
+  transition-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+.apps-discovery :is(
+  .apps-filterbar__filter,
+  .apps-filterbar__checkbox-option,
+  .apps-platform-switcher::before,
+  .reference-discovery-toolbar__sort button,
+  .reference-discovery-toolbar__sort button::after
+) {
+  transition-duration: var(--vitrine-motion-fast) !important;
+  transition-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+/* Interactive cards use local motion and a restrained two-pixel lift. */
+:is(
+  .apps-discovery .app-discovery-card,
+  .apps-discovery .apps-discovery-screen-card,
+  .sites-discovery .discovery-card,
+  .site-detail__related .discovery-card,
+  .reference-detail[data-reference-detail="app"] .screen-grid-card__media > .astryx-clickable-card,
+  .projects-workspace .discovery-card,
+  .collections-workspace__card,
+  .collections-workspace__item,
+  .project-file-row,
+  .project-file-index__empty
+) {
+  transform: translateY(0) scale(1);
+  transition:
+    transform var(--vitrine-transition-standard),
+    border-color var(--vitrine-transition-fast),
+    box-shadow var(--vitrine-transition-standard);
+}
+
+:is(
+  .apps-discovery .app-discovery-card,
+  .sites-discovery .discovery-card
+) {
+  animation-duration: var(--vitrine-motion-slow);
+  animation-timing-function: var(--vitrine-motion-ease);
+}
+
+:is(
+  .apps-discovery .app-discovery-card .discovery-card__media,
+  .apps-discovery .apps-discovery-screen-card__media,
+  .sites-discovery .discovery-card__media,
+  .site-detail__related .discovery-card__media
+) {
+  transition:
+    transform var(--vitrine-transition-slow),
+    box-shadow var(--vitrine-transition-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(
+    .apps-discovery .app-discovery-card,
+    .apps-discovery .apps-discovery-screen-card,
+    .sites-discovery .discovery-card,
+    .site-detail__related .discovery-card,
+    .reference-detail[data-reference-detail="app"] .screen-grid-card__media > .astryx-clickable-card,
+    .projects-workspace .discovery-card,
+    .collections-workspace__card,
+    .collections-workspace__item,
+    .project-file-row,
+    .project-file-index__empty
+  ):hover {
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+:is(
+  .apps-discovery .app-discovery-card,
+  .apps-discovery .apps-discovery-screen-card,
+  .sites-discovery .discovery-card,
+  .site-detail__related .discovery-card,
+  .reference-detail[data-reference-detail="app"] .screen-grid-card__media > .astryx-clickable-card,
+  .projects-workspace .discovery-card,
+  .collections-workspace__card,
+  .collections-workspace__item,
+  .project-file-row,
+  .project-file-index__empty
+):active {
+  transform: translateY(0) scale(.995);
+  transition-duration: var(--vitrine-motion-fast);
+}
+
+/* Local overlays, navigation indicators, and status changes use 180ms. */
+:is(
+  body:has(.apps-discovery),
+  body:has(.sites-discovery),
+  body:has(.site-detail),
+  .reference-detail[data-reference-detail="app"],
+  .projects-workspace,
+  .settings-workspace,
+  [data-admin-dashboard="true"]
+) :is(.astryx-dropdown, .astryx-dropdown-panel) {
+  animation-duration: var(--vitrine-motion-medium);
+  animation-timing-function: var(--vitrine-motion-ease);
+}
+
+:is(
+  .reference-detail__tab-indicator,
+  .project-area-nav__indicator,
+  .settings-workspace__panel,
+  .team-settings__member,
+  .admin-users-state
+) {
+  transition-duration: var(--vitrine-motion-medium) !important;
+  transition-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+/* Drawers, dialogs, and mobile sheets are deliberate context changes. */
+:is(
+  .projects-team-drawer,
+  .projects-workspace__menu-popover,
+  .settings-profile-menu
+) {
+  transition-duration: var(--vitrine-motion-slow) !important;
+  transition-timing-function: var(--vitrine-motion-ease) !important;
+  animation-duration: var(--vitrine-motion-slow) !important;
+  animation-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+dialog.astryx-modal.astryx-modal--dialog:not(.flow-preview-dialog-shell) {
+  animation-duration: var(--vitrine-motion-slow) !important;
+  animation-timing-function: var(--vitrine-motion-ease) !important;
+}
+
+@media (max-width: 720px) {
+  :is(
+    .apps-discovery .apps-filterbar,
+    .sites-discovery .apps-filterbar
+  ) .astryx-dropdown-panel {
+    animation-duration: var(--vitrine-motion-slow);
+    animation-timing-function: var(--vitrine-motion-ease);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    body:has(.apps-discovery) .apps-top-nav *,
+    body:has(.sites-discovery) .apps-top-nav *,
+    body:has(.site-detail) .apps-top-nav *,
+    body:has(.reference-detail[data-reference-detail="app"]) .apps-top-nav *,
+    .apps-discovery *,
+    .sites-discovery *,
+    .site-detail *,
+    .reference-detail[data-reference-detail="app"] *,
+    .projects-workspace *,
+    .settings-workspace *,
+    .team-settings *,
+    [data-admin-dashboard="true"] *,
+    .admin-users-state *
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-workspace *,
+    .flows-discovery *,
+    .flow-preview-dialog *,
+    .screen-grid-card__media *,
+    .excalidraw *
+  ) {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+
+  :is(
+    .apps-discovery .reference-discovery__facet button,
+    .apps-discovery .app-discovery-card,
+    .apps-discovery .app-discovery-card .discovery-card__media,
+    .apps-discovery .apps-discovery-screen-card,
+    .apps-discovery .apps-discovery-screen-card__media,
+    .sites-discovery .discovery-card,
+    .sites-discovery .discovery-card__media,
+    .site-detail__related .discovery-card,
+    .reference-detail[data-reference-detail="app"] .screen-grid-card__media > .astryx-clickable-card,
+    .projects-workspace .discovery-card,
+    .collections-workspace__card,
+    .collections-workspace__item,
+    .project-file-row,
+    .project-file-index__empty
+  ) {
+    transform: none !important;
+  }
+}

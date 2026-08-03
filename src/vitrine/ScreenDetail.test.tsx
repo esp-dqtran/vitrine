@@ -472,7 +472,7 @@ test('renders the Mobbin-style App detail navigation rail with real version stat
   );
   assert.match(
     css,
-    /\.reference-detail__tab-controls\s*\{[^}]*padding-left:\s*24px;[^}]*border-left:\s*1px solid var\(--color-border\)/,
+    /\.reference-detail__tab-controls\s*\{[^}]*padding-left:\s*24px;[^}]*border-left:\s*2px solid var\(--color-border\)/,
   );
   assert.match(
     css,

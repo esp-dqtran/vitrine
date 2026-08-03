@@ -1,2701 +1,487 @@
-# Astryx Sites UI Design QA
+# Design QA — Focused Project Document Shell
 
-## Visual truth
+Source visual truth:
 
-- Mobbin catalog reference: `artifacts/design-audit/2026-07-24-sites-comparison/02-mobbin-sites.png`
-- Mobbin V7 detail reference: `artifacts/design-audit/2026-07-24-sites-comparison/04-mobbin-v7-detail.png`
-- Astryx catalog: `design-qa-sites-catalog-final.png`
-- Astryx V7 detail: `design-qa-site-detail-preview.png`
-- Astryx compact catalog: `design-qa-sites-catalog-mobile.png`
-- Catalog side-by-side: `design-qa-catalog-comparison-final.png`
-- Detail side-by-side: `design-qa-detail-comparison-final.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/notion-structure-2026-08-03/01-document-shell-desktop.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/notion-structure-2026-08-03/02-app-detail-shell.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/notion-structure-2026-08-03/03-app-detail-mobile.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/notion-structure-2026-08-03/04-document-shell-mobile.jpg`
 
-Every source and implementation capture uses the same 1512 × 782 viewport and
-the same loaded catalog/detail state.
+Implementation evidence:
 
-## Rebuilt surfaces
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-focused-shell-2026-08-03/01-focused-document-desktop.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-focused-shell-2026-08-03/02-focused-document-mobile.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-focused-shell-2026-08-03/03-focused-document-mobile-menu.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-focused-shell-2026-08-03/04-desktop-comparison.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-focused-shell-2026-08-03/05-mobile-comparison.jpg`
 
-- Full-width Sites navigation with centered 512 px search, Apps/Sites switcher,
-  import action, and account controls.
-- Mobbin-measured discovery taxonomy, ordering row, filter action, three-column
-  grid, large media cards, logo, description, version, and section count.
-- Site detail with vertical identity, display heading, Category and Style
-  groups, Save/Visit actions, Latest selector, Preview/Sections tabs, and a wide
-  real-media stage.
-- Responsive two-column, one-column, and compact navigation breakpoints.
-- Search, taxonomy filters, sorting, filter toggle, full-card navigation,
-  version selection, Save, Visit site, and Preview/Sections remain interactive.
+Viewport and normalization: desktop source and implementation use 1280 × 720 CSS px; mobile source and implementation use 390 × 844 CSS px. All screenshots are CSS-pixel normalized at 1× density.
 
-## Findings fixed
+State: authenticated dark-mode `Discovery notes` document. The base captures have Share, More, and Page discussion closed. The mobile-menu capture shows the responsive overflow menu open.
 
-- [P1] Sites still inherited the Apps/admin shell instead of Mobbin's full-width
-  surface.
-  - Fixed by routing both Sites views through their own shared top navigation.
-- [P1] The discovery taxonomy order, column positions, vertical rhythm, and
-  card start position did not match the source.
-  - Fixed with source-measured 32 px gutters, column tracks, column-flow
-    ordering, 24 px labels, and the 432 px card baseline.
-- [P1] Site detail used a horizontal product header and compact preview frame.
-  - Fixed with the vertical 96 px identity, split display heading, source-style
-    metadata/actions/navigation, and 1048 px preview media.
-- [P2] Search width and height, action styling, filter treatment, and card
-  semantics diverged from the source.
-  - Fixed with the 512 × 48 search field, white primary Save action, quiet
-    Filter action, and one semantic link for the complete card.
-- [P2] Existing imports did not expose Mobbin tagline, logo, styles, or
-  popularity.
-  - Fixed in the crawler/store contract and migration `0022`; existing records
-    need the migration plus re-import/backfill before those authoritative values
-    appear. The UI does not fabricate missing metadata.
+## Findings
+
+- No actionable P0, P1, or P2 findings remain for the approved focused-shell change.
+- Hierarchy: the document route now starts with its 46px document bar. The duplicate Projects/search/account discovery header is absent, matching the App detail page's single-shell hierarchy while preserving the document-specific canvas.
+- Desktop actions: breadcrumb, connection status, collaborator, Favorite, Share, and More remain in one compact bar. Copy link is available from Share rather than duplicated in the bar.
+- Mobile actions: the bar reduces to back, truncated document title, Share, and More. Favorite and Copy link move into More, and the global header is absent.
+- Page canvas: the 72px page icon remains above the persistent `Change icon` and `Add comment` controls. Their label size is 13px, and the editor surface remains transparent over the page background.
+- Responsiveness: measured document width is 760px in Standard mode and 1208px in Full width mode at 1280px. The 390px view has matching 390px client and scroll widths, so there is no horizontal overflow.
+- Accessibility: connection status is exposed as a polite live status. The discussion error is scoped to the Page discussion panel with `role="alert"` and a Retry action rather than becoming a page-wide banner.
+- Runtime: the browser console contains no errors. Realtime collaboration remains visibly `Offline` because the local collaboration service is blocked by a pre-existing pending database migration; the document UI and API-backed discussion still load.
+
+## Full-view comparison evidence
+
+The desktop comparison places the previous double-header document, the App detail hierarchy reference, and the focused implementation in one 1:1 comparison. The implementation removes the redundant global chrome and keeps the content anchored to the same document width and dark surface.
+
+The mobile comparison places the previous double-header document, App detail mobile hierarchy, and focused implementation together. The focused build recovers substantial vertical space and preserves a clear back/title/action relationship without clipping or overflow.
+
+## Comparison history
+
+1. Previous document shell: global Projects discovery header plus a second document action bar created competing navigation levels on desktop and mobile.
+2. Focused-shell implementation: document routes opt out of the global discovery header, and document actions are consolidated into one responsive bar.
+3. Interaction refinement: desktop keeps Favorite visible; mobile moves Favorite and Copy link into More. Discussion failures are isolated inside the discussion panel.
+4. Post-fix evidence: matched desktop and mobile captures, DOM snapshots, geometry checks, and console inspection confirm the approved hierarchy and responsive behavior.
+
+## Primary interactions tested
+
+- Share opens the existing share dialog with Manage access and Copy link.
+- Desktop More contains only Page width controls.
+- Mobile More contains Add to favorites, Copy link, Standard, and Full width.
+- Standard and Full width switch between measured 760px and 1208px document canvases at desktop width.
+- Add comment opens the Page discussion panel without creating a page-wide error surface.
+- Focused Project Document and App boundary tests pass.
+- Production build succeeds.
+- Final browser console has no errors.
+
+final result: passed
+
+---
+
+# Design QA — Apps Discovery Figtree Restoration
+
+Source visual truth: the user's annotated Apps discovery taxonomy, backed by the pre-standardization declarations in `git show HEAD:src/vitrine/referenceDiscovery.css`. The pre-restoration rendered evidence is `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/apps-dark.png`.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/apps-discovery-figtree/implementation-1280x720.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/apps-discovery-figtree/before-vs-restored-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/apps-discovery-figtree/focused-before-vs-restored.png`
+
+Viewport and normalization: source and implementation captures are 1280 × 720 image pixels at a 1280 × 720 CSS viewport with device scale factor 1. The full comparison appends the equal-size captures into one 2560 × 720 input. The focused comparison uses equal 1280 × 300 crops of the taxonomy region. The older full-page source was captured while results were loading, so only the unchanged header, taxonomy, and toolbar are compared; result-card state is intentionally excluded from fidelity judgment.
+
+State: authenticated dark-mode Apps discovery with no active taxonomy filter for visual comparison. The AI category was then selected separately for interaction verification.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the taxonomy resolves to the bundled Figtree family. Section headings are 14px/500 with normal line height and tracking; filter choices are 24px/600 with 32px line height and -0.025em tracking. The rest of the Apps screen remains on the shared Vitrines typography contract.
+- Spacing and layout rhythm: the original four-column desktop taxonomy, 48px inter-column gap, 29px top padding, and 48px bottom padding are preserved. The restored type does not produce horizontal overflow at 1280px.
+- Colors and visual tokens: the restoration retains the current foundation text, page, surface, and interaction colors; it changes no color token.
+- Image quality and asset fidelity: existing app marks, screenshots, cards, and icons remain unchanged. No new visual asset or placeholder was introduced.
+- Copy and content: taxonomy headings and choices remain exactly Categories, Screens, UI Elements, Flows, and their existing options.
+- Scope: Figtree is deliberately limited to `.reference-discovery__taxonomy`; navigation, toolbar, result cards, App detail, and all other screens continue using the standard product family.
+
+## Full-view comparison evidence
+
+The combined before-versus-restored input shows the previously flattened small taxonomy on the left and the restored original hierarchy on the right. Header geometry, toolbar position, color system, and content remain stable while the taxonomy regains its intended visual weight.
+
+## Focused-region comparison evidence
+
+The focused 2560 × 300 comparison makes the restored Figtree family, lighter headings, larger choices, and compact 32px rows readable at native scale. Browser computed styles confirm the exact source values and confirm that the Figtree 600 face is loaded.
+
+## Comparison history
+
+1. Earlier typography rollout: the global semantic layer overrode the Apps taxonomy with 15px/700 headings and 14px/600 choices in the native system stack.
+2. First restoration pass: Figtree was loaded and taxonomy declarations were restored, but computed-style verification found that the later global typography selector still won.
+3. Boundary fix: the taxonomy was explicitly excluded from the global H2 and button mappings, preserving the exception without weakening typography coverage elsewhere.
+4. Post-fix evidence: computed styles resolve to Figtree 14px/500 headings and Figtree 24px/600 choices; visual comparisons show the intended hierarchy; focused tests, production build, and Storybook build pass.
+
+## Primary interactions tested
+
+- Selecting AI sets `aria-pressed="true"` and updates the URL to `filter=categories.AI`.
+- The restored taxonomy reports no horizontal overflow.
+- A clean browser load reports no console errors; the existing runtime-theme performance warning remains unrelated.
+- Fourteen focused foundation tests pass.
+- Production and Storybook builds succeed, including bundled Figtree 500 and 600 font assets.
+
+final result: passed
+
+---
+
+# Design QA — Vitrines Typography Foundation
+
+Source visual truth: `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/source-app-detail-dark.png`, captured from the authenticated dark-mode Aboard App detail before the typography bridge.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/implementation-app-detail-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/app-detail-comparison.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/storybook-system-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/storybook-system-light.png`
+
+Viewport and normalization: the matched App detail source and implementation use 1280 × 720 CSS px. Their combined comparison uses the identical 1280 × 370 top region at 1:1 scale. The Storybook foundation was also checked in a 732 CSS px responsive browser area in both themes; the full-page PNGs retain the browser's device-pixel density.
+
+State: authenticated Aboard App detail with Screens selected, plus the Typography/System Storybook reference in dark and light modes.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Source fidelity: the App detail display, lead, metadata, tabs, actions, and supporting count preserve the measured source hierarchy. Computed values remain 38px/600/42.56px for the display title, 21.76px/520/27.2px for the responsive lead, 16px/400/24px for metadata labels, 17px/600/24px for emphasized metadata, 16px/500/24px for tabs, and 12px/400/15px for the screen count.
+- Font truth: the prior Figtree declaration did not load a Figtree asset and rendered through the system fallback. The foundation now names the actual `-apple-system`, Segoe UI, Roboto, Helvetica, Arial stack directly and reserves the system monospace stack for technical values.
+- Semantic hierarchy: twelve roles cover display, lead, title, heading, subheading, body-large, body, label, detail, supporting, micro, and code. The shared component tokens resolve through the same roles instead of creating a second scale.
+- Responsive behavior: the Storybook specimen has matching client and scroll widths at 732 CSS px in both themes. The headline now wraps at a readable 18ch measure; no card, type specimen, or family panel creates horizontal overflow.
+- Theme behavior: the light specimen resolves to `rgb(241, 244, 247)` and the dark specimen resolves to `rgb(17, 17, 18)`. Type hierarchy, contrast, and density remain consistent across both modes.
+- Screen coverage: the root Vitrines page shell establishes the body family, size, weight, and leading. Discovery, App detail, Flow preview, Storybook, and canvas UI fallbacks inherit the same family. A guardrail fails if screen CSS restores the phantom Figtree declaration.
+- Domain boundary: imported reference typography and data-canvas label measurements remain evidence-specific implementation details rather than expanding the public Vitrines scale.
+
+## Full-view comparison evidence
+
+The combined App detail image places the captured source on the left and the implementation on the right. At identical scale, the Aboard title, description, four metadata groups, primary and secondary actions, navigation tabs, and count align without a visible typography or layout shift.
+
+The Storybook dark and light captures show the full twelve-role system in one responsive reference: family policy first, live specimens second, and usage guidance with exact size/leading/weight metadata for each role.
+
+## Comparison history
+
+1. Initial state: screen CSS referred to Figtree without bundling or loading it, while product components mixed that phantom declaration with the core system stack and page-specific sizes.
+2. Measurement: the App detail source was captured and its rendered family, size, weight, leading, and tracking were recorded before changes.
+3. Foundation bridge: the actual system stack and twelve semantic roles became the product-owned contract; core Heading and Text roles now resolve through it.
+4. Screen migration: App detail source styles, the global page shell, discovery, Flow preview, canvas fallbacks, and Storybook moved onto the shared family and roles.
+5. Post-fix evidence: the matched App detail comparison, responsive light/dark Storybook captures, computed-style checks, focused tests, Storybook build, and production build confirm the result.
+
+## Primary interactions tested
+
+- The App detail loads its Screens gallery while retaining the measured title, description, metadata, action, tab, and count styles.
+- Storybook renders the complete typography scale in light and dark theme globals.
+- App detail and the responsive Storybook specimen have no horizontal overflow.
+- The 15 focused foundation tests and 26 Apps discovery tests pass.
+- Storybook and the production Vite build succeed.
+
+final result: passed
+
+---
+
+# Design QA — Project Document Controls Below Page Icon
+
+Source visual truth: `browser:/projects/3d48a5c7-20b5-480a-a268-c3de515d8344/documents/6#comment-change-icon-and-add-comment-below-icon`, using the authenticated dark-mode document screenshot and the user's explicit placement annotation from the current conversation.
+
+Implementation screenshot: `/Users/kai/works/eastplayers/Astryx/.codex-audits/project-document-controls-below-icon-893x855.png`
+
+Viewport and normalization: source and implementation use 893 × 855 CSS px. The implementation capture is 893 × 855 pixels at CSS-pixel-normalized density; no scaling was applied.
+
+State: authenticated dark-mode `Discovery notes` document with the icon menu and comment discussion closed.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain for the requested placement change.
+- Spacing and layout: the 72 × 72px page icon is first in the document article, followed by the 28px control row and then the document title. Browser geometry confirms the control row begins 10px below the icon and ends 4px above the title.
+- Visibility and affordance: `Change icon` and `Add comment` are always visible beneath the page icon rather than depending on page hover.
+- Typography and copy: existing control labels, title styling, weights, wrapping, and editor typography are unchanged.
+- Colors and tokens: controls retain the existing muted text and hover tokens. The editor and ProseMirror surfaces remain transparent over the `rgb(25, 26, 29)` document background.
+- Icons and image quality: the existing Vitrines icon component is retained at 48 × 48px; no generated, placeholder, CSS-drawn, or replacement imagery was introduced.
+- Accessibility: both controls remain semantic buttons with their existing accessible names, expanded states, and keyboard behavior.
+- Responsiveness: the 893 × 855 viewport has no horizontal overflow, and the existing narrow-screen control visibility remains intact.
+
+## Full-view comparison evidence
+
+The matched implementation capture shows the requested order directly: page icon, `Change icon` and `Add comment`, document title, then the seamless editor surface. The surrounding header, breadcrumb, title, and editor layout remain unchanged from the source state.
+
+## Focused-region comparison evidence
+
+No separate crop was needed because the affected icon-to-title region is large and readable at 1:1 scale in the 893 × 855 full-view capture. Browser geometry additionally confirms the DOM and visual ordering.
+
+## Comparison history
+
+1. Earlier state: the control row appeared before the page icon and was hidden unless the page was hovered.
+2. Fix: moved the control row after the page icon in `ProjectDocumentPage` and made the row persistently visible.
+3. Post-fix evidence: the matched screenshot and browser measurements confirm the controls are below the icon, above the title, visible, and free of overflow.
+
+## Primary interactions tested
+
+- `Change icon` opens the existing Page icon menu and closes without changing document data.
+- `Add comment` opens the existing Page discussion panel.
+- The final browser console has no errors.
+- Focused Project Document test and production build pass.
+
+final result: passed
+
+---
+
+# Design QA — Collections In Personal Workspace Navigation
+
+Source visual truth: `browser:/projects#comment-add-collections-to-workspace-navigation`, using the user's authenticated dark-mode Projects screenshot at 1010 × 855 and the explicit annotation to add Collections beside Projects.
+
+Implementation screenshots: `browser:http://127.0.0.1:5173/projects#collections-rail-1010x855` and `browser:http://127.0.0.1:5173/collections#collections-workspace-1010x855`.
+
+Viewport and normalization: desktop source and implementation use 1010 × 855 CSS px and 1010 × 855 screenshot pixels. The responsive implementation was additionally checked at 390 × 844 CSS px. Captures were CSS-pixel normalized; no scaling or density conversion was applied.
+
+State: authenticated dark-mode Personal workspace. Projects contains one existing project; Collections is in its empty state because the current account has no saved collection yet.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the existing Assistant font family, heading hierarchy, 12px rail labels, input copy, and empty-state typography are preserved from the Projects workspace.
+- Spacing and layout rhythm: Collections occupies the next Personal navigation slot beneath Projects, before the library divider. The dedicated page reuses the existing 80px rail, 64px context header, content inset, radii, and empty-state spacing.
+- Colors and visual tokens: the page uses the existing workspace surface, muted background, border, focus, and text tokens. The active Collections state matches the active Projects treatment.
+- Image quality and assets: the existing Vitrines favicon and Storybook bookmark, folder, grid, globe, help, notification, and settings icons are retained. No placeholder raster, custom SVG, CSS drawing, or generated asset was introduced.
+- Copy and content: the page explicitly describes Collections as a personal place for saved Screens and Flows. Empty-state and creation labels are concise and consistent with Projects.
+- Responsiveness: the desktop rail is present at 1010px. At 390px it becomes the existing slide-in Personal menu, where Projects, Collections, Apps, Sites, and Settings remain accessible with Collections visibly selected.
+- Accessibility: the rail remains labeled `Workspace navigation`; Collections receives `aria-current="page"` on its page. The responsive drawer exposes a named Personal navigation landmark and semantic buttons.
+
+## Full-view comparison evidence
+
+The 1010 × 855 Projects capture preserves the source composition and adds one bookmark-labeled Collections destination directly below Projects. The matching Collections capture keeps the same rail, top header, horizontal alignment, dark palette, and primary-action treatment while moving collection content into the dedicated main area.
+
+## Focused-region comparison evidence
+
+No separate crop was needed because the complete 80px rail and its labels remain readable at 1:1 in the 1010 × 855 full-view capture. A DOM check independently confirmed the ordered rail labels: Personal, Projects, Collections, Apps, Sites, Settings.
+
+## Comparison history
+
+1. Initial implementation: the 1010px Collections header included a third account action that clipped at the right viewport edge, a P2 persistent-control overflow issue.
+2. Fix: removed the duplicate account action from this header because Settings remains permanently available in the workspace rail. Replaced the initial stacked rail glyph with the clearer existing bookmark icon.
+3. Post-fix evidence: the revised 1010 × 855 capture shows Help and Notifications fully inside the header, with no persistent control clipping. The 390 × 844 capture shows the complete responsive Personal menu without horizontal overflow.
+
+## Primary interactions tested
+
+- Projects rail exposes Collections in the intended order.
+- `/collections` loads as a first-class authenticated route instead of opening the former right-side drawer.
+- The mobile Personal menu opens and shows Projects, Collections, Apps, Sites, and Settings.
+- The Collections empty state and New collection affordances render at desktop and mobile widths.
+- Browser console contains no errors on the final Collections route.
+- Focused route and route-access tests pass, and the production build succeeds.
+
+final result: passed
+
+---
+
+# Design QA — App Screen Detail Typography Standard
+
+Source visual truth: the authenticated Aboard App Screen detail dialog opened from the Screens gallery at `http://127.0.0.1:5173/apps/aboard-ea683077-aadb-47c5-a771-d21fd9676510` in dark mode.
+
+Source and implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/screen-detail-standard/source-default-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/screen-detail-standard/source-info-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/screen-detail-standard/implementation-screen-detail-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/screen-detail-standard/implementation-system-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/screen-detail-standard/source-vs-implementation-dark.png`
+
+Viewport and normalization: the source dialog, post-token dialog, and Storybook implementation were measured at 732 × 855 CSS px. The combined source-versus-system evidence keeps both sides at 732px width and crops only the long Storybook page below the first 855px for a single comparison input.
+
+State: authenticated dark-mode Aboard screen 1 of 624, with the Screen information panel open, plus the Typography/System Storybook reference.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Source correction: this section supersedes the earlier App-overview typography QA. The App Screen detail dialog is now the sole product typography source.
+- Exact role fidelity: Title resolves to 18px/600/26px at this viewport; Action to 16px/600/22px with 0.2px tracking; Heading to 15px/700/22.5px; Body to 14px/400/18.2px; Label to 14px/600/20px with 0.2px tracking; Detail to 13px/400/18.85px.
+- Contract size: nine semantic roles plus the system UI and monospace families make an eleven-token public typography contract. Display, lead, and large overview copy are explicitly presentation-layer decisions rather than product roles.
+- Source integration: the App Screen detail app identity, footer actions, metadata, More info control, information heading, information detail, and optional screen context all consume semantic foundation roles instead of repeating raw font measurements.
+- Responsive behavior: the App Screen detail and Storybook implementation both report matching 732px client and scroll widths, with no horizontal overflow.
+- Font truth: product roles use the native system UI stack and code remains on the system monospace stack. The later Apps discovery QA documents the intentionally narrow Figtree taxonomy exception.
+
+## Full-view comparison evidence
+
+The combined evidence places the live App Screen detail source on the left and the Storybook system on the right. The Aboard identity maps to Title, Save and Copy image map to Action, More info maps to Label, Web maps to Body, and the open information card maps Aboard screen to Heading plus Web to Detail.
+
+## Comparison history
+
+1. Prior foundation: twelve roles were derived from the App overview, which incorrectly promoted its 32–38px display and 18–24px lead styles into everyday product typography.
+2. Correct source measurement: the actual App Screen detail dialog was captured in default and information-open states, then measured before edits.
+3. Contract correction: the public scale was reduced to the compact nine-role hierarchy, while large App overview type moved behind named presentation tokens.
+4. Source migration: the live Screen detail dialog was mapped directly to the new roles and re-measured with the same values.
+5. Post-fix evidence: focused tests, Storybook build, production build, overflow checks, implementation screenshots, and the single comparison input confirm the correction.
+
+## Primary interactions tested
+
+- Opening an Aboard screen from the Screens gallery still opens the fullscreen detail dialog.
+- More info still opens the Screen information panel and exposes its compact heading and detail hierarchy.
+- The live dialog retains the exact measured title, action, heading, body, label, and detail values after token mapping.
+- The 11 focused foundation tests pass.
+- Storybook and the production Vite build succeed.
+
+final result: passed
+
+---
+
+# Design QA — Typography Applied Across Product Screens
+
+Source visual truth: `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/screen-detail-dark.png`, the authenticated Aboard App Screen detail dialog with its information panel open at 1280 × 720 CSS px.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/apps-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/sites-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/flows-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/collections-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/settings-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/projects-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/admin-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/app-detail-dark.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/standard-vs-product-screens-dark.png`
+
+Viewport and normalization: every source and implementation route was captured at 1280 × 720 CSS px and 1280 × 720 image pixels. The combined comparison is a 1280 × 776 contact sheet containing four 640 × 360 normalized views plus 28px labels.
+
+State: authenticated dark mode. Apps, Sites, and Flows use their loaded discovery state; Collections uses its empty state; Settings uses Billing; Projects uses its existing API-error state; Admin uses the loaded Users table; App detail uses Aboard Screens; the Screen detail source has More info open.
+
+## Findings
+
+- No actionable P0, P1, or P2 typography findings remain.
+- Fonts and typography: application surfaces inherit the system UI family and 14px/400/18.2px body role. H1 resolves to the responsive 18–20px/600/26px Title role, H2/H3 to 15px/700/22.5px Heading, labels and ordinary actions to 14px/600/20px with 0.2px tracking, primary actions to 16px/600/22px, metadata to 13px/400/18.85px, and supporting text to 12px/400/16px. The Apps taxonomy is the documented Figtree exception.
+- Screen coverage: computed styles were verified on Apps, Sites, Flows, Collections, Settings, Projects, Admin, Aboard App detail, and the App Screen detail overlay. All inspected routes report equal 1280px client and scroll widths.
+- Spacing and layout rhythm: the compact hierarchy preserves the existing grids, header heights, workspaces, card geometry, overlay frame, and control alignment. No persistent control or title is clipped in the comparison sheet.
+- Colors and visual tokens: the typography migration does not change the neutral foundation palette, foreground hierarchy, borders, fills, or status colors.
+- Image quality and assets: all app icons, screen captures, cards, and workspace icons remain the existing source assets. No placeholder, generated, CSS-drawn, or replacement imagery was introduced.
+- Copy and content: route labels, app names, descriptions, metadata, empty-state copy, and actions remain unchanged.
+- Scope boundaries: App overview and Project Files hero copy retain named presentation tokens. Imported evidence, BlockNote document content, document-flow content, canvas documents, Excalidraw, and the source Screen detail dialog keep their domain typography instead of being flattened by the product layer.
+- Existing runtime state: Projects still displays its pre-existing `/api/research-projects returned 500` message; the typography migration was verified on that visible state and did not introduce the request failure.
+
+## Full-view comparison evidence
+
+The single comparison input places the App Screen detail standard beside Apps discovery, Collections, and Settings. Across all four views, titles, section headings, controls, descriptions, metadata, and primary actions follow the same compact density without altering each screen's layout or content priority.
+
+## Focused-region comparison evidence
+
+Computed-style checks provide the focused typography comparison because the full-view contact sheet reduces each screen to 640 × 360. The checks confirm exact source-role values for discovery headings and controls, workspace H1/H3/body copy, primary actions, App detail tabs and actions, plus Screen detail title, information heading, label, body, and detail copy.
+
+## Comparison history
+
+1. Earlier state: shared tokens existed, but route CSS could continue rendering page-specific font sizes and weights.
+2. Fix: added a final application-surface typography layer that maps semantic HTML, controls, primary actions, metadata, brand identity, and card identity onto the measured roles.
+3. Boundary fix: excluded editorial overview copy, evidence, documents, canvas content, Excalidraw, and the source dialog from generic overrides, then reasserted named presentation tokens for App and Project Files heroes.
+4. Post-fix evidence: the eight route captures, computed values, overflow checks, fourteen focused foundation tests, Storybook build, production build, and single visual comparison input confirm the final state.
+
+## Primary interactions tested
+
+- Navigated among Apps, Sites, and Flows discovery routes with their persistent header intact.
+- Opened Collections, Billing settings, Projects, and the Admin Users table.
+- Opened Aboard App detail, selected a screen, and opened More info in the Screen detail dialog.
+- Verified primary New collection and Export to Figma actions resolve to the Action role.
+- The fourteen focused foundation tests pass.
+- Storybook and the production Vite build succeed.
+
+final result: passed
+
+---
+
+# Design QA — Figtree Applied Across Product UI
+
+Source visual truth: the user-approved Figtree Apps discovery taxonomy at `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/apps-discovery-figtree/implementation-1280x720.jpg`. Previous system-family evidence is `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/storybook-system-dark.png` and `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/all-screens/collections-dark.png`.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/figtree-global/storybook-figtree-1280x720.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/figtree-global/collections-figtree-1280x720.jpg`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/typography-foundation/figtree-global/system-vs-figtree-product-normalized.png`
+
+Viewport and normalization: live implementations were captured at 1280 × 720 CSS px and 1280 × 720 image pixels with device scale factor 1. The normalized comparison contains four 640 × 360 cells in a 1280 × 720 image. The older portrait Storybook source is cropped from the top to the same 16:9 cell; Collections is compared at equal aspect ratio and scale.
+
+State: authenticated dark-mode Apps, Collections empty state, Aboard App detail, and the dark Typography/System Storybook foundation.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: Figtree is the product-family token and resolves across navigation, filters, cards, metadata, workspace titles, body copy, controls, App detail presentation roles, and Storybook. Bundled 400, 500, 600, and 700 faces all load successfully. The compact App Screen detail measurements remain unchanged.
+- Technical and domain boundaries: code remains on SF Mono, Monaco, and Consolas. Imported reference typography, document/canvas content, and Excalidraw keep their domain-owned family instead of being overwritten.
+- Apps taxonomy: the approved 14px/500 headings and 24px/600 choices remain intact while sharing the same global Figtree family; the redundant taxonomy-only family token was removed.
+- Spacing and layout rhythm: Collections and Apps retain their existing navigation rails, grids, control geometry, card spacing, and hierarchy. Apps, Collections, App detail, and Storybook report no horizontal overflow at 1280px.
+- Colors and visual tokens: the family migration changes no page, surface, text, border, action, or semantic-state color.
+- Image quality and assets: all existing icons, app captures, cards, and workspace assets remain unchanged; no generated or placeholder imagery was introduced.
+- Copy and content: product copy is unchanged. The foundation story now identifies Figtree and its four bundled weights instead of presenting the former native-system stack.
+
+## Full-view comparison evidence
+
+The normalized comparison places the earlier system-family foundation and Collections screen on the left, with the Figtree foundation and Collections implementation on the right. The product retains the same density and layout while gaining the rounder, more deliberate Figtree character approved in Apps discovery.
+
+## Focused-region comparison evidence
+
+Browser computed-style checks cover Apps navigation, taxonomy headings and choices, filter controls, card titles and metadata; Collections H1, body, navigation, and actions; Aboard App-detail title, lead, metadata, controls, and tabs; plus Storybook product and code families. Every product sample resolves to `Figtree, system-ui, sans-serif`; code resolves to the monospace token.
+
+## Comparison history
+
+1. Source selection: the Apps discovery taxonomy established Figtree as the approved family while the rest of Vitrines still used the native-system stack.
+2. Foundation migration: the product-family token changed to Figtree and bundled 400, 500, 600, and 700 faces were loaded in both the application and Storybook.
+3. Cleanup: the taxonomy-only family token and remote Storybook Figtree request were removed; the approved taxonomy hierarchy remains as a size-and-weight exception only.
+4. Post-fix evidence: visual comparison, computed styles, overflow checks, fourteen focused tests, production build, and Storybook build confirm the global migration.
+
+## Primary interactions tested
+
+- Loaded Apps discovery with its navigation, taxonomy, filters, and populated app-card grid.
+- Loaded the Collections workspace and its empty-state actions.
+- Loaded the Aboard App detail with presentation heading, metadata, controls, tabs, and screen cards.
+- Loaded the Typography/System Storybook reference with Figtree product specimens and monospace technical specimens.
+- Browser logs contain no errors; the existing runtime-theme performance warning remains unrelated.
+- Fourteen focused foundation tests pass.
+- Production and Storybook builds succeed and emit all four Figtree weight assets.
+
+final result: passed
+
+---
+
+# Design QA — Foundation 03 Spacing & Size
+
+Source visual truth: rendered Vitrines Apps discovery, Aboard App detail, and Collections workspace at 1280 × 720 CSS px in authenticated dark mode.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-foundation/spacing-system-dark-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-foundation/spacing-system-dark-full.png`
+
+## Findings
+
+- No actionable P0, P1, or P2 spacing-foundation findings remain.
+- Product spacing choices are limited to seven values: 4, 8, 12, 16, 24, 32, and 48px. The core package's finer 0/2/6/20/28/36/40/44px steps remain available to shared component internals instead of becoming page-level design choices.
+- Control heights remain aligned to the shared 28, 32, and 36px size contract for small, medium, and large component variants.
+- The live source measurements support the chosen rhythm: Apps uses 8px control gaps, 24px page gutters, 32px major spacing, and 48px taxonomy separation; App detail uses 4px metadata stacks, 8px action gaps, 12px control groups, 24px gutters, and 32px section insets; Workspace uses 8/12/16px compact rail spacing, 24px header grouping, and 32px primary controls.
+- The Storybook reference shows the scale, intended use of every value, aligned control-size specimens, and compact/content/region composition examples.
+- The built story resolves all ten spacing and size custom properties to their documented pixel values and has equal 1280px client and scroll widths.
+- The existing live Storybook development process has a stale index error in the pre-existing Typography story. The fresh static Storybook build succeeds and contains the verified Spacing/System story.
 
 ## Verification
 
-- Catalog comparison: no remaining P0/P1/P2 layout defect.
-- Detail comparison: the layout contract is matched; the local legacy V7 row
-  intentionally shows the explicit captured-source fallback until migration and
-  re-import/backfill provide its Mobbin metadata.
-- Compact catalog: 390 px client width and 390 px scroll width, with no
-  horizontal overflow and no navigation collisions.
-- Focused Sites component tests: 16 passed.
-- Sites route-boundary tests: 16 passed.
-- Production build: passed.
-- Vite reports only its existing large-chunk optimization warning.
-
-## Apps/Sites header replication QA — 2026-07-27
-
-### Visual truth and normalization
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_pxRSMa/Screenshot 2026-07-27 at 12.28.13.png`
-- Browser-rendered implementation: `/tmp/astryx-apps-after.png`
-- Normalized source header: `/tmp/astryx-header-reference.png`
-- Normalized implementation header: `/tmp/astryx-header-implementation.png`
-- Combined comparison input: `/tmp/astryx-header-comparison.png`
-- Browser viewport: 1512 × 900 CSS px at device pixel ratio 2.
-- Source pixels: 3024 × 146 at 2× density, downsampled to 1512 × 73.
-- Implementation pixels: 1512 × 900 CSS-normalized browser capture; the
-  1512 × 72 header crop was extended by one background pixel to match the
-  source comparison frame.
-- State: source is Mobbin signed-in; implementation is Vitrine Apps in the
-  guest state. The product logo and right-side account controls are intentional
-  product/state differences and were excluded from false-precision matching.
-
-### Findings
-
-- No actionable P0, P1, or P2 differences remain.
-- Fonts and typography: the active/inactive tab hierarchy, 16 px/600 tab
-  treatment, and subdued search copy match the source. The implementation keeps
-  the existing product font stack.
-- Spacing and layout rhythm: the header is 72 px high; the centered search is
-  512 × 48 at x=500; the logo, tabs, and search align to the source frame.
-- Colors and visual tokens: the header resolves to `#111111`, the search to
-  `#303030`, the active tab to `#f5f5f5`, and inactive tabs to `#686868`.
-- Image quality and asset fidelity: Vitrine's existing SVG favicon remains
-  sharp at 32 × 32. The Mobbin logo was not copied because this is Vitrine's
-  product header.
-- Copy and content: `Apps`, `Sites`, and `Search on Web...` match the source.
-  The source's signed-in actions intentionally remain Vitrine's functional
-  guest `Login` control.
-
-### Comparison evidence
-
-- Full-view evidence: the normalized two-row comparison shows matching header
-  frame, centered search proportions, baseline, dark surfaces, and flat tabs.
-- Focused-region evidence: the complete header is itself the focused region;
-  no smaller crop was required because all typography, icon, and control edges
-  are legible in the 1512 × 146 combined comparison.
-- Comparison history: the first formal comparison found no actionable
-  P0/P1/P2 mismatch, so no blocking design-QA iteration was required.
-
-### Interaction and runtime verification
-
-- Apps → Sites and Sites → Apps navigation both reached their expected routes.
-- The header search opened the catalog dialog and its Close action dismissed it.
-- Browser console: no runtime errors; only the existing Astryx development
-  theme-injection warning and Vite development messages.
-- Focused Apps/Sites tests: 52 passed.
-- Production build: passed.
-
-### Open questions
-
-- None blocking. The signed-in action cluster can only be compared exactly in
-  the equivalent authenticated Vitrine state.
-
-### Implementation checklist
-
-- Keep Vitrine branding and account behavior.
-- Preserve the shared header across Apps and Sites.
-- Recheck the authenticated action cluster when that state is next changed.
-
-### Follow-up polish
-
-- [P3] The reference placeholder begins a few pixels farther from the search
-  icon; the current spacing remains clear and consistent with the design-system
-  button internals.
-
-final result: passed
-
-# Project Docs Trash, Import, and BA/PO templates — 2026-07-31
-
-## Visual truth and normalization
-
-- AFFiNE source captures:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-trash-import-templates-2026-07-31/`.
-- Browser-rendered Astryx implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-trash-import-templates/`.
-- Combined source/implementation review:
-  `12-combined-review.png` in the implementation evidence directory.
-- Viewport: 1280 × 720 for the implementation captures. Source and local
-  evidence were normalized to 640px-wide panels for the comparison input.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in this scoped build.
-
-- Trash follows AFFiNE's dedicated management view with centered empty-state
-  copy, while retaining the approved Astryx workspace shell and light design
-  tokens.
-- Import deliberately exposes only formats that are implemented end to end:
-  Markdown and HTML. AFFiNE's additional experimental/unsupported choices are
-  not presented as functional options.
-- Templates extend the AFFiNE entry point with three BA/PO structures:
-  Product brief, Decision record, and Meeting notes. Each contains prompts
-  only and performs no content generation.
-- Permanent deletion is protected by an Astryx design-system confirmation
-  dialog and describes that both Page and Canvas state will be removed.
-- The Trash view hides Docs/Collections/Tags tabs, matching AFFiNE's dedicated
-  management context and reducing unrelated controls.
-
-## Interaction and runtime verification
-
-- Created a Decision record from the template chooser and verified all seeded
-  BlockSuite Page headings, prompts, numbered items, and bullets in the Browser.
-- Imported a Markdown file and an HTML file through the real file chooser and
-  verified their structured content in the Page editor.
-- Moved the disposable Markdown import to Trash, restored it, moved it again,
-  confirmed permanent deletion, and verified that both metadata and the
-  private OctoBase workspace were deleted.
-- Migration `0048_project_document_trash.sql` applied successfully.
-- Focused migration, store, API, OctoBase, client, runtime, and UI tests passed.
-- Production build passed.
-
-final result: passed
-
-# Project Docs Collections and Journals — 2026-07-31
-
-## Visual truth and normalization
-
-- AFFiNE Collections reference:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-journals-collections-2026-07-31/06-collections-list.png`.
-- Astryx Collections implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/05-collections-list.png`.
-- Combined Collections comparison:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/06-collections-comparison.png`.
-- AFFiNE Journals reference:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-journals-collections-2026-07-31/01-journals-empty.png`.
-- Astryx Journals implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/04-journals-empty-clean.png`.
-- Combined Journals comparison:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-collections-journals/07-journals-comparison.png`.
-- Viewport and pixels: source and implementation use 1280 × 720 at normalized
-  1× density.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in this parity slice.
-
-- Collections preserve the AFFiNE model of a manual or rule-driven smart
-  folder, while keeping Astryx navigation, typography, and light design-system
-  tokens.
-- The collection list, detail empty state, document picker, rules editor, and
-  deep links are functional.
-- Journals preserve the AFFiNE seven-day date strip, date heading, empty daily
-  state, and one-click daily-document creation.
-- The sidebar action buttons are icon-only with accessible names, avoiding the
-  visible `actions` copy that appeared during the first browser pass.
-- Rules cover fields that exist in the Astryx Project Document model:
-  favorites, journals, tags, document mode, page width, and created/updated
-  dates. Unsupported AFFiNE-only metadata is not simulated.
-
-## Interaction and runtime verification
-
-- Created the `Product decisions` collection, selected `Product brief`, opened
-  the persisted deep link, and verified the collection shows one document.
-- Opened the rules editor and verified both manual and rules modes plus every
-  supported field.
-- Created the July 31 daily journal as a real BlockSuite/OctoBase-backed
-  Project Document and reopened it from the Journals workspace.
-- Browser verification caught and fixed a calendar-date timezone shift caused
-  by converting PostgreSQL `DATE` values through UTC.
-- Reload persistence now returns the correct journal day and changes the
-  primary action from `Create daily journal` to `Open journal`.
-- Migration 0047 applied successfully.
-- Focused migration, store, API, router, client, and UI tests: 63 passed.
-- Production build: passed.
-
-final result: passed
-
-# Project Docs multi-document workspace — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/affine-reference.png`.
-- Browser-rendered Astryx implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/astryx-implementation.png`.
-- Combined comparison:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-multidoc/affine-astryx-comparison.jpg`.
-- Source and implementation are both 1280 × 720 CSS pixels and 1280 × 720
-  image pixels at normalized 1× density.
-- Compared state: AFFiNE Page workspace with its document navigation open versus
-  Astryx Project Docs with two persistent documents, one favorite, the active
-  document highlighted, and the Page editor open.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in this multi-document slice.
-
-- Hierarchy: both products keep document discovery in a persistent left rail and
-  reserve the larger right surface for the active block document.
-- Navigation: Astryx now exposes New doc, search, Favorites, All docs, active
-  selection, update dates, and a collapsible sidebar.
-- Editor continuity: the existing BlockSuite Page and Canvas editors remain
-  untouched and mount inside the selected document route.
-- Astryx intentionally retains its global product header, light design-system
-  tokens, and Project-scoped terminology instead of copying AFFiNE branding.
-- Journals, folders, tags, collections, trash, and import remain outside this
-  slice and are ranked follow-up parity work rather than hidden visual controls.
-
-The full-view comparison keeps the navigation, active row, favorite row, editor
-title, content, and global shell legible, so a separate crop was not required.
-
-## Interaction and runtime verification
-
-- Created a second document and received a durable deep link using `?doc=5`.
-- Renamed it to `Product brief`, favorited it, reloaded, and confirmed both
-  metadata values persisted.
-- Search for `Project` reduced the navigation list to `Project notes`.
-- Switched between `Project notes` and `Product brief`; each restored its own
-  BlockSuite document and independent Page/Canvas mode after reload.
-- Collapsed and reopened the document navigation.
-- Loaded a nonexistent document ID and confirmed the recovery state still kept
-  the real project document list available for navigation.
-- Focused Project Docs, routing, API, storage, and sync tests: 45 passed.
-- Production build: passed. Vite reported only its existing large-chunk warning.
-- A broader run that included the repository's source-inspection
-  `App.boundary.test.ts` still has unrelated pending assertions in the existing
-  dirty worktree; none are runtime or build failures for this slice.
-
-## Comparison history
-
-- Pass 1 exposed a P1 workflow gap: one fixed `main` document with no workspace
-  list, create action, search, favorites grouping, or persistent selected route.
-- Fix: added owner-scoped document list/create/reopen APIs, document-aware
-  routing, a design-system sidebar, favorites and search, and per-document
-  runtime mounting without forking BlockSuite.
-- Post-fix evidence: the side-by-side comparison shows the workspace navigation
-  pattern alongside a functioning Astryx implementation, and live Browser
-  testing proves create, select, reload, search, favorite, collapse, and
-  invalid-link recovery states.
-
-final result: passed
-
-# Project Docs folders and tags — 2026-07-31
-
-## Visual truth and normalization
-
-- AFFiNE source states:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-folders-tags-2026-07-31/01-document-info-tags-empty.png`
-  through
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-folders-tags-2026-07-31/06-folder-add-docs-dialog.png`.
-- Final Astryx states:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/02-tags-management.png`,
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/04-folder-add-docs-fixed.png`,
-  and
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-folders-tags/06-document-info-tag-picker-final.png`.
-- Combined source/implementation comparisons:
-  `compare-tags-page.png`, `compare-folder-add-docs.png`, and
-  `compare-info-tag-picker.png` in the same Astryx evidence directory.
-- Viewport and pixels: source and implementation are 1280 × 720 CSS pixels and
-  1280 × 720 image pixels at 1× normalized density.
-- State: authenticated document workspace with two documents, one root folder,
-  one nested folder, and one assigned tag.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in this organization slice.
-
-- Information architecture: Astryx now exposes persistent folders, nested
-  folders, multi-folder document membership, a Tags management view, tag
-  filters, and document-level tag assignment in the library and Info panel.
-- Design system: the new controls use Astryx toolbar, breadcrumbs, buttons,
-  inputs, segmented controls, menus, checkboxes, and modal primitives. The
-  application shell remains the approved Astryx shell rather than copying
-  AFFiNE chrome.
-- Typography and spacing: sidebar counts, nested rows, tag chips, document
-  metadata, pickers, and actions remain compact and readable at the comparison
-  viewport.
-- Colors: folder and tag surfaces follow the existing light document workspace.
-  Tag colors are consistent between the sidebar, library rows, Tags view, and
-  document Info panel.
-- Intentional presentation difference: AFFiNE uses a dark workspace popover for
-  document tags. Astryx uses its accessible form modal to keep the existing
-  design-system interaction contract while preserving the same search,
-  selection, and save behavior.
-
-## Interaction and runtime verification
-
-- Created `Planning`, then created nested `Research` from the folder action
-  menu.
-- Added both `Product brief` and `Research notes` to `Planning`; documents can
-  belong to multiple folders.
-- Folder selection filtered to two documents and now writes a persistent
-  `?folder=1` deep link.
-- Created `Priority`, assigned it to `Product brief`, opened it from the
-  document Info panel, and confirmed `?tag=` and `?view=tags` deep-link routes.
-- Reloading the document preserved folder nesting, memberships, tags, and tag
-  assignments.
-- The selected in-app Browser connector did not expose a console-message
-  stream. No visible error state appeared during the complete interaction run,
-  the API process logged no request errors, and all mutations returned their
-  expected UI state.
-- Focused project-document and route tests: 78 passed.
-- Focused library/workspace render tests: 11 passed.
-- Production build: passed. The existing BlockSuite large-chunk warning
-  remains non-blocking.
-
-## Comparison history
-
-- Pass 1 found a P1 contrast failure: organizer dialogs inherited the global
-  dark modal surface while headings, secondary text, and actions used light
-  workspace colors.
-- Fix: raised the organizer modal override specificity and defined light
-  surface, text, field, input, border, backdrop, and ghost-action colors.
-- Pass 2 confirmed readable folder and tag pickers against the AFFiNE source
-  states. Deep-link navigation was also added after the live folder filter
-  initially changed local state without updating the URL.
-
-final result: passed
-
-## Latest QA checkpoint
-
-The latest completed build review is
-**Project Docs folders and tags — 2026-07-31** in this file.
-
-final result: passed
-
-# Project Docs All docs library — 2026-07-31
-
-## Audit evidence
-
-- AFFiNE All docs:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/01-all-docs.jpg`.
-- AFFiNE Display menu:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/02-display-options.jpg`.
-- AFFiNE Collections empty state:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/03-collections-empty.jpg`.
-- AFFiNE Tags empty state:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/04-tags-empty.jpg`.
-- AFFiNE expanded folder:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-workspace-management-audit/05-folder-expanded.jpg`.
-
-The audited flow is healthy for document discovery: All docs is the central
-library, Display owns grouping and ordering, New doc creates immediately, and
-folders expand inline. Collections and Tags intentionally begin with dedicated
-empty states and clear creation actions. Screenshot evidence cannot confirm
-screen-reader output or every keyboard path.
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/affine-all-docs-reference.png`.
-- Browser-rendered Astryx implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/astryx-all-docs-implementation.png`.
-- Combined comparison:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/project-docs-all-docs/affine-astryx-all-docs-comparison.jpg`.
-- Source and implementation are both 1280 × 720 CSS pixels and 1280 × 720
-  image pixels at normalized 1× density.
-- Compared state: authenticated workspace, All docs selected, three documents,
-  updated-date grouping, list display, no open menus or search query.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the implemented All docs
-slice.
-
-- Fonts and typography: Astryx keeps its approved product type hierarchy while
-  matching AFFiNE's compact row labels, muted metadata, and small group counts.
-- Spacing and layout rhythm: the 248px persistent document rail, grouped rows,
-  compact toolbar, and open content field align with the reference composition.
-- Colors and visual tokens: Astryx intentionally uses the existing light
-  Project Docs tokens beneath its dark global header instead of copying AFFiNE
-  dark mode. The Display popover is explicitly light and readable.
-- Image quality and asset fidelity: this surface has no raster imagery. All
-  functional icons come from the existing Astryx icon library.
-- Copy and content: labels use the Project-scoped vocabulary already approved:
-  Docs, Project docs, New doc, Favorites, All docs, Display, List, and Grid.
-- Collections, Tags, Journals, folders, Trash, Import, and Template are not
-  represented as fake controls. They remain explicit follow-up features for
-  full workspace parity.
-
-The full-view comparison keeps the navigation, controls, groups, document
-titles, metadata, and favorite states legible, so a separate focused crop was
-not required.
-
-## Interaction and runtime verification
-
-- `/projects/2/docs` opens the library; `?doc=<id>` opens the selected editor.
-- Search reduced three documents to one matching row.
-- List and Grid both rendered the complete filtered collection.
-- Display switched between updated-date groups and one group, and sorting by
-  title changed the live row order.
-- Favorite toggles persisted across reload.
-- New doc created document `6`, opened it, and the title `Discovery notes`
-  persisted back into the library.
-- Opening `Project notes` from the library and choosing All docs returned to the
-  library route.
-- The sidebar can collapse and uses an overlay layout below 760px; static
-  responsive assertions cover 760px and 480px breakpoints.
-- Focused Project Docs, routing, API, storage, and sync tests: 48 passed.
-- Production build: passed. Vite reported only its existing large-chunk warning.
-
-## Comparison history
-
-- Pass 1 found a P1 structural gap: Astryx had only the editor sidebar and no
-  dedicated All docs surface.
-- Fix: made the no-document route a real library with owner-scoped data, search,
-  grouping, sorting, list/grid display, favorites, creation, and editor links.
-- Pass 2 found a P2 popover contrast failure and a P2 composition mismatch
-  because the library omitted persistent document navigation.
-- Fix: forced the library surface and popover to light design-system tokens,
-  separated the heading count, and added the same 248px project document rail
-  used by the editor.
-- Post-fix evidence: the final side-by-side shows matching persistent
-  navigation, compact controls, grouped document rows, and open workspace
-  composition with no unreadable menu state.
-
-final result: passed
-
-## Latest QA checkpoint
-
-The latest completed build review is
-**Project Docs All docs library — 2026-07-31** in this file.
-
-final result: passed
-
-# Project Docs Page editor — 2026-07-30
-
-## Visual truth and normalization
-
-- AFFiNE Page reference: `/tmp/astryx-affine-page-reference.png`.
-- Browser-rendered Astryx implementation:
-  `/tmp/astryx-page-implementation.png`.
-- Combined side-by-side comparison:
-  `/tmp/astryx-affine-page-comparison.jpg`.
-- Viewport and pixels: both captures are 1086 × 863 CSS/image pixels at 1×
-  normalized density.
-- State: AFFiNE Getting Started Page compared with Astryx Project notes in Page
-  mode, with the document properties section collapsed.
-
-## Findings
-
-No actionable P0, P1, or P2 difference remains in the requested Page editor
-surface.
-
-- Fonts and typography: Astryx matches the reference's large editable title,
-  quiet property action, and readable rich-block hierarchy while retaining the
-  existing product font.
-- Spacing and layout rhythm: the Page editor uses a centered 816 px document
-  column, generous top offset, compact page actions, a title/property header,
-  and uninterrupted BlockSuite content below the divider.
-- Colors and visual tokens: the reference's document hierarchy is adapted to
-  Astryx's approved light document surface. The surrounding global header
-  remains Astryx black rather than copying AFFiNE branding or theme.
-- Image quality and asset fidelity: no raster assets are required. Page actions
-  use the existing Astryx design-system icon library.
-- Copy and content: `Project notes` and the existing project blocks remain the
-  authoritative document content. AFFiNE's demo copy, workspace sidebar,
-  sync-warning banner, and share controls were intentionally not copied.
-- Canvas remains the existing full-bleed BlockSuite edgeless workspace rather
-  than being constrained by the Page document column.
-
-## Interaction and runtime verification
-
-- Page icon selection persisted after a full reload.
-- Editing the document title persisted after reload; the temporary verification
-  title was restored to `Project notes`.
-- Info opens the Created, Updated, and View properties and closes again.
-- Switching to Canvas removes the Page shell and provides a 746 px full-bleed
-  editor; switching back restores the Page title and rich document.
-- The editor save indicator remained `Saved` after the interaction pass.
-
-## Comparison history
-
-- Pass 1 found a P2 contrast issue where the document toolbar inherited dark
-  global design tokens on its white surface.
-- Fix: scoped the approved light text, icon, neutral, hover, and accent tokens
-  to the document toolbar while keeping the shared component implementation.
-- Post-fix evidence: the final side-by-side shows a clear breadcrumb, centered
-  view switcher, save state, document title, Info divider, and aligned content
-  column with no blocked or illegible controls.
-
-final result: passed
-
-# Site section inspector footer cleanup — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-flow-modal-2026-07-30/site-section.jpg`.
-- Browser-rendered final implementation:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-footer-cleanup-2026-07-30/after.jpg`.
-- Source viewport/pixels: 1280 × 720 CSS pixels and 1280 × 720 image pixels at
-  1× density.
-- Implementation viewport/pixels: 642 × 863 CSS pixels and 642 × 863 image
-  pixels at 1× density.
-- State: authenticated Vercel section inspector, Section mode, item 5 of 8.
-- The active browser viewport was narrower than the source capture. The review
-  therefore judges the footer content and responsive alignment rather than
-  claiming pixel-level equivalence across the full modal.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested footer surface.
-
-- Fonts and typography: the retained `Content Section`, `5 of 8`, and
-  `Download` labels keep the established hierarchy and remain legible at the
-  narrow viewport.
-- Spacing and layout rhythm: removing the secondary metadata row and disclosure
-  leaves a single balanced footer row, with summary at the start and Download
-  at the end.
-- Colors and visual tokens: retained content continues to use the shared modal
-  foreground and muted-count tokens.
-- Image quality and asset fidelity: the section capture and transparent media
-  treatment are unchanged.
-- Copy and content: `Reconstruction details`, the pattern badge, and the
-  `Vercel · vercel.com` source row are absent. The requested title/count and
-  Download action remain.
-- Focused-region comparison was not needed because both removed targets and
-  the complete remaining footer row are clearly readable in the full-view
-  captures. The DOM snapshot independently confirms their absence.
-
-## Interaction and runtime verification
-
-- Section and Full page modes still toggle successfully after the footer
-  cleanup.
-- The live modal DOM contains `Content Section`, `5 of 8`, and `Download`, and
-  contains neither `Reconstruction details` nor `vercel.com`.
-- No browser console errors were captured.
-- Focused modal tests: 11 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified P2 footer clutter from the reconstruction disclosure and
-  the redundant pattern/source metadata row.
-- Fix: removed both elements and changed the footer grid from three columns to
-  two.
-- Post-fix evidence: the final browser capture shows one concise footer row with
-  no empty middle column or redundant metadata.
-
-final result: passed
-
-# Site section inspector Flow modal alignment — 2026-07-30
-
-## Visual truth and normalization
-
-- Flow modal source:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-flow-modal-2026-07-30/flow-reference.jpg`.
-- Browser-rendered Site section modal:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-flow-modal-2026-07-30/site-section.jpg`.
-- Combined comparison:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-flow-modal-2026-07-30/comparison.jpg`.
-- Viewport and pixels: both captures are 1280 × 720 CSS pixels and
-  1280 × 720 image pixels at 1× density.
-- State: authenticated Flow Screens modal compared with the Vercel Section
-  modal in Section mode.
-
-## Findings
-
-No actionable P0, P1, or P2 modal-shell mismatch remains.
-
-- Fonts and typography: each modal keeps its content-specific labels while
-  sharing the same header density and dark preview hierarchy.
-- Spacing and layout rhythm: both use the exact fullscreen overlay, 24/32px
-  desktop inset, 24px radius, border, and elevation from the Flow preview
-  shell.
-- Colors and visual tokens: both inherit `--flow-preview-surface` and the same
-  overlay treatment; the Site capture letterbox remains transparent.
-- Image quality and asset fidelity: both display authoritative imported
-  captures without recoloring or replacement.
-- Copy and content: Flow-specific actions remain in Flow; Section-specific
-  source metadata, reconstruction details, and download remain in Section.
-
-The full-view side-by-side keeps the modal frame, header, stage, and footer
-fully legible, so a focused crop was not needed.
-
-## Interaction and runtime verification
-
-- Section and Full page both render inside the Flow preview shell.
-- Compact breakpoints inherit the Flow modal's edge-to-edge behavior.
-- Browser console: no application errors.
-- Focused Flow, modal, and Section inspector tests: 11 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 incorrectly used the standard centered dialog presentation.
-- Fix: restored the fullscreen design-system variant and reused
-  `flow-preview-dialog-shell` plus `flow-preview-dialog` directly.
-- Post-fix evidence: the combined comparison shows identical outer geometry,
-  backdrop, surface color, border, radius, and elevation.
-
-final result: passed
-
-# Site section inspector shared modal — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-inspector-modal-2026-07-30/before.png`.
-- Browser-rendered final implementation:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-inspector-modal-2026-07-30/after.png`.
-- Combined before/after comparison:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-inspector-modal-2026-07-30/comparison.jpg`.
-- Full-page interaction evidence:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-inspector-modal-2026-07-30/full-page.png`.
-- Viewport and pixels: source and implementation are 642 × 863 CSS pixels and
-  642 × 863 image pixels at 1× normalized density.
-- State: authenticated Vercel Sites detail, section 5 of 8, Section mode.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested modal surface.
-
-- Fonts and typography: the existing Section/Full page switcher and metadata
-  hierarchy remain unchanged and readable.
-- Spacing and layout rhythm: the inspector now has the shared modal inset,
-  24px surface radius, border, backdrop, and elevation instead of touching the
-  viewport edges.
-- Colors and visual tokens: the header, media stage, and footer now inherit the
-  shared modal surface and border tokens. The section image uses a transparent
-  letterbox, removing the separate muted color layer.
-- Image quality and asset fidelity: the imported Site capture is unchanged,
-  remains contained without cropping, and retains its original color.
-- Copy and content: section title, position, classification, source link,
-  reconstruction details, and download action are unchanged.
-
-The full-view comparison keeps the modal frame, switcher, capture, metadata,
-and footer legible, so a separate focused crop was not needed.
-
-## Interaction and runtime verification
-
-- Section and Full page modes both render inside the same modal surface.
-- Full page remains vertically scrollable and uses the parent page capture.
-- Close returns to `/sites/vercel/sections?version=454`.
-- Reopening the section route restores Section mode and one accessible
-  `Vercel section detail` dialog.
-- Browser console: no application errors.
-- Focused modal and inspector tests: 7 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found a P2 surface mismatch: the fullscreen presentation removed the
-  shared modal frame on compact viewports, and the image introduced a separate
-  muted background color.
-- Fix: changed the inspector to the standard Astryx modal presentation, moved
-  sizing to a modal shell, retained the shared surface for content layout, and
-  made the section image background transparent.
-- Post-fix evidence: the side-by-side comparison shows the requested inset,
-  rounded shared modal with one consistent dark surface and unchanged capture
-  content.
-
-final result: passed
-
-## Latest QA checkpoint
-
-The latest completed build review is **Site section inspector footer cleanup —
-2026-07-30** in this file.
-
-final result: passed
-
-# Site section inspector header actions — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-footer-cleanup-2026-07-30/after.jpg`.
-- Browser-rendered implementation:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-actions-header-2026-07-30/after.jpg`.
-- Combined side-by-side comparison:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-actions-header-2026-07-30/comparison.jpg`.
-- Source and implementation are 642 × 863 CSS pixels and 642 × 863 image
-  pixels at 1× density.
-- State: authenticated Vercel section inspector, Section mode, item 5 of 8.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested action area.
-
-- Fonts and typography: Save and Copy link use the existing compact header
-  action hierarchy.
-- Spacing and layout rhythm: Save now sits directly beside Copy link and Close
-  in the top-right action group. The footer retains only the section title and
-  count without an empty second column.
-- Colors and visual tokens: the new action reuses the modal foreground and
-  hover-surface tokens.
-- Image quality and asset fidelity: the section capture is unchanged.
-- Copy and content: Download is replaced by Save, while Copy link remains
-  available beside it.
-- The combined full-view comparison clearly shows both the moved action and
-  the simplified footer, so a separate focused crop was unnecessary.
-
-## Interaction and runtime verification
-
-- Save retains the section media URL and native `download` behavior.
-- Copy link and the Section/Full page switcher remain present.
-- No browser console errors were captured.
-- Focused modal tests: 11 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified the P2 action-placement mismatch: Download was isolated in
-  the footer while the related Copy link action lived in the header.
-- Fix: moved the media action into the header, renamed it Save, and reduced the
-  footer to one content column.
-- Post-fix evidence: the side-by-side comparison shows Save and Copy link
-  grouped at the top-right with no remaining footer action.
-
-final result: passed
-
-# Project Docs Page workspace controls — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-page-reference.jpg`.
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-implementation.jpg`.
-- Combined comparison input:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/affine-astryx-page-comparison.jpg`.
-- Focused interaction evidence:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-more-menu.jpg`
-  and
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb393-11aa-7cb0-9095-29b47780f562/astryx-page-table-of-contents.jpg`.
-- Source and implementation are both 1086 × 863 image pixels in the same
-  in-app Browser viewport. The Browser connector did not expose device density;
-  no density normalization was needed because both captures have identical
-  pixel dimensions.
-- State: authenticated Page mode, standard width, not favorited, editor scrolled
-  to the document header. AFFiNE is in its dark workspace theme while Astryx
-  intentionally inherits the light Astryx design system.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in this Page workspace-control
-slice.
-
-- Fonts and typography: the source and implementation preserve the same
-  BlockSuite document hierarchy and readable rich-text density. Astryx shell
-  controls use the existing design-system typography rather than AFFiNE chrome.
-- Spacing and layout rhythm: the document remains centered at standard width,
-  expands through the explicit full-width setting, and the outline occupies a
-  bounded 280px side rail without covering the editor on desktop.
-- Colors and visual tokens: the toolbar, menu, status, focus, property panel,
-  and outline inherit Astryx tokens. The light/dark difference is intentional
-  product-shell ownership, not an unfinished theme clone.
-- Image quality and asset fidelity: the editor uses BlockSuite's real rendered
-  blocks and icons. No placeholder images, CSS drawings, emoji, or handcrafted
-  SVG substitutes were added.
-- Copy and content: Page, Canvas, Favorite, More, Info, Page width, and table of
-  contents labels are concise and independently understandable.
-- Icons and affordances: all new controls use Astryx design-system icons and
-  primitives. Favorite, More, outline, selected mode, save status, and close
-  actions are visibly distinct and semantically labelled.
-- The AFFiNE workspace sidebar and journal header remain different by design:
-  Astryx keeps its existing global Projects header and project-scoped document
-  route. This review judges the Page workspace controls and editor surface.
-
-The full comparison keeps the document typography, Page header, app chrome, and
-toolbar legible. Separate focused evidence was captured for the two dense
-interaction states: the More menu and generated table of contents.
-
-## Interaction and runtime verification
-
-- Favorite and full-width settings were toggled, saved, reloaded, and confirmed
-  from the live Browser DOM; both were then restored to their defaults.
-- The More menu rendered Rename, favorite, Page/Canvas, Info, table of contents,
-  and recovery-export actions.
-- The table of contents derived live BlockSuite headings including
-  `Data-intensive blocks`, `Examples for advanced blocks`,
-  `Continue with the rabbit hole`, and `And one more thing:`.
-- Canvas remained available through the existing Page/Canvas mode control.
-- The Browser showed no visible application error during these interactions.
-  Its current connector did not expose console-log collection; API mutation
-  responses and the final Saved state were verified instead.
-- Focused tests: 31 passed.
-- Production build: passed.
-- Database migration 0045 applied successfully.
-
-## Comparison history
-
-- Initial parity review found four P1/P2 product gaps: no persistent favorite,
-  no persistent Page width, no document More menu, and no navigable outline.
-- Fix: added owner-scoped metadata storage and validation, Astryx
-  design-system controls, and a live outline scanner over untouched BlockSuite
-  heading blocks.
-- Post-fix evidence: the Browser reload retained both settings, the More menu
-  exposed the expected actions, and the outline populated from the real
-  document without modifying or forking BlockSuite.
-
-final result: passed
-
-## Latest QA checkpoint
-
-The latest completed build review is
-**Project Docs Page workspace controls — 2026-07-30** in this file.
-
-final result: passed
-
-# Site section inspector shared Flow actions — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-actions-header-2026-07-30/after.jpg`.
-- Browser-rendered implementation:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-shared-flow-actions-2026-07-30/after.jpg`.
-- Combined side-by-side comparison:
-  `/Users/kai/works/eastplayers/Astryx/artifacts/site-section-shared-flow-actions-2026-07-30/comparison.jpg`.
-- Source and implementation are 642 × 863 CSS pixels and 642 × 863 image
-  pixels at 1× density.
-- State: authenticated Vercel section inspector, Section mode, item 5 of 8.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested action group.
-
-- Fonts and typography: the controls now inherit the same compact button
-  typography used by Flow-card actions.
-- Spacing and layout rhythm: Save and Copy link share the Flow action height,
-  full pill radius, and eight-pixel action gap.
-- Colors and visual tokens: Save uses the existing white primary treatment;
-  Copy link uses the existing dark secondary treatment.
-- Image quality and asset fidelity: the section capture remains unchanged.
-- Copy and content: the labels remain Save and Copy link, with the shared copy
-  icon supplied by `CopyButton`.
-- The side-by-side full-view comparison keeps the complete action group
-  readable, so a separate focused crop was unnecessary.
-
-## Interaction and runtime verification
-
-- Save still initiates a download of the active section/full-page media.
-- Copy link retains shared loading and toast feedback.
-- Section/Full page switching and Close remain available.
-- No browser console errors were captured.
-- Focused shared-action tests: 22 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified P2 visual drift: the custom text actions did not match the
-  established image/Flow primary and secondary pills.
-- Fix: replaced the custom Save link with the design-system Button, reused the
-  Flow save/copy classes, and switched CopyButton to the shared secondary
-  treatment.
-- Post-fix evidence: the final comparison shows the same white Save pill and
-  dark icon-bearing Copy pill used by existing Flow actions.
-
-final result: passed
-
-# App detail Export primary action — 2026-07-30
-
-## Reference set
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-export-secondary-source.jpg`.
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-export-primary-implementation.jpg`.
-- Combined comparison input:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-export-button-before-after.jpg`.
-- Viewport and pixels: 1280 × 720 CSS pixels and 1280 × 720 normalized
-  screenshot pixels at browser device pixel ratio 2.
-- State: authenticated Aboard App detail, Web platform, Screens tab, loaded
-  first gallery row.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for the requested button-state
-change.
-
-- Fonts and typography: the existing medium Hero action typography and label
-  remain unchanged.
-- Spacing and layout rhythm: the control remains 160.9 × 44px with the same
-  pill radius, padding, and hero alignment.
-- Colors and visual tokens: the action now resolves through the shared Astryx
-  primary variant to a white background and border with `rgb(17, 17, 17)` text.
-- Image quality and asset fidelity: App identity and gallery media are
-  unchanged; the comparison shows identical source crops and sharpness.
-- Copy and content: `Export to Figma` is unchanged.
-
-## Interaction and runtime verification
-
-- Activating the action still selects the existing Export section and renders
-  `Editable design handoff`.
-- The live DOM reports `data-variant="primary"` and `data-size="md"`.
-- Focused App-detail tests: 35 passed.
-- Production build and diff check: passed.
-
-## Comparison history
-
-- Pass 1 recorded the requested P2 hierarchy mismatch: Export used the
-  secondary translucent treatment.
-- Fix: enabled the existing `HeroButton` primary prop without changing its
-  event handler or layout.
-- Post-fix evidence: the normalized side-by-side capture shows the secondary
-  gray action replaced by the shared white primary action, with all surrounding
-  geometry unchanged.
-
-final result: passed
-
-# Platform-aware App Detail Screens — 2026-07-30
-
-## Visual truth and normalization
-
-- Mobbin iOS source:
-  `/Users/kai/.codex/visualizations/2026/07/30/mobbin-app-detail-screens-audit/02-mobbin-mobile-app-screens-top.png`.
-- Mobbin Android source:
-  `/Users/kai/.codex/visualizations/2026/07/30/mobbin-app-detail-screens-audit/05-mobbin-android-app-screens.png`.
-- Mobbin Web source:
-  `/Users/kai/.codex/visualizations/2026/07/30/mobbin-app-detail-screens-audit/07-mobbin-web-app-screens.png`.
-- Browser-rendered implementations:
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/01-vitrine-ios-fixed.png`,
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/02-vitrine-android-fixed.png`,
-  and
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/03-vitrine-web-fixed.png`.
-- Combined comparison inputs:
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/compare-ios-fixed.png`,
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/compare-android-fixed.png`,
-  and
-  `/Users/kai/.codex/visualizations/2026/07/30/astryx-platform-detail-fix/compare-web-fixed.png`.
-- Viewport and pixels: every source and implementation is 875 × 863 CSS pixels
-  and 875 × 863 image pixels at 1× normalized density.
-- State: signed-in App Detail → Screens, Latest version, default screen filters.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for the implemented
-platform-layout contract.
-
-- Fonts and typography: Vitrine keeps its existing product font and hierarchy.
-  Mobbin-only rating/tagline data is intentionally omitted when Astryx has no
-  authoritative value.
-- Spacing and layout rhythm: App Detail uses 24px horizontal gutters. iOS and
-  Android retain a three-column mobile grid at 875px. Web renders two
-  402 × 251 cards with a 24px gap, matching the Mobbin Web inspection density.
-- Colors and visual tokens: existing Vitrine dark surfaces, borders, selected
-  indicators, and muted secondary actions remain unchanged.
-- Image quality and asset fidelity: existing imported app icons and full
-  screenshot media remain authoritative. Mobile cards use the rounded mobile
-  treatment while Web cards use a 12px landscape treatment.
-- Copy and content: the hero and gallery now show the selected platform's
-  version count. Screen controls use app and screen context instead of database
-  ids; no source text or ratings were fabricated.
-- Navigation: Screens, UI Elements, and Flows remain primary. Admin Design
-  System and Export are available through the functional More selector, so the
-  navigation no longer clips at the audited viewport.
-
-Focused-region crops were not needed because the full-view normalized
-comparisons keep the hero metadata, navigation controls, and complete first-row
-card edges legible.
-
-## Interaction and runtime verification
-
-- Switching Amazon Shopping from iOS to Android updates the route to
-  `platform=android` and the displayed total to 268 screens.
-- The More selector opens a listbox containing Design System and Export.
-- The Screens filter opens its searchable, scroll-contained dialog.
-- Save and Copy controls remain in every screen card and the existing preview
-  dialog behavior is preserved.
-- Browser console: no application errors; only the existing Astryx development
-  theme-injection warning and Vite development messages.
-- Focused component tests: 40 passed.
-- Full repository test suite: passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found aggregate hero totals, a three-column Web grid, clipped admin
-  tabs, and id/flow-only screen labels.
-- Fix: used selected-version totals, introduced explicit mobile/Web gallery
-  layouts, moved admin sections into More, and generated descriptive labels.
-- Post-fix evidence: mobile retains three inspection columns while Web exactly
-  measures 402 × 251 in two columns at 875px.
-- Interaction pass found platform selection changed content without persisting
-  the route.
-- Fix: platform selection now forwards the selected platform through the
-  existing route callback.
-- Post-fix evidence: the Android selection updates both route and count.
-
-final result: passed
-
-# App Screens gallery-label removal — 2026-07-30
-
-## Reference set
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/02-all-screens-only.png`,
-  matching the user-marked `All screens / loaded · total` block.
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/13-screens-no-gallery-heading-final-loaded.jpg`.
-- Combined comparison input:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/14-heading-removal-before-after.png`.
-- Viewport and pixels: 875 × 863 CSS pixels and 875 × 863 image pixels at
-  1× normalized density.
-- State: Amazon Shopping, iOS, version 1, loaded Screens tab at page top.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for this scoped removal.
-
-- Fonts and typography: no application typography changed; the redundant
-  gallery heading and count are absent.
-- Spacing and layout rhythm: the screen grid now follows the App navigation
-  directly, removing the empty labelled-section gap.
-- Colors and visual tokens: unchanged.
-- Image quality and asset fidelity: screen images retain their source crop,
-  containment, and sharpness.
-- Copy and content: `All screens` and the secondary loaded/total count are no
-  longer rendered. The navigation-level `Showing 947 screens` count remains.
-
-## Interaction and runtime verification
-
-- Screen cards, Save, Copy, selection, filters, and incremental loading remain
-  wired through the existing gallery implementation.
-- Browser DOM contains no `All screens` or `loaded ·` gallery copy.
-- Browser console has no application errors; only the existing development
-  warning about runtime theme injection.
-- Focused component tests: 27 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P2 density issue: the gallery repeated a title and count
-  already communicated by the Screens tab and navigation total.
-- Fix: removed only the gallery heading wrapper and rendered the existing grid
-  directly.
-- Post-fix evidence: the side-by-side comparison shows the cards beginning
-  directly beneath the App navigation without changing the cards themselves.
+- Eighteen focused color, typography, spacing, and foundation tests pass.
+- The production Vite build succeeds.
+- The static Storybook build succeeds and emits `Spacing.stories`.
+- The verified dark-mode Storybook story has no horizontal overflow at 1280px.
 
 final result: passed
 
 ---
 
-# Vitrine Screen Save and Copy Parity Design QA — 2026-07-30
+# Design QA — Foundation 03 Spacing Rollout
 
-## Comparison target
+Checkpoint: foundation commit `1d5b3d65` was pushed to `origin/main` before this rollout began.
 
-- Source visual truth:
-  `artifacts/mobbin-save-copy-audit-2026-07-30/05-save-popover.png`,
-  `09-two-selected.png`, and `13-screen-viewer-actions.png`.
-- Browser-rendered implementation:
-  `03-save-menu.png`, `05-batch-selected-fixed.png`,
-  `06-batch-save-menu-fixed.png`, `08-viewer-actions.png`,
-  and `10-mobile-batch-toolbar.png` under
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-save-copy-qa-2026-07-30/`.
-- Desktop viewport: 1467 × 834 CSS pixels at 1× density.
-- Mobile viewport: 390 × 844 CSS pixels at 1× density.
-- State coverage: single-screen copy, Save menu, create-collection dialog,
-  save/unsave confirmation, two-screen selection, batch Save menu, batch copy,
-  and full-screen viewer actions.
-- Full-view comparison evidence: each Mobbin source state was paired with the
-  matching Vitrine state at the same desktop viewport.
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/apps-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/sites-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/flows-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/app-detail-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/collections-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/projects-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/settings-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/admin-1280x720.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/spacing-rollout/pricing-1280x720.png`
 
 ## Findings
 
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: Vitrine retains its existing product typography while
-  matching Mobbin's compact action labels and restrained hierarchy.
-- Spacing and layout rhythm: Save and Copy sit directly beneath each screen;
-  the selected-screen toolbar stays centered above the viewport edge on
-  desktop and stretches safely between mobile gutters.
-- Colors and visual tokens: selected cards use a visible blue outline and
-  check state, while menus, viewer chrome, and the batch toolbar use the
-  existing dark Vitrine tokens.
-- Image quality and asset fidelity: actions operate on the original stored
-  screenshot bytes and place real `image/png` content on the clipboard.
-- Copy and content: `All saved`, `Create collection`, `Saved`, `Unsave`,
-  `Copied as png`, and `2 screens copied` match the audited Mobbin behavior.
-
-## Interaction and runtime verification
-
-- Single Copy placed an `image/png` clipboard item and showed
-  `Copied as png`.
-- Save exposed `All saved` and `Create collection`; the creation dialog
-  included Name, Description, and Private controls.
-- Saving persisted the selected screen, while removing it required the
-  destructive Unsave confirmation and restored the original clean state.
-- Selecting two screens showed the floating toolbar; batch Copy produced one
-  composite PNG, showed `2 screens copied`, and cleared selection.
-- The screen viewer exposed Save, PNG Copy, and Copy link. Copied links include
-  `utm_source=copy_link`, `utm_medium=link`, and
-  `utm_campaign=screen_sharing`.
-- The floating toolbar remained visible and usable at 390 × 844.
-- Focused API and Vitrine tests: 134 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P2 layout defect: the fixed batch toolbar inherited the
-  transformed gallery as its containing block and could render below a long
-  page.
-- Fix: moved transient screen-action overlays into a document-level portal.
-- Pass 2 confirmed the toolbar at the desktop viewport edge and within mobile
-  gutters, with its Save menu anchored above the control.
-
-final result: passed
-
----
-
-# App Screens Flow Context Build QA — 2026-07-30
-
-## Comparison target
-
-- Source visual truths:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/01-mobbin-app-screens.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/04-mobbin-screen-viewer.png`
-- Browser-rendered implementations:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/16-vitrine-app-screens-flow-context-1467x834.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/18-vitrine-screen-viewer-flow-context-1467x834.png`
-- Combined comparison inputs:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/21-mobbin-vitrine-screens-final-comparison.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/22-mobbin-vitrine-screen-viewer-final-comparison.png`
-- Viewport: 1467 × 834 CSS pixels at 1× density.
-- Source pixels: 1467 × 834 for both source captures.
-- Implementation pixels: 1467 × 834 for both implementation captures.
-- Density normalization: none required.
-- State: signed-in Amazon Shopping iOS Screens page with no active filters, plus an open single-screen viewer. Viewer content differs because each capture opens a different real Amazon screen; the shell, navigation, metadata, and action state are equivalent.
-- Responsive evidence:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/19-vitrine-app-screens-flow-context-875x863.png`.
-- Full-view comparison evidence: the source and implementation were joined side by side for the Screens page and viewer.
-- Focused-region comparison: the viewer comparison is the focused interaction region; no additional crop was needed because every action and metadata label is readable.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested Screens and viewer surfaces.
-
-- Fonts and typography: Vitrine retains the existing reference-navigation type system while matching Mobbin's large section headings, muted supporting copy, compact metadata, and action hierarchy.
-- Spacing and layout rhythm: Highlights is now a horizontal screen rail, Flow context is presented before the divided All screens grid, and the viewer keeps a centered 393 × 852 phone with edge navigation and bottom controls.
-- Viewport resilience: the horizontal Highlights and Flow rails preserve card proportions and scroll instead of collapsing at 875 px; action controls remain available on touch-width layouts.
-- Colors and visual tokens: the dark neutral canvas, restrained dividers, white primary Save action, dark secondary actions, and muted metadata match the source treatment.
-- Image quality and asset fidelity: every card and viewer uses the stored Amazon full image or thumbnail; no placeholder art, CSS illustration, or synthetic app asset was introduced.
-- Copy and content: Highlights, Flows using these screens, All screens, Found in, platform/resolution, and More info are grounded in persisted screen and Flow records.
-- Icons and controls: Save, Copy, source/more, close, previous, and next use the shared Astryx icon family with accessible labels.
-- States and interactions: the Flow-based filter, Highlights, All screens, Flow preview, shareable evidence URL, real collection picker, Copy action, viewer navigation, and exact Found in membership are connected.
-- Accessibility: semantic regions and headings identify the three content areas; filters use native checkboxes; controls remain keyboard reachable with named actions.
-
-## Expected product-data differences
-
-- Vitrine does not invent Mobbin's Amazon tagline, rating, or proprietary Highlight flag. Highlight ordering is deterministically derived from repeated persisted Flow evidence.
-- The current Amazon screen records have no page-type analysis, so the filter exposes the available `Unclassified` type plus a rich, searchable `Found in Flows` group from 307 real Flows. Screen taxonomy enrichment remains an upstream analysis task rather than a UI fabrication.
-- Mobbin's viewer-only collaboration avatars and recommendation affordance are not reproduced because Vitrine has no corresponding collaboration or recommendation state.
-
-## Interaction and runtime verification
-
-- Selecting `Adding a vet clinic` under Found in Flows reduced Highlights, Flow previews, and All screens to one currently loaded matching screen.
-- Opening a Highlight produced the shareable route `evidence=SCREEN-340248`.
-- The viewer rendered `Found in Favoriting a creator's list +2`, proving multi-Flow membership from persisted evidence IDs.
-- Browser console: no errors.
-- Focused Screen, viewer, Flow-context, section-store, and API tests: 39 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Earlier audit: the Screens surface had only a flat grid, an `Unclassified` filter, no Highlights/All screens structure, no Flow previews, no direct card actions, and no exact Flow membership in the viewer.
-- Fix: joined screens to persisted Flow evidence IDs, added deterministic Highlights and Flow preview sections, added searchable Flow-context filtering, connected Save/Copy/source actions, and passed exact memberships into the viewer.
-- Post-fix evidence: the two final combined comparisons show the intended Mobbin information architecture and viewer shell while preserving Vitrine's real data and design system.
-
-final result: passed
-
----
-
-# App Detail Mobbin-Style Flow Modal QA — 2026-07-30
-
-## Comparison target
-
-- Mobbin Screens reference:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/04-mobbin-flow-detail.png`.
-- Mobbin Prototype reference:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/05-mobbin-flow-prototype.png`.
-- Browser-rendered Screens implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/21-vitrine-modal-screens-final.png`.
-- Browser-rendered Prototype implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/16-vitrine-modal-prototype-final.png`.
-- Responsive implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/17-vitrine-modal-responsive.png`.
-- Screens comparison:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/22-modal-screens-final-comparison.png`.
-- Prototype comparison:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/20-modal-prototype-comparison.png`.
-- Desktop viewport and source pixels: 1467 × 834 at 1× density.
-- Responsive viewport: 875 × 863 at 1× density.
-- State: Amazon Shopping, No-Rush reward balance, Screens and Prototype
-  modes.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the Flow title, app identity, mode selector, action
-  labels, progress, and metadata follow the Mobbin hierarchy and compact scale.
-- Spacing and layout rhythm: the desktop modal uses the same 32px horizontal
-  inset, 24px top inset, 72px header, three centered 393:852 phones, 32px
-  gaps, and bottom action placement.
-- Colors and visual tokens: the dimmed black backdrop, charcoal surface,
-  selected mode, neutral controls, muted metadata, and white primary action
-  reproduce the reference treatment.
-- Image quality and asset fidelity: full-resolution Flow screens fill the
-  correct phone aspect without the former white letterboxing or 16:10 crop.
-- Copy and content: Flow title, Amazon Shopping identity, screen metadata,
-  progress, Save, Copy, Restart prototype, and More info remain present.
-- Vitrine intentionally retains a third `Document` mode beside Mobbin's
-  `Screens` and `Prototype` modes.
-
-## Interaction and runtime verification
-
-- Screens mode displays the complete Flow as a side-by-side sequence without
-  prototype arrows.
-- Prototype mode displays one screen at a time with previous/next controls,
-  `n of m` progress, restart, and overflow actions.
-- The Document mode still opens the generated Feature Document and loads its
-  existing content.
-- Arrow-key navigation is available in visual modes and excluded from the
-  document reader.
-- At 875px width, all three screens remain visible in a compact strip, the
-  header reflows, and the page has no horizontal body overflow.
-- Focused Flow tests: 21 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found a P1 image treatment mismatch: 16:10 preview containers produced
-  large white strips instead of phone-shaped screens.
-- Fix: render Flow captures in their observed 393:852 mobile aspect and let the
-  source image fill that frame.
-- Pass 1 found a P1 functional mismatch: the modal had no first-class Prototype
-  playback mode.
-- Fix: add single-screen playback, directional controls, progress, restart,
-  and mode-aware URL state.
-- Pass 1 found a P2 identity mismatch: the source application was absent or
-  truncated.
-- Fix: pass the app name and icon through the Flow workspace and allow the full
-  Amazon Shopping label.
-- Pass 1 found a P2 responsive mismatch at the in-app browser width.
-- Fix: add a two-row header and a compact three-screen strip with no body
-  overflow.
-
-final result: passed
-
----
-
-# Shared Discovery Migration Runtime QA — 2026-07-28
-
-## Browser coverage
-
-- Apps: verified Web, iOS, and Android; Categories, Screens, UI Elements, and
-  Flows filters; same-group OR and cross-group AND selections; Latest and
-  Trending; query, reload, back/forward, and cursor-based infinite scroll.
-- Sites: verified Web; Categories, Sections, and Styles filters; same-group OR
-  and cross-group AND selections; Latest and Popular; query, back/forward, and
-  cursor-based infinite scroll.
-- Flows: verified Web, iOS, and Android; Flow groups; parent and child Flow-name
-  queries; Popular and Grouped; query clearing, back/forward, infinite scroll,
-  Flow preview opening, and App-icon navigation.
-- Network inspection showed one catalog request per state change and one request
-  per cursor. Opening a Flow preview made no catalog or design-system requests.
-  No `/api/design-systems/{app}` fan-out was observed.
-
-## Responsive filter-menu regression
-
-- At the tablet breakpoint, filter controls wrap with visible overflow instead
-  of becoming a horizontal scroll container.
-- Live browser verification at a 763 × 834 CSS-pixel viewport measured the open
-  Flow-groups menu below the 36px control row with computed
-  `overflow-x: visible`, `overflow-y: visible`, and `flex-wrap: wrap`.
-- A hit test 100px inside the menu resolved to the Settings checkbox option,
-  and clicking it produced the canonical URL
-  `?platform=web&sort=popular&filter=flowGroups.Settings`.
-
-## Unified API benchmark
-
-One warm-up followed by ten timed requests against the optimized API on port
-3011:
-
-| Case | Median | p95 | Decoded bytes |
-| --- | ---: | ---: | ---: |
-| Apps latest | 103 ms | 147 ms | 1,953,843 |
-| Apps category | 88 ms | 94 ms | 138,538 |
-| Apps combined | 44 ms | 45 ms | 321 |
-| Sites latest | 84 ms | 88 ms | 71,272 |
-| Sites combined | 80 ms | 85 ms | 1,990 |
-| Flows popular | 6 ms | 17 ms | 382,149 |
-| Flows grouped | 5 ms | 5 ms | 383,727 |
-| Flows parent query | 1 ms | 4 ms | 49,788 |
-| Flows child query | 1 ms | 1 ms | 14,332 |
-| Flows group filter | 5 ms | 7 ms | 383,750 |
-
-All responses were HTTP 200 and every warm p95 remained below the 500ms
-optimization threshold. Separate compression verification measured the largest
-Apps response at approximately 155–157KB gzip and the Flow response at
-approximately 46KB gzip.
-
-final result: passed
-
----
-
-# Flows Filter Bar Apps-Parity Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth: `design-qa-flows-apps-reference.png`.
-- Browser-rendered implementation: `design-qa-flows-filterbar.png`.
-- Combined comparison input: `design-qa-flows-filterbar-comparison.png`.
-- Viewport: 1280 × 720 CSS pixels.
-- Source pixels: 1280 × 720.
-- Implementation pixels: 1280 × 720.
-- Density normalization: none required; both captures came from the same
-  in-app browser tab and viewport.
-- State: loaded Web catalog with no active filter and the default sort.
-- Full-view comparison evidence: Apps and Flows were captured at the same
-  viewport and combined side by side. The comparison shows the same white
-  platform pill, outlined filter pill, result summary, divider rhythm, and
-  right-aligned sort control.
-- Focused-region comparison: the complete toolbar is fully legible in the
-  full-view comparison, so a separate crop was unnecessary.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the Web label, filter label, two-line result count,
-  and sort label use the same sizes, weights, and hierarchy as Apps.
-- Spacing and layout rhythm: Flows now uses the same compact platform pill,
-  dividers, 36px controls, result-summary alignment, and right-hand sort
-  placement as Apps.
-- Colors and visual tokens: the selected white platform surface, neutral
-  outlined filter, muted count, and primary sort label resolve through the
-  existing Apps filter-bar styles.
-- Image quality and asset fidelity: the control bar contains no raster assets;
-  existing Flow preview images and real app icons remain unchanged.
-- Copy and content: Flows intentionally retains its product-specific `Flow
-  groups`, `12 flows`, and `Popular` copy while matching Apps presentation.
-
-## Interaction and runtime verification
-
-- The Flow platform trigger is the same single-select dropdown used by Apps.
-- Opening it exposes Web, iOS, and Android as accessible radio menu items.
-- Flow groups, result count, and Popular/Grouped sorting remain connected to
-  the existing Flow state and catalog request.
-- Focused Apps, Sites, and Flows tests: 65 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P2 consistency mismatch: Flows rendered the older
-  three-segment platform switcher while Apps rendered a compact single-select
-  platform pill.
-- Fix: routed Flows through the same compact platform branch in the shared
-  `DiscoveryFilterBar` without changing Flow data or filter behavior.
-- Post-fix evidence: the combined 2560 × 720 comparison shows matching platform,
-  filter, count, divider, and sort treatments.
-
-final result: passed
-
----
-
-# App Screens Tab Mobbin Comparison Audit — 2026-07-30
-
-## Audit scope
-
-- Product surface: Amazon Shopping App detail, iOS Screens tab.
-- User goal: scan many mobile screens quickly, filter them, open one at full
-  readable size, move through adjacent screens, and share the exact selection.
-- Mobbin Screens reference:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/01-mobbin-app-screens.png`.
-- Mobbin screen viewer reference:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/04-mobbin-screen-viewer.png`.
-- Updated Vitrine Screens view:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/07-vitrine-app-screens-updated.png`.
-- Updated Vitrine screen viewer:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/06-vitrine-screen-viewer-updated.png`.
-- Responsive Vitrine Screens view:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/08-vitrine-app-screens-875x863.png`.
-- Responsive Vitrine screen viewer:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/09-vitrine-screen-viewer-875x863.png`.
-- Same-input comparisons:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/10-app-screens-comparison.png`
-  and
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/11-screen-viewer-comparison.png`.
-- Screen-filter comparison:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/14-screen-filter-comparison.png`.
-- Desktop viewport: 1467 × 834 CSS pixels at 1× density.
-- Responsive viewport: 875 × 863 CSS pixels at 1× density.
-
-## Strengths and resolved gaps
-
-- The Screens gallery now follows Mobbin's dense browsing rhythm: five
-  phone-shaped cards at the desktop comparison width and three at the in-app
-  browser width, rather than two oversized cards.
-- Screen media preserves the observed 393:852 phone shape and uses the
-  high-density source image without cropping or white side gutters.
-- Opening a card now uses an app-identified modal with one centered phone,
-  previous/next navigation, Save, Copy, overflow actions, logical iOS
-  resolution, and More info.
-- Opening and navigating a screen now serializes `evidence=SCREEN-{id}` into the
-  App URL; closing the viewer removes that selection.
-- Previously duplicated accessible labels such as `Open Unclassified screen`
-  now fall back to the stable screen id.
-- The responsive grid and viewer do not introduce horizontal body overflow.
-
-## Remaining UX and data risks
-
-- P1, upstream taxonomy: Mobbin exposes a full categorized screen taxonomy,
-  while the currently loaded Amazon Shopping records expose only
-  `Unclassified`. The Vitrine filter is therefore structurally correct but can
-  offer only one useful option until screen classification is populated.
-- P2, page composition: Mobbin separates Highlights, related Flow previews, and
-  All screens. Vitrine currently renders one continuous evidence grid because
-  highlight rank and screen-to-Flow membership are not part of the Screens
-  payload.
-- P2, app metadata: Mobbin shows the marketing tagline, rating, Save, Rate, and
-  more actions. Vitrine preserves its product-specific Export to Figma action
-  and cannot render the missing tagline or rating from the current App
-  metadata.
-- P2, card actions: Mobbin exposes per-card selection, Save, and Copy controls.
-  Vitrine provides Save and Copy in the screen viewer but does not yet expose
-  those actions directly on every grid card.
-- The viewer can show `Found in {Flow}` only when screen-to-Flow membership is
-  supplied. The current unclassified screen records do not include that
-  context, so the label is correctly omitted rather than guessed.
-
-## Accessibility evidence and limits
-
-- The viewer is a named modal dialog with a named screen-viewer group.
-- Close, previous, next, Save, Copy, overflow, link-copy, and More info controls
-  are exposed as named buttons.
-- Grid cards now have distinct accessible names even when analysis metadata is
-  missing.
-- Keyboard arrow and Escape behavior remains connected through the App detail
-  controller.
-- Screenshots and DOM inspection cannot prove full screen-reader announcement
-  quality, contrast compliance, or zoom behavior; those require dedicated
-  assistive-technology and contrast testing.
+- No actionable P0, P1, or P2 spacing-rollout findings remain.
+- A final application layer maps repeated actions, controls, tools, headers, metadata items, identity stacks, empty states, and screen-family anchors onto the seven-step product scale.
+- Apps, Sites, and Flows use 24px page gutters, 32px taxonomy entry spacing, and 48px major separation.
+- App detail uses 24px composition gaps and gutters, 32px hero/body insets, 8px action gaps, 4px metadata-item stacks, and 48px body-end separation.
+- Projects, Collections, Settings, Project Document shell, Admin, and public product pages share standardized header, grid, action, control, and section relationships.
+- Small, medium, and large component variants resolve to 28, 32, and 36px outside explicitly preserved tab, metadata, evidence, document, and canvas regions.
+- Project drawer animation scales two 32px controls to 31.36px while the drawer is open; their declared size remains 32px and returns to 32px after the transform completes.
+- Imported evidence, BlockNote documents, document flows, Screen detail, Project Canvas document content, and Excalidraw retain their domain geometry.
+- All nine verified routes have equal client and scroll widths at 1280px.
 
 ## Verification
 
-- Focused App Screens, router, and App-boundary tests: 62 passed.
-- Production build: passed.
-- Live browser verification: five-column desktop grid, three-column responsive
-  grid, modal open/close, previous/next navigation, and URL evidence state all
-  passed.
-
-final result: rendering passed; taxonomy and enrichment gaps remain upstream
-
----
-
-# App Detail Mobbin-Style Flow Browsing QA — 2026-07-29
-
-## Comparison target
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/03-mobbin-no-rush-selected.png`
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/10-vitrine-no-rush-final.png`
-- Same-region side-by-side comparison:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-mobile-flows-audit/12-flow-comparison.png`
-- Desktop viewport: 1467 × 834 CSS pixels.
-- Compared state: Amazon Shopping iOS, Flows, searched to the single
-  `No-Rush reward balance` Flow.
-- The comparison crops normalize the Flow-browsing region because Vitrine
-  retains its product-level app header above that region.
-
-## Findings fixed
-
-- [P1] App-detail Flow screens were presented inside oversized 620px white
-  media panels instead of recognizable phone-sized screenshots.
-  - Fixed with 390:844 device frames, a 450px desktop height, 16px strip
-    spacing, rounded phone clipping, and direct full-resolution image media.
-- [P1] Category headings displaced the first Flow row and duplicated navigation
-  information already present in the persistent directory.
-  - Removed from the gallery surface; category context now appears in the Flow
-    title as `Flow from Category`, matching the source.
-- [P2] The modal preview lost the selected app platform and feature-document
-  source when opened from the gallery.
-  - The gallery now carries app, iOS/Android platform, version, Flow id, and
-    user role into the Screens/Document preview.
-- [P2] The existing Flow analysis handoff could have been obscured by a visual
-  replication.
-  - The persistent searchable Flow hierarchy and sibling Visual Flow /
-    Document Flow experiences remain unchanged.
-
-## Visual comparison result
-
-- No actionable P0, P1, or P2 visual difference remains in the replicated Flow
-  strip.
-- Source and implementation both render three 208 × 450 No-Rush screens with
-  the same 16px spacing, dark background, left-aligned strip, rounded device
-  frames, and `No-Rush reward balance from Account` metadata.
-- Vitrine intentionally keeps the richer persistent hierarchy in the left rail
-  and its product app header.
-
-## Interaction and runtime verification
-
-- Search reduced 307 Amazon Shopping Flows to the single matching No-Rush Flow.
-- Opening the Flow displayed all three full-resolution screens.
-- Preview metadata resolved to `iOS 1179×2555`.
-- The Document mode loaded the generated feature document with two supported
-  requirements and linked evidence.
-- At 390 × 844, the document remained 390px wide with no page overflow; the
-  Flow strip retained 208 × 450 phone frames and the mobile Browse flows
-  control.
-- Focused Flow tests: 20 passed.
-- Production build: passed.
-
-final result: passed
-
----
-
-# App Detail Navigation Rail Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth: `/tmp/astryx-mobbin-reference.png`
-- Browser-rendered implementation: `/tmp/astryx-shopee-nav-final.png`
-- Full-view comparison: `/tmp/astryx-app-detail-nav-comparison.png`
-- Focused navigation comparison: `/tmp/astryx-app-detail-nav-focused-comparison.png`
-- Screens-filter source state: `/tmp/mobbin-screens-filter-reference.png`
-- Screens-filter implementation state: `/tmp/astryx-shopee-screens-filter.png`
-- Screens-filter side-by-side comparison: `/tmp/astryx-screens-filter-comparison.png`
-- UI Elements filter state: `/tmp/astryx-shopee-ui-elements-filter.png`
-- Flows filter state: `/tmp/astryx-shopee-flows-filter.png`
-- Cross-section filter comparison: `/tmp/astryx-section-filters-comparison.png`
-- Viewport: 905 × 863 CSS pixels.
-- Source pixels: 905 × 863.
-- Implementation pixels: 905 × 863.
-- Density normalization: none required; both captures came from the same in-app browser viewport and density.
-- State: Mobbin Mercor Screens and Astryx Shopee Flows. The comparison is intentionally scoped to the annotated 64px navigation rail; product identity, hero height, available sections, and gallery content remain product-specific.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the 17px navigation labels, active weight, two-line result count, and quiet inactive hierarchy match the reference treatment.
-- Spacing and layout rhythm: both rails are 64px tall. Astryx retains its existing 32px product gutter while matching the source's version divider, horizontal tab rhythm, active underline, and far-right count alignment.
-- Colors and visual tokens: the rail uses Astryx's existing dark background, subtle divider, primary active text, secondary inactive text, and white underline tokens.
-- Image quality and asset fidelity: this rail contains no raster image assets. Existing app identity and gallery media remain unchanged.
-- Copy and content: `Latest`, the five real Astryx destinations, contextual `Screens`, `UI Elements`, and `Flows` filters, and the two-line section total preserve Astryx behavior while adopting the Mobbin hierarchy. Screens and UI Elements use their own evidence metadata; Flows uses real parent groups, tags, interactions, and analyzed states when those fields exist.
-
-## Interaction and runtime verification
-
-- The App version control exposes an accessible combobox and opens a listbox containing the real `Latest` version.
-- Selecting `Latest` closes the listbox and preserves the current route-backed version.
-- Existing section tabs, active underline, and section result totals remain connected.
-- The secondary `Screens` control appears only on the Screens section. It opens an accessible searchable dialog, supports multi-select options, displays a selected-count badge, clears in one action, and resets when platform or version changes.
-- UI Elements and Flows expose the same contextual control with independent selections. UI Elements labels its evidence facets as Element types, Layouts, Components, and States. Flows labels its facets as Flow groups, Tags, Interactions, and States.
-- Options inside one metadata group use OR matching; separate metadata groups use AND matching.
-- Selecting the real Shopee `Onboarding` Flow group reduced the workspace to its one child flow and changed the total to `1 of 538 flows`.
-- The 905px page has no horizontal overflow.
-- Browser console: no errors.
-- Focused Screen Detail and shared shell tests: 32 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found a P1 loading-state copy defect: the version trigger briefly rendered `Select...` before the version list loaded.
-- Fix: fall back to the stable `Latest` option until the resolved version exists in the loaded version collection.
-- Post-fix evidence: the final 905 × 863 capture and focused 857 × 128 comparison show `Latest`, the divider, five working tabs, active underline, and the two-line total with no placeholder flash.
-- Pass 2 added the annotated secondary `Screens` filter. The initial rail was too tight and clipped `Export`; reducing the App-only tab gap to 20px preserved all five real destinations, the contextual filter, and the section total at 905px.
-- Pass 3 extended the same control to UI Elements and Flows. The longer UI Elements trigger initially clipped the final tab; the App-only rail now uses a compact 16px label scale and 10px tab gap so every destination, contextual filter, and total remains visible at 905px.
-
-## Follow-up polish
-
-- P3: Astryx intentionally omits Mobbin's playback and adjacent utility icon because Astryx has no corresponding actions in this rail.
-
-final result: passed
-
----
-
-# Apps Platform Switcher Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/mobbin-platform-switcher-762.png`
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-platform-switcher-762.png`
-- Combined comparison evidence: both captures were emitted together in the same
-  browser comparison pass.
-- Viewport: 762 × 863 CSS pixels.
-- Pixels and density: both captures are 762 × 863 at the same browser density;
-  no normalization was required.
-- State: dark-theme Apps catalog, Web selected, compact responsive toolbar.
-  Mobbin exposes its two available platforms as device icons at this width;
-  Astryx intentionally retains readable labels for its three supported
-  platforms.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: each label uses the same 12px size and is centered
-  without truncation or overlap. The selected and inactive weights remain
-  consistent with the surrounding filter toolbar.
-- Spacing and layout rhythm: all three segments measure exactly 56px, with 2px
-  gaps and a 55.99px indicator inside a 178px pill. The indicator aligns with
-  each segment rather than following unequal intrinsic label widths.
-- Colors and visual tokens: the muted inactive labels, neutral selected surface,
-  dark track, and low-contrast border retain the Mobbin-derived hierarchy.
-- Image quality and asset fidelity: this control needs no image assets. No
-  custom icon, SVG, or drawn replacement was introduced.
-- Copy and content: Web, iOS, and Android remain explicit because Astryx
-  supports all three catalog platforms.
-- Accessibility and interaction: the radiogroup and radio semantics remain
-  intact, arrow-key behavior is unchanged, and selecting Android then Web
-  updates both `aria-checked` and the URL.
-
-## Interaction and runtime verification
-
-- At 762px, button bounds are 27–83px, 85–141px, and 143–199px, so no labels
-  collide.
-- Selecting Android moves the indicator by 115.98px, exactly two segment widths
-  plus two gaps.
-- Returning to Web restores
-  `/apps?platform=web&content_type=apps&sort=latest`.
-- The only browser error retained in the tab log predates this fix and belongs
-  to the earlier hot-refresh cursor-state transition; no new switcher errors
-  were produced.
-- Focused Apps tests: 20 passed.
-- Production build: passed.
-
-## Focused comparison
-
-The full 762px captures make the annotated platform control, its relationship
-to the filter pills, and its responsive density clearly readable. No additional
-crop was needed.
-
-## Comparison history
-
-- Pass 1 P2: the Apps toolbar set platform buttons to intrinsic `auto` widths
-  even though the animated indicator divides the track into equal thirds.
-  Android therefore received a wider segment and crowded the neighboring labels.
-- Fix: assigned equal 60px desktop, 56px tablet, and 52px mobile segment widths,
-  removed horizontal padding, and clipped the moving indicator to the pill.
-- Post-fix evidence: the 762px browser measurement reports three equal 56px
-  buttons, aligned 2px gaps, and a matching 55.99px indicator.
-
-## Follow-up polish
-
-- P3: if Astryx later adds platform-specific icons to its design system, the
-  tablet breakpoint could adopt Mobbin's icon-only treatment. Explicit labels
-  are currently clearer for the third Android option.
-
-final result: passed
-
----
-
-# Apps Multi-select Filter Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-mobbin-source.png`
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-multiselect-implementation.png`
-- Combined comparison evidence: both 1512 × 834 captures were emitted together
-  in the same Chrome comparison pass.
-- Viewport: 1512 × 834 CSS pixels.
-- Pixels and density: both captures are 1512 × 834; no density normalization
-  was required.
-- State: Web, Screens, Trending, two Categories and two Screen patterns
-  selected. The implementation menu is open to verify pinned selected values;
-  the source full view is closed, while its open-menu behavior was verified
-  separately in the same signed-in Chrome session.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the compact 14–15px labels, medium-weight selected
-  pills, muted result count, and hierarchy closely match the Mobbin reference
-  while retaining Astryx's product font.
-- Spacing and layout rhythm: the 36px pill controls, one-pixel dividers,
-  compact sticky toolbar, rounded menu, selected-value pinning, and grouped
-  taxonomy preserve the source density. Astryx intentionally keeps Android,
-  Flows, and its existing funnel action because those are supported product
-  controls.
-- Colors and visual tokens: the neutral dark surfaces, selected white outline,
-  subdued borders, selected-row fill, and high-contrast count badges match the
-  reference treatment.
-- Image quality and asset fidelity: no new imagery was needed. Check, close,
-  search, and chevron controls use the Astryx icon library rather than custom
-  drawings.
-- Copy and content: Astryx keeps its own taxonomy and result terminology while
-  using Mobbin's selected-group count and URL behavior.
-- Accessibility and interaction: selected options use `aria-selected`, filter
-  triggers expose selected counts, clear controls name the affected group, and
-  the open menu remains available while values are toggled.
-
-## Interaction and runtime verification
-
-- Repeated URL tokens restore two Categories and two Screen patterns.
-- Removing Business leaves the menu open, updates the Categories pill from
-  three to two, and removes only the matching `appCategories.Business` token.
-- Selected values are pinned above the divider and repeated in their taxonomy
-  section with real check icons.
-- Matching is OR within Categories or Screens and AND between the two groups.
-- Multi-category public catalog requests are merged and de-duplicated before
-  the local cross-group filter is applied.
-- Console errors were checked. A hot-refresh-only stale-state error was found
-  during the first pass, fixed with a null-safe cursor transition, and the
-  final route and interactions completed successfully.
-- Focused Apps tests: 23 passed.
-- Production build: passed.
-
-## Focused comparison
-
-The toolbar and open Categories menu were large enough in the full-view
-captures to judge pill typography, count badges, borders, menu spacing,
-selected checks, divider treatment, and URL-backed interaction. No additional
-crop was needed.
-
-## Comparison history
-
-- Pass 1 found that selected rows did not visibly render the check icon because
-  the design-system Button expects its leading visual in `icon`.
-- Fix: moved the real Astryx `check` icon to the supported Button prop.
-- Post-fix evidence: both pinned selections expose one SVG check and the
-  browser capture shows the checks beside Shopping and AI.
-
-## Follow-up polish
-
-- P3: the result count can briefly show zero while a freshly combined facet
-  catalog is loading. This is existing catalog-state behavior and does not
-  affect selection, persistence, or matching semantics.
-
-final result: passed
-
----
-
-# Flow Preview Dialog Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/mobbin-flow-dialog-audit/01-mobbin-flow-dialog.png`
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/flow-preview-dialog-build/06-astryx-flow-dialog-metrics-refined.png`
-- Mobile implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/flow-preview-dialog-build/09-astryx-flow-dialog-metrics-mobile.png`
-- Combined comparison evidence:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/flow-preview-dialog-build/07-metrics-refined-comparison.png`
-- Focused header and footer evidence:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/flow-preview-dialog-build/08-metrics-focused-comparison.png`
-- Viewport: 866 × 863 CSS pixels; compact check at 390 × 844 CSS pixels.
-- Pixels and density: source and desktop implementation are both 866 × 863
-  physical pixels at device scale 1.
-- State: initial Flow screen, Screens selected, dark theme, no transient menu
-  or information panel open.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Layout: the implementation matches the 24px inset dialog, 24px radius,
-  fixed identity header, centered horizontal media strip, partial next screen,
-  and anchored footer actions and metadata.
-- Content: Astryx uses the selected Flow title, real source-app icon and name,
-  real full-resolution screen captures, platform, and measured image
-  resolution. No generated or placeholder assets replace available evidence.
-- Behavior: opening a Flow card restores a shareable URL, screen navigation
-  updates that URL, edge arrows disappear at the first and last screen, and
-  closing clears Flow preview state.
-- Controls: Screens is selected; Prototype is visibly disabled until prototype
-  data exists. Save, Copy, link copy, screen actions, More info, source-app
-  navigation, and Close expose accessible names.
-- Typography and control metrics: Astryx retains its available Figtree family
-  while matching Mobbin's measured 20/26px identity type, 14/20px mode type,
-  16/22px action type, and 600 weight. The mode pill is 159.9 × 36px; Save,
-  Copy, and More are 67 × 44px, 98 × 44px, and 44 × 44px.
-- Deliberate adaptation: Mobbin-only collaborator and comment controls are not
-  shown because Astryx does not currently expose those product capabilities.
-
-## Interaction and runtime verification
-
-- Direct reload restored
-  `/flows?flow=whatsapp%3A7230&tab=screens&screen=0`.
-- Next moved to Screen 2, exposed Previous, and updated `screen=1`.
-- Returning to Screen 1 hid Previous and restored `screen=0`.
-- Save changed to Saved; Copy changed to Copied.
-- More info exposed the active step and screen position.
-- Screen actions exposed Open full image and Copy image URL.
-- At 390px the dialog remained usable with the app icon, mode tabs, carousel,
-  actions, and metadata visible.
-- Browser console: no errors.
-- Focused Flow UI tests: 8 passed.
-- Production build and `git diff --check`: passed.
-
-## Comparison history
-
-- Pass 1 found a P2 breakpoint mismatch at 866px: the identity header stacked
-  into two rows and the dialog inset shrank to 12px.
-- Fix: moved the compact breakpoint below the reference viewport, restoring
-  the 72px single-row header and 24px dialog inset.
-- Pass 2 found a P2 programmatic focus outline around the source-app control,
-  then around the full dialog when focus was redirected.
-- Fix: focused the dialog canvas for predictable keyboard entry and suppressed
-  only that non-interactive container outline; interactive controls retain
-  visible keyboard focus.
-- Pass 3 found P2 density drift in the requested size, font, and buttons:
-  Astryx used an 18px identity, a 206 × 44px mode pill, 52px footer buttons,
-  and a carousel card aligned to the dialog edge instead of the 32px content
-  gutter.
-- Fix: matched the measured typography, reduced the mode and action controls to
-  Mobbin's dimensions, moved the Copy icon to the trailing side, and corrected
-  scroll snapping to preserve the media gutter.
-- Post-fix browser measurements place the first screen at 57 × 255.1 with a
-  519.6 × 324.7 frame, versus the reference's 56 × 255 and approximately
-  520 × 325 frame. Full-view and focused comparisons confirm the source
-  hierarchy, spacing, carousel geometry, footer placement, and dark treatment.
-
-final result: passed
-
----
-
-# Apps Filter Bar Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/mobbin-apps-filter-reference-open.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/mobbin-apps-filter-reference-mobile.png`
-- Browser-rendered implementation:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/astryx-apps-filter-open-866.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/astryx-apps-filter-mobile.png`
-- Combined comparison evidence:
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/apps-filter-open-comparison.png`
-  - `/Users/kai/.codex/visualizations/2026/07/28/019fa865-de61-7db0-8d2c-0e1ebff02d68/apps-filter-mobile-comparison.png`
-- Viewports and pixels:
-  - Desktop source and implementation: 866 × 863 CSS pixels and 866 × 863 captured pixels.
-  - Mobile source and implementation: 390 × 844 CSS pixels and 390 × 844 captured pixels.
-- Density normalization: all comparison inputs use one captured pixel per CSS pixel; no resampling was required.
-- State: authenticated dark-theme Web Apps catalog with `Shopping`, `My Account & Profile`, and `Trending` selected. The open-menu comparison keeps the Screens menu open and the mobile comparison keeps it closed.
-- Data constraint: Mobbin has 27 matching screens while the current Astryx preview catalog has no matching classified screen payload. Result cards and the empty state are therefore not judged as visual equivalents; the requested Apps filter surface and its interaction states are the fidelity target.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for the requested Apps filter surface.
-
-- Fonts and typography: the implementation uses Astryx's existing Figtree/system stack with the same compact hierarchy for pills, group labels, options, result count, and ordering. The smaller tablet platform labels are an intentional fit adjustment for Astryx's third Android option.
-- Spacing and layout rhythm: the 64 px desktop bar, 36 px pills, 320 px menu, 96 px compact mobile header, 52 px horizontal mobile control row, and separate count/sort row match the reference structure. The user's earlier request to minimize Apps search intentionally keeps the desktop navigation at 72 px instead of Mobbin's taller search header.
-- Colors and visual tokens: the implementation matches the source's `#111` page/bar, dark raised menu, subdued inactive text, white selected-pill outline, muted dividers, and highlighted selected option using Astryx's neutral tokens.
-- Image quality and asset fidelity: no Mobbin assets were copied or approximated. Astryx retains its real favicon, app media, and design-system icons. The menu preview appears only when a real catalog preview asset exists.
-- Copy and content: `Shopping`, `My Account & Profile`, `UI Elements`, `Flows`, `Showing`, `Latest`, and `Trending` follow the source language. Astryx retains its own Apps/Sites/Flows navigation and Android platform because those are existing product capabilities.
-- Accessibility and interaction: platforms remain keyboard-operable radios; filter suggestions are searchable options; selected filters are independently removable; menus expose expanded/selected state; Escape closes filter menus; sorting is a radio menu; and URL state is shareable.
-
-## Comparison history
-
-- Pass 1 found a P2 mobile hierarchy mismatch: the Apps search occupied a full second row, making the header too tall and shifting the filter controls below the reference position.
-- Fix: rebuilt the Apps-only compact header into a 58 px brand/search/account row plus a 38 px product-navigation row, then anchored the filter bar at 96 px.
-- Post-fix evidence: `apps-filter-mobile-comparison.png` shows the search, navigation, horizontal filter rail, and count/sort row aligned to the same 390 × 844 frame.
-- Pass 2 found a P2 tablet/desktop overflow: at 866 px, the third Astryx platform and Flow control collided with persistent sort controls, and the wide two-column menu did not match the source.
-- Fix: compressed the platform switcher at the tablet breakpoint, hides the redundant Flow chip while keeping More Filters available, removes the count label at that width, narrows the menu to 320 px, and uses a source-like selected-row treatment.
-- Post-fix evidence: `apps-filter-open-comparison.png` shows the bar and menu fitting without overlap at 866 × 863, with the menu aligned under the selected Screens pill.
-
-## Interaction and runtime verification
-
-- Selecting Shopping produced the Mobbin-style URL filter and loaded 16 real Shopping apps.
-- The exact combined state round-tripped as `appCategories.Shopping_screenPatterns.My+Account+%26+Profile`.
-- Searching the open Screens menu for `account` reduced it to the selected `My Account & Profile` option.
-- Switching Trending → Latest → Trending updated and restored the URL sort state.
-- The browser console reported no runtime errors. The only warning is the existing Astryx neutral-theme development injection notice.
-
-## Open questions
-
-- None blocking. Populating result cards for `My Account & Profile` requires fuller screen classifications in the catalog payload; the UI intentionally does not fabricate them.
-
-## Implementation checklist
-
-- Keep the Apps search compact.
-- Preserve URL-backed filters and sort state.
-- Keep the mobile filter controls horizontally scrollable.
-- Continue using real Astryx catalog media and design-system icons.
-
-## Follow-up polish
-
-- [P3] Mobbin uses icon-only mobile platform controls and only iOS/Web in this state; Astryx keeps short text labels because it also supports Android.
-- [P3] Mobbin shows notification/avatar actions while Astryx keeps its existing compact account menu.
-
-final result: passed
-
----
-
-# Flow Search Behavior QA
-
-## Visual truth and normalization
-
-- Source Flow browser: `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/mobbin-search-audit/02-flows.png`
-- Source typed-query state: `/Users/kai/.codex/visualizations/2026/07/28/019fa6a9-148a-7922-ae94-8317b9e0c87f/mobbin-search-audit/03-query-login.png`
-- Browser-rendered Flow browser: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/01-flow-browser.png`
-- Browser-rendered typed-query state: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/02-flow-query-login.png`
-- Browser-rendered Flow-filtered Apps: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/03-flow-filtered-apps.png`
-- Full-view Flow browser comparison: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/04-flow-browser-comparison.jpg`
-- Full-view typed-query comparison: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/05-flow-query-comparison.jpg`
-- Focused modal comparison: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/06-flow-modal-focused-comparison.jpg`
-- Active-filter before/after comparison: `/Users/kai/works/eastplayers/Astryx/artifacts/design-audit/2026-07-28-flow-search-behavior/07-filter-condition-before-after.jpg`
-- Viewport and pixels: 1512 × 782 CSS px and 1512 × 782 captured px for both source and implementation.
-- Density normalization: the Mobbin source was captured from a DPR-2 Chrome tab that returned one captured pixel per CSS pixel; Astryx used an explicit DPR-1 1512 × 782 viewport. Both comparison inputs are therefore equal-size 1512 × 782 images with no rescaling.
-- State: authenticated Apps catalog, Search open, Web selected, Flows selected; the typed-query comparison uses `login`.
-
-## Findings
-
-- No actionable P0, P1, or P2 visual or interaction differences remain for the requested Flow-first slice.
-- Fonts and typography: the Flow browser keeps the measured 16 px row hierarchy, regular group labels and counts, muted secondary text, and compact search input treatment from the source.
-- Spacing and layout rhythm: the default state retains the 816 × 594 dialog, 260 px navigation column, grouped Flow rows, highlighted first item, real App chip rail, internal scrolling, and the measured neutral spacing. The typed state collapses the App rail and navigation so suggestions use the full results width, matching Mobbin's query-state transition.
-- Colors and visual tokens: dark neutral surfaces, selected navigation, highlighted rows, backdrop blur, secondary labels, and count colors remain aligned with the source and Astryx's current neutral theme.
-- Image quality and asset fidelity: real catalog App icons remain in the default Flow browser; no placeholder, CSS-drawn, generated, or approximate assets were introduced.
-- Copy and content: Flow groups, titles, counts, Apps, and result cards intentionally use Astryx's normalized production data. Unlike Mobbin's global mixed-type query, the typed state intentionally remains Flow-scoped because this implementation slice is Flow search first.
-- Accessibility and responsiveness: Flow suggestions remain semantic buttons, selected platform and navigation states remain exposed, arrow keys move the active Flow row, Enter selects it, Escape behavior is preserved, and the existing compact breakpoint remains intact.
-
-## Comparison history
-
-- First typed-query comparison: Astryx kept the App chip rail and left navigation visible after typing, while Mobbin moved to a focused full-width result state. This was a P2 interaction-state mismatch.
-- Fix: added a query-state layout that hides the App chips and navigation and expands the Flow results to the full modal width while preserving the Flow scope and platform controls.
-- Post-fix evidence: `05-flow-query-comparison.jpg` shows the focused full-width query state at the same viewport; `06-flow-modal-focused-comparison.jpg` confirms the unchanged default Flow browser geometry.
-- First selected-filter treatment: the active Flow appeared as a high-contrast pill beside the search trigger, so the applied condition competed with the primary search action and left the results without local context. This was a P2 hierarchy issue.
-- Fix: moved the condition below the ordering toolbar into a quiet `Filtered by` context row with an editable Flow chip, a dedicated clear action, and the live App count aligned to the results.
-- Post-fix evidence: `07-filter-condition-before-after.jpg` confirms that search stays visually stable while the applied condition is now attached to the result set.
-
-## Interaction and runtime verification
-
-- Opening Flows performs one grouped `/api/catalog/flows` request instead of one design-system request per App.
-- Typing `login` produced exactly one debounced request: `/api/catalog/flows?platform=web&limit=80&query=login`. No `/api/design-systems/{app}` or broad `/api/search` request was emitted.
-- Selecting `Logging in (saved login info)` closed the modal and produced one normalized facet request: `/api/catalog?group=flows&value=Logging+in+%28saved+login+info%29&platform=web`.
-- The facet handoff retained Web, displayed the active Flow context row with `1 app`, and returned the matching Instagram App from normalized Flow mappings.
-- At the 390 px compact breakpoint, the filter context stacked to 109 px without horizontal overflow; the Flow chip remained fully visible and independently clearable.
-- A clean Chrome verification tab reported no console errors. The only console entry was the existing neutral-theme runtime-injection warning.
-- Focused Flow catalog, normalized facet, Apps handoff, keyboard/ID routing, and UI tests: 41 passed.
-- Production build: passed.
-- Full repository suite: 1,262 of 1,266 passed. The four remaining failures are outside this Flow slice: two existing design-system API tests attempted unavailable real database fallbacks, one pre-existing Apps boundary source-shape assertion does not recognize the server-facet sentinel, and the existing Astryx native-control migration baseline still reports CommandPalette and MediaGridCard buttons.
-
-## Open questions
-
-- None blocking.
-
-## Implementation checklist
-
-- Keep Flow typing on the lightweight grouped catalog endpoint.
-- Keep Flow selection on the normalized catalog facet path.
-- Keep platform context through the modal-to-Apps handoff.
-- Keep mixed Screen/UI Element/Site query results out of this Flow-first slice until those scopes receive the same normalized search contract.
-
-## Follow-up polish
-
-- The current database still contains a large `Other Flows` parent group. Taxonomy curation can improve those labels independently without changing this search behavior.
-
-final result: passed
-
----
-
-# First-class Flows Catalog QA
-
-## Comparison target
-
-- Source visual truth:
-  `artifacts/design-audit/2026-07-28-flows-page-card-parity/01-app-flow-card-source.png`
-- Browser-rendered implementation:
-  `artifacts/design-audit/2026-07-28-flows-page-card-parity/03-global-flows-page-final.png`
-- Combined full-view comparison:
-  `artifacts/design-audit/2026-07-28-flows-page-card-parity/04-source-vs-global-flows.png`
-- Viewport and pixels: both captures are 1512 × 778 CSS pixels and
-  1512 × 778 image pixels at device scale 1. No density normalization was
-  required.
-- State: authenticated dark-theme Web Flow browser. The source is Linear's App
-  detail Flows tab; the implementation is the first-class `/flows` catalog.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for the requested composition.
-
-- Fonts and typography: `/flows` now uses the same Apps/Sites discovery
-  taxonomy scale and toolbar hierarchy above the results, then the exact
-  existing App FlowCard title, screen count, and action typography below.
-- Spacing and layout rhythm: the shared discovery top navigation, 32px page
-  gutters, 29px taxonomy top inset, 73px taxonomy-to-toolbar rhythm, 64px
-  ordering row, and wide one-column screen strips match the existing product
-  patterns. The Flow strip keeps the same carousel spacing, radii, arrows, and
-  footer rhythm as App detail.
-- Colors and visual tokens: the implementation reuses the existing neutral
-  body, search, taxonomy, toolbar, screen-stage, action, and selected-state
-  tokens. No new palette or card surface was introduced.
-- Image quality and asset fidelity: every card uses real published Flow
-  evidence. The first visible WhatsApp sequence loaded at 480 × 300 through
-  the public Flow preview route; 65 image nodes were present and only the
-  visible nine loaded initially through native lazy loading. No generated,
-  drawn, or placeholder imagery replaces available evidence.
-- Copy and content: the parent Flow group, representative App, distinct App
-  count, normalized Flow title, and true screen count come from the current
-  catalog database. The source and implementation intentionally show different
-  products because `/flows` is an aggregate catalog rather than one App.
-- Accessibility and interaction: Apps, Sites, and Flows remain semantic tabs;
-  platforms are radios; Popular/Grouped are tabs; Flow groups are pressed-state
-  buttons; each screen strip and action retains its accessible App FlowCard
-  label.
-
-## Comparison history
-
-- Pass 1 used compact text-only Flow cards under a custom page title and inline
-  search field. This was a P1 mismatch with the requested Apps/Sites shell and
-  App Flow rendering.
-- Fix: routed `/flows` through `ReferenceDiscoveryPageShell`, reused the shared
-  top navigation, taxonomy, platform switcher, and ordering toolbar, and
-  replaced text cards with the existing `FlowCard` screen strip.
-- Pass 2 exposed a slow aggregate query because representative selection
-  examined evidence JSON for every normalized Flow before pagination. This was
-  a P1 runtime issue.
-- Fix: page the normalized Flow titles first, then choose one strongest
-  representative only for the 13 bounded page rows. The page now returns 12
-  cards plus one pagination sentinel in one catalog request.
-- Post-fix evidence:
-  `04-source-vs-global-flows.png` shows the shared component geometry and real
-  screen strips at the same viewport.
-
-## Interaction and runtime verification
-
-- The Web catalog loaded 12 real Flow strips with zero horizontal overflow.
-- Selecting the `Logging in` group produced 12 Flow-only results and exposed
-  the active pressed state in the shared taxonomy.
-- Popular and Grouped ordering both completed; the selected ordering tab stayed
-  explicit.
-- iOS loaded 12 Flow strips, then Web/Popular restored the final deliverable
-  state.
-- Real public preview media resolved for the first Flow, and lazy loading
-  prevented all 65 screen images from downloading at once.
-- The aggregate page performs one `/api/catalog/flows` metadata request. It
-  does not call `/api/design-systems/{app}` or `/api/apps/{app}/flows` per card.
-- Focused Flow store, media, API, router, route-boundary, navigation, and UI
-  tests: 59 passed.
-- Production build: passed.
-
-## Follow-up polish
-
-- P3: the first 12 database-derived parent groups are more granular than a
-  curated top-level taxonomy. Their normalization can improve independently
-  without changing the shared shell or FlowCard contract.
-
-final result: passed
-
----
-
-# Sites Detail Design QA — 2026-07-28
-
-final result: passed
-
-## Comparison target
-
-- Source visual truth:
-  - `artifacts/design-audit/2026-07-28-mobbin-sites-detail-audit/03-sections-grid.png`
-  - `artifacts/design-audit/2026-07-28-mobbin-sites-detail-audit/04-section-detail.png`
-- Browser-rendered implementation:
-  - `artifacts/design-qa/sites-detail-adaptation/01-sections-desktop.png`
-  - `artifacts/design-qa/sites-detail-adaptation/02-section-detail-desktop.png`
-- Combined comparison evidence:
-  - `artifacts/design-qa/sites-detail-adaptation/05-source-vs-implementation.png`
-- Viewport: 1512 × 778 CSS pixels
-- Pixels and density: all source and implementation captures are 1512 × 778 at device scale 1; no density normalization was required.
-- State: authenticated dark-theme Vercel Sites detail, Sections tab, second section open in Section mode.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: Astryx keeps its existing product font while matching the reference hierarchy, compact modal controls, section count scale, and restrained metadata weights.
-- Spacing and layout rhythm: the two-column 24px section grid, 32px modal inset, 24px radius, three-part header, centered media stage, and footer rhythm match the source structure.
-- Colors and visual tokens: the neutral dark surface, subtle borders, muted card stage, white captured media, and low-emphasis secondary text align with the source while using Astryx tokens.
-- Image quality and asset fidelity: real crawler images and site identity assets are used; no drawn or placeholder replacement was introduced. Irregular-height captured sections are letterboxed instead of distorted.
-- Copy and content: Astryx intentionally keeps its own site description, Pages and Sections counts, Technology tab, download action, and reconstruction details instead of copying Mobbin product content.
-- Accessibility and interaction: the dialog, Section and Full page controls, Save, Copy, Close, previous/next controls, links, and deep-linked route expose accessible names and keyboard behavior.
-
-## Interaction verification
-
-- Opening a card navigates to `/sites/vercel-2/sections/13662`.
-- Loading that URL directly restores the correct section dialog.
-- Previous and next controls retain the deep-linked inspector model.
-- Full page mode produces a scrollable 556px viewport with 5,256px captured content.
-- Closing the dialog returns to `/sites/vercel-2/sections` and removes the dialog.
-- At 390px, the modal and header have zero horizontal overflow; controls end at 378px inside the 390px frame.
-- A clean browser tab reported no console errors.
-
-## Comparison history
-
-- Pass 1 found a P2 mobile header overflow: Save, Copy, and Close extended beyond the 390px frame.
-- Fix: hid the redundant modal Save action at the mobile breakpoint, shortened Copy, and retained Copy and Close as visible controls.
-- Post-fix evidence: article and header widths are 390px, both report zero overflow, the switcher ends at 180.34px, and actions end at 378px.
-
-## Follow-up polish
-
-- P3: captures with extremely short source sections retain visible letterboxing. This preserves source geometry and avoids stretching; improving it belongs in future crawler crop normalization, not this UI adaptation.
-
----
-
-# Sites Version Picker Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/TemporaryItems/NSIRD_screencaptureui_rkjsf1/Screenshot 2026-07-28 at 16.29.04.png`
-- Browser-rendered implementation:
-  `artifacts/design-qa/site-version-picker/implementation-open.png`
-- Compact implementation:
-  `artifacts/design-qa/site-version-picker/mobile-open.png`
-- Combined comparison evidence:
-  `artifacts/design-qa/site-version-picker/reference-vs-implementation.png`
-- Focused viewport: 818 × 650 CSS pixels, cropped to the same 818 × 355
-  comparison frame as the source.
-- State: Vercel Sections, earlier capture selected, version menu open.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- The selected capture is a compact trigger beside the Preview, Sections, and
-  Technology tabs, separated by the existing navigation divider.
-- The menu uses the source's wide dark rounded surface, newest-first ordering,
-  `Latest` badge, selected-version checkmark, and rotating chevron.
-- Astryx intentionally uses full capture date-time labels because multiple
-  crawls can occur on the same day.
-- At 390 px, the menu fits within 16 px page gutters and its date-time labels,
-  badge, and selected check remain visible.
-
-## Interaction and runtime verification
-
-- Selecting the latest option changed the route from `version=329` to
-  `version=454`, updating the detail from 22 pages and 50 sections to 1 page
-  and 8 sections.
-- Escape closes the open menu and returns `aria-expanded` to `false`.
-- Options expose `menuitemradio` semantics and the selected option exposes
-  `aria-checked`.
-- Browser console: no errors.
-- Focused Sites tests: 38 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found the menu narrower than the source and the programmatically
-  focused selected row showed a blue outline not present in the reference.
-- Fix: widened the desktop popover to 480 px and retained keyboard focus
-  visibility through a quiet background treatment instead of the accent
-  outline.
-- Post-fix comparison confirms matching popover scale, hierarchy, radius,
-  latest badge, selected check, and tab relationship.
-
-final result: passed
-
----
-
-# Apps Filter Funnel Removal Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-before-funnel-removal-762.png`
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-after-funnel-removal-762.png`
-- Viewport: 762 × 863 CSS pixels at 1× density.
-- Source pixels: 762 × 863.
-- Implementation pixels: 762 × 863.
-- Density normalization: none required; both captures have identical pixel and CSS dimensions.
-- State: Apps route, Web platform, Apps content, Latest sorting, no active facet.
-- Full-view comparison evidence: the before and after captures were emitted together in one comparison pass.
-- Focused-region comparison: not needed because the selected toolbar occupies the full width, all labels are readable in the same-size full-view captures, and the change is isolated to one trailing control.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: unchanged across the platform switcher, filter labels, result metadata, and Latest sort control.
-- Spacing and layout rhythm: removing the funnel also removes its orphan divider; Categories remains the first filter immediately after the platform switcher and divider.
-- Colors and visual tokens: unchanged; the toolbar retains its dark surfaces, borders, and text hierarchy.
-- Image quality and asset fidelity: app-card imagery and identity assets are unchanged.
-- Copy and content: Categories, Screens, UI Elements, and Latest remain visible; More filters is absent.
-
-## Interaction and runtime verification
-
-- Browser DOM inspection confirms `Open Categories filters` remains present.
-- Browser DOM inspection confirms `More filters` is absent.
-- Browser console: no errors.
-- Focused Apps tests: 21 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified the annotated redundant funnel as a P2 toolbar-control mismatch.
-- Fix: removed the More filters callback, button, dedicated style, and the divider that existed only for that control.
-- Post-fix evidence: the 762 × 863 implementation capture shows Categories preserved below the header with no funnel and no empty trailing divider.
-
-final result: passed
-
----
-
-# Apps Taxonomy Restoration Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-sites-taxonomy-reference-707.png`
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-taxonomy-restored-707.png`
-- Viewport: 707 × 863 CSS pixels at 1× density.
-- Source pixels: 707 × 863.
-- Implementation pixels: 707 × 863.
-- Density normalization: none required; both captures have identical pixel and CSS dimensions.
-- State: signed-in dark-theme Sites taxonomy reference compared with the signed-in dark-theme Apps taxonomy at Web, Apps content, Latest sorting, and no selected facets.
-- Full-view comparison evidence: the Sites reference and Apps implementation were emitted together in one comparison pass.
-- Focused-region comparison: not needed because every visible taxonomy heading and option is readable in the full-view comparison. The different Apps header composition and App-specific taxonomy copy are intentional product differences.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the Apps taxonomy reuses the shared facet group typography, weights, line heights, and hierarchy visible on Sites.
-- Spacing and layout rhythm: the Apps groups use the same single-column responsive structure, left alignment, heading gaps, option rhythm, and content gutter as the 707 px Sites reference.
-- Colors and visual tokens: background, primary option text, secondary group headings, selected-state treatment, and divider-free presentation use the shared discovery tokens.
-- Image quality and asset fidelity: the taxonomy contains no image assets; the existing Vitrine brand asset remains unchanged.
-- Copy and content: the restored Apps groups intentionally use Apps-specific values under Categories, Screens, UI Elements, and Flows rather than copying Sites content.
-
-## Interaction and runtime verification
-
-- Clicking `AI` selects the category and synchronizes the compact filter bar.
-- Clicking `Business` adds a second selected category, preserving multi-selection.
-- The Apps DOM contains the full `App discovery filters` taxonomy and the compact filter bar below it.
-- `More filters` remains absent.
-- Browser console: no errors.
-- Focused Apps tests: 21 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P1 missing major region: Apps emitted an empty taxonomy container and CSS hid it.
-- Fix: restored the shared facet-group rendering with the original Apps taxonomy definitions, connected each option to the current multi-select URL state, and removed the Apps-only hide rule.
-- Post-fix evidence: the 707 × 863 Apps capture matches the Sites taxonomy's responsive hierarchy and visual rhythm while showing Apps-specific groups and values.
-
-final result: passed
-
----
-
-# Apps Filter Checkbox Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth: `browser:Categories suggestions` from User Comment 1.
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-filter-checkboxes-707.png`
-- Viewport: 707 × 863 CSS pixels at 1× density.
-- Source pixels: 707 × 863.
-- Implementation pixels: 707 × 863.
-- Density normalization: none required; the annotated source and implementation use the same viewport and density.
-- State: Categories menu open with Education, AI, and Business selected.
-- Full-view comparison evidence: the annotated source and browser-rendered implementation were compared in the same turn at the same route, viewport, menu state, and selected values.
-- Focused-region comparison: the open Categories popover is large and readable in the full-view captures, so a separate crop was unnecessary.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: labels retain the existing compact menu type scale, weight, and hierarchy.
-- Spacing and layout rhythm: every pinned and grouped option now has the same checkbox-leading alignment, row padding, radius, and vertical rhythm.
-- Colors and visual tokens: native Astryx checkbox states provide a clear blue checked state and quiet dark unchecked state while retaining existing selected-row surfaces.
-- Image quality and asset fidelity: the menu contains no image assets; the underlying app-card imagery remains unchanged.
-- Copy and content: all category labels, pinned selected values, group headings, and search placeholder remain unchanged.
-
-## Interaction and runtime verification
-
-- The Categories suggestions container exposes accessible group semantics.
-- Every selected and unselected row exposes a native checkbox with its label.
-- Clicking unchecked `Finance` changed the filter summary from three to four selections.
-- Clicking checked `Finance` restored the original three-selection state.
-- Search, selected-value pinning, duplicate grouped values, preview hover/focus hooks, and multi-select URL state remain connected.
-- Browser console: no errors.
-- Focused Apps tests: 22 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P2 affordance mismatch: selected rows used small check glyphs while unselected rows had no persistent selection control.
-- Fix: replaced option buttons with the shared native `CheckboxInput` for both pinned and grouped rows, added checkbox-row hover/focus/selected styling, and changed the suggestion container from listbox to checkbox-group semantics.
-- Post-fix evidence: the 707 × 863 capture shows visible checked and unchecked boxes on every option with unchanged content and menu structure.
-
-final result: passed
-
----
-
-# Apps Filter Dark Checkbox Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth: `browser:Education AI Business` from User Comment 1.
-- Browser-rendered implementation:
-  `/var/folders/_x/_t0kc8qn5vs2xlpstygr0lvc0000gn/T/astryx-apps-filter-dark-checkboxes-707.png`
-- Viewport: 707 × 863 CSS pixels at 1× density.
-- Source pixels: 707 × 863.
-- Implementation pixels: 707 × 863.
-- Density normalization: none required; the annotated source and implementation use the same viewport and density.
-- State: Categories menu open with Education, AI, and Business selected.
-- Full-view comparison evidence: the annotated source and browser-rendered implementation were compared in the same turn at the same route, viewport, menu state, and selected values.
-- Focused-region comparison: the open Categories menu is readable at full size, so a separate crop was unnecessary.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: search, group heading, and option labels retain the existing compact hierarchy.
-- Spacing and layout rhythm: removing the pinned block and divider eliminates duplicate rows and lets the grouped list begin directly below search.
-- Colors and visual tokens: checked controls now use dark neutral fills, gray borders, and white checks; unchecked controls remain dark and quiet.
-- Image quality and asset fidelity: the menu contains no image assets; app-card imagery remains unchanged.
-- Copy and content: all category labels and selected values remain available once in the grouped list.
-
-## Interaction and runtime verification
-
-- The Categories menu contains one grouped list and no pinned selected block.
-- AI, Business, and Education remain checked in place.
-- Clicking unchecked `Finance` changed the filter summary from three to four selections.
-- Clicking checked `Finance` restored the original three-selection state.
-- Browser console: no errors.
-- Focused Apps tests: 23 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified two P2 issues: selected values were duplicated above the grouped list, and checked controls used a bright blue treatment inconsistent with the requested dark theme.
-- Fix: removed the selected-options block and divider, then scoped dark neutral checked and unchecked checkbox colors to the Apps filter menu.
-- Post-fix evidence: the 707 × 863 capture shows a single grouped category list with dark checkboxes and no duplicate selected section.
-
-final result: passed
-
----
-
-# Sites Filter Bar Apps-Parity Design QA — 2026-07-28
-
-## Comparison target
-
-- Source visual truth: `design-qa-sites-apps-reference.png`.
-- Browser-rendered implementation: `design-qa-sites-filterbar.png`.
-- Combined comparison input: `design-qa-sites-filterbar-comparison.png`.
-- Viewport: 1280 × 720 CSS pixels.
-- Source pixels: 1280 × 720.
-- Implementation pixels: 1280 × 720.
-- Density normalization: none required; both captures came from the same
-  in-app browser tab and viewport.
-- State: loaded Web catalogs with no active filters and Latest sorting.
-- Full-view comparison evidence: the Apps and Sites pages were combined side by
-  side. Both use the same white platform dropdown, outlined filter pills,
-  two-line count, divider rhythm, and right-aligned sort control.
-- Focused-region comparison: the complete toolbar is readable in the full-view
-  comparison, so a separate crop was unnecessary.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain.
-
-- Fonts and typography: the Web label, filter labels, result count, and Latest
-  label share the Apps type scale, weights, and hierarchy.
-- Spacing and layout rhythm: Sites now uses the same compact 36px platform
-  control, dividers, filter gaps, result-summary alignment, and sort placement.
-- Colors and visual tokens: the selected white platform surface, neutral
-  filter borders, muted count, and primary sort text reuse the Apps toolbar
-  tokens.
-- Image quality and asset fidelity: the toolbar contains no raster assets;
-  Site preview media, logos, and crops remain unchanged.
-- Copy and content: Sites intentionally retains its product-specific
-  Categories, Sections, Styles, site count, and Latest labels.
-
-## Interaction and runtime verification
-
-- The Site platform trigger now uses the shared single-select dropdown shell.
-- The Web-only Site platform menu opens and closes correctly.
-- Categories, Sections, Styles, result count, and sorting remain connected to
-  the existing Site state and data.
-- Focused Apps, Sites, and Flows tests: 66 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified a P2 consistency mismatch: Sites rendered the older
-  platform switcher while Apps and Flows used the compact platform dropdown.
-- Fix: removed the kind-specific switcher branch so every discovery page uses
-  the same platform control.
-- Post-fix evidence: the combined 2560 × 720 comparison shows matching platform,
-  filter, count, divider, and sort treatments.
-
-final result: passed
-
-# App Screens hover actions and Flow-card identity — 2026-07-30
-
-## Reference set
-
-- Source visual truth: the three user-marked Vitrine Screens and Apps Flow-card
-  states, captured at 875 × 863 CSS pixels.
-- Before implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/mobbin-app-screens-audit-2026-07-30/19-vitrine-app-screens-flow-context-875x863.png`.
-- Browser-rendered hover state:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/03-hover-actions-875.png`.
-- Browser-rendered Apps Flow cards:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/04-flows-no-app-icon.png`.
-- Combined comparison input:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-card-hover-qa-2026-07-30/05-before-after-comparison.png`.
-- Viewport: 875 × 863 CSS pixels at 1× density.
-- State: Amazon Shopping, iOS, version 1; the first screen card was forced
-  into its browser hover pseudo-state only for screenshot verification.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain for the requested changes.
-
-- Typography: the existing App detail hierarchy is unchanged; the remaining
-  `All screens` heading and count retain the established scale.
-- Layout: the Screens tab now contains one gallery instead of the redundant
-  Highlights and related-Flows sections.
-- Visual tokens: Save and Copy share one compact dark glass action pill inside
-  the image card, using the existing Vitrine neutral palette.
-- Image fidelity: the source screen images, aspect ratios, containment, and
-  high-density sources are unchanged.
-- Copy and content: Highlight labels, `Open source screen`, and
-  `Flows using these screens` are absent. App-local Flow cards no longer repeat
-  the app icon.
-
-## Interaction and runtime verification
-
-- Save and Copy are hidden at rest and appear on hover, keyboard focus, or
-  selected state; touch-only devices keep the actions visible.
-- Save opens the existing collection picker without navigating away.
-- Copy completes through the existing PNG-copy path and reports
-  `Copied as png`.
-- The Apps Flow tab preserves Flow titles, screen counts, Save, and Copy while
-  omitting redundant app identity. The global Flow catalog retains app identity
-  where its icon remains an actionable source-app link.
-- Browser console: no application errors; only the pre-existing development
-  warning about runtime theme injection.
-- Focused component tests: 34 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 identified the requested mismatches: screen actions sat persistently
-  below cards, a source-screen overflow action was present, Highlights and
-  related-Flow sections duplicated the gallery, and App-local Flow cards
-  repeated the app icon.
-- Fix: placed Save and Copy inside the screen media as hover/focus actions,
-  removed the source action and redundant sections, and conditioned Flow-card
-  identity on having an actionable source-app destination.
-- Post-fix evidence: the 1750 × 863 comparison shows one focused gallery and
-  the action pill inside the hovered card; the Apps Flow capture shows cards
-  without app icons.
-
-final result: passed
-
-# App detail responsive navigation spacing — 2026-07-30
-
-## Audit scope and evidence
-
-- Surface: Amazon Shopping App detail navigation on the Screens tab.
-- User goal: scan and switch App sections without the version, tabs, and filter
-  feeling compressed at tablet and compact widths.
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-responsive-nav-qa-2026-07-30/01-before-689x863.jpg`.
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-responsive-nav-qa-2026-07-30/03-after-loaded-689x863.jpg`.
-- Additional compact-width evidence:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-responsive-nav-qa-2026-07-30/04-mobile-390x844.jpg`.
-- Combined comparison input:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-responsive-nav-qa-2026-07-30/05-before-after-comparison.png`.
-- Viewport and pixels: 689 × 863 CSS pixels and 689 × 863 image pixels at
-  1× normalized density. Compact verification used 390 × 844.
-- State: Amazon Shopping, iOS, version 1, loaded Screens tab at page top.
-
-## Audit findings
-
-- [P2] Nine navigation controls were compressed into one 64px row at 689px.
-  The five tabs had only 10px gaps, weakening grouping between the version,
-  section navigation, and filter.
-- Accessibility risk: the one-row layout had no room to absorb longer labels or
-  text scaling before relying on implicit horizontal scrolling. Screenshot
-  evidence cannot establish full keyboard or screen-reader compliance.
-- Strengths preserved: semantic tablist, selected indicator, labelled version
-  selector, filter control, tap heights, and horizontal overflow behavior.
-
-## Fix and design QA
-
-- At widths up to 720px, version and filter now occupy a clear 52px utility row.
-  The section tabs use a separate 60px row with 24px spacing.
-- The tab row retains horizontal scrolling at 390px while the page itself has
-  no horizontal overflow (`390px` body width and scroll width).
-- Fonts and typography: existing type family, sizes, weights, wrapping, and
-  selected hierarchy are unchanged.
-- Spacing and layout rhythm: controls are separated by task and the tab gap
-  increases from 10px to 24px without changing the desktop layout.
-- Colors and visual tokens: existing background, divider, selected indicator,
-  and text tokens are unchanged.
-- Image quality and asset fidelity: App icon and captured screen images are
-  unchanged.
-- Copy and content: all labels and App data are unchanged.
-- Interaction: tablist overflow, version selector, and Screens filter remain
-  functional; switching to UI Elements and back to Screens updated the route
-  and selected tab correctly. The 390px layout does not create page-level
-  overflow.
-- Browser console: no application errors; only the existing development
-  warning about runtime theme injection.
-- Focused component tests: 27 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 recorded the P2 compressed single-row navigation.
-- Fix: introduced a two-row responsive grid only for App detail at `≤720px`.
-- Post-fix evidence: the 689px comparison shows distinct utility and section
-  rows; the 390px capture confirms resilient horizontal tab scrolling.
-
-final result: passed
-
-# Screens filter viewport containment — 2026-07-30
-
-## Reference set
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-filter-menu-qa-2026-07-30/01-before-open-875x863.jpg`.
-- Browser-rendered implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-filter-menu-qa-2026-07-30/02-after-open-875x863.jpg`.
-- Compact implementation:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-filter-menu-qa-2026-07-30/04-mobile-open-full-list-390x844.jpg`.
-- Combined comparison input:
-  `/Users/kai/.codex/visualizations/2026/07/28/019fa930-3eda-7e20-93aa-0ddd56b4693c/vitrine-filter-menu-qa-2026-07-30/05-before-after-comparison.png`.
-- Viewport and pixels: 875 × 863 CSS pixels and 875 × 863 image pixels at
-  1× normalized density. Compact verification used 390 × 844.
-- State: Amazon Shopping Screens filter open with the complete unfiltered list.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain after the fix.
-
-- Earlier P1: the options content escaped the menu surface and continued across
-  the screen grid, obscuring content and making lower options difficult to use.
-- Fonts and typography: search, section, and option typography are unchanged
-  and remain readable inside the clipped surface.
-- Spacing and layout rhythm: the 520px menu surface remains aligned to its
-  trigger; search occupies a fixed 40px row and options receive the remaining
-  454px.
-- Colors and visual tokens: the existing dark surface, border, shadow,
-  checkboxes, and text colors are unchanged.
-- Image quality and asset fidelity: background screen images are unchanged and
-  are no longer covered by escaped option content.
-- Copy and content: all 200 filter options and search labels are preserved.
-
-## Interaction and runtime verification
-
-- The search field remains visible while the options element scrolls
-  independently (`454px` client height, `7332px` scroll height at 875px).
-- Searching for `Cart` reduced the visible list to seven matching options;
-  clearing restored all 200.
-- The desktop popover bottom is `630px` within an `863px` viewport.
-- At 390 × 844, the complete-list popover ends at `684px`, its options scroll
-  internally, and the page has no horizontal overflow.
-- Browser console: no application errors; only the existing development
-  warning about runtime theme injection.
-- Focused component tests: 41 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 recorded the P1 escaping option list.
-- Fix: gave the popover a viewport-aware height, clipped the surface, made the
-  menu fill that height, and retained scrolling on the options row only.
-- Post-fix evidence: the side-by-side comparison shows the complete surface
-  ending above the lower screen cards without any transparent overflow.
-
-final result: passed
-
-# Sites Sections gallery — 2026-07-30
-
-## Visual truth and normalization
-
-- Source visual truth:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb1ac-763e-7a23-8c67-7a2207a85da1/sections-comparison/02-mobbin-sections.png`.
-- Initial Astryx implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb1ac-763e-7a23-8c67-7a2207a85da1/sections-comparison/01-local-sections.png`.
-- Browser-rendered final implementation:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb1ac-763e-7a23-8c67-7a2207a85da1/sections-comparison/05-local-sections-final.png`.
-- Combined final comparison:
-  `/Users/kai/.codex/visualizations/2026/07/30/019fb1ac-763e-7a23-8c67-7a2207a85da1/sections-comparison/06-mobbin-local-final-comparison.png`.
-- Viewport and pixels: source and implementation are 642 × 863 CSS pixels and
-  642 × 863 image pixels at 1× normalized density.
-- State: authenticated Vercel Sites detail, Sections tab, latest version, no
-  active filter.
-
-## Findings
-
-No actionable P0, P1, or P2 differences remain in the requested Sections
-gallery surface.
-
-- Fonts and typography: Astryx retains its product font and compact control
-  hierarchy. Meaningful extracted headings lead each card; section type and
-  page name move to secondary copy.
-- Spacing and layout rhythm: the duplicate title and explanatory paragraph are
-  removed. The type control, search action, and result count share one compact
-  row, and the first capture begins immediately below it.
-- Colors and visual tokens: controls use the existing Vitrine dark surface,
-  neutral border, muted text, and white selected-state tokens.
-- Image quality and asset fidelity: imported captures remain authoritative.
-  Image and video cards now measure their loaded media and preserve its native
-  aspect ratio rather than containing it inside a fixed 16:10 letterbox.
-- Copy and content: generic `Feature Section` labels are shortened to `Feature`;
-  extracted headings such as `Agentic Infrastructure` are promoted when
-  available. OCR text remains excluded.
-- The larger Astryx identity/metadata/Visit Site area differs from Mobbin
-  intentionally because Sites detail reuses the approved shared Apps/Sites
-  detail shell. The comparison judges the Sections surface below the tabs.
-
-The full-view comparison keeps the toolbar, first card, text hierarchy, media
-crop, and surrounding shell legible, so a smaller focused crop was not needed.
-
-## Interaction and runtime verification
-
-- Selecting `Hero` from the shared Astryx dropdown reduced the gallery to one
-  card and announced `1 of 8 sections`.
-- Opening search and entering `footer` reduced the gallery to the Footer card
-  and announced `1 of 8 sections`.
-- Filtered cards still open the correct original inspector item.
-- No runtime errors were captured while opening and closing the filter and
-  search controls.
-- Focused Sites tests: 45 passed.
-- Production build: passed.
-
-## Comparison history
-
-- Pass 1 found a P2 density mismatch from the large `8 sections` heading and
-  explanatory copy, a duplicate count in the detail navigation, generic labels,
-  and fixed-ratio letterboxing that made the navigation capture mostly empty.
-- Fix: replaced the intro with a compact functional toolbar, moved the count
-  into that row, added type/search filtering, promoted meaningful headings,
-  preserved native image/video ratios, and placed the Hero capture first.
-- Post-fix evidence: the final side-by-side shows a Mobbin-like control row and
-  a dense Hero capture without letterboxing.
-
-final result: passed
-
-## Latest QA checkpoint
-
-The latest completed build review is
-**Project Docs multi-document workspace — 2026-07-30** in this file.
+- Seventeen focused color, typography, spacing, and rollout tests pass.
+- The production Vite build succeeds.
+- The Storybook build succeeds.
+- Browser verification covers Apps, Sites, Flows, Aboard App detail, Collections, Projects, Billing settings, Admin Users, and Pricing.
 
 final result: passed

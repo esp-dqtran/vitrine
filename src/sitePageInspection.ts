@@ -239,6 +239,13 @@ export async function inspectSiteViewport(
       "h1",
       "h2",
       "h3",
+      "a",
+      "button",
+      "input",
+      "select",
+      "textarea",
+      "label",
+      "dialog",
       "video",
       "canvas",
       "svg",
@@ -288,6 +295,7 @@ export async function inspectSiteViewport(
         ...(parent ? { parentId: idByElement.get(parent) } : {}),
         order,
         tag,
+        classNames: [...element.classList].slice(0, 20),
         role: clean(element.getAttribute("role"), 100) || undefined,
         accessibleName: clean(
           element.getAttribute("aria-label") ||
@@ -318,6 +326,18 @@ export async function inspectSiteViewport(
           : undefined,
       };
     });
+    const customProperties: Record<string, string> = {};
+    let customPropertyCount = 0;
+    const rootStyle = getComputedStyle(document.documentElement);
+    for (let index = 0; index < rootStyle.length; index += 1) {
+      const property = rootStyle.item(index);
+      if (!property.startsWith("--") || customPropertyCount >= 100) continue;
+      const value = clean(rootStyle.getPropertyValue(property), 500);
+      if (value) {
+        customProperties[property] = value;
+        customPropertyCount += 1;
+      }
+    }
     const visualTokens = retainedElements.map((element, index) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
@@ -338,6 +358,7 @@ export async function inspectSiteViewport(
         padding: style.padding,
         border: style.border,
         borderRadius: style.borderRadius,
+        boxShadow: style.boxShadow.slice(0, 500),
         background: style.background.slice(0, 500),
         color: style.color,
         fontFamily: style.fontFamily.slice(0, 300),
@@ -345,6 +366,9 @@ export async function inspectSiteViewport(
         fontWeight: style.fontWeight,
         lineHeight: style.lineHeight,
         letterSpacing: style.letterSpacing,
+        textTransform: style.textTransform,
+        objectFit: style.objectFit,
+        aspectRatio: style.aspectRatio,
         transform: style.transform.slice(0, 500),
         opacity: style.opacity,
         filter: style.filter.slice(0, 500),
@@ -353,6 +377,9 @@ export async function inspectSiteViewport(
         overflow: style.overflow,
         zIndex: style.zIndex,
         willChange: style.willChange.slice(0, 300),
+        ...(index === 0 && customPropertyCount
+          ? { customProperties }
+          : {}),
       };
     });
 

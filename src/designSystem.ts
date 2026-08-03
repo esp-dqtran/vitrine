@@ -14,7 +14,22 @@ export interface EvidenceView {
 }
 
 export type ReviewStatus = "needs_review" | "reviewed" | "rejected";
-export type DesignInferenceSource = "llm_inferred";
+export type DesignInferenceSource = "llm_inferred" | "external_import";
+
+export interface DesignSystemProvenance {
+  provider: "vitrines" | "getdesign" | "refero";
+  externalId?: string;
+  sourceUrl?: string;
+  originalUrl?: string;
+  screenshotUrl?: string;
+  thumbnailUrl?: string;
+  importedAt?: string;
+  upstreamModifiedAt?: string;
+  attribution?: string;
+  theme?: "light" | "dark";
+  northStar?: string;
+  industry?: string;
+}
 export interface EvidenceOccurrence<T = number> {
   imageId: number;
   region?: { x: number; y: number; width: number; height: number };
@@ -110,6 +125,7 @@ export interface DesignSystemSnapshot<T = number> {
   app: string;
   generatedAt: string;
   summary?: string;
+  provenance?: DesignSystemProvenance;
   tokens: DesignToken<T>[];
   components: DesignComponent<T>[];
   flows: DesignFlow<T>[];

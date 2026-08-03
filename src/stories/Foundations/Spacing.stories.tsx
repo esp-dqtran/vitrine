@@ -73,9 +73,9 @@ export const System: Story = {
 
       <section aria-labelledby="control-size-title" style={{ ...panel, padding: 'var(--spacing-6)' }}>
         <div style={{ display: 'grid', gap: 'var(--spacing-1)', marginBottom: 'var(--spacing-6)' }}>
-          <h2 id="control-size-title" className="vitrine-type-heading" style={{ margin: 0 }}>Control heights</h2>
+          <h2 id="control-size-title" className="vitrine-type-heading" style={{ margin: 0 }}>Standard control height</h2>
           <p className="vitrine-type-detail" style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-            Size variants align adjacent controls. Padding changes content fit, never the declared height.
+            Buttons and dropdown selectors use one 40px height. Tabs use their navigation row; embedded editor and canvas tools keep their domain geometry.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--spacing-6)' }}>

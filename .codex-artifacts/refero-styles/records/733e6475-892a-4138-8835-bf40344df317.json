@@ -1,0 +1,912 @@
+{
+  "schemaVersion": 1,
+  "id": "733e6475-892a-4138-8835-bf40344df317",
+  "sourceUrl": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317",
+  "sitemapLastModified": "2026-07-03T11:04:52.763Z",
+  "fetchedAt": "2026-08-02T18:06:43.138Z",
+  "contentHash": "eac422cc356d92a2f3bbcffe98c4d9bd0f0cc29323d87b9bf5a8855b2dd077ec",
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Refero Styles",
+            "item": "https://styles.refero.design"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Fey design system",
+            "item": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317"
+          }
+        ]
+      },
+      {
+        "@type": "CreativeWork",
+        "@id": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317#style-reference",
+        "name": "Fey design system reference",
+        "headline": "Fey design system | Refero Styles",
+        "description": "Explore Fey's light Fintech design system: Warm Paper #fafafa, Graphite #595959 colors, -apple-system, Wealthsimple Sans Display typography, and DESIGN.md...",
+        "url": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317",
+        "mainEntityOfPage": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "Fey",
+          "url": "https://feyapp.com"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "@id": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317#primaryimage",
+          "url": "https://images.refero.design/styles/refero.design/image/1b079686-f003-49bc-8b88-a074f149423f.jpg",
+          "contentUrl": "https://images.refero.design/styles/refero.design/image/1b079686-f003-49bc-8b88-a074f149423f.jpg",
+          "caption": "Screenshot of Fey"
+        },
+        "image": "https://images.refero.design/styles/refero.design/image/1b079686-f003-49bc-8b88-a074f149423f.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "Refero Styles",
+          "url": "https://styles.refero.design"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Refero",
+          "url": "https://refero.design"
+        },
+        "keywords": [
+          "Fey design system",
+          "Fey website design",
+          "Fey colors",
+          "Fey typography",
+          "DESIGN.md",
+          "AI agent design",
+          "website design inspiration",
+          "Fintech design system",
+          "Warm Paper",
+          "Graphite",
+          "Ink",
+          "-apple-system",
+          "Wealthsimple Sans Display"
+        ],
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Fey design system"
+          },
+          {
+            "@type": "Thing",
+            "name": "Fey website design"
+          },
+          {
+            "@type": "Thing",
+            "name": "Fey colors"
+          },
+          {
+            "@type": "Thing",
+            "name": "Fey typography"
+          },
+          {
+            "@type": "Thing",
+            "name": "DESIGN.md"
+          },
+          {
+            "@type": "Thing",
+            "name": "AI agent design"
+          },
+          {
+            "@type": "Thing",
+            "name": "website design inspiration"
+          },
+          {
+            "@type": "Thing",
+            "name": "Fintech design system"
+          }
+        ],
+        "datePublished": "2026-01-31T13:04:03.000Z",
+        "dateModified": "2026-01-31T13:04:03.000Z"
+      }
+    ]
+  },
+  "result": {
+    "meta": {
+      "url": "https://feyapp.com",
+      "siteName": "Fey",
+      "extractedAt": "2026-07-03T03:32:17.142Z",
+      "durationMs": 42800,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "elementCount": 98,
+      "telemetry": {
+        "enrichment": {
+          "componentHtmlStatus": "pending",
+          "attempts": 0
+        }
+      }
+    },
+    "raw": {
+      "colors": {
+        "tokens": [
+          {
+            "hex": "#fafafa",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.9851036517304731
+            },
+            "contexts": [
+              "other"
+            ],
+            "frequency": 1,
+            "confidence": 1,
+            "prominence": 1296000,
+            "properties": [
+              "backgroundColor"
+            ],
+            "usageCounts": {
+              "other/backgroundColor": 1
+            }
+          },
+          {
+            "hex": "#595959",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.464002143159062
+            },
+            "contexts": [
+              "body",
+              "nav"
+            ],
+            "frequency": 88,
+            "confidence": 1,
+            "prominence": 23345.019018633862,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "nav/color": 5,
+              "body/color": 83
+            }
+          },
+          {
+            "hex": "#1c1c1c",
+            "oklch": {
+              "c": 0,
+              "h": 0,
+              "l": 0.22644986475198373
+            },
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 2,
+            "confidence": 1,
+            "prominence": 10053.417142074293,
+            "properties": [
+              "color"
+            ],
+            "usageCounts": {
+              "body/color": 1,
+              "link/color": 1
+            }
+          }
+        ],
+        "isDarkMode": false,
+        "colorfulness": 0,
+        "contrastPairs": [
+          {
+            "level": "AAA",
+            "ratio": 16.33,
+            "background": "#fafafa",
+            "foreground": "#1c1c1c"
+          },
+          {
+            "level": "AA",
+            "ratio": 6.71,
+            "background": "#fafafa",
+            "foreground": "#595959"
+          }
+        ]
+      },
+      "shapes": {
+        "radii": [],
+        "shadows": []
+      },
+      "spacing": {
+        "tokens": [
+          {
+            "value": 8,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 2,
+            "properties": [
+              "rowGap",
+              "columnGap"
+            ],
+            "propertyContextPairs": [
+              "rowGap|nav",
+              "columnGap|nav"
+            ]
+          },
+          {
+            "value": 28,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingTop"
+            ],
+            "propertyContextPairs": [
+              "paddingTop|nav"
+            ]
+          },
+          {
+            "value": 29,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 2,
+            "properties": [
+              "marginBottom"
+            ],
+            "propertyContextPairs": [
+              "marginBottom|body"
+            ]
+          },
+          {
+            "value": 40,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingLeft"
+            ],
+            "propertyContextPairs": [
+              "paddingLeft|nav"
+            ]
+          },
+          {
+            "value": 48,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingBottom"
+            ],
+            "propertyContextPairs": [
+              "paddingBottom|nav"
+            ]
+          },
+          {
+            "value": 72,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "properties": [
+              "paddingRight"
+            ],
+            "propertyContextPairs": [
+              "paddingRight|nav"
+            ]
+          }
+        ],
+        "density": "spacious",
+        "baseUnit": 4
+      },
+      "gradients": [],
+      "typography": {
+        "fonts": [
+          {
+            "family": "-apple-system",
+            "source": "system",
+            "weights": [
+              400,
+              600
+            ],
+            "frequency": 96,
+            "fontFeatureSettings": []
+          },
+          {
+            "family": "Wealthsimple Sans Display",
+            "source": "custom",
+            "weights": [
+              700
+            ],
+            "frequency": 2,
+            "fontFeatureSettings": []
+          }
+        ],
+        "scale": {
+          "base": 21,
+          "name": "Major Second",
+          "ratio": 1.125,
+          "confidence": 1
+        },
+        "steps": [
+          {
+            "size": 13,
+            "family": "-apple-system",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 1,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 13,
+            "family": "-apple-system",
+            "weight": 400,
+            "contexts": [
+              "nav"
+            ],
+            "frequency": 5,
+            "lineHeight": 1.2,
+            "letterSpacing": -0.002,
+            "textTransform": "none"
+          },
+          {
+            "size": 16,
+            "family": "-apple-system",
+            "weight": 400,
+            "contexts": [
+              "other",
+              "image"
+            ],
+            "frequency": 4,
+            "lineHeight": 1.2,
+            "letterSpacing": 0,
+            "textTransform": "none"
+          },
+          {
+            "size": 21,
+            "family": "-apple-system",
+            "weight": 600,
+            "contexts": [
+              "body"
+            ],
+            "frequency": 86,
+            "lineHeight": 1.55,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          },
+          {
+            "size": 21,
+            "family": "Wealthsimple Sans Display",
+            "weight": 700,
+            "contexts": [
+              "body",
+              "link"
+            ],
+            "frequency": 2,
+            "lineHeight": 1.55,
+            "letterSpacing": -0.01,
+            "textTransform": "none"
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "dos": [
+        "Set body copy at 21px / weight 600 / line-height 1.55 with -0.01em tracking — this IS the brand voice.",
+        "Use exactly two text colors: #595959 for narrative and #1c1c1c for emphasis and links. Nothing else.",
+        "Constrain content to a ~520px centered column; let white space do the layout work.",
+        "Separate paragraphs with ~29px margin-bottom for editorial rhythm.",
+        "Keep the page to a single surface color (#fafafa) — no cards, no panels, no shadows."
+      ],
+      "donts": [
+        "Do not introduce accent colors, buttons, or CTAs — this page is a declaration, not an action.",
+        "Do not add headings (h1/h2/h3) — the 21px body carries the hierarchy through weight and color alone.",
+        "Do not use shadows, borders, or background fills on text containers.",
+        "Do not break the 520px column with sidebars, images, or multi-column layouts.",
+        "Do not use a display or serif font for body copy — the system stack at 21px / 600 is the intended voice.",
+        "Do not add hover states beyond color/weight transitions on links; no transform, scale, or shadow effects."
+      ],
+      "theme": "light",
+      "colors": [
+        {
+          "hex": "#fafafa",
+          "name": "Warm Paper",
+          "role": "Page background — the only surface; everything floats on this warm off-white",
+          "group": "neutral"
+        },
+        {
+          "hex": "#595959",
+          "name": "Graphite",
+          "role": "Body text, nav labels, footer copy — medium-dark gray keeps long-form reading comfortable without high-contrast harshness",
+          "group": "neutral"
+        },
+        {
+          "hex": "#1c1c1c",
+          "name": "Ink",
+          "role": "Secondary body text, navigation labels, and subdued headings.",
+          "group": "neutral"
+        }
+      ],
+      "layout": "Single narrow centered column (~520px max-width) on a full-bleed #fafafa canvas. No hero, no grid, no sections — just one vertical flow of text paragraphs separated by ~29px gaps, with a tiny left-edge nav indicator aligned to the column. The page reads top-to-bottom like a printed letter: announcement, context, continuation, signature marks.",
+      "imagery": "Pure typography page — no photography, no product screenshots, no illustration beyond three small hand-drawn line glyphs at the bottom that serve as a closing signature. The visual language is absence: white space, two ink tones, and the texture of the type itself.",
+      "similar": [
+        {
+          "why": "Same editorial restraint — a single narrow column of type on warm white, no CTAs, no accent colors, narrative voice carrying the page",
+          "business": "Stripe Press"
+        },
+        {
+          "why": "Monochrome announcement pages with system-stack typography at a single comfortable size, using whitespace and type rhythm instead of visual decoration",
+          "business": "Linear Changelog"
+        },
+        {
+          "why": "Centered narrow text column on off-white with generous paragraph spacing — reading-first layout that treats type as the entire design",
+          "business": "Substack Blog"
+        }
+      ],
+      "spacing": {
+        "radius": {
+          "none": "0px"
+        },
+        "elementGap": "8px",
+        "sectionGap": "48px",
+        "cardPadding": "0px",
+        "pageMaxWidth": "520px"
+      },
+      "industry": "fintech",
+      "surfaces": [
+        {
+          "hex": "#fafafa",
+          "name": "Warm Paper",
+          "level": 1,
+          "purpose": "The only surface — page background and text container share this single warm off-white"
+        }
+      ],
+      "northStar": "a printed broadsheet on warm paper — type and silence, nothing else.",
+      "typeScale": [
+        {
+          "role": "caption",
+          "size": 13,
+          "lineHeight": 1.55
+        },
+        {
+          "role": "body-sm",
+          "size": 16,
+          "lineHeight": 1.55
+        },
+        {
+          "role": "body",
+          "size": 21,
+          "lineHeight": 1.55
+        }
+      ],
+      "components": [
+        {
+          "name": "Editorial Text Column",
+          "role": "Main content container",
+          "description": "A narrow centered column (~520px max-width) holding 3-4 paragraphs of 21px / 600 body text at line-height 1.55. Paragraphs separated by ~29px margin-bottom. No headings, dividers, or decorative elements — just text on #fafafa."
+        },
+        {
+          "name": "Inline Emphasis Word",
+          "role": "Inline bold highlight within a paragraph",
+          "description": "Selected words (\"Fey joined\", \"Everything\", \"Fey\", \"Wealthsimple\") rendered at the same 21px size but in #1c1c1c instead of #595959, using weight 600. Creates contrast within the same line without changing scale or family."
+        },
+        {
+          "name": "Inline Text Link",
+          "role": "The single navigational link in the body",
+          "description": "\"Wealthsimple\" rendered in #1c1c1c at 21px / 600 / -0.01em, optionally in Wealthsimple Sans Display 700. No underline by default; relies on weight and color shift to signal interactivity."
+        },
+        {
+          "name": "Left-Edge Nav Index",
+          "role": "Minimal navigation strip",
+          "role-descr": "Five horizontal lines (collapsed menu indicator) positioned at the page's left edge, vertically aligned with the text column. Acts as the only structural UI element — 8px row-gap between lines, 40px left padding from viewport edge.",
+          "description": ""
+        },
+        {
+          "name": "Signature Hand-Off Glyphs",
+          "role": "Closing illustration",
+          "description": "Three small hand-drawn line illustrations beneath the final paragraph, in #595959 stroke at ~16px height. The closing visual punctuation of the announcement — informal marks replacing a button or CTA."
+        }
+      ],
+      "typography": [
+        {
+          "role": "Body and navigation. At 21px / 600 / line-height 1.55 with -0.01em tracking, the system stack carries the entire page — the signature is the size and rhythm, not a custom face. 13px / 400 nav labels use the same -0.002em micro-tracking. A 16px / 400 utility size appears for small captions.",
+          "sizes": "13px, 16px, 21px",
+          "family": "-apple-system",
+          "weight": "400, 600",
+          "lineHeight": "1.20, 1.55",
+          "substitute": "Inter or SF Pro Text",
+          "letterSpacing": "-0.0100em, -0.0020em"
+        },
+        {
+          "role": "Reserved for the \"Wealthsimple\" link — a single display-grade cut at 21px / 700 / -0.01em. It signals partnership without changing the page's monochrome restraint.",
+          "sizes": "21px",
+          "family": "Wealthsimple Sans Display",
+          "weight": "700",
+          "lineHeight": "1.55",
+          "substitute": "Inter (weight 700) or GT Walsheim Bold",
+          "letterSpacing": "-0.0100em"
+        }
+      ],
+      "description": "Fey operates as a quiet editorial announcement — a near-empty white page where a single column of 21px serif-quality system text does all the talking. The entire visual system reduces to two ink tones on warm off-white: a graphite body for narrative and a near-black for emphasis and the one link. There are no buttons, cards, icons, or color accents — the restraint IS the design. Layout is centered and narrow (~520px column), with generous vertical rhythm between paragraphs and a small left-edge navigation index that acts as the only structural decoration.",
+      "customSections": [
+        {
+          "title": "Agent Prompt Guide",
+          "content": "$19"
+        }
+      ],
+      "elevationPhilosophy": "No elevation. The design deliberately avoids shadows, borders, and surface layering — everything exists on a single flat plane (#fafafa). Hierarchy is created through type weight, color contrast, and whitespace alone."
+    },
+    "screenshot": {
+      "url": "https://images.refero.design/styles/refero.design/image/45ee0c02-2aa7-4061-9679-6d174f0e73d8.jpg",
+      "thumbnail": "https://images.refero.design/styles/refero.design/image/1b079686-f003-49bc-8b88-a074f149423f.jpg"
+    }
+  },
+  "snapshot": {
+    "app": "fey",
+    "generatedAt": "2026-07-03T03:32:17.142Z",
+    "summary": "Fey operates as a quiet editorial announcement — a near-empty white page where a single column of 21px serif-quality system text does all the talking. The entire visual system reduces to two ink tones on warm off-white: a graphite body for narrative and a near-black for emphasis and the one link. There are no buttons, cards, icons, or color accents — the restraint IS the design. Layout is centered and narrow (~520px column), with generous vertical rhythm between paragraphs and a small left-edge navigation index that acts as the only structural decoration.",
+    "provenance": {
+      "provider": "refero",
+      "externalId": "733e6475-892a-4138-8835-bf40344df317",
+      "sourceUrl": "https://styles.refero.design/style/733e6475-892a-4138-8835-bf40344df317",
+      "originalUrl": "https://feyapp.com",
+      "screenshotUrl": "https://images.refero.design/styles/refero.design/image/45ee0c02-2aa7-4061-9679-6d174f0e73d8.jpg",
+      "thumbnailUrl": "https://images.refero.design/styles/refero.design/image/1b079686-f003-49bc-8b88-a074f149423f.jpg",
+      "importedAt": "2026-08-02T18:06:43.138Z",
+      "upstreamModifiedAt": "2026-07-03T11:04:52.763Z",
+      "attribution": "Imported from Refero Styles",
+      "theme": "light",
+      "northStar": "a printed broadsheet on warm paper — type and silence, nothing else.",
+      "industry": "fintech"
+    },
+    "tokens": [
+      {
+        "id": "color-warm-paper",
+        "kind": "color",
+        "name": "Warm Paper",
+        "value": "#fafafa",
+        "role": "Page background — the only surface; everything floats on this warm off-white",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-graphite",
+        "kind": "color",
+        "name": "Graphite",
+        "value": "#595959",
+        "role": "Body text, nav labels, footer copy — medium-dark gray keeps long-form reading comfortable without high-contrast harshness",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "color-ink",
+        "kind": "color",
+        "name": "Ink",
+        "value": "#1c1c1c",
+        "role": "Secondary body text, navigation labels, and subdued headings.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-apple-system",
+        "kind": "typography",
+        "name": "-apple-system",
+        "value": "font-family: -apple-system; font-weight: 400, 600; font-size: 13px, 16px, 21px; line-height: 1.20, 1.55; letter-spacing: -0.0100em, -0.0020em",
+        "role": "Body and navigation. At 21px / 600 / line-height 1.55 with -0.01em tracking, the system stack carries the entire page — the signature is the size and rhythm, not a custom face. 13px / 400 nav labels use the same -0.002em micro-tracking. A 16px / 400 utility size appears for small captions.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-wealthsimple-sans-display",
+        "kind": "typography",
+        "name": "Wealthsimple Sans Display",
+        "value": "font-family: Wealthsimple Sans Display; font-weight: 700; font-size: 21px; line-height: 1.55; letter-spacing: -0.0100em",
+        "role": "Reserved for the \"Wealthsimple\" link — a single display-grade cut at 21px / 700 / -0.01em. It signals partnership without changing the page's monochrome restraint.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-caption-scale",
+        "kind": "typography",
+        "name": "caption",
+        "value": "font-size: 13px; line-height: 1.55",
+        "role": "Imported caption type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-sm-scale",
+        "kind": "typography",
+        "name": "body-sm",
+        "value": "font-size: 16px; line-height: 1.55",
+        "role": "Imported body-sm type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "typography-body-scale",
+        "kind": "typography",
+        "name": "body",
+        "value": "font-size: 21px; line-height: 1.55",
+        "role": "Imported body type-scale step",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-elementgap",
+        "kind": "spacing",
+        "name": "elementGap",
+        "value": "8px",
+        "role": "Imported elementGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-sectiongap",
+        "kind": "spacing",
+        "name": "sectionGap",
+        "value": "48px",
+        "role": "Imported sectionGap spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-cardpadding",
+        "kind": "spacing",
+        "name": "cardPadding",
+        "value": "0px",
+        "role": "Imported cardPadding spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "spacing-pagemaxwidth",
+        "kind": "spacing",
+        "name": "pageMaxWidth",
+        "value": "520px",
+        "role": "Imported pageMaxWidth spacing value",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "radius-none",
+        "kind": "radius",
+        "name": "none",
+        "value": "0px",
+        "role": "Imported none radius",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "effect-elevation-philosophy",
+        "kind": "effect",
+        "name": "Elevation philosophy",
+        "value": "documented",
+        "role": "No elevation. The design deliberately avoids shadows, borders, and surface layering — everything exists on a single flat plane (#fafafa). Hierarchy is created through type weight, color contrast, and whitespace alone.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ],
+    "components": [
+      {
+        "id": "editorial-text-column",
+        "name": "Editorial Text Column",
+        "category": "Refero components",
+        "description": "A narrow centered column (~520px max-width) holding 3-4 paragraphs of 21px / 600 body text at line-height 1.55. Paragraphs separated by ~29px margin-bottom. No headings, dividers, or decorative elements — just text on #fafafa.",
+        "variants": [
+          {
+            "id": "editorial-text-column-reference",
+            "name": "Reference",
+            "description": "A narrow centered column (~520px max-width) holding 3-4 paragraphs of 21px / 600 body text at line-height 1.55. Paragraphs separated by ~29px margin-bottom. No headings, dividers, or decorative elements — just text on #fafafa.",
+            "evidence": [],
+            "observedProperties": [
+              "Main content container"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "inline-emphasis-word",
+        "name": "Inline Emphasis Word",
+        "category": "Refero components",
+        "description": "Selected words (\"Fey joined\", \"Everything\", \"Fey\", \"Wealthsimple\") rendered at the same 21px size but in #1c1c1c instead of #595959, using weight 600. Creates contrast within the same line without changing scale or family.",
+        "variants": [
+          {
+            "id": "inline-emphasis-word-reference",
+            "name": "Reference",
+            "description": "Selected words (\"Fey joined\", \"Everything\", \"Fey\", \"Wealthsimple\") rendered at the same 21px size but in #1c1c1c instead of #595959, using weight 600. Creates contrast within the same line without changing scale or family.",
+            "evidence": [],
+            "observedProperties": [
+              "Inline bold highlight within a paragraph"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "inline-text-link",
+        "name": "Inline Text Link",
+        "category": "Refero components",
+        "description": "\"Wealthsimple\" rendered in #1c1c1c at 21px / 600 / -0.01em, optionally in Wealthsimple Sans Display 700. No underline by default; relies on weight and color shift to signal interactivity.",
+        "variants": [
+          {
+            "id": "inline-text-link-reference",
+            "name": "Reference",
+            "description": "\"Wealthsimple\" rendered in #1c1c1c at 21px / 600 / -0.01em, optionally in Wealthsimple Sans Display 700. No underline by default; relies on weight and color shift to signal interactivity.",
+            "evidence": [],
+            "observedProperties": [
+              "The single navigational link in the body"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "left-edge-nav-index",
+        "name": "Left-Edge Nav Index",
+        "category": "Refero components",
+        "description": "Minimal navigation strip",
+        "variants": [
+          {
+            "id": "left-edge-nav-index-reference",
+            "name": "Reference",
+            "description": "Minimal navigation strip",
+            "evidence": [],
+            "observedProperties": [
+              "Minimal navigation strip"
+            ],
+            "source": "external_import"
+          }
+        ]
+      },
+      {
+        "id": "signature-hand-off-glyphs",
+        "name": "Signature Hand-Off Glyphs",
+        "category": "Refero components",
+        "description": "Three small hand-drawn line illustrations beneath the final paragraph, in #595959 stroke at ~16px height. The closing visual punctuation of the announcement — informal marks replacing a button or CTA.",
+        "variants": [
+          {
+            "id": "signature-hand-off-glyphs-reference",
+            "name": "Reference",
+            "description": "Three small hand-drawn line illustrations beneath the final paragraph, in #595959 stroke at ~16px height. The closing visual punctuation of the announcement — informal marks replacing a button or CTA.",
+            "evidence": [],
+            "observedProperties": [
+              "Closing illustration"
+            ],
+            "source": "external_import"
+          }
+        ]
+      }
+    ],
+    "flows": [],
+    "rules": [
+      {
+        "id": "layout-layout-1",
+        "kind": "layout",
+        "name": "Layout",
+        "description": "Single narrow centered column (~520px max-width) on a full-bleed #fafafa canvas. No hero, no grid, no sections — just one vertical flow of text paragraphs separated by ~29px gaps, with a tiny left-edge nav indicator aligned to the column. The page reads top-to-bottom like a printed letter: announcement, context, continuation, signature marks.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "imagery-imagery-2",
+        "kind": "imagery",
+        "name": "Imagery",
+        "description": "Pure typography page — no photography, no product screenshots, no illustration beyond three small hand-drawn line glyphs at the bottom that serve as a closing signature. The visual language is absence: white space, two ink tones, and the texture of the type itself.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "layout-elevation-3",
+        "kind": "layout",
+        "name": "Elevation",
+        "description": "No elevation. The design deliberately avoids shadows, borders, and surface layering — everything exists on a single flat plane (#fafafa). Hierarchy is created through type weight, color contrast, and whitespace alone.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-4",
+        "kind": "content",
+        "name": "Do",
+        "description": "Set body copy at 21px / weight 600 / line-height 1.55 with -0.01em tracking — this IS the brand voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-5",
+        "kind": "content",
+        "name": "Do",
+        "description": "Use exactly two text colors: #595959 for narrative and #1c1c1c for emphasis and links. Nothing else.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-6",
+        "kind": "content",
+        "name": "Do",
+        "description": "Constrain content to a ~520px centered column; let white space do the layout work.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-7",
+        "kind": "content",
+        "name": "Do",
+        "description": "Separate paragraphs with ~29px margin-bottom for editorial rhythm.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-do-8",
+        "kind": "content",
+        "name": "Do",
+        "description": "Keep the page to a single surface color (#fafafa) — no cards, no panels, no shadows.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-9",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not introduce accent colors, buttons, or CTAs — this page is a declaration, not an action.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-10",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add headings (h1/h2/h3) — the 21px body carries the hierarchy through weight and color alone.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-11",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use shadows, borders, or background fills on text containers.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-12",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not break the 520px column with sidebars, images, or multi-column layouts.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-13",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not use a display or serif font for body copy — the system stack at 21px / 600 is the intended voice.",
+        "evidence": [],
+        "source": "external_import"
+      },
+      {
+        "id": "content-don-t-14",
+        "kind": "content",
+        "name": "Don't",
+        "description": "Do not add hover states beyond color/weight transitions on links; no transform, scale, or shadow effects.",
+        "evidence": [],
+        "source": "external_import"
+      }
+    ]
+  }
+}

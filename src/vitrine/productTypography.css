@@ -44,6 +44,7 @@
 
 [data-application-surface="true"]
   :where(h4, h5, h6, label, legend):not(
+    .astryx-field-label,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -56,6 +57,8 @@
 
 [data-application-surface="true"]
   :where(p, li, dt, dd, blockquote, input, textarea, select):not(
+    .astryx-text-input input,
+    .astryx-textarea textarea,
     .reference-detail__heading *,
     .project-files__hero-heading *,
     .project-document__editor *,
@@ -93,6 +96,15 @@
     .excalidraw *
   ) {
   font: var(--vitrine-type-action) !important;
+  letter-spacing: .2px !important;
+}
+
+/* Hero actions are peers: secondary actions retain the same 16px action type. */
+[data-application-surface="true"]
+  .reference-detail__actions
+  button {
+  font: var(--vitrine-type-action) !important;
+  font-size: 16px !important;
   letter-spacing: .2px !important;
 }
 

@@ -78,5 +78,6 @@ test('documents the system and keeps icon-only App Detail controls named and too
   assert.match(flowCard, /iconTooltips\?: boolean/);
   assert.match(flowCard, /tooltip=\{iconTooltips \? 'More flow actions' : undefined\}/);
   assert.match(flowPreview, /iconTooltips\?: boolean/);
-  assert.match(flowPreview, /tooltip=\{iconTooltips \? 'More screen actions' : undefined\}/);
+  assert.doesNotMatch(flowPreview, /More screen actions/);
+  assert.doesNotMatch(flowPreview, /More prototype actions/);
 });
