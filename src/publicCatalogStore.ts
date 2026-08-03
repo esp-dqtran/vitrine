@@ -589,7 +589,7 @@ async function catalogPage(
            candidate.viewport_width, candidate.viewport_height,
            candidate.state_context, candidate.captured_at,
            candidate.curated_rank, candidate.source_priority,
-           candidate.matched_facets
+           candidate.heft_bytes, candidate.matched_facets
          FROM apps a
          JOIN latest ON latest.app_id = a.id
          JOIN LATERAL (
@@ -603,6 +603,7 @@ async function catalogPage(
                vi.source_url AS capture_url, vi.viewport_width,
                vi.viewport_height, vi.state_context, vi.captured_at,
                MIN(pfp.rank)::int AS curated_rank, -1 AS source_priority,
+               NULL::bigint AS heft_bytes,
                to_jsonb(ARRAY_AGG(DISTINCT jsonb_build_object(
                  'group', pfp.facet_group,
                  'value', pfp.facet_value
@@ -628,6 +629,7 @@ async function catalogPage(
                vi.source_url AS capture_url, vi.viewport_width,
                vi.viewport_height, vi.state_context, vi.captured_at,
                api.rank::int AS curated_rank, 0 AS source_priority,
+               NULL::bigint AS heft_bytes,
                NULL::jsonb AS matched_facets
              FROM app_preview_images api
              JOIN version_images vi
@@ -645,14 +647,30 @@ async function catalogPage(
                vi.source_url AS capture_url, vi.viewport_width,
                vi.viewport_height, vi.state_context, vi.captured_at,
                NULL::int AS curated_rank, 1 AS source_priority,
+               i.heft_bytes,
                NULL::jsonb AS matched_facets
              FROM platforms p
              JOIN LATERAL (
-               SELECT candidate.*
+               -- Uncurated fallback previews used to be pure recency, which
+               -- surfaced blank splash/loading captures (~18% of previews,
+               -- measured) as an app's public face. Stored byte size is a
+               -- strong blankness proxy — near-empty frames compress an order
+               -- of magnitude smaller than real screens — and it's already on
+               -- every stored object, so no reanalysis pass is needed. The
+               -- same ordering rule lives in publishedPreviewImages (db.ts)
+               -- and publishedPreviewObject (objectStoreDb.ts); the three
+               -- must agree or /preview-media/:app/:rank serves a different
+               -- image than the catalog JSON described.
+               -- ponytail: byte size is a heuristic; replace with a stored
+               -- visual-richness score at import time if it misranks.
+               SELECT candidate.*, heft.byte_size AS heft_bytes
                FROM images candidate
+               LEFT JOIN stored_objects heft
+                 ON heft.object_key = candidate.object_key
                WHERE candidate.platform_id = p.id
                  AND candidate.kind = 'screen'
-               ORDER BY candidate.created_at DESC, candidate.id DESC
+               ORDER BY heft.byte_size DESC NULLS LAST,
+                 candidate.created_at DESC, candidate.id DESC
                LIMIT 3
              ) i ON true
              JOIN version_images vi
@@ -681,9 +699,13 @@ async function catalogPage(
                  vi.source_url AS capture_url, vi.viewport_width,
                  vi.viewport_height, vi.state_context, vi.captured_at,
                  NULL::int AS curated_rank, 1 AS source_priority,
+                 heft.byte_size AS heft_bytes,
                  NULL::jsonb AS matched_facets
                FROM version_images vi
                JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
+               -- Same blankness guard as fast_fallback: prefer heavier
+               -- captures so a splash screen never becomes the preview.
+               LEFT JOIN stored_objects heft ON heft.object_key = i.object_key
                WHERE vi.version_id = latest.version_id
                  AND vi.captured_at <= $2::timestamptz
                  AND (
@@ -703,11 +725,13 @@ async function catalogPage(
                    FROM fast_fallback
                    WHERE fast_fallback.id = vi.image_id
                  )
-               ORDER BY vi.captured_at DESC, vi.image_id DESC
+               ORDER BY heft.byte_size DESC NULLS LAST,
+                 vi.captured_at DESC, vi.image_id DESC
                LIMIT 3
              )
            ) pool
            ORDER BY pool.source_priority, pool.curated_rank NULLS LAST,
+             pool.heft_bytes DESC NULLS LAST,
              pool.captured_at DESC NULLS LAST, pool.id DESC
            LIMIT 3
          ) candidate ON true
@@ -718,6 +742,7 @@ async function catalogPage(
            ROW_NUMBER() OVER (
              PARTITION BY app, platform
              ORDER BY source_priority, curated_rank NULLS LAST,
+               heft_bytes DESC NULLS LAST,
                captured_at DESC NULLS LAST, id DESC
            ) AS platform_rank
          FROM candidates

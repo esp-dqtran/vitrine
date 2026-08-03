@@ -390,7 +390,12 @@ test("selects one extra Updated At identity before reading bounded catalog metad
   assert.match(calls[2]?.sql ?? "", /fast_fallback AS MATERIALIZED/);
   assert.match(calls[2]?.sql ?? "", /UNION ALL/);
   assert.match(calls[2]?.sql ?? "", /candidate\.platform_id = p\.id[\s\S]*candidate\.kind = 'screen'/);
-  assert.match(calls[2]?.sql ?? "", /ORDER BY candidate\.created_at DESC, candidate\.id DESC\s+LIMIT 3/);
+  // Fallback previews rank by stored byte size before recency, so blank
+  // splash/loading captures never become an app's public face.
+  assert.match(
+    calls[2]?.sql ?? "",
+    /ORDER BY heft\.byte_size DESC NULLS LAST,\s+candidate\.created_at DESC, candidate\.id DESC\s+LIMIT 3/,
+  );
   assert.match(calls[2]?.sql ?? "", /\(SELECT COUNT\(\*\) FROM curated\)[\s\S]*\(SELECT COUNT\(\*\) FROM fast_fallback\)[\s\S]*< 3/);
   assert.doesNotMatch(calls[2]?.sql ?? "", /DISTINCT ON \(a\.id, latest\.platform, i\.id\)/);
   assert.match(calls[2]?.sql ?? "", /PARTITION BY app, platform/);

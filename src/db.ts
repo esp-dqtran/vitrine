@@ -5,7 +5,7 @@ import type { ObjectMetadata } from "./objectStore.ts";
 import type { PublishedSearchSource } from "./searchProjection.ts";
 import type { PublishedSiteSearchSource } from "./siteSearchProjection.ts";
 import type { ScreenAnalysis } from "./screenAnalysis.ts";
-import { markSnapshotReviewed, validatePublication, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
+import { markSnapshotReviewed, validatePublication, type AppVersionProvider, type AppVersionStatus, type PublicationBlocker } from "./versioning.ts";
 import {
   decodeUpdatedCatalogCursor,
   encodeUpdatedCatalogCursor,
@@ -57,7 +57,7 @@ export async function insertImage(
   app: string,
   platform: string,
   imageUrl: string,
-  capture: { sourceUrl?: string; viewportWidth?: number; viewportHeight?: number; stateContext?: string; kind?: ImageKind } = {},
+  capture: { sourceUrl?: string; viewportWidth?: number; viewportHeight?: number; stateContext?: string; kind?: ImageKind; provider?: AppVersionProvider } = {},
 ): Promise<number> {
   return withTransaction(async (client) => {
     // The app-row upsert also serializes concurrent inserts for the same app while this
@@ -83,27 +83,31 @@ export async function insertImage(
     );
     const imageId = imageRow.rows[0].id;
 
-    const createdVersion = await client.query<{ id: number }>(
+    const provider = capture.provider ?? "m";
+    const createdVersion = await client.query<{ id: number; provider: AppVersionProvider }>(
       `WITH next AS (
          SELECT COALESCE(MAX(version_number), 0) + 1 AS revision
          FROM app_versions WHERE app_id = $1 AND platform = $2
        )
-       INSERT INTO app_versions (app_id, platform, version_number, label, status)
-       SELECT $1, $2, revision, 'v' || revision, 'draft' FROM next
+       INSERT INTO app_versions (app_id, platform, version_number, label, status, provider)
+       SELECT $1, $2, revision, 'v' || revision, 'draft', $3 FROM next
        WHERE NOT EXISTS (
          SELECT 1 FROM app_versions
          WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
        )
-       RETURNING id`,
-      [appId, platform],
+       RETURNING id, provider`,
+      [appId, platform, provider],
     );
-    const activeVersion = createdVersion.rows[0] ?? (await client.query<{ id: number }>(
-      `SELECT id FROM app_versions
+    const activeVersion = createdVersion.rows[0] ?? (await client.query<{ id: number; provider: AppVersionProvider }>(
+      `SELECT id, provider FROM app_versions
        WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
        ORDER BY version_number DESC LIMIT 1`,
       [appId, platform],
     )).rows[0];
     if (!activeVersion) throw new Error("Unable to establish an active app version");
+    if (activeVersion.provider !== provider) {
+      throw new Error(`Active app version uses provider ${activeVersion.provider}, not ${provider}`);
+    }
 
     if (createdVersion.rowCount) {
       await client.query(
@@ -197,21 +201,42 @@ export async function saveScreenAnalysis(id: number, analysis: ScreenAnalysis): 
   await query("UPDATE version_images SET state_context = $1 WHERE image_id = $2", [analysis.visibleStates.join(", ") || null, id]);
 }
 
-// Store non-media app metadata captured from Mobbin at crawl time. App icons are resolved
-// independently from the official marketplace or product site and must never come from Mobbin.
+// Store non-media app metadata captured at import time. Mobbin callers intentionally leave
+// icon/website fields empty; trusted provider-specific importers can fill missing metadata.
 export async function setAppMeta(app: string, meta: {
   category?: string | null;
+  categories?: string[];
   displayName?: string | null;
+  description?: string | null;
+  websiteUrl?: string | null;
+  iconUrl?: string | null;
+  accentColor?: string | null;
 }): Promise<void> {
   await withTransaction(async (client) => {
     const updated = await client.query<{ id: number }>(
-      `UPDATE apps SET display_name = COALESCE(display_name, $2)
+      `UPDATE apps SET
+         display_name = COALESCE(display_name, $2),
+         description = COALESCE(description, $3),
+         website_url = COALESCE(website_url, $4),
+         icon_url = COALESCE(icon_url, $5),
+         accent_color = COALESCE(accent_color, $6)
        WHERE name = $1
        RETURNING id`,
-      [app, meta.displayName ?? null],
+      [
+        app,
+        meta.displayName ?? null,
+        meta.description ?? null,
+        meta.websiteUrl ?? null,
+        meta.iconUrl ?? null,
+        meta.accentColor ?? null,
+      ],
     );
     const appId = updated.rows[0]?.id;
-    if (!appId || !meta.category?.trim()) return;
+    const categories = [
+      ...(meta.categories ?? []),
+      ...(meta.category?.trim() ? [meta.category] : []),
+    ];
+    if (!appId || categories.length === 0) return;
     const transactionQuery = (
       sql: string,
       values?: readonly unknown[],
@@ -219,7 +244,7 @@ export async function setAppMeta(app: string, meta: {
     await createCategoryStore(
       transactionQuery,
       async (work) => work(transactionQuery),
-    ).assignNames(appId, [meta.category], { replace: false });
+    ).assignNames(appId, categories, { replace: false });
   });
 }
 
@@ -430,24 +455,11 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
        SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
        FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
        WHERE $2::boolean = false
-         AND (i.kind <> 'ui_element' OR EXISTS (
-           SELECT 1
-           FROM screen_ui_elements occurrence
-           WHERE occurrence.cropped_image_id = i.id
-             AND occurrence.review_status IN ('accepted', 'pending')
-         ))
        UNION ALL
        SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
        FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
-         AND (i.kind <> 'ui_element' OR EXISTS (
-           SELECT 1
-           FROM screen_ui_elements occurrence
-           WHERE occurrence.version_id = lv.id
-             AND occurrence.cropped_image_id = i.id
-             AND occurrence.review_status IN ('accepted', 'pending')
-         ))
      ), eligible_flows AS (
        SELECT COUNT(af.id)::integer AS flow_count
        FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
@@ -513,6 +525,108 @@ export async function appMetadata(app: string, publishedOnly = false): Promise<A
   }
 }
 
+export async function publishedAppPreviewMetadata(app: string): Promise<AppMetadataRow | null> {
+  const result = await query<AppMetadataRow>(
+    `WITH target AS (
+       SELECT id, name, icon_url, display_name, description, website_url, accent_color
+       FROM apps
+       WHERE name = $1
+     ), latest_versions AS (
+       SELECT DISTINCT ON (av.platform)
+         av.id, av.platform, av.screen_count, av.ui_element_count, av.captured_at
+       FROM app_versions av
+       JOIN target ON target.id = av.app_id
+       WHERE av.status = 'published'
+       ORDER BY av.platform, av.version_number DESC
+     ), version_counts AS (
+       SELECT
+         COALESCE(SUM(screen_count), 0)::integer AS total_screens,
+         COALESCE(SUM(ui_element_count), 0)::integer AS total_ui_elements,
+         MAX(captured_at) AS last_captured_at,
+         COALESCE(array_agg(
+           platform
+           ORDER BY CASE platform WHEN 'web' THEN 1 WHEN 'ios' THEN 2 WHEN 'android' THEN 3 ELSE 4 END,
+             platform
+         ) FILTER (WHERE screen_count > 0), ARRAY[]::text[]) AS available_platforms
+       FROM latest_versions
+     ), analyzed AS (
+       SELECT COUNT(*)::integer AS analyzed_screens
+       FROM latest_versions
+       JOIN version_images vi ON vi.version_id = latest_versions.id
+       JOIN images i ON i.id = vi.image_id
+       WHERE i.kind = 'screen' AND i.analysis IS NOT NULL
+     ), flows AS (
+       SELECT COUNT(*)::integer AS total_flows
+       FROM latest_versions
+       JOIN app_flow_versions afv ON afv.version_id = latest_versions.id
+     )
+     SELECT target.name AS app, target.icon_url,
+       COALESCE((
+         SELECT jsonb_agg(
+           jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
+           ORDER BY lower(c.name), c.id
+         )
+         FROM app_categories ac
+         JOIN categories c ON c.id = ac.category_id
+         WHERE ac.app_id = target.id
+       ), '[]'::jsonb) AS categories,
+       target.display_name, target.description, target.website_url, target.accent_color,
+       NULL::integer AS preview_version_id,
+       version_counts.total_screens,
+       version_counts.total_ui_elements,
+       flows.total_flows,
+       analyzed.analyzed_screens,
+       version_counts.last_captured_at,
+       version_counts.available_platforms
+     FROM target
+     CROSS JOIN version_counts
+     CROSS JOIN analyzed
+     CROSS JOIN flows`,
+    [app],
+  );
+  return result.rows[0] ?? null;
+}
+
+export interface PublishedAppPreviewFlowRow {
+  version_id: number;
+  version_flow_id: number;
+  source_flow_id: string;
+  title: string;
+  description: string;
+  steps: Array<{ label?: unknown; evidence?: unknown }>;
+}
+
+export async function publishedAppPreviewFlows(
+  app: string,
+  platform: string,
+): Promise<PublishedAppPreviewFlowRow[]> {
+  const result = await query<PublishedAppPreviewFlowRow>(
+    `WITH latest AS (
+       SELECT av.id
+       FROM app_versions av
+       JOIN apps a ON a.id = av.app_id
+       WHERE a.name = $1 AND av.platform = $2 AND av.status = 'published'
+       ORDER BY av.version_number DESC
+       LIMIT 1
+     )
+     SELECT latest.id::integer AS version_id,
+       afv.id::integer AS version_flow_id,
+       afv.source_flow_id, afv.title, afv.description, afv.steps
+     FROM latest
+     JOIN app_flow_versions afv ON afv.version_id = latest.id
+     WHERE EXISTS (
+       SELECT 1
+       FROM jsonb_array_elements(COALESCE(afv.steps, '[]'::jsonb)) AS step(value)
+       WHERE jsonb_typeof(step.value->'evidence') = 'array'
+         AND jsonb_array_length(step.value->'evidence') > 0
+     )
+     ORDER BY afv.position
+     LIMIT 3`,
+    [app, platform],
+  );
+  return result.rows;
+}
+
 async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<AppMetadataRow | null> {
   const res = await query<AppMetadataRow>(
     `WITH target AS (
@@ -526,24 +640,11 @@ async function legacyAppMetadata(app: string, publishedOnly: boolean): Promise<A
        SELECT i.id, i.kind, i.analysis, i.created_at AS captured_at, p.name AS platform
        FROM target t JOIN platforms p ON p.app_id = t.id JOIN images i ON i.platform_id = p.id
        WHERE $2::boolean = false
-         AND (i.kind <> 'ui_element' OR EXISTS (
-           SELECT 1
-           FROM screen_ui_elements occurrence
-           WHERE occurrence.cropped_image_id = i.id
-             AND occurrence.review_status IN ('accepted', 'pending')
-         ))
        UNION ALL
        SELECT i.id, i.kind, i.analysis, vi.captured_at, lv.platform
        FROM latest_versions lv JOIN version_images vi ON vi.version_id = lv.id
        JOIN images i ON i.id = vi.image_id
        WHERE $2::boolean = true
-         AND (i.kind <> 'ui_element' OR EXISTS (
-           SELECT 1
-           FROM screen_ui_elements occurrence
-           WHERE occurrence.version_id = lv.id
-             AND occurrence.cropped_image_id = i.id
-             AND occurrence.review_status IN ('accepted', 'pending')
-         ))
      ), eligible_flows AS (
        SELECT COUNT(af.id)::integer AS flow_count
        FROM target t LEFT JOIN app_flows af ON af.app_id = t.id
@@ -653,7 +754,6 @@ export async function appEvidencePage(input: {
        ) reference ON i.kind = 'ui_element'
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
-         AND ($2 <> 'ui_element' OR reference.component_type IS NOT NULL)
        UNION ALL
        SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description,
          CASE WHEN reference.component_type IS NOT NULL THEN jsonb_build_object(
@@ -702,7 +802,6 @@ export async function appEvidencePage(input: {
          LIMIT 1
        ) reference ON i.kind = 'ui_element'
        WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
-         AND ($2 <> 'ui_element' OR reference.component_type IS NOT NULL)
      )
      SELECT * FROM eligible
      WHERE ($6::integer IS NULL OR id > $6)
@@ -1248,6 +1347,7 @@ export interface AppVersion {
   version_number: number;
   label: string;
   source_url: string | null;
+  provider: AppVersionProvider;
   status: AppVersionStatus;
   notes: string;
   captured_at: string;
@@ -1262,7 +1362,7 @@ export interface AppVersion {
 }
 
 const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform_id,
-  a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.status,
+  a.name AS app, av.platform, av.version_number, av.label, av.source_url, av.provider, av.status,
   av.notes, av.captured_at, av.submitted_at, av.published_at,
   COALESCE(image_counts.screen_count, 0)::int AS screen_count,
   COALESCE(image_counts.ui_element_count, 0)::int AS ui_element_count,
@@ -1279,13 +1379,7 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
     AND platform_identity.name = av.platform
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
-      COUNT(*) FILTER (WHERE i.kind = 'ui_element' AND EXISTS (
-        SELECT 1
-        FROM screen_ui_elements occurrence
-        WHERE occurrence.version_id = av.id
-          AND occurrence.cropped_image_id = i.id
-          AND occurrence.review_status IN ('accepted', 'pending')
-      ))::int AS ui_element_count,
+      COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
     FROM version_images vi JOIN images i ON i.id = vi.image_id
     WHERE vi.version_id = av.id
@@ -1326,7 +1420,13 @@ async function appVersionById(id: number): Promise<AppVersion | undefined> {
   return res.rows[0];
 }
 
-export async function createAppVersion(app: string, platform: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
+export async function createAppVersion(
+  app: string,
+  platform: string,
+  userId?: number,
+  sourceUrl?: string,
+  provider: AppVersionProvider = "m",
+): Promise<AppVersion> {
   const id = await withTransaction(async (client) => {
     const appRow = await client.query<{ id: number }>(
       `INSERT INTO apps (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`, [app]
@@ -1337,10 +1437,10 @@ export async function createAppVersion(app: string, platform: string, userId?: n
     );
     if (active.rowCount) throw new Error('This app already has an active draft or review version for this platform');
     const created = await client.query<{ id: number }>(
-      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by)
-       SELECT $1, $2, COALESCE(MAX(version_number), 0) + 1, 'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4
+      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by, provider)
+       SELECT $1, $2, COALESCE(MAX(version_number), 0) + 1, 'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4, $5
        FROM app_versions WHERE app_id = $1 AND platform = $2 RETURNING id`,
-      [appId, platform, sourceUrl ?? null, userId ?? null]
+      [appId, platform, sourceUrl ?? null, userId ?? null, provider]
     );
     const versionId = created.rows[0].id;
     await client.query(
@@ -1357,7 +1457,13 @@ export async function createAppVersion(app: string, platform: string, userId?: n
   return (await appVersionById(id))!;
 }
 
-export async function ensureActiveAppVersion(app: string, platform: string, userId?: number, sourceUrl?: string): Promise<AppVersion> {
+export async function ensureActiveAppVersion(
+  app: string,
+  platform: string,
+  userId?: number,
+  sourceUrl?: string,
+  provider: AppVersionProvider = "m",
+): Promise<AppVersion> {
   const id = await withTransaction(async (client) => {
     // The harmless conflict update locks this app, serializing concurrent ensure calls.
     const appRow = await client.query<{ id: number }>(
@@ -1366,19 +1472,24 @@ export async function ensureActiveAppVersion(app: string, platform: string, user
       [app],
     );
     const appId = appRow.rows[0].id;
-    const active = await client.query<{ id: number }>(
-      `SELECT id FROM app_versions
+    const active = await client.query<{ id: number; provider: AppVersionProvider }>(
+      `SELECT id, provider FROM app_versions
        WHERE app_id = $1 AND platform = $2 AND status IN ('draft', 'in_review')
        ORDER BY version_number DESC LIMIT 1`,
       [appId, platform],
     );
-    if (active.rowCount) return active.rows[0].id;
+    if (active.rows[0]) {
+      if (active.rows[0].provider !== provider) {
+        throw new Error(`Active app version uses provider ${active.rows[0].provider}, not ${provider}`);
+      }
+      return active.rows[0].id;
+    }
     const created = await client.query<{ id: number }>(
-      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by)
+      `INSERT INTO app_versions (app_id, platform, version_number, label, source_url, status, created_by, provider)
        SELECT $1, $2, COALESCE(MAX(version_number), 0) + 1,
-         'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4
+         'v' || (COALESCE(MAX(version_number), 0) + 1), $3, 'draft', $4, $5
        FROM app_versions WHERE app_id = $1 AND platform = $2 RETURNING id`,
-      [appId, platform, sourceUrl ?? null, userId ?? null],
+      [appId, platform, sourceUrl ?? null, userId ?? null, provider],
     );
     return created.rows[0].id;
   });
@@ -1713,7 +1824,90 @@ export interface PublishedPreviewImage extends CrawledImage {
   preview_rank: number;
 }
 
-export async function publishedPreviewImages(): Promise<PublishedPreviewImage[]> {
+export async function publishedPreviewImages(app?: string): Promise<PublishedPreviewImage[]> {
+  if (app) {
+    const targeted = await query<PublishedPreviewImage>(
+      `WITH target AS (
+         SELECT id, name, icon_url FROM apps WHERE name = $1
+       ), latest AS (
+         SELECT DISTINCT ON (av.platform) av.id AS version_id, av.platform
+         FROM app_versions av
+         JOIN target ON target.id = av.app_id
+         WHERE av.status = 'published'
+         ORDER BY av.platform, av.version_number DESC
+       ), candidates AS (
+         SELECT image.id, target.name AS app, latest.platform,
+           image.image_url, image.kind, image.description, image.analysis,
+           target.icon_url, version_image.source_url AS capture_url,
+           version_image.viewport_width, version_image.viewport_height,
+           version_image.state_context, version_image.captured_at,
+           preview.rank::integer AS curated_rank, 0 AS source_priority,
+           NULL::bigint AS heft_bytes
+         FROM target
+         JOIN latest ON true
+         JOIN app_preview_images preview ON preview.version_id = latest.version_id
+         JOIN version_images version_image
+           ON version_image.version_id = preview.version_id
+          AND version_image.image_id = preview.image_id
+         JOIN images image ON image.id = preview.image_id AND image.kind = 'screen'
+         UNION ALL
+         SELECT fallback.id, target.name AS app, latest.platform,
+           fallback.image_url, fallback.kind, fallback.description, fallback.analysis,
+           target.icon_url, fallback.capture_url, fallback.viewport_width,
+           fallback.viewport_height, fallback.state_context, fallback.captured_at,
+           NULL::integer AS curated_rank, 1 AS source_priority,
+           fallback.heft_bytes
+         FROM target
+         JOIN latest ON true
+         JOIN LATERAL (
+           -- Uncurated fallbacks rank by stored byte size before recency so a
+           -- blank splash/loading capture never fronts an app. Must stay in
+           -- lockstep with publicCatalogStore.ts and objectStoreDb.ts
+           -- publishedPreviewObject — /preview-media/:app/:rank re-derives
+           -- rank with this same rule.
+           SELECT image.id, image.image_url, image.kind, image.description, image.analysis,
+             version_image.source_url AS capture_url,
+             version_image.viewport_width, version_image.viewport_height,
+             version_image.state_context, version_image.captured_at,
+             heft.byte_size AS heft_bytes
+           FROM version_images version_image
+           JOIN images image ON image.id = version_image.image_id AND image.kind = 'screen'
+           LEFT JOIN stored_objects heft ON heft.object_key = image.object_key
+           WHERE version_image.version_id = latest.version_id
+             AND NOT EXISTS (
+               SELECT 1 FROM app_preview_images preview
+               WHERE preview.version_id = latest.version_id
+                 AND preview.image_id = version_image.image_id
+             )
+           ORDER BY heft.byte_size DESC NULLS LAST,
+             version_image.captured_at DESC NULLS LAST, version_image.image_id DESC
+           LIMIT 3
+         ) fallback ON true
+       ), platform_ranked AS (
+         SELECT candidates.*,
+           ROW_NUMBER() OVER (
+             PARTITION BY app, platform
+             ORDER BY source_priority, curated_rank NULLS LAST,
+               heft_bytes DESC NULLS LAST,
+               captured_at DESC NULLS LAST, id DESC
+           )::integer AS platform_rank
+         FROM candidates
+       ), ranked AS (
+         SELECT platform_ranked.*,
+           ROW_NUMBER() OVER (
+             PARTITION BY app
+             ORDER BY platform_rank, platform
+           )::integer AS preview_rank
+         FROM platform_ranked
+       )
+       SELECT ranked.*, '[]'::jsonb AS categories
+       FROM ranked
+       WHERE preview_rank <= 3
+       ORDER BY preview_rank`,
+      [app],
+    );
+    return targeted.rows;
+  }
   const res = await query<PublishedPreviewImage>(
     `SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description, i.analysis,
        a.icon_url, COALESCE((

@@ -255,13 +255,15 @@ export async function publishedPreviewObject(
      candidates AS (
        SELECT DISTINCT ON (a.id, latest.platform, i.id)
          a.name AS app, latest.platform, i.id AS image_id, vi.captured_at,
-         api.rank::int AS curated_rank, (api.rank IS NULL) AS fallback
+         api.rank::int AS curated_rank, (api.rank IS NULL) AS fallback,
+         CASE WHEN api.rank IS NULL THEN heft.byte_size END AS heft_bytes
        FROM apps a
        JOIN latest ON latest.app_id = a.id
        JOIN version_images vi ON vi.version_id = latest.version_id
        JOIN images i ON i.id = vi.image_id AND i.kind = 'screen'
        LEFT JOIN app_preview_images api
          ON api.version_id = latest.version_id AND api.image_id = i.id
+       LEFT JOIN stored_objects heft ON heft.object_key = i.object_key
        WHERE a.name = $1
        ORDER BY a.id, latest.platform, i.id, api.rank NULLS LAST,
          vi.captured_at DESC NULLS LAST
@@ -270,7 +272,13 @@ export async function publishedPreviewObject(
        SELECT candidates.*,
          ROW_NUMBER() OVER (
            PARTITION BY app, platform
+           -- Fallback rows rank by stored byte size before recency (blank
+           -- captures compress tiny). This resolver re-derives the rank that
+           -- publicCatalogStore.ts / db.ts publishedPreviewImages emitted in
+           -- catalog JSON — the orderings must match or /preview-media URLs
+           -- point at a different image than the one described.
            ORDER BY fallback, curated_rank NULLS LAST,
+             heft_bytes DESC NULLS LAST,
              captured_at DESC NULLS LAST, image_id DESC
          ) AS platform_rank
        FROM candidates
