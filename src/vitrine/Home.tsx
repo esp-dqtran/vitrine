@@ -21,7 +21,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
 import {
-  useParallaxDrift,
   useRevealOnScroll,
   useWordRise,
 } from "./useRevealOnScroll";
@@ -392,29 +391,6 @@ function LiveHeroEmbed({ onBrowse }: { onBrowse: () => void }) {
     return () => observer.disconnect();
   }, []);
 
-  // Ambient ping-pong scroll inside the embed, so the hero shows the catalog
-  // moving without trapping the visitor's own scroll.
-  useEffect(() => {
-    if (!ready) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0;
-    const start = performance.now();
-    const RANGE = 1100;
-    const PERIOD = 14_000;
-    const step = (now: number) => {
-      const phase = ((now - start) % PERIOD) / PERIOD;
-      const eased = (1 - Math.cos(phase * 2 * Math.PI)) / 2;
-      try {
-        frameRef.current?.contentWindow?.scrollTo(0, RANGE * eased);
-      } catch {
-        // Cross-origin dev proxies can deny access; the embed stays static.
-      }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [ready]);
-
   return (
     <div
       ref={boxRef}
@@ -690,37 +666,48 @@ export function Home({
     };
   }, []);
 
-  // Mosaic rows creep in opposite directions as the section crosses the
-  // viewport — scrubbed, shallow, and never in the way of scroll progress.
+  // The mosaic never stops: each row is rendered twice and slides exactly
+  // -50%, so the wrap is invisible and the belt runs whether or not anyone is
+  // scrolling. Rows travel in opposite directions; scroll velocity gives a
+  // brief push, matching the logo marquee's behaviour.
   const mosaicRowARef = useRef<HTMLDivElement>(null);
   const mosaicRowBRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rows = [mosaicRowARef.current, mosaicRowBRef.current];
-    if (rows.some((row) => !row)) return;
-    const tweens = rows.map((row, index) =>
-      gsap.fromTo(
-        row,
-        { x: index ? -110 : 0 },
-        {
-          x: index ? 0 : -110,
-          ease: "none",
-          scrollTrigger: {
-            trigger: row,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.8,
-          },
-        },
-      ),
+    if (rows.some((row) => !row) || mosaic.length === 0) return;
+    const belts = rows.map((row, index) =>
+      index === 0
+        ? gsap.fromTo(
+            row,
+            { xPercent: 0 },
+            { xPercent: -50, ease: "none", duration: 70, repeat: -1 },
+          )
+        : gsap.fromTo(
+            row,
+            { xPercent: -50 },
+            { xPercent: 0, ease: "none", duration: 82, repeat: -1 },
+          ),
     );
+    const trigger = ScrollTrigger.create({
+      onUpdate: (self) => {
+        const boost = 1 + Math.min(Math.abs(self.getVelocity()) / 900, 2);
+        for (const belt of belts) {
+          gsap.to(belt, {
+            timeScale: boost,
+            duration: 0.2,
+            overwrite: true,
+            onComplete: () =>
+              gsap.to(belt, { timeScale: 1, duration: 1.4, overwrite: true }),
+          });
+        }
+      },
+    });
     return () => {
-      for (const tween of tweens) {
-        tween.scrollTrigger?.kill();
-        tween.kill();
-      }
+      trigger.kill();
+      for (const belt of belts) belt.kill();
     };
-  }, [apps.length]);
+  }, [mosaic.length]);
 
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
@@ -730,11 +717,6 @@ export function Home({
   useRevealOnScroll(storiesRef, {
     stagger: "article",
     axis: "alternate-x",
-    key: apps.length,
-  });
-  // Story media drifts a few px against the scroll — depth without a camera.
-  useParallaxDrift(storiesRef, {
-    selector: "[data-parallax]",
     key: apps.length,
   });
   // Section headings ride up word by word as they enter.
@@ -1069,10 +1051,7 @@ export function Home({
                   alignItems: "center",
                 }}
               >
-                <div
-                  data-parallax
-                  style={{ order: !isMobile && index % 2 === 1 ? 2 : 1 }}
-                >
+                <div style={{ order: !isMobile && index % 2 === 1 ? 2 : 1 }}>
                   {index === 1 && flowShots.length === 3 ? (
                     <div
                       style={{
@@ -1686,7 +1665,7 @@ export function Home({
             style={{
               width: "100vw",
               marginLeft: "calc(50% - 50vw)",
-              overflowX: isMobile ? "auto" : "hidden",
+              overflow: "hidden",
               display: "grid",
               gap: isMobile ? 14 : 20,
             }}
@@ -1700,28 +1679,31 @@ export function Home({
                   alignItems: "flex-start",
                   gap: isMobile ? 14 : 20,
                   width: "max-content",
-                  // Offset rows start at different phases so the edge crops
-                  // never line up between rows.
-                  marginLeft: rowIndex === 0 ? -40 : -150,
+                  willChange: "transform",
                 }}
               >
-                {row.map((shot) => (
-                  <Shot
-                    key={shot.url}
-                    shot={shot}
-                    style={{
-                      flex: "none",
-                      width:
-                        shot.platform === "web"
-                          ? isMobile
-                            ? 300
-                            : 440
-                          : isMobile
-                            ? 128
-                            : 172,
-                    }}
-                  />
-                ))}
+                {/* Rendered twice: the tween travels exactly one copy width,
+                    so the belt wraps with no visible seam. */}
+                {[0, 1].map((copy) =>
+                  row.map((shot) => (
+                    <Shot
+                      key={`${copy}-${shot.url}`}
+                      shot={shot}
+                      eager={copy === 0}
+                      style={{
+                        flex: "none",
+                        width:
+                          shot.platform === "web"
+                            ? isMobile
+                              ? 300
+                              : 440
+                            : isMobile
+                              ? 128
+                              : 172,
+                      }}
+                    />
+                  )),
+                )}
               </div>
             ))}
           </div>
