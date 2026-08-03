@@ -159,6 +159,25 @@ const STAT_ICONS = [
   "M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.035 1.008-1.875 2.25-1.875 1.243 0 2.25.84 2.25 1.875 0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .658-.663 48.422 48.422 0 0 0-.37-5.36c-1.886.342-3.81.574-5.766.689a.578.578 0 0 1-.61-.58v0Z",
 ];
 
+// Real flow, same capture set the ad kit uses — the first three public steps
+// of "Resetting password" (1Password, web). The claim is the catalog's own.
+const FLOW_VIGNETTE = {
+  caption: "Resetting password · 12 screens · observed in 277 apps",
+  screens: [1, 2, 3].map(
+    (step) => `/api/catalog/flow-media/1password/web/273/18360/${step}?variant=full`,
+  ),
+};
+
+// Bottom link per bento card, Framer-style: quiet label, arrow, real route.
+const CAPABILITY_LINKS = [
+  "Browse apps",
+  "See real flows",
+  "Compare elements",
+  "Start a project",
+  "Open the canvas",
+  "Share a brief",
+];
+
 const CAPABILITIES = [
   {
     eyebrow: "SEARCH",
@@ -1178,6 +1197,7 @@ export function Home({
               return (
                 <article
                   key={item.title}
+                  className="hm-bento"
                   style={{
                     minHeight: tall ? 430 : 265,
                     // The shot runs off the bottom edge, so the card keeps no
@@ -1203,25 +1223,88 @@ export function Home({
                       </Text>
                     </div>
                   </div>
-                  {shot && (
-                    <div
-                      style={{
-                        marginTop: 24,
-                        flex: 1,
-                        minHeight: 0,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <Shot
-                        shot={shot}
+                  <div style={{ marginTop: 10, marginLeft: -10 }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      label={`${CAPABILITY_LINKS[index]} →`}
+                      clickAction={index < 3 ? onBrowse : onLogin}
+                    />
+                  </div>
+                  {index === 1 ? (
+                    <div style={{ marginTop: 20, display: "grid", gap: 10 }}>
+                      <div
                         style={{
-                          width: "100%",
-                          maxWidth: shot.platform === "web" ? undefined : 168,
+                          display: "grid",
+                          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                          gap: 8,
                         }}
-                      />
+                      >
+                        {FLOW_VIGNETTE.screens.map((src, step) => (
+                          <div
+                            key={src}
+                            style={{
+                              position: "relative",
+                              borderRadius: 10,
+                              overflow: "hidden",
+                              border: "1px solid var(--color-border)",
+                              background: "#17181b",
+                            }}
+                          >
+                            <img
+                              src={src}
+                              alt={`Resetting password, captured step ${step + 1}`}
+                              loading="lazy"
+                              decoding="async"
+                              style={{ display: "block", width: "100%", height: "auto" }}
+                            />
+                            <span
+                              aria-hidden="true"
+                              style={{
+                                position: "absolute",
+                                left: 6,
+                                top: 6,
+                                width: 18,
+                                height: 18,
+                                borderRadius: 999,
+                                background: "rgba(10,11,13,.82)",
+                                color: "#fff",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                display: "grid",
+                                placeItems: "center",
+                              }}
+                            >
+                              {step + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <Text type="supporting" color="secondary">
+                        {FLOW_VIGNETTE.caption}
+                      </Text>
                     </div>
+                  ) : (
+                    shot && (
+                      <div
+                        style={{
+                          marginTop: 20,
+                          flex: 1,
+                          minHeight: 0,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <Shot
+                          shot={shot}
+                          style={{
+                            width: "100%",
+                            maxWidth: shot.platform === "web" ? undefined : 168,
+                          }}
+                        />
+                      </div>
+                    )
                   )}
                 </article>
               );

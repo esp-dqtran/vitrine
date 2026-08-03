@@ -4472,6 +4472,26 @@ body {
   }
 }
 
+/* Bento cards lift slightly on hover — the affordance for the card links. */
+.hm-bento {
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s ease;
+}
+
+.hm-bento:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--color-border) 40%, #8a8f98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-bento,
+  .hm-bento:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* Scroll-triggered variant of the word clip: no CSS animation or offset — the
    initial transform and the rise are both applied by useWordRise, so the text
    is fully visible without JS and under reduced motion. */
