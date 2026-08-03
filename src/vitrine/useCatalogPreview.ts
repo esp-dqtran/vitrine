@@ -4,9 +4,15 @@ import {
 } from './catalogPageParser.ts';
 import type { Category } from './types.ts';
 
+export type PreviewPlatform = 'web' | 'ios' | 'android';
+
 export interface PreviewScreen {
   url: string;
   type: string;
+  // Drives how the landing frames the shot: portrait handset vs browser window.
+  platform: PreviewPlatform;
+  // Smaller variant for grid tiles; falls back to the full asset.
+  thumbnailUrl: string;
 }
 
 export interface PreviewApp {
@@ -15,7 +21,17 @@ export interface PreviewApp {
   accent: string;
   categories: Category[];
   iconUrl: string | null;
+  platforms: PreviewPlatform[];
+  totalScreens: number;
   screens: PreviewScreen[];
+}
+
+const PLATFORMS: PreviewPlatform[] = ['web', 'ios', 'android'];
+
+function platform(value: unknown, fallback: PreviewPlatform): PreviewPlatform {
+  return PLATFORMS.includes(value as PreviewPlatform)
+    ? value as PreviewPlatform
+    : fallback;
 }
 
 // Pure mapper: only apps with a servable preview screen survive, so callers can
@@ -27,20 +43,40 @@ export function toPreviewApps(page: {
     accent: string;
     categories: Category[];
     iconUrl?: string | null;
-    previewScreens?: Array<{ url: string | null; type: string }>;
+    platforms?: string[];
+    totalScreens?: number;
+    previewScreens?: Array<{
+      url: string | null;
+      type: string;
+      platform?: string;
+      thumbnailUrl?: string | null;
+    }>;
   }>;
 }): PreviewApp[] {
   return (page.items ?? [])
-    .map((a) => ({
-      id: a.id,
-      name: a.app,
-      accent: a.accent,
-      categories: a.categories,
-      iconUrl: a.iconUrl ?? null,
-      screens: (a.previewScreens ?? [])
-        .filter((s): s is { url: string; type: string } => Boolean(s.url))
-        .map((s) => ({ url: s.url, type: s.type })),
-    }))
+    .map((a) => {
+      const platforms = (a.platforms ?? [])
+        .map((p) => platform(p, 'web'))
+        .filter((p, i, all) => all.indexOf(p) === i);
+      const appPlatform = platforms[0] ?? 'web';
+      return {
+        id: a.id,
+        name: a.app,
+        accent: a.accent,
+        categories: a.categories,
+        iconUrl: a.iconUrl ?? null,
+        platforms,
+        totalScreens: a.totalScreens ?? 0,
+        screens: (a.previewScreens ?? [])
+          .filter((s): s is typeof s & { url: string } => Boolean(s.url))
+          .map((s) => ({
+            url: s.url,
+            type: s.type,
+            platform: platform(s.platform, appPlatform),
+            thumbnailUrl: s.thumbnailUrl ?? s.url,
+          })),
+      };
+    })
     .filter((a) => a.screens.length > 0);
 }
 

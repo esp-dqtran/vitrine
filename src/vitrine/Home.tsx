@@ -14,8 +14,14 @@ import {
   useMediaQuery,
 } from "@astryxdesign/core";
 import { AstryxMenu } from "./components/AstryxDropdown";
+import { Shot, type ShotSource } from "./components/Shot";
 import { useRevealOnScroll } from "./useRevealOnScroll";
-import { useCatalogPreview, useCatalogStats } from "./useCatalogPreview";
+import {
+  useCatalogPreview,
+  useCatalogStats,
+  type PreviewApp,
+  type PreviewScreen,
+} from "./useCatalogPreview";
 
 const wrap: CSSProperties = {
   maxWidth: 1220,
@@ -44,23 +50,80 @@ const FALLBACK_STATS = [
   { n: "647", label: "UI elements" },
 ];
 
+// Vitrines' own product captures. Used where the story is about the workspace
+// itself rather than about a catalog reference.
+const PRODUCT_SHOTS = {
+  catalog: "/landing/astryx-apps-catalog.png",
+  publicPreview: "/landing/astryx-public-preview-real-flows.png",
+} as const;
+
+// 421960 reads as noise in a headline; 422K reads as a number someone chose.
+function compact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 10_000) return `${Math.round(n / 1000)}K`;
+  return n.toLocaleString("en-US");
+}
+
+function productShot(url: string): ShotSource {
+  return { url, platform: "web", appName: "Vitrines" };
+}
+
+function screensOn(app: PreviewApp, kind: "web" | "phone") {
+  return app.screens.filter((s) =>
+    kind === "web" ? s.platform === "web" : s.platform !== "web",
+  );
+}
+
+// One catalog app → one framed shot. Returns null when the catalog has not
+// loaded, so every call site can fall back to a Vitrines product capture.
+function toShot(
+  app: PreviewApp | undefined,
+  {
+    screen = 0,
+    thumb = false,
+    prefer,
+  }: { screen?: number; thumb?: boolean; prefer?: "web" | "phone" } = {},
+): ShotSource | null {
+  if (!app) return null;
+  // A multi-platform app (WhatsApp ships web, iOS and Android) can land in the
+  // web pool and still hand back an Android capture from screens[0]. Pick from
+  // the platform the slot was framed for, not from whatever came first.
+  const pool = prefer ? screensOn(app, prefer) : app.screens;
+  const picked = pool[screen] ?? pool[0] ?? app.screens[screen] ?? app.screens[0];
+  if (!picked) return null;
+  const pick = (s: PreviewScreen) => (thumb ? s.thumbnailUrl : s.url);
+  return {
+    url: pick(picked),
+    platform: picked.platform,
+    appName: app.name,
+    iconUrl: app.iconUrl,
+    accent: app.accent,
+    meta: [
+      app.categories[0]?.name,
+      app.totalScreens > 0 ? `${compact(app.totalScreens)} screens` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  };
+}
+
 const STORIES = [
   {
-    eyebrow: "DISCOVER WITH CONTEXT",
+    eyebrow: "BROWSE BY PRODUCT",
     title: "Start with the product, not a blank search box.",
-    copy: "Browse a living catalog of real apps, sites, screens, flows, and UI patterns. Filter by platform and category without losing the product around the reference.",
+    copy: "Open a real app and stay inside it. Every screen keeps the product, platform, and capture date around it, so a reference never arrives stripped of the thing that made it work.",
     action: "Explore the library",
   },
   {
-    eyebrow: "TRACE COMPLETE FLOWS",
+    eyebrow: "FOLLOW THE WHOLE JOURNEY",
     title: "See what happens before and after the perfect screen.",
-    copy: "Follow real journeys step by step. Vitrines keeps the surrounding states visible, so your team understands how a pattern works—not only how it looks.",
+    copy: "One screenshot hides the decision. Step through the captured flow — the empty state before it, the confirmation after it — and you can tell whether a pattern will survive contact with your users.",
     action: "Browse product flows",
   },
   {
-    eyebrow: "BUILD WITH EVIDENCE",
+    eyebrow: "KEEP THE TRAIL",
     title: "Collect the references. Keep the reasoning attached.",
-    copy: "Bring screenshots, flow steps, notes, design tokens, and product observations into one research project. The source stays one click away as ideas turn into decisions.",
+    copy: "Pull screens, flow steps, notes and tokens into one project. Six weeks later, when someone asks why the flow looks like that, the answer is still attached to the evidence.",
     action: "Start a research project",
   },
 ];
@@ -69,71 +132,34 @@ const CAPABILITIES = [
   {
     eyebrow: "SEARCH",
     title: "Apps & sites",
-    copy: "Find product references across web and mobile.",
+    copy: "Web, iOS and Android products, captured and kept current.",
   },
   {
     eyebrow: "TRACE",
     title: "Screens & flows",
-    copy: "Move through journeys, states, and edge cases.",
+    copy: "Whole journeys — including the states nobody screenshots.",
   },
   {
     eyebrow: "INSPECT",
     title: "UI elements",
-    copy: "Compare reusable patterns in their real context.",
+    copy: "One pattern, side by side, across the products that use it.",
   },
   {
     eyebrow: "ORGANIZE",
     title: "Research projects",
-    copy: "Keep evidence and observations together.",
+    copy: "Evidence and observations in one place, not five tabs.",
   },
   {
     eyebrow: "SYNTHESIZE",
     title: "Living canvas",
-    copy: "Arrange research, notes, and team feedback.",
+    copy: "Arrange the findings until the argument is obvious.",
   },
   {
     eyebrow: "HAND OFF",
     title: "Shareable briefs",
-    copy: "Publish decisions with the source still visible.",
+    copy: "Send the decision with its sources still clickable.",
   },
 ];
-
-function ProductMedia({
-  src,
-  alt,
-  fit = "contain",
-}: {
-  src: string;
-  alt: string;
-  fit?: "contain" | "cover";
-}) {
-  return (
-    <div
-      style={{
-        height: "100%",
-        overflow: "hidden",
-        borderRadius: 18,
-        border: "1px solid var(--color-border)",
-        background: "#111214",
-        boxShadow: "0 28px 80px rgba(0,0,0,.24)",
-      }}
-    >
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          objectFit: fit,
-          objectPosition: "center",
-          background: "#111214",
-        }}
-      />
-    </div>
-  );
-}
 
 function PromptSearch({
   onBrowse,
@@ -219,39 +245,103 @@ export function Home({
 }) {
   const isCompactNav = useMediaQuery("(max-width: 700px)", false);
   const isMobile = useMediaQuery("(max-width: 760px)", false);
-  const catalog = useCatalogPreview();
+  const catalog = useCatalogPreview(24);
   const statCounts = useCatalogStats();
-  const realScreens = (catalog ?? [])
-    .flatMap((app) =>
-      app.screens
-        .slice(0, 1)
-        .map((screen) => ({ name: app.name, url: screen.url })),
-    )
-    .filter((item): item is { name: string; url: string } => Boolean(item.url))
-    .slice(0, 6);
-  const carouselApps = (catalog ?? [])
+  const apps = catalog ?? [];
+  // Framing is per-platform, so the page picks its imagery per platform too:
+  // a browser story wants a landscape web capture, a flow strip wants handsets.
+  // Both pools lead with the most deeply captured products: a thinly covered
+  // app tends to open on a near-empty screen, which reads as a broken image.
+  const byCoverage = (a: PreviewApp, b: PreviewApp) =>
+    b.totalScreens - a.totalScreens;
+  const webApps = apps
+    .filter((app) => app.screens.some((screen) => screen.platform === "web"))
+    .sort(byCoverage);
+  const phoneApps = apps
+    .filter((app) => app.screens.some((screen) => screen.platform !== "web"))
+    .sort(byCoverage);
+
+  // Every surface draws from one shared allocation, in page order, so no
+  // product appears twice — the same app in the hero story and again in the
+  // wall below reads as a thin catalog, which is the opposite of the claim.
+  const used = new Set<string>();
+  const take = (pool: PreviewApp[], n: number): PreviewApp[] => {
+    const picked = pool.filter((app) => !used.has(app.id)).slice(0, n);
+    picked.forEach((app) => used.add(app.id));
+    return picked;
+  };
+
+  const carouselApps = apps
     .flatMap((app) => (app.iconUrl ? [{ ...app, iconUrl: app.iconUrl }] : []))
     .slice(0, 8);
   const stats = statCounts
     ? [
-        { n: String(statCounts.apps), label: "apps" },
-        { n: String(statCounts.screens), label: "screens" },
-        { n: String(statCounts.uiElements), label: "UI elements" },
+        { n: compact(statCounts.apps), label: "apps" },
+        { n: compact(statCounts.screens), label: "screens" },
+        { n: compact(statCounts.uiElements), label: "UI elements" },
       ]
     : FALLBACK_STATS;
-  const storyMedia = [
-    "/landing/astryx-apps-catalog.png",
-    "/landing/astryx-public-preview-real-flows.png",
-    realScreens[0]?.url ?? "/landing/astryx-apps-catalog.png",
+
+  // Story 2 is a captured flow, so it needs consecutive screens from one app —
+  // three unrelated shots would contradict the headline above it.
+  const [flowApp] = take(
+    phoneApps.filter((app) => screensOn(app, "phone").length >= 3),
+    1,
+  );
+  const flowScreens = flowApp ? screensOn(flowApp, "phone") : [];
+  const flowShots = flowScreens.slice(0, 3).map((screen, i) => ({
+    url: screen.url,
+    platform: screen.platform,
+    appName: flowApp?.name ?? "",
+    // Only the last frame carries the caption; three captions under one flow
+    // repeat the same app name three times.
+    iconUrl: i === 2 ? flowApp?.iconUrl : null,
+    accent: flowApp?.accent,
+    meta: i === 2 ? "captured steps from one product" : null,
+  }));
+
+  // `/api/catalog` returns no per-screen classification — every preview comes
+  // back `Unclassified` with empty text and component arrays — so there is no
+  // way to tell a dense screen from a splash or loading state. The page is
+  // built around that: the two single-image slots use Vitrines' own captures,
+  // which are known-good, and every catalog reference lives in a multi-tile
+  // surface where one thin capture among ten is invisible rather than being
+  // the largest thing on the page.
+  const storyShots: Array<ShotSource> = [
+    productShot(PRODUCT_SHOTS.catalog),
+    // Only reached when no app has the 3 consecutive screens the strip needs.
+    toShot(flowApp, { prefer: "phone" }) ??
+      productShot(PRODUCT_SHOTS.publicPreview),
+    productShot(PRODUCT_SHOTS.catalog),
   ];
-  const galleryMedia = [
-    realScreens[0]?.url ?? "/landing/astryx-apps-catalog.png",
-    realScreens[1]?.url ?? "/landing/astryx-public-preview-real-flows.png",
-    realScreens[2]?.url ?? "/landing/astryx-apps-catalog.png",
-    realScreens[3]?.url ?? "/landing/astryx-public-preview-real-flows.png",
-    realScreens[4]?.url ?? "/landing/astryx-apps-catalog.png",
-    realScreens[5]?.url ?? "/landing/astryx-public-preview-real-flows.png",
-  ];
+  // Story 3 collects references, so it shows two of them rather than one — and
+  // a pair survives a weak capture in a way a single hero image does not.
+  const storyPairShots = take(webApps, 2)
+    .map((app) => toShot(app, { prefer: "web" }))
+    .filter((shot): shot is ShotSource => shot?.platform === "web");
+
+  // Bento tiles alternate handset and browser so the grid does not read as six
+  // of the same shape. Thumbnails are plenty at this size, and captions are
+  // dropped — the card already carries a title right above the image.
+  const bentoPhones = take(phoneApps, 3);
+  const bentoWeb = take(webApps, 3);
+  const bentoShots = CAPABILITIES.map((_, i) => {
+    const phone = i % 2 === 0;
+    const app = phone ? bentoPhones[i / 2] : bentoWeb[(i - 1) / 2];
+    const shot = toShot(app, { thumb: true, prefer: phone ? "phone" : "web" });
+    return shot && { ...shot, iconUrl: null, meta: null };
+  });
+
+  // Two grids, not one: a 9/19.5 handset and a 16/10 browser in the same row
+  // leave a crater under the short one. Grouping by shape keeps rows even.
+  const galleryWeb = take(webApps, 2)
+    .map((app) => toShot(app, { thumb: true, prefer: "web" }))
+    .filter((shot): shot is ShotSource => shot?.platform === "web");
+  const galleryPhones = take(phoneApps, 4)
+    .map((app) => toShot(app, { thumb: true, prefer: "phone" }))
+    .filter(
+      (shot): shot is ShotSource => shot !== null && shot.platform !== "web",
+    );
 
   const heroMediaRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
@@ -397,6 +487,19 @@ export function Home({
           </Heading>
           <div
             style={{
+              margin: `${isMobile ? 18 : 24}px auto 0`,
+              maxWidth: 620,
+              animation: "hmFadeUp .55s cubic-bezier(.16,1,.3,1) .04s both",
+            }}
+          >
+            <Text type="large" color="secondary">
+              Search {stats[1].n} screens captured from {stats[0].n} real
+              products — then keep the evidence attached to the decision your
+              team ships.
+            </Text>
+          </div>
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -480,7 +583,7 @@ export function Home({
       <Section style={{ paddingBottom: isMobile ? 70 : 108 }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <Text type="supporting" color="secondary">
-            RESEARCH ACROSS THE PRODUCTS PEOPLE USE
+            CAPTURED FROM PRODUCTS YOUR USERS ALREADY KNOW
           </Text>
         </div>
         <div
@@ -529,7 +632,7 @@ export function Home({
         >
           <div style={{ maxWidth: 690, marginBottom: isMobile ? 52 : 76 }}>
             <Text type="supporting" color="secondary">
-              A RESEARCH PARTNER FOR THE WHOLE JOURNEY
+              FROM FIRST LOOK TO FINAL HANDOFF
             </Text>
             <div style={{ marginTop: 12 }}>
               <Heading
@@ -557,16 +660,37 @@ export function Home({
                   alignItems: "center",
                 }}
               >
-                <div
-                  style={{
-                    order: !isMobile && index % 2 === 1 ? 2 : 1,
-                    height: isMobile ? 360 : 480,
-                  }}
-                >
-                  <ProductMedia
-                    src={storyMedia[index]}
-                    alt={`${story.title} in Vitrines`}
-                  />
+                <div style={{ order: !isMobile && index % 2 === 1 ? 2 : 1 }}>
+                  {index === 1 && flowShots.length === 3 ? (
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                        gap: isMobile ? 8 : 14,
+                        alignItems: "start",
+                      }}
+                    >
+                      {flowShots.map((shot, step) => (
+                        <Shot key={`${shot.url}-${step}`} shot={shot} />
+                      ))}
+                    </div>
+                  ) : index === 2 && storyPairShots.length === 2 ? (
+                    <div style={{ display: "grid", gap: isMobile ? 20 : 26 }}>
+                      {storyPairShots.map((shot) => (
+                        <Shot key={shot.url} shot={shot} />
+                      ))}
+                    </div>
+                  ) : (
+                    <Shot
+                      shot={storyShots[index]}
+                      aspect={index === 2 ? "16 / 9" : undefined}
+                      style={
+                        storyShots[index].platform === "web"
+                          ? undefined
+                          : { maxWidth: 300, margin: "0 auto" }
+                      }
+                    />
+                  )}
                 </div>
                 <div style={{ order: !isMobile && index % 2 === 1 ? 1 : 2 }}>
                   <Text type="supporting" color="secondary">
@@ -658,36 +782,69 @@ export function Home({
               gap: 12,
             }}
           >
-            {CAPABILITIES.map((item, index) => (
-              <article
-                key={item.title}
-                style={{
-                  minHeight: index === 0 || index === 4 ? 300 : 220,
-                  padding: 24,
-                  borderRadius: 18,
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-background-body)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gridRow:
-                    !isMobile && (index === 0 || index === 4)
-                      ? "span 2"
-                      : undefined,
-                }}
-              >
-                <Text type="supporting" color="secondary">
-                  {item.eyebrow}
-                </Text>
-                <div style={{ marginTop: "auto", paddingTop: 42 }}>
-                  <Heading level={3}>{item.title}</Heading>
-                  <div style={{ marginTop: 9 }}>
-                    <Text type="body" color="secondary">
-                      {item.copy}
-                    </Text>
+            {CAPABILITIES.map((item, index) => {
+              const tall = !isMobile && (index === 0 || index === 4);
+              const shot = bentoShots[index];
+              return (
+                <article
+                  key={item.title}
+                  style={{
+                    minHeight: tall ? 430 : 265,
+                    // The shot runs off the bottom edge, so the card keeps no
+                    // bottom padding of its own.
+                    padding: "24px 24px 0",
+                    borderRadius: 18,
+                    border: "1px solid var(--color-border)",
+                    background: "var(--color-background-body)",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                    gridRow: tall ? "span 2" : undefined,
+                  }}
+                >
+                  <Text type="supporting" color="secondary">
+                    {item.eyebrow}
+                  </Text>
+                  <div style={{ marginTop: 14 }}>
+                    <Heading level={3}>{item.title}</Heading>
+                    <div style={{ marginTop: 9 }}>
+                      <Text type="body" color="secondary">
+                        {item.copy}
+                      </Text>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                  {shot && (
+                    <div
+                      style={{
+                        marginTop: 24,
+                        flex: 1,
+                        minHeight: 0,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <Shot
+                        shot={shot}
+                        // A 16/10 browser frame leaves a void under a short
+                        // card; crop taller so the shot reaches the edge.
+                        aspect={
+                          shot.platform === "web"
+                            ? tall
+                              ? "16 / 17"
+                              : "16 / 12"
+                            : undefined
+                        }
+                        style={{
+                          width: "100%",
+                          maxWidth: shot.platform === "web" ? undefined : 168,
+                        }}
+                      />
+                    </div>
+                  )}
+                </article>
+              );
+            })}
             <article
               style={{
                 minHeight: 220,
@@ -742,7 +899,7 @@ export function Home({
           >
             <div style={{ maxWidth: 610 }}>
               <Text type="supporting" color="secondary">
-                INSIDE VITRINES
+                STRAIGHT FROM THE CATALOG
               </Text>
               <div style={{ marginTop: 12 }}>
                 <Heading
@@ -763,38 +920,42 @@ export function Home({
               clickAction={onBrowse}
             />
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile
-                ? "repeat(2, minmax(0, 1fr))"
-                : "repeat(12, minmax(0, 1fr))",
-              gap: 12,
-            }}
-          >
-            {galleryMedia.map((src, index) => (
+          <div style={{ display: "grid", gap: isMobile ? 34 : 44 }}>
+            {galleryWeb.length > 0 && (
               <div
-                key={`${src}-${index}`}
                 style={{
-                  gridColumn: isMobile
-                    ? undefined
-                    : `span ${index === 0 || index === 5 ? 7 : 5}`,
-                  height: isMobile
-                    ? index % 3 === 0
-                      ? 250
-                      : 190
-                    : index === 0 || index === 5
-                      ? 400
-                      : 300,
+                  display: "grid",
+                  gridTemplateColumns: isMobile
+                    ? "1fr"
+                    : "repeat(2, minmax(0, 1fr))",
+                  gap: isMobile ? 28 : 24,
                 }}
               >
-                <ProductMedia
-                  src={src}
-                  alt={`Real product reference ${index + 1} in Vitrines`}
-                  fit="cover"
-                />
+                {galleryWeb.map((shot) => (
+                  <Shot key={shot.url} shot={shot} />
+                ))}
               </div>
-            ))}
+            )}
+            {galleryPhones.length > 0 && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile
+                    ? "repeat(2, minmax(0, 1fr))"
+                    : "repeat(4, minmax(0, 1fr))",
+                  gap: isMobile ? 16 : 24,
+                  justifyItems: "center",
+                }}
+              >
+                {galleryPhones.map((shot) => (
+                  <Shot
+                    key={shot.url}
+                    shot={shot}
+                    style={{ width: "100%", maxWidth: 232 }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </Section>
       </div>
@@ -814,7 +975,7 @@ export function Home({
         >
           <div style={{ maxWidth: 780, marginBottom: 42 }}>
             <Text type="supporting" color="secondary">
-              RESEARCH YOUR TEAM CAN USE
+              SHARE IT WITHOUT LOSING IT
             </Text>
             <div style={{ marginTop: 12 }}>
               <Heading
@@ -830,17 +991,19 @@ export function Home({
             </div>
             <div style={{ marginTop: 16, maxWidth: 650 }}>
               <Text type="large" color="secondary">
-                Public previews and living documents make the research legible
-                without handing your team a folder of disconnected screenshots.
+                A public preview link carries the screens, the flow order and
+                the notes together — so nobody receives a folder of
+                disconnected screenshots and has to reconstruct the argument.
               </Text>
             </div>
           </div>
-          <div style={{ height: isMobile ? 280 : 610 }}>
-            <ProductMedia
-              src="/landing/astryx-public-preview-real-flows.png"
-              alt="A public Vitrines product-flow preview"
-            />
-          </div>
+          {/* Vitrines' own captures get their true aspect — cropping our own
+              product shot to a generic browser ratio hides the thing the
+              section is pointing at. */}
+          <Shot
+            shot={productShot(PRODUCT_SHOTS.publicPreview)}
+            aspect="1200 / 818"
+          />
           <div
             style={{
               display: "grid",
@@ -906,8 +1069,8 @@ export function Home({
             </Heading>
             <div style={{ margin: "16px auto 30px", maxWidth: 580 }}>
               <Text type="large" color="secondary">
-                Start with evidence. Finish with a direction your team can
-                understand and build.
+                Start from what already shipped. Finish with a direction your
+                team can understand, defend and build.
               </Text>
             </div>
           </div>
