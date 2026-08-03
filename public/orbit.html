@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Vitrines orbit motif</title>
+<style>
+  /* Beat 1/10 of docs/saas-explainer-spec.md — the orbit motif, rebuilt on the
+     dark theme with REAL catalog icons and REAL app accent colours.
+     Every animation period divides 12s, so any exact-12s window loops
+     seamlessly. Depth is faked with blur on one flat plane (the reference's
+     rack-focus trick) — nothing here is 3D. */
+  html, body { margin: 0; height: 100%; background: #050505; display: grid; place-items: center; }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    background: radial-gradient(closest-side at 50% 50%, #1b1d22 0%, #111112 62%, #0c0c0d 100%);
+  }
+  #arc { position: absolute; left: 50%; top: 50%; width: 560px; height: 560px;
+         margin: -280px 0 0 -280px; animation: spin 12s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #core {
+    position: absolute; left: 50%; top: 50%; width: 200px; height: 200px;
+    margin: -100px 0 0 -100px; border-radius: 50%;
+    background: #17181b; border: 1px solid #2a2a2e;
+    display: grid; place-items: center;
+    box-shadow: 0 0 120px 10px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.5);
+  }
+  #core img { width: 84px; height: 84px; }
+  .app {
+    position: absolute; width: var(--s); height: var(--s);
+    border-radius: 22%; overflow: hidden; background: #17181b;
+    border: 1px solid #2a2a2e; box-shadow: 0 18px 44px rgba(0,0,0,.45);
+    filter: blur(var(--b)); opacity: var(--o);
+    animation: bob var(--p) ease-in-out infinite; animation-delay: var(--d);
+  }
+  .app img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* 0% == 100%, so period == duration; all durations divide 12s. */
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(var(--amp)); }
+  }
+</style>
+<div id="stage">
+  <svg id="arc" viewBox="0 0 560 560" fill="none"></svg>
+  <div id="core"><img src="/favicon.svg" alt=""></div>
+</div>
+<script>
+  // Two rings around the core: inner ring near-sharp, outer ring soft — the
+  // blur register from the spec. Positions are fixed per index so every
+  // recording is identical (no Math.random: determinism is the point).
+  const INNER = { r: 390, n: 6, s: 96, b: 0.4, o: 1 };
+  const OUTER = { r: 640, n: 8, s: 76, b: 3.5, o: 0.5 };
+  const PERIODS = ['4s', '6s', '12s', '6s', '4s', '12s', '6s', '4s'];
+
+  fetch('/api/catalog?limit=24')
+    .then((r) => r.json())
+    .then((page) => {
+      const apps = page.items.filter((a) => a.iconUrl);
+      const stage = document.getElementById('stage');
+      let i = 0;
+      for (const ring of [INNER, OUTER]) {
+        for (let k = 0; k < ring.n; k++, i++) {
+          const app = apps[i % apps.length];
+          const angle = (k / ring.n) * 2 * Math.PI + (ring === OUTER ? Math.PI / ring.n : 0);
+          const el = document.createElement('div');
+          el.className = 'app';
+          el.style.cssText = `--s:${ring.s}px; --b:${ring.b}px; --o:${ring.o};` +
+            `--p:${PERIODS[i % PERIODS.length]}; --d:${-(i * 1.5) % 12}s;` +
+            `--amp:${(i % 2 ? -1 : 1) * (10 + (i % 3) * 4)}px;` +
+            `left:${960 + ring.r * Math.cos(angle) - ring.s / 2}px;` +
+            `top:${540 + ring.r * Math.sin(angle) * 0.72 - ring.s / 2}px;`;
+          el.innerHTML = `<img src="${app.iconUrl}" alt="${app.app} icon">`;
+          stage.appendChild(el);
+
+          // Segmented arc ring, one segment per inner app, in that app's REAL
+          // accent colour — the reference's multicolour ring, but honest.
+          if (ring === INNER) {
+            const seg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            const C = 2 * Math.PI * 260;
+            seg.setAttribute('cx', 280); seg.setAttribute('cy', 280); seg.setAttribute('r', 260);
+            seg.setAttribute('stroke', app.accent);
+            seg.setAttribute('stroke-width', 10);
+            seg.setAttribute('stroke-linecap', 'round');
+            seg.setAttribute('stroke-dasharray', `${C / 12} ${C}`);
+            seg.setAttribute('stroke-dashoffset', -(k / ring.n) * C);
+            seg.setAttribute('opacity', '0.9');
+            document.getElementById('arc').appendChild(seg);
+          }
+        }
+      }
+      // Recorder waits for this flag: all icons decoded, first frame is clean.
+      Promise.all([...document.images].map((im) => im.decode().catch(() => {})))
+        .then(() => { window.__orbitReady = true; });
+    });
+</script>
