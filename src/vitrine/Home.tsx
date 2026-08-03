@@ -1,4 +1,6 @@
 import {
+  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -76,13 +78,15 @@ function screensOn(app: PreviewApp, kind: "web" | "phone") {
 
 // One catalog app → one framed shot. Returns null when the catalog has not
 // loaded, so every call site can fall back to a Vitrines product capture.
+// Always the full-resolution variant: the server thumbnails are 10–20x
+// smaller and visibly soft at the sizes the landing renders. Every <img> is
+// lazy, so the weight only loads as the visitor reaches it.
 function toShot(
   app: PreviewApp | undefined,
   {
     screen = 0,
-    thumb = false,
     prefer,
-  }: { screen?: number; thumb?: boolean; prefer?: "web" | "phone" } = {},
+  }: { screen?: number; prefer?: "web" | "phone" } = {},
 ): ShotSource | null {
   if (!app) return null;
   // A multi-platform app (WhatsApp ships web, iOS and Android) can land in the
@@ -91,7 +95,7 @@ function toShot(
   const pool = prefer ? screensOn(app, prefer) : app.screens;
   const picked = pool[screen] ?? pool[0] ?? app.screens[screen] ?? app.screens[0];
   if (!picked) return null;
-  const pick = (s: PreviewScreen) => (thumb ? s.thumbnailUrl : s.url);
+  const pick = (s: PreviewScreen) => s.url;
   return {
     url: pick(picked),
     platform: picked.platform,
@@ -232,6 +236,113 @@ function PromptSearch({
   );
 }
 
+// The hero is the real product, not a recording of it. Same origin, so an
+// iframe of /apps just works, and "Live Vitrines catalog" is literally true —
+// on-brand for a product whose pitch is real evidence. Ambient, not
+// interactive: pointer events are off and a gentle scripted scroll plays
+// inside; clicking anywhere goes to the real page. Mobile keeps the recorded
+// video — a second React instance rendering a desktop layout is a bad trade
+// on a phone.
+const HERO_APP_WIDTH = 1600;
+const HERO_APP_HEIGHT = 900;
+
+function LiveHeroEmbed({ onBrowse }: { onBrowse: () => void }) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.72);
+  const [ready, setReady] = useState(false);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const fit = () => setScale(box.clientWidth / HERO_APP_WIDTH);
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
+
+  // Ambient ping-pong scroll inside the embed, so the hero shows the catalog
+  // moving without trapping the visitor's own scroll.
+  useEffect(() => {
+    if (!ready) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const start = performance.now();
+    const RANGE = 1100;
+    const PERIOD = 14_000;
+    const step = (now: number) => {
+      const phase = ((now - start) % PERIOD) / PERIOD;
+      const eased = (1 - Math.cos(phase * 2 * Math.PI)) / 2;
+      try {
+        frameRef.current?.contentWindow?.scrollTo(0, RANGE * eased);
+      } catch {
+        // Cross-origin dev proxies can deny access; the embed stays static.
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [ready]);
+
+  return (
+    <div
+      ref={boxRef}
+      role="link"
+      aria-label="Open the live Vitrines catalog"
+      tabIndex={0}
+      onClick={onBrowse}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onBrowse();
+      }}
+      style={{
+        position: "relative",
+        aspectRatio: "16 / 9",
+        overflow: "hidden",
+        borderRadius: 17,
+        background: "#0f1012",
+        cursor: "pointer",
+      }}
+    >
+      {/* Poster behind the iframe kills the white flash while the app boots. */}
+      <img
+        src="/landing/astryx-apps-catalog.png"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: ready ? 0 : 1,
+          transition: "opacity .4s",
+        }}
+      />
+      <iframe
+        ref={frameRef}
+        src="/apps"
+        title="Live Vitrines catalog"
+        tabIndex={-1}
+        aria-hidden="true"
+        onLoad={() => setReady(true)}
+        style={{
+          // 24px wider than the box clips the embed's own scrollbar out of
+          // view — the ambient scroll would otherwise flash it on the edge.
+          width: HERO_APP_WIDTH + 24,
+          height: HERO_APP_HEIGHT,
+          border: 0,
+          transformOrigin: "0 0",
+          transform: `scale(${scale})`,
+          pointerEvents: "none",
+          opacity: ready ? 1 : 0,
+          transition: "opacity .4s",
+        }}
+      />
+    </div>
+  );
+}
+
 export function Home({
   onBrowse,
   onPricing,
@@ -328,17 +439,17 @@ export function Home({
   const bentoShots = CAPABILITIES.map((_, i) => {
     const phone = i % 2 === 0;
     const app = phone ? bentoPhones[i / 2] : bentoWeb[(i - 1) / 2];
-    const shot = toShot(app, { thumb: true, prefer: phone ? "phone" : "web" });
+    const shot = toShot(app, { prefer: phone ? "phone" : "web" });
     return shot && { ...shot, iconUrl: null, meta: null };
   });
 
   // Two grids, not one: a 9/19.5 handset and a 16/10 browser in the same row
   // leave a crater under the short one. Grouping by shape keeps rows even.
   const galleryWeb = take(webApps, 2)
-    .map((app) => toShot(app, { thumb: true, prefer: "web" }))
+    .map((app) => toShot(app, { prefer: "web" }))
     .filter((shot): shot is ShotSource => shot?.platform === "web");
   const galleryPhones = take(phoneApps, 4)
-    .map((app) => toShot(app, { thumb: true, prefer: "phone" }))
+    .map((app) => toShot(app, { prefer: "phone" }))
     .filter(
       (shot): shot is ShotSource => shot !== null && shot.platform !== "web",
     );
@@ -541,26 +652,30 @@ export function Home({
             boxShadow: "0 34px 110px rgba(0,0,0,.34)",
           }}
         >
-          <video
-            aria-label="Vitrines product evidence demo"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster="/landing/astryx-apps-catalog.png"
-            style={{
-              display: "block",
-              width: "100%",
-              aspectRatio: isMobile ? "4 / 3" : "16 / 9",
-              objectFit: "cover",
-              objectPosition: "center",
-              borderRadius: isMobile ? 12 : 17,
-              background: "#0f1012",
-            }}
-          >
-            <source src="/landing/astryx-product-demo.mp4" type="video/mp4" />
-          </video>
+          {isMobile ? (
+            <video
+              aria-label="Vitrines product evidence demo"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/landing/astryx-apps-catalog.png"
+              style={{
+                display: "block",
+                width: "100%",
+                aspectRatio: "4 / 3",
+                objectFit: "cover",
+                objectPosition: "center",
+                borderRadius: 12,
+                background: "#0f1012",
+              }}
+            >
+              <source src="/landing/astryx-product-demo.mp4" type="video/mp4" />
+            </video>
+          ) : (
+            <LiveHeroEmbed onBrowse={onBrowse} />
+          )}
           <div
             style={{
               position: "absolute",
@@ -589,10 +704,7 @@ export function Home({
         <div
           className="home-logo-carousel"
           aria-label="Products in the Vitrines research catalog"
-          style={{
-            borderBlock: "1px solid var(--color-border)",
-            paddingBlock: isMobile ? 20 : 24,
-          }}
+          style={{ paddingBlock: isMobile ? 20 : 24 }}
         >
           <div className="home-logo-carousel__track">
             {[0, 1].map((group) => (
@@ -683,7 +795,6 @@ export function Home({
                   ) : (
                     <Shot
                       shot={storyShots[index]}
-                      aspect={index === 2 ? "16 / 9" : undefined}
                       style={
                         storyShots[index].platform === "web"
                           ? undefined
@@ -826,15 +937,6 @@ export function Home({
                     >
                       <Shot
                         shot={shot}
-                        // A 16/10 browser frame leaves a void under a short
-                        // card; crop taller so the shot reaches the edge.
-                        aspect={
-                          shot.platform === "web"
-                            ? tall
-                              ? "16 / 17"
-                              : "16 / 12"
-                            : undefined
-                        }
                         style={{
                           width: "100%",
                           maxWidth: shot.platform === "web" ? undefined : 168,
@@ -973,43 +1075,11 @@ export function Home({
             paddingBottom: isMobile ? 72 : 104,
           }}
         >
-          <div style={{ maxWidth: 780, marginBottom: 42 }}>
-            <Text type="supporting" color="secondary">
-              SHARE IT WITHOUT LOSING IT
-            </Text>
-            <div style={{ marginTop: 12 }}>
-              <Heading
-                level={2}
-                style={{
-                  fontSize: isMobile ? 32 : 48,
-                  lineHeight: 1.02,
-                  letterSpacing: "-0.045em",
-                }}
-              >
-                Keep the source visible when the decision leaves your desk.
-              </Heading>
-            </div>
-            <div style={{ marginTop: 16, maxWidth: 650 }}>
-              <Text type="large" color="secondary">
-                A public preview link carries the screens, the flow order and
-                the notes together — so nobody receives a folder of
-                disconnected screenshots and has to reconstruct the argument.
-              </Text>
-            </div>
-          </div>
-          {/* Vitrines' own captures get their true aspect — cropping our own
-              product shot to a generic browser ratio hides the thing the
-              section is pointing at. */}
-          <Shot
-            shot={productShot(PRODUCT_SHOTS.publicPreview)}
-            aspect="1200 / 818"
-          />
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
               gap: 1,
-              marginTop: 12,
               background: "var(--color-border)",
               border: "1px solid var(--color-border)",
               borderRadius: 18,

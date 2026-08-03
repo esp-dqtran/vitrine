@@ -10,24 +10,24 @@ const shot = (over: Partial<ShotSource> = {}): ShotSource => ({
   ...over,
 });
 
-test('frames a handset capture in a portrait bezel with no browser chrome', () => {
+test('frames a handset capture in a bezel with no browser chrome', () => {
   const html = renderToStaticMarkup(<Shot shot={shot()} />);
 
-  assert.match(html, /aspect-ratio:9 \/ 19\.5/);
+  assert.match(html, /border-radius:34px/);
   assert.doesNotMatch(html, /border-bottom:1px solid var\(--color-border\)/);
 });
 
-test('frames a web capture in browser chrome at a landscape ratio', () => {
+test('frames a web capture in browser chrome', () => {
   const html = renderToStaticMarkup(<Shot shot={shot({ platform: 'web' })} />);
 
-  assert.match(html, /aspect-ratio:16 \/ 10/);
   assert.match(html, /border-bottom:1px solid var\(--color-border\)/);
 });
 
 test('android captures are framed as handsets, not as browsers', () => {
   const html = renderToStaticMarkup(<Shot shot={shot({ platform: 'android' })} />);
 
-  assert.match(html, /aspect-ratio:9 \/ 19\.5/);
+  assert.match(html, /border-radius:34px/);
+  assert.doesNotMatch(html, /border-bottom:1px solid var\(--color-border\)/);
 });
 
 test('never filters or dims the screenshot itself', () => {
@@ -42,11 +42,11 @@ test('never filters or dims the screenshot itself', () => {
   assert.match(html, /radial-gradient\(closest-side, #f0763b/);
 });
 
-test('top-aligns the crop so a capture keeps its header and first content', () => {
-  assert.match(
-    renderToStaticMarkup(<Shot shot={shot()} />),
-    /object-position:top center/,
-  );
+test('never crops: the capture renders at its natural aspect ratio', () => {
+  const html = renderToStaticMarkup(<Shot shot={shot()} />);
+
+  assert.match(html, /height:auto/);
+  assert.doesNotMatch(html, /aspect-ratio|object-fit|object-position/);
 });
 
 test('omits the caption entirely when there is no real metadata to show', () => {

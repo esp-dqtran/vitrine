@@ -86,6 +86,21 @@ test("uses the generated Vitrines product demo with a real catalog poster", asyn
   assert.match(source, /poster="\/landing\/astryx-apps-catalog\.png"/);
 });
 
+test("embeds the live catalog as the desktop hero, ambient and click-through", async () => {
+  const source = await readFile(new URL("./Home.tsx", import.meta.url), "utf8");
+
+  // Real product in the hero: same-origin iframe of /apps, not a recording.
+  assert.match(source, /<iframe/);
+  assert.match(source, /src="\/apps"/);
+  // Ambient, not a scroll trap: no pointer events, reduced-motion respected,
+  // and the whole frame acts as a link into the real page.
+  assert.match(source, /pointerEvents: "none"/);
+  assert.match(source, /prefers-reduced-motion/);
+  assert.match(source, /aria-label="Open the live Vitrines catalog"/);
+  // Mobile keeps the recorded demo instead of a second React instance.
+  assert.match(source, /isMobile \? \(\s*<video/);
+});
+
 test("hands the landing prompt to the catalog search", async () => {
   const source = await readFile(new URL("./Home.tsx", import.meta.url), "utf8");
 
