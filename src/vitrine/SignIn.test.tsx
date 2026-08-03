@@ -46,7 +46,14 @@ test("maps real catalog identity into a showcase slide", () => {
     accent: "#5e6ad2",
     categories: [{ id: 1, name: "Productivity", slug: "productivity" }],
     iconUrl: "/icons/linear.svg",
-    screens: [{ url: "/api/preview-media/linear/1", type: "Dashboard" }],
+    platforms: ["web"],
+    totalScreens: 1,
+    screens: [{
+      url: "/api/preview-media/linear/1",
+      type: "Dashboard",
+      platform: "web",
+      thumbnailUrl: "/api/preview-media/linear/1",
+    }],
   });
 
   assert.deepEqual(slide, {

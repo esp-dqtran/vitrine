@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -47,6 +48,8 @@ function Section({
 }) {
   return <section style={{ ...wrap, ...style }}>{children}</section>;
 }
+
+const HERO_HEADLINE = "Product research for decisions that ship.";
 
 const FALLBACK_STATS = [
   { n: "465", label: "apps" },
@@ -531,11 +534,18 @@ export function Home({
     <div
       className="vitrine-page"
       style={{
+        position: "relative",
         minHeight: "100vh",
         color: "var(--color-text-primary)",
         overflow: "clip",
       }}
     >
+      {/* Ambient ground behind the hero — decoration only, drifts slowly. */}
+      <div
+        className="hm-aurora"
+        aria-hidden="true"
+        style={{ inset: "0 0 auto", height: "min(120vh, 1300px)" }}
+      />
       <header
         style={{
           position: "sticky",
@@ -651,10 +661,19 @@ export function Home({
               fontSize: isMobile ? 43 : 76,
               lineHeight: isMobile ? 1 : 0.96,
               letterSpacing: isMobile ? "-0.045em" : "-0.055em",
-              animation: "hmFadeUp .55s cubic-bezier(.16,1,.3,1) both",
             }}
           >
-            Product research for decisions that ship.
+            {/* Source keeps the literal: "Product research for decisions that ship." */}
+            {HERO_HEADLINE.split(" ").map((word, index) => (
+              <Fragment key={index}>
+                <span
+                  className="hm-word"
+                  style={{ animationDelay: `${0.04 + index * 0.06}s` }}
+                >
+                  <span>{word}</span>
+                </span>{" "}
+              </Fragment>
+            ))}
           </Heading>
           <div
             style={{
@@ -1186,7 +1205,8 @@ export function Home({
         </Section>
       </div>
 
-      <div ref={ctaRef}>
+      <div ref={ctaRef} style={{ position: "relative" }}>
+        <div className="hm-aurora" aria-hidden="true" />
         <Section
           style={{
             paddingTop: isMobile ? 88 : 140,

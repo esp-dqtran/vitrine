@@ -4439,6 +4439,85 @@ body {
   }
 }
 
+/* Hero headline: each word rises out of its own clip. Delays are set inline
+   per word; the clip lives on the wrapper so descenders never get shaved. */
+.hm-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.hm-word > span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: hmWordUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: inherit;
+}
+
+@keyframes hmWordUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Ambient ground: two soft glows drifting very slowly behind the hero and the
+   closing CTA. Decoration only — near-threshold opacity, huge blur, no
+   pointer events. The rest of the page already moves; the background only
+   breathes. */
+.hm-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hm-aurora::before,
+.hm-aurora::after {
+  content: "";
+  position: absolute;
+  width: 44vw;
+  height: 44vw;
+  border-radius: 50%;
+  filter: blur(110px);
+  will-change: transform;
+}
+
+.hm-aurora::before {
+  left: -8vw;
+  top: -14vw;
+  background: radial-gradient(
+    closest-side,
+    rgb(88 130 255 / 10%),
+    transparent 70%
+  );
+  animation: hmAuroraA 34s ease-in-out infinite alternate;
+}
+
+.hm-aurora::after {
+  right: -10vw;
+  bottom: -18vw;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 255 255 / 6%),
+    transparent 70%
+  );
+  animation: hmAuroraB 41s ease-in-out infinite alternate;
+}
+
+@keyframes hmAuroraA {
+  to {
+    transform: translate(9vw, 7vw) scale(1.15);
+  }
+}
+
+@keyframes hmAuroraB {
+  to {
+    transform: translate(-8vw, -6vw) scale(0.9);
+  }
+}
+
 .home-logo-carousel {
   overflow: hidden;
   mask-image: linear-gradient(
@@ -4514,8 +4593,15 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .hm-floating,
-  .home-logo-carousel__track {
+  .home-logo-carousel__track,
+  .hm-aurora::before,
+  .hm-aurora::after {
     animation: none !important;
+  }
+
+  .hm-word > span {
+    animation: none !important;
+    transform: none;
   }
 }
 
@@ -12585,7 +12671,7 @@ body {
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 0.035);
   border-radius: 24px;
-  background: #242424;
+  background: var(--color-background-popover);
   box-shadow: 0 18px 60px rgb(0 0 0 / 0.58);
   color: #f5f5f5;
 }
@@ -12613,12 +12699,6 @@ body {
   font-size: 16px !important;
   font-weight: 456 !important;
   letter-spacing: 0.2px;
-}
-
-.command-palette-search .astryx-text-input {
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
 }
 
 .command-palette-search input::placeholder {
