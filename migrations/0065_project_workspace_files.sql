@@ -15,3 +15,4 @@ CREATE INDEX research_project_canvas_files_project_updated_idx
 INSERT INTO research_project_canvas_files (project_id, title, snapshot, revision, updated_at)
 SELECT project_id, 'Canvas', snapshot, revision, updated_at
 FROM research_project_canvases;
+
