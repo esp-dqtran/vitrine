@@ -246,12 +246,15 @@ function BentoCell({
   label,
   onAction,
   span = 1,
+  rows = 1,
   height,
   children,
 }: {
   label: string;
   onAction: () => void;
   span?: number;
+  /** Lattice rows are a fixed 240px; tall cells span two of them. */
+  rows?: number;
   height: number;
   children: ReactNode;
 }) {
@@ -260,14 +263,18 @@ function BentoCell({
       className="hm-bento"
       style={{
         gridColumn: span === 2 ? "span 2" : undefined,
+        gridRow: rows === 2 ? "span 2" : undefined,
         minHeight: height,
         position: "relative",
         overflow: "hidden",
         background: "var(--color-background-body)",
         padding: "26px 26px 60px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
       }}
     >
-      {children}
+      <div>{children}</div>
       <div style={{ position: "absolute", left: 15, bottom: 13 }}>
         <Button
           variant="ghost"
@@ -1188,12 +1195,18 @@ export function Home({
               gridTemplateColumns: isMobile
                 ? "1fr"
                 : "repeat(3, minmax(0, 1fr))",
+              gridAutoRows: isMobile ? undefined : 240,
               gap: 1,
               background: "var(--color-border)",
               border: "1px solid var(--color-border)",
             }}
           >
-            <BentoCell label="Apps & sites" onAction={onBrowse} height={isMobile ? 300 : 480}>
+            <BentoCell
+              label="Apps & sites"
+              onAction={onBrowse}
+              rows={isMobile ? 1 : 2}
+              height={isMobile ? 300 : 480}
+            >
               {bentoShots[0] && (
                 <Shot
                   shot={bentoShots[0]}
@@ -1205,6 +1218,7 @@ export function Home({
               label="Screens & flows"
               onAction={onBrowse}
               span={isMobile ? 1 : 2}
+              rows={isMobile ? 1 : 2}
               height={isMobile ? 300 : 480}
             >
               {/* Fills the whole cell: tiles stretch to the available height
@@ -1280,7 +1294,12 @@ export function Home({
                 </div>
               </div>
             </BentoCell>
-            <BentoCell label="UI elements" onAction={onBrowse} height={isMobile ? 300 : 480}>
+            <BentoCell
+              label="UI elements"
+              onAction={onBrowse}
+              rows={isMobile ? 1 : 2}
+              height={isMobile ? 300 : 480}
+            >
               {bentoShots[2] && (
                 <Shot
                   shot={bentoShots[2]}
@@ -1562,6 +1581,7 @@ export function Home({
               label="Real screens, full pages"
               onAction={onBrowse}
               span={isMobile ? 1 : 2}
+              rows={isMobile ? 1 : 2}
               height={isMobile ? 300 : 480}
             >
               {bentoShots[1] && (
@@ -1570,7 +1590,12 @@ export function Home({
                 </div>
               )}
             </BentoCell>
-            <BentoCell label="Every platform" onAction={onBrowse} height={isMobile ? 260 : 480}>
+            <BentoCell
+              label="Every platform"
+              onAction={onBrowse}
+              rows={isMobile ? 1 : 2}
+              height={isMobile ? 260 : 480}
+            >
               <div
                 style={{
                   textAlign: "center",
