@@ -36,6 +36,9 @@ export function usePinnedSwap(
         ...items.map((item) => item.getBoundingClientRect().height),
       );
       gsap.set(el, { position: 'relative', display: 'block', height });
+      // Alternating sides: story 2 enters from the right, story 3 from the
+      // left; the outgoing story always exits toward the opposite edge.
+      const entryX = (index: number) => (index % 2 ? 120 : -120);
       items.forEach((item, index) => {
         gsap.set(item, {
           position: 'absolute',
@@ -43,23 +46,32 @@ export function usePinnedSwap(
           left: 0,
           right: 0,
           autoAlpha: index === 0 ? 1 : 0,
-          y: index === 0 ? 0 : 60,
+          x: index === 0 ? 0 : entryX(index),
         });
       });
       const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: el,
           start: 'top 15%',
-          end: `+=${(items.length - 1) * 90}%`,
+          end: `+=${(items.length - 1) * 110}%`,
           pin: true,
-          scrub: 0.5,
+          scrub: 0.9,
           anticipatePin: 1,
         },
       });
-      items.slice(1).forEach((item, index) => {
+      items.slice(1).forEach((item, step) => {
+        const from = entryX(step + 1);
         timeline
-          .to(items[index], { autoAlpha: 0, y: -60, duration: 1 }, index)
-          .to(item, { autoAlpha: 1, y: 0, duration: 1 }, index + 0.18);
+          .to(
+            items[step],
+            { autoAlpha: 0, x: -from, duration: 1, ease: 'power1.inOut' },
+            step,
+          )
+          .to(
+            item,
+            { autoAlpha: 1, x: 0, duration: 1, ease: 'power1.inOut' },
+            step + 0.12,
+          );
       });
     }, el);
     return () => ctx.revert();
