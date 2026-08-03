@@ -92,6 +92,18 @@ export function Shot({
         <img
           src={shot.url}
           alt={alt}
+          // Preview media 302s to short-lived presigned URLs; a stale
+          // redirect fails the load. One delayed retry fetches a fresh
+          // signature instead of leaving alt text in the layout.
+          onError={(event) => {
+            const img = event.currentTarget;
+            if (img.dataset.retried) return;
+            img.dataset.retried = "1";
+            setTimeout(() => {
+              img.src =
+                shot.url + (shot.url.includes("?") ? "&" : "?") + "retry=1";
+            }, 900);
+          }}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           style={{

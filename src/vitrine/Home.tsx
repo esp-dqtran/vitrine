@@ -577,16 +577,19 @@ export function Home({
     return shot && { ...shot, iconUrl: null, meta: null };
   });
 
-  // Two grids, not one: a 9/19.5 handset and a 16/10 browser in the same row
-  // leave a crater under the short one. Grouping by shape keeps rows even.
-  const galleryWeb = take(webApps, 2)
-    .map((app) => toShot(app, { prefer: "web" }))
-    .filter((shot): shot is ShotSource => shot?.platform === "web");
-  const galleryPhones = take(phoneApps, 4)
-    .map((app) => toShot(app, { prefer: "phone" }))
-    .filter(
-      (shot): shot is ShotSource => shot !== null && shot.platform !== "web",
-    );
+  // Full-bleed mosaic (the "Shipped with Framer" pattern): every app not yet
+  // used on the page becomes a chromeless tile, mixed sizes, cropped at the
+  // viewport edges — the crop itself says the catalog is bigger than the
+  // screen. Captions are dropped; the artifacts are the pitch.
+  const mosaic = apps
+    .filter((app) => !used.has(app.id))
+    .map((app) => toShot(app))
+    .filter((shot): shot is ShotSource => shot !== null)
+    .map((shot) => ({ ...shot, iconUrl: null, meta: null }));
+  const mosaicRows: ShotSource[][] = [
+    mosaic.filter((_, i) => i % 2 === 0),
+    mosaic.filter((_, i) => i % 2 === 1),
+  ];
 
   const heroMediaRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
@@ -665,6 +668,38 @@ export function Home({
       gsap.set(track, { xPercent: 0 });
     };
   }, []);
+
+  // Mosaic rows creep in opposite directions as the section crosses the
+  // viewport — scrubbed, shallow, and never in the way of scroll progress.
+  const mosaicRowARef = useRef<HTMLDivElement>(null);
+  const mosaicRowBRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rows = [mosaicRowARef.current, mosaicRowBRef.current];
+    if (rows.some((row) => !row)) return;
+    const tweens = rows.map((row, index) =>
+      gsap.fromTo(
+        row,
+        { x: index ? -110 : 0 },
+        {
+          x: index ? 0 : -110,
+          ease: "none",
+          scrollTrigger: {
+            trigger: row,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.8,
+          },
+        },
+      ),
+    );
+    return () => {
+      for (const tween of tweens) {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      }
+    };
+  }, [apps.length]);
 
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
@@ -1266,42 +1301,48 @@ export function Home({
               clickAction={onBrowse}
             />
           </div>
-          <div style={{ display: "grid", gap: isMobile ? 34 : 44 }}>
-            {galleryWeb.length > 0 && (
+          <div
+            style={{
+              width: "100vw",
+              marginLeft: "calc(50% - 50vw)",
+              overflowX: isMobile ? "auto" : "hidden",
+              display: "grid",
+              gap: isMobile ? 14 : 20,
+            }}
+          >
+            {mosaicRows.map((row, rowIndex) => (
               <div
+                key={rowIndex}
+                ref={rowIndex === 0 ? mosaicRowARef : mosaicRowBRef}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile
-                    ? "1fr"
-                    : "repeat(2, minmax(0, 1fr))",
-                  gap: isMobile ? 28 : 24,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: isMobile ? 14 : 20,
+                  width: "max-content",
+                  // Offset rows start at different phases so the edge crops
+                  // never line up between rows.
+                  marginLeft: rowIndex === 0 ? -40 : -150,
                 }}
               >
-                {galleryWeb.map((shot) => (
-                  <Shot key={shot.url} shot={shot} />
-                ))}
-              </div>
-            )}
-            {galleryPhones.length > 0 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile
-                    ? "repeat(2, minmax(0, 1fr))"
-                    : "repeat(4, minmax(0, 1fr))",
-                  gap: isMobile ? 16 : 24,
-                  justifyItems: "center",
-                }}
-              >
-                {galleryPhones.map((shot) => (
+                {row.map((shot) => (
                   <Shot
                     key={shot.url}
                     shot={shot}
-                    style={{ width: "100%", maxWidth: 232 }}
+                    style={{
+                      flex: "none",
+                      width:
+                        shot.platform === "web"
+                          ? isMobile
+                            ? 300
+                            : 440
+                          : isMobile
+                            ? 128
+                            : 172,
+                    }}
                   />
                 ))}
               </div>
-            )}
+            ))}
           </div>
         </Section>
       </div>
