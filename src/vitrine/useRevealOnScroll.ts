@@ -13,6 +13,46 @@ gsap.registerPlugin(ScrollTrigger);
 // instead of the section arriving as a single slab. `key` re-arms the effect
 // when async content lands (the catalog loads after mount, so the children
 // the selector matches don't exist on first run).
+// Scroll-scrubbed vertical drift: children matching the selector translate a
+// few px against scroll direction while their section crosses the viewport.
+// Reads as depth, not as an effect — amplitude stays small on purpose.
+export function useParallaxDrift(
+  ref: RefObject<HTMLElement | null>,
+  options: { selector: string; amplitude?: number; key?: unknown },
+) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const amp = options.amplitude ?? 26;
+    const tweens = Array.from(el.querySelectorAll(options.selector)).map(
+      (target, index) =>
+        gsap.fromTo(
+          target,
+          { y: amp * (index % 2 ? -1 : 1) },
+          {
+            y: -amp * (index % 2 ? -1 : 1),
+            ease: 'none',
+            scrollTrigger: {
+              trigger: target,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 0.6,
+            },
+          },
+        ),
+    );
+    return () => {
+      for (const tween of tweens) {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      }
+      gsap.set(el.querySelectorAll(options.selector), { y: 0 });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ref, options.selector, options.amplitude, options.key]);
+}
+
 export function useRevealOnScroll(
   ref: RefObject<HTMLElement | null>,
   options: { stagger?: string; key?: unknown } = {},

@@ -20,7 +20,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
-import { useRevealOnScroll } from "./useRevealOnScroll";
+import { useParallaxDrift, useRevealOnScroll } from "./useRevealOnScroll";
 import {
   useCatalogPreview,
   useCatalogStats,
@@ -544,10 +544,40 @@ export function Home({
   const galleryRef = useRef<HTMLDivElement>(null);
   const proofRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // Past the hero, the nav firms up: fully opaque ground and a soft shadow so
+  // it reads as a surface once real content scrolls beneath it.
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const trigger = ScrollTrigger.create({
+      start: 90,
+      onEnter: () =>
+        gsap.to(el, {
+          background:
+            "color-mix(in srgb, var(--color-background-body) 97%, transparent)",
+          boxShadow: "0 14px 40px rgba(0,0,0,.35)",
+          duration: 0.35,
+          overwrite: "auto",
+        }),
+      onLeaveBack: () =>
+        gsap.to(el, {
+          background:
+            "color-mix(in srgb, var(--color-background-body) 88%, transparent)",
+          boxShadow: "0 0 0 rgba(0,0,0,0)",
+          duration: 0.35,
+          overwrite: "auto",
+        }),
+    });
+    return () => trigger.kill();
+  }, []);
+
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
   // the stagger re-arms once the async previews actually exist.
   useRevealOnScroll(storiesRef, { stagger: "article", key: apps.length });
+  // Story media drifts a few px against the scroll — depth without a camera.
+  useParallaxDrift(storiesRef, { selector: "[data-parallax]", key: apps.length });
   useRevealOnScroll(platformRef, { stagger: "article", key: apps.length });
   useRevealOnScroll(galleryRef, { stagger: "figure", key: apps.length });
   useRevealOnScroll(proofRef, { stagger: "[data-stat]", key: stats[0].n });
@@ -570,6 +600,7 @@ export function Home({
         style={{ inset: "0 0 auto", height: "min(120vh, 1300px)" }}
       />
       <header
+        ref={navRef}
         style={{
           position: "sticky",
           top: 0,
@@ -874,7 +905,10 @@ export function Home({
                   alignItems: "center",
                 }}
               >
-                <div style={{ order: !isMobile && index % 2 === 1 ? 2 : 1 }}>
+                <div
+                  data-parallax
+                  style={{ order: !isMobile && index % 2 === 1 ? 2 : 1 }}
+                >
                   {index === 1 && flowShots.length === 3 ? (
                     <div
                       style={{
