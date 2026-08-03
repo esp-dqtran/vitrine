@@ -168,49 +168,6 @@ const FLOW_VIGNETTE = {
   ),
 };
 
-// Bottom link per bento card, Framer-style: quiet label, arrow, real route.
-const CAPABILITY_LINKS = [
-  "Browse apps",
-  "See real flows",
-  "Compare elements",
-  "Start a project",
-  "Open the canvas",
-  "Share a brief",
-];
-
-const CAPABILITIES = [
-  {
-    eyebrow: "SEARCH",
-    title: "Apps & sites",
-    copy: "Web, iOS and Android products, captured and kept current.",
-  },
-  {
-    eyebrow: "TRACE",
-    title: "Screens & flows",
-    copy: "Whole journeys — including the states nobody screenshots.",
-  },
-  {
-    eyebrow: "INSPECT",
-    title: "UI elements",
-    copy: "One pattern, side by side, across the products that use it.",
-  },
-  {
-    eyebrow: "ORGANIZE",
-    title: "Research projects",
-    copy: "Evidence and observations in one place, not five tabs.",
-  },
-  {
-    eyebrow: "SYNTHESIZE",
-    title: "Living canvas",
-    copy: "Arrange the findings until the argument is obvious.",
-  },
-  {
-    eyebrow: "HAND OFF",
-    title: "Shareable briefs",
-    copy: "Send the decision with its sources still clickable.",
-  },
-];
-
 function PromptSearch({
   onBrowse,
   compact = false,
@@ -279,6 +236,47 @@ function PromptSearch({
         clickAction={runSearch}
       />
     </form>
+  );
+}
+
+// One lattice cell of the platform bento. Framer's card anatomy: vignette
+// floating on the cell ground, a single quiet label pinned bottom-left, no
+// title or body copy — the vignette is the explanation.
+function BentoCell({
+  label,
+  onAction,
+  span = 1,
+  height,
+  children,
+}: {
+  label: string;
+  onAction: () => void;
+  span?: number;
+  height: number;
+  children: ReactNode;
+}) {
+  return (
+    <article
+      className="hm-bento"
+      style={{
+        gridColumn: span === 2 ? "span 2" : undefined,
+        minHeight: height,
+        position: "relative",
+        overflow: "hidden",
+        background: "var(--color-background-body)",
+        padding: "26px 26px 60px",
+      }}
+    >
+      {children}
+      <div style={{ position: "absolute", left: 15, bottom: 13 }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          label={`${label} →`}
+          clickAction={onAction}
+        />
+      </div>
+    </article>
   );
 }
 
@@ -584,17 +582,14 @@ export function Home({
     .map((app) => toShot(app, { prefer: "web" }))
     .filter((shot): shot is ShotSource => shot?.platform === "web");
 
-  // Bento tiles alternate handset and browser so the grid does not read as six
-  // of the same shape. Thumbnails are plenty at this size, and captions are
-  // dropped — the card already carries a title right above the image.
-  const bentoPhones = take(phoneApps, 3);
-  const bentoWeb = take(webApps, 3);
-  const bentoShots = CAPABILITIES.map((_, i) => {
-    const phone = i % 2 === 0;
-    const app = phone ? bentoPhones[i / 2] : bentoWeb[(i - 1) / 2];
-    const shot = toShot(app, { prefer: phone ? "phone" : "web" });
-    return shot && { ...shot, iconUrl: null, meta: null };
-  });
+  // Bento vignettes: two handsets and one wide browser capture, chromeless.
+  const bentoPhones = take(phoneApps, 2);
+  const [bentoWebApp] = take(webApps, 1);
+  const bentoShots = [
+    toShot(bentoPhones[0], { prefer: "phone" }),
+    toShot(bentoWebApp, { prefer: "web" }),
+    toShot(bentoPhones[1], { prefer: "phone" }),
+  ].map((shot) => shot && { ...shot, iconUrl: null, meta: null });
 
   // Full-bleed mosaic (the "Shipped with Framer" pattern): every app not yet
   // used on the page becomes a chromeless tile, mixed sizes, cropped at the
@@ -1182,164 +1177,263 @@ export function Home({
               clickAction={onBrowse}
             />
           </div>
+          {/* Structure studied from framer.com's "Bento Features" lattice:
+              3x400 columns, hairline dividers instead of gaps, square cells
+              480/240 tall, wides spanning two columns, one quiet label per
+              cell at bottom-left, vignettes floating on the cell ground.
+              Structure only — every vignette below is Vitrines content. */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: isMobile
                 ? "1fr"
                 : "repeat(3, minmax(0, 1fr))",
-              gap: 12,
+              gap: 1,
+              background: "var(--color-border)",
+              border: "1px solid var(--color-border)",
             }}
           >
-            {CAPABILITIES.map((item, index) => {
-              const tall = !isMobile && (index === 0 || index === 4);
-              const shot = bentoShots[index];
-              return (
-                <article
-                  key={item.title}
-                  className="hm-bento"
+            <BentoCell label="Apps & sites" onAction={onBrowse} height={isMobile ? 300 : 480}>
+              {bentoShots[0] && (
+                <Shot
+                  shot={bentoShots[0]}
+                  style={{ width: "100%", maxWidth: 180, margin: "0 auto" }}
+                />
+              )}
+            </BentoCell>
+            <BentoCell
+              label="Screens & flows"
+              onAction={onBrowse}
+              span={isMobile ? 1 : 2}
+              height={isMobile ? 300 : 480}
+            >
+              <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 12 }}>
+                <div
                   style={{
-                    minHeight: tall ? 430 : 265,
-                    // The shot runs off the bottom edge, so the card keeps no
-                    // bottom padding of its own.
-                    padding: "24px 24px 0",
-                    borderRadius: 18,
-                    border: "1px solid var(--color-border)",
-                    background: "var(--color-background-body)",
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
-                    gridRow: tall ? "span 2" : undefined,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                    gap: 10,
                   }}
                 >
-                  <Text type="supporting" color="secondary">
-                    {item.eyebrow}
-                  </Text>
-                  <div style={{ marginTop: 14 }}>
-                    <Heading level={3}>{item.title}</Heading>
-                    <div style={{ marginTop: 9 }}>
-                      <Text type="body" color="secondary">
-                        {item.copy}
-                      </Text>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 10, marginLeft: -10 }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      label={`${CAPABILITY_LINKS[index]} →`}
-                      clickAction={index < 3 ? onBrowse : onLogin}
-                    />
-                  </div>
-                  {index === 1 ? (
-                    <div style={{ marginTop: 20, display: "grid", gap: 10 }}>
-                      <div
+                  {FLOW_VIGNETTE.screens.map((src, step) => (
+                    <div
+                      key={src}
+                      style={{
+                        position: "relative",
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        border: "1px solid var(--color-border)",
+                        background: "#17181b",
+                      }}
+                    >
+                      <img
+                        src={src}
+                        alt={`Resetting password, captured step ${step + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ display: "block", width: "100%", height: "auto" }}
+                      />
+                      <span
+                        aria-hidden="true"
                         style={{
+                          position: "absolute",
+                          left: 8,
+                          top: 8,
+                          width: 20,
+                          height: 20,
+                          borderRadius: 999,
+                          background: "rgba(10,11,13,.82)",
+                          color: "#fff",
+                          fontSize: 11,
+                          fontWeight: 700,
                           display: "grid",
-                          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                          gap: 8,
+                          placeItems: "center",
                         }}
                       >
-                        {FLOW_VIGNETTE.screens.map((src, step) => (
-                          <div
-                            key={src}
-                            style={{
-                              position: "relative",
-                              borderRadius: 10,
-                              overflow: "hidden",
-                              border: "1px solid var(--color-border)",
-                              background: "#17181b",
-                            }}
-                          >
-                            <img
-                              src={src}
-                              alt={`Resetting password, captured step ${step + 1}`}
-                              loading="lazy"
-                              decoding="async"
-                              style={{ display: "block", width: "100%", height: "auto" }}
-                            />
-                            <span
-                              aria-hidden="true"
-                              style={{
-                                position: "absolute",
-                                left: 6,
-                                top: 6,
-                                width: 18,
-                                height: 18,
-                                borderRadius: 999,
-                                background: "rgba(10,11,13,.82)",
-                                color: "#fff",
-                                fontSize: 11,
-                                fontWeight: 700,
-                                display: "grid",
-                                placeItems: "center",
-                              }}
-                            >
-                              {step + 1}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      <Text type="supporting" color="secondary">
-                        {FLOW_VIGNETTE.caption}
-                      </Text>
+                        {step + 1}
+                      </span>
                     </div>
-                  ) : (
-                    shot && (
-                      <div
-                        style={{
-                          marginTop: 20,
-                          flex: 1,
-                          minHeight: 0,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <Shot
-                          shot={shot}
-                          style={{
-                            width: "100%",
-                            maxWidth: shot.platform === "web" ? undefined : 168,
-                          }}
-                        />
-                      </div>
-                    )
-                  )}
-                </article>
-              );
-            })}
-            <article
-              style={{
-                minHeight: 220,
-                padding: 24,
-                borderRadius: 18,
-                border: "1px solid var(--color-border)",
-                background: "var(--color-background-body)",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <Text type="supporting" color="secondary">
-                LIVE CATALOG
-              </Text>
+                  ))}
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <Text type="supporting" color="secondary">
+                    {FLOW_VIGNETTE.caption}
+                  </Text>
+                </div>
+              </div>
+            </BentoCell>
+            <BentoCell label="UI elements" onAction={onBrowse} height={isMobile ? 300 : 480}>
+              {bentoShots[2] && (
+                <Shot
+                  shot={bentoShots[2]}
+                  style={{ width: "100%", maxWidth: 180, margin: "0 auto" }}
+                />
+              )}
+            </BentoCell>
+            <BentoCell label="Research projects" onAction={onLogin} height={240}>
+              {/* Drawn vignette: an evidence note with its citation chip. */}
+              <div style={{ display: "grid", gap: 9, maxWidth: 250, margin: "10px auto 0" }}>
+                {[0.9, 0.72, 0.55].map((w) => (
+                  <div
+                    key={w}
+                    style={{
+                      height: 9,
+                      width: `${w * 100}%`,
+                      borderRadius: 5,
+                      background: "color-mix(in srgb, var(--color-border) 62%, #9aa0aa)",
+                    }}
+                  />
+                ))}
+                <div
+                  style={{
+                    justifySelf: "start",
+                    marginTop: 5,
+                    padding: "5px 10px",
+                    borderRadius: 999,
+                    border: "1px solid var(--color-border)",
+                    fontSize: 11,
+                    fontWeight: 650,
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  ⌘ 1Password · step 3 of 12
+                </div>
+              </div>
+            </BentoCell>
+            <BentoCell label="Live catalog" onAction={onBrowse} height={240}>
               <div
                 style={{
-                  marginTop: "auto",
-                  fontSize: isMobile ? 52 : 68,
-                  lineHeight: 0.9,
+                  textAlign: "center",
+                  fontSize: isMobile ? 46 : 58,
+                  lineHeight: 0.95,
                   fontWeight: 800,
-                  letterSpacing: "-0.06em",
+                  letterSpacing: "-0.055em",
+                  marginTop: 12,
                 }}
               >
                 {stats[1].n}
               </div>
-              <div style={{ marginTop: 10 }}>
-                <Text type="body" color="secondary">
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <Text type="supporting" color="secondary">
                   real screens and counting
                 </Text>
               </div>
-            </article>
+            </BentoCell>
+            <BentoCell label="Living canvas" onAction={onLogin} height={240}>
+              {/* Drawn vignette: three cards settling on a canvas. */}
+              <div style={{ position: "relative", height: 120, margin: "8px auto 0", maxWidth: 240 }}>
+                {[
+                  { x: 0, y: 16, r: -5 },
+                  { x: 76, y: 0, r: 3 },
+                  { x: 148, y: 22, r: -2 },
+                ].map((c) => (
+                  <div
+                    key={c.x}
+                    style={{
+                      position: "absolute",
+                      left: c.x,
+                      top: c.y,
+                      width: 84,
+                      height: 92,
+                      borderRadius: 10,
+                      border: "1px solid var(--color-border)",
+                      background: "#17181b",
+                      transform: `rotate(${c.r}deg)`,
+                      boxShadow: "0 12px 30px rgba(0,0,0,.35)",
+                    }}
+                  />
+                ))}
+              </div>
+            </BentoCell>
+            <BentoCell label="Shareable briefs" onAction={onLogin} height={240}>
+              {/* Drawn vignette: the public preview link, ready to send. */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  maxWidth: 280,
+                  margin: "26px auto 0",
+                  padding: "9px 12px",
+                  borderRadius: 999,
+                  border: "1px solid var(--color-border)",
+                  background: "#17181b",
+                  fontSize: 12.5,
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                <span aria-hidden="true">🔗</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  vitrines.app/preview/reset-flow
+                </span>
+                <span
+                  style={{
+                    flex: "none",
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    opacity: 0.75,
+                  }}
+                >
+                  Copy
+                </span>
+              </div>
+            </BentoCell>
+            <BentoCell
+              label="Real screens, full pages"
+              onAction={onBrowse}
+              span={isMobile ? 1 : 2}
+              height={isMobile ? 300 : 480}
+            >
+              {bentoShots[1] && (
+                <div style={{ marginRight: isMobile ? 0 : -70 }}>
+                  <Shot shot={bentoShots[1]} style={{ width: "100%" }} />
+                </div>
+              )}
+            </BentoCell>
+            <BentoCell label="Every platform" onAction={onBrowse} height={isMobile ? 260 : 480}>
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: isMobile ? 46 : 58,
+                  lineHeight: 0.95,
+                  fontWeight: 800,
+                  letterSpacing: "-0.055em",
+                  marginTop: 12,
+                }}
+              >
+                {stats[0].n}
+              </div>
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <Text type="supporting" color="secondary">
+                  real products captured
+                </Text>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginTop: 22,
+                  flexWrap: "wrap",
+                }}
+              >
+                {["Web", "iOS", "Android"].map((platform) => (
+                  <span
+                    key={platform}
+                    style={{
+                      padding: "6px 13px",
+                      borderRadius: 999,
+                      border: "1px solid var(--color-border)",
+                      fontSize: 12,
+                      fontWeight: 650,
+                    }}
+                  >
+                    {platform}
+                  </span>
+                ))}
+              </div>
+            </BentoCell>
           </div>
         </Section>
       </div>
