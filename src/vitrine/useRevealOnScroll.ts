@@ -13,72 +13,6 @@ gsap.registerPlugin(ScrollTrigger);
 // instead of the section arriving as a single slab. `key` re-arms the effect
 // when async content lands (the catalog loads after mount, so the children
 // the selector matches don't exist on first run).
-// Pinned scrollytelling: the container pins to the viewport and its children
-// (matching the selector) crossfade-swap one per scroll segment. Children are
-// stacked absolutely; the container keeps the tallest child's height so the
-// page doesn't jump when pinning engages. Pass `disabled` on mobile — small
-// screens read better as a plain stack.
-export function usePinnedSwap(
-  ref: RefObject<HTMLElement | null>,
-  options: { selector: string; key?: unknown; disabled?: boolean },
-) {
-  useLayoutEffect(() => {
-    if (options.disabled) return;
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const items = Array.from(el.querySelectorAll<HTMLElement>(options.selector));
-    if (items.length < 2) return;
-
-    const ctx = gsap.context(() => {
-      const height = Math.max(
-        520,
-        ...items.map((item) => item.getBoundingClientRect().height),
-      );
-      gsap.set(el, { position: 'relative', display: 'block', height });
-      // Alternating sides: story 2 enters from the right, story 3 from the
-      // left; the outgoing story always exits toward the opposite edge.
-      const entryX = (index: number) => (index % 2 ? 120 : -120);
-      items.forEach((item, index) => {
-        gsap.set(item, {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          autoAlpha: index === 0 ? 1 : 0,
-          x: index === 0 ? 0 : entryX(index),
-        });
-      });
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 15%',
-          end: `+=${(items.length - 1) * 110}%`,
-          pin: true,
-          scrub: 0.9,
-          anticipatePin: 1,
-        },
-      });
-      items.slice(1).forEach((item, step) => {
-        const from = entryX(step + 1);
-        timeline
-          .to(
-            items[step],
-            { autoAlpha: 0, x: -from, duration: 1, ease: 'power1.inOut' },
-            step,
-          )
-          .to(
-            item,
-            { autoAlpha: 1, x: 0, duration: 1, ease: 'power1.inOut' },
-            step + 0.12,
-          );
-      });
-    }, el);
-    return () => ctx.revert();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref, options.selector, options.key, options.disabled]);
-}
-
 // Word-mask rise for section headings, scroll-triggered: inside `[data-split]`
 // containers, each `.hm-word-scroll` clip's inner span slides up when the
 // heading enters the viewport. Initial offset is set here, not in CSS, so the
@@ -171,7 +105,15 @@ export function useParallaxDrift(
 
 export function useRevealOnScroll(
   ref: RefObject<HTMLElement | null>,
-  options: { stagger?: string; key?: unknown; disabled?: boolean } = {},
+  options: {
+    stagger?: string;
+    // 'alternate-x' slides staggered children in from alternating sides —
+    // scroll stays in normal flow, entrances only decorate it (framer.com
+    // pattern: animation never owns the scrollbar).
+    axis?: 'y' | 'alternate-x';
+    key?: unknown;
+    disabled?: boolean;
+  } = {},
 ) {
   useLayoutEffect(() => {
     if (options.disabled) return;
@@ -184,25 +126,37 @@ export function useRevealOnScroll(
       : [el];
     if (targets.length === 0) return;
 
-    gsap.set(targets, { opacity: 0, y: 28 });
-    const trigger = ScrollTrigger.create({
-      trigger: el,
-      start: 'top 88%',
-      once: true,
-      onEnter: () =>
-        gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration: 0.65,
-          ease: 'power3.out',
-          stagger: options.stagger ? 0.08 : 0,
-        }),
-    });
+    const sideways = options.axis === 'alternate-x';
+    if (sideways) {
+      targets.forEach((target, index) =>
+        gsap.set(target, { opacity: 0, x: index % 2 ? 72 : -72 }),
+      );
+    } else {
+      gsap.set(targets, { opacity: 0, y: 28 });
+    }
+    // Each child gets its own trigger when sliding sideways, so a story
+    // animates when IT arrives, not when the section's top passed long ago.
+    const triggers = (sideways ? targets : [el]).map((trigger) =>
+      ScrollTrigger.create({
+        trigger,
+        start: 'top 85%',
+        once: true,
+        onEnter: () =>
+          gsap.to(sideways ? trigger : targets, {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            duration: sideways ? 0.85 : 0.65,
+            ease: 'power3.out',
+            stagger: !sideways && options.stagger ? 0.08 : 0,
+          }),
+      }),
+    );
     return () => {
-      trigger.kill();
+      for (const trigger of triggers) trigger.kill();
       // Re-armed runs re-set opacity; never leave content stuck invisible.
-      gsap.set(targets, { opacity: 1, y: 0 });
+      gsap.set(targets, { opacity: 1, x: 0, y: 0 });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref, options.stagger, options.key, options.disabled]);
+  }, [ref, options.stagger, options.axis, options.key, options.disabled]);
 }

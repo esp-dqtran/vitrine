@@ -22,7 +22,6 @@ import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
 import {
   useParallaxDrift,
-  usePinnedSwap,
   useRevealOnScroll,
   useWordRise,
 } from "./useRevealOnScroll";
@@ -670,24 +669,17 @@ export function Home({
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
   // the stagger re-arms once the async previews actually exist.
-  // Desktop: the three stories pin and swap in place (scrollytelling); the
-  // plain stagger + parallax stack stays for mobile, where pinning cramps.
-  const storiesStageRef = useRef<HTMLDivElement>(null);
-  usePinnedSwap(storiesStageRef, {
-    selector: "article",
-    key: apps.length,
-    disabled: isMobile,
-  });
+  // Stories stay in normal document flow (scroll always makes progress —
+  // pinning made skimmers feel stuck) and slide in from alternating sides.
   useRevealOnScroll(storiesRef, {
     stagger: "article",
+    axis: "alternate-x",
     key: apps.length,
-    disabled: !isMobile,
   });
   // Story media drifts a few px against the scroll — depth without a camera.
   useParallaxDrift(storiesRef, {
     selector: "[data-parallax]",
     key: apps.length,
-    disabled: !isMobile,
   });
   // Section headings ride up word by word as they enter.
   useWordRise(storiesRef);
@@ -1008,10 +1000,7 @@ export function Home({
               </Heading>
             </div>
           </div>
-          <div
-            ref={storiesStageRef}
-            style={{ display: "grid", gap: isMobile ? 72 : 108 }}
-          >
+          <div style={{ display: "grid", gap: isMobile ? 72 : 108 }}>
             {STORIES.map((story, index) => (
               <article
                 key={story.title}
