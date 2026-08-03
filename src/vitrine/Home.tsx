@@ -20,7 +20,12 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
-import { useParallaxDrift, useRevealOnScroll } from "./useRevealOnScroll";
+import {
+  useParallaxDrift,
+  usePinnedSwap,
+  useRevealOnScroll,
+  useWordRise,
+} from "./useRevealOnScroll";
 import {
   useCatalogPreview,
   useCatalogStats,
@@ -259,6 +264,24 @@ function PromptSearch({
   );
 }
 
+// Section-heading words wrapped in individual clips so useWordRise can slide
+// them up on scroll. The data-split wrapper is the scroll trigger. Rendering
+// is inert without JS — the initial offset is applied by the hook, never by
+// CSS, so the text can never be stuck hidden.
+function SplitWords({ text }: { text: string }) {
+  return (
+    <span data-split>
+      {text.split(" ").map((word, index) => (
+        <Fragment key={index}>
+          <span className="hm-word-scroll">
+            <span>{word}</span>
+          </span>{" "}
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 // Headline stat that counts up from zero the first time it scrolls into view.
 // Parses its own display string ("1,190", "422K") so the animated number and
 // the final rendered value can never disagree with the live catalog stats.
@@ -378,6 +401,34 @@ function LiveHeroEmbed({ onBrowse }: { onBrowse: () => void }) {
       onClick={onBrowse}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") onBrowse();
+      }}
+      // Slight perspective tilt toward the pointer; snaps flat on leave.
+      onMouseMove={(event) => {
+        const box = boxRef.current;
+        if (!box) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          return;
+        }
+        const rect = box.getBoundingClientRect();
+        gsap.to(box, {
+          rotateX: ((event.clientY - rect.top) / rect.height - 0.5) * -5,
+          rotateY: ((event.clientX - rect.left) / rect.width - 0.5) * 5,
+          transformPerspective: 1000,
+          duration: 0.45,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }}
+      onMouseLeave={() => {
+        const box = boxRef.current;
+        if (box) {
+          gsap.to(box, {
+            rotateX: 0,
+            rotateY: 0,
+            duration: 0.6,
+            ease: "power3.out",
+          });
+        }
       }}
       style={{
         position: "relative",
@@ -572,12 +623,77 @@ export function Home({
     return () => trigger.kill();
   }, []);
 
+  // Marquee reacts to scroll: GSAP takes over the CSS keyframe loop so fast
+  // scrolling spins the logo belt up briefly before it settles back to
+  // cruising speed. Hover still pauses it.
+  const marqueeTrackRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const track = marqueeTrackRef.current;
+    if (!track) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    track.style.animation = "none";
+    const belt = gsap.to(track, {
+      xPercent: -50,
+      ease: "none",
+      duration: 30,
+      repeat: -1,
+    });
+    const carousel = track.parentElement;
+    const pause = () =>
+      gsap.to(belt, { timeScale: 0, duration: 0.4, overwrite: true });
+    const resume = () =>
+      gsap.to(belt, { timeScale: 1, duration: 0.4, overwrite: true });
+    carousel?.addEventListener("mouseenter", pause);
+    carousel?.addEventListener("mouseleave", resume);
+    const trigger = ScrollTrigger.create({
+      onUpdate: (self) => {
+        const boost = 1 + Math.min(Math.abs(self.getVelocity()) / 700, 2.5);
+        gsap.to(belt, {
+          timeScale: boost,
+          duration: 0.2,
+          overwrite: true,
+          onComplete: () =>
+            gsap.to(belt, { timeScale: 1, duration: 1.2, overwrite: true }),
+        });
+      },
+    });
+    return () => {
+      trigger.kill();
+      belt.kill();
+      carousel?.removeEventListener("mouseenter", pause);
+      carousel?.removeEventListener("mouseleave", resume);
+      track.style.animation = "";
+      gsap.set(track, { xPercent: 0 });
+    };
+  }, []);
+
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
   // the stagger re-arms once the async previews actually exist.
-  useRevealOnScroll(storiesRef, { stagger: "article", key: apps.length });
+  // Desktop: the three stories pin and swap in place (scrollytelling); the
+  // plain stagger + parallax stack stays for mobile, where pinning cramps.
+  const storiesStageRef = useRef<HTMLDivElement>(null);
+  usePinnedSwap(storiesStageRef, {
+    selector: "article",
+    key: apps.length,
+    disabled: isMobile,
+  });
+  useRevealOnScroll(storiesRef, {
+    stagger: "article",
+    key: apps.length,
+    disabled: !isMobile,
+  });
   // Story media drifts a few px against the scroll — depth without a camera.
-  useParallaxDrift(storiesRef, { selector: "[data-parallax]", key: apps.length });
+  useParallaxDrift(storiesRef, {
+    selector: "[data-parallax]",
+    key: apps.length,
+    disabled: !isMobile,
+  });
+  // Section headings ride up word by word as they enter.
+  useWordRise(storiesRef);
+  useWordRise(platformRef);
+  useWordRise(galleryRef);
+  useWordRise(ctaRef);
   useRevealOnScroll(platformRef, { stagger: "article", key: apps.length });
   useRevealOnScroll(galleryRef, { stagger: "figure", key: apps.length });
   useRevealOnScroll(proofRef, { stagger: "[data-stat]", key: stats[0].n });
@@ -839,7 +955,7 @@ export function Home({
           aria-label="Products in the Vitrines research catalog"
           style={{ paddingBlock: isMobile ? 20 : 24 }}
         >
-          <div className="home-logo-carousel__track">
+          <div ref={marqueeTrackRef} className="home-logo-carousel__track">
             {[0, 1].map((group) => (
               <div
                 key={group}
@@ -888,11 +1004,14 @@ export function Home({
                   letterSpacing: "-0.045em",
                 }}
               >
-                Evidence that works alongside you, not after you.
+                <SplitWords text="Evidence that works alongside you, not after you." />
               </Heading>
             </div>
           </div>
-          <div style={{ display: "grid", gap: isMobile ? 72 : 108 }}>
+          <div
+            ref={storiesStageRef}
+            style={{ display: "grid", gap: isMobile ? 72 : 108 }}
+          >
             {STORIES.map((story, index) => (
               <article
                 key={story.title}
@@ -1010,7 +1129,7 @@ export function Home({
                     letterSpacing: "-0.045em",
                   }}
                 >
-                  A full product research platform.
+                  <SplitWords text="A full product research platform." />
                 </Heading>
               </div>
             </div>
@@ -1148,7 +1267,7 @@ export function Home({
                     letterSpacing: "-0.045em",
                   }}
                 >
-                  Patterns found in real products.
+                  <SplitWords text="Patterns found in real products." />
                 </Heading>
               </div>
             </div>
@@ -1294,7 +1413,7 @@ export function Home({
                 letterSpacing: "-0.05em",
               }}
             >
-              Your next decision starts here.
+              <SplitWords text="Your next decision starts here." />
             </Heading>
             <div style={{ margin: "16px auto 30px", maxWidth: 580 }}>
               <Text type="large" color="secondary">

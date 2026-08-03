@@ -4472,6 +4472,21 @@ body {
   }
 }
 
+/* Scroll-triggered variant of the word clip: no CSS animation or offset — the
+   initial transform and the rise are both applied by useWordRise, so the text
+   is fully visible without JS and under reduced motion. */
+.hm-word-scroll {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.hm-word-scroll > span {
+  display: inline-block;
+}
+
 /* Ambient ground: two soft glows drifting very slowly behind the hero and the
    closing CTA. Decoration only — near-threshold opacity, huge blur, no
    pointer events. The rest of the page already moves; the background only
