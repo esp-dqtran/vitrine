@@ -15,6 +15,8 @@ import {
   Text,
   useMediaQuery,
 } from "@astryxdesign/core";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
 import { useRevealOnScroll } from "./useRevealOnScroll";
@@ -132,6 +134,13 @@ const STORIES = [
   },
 ];
 
+// One line of context per headline stat, same order as the stats array.
+const STAT_DETAILS = [
+  "real products, captured across web, iOS and Android",
+  "whole journeys kept in order, not hero shots",
+  "patterns preserved in their real context",
+];
+
 const CAPABILITIES = [
   {
     eyebrow: "SEARCH",
@@ -233,6 +242,55 @@ function PromptSearch({
         clickAction={runSearch}
       />
     </form>
+  );
+}
+
+// Headline stat that counts up from zero the first time it scrolls into view.
+// Parses its own display string ("1,190", "422K") so the animated number and
+// the final rendered value can never disagree with the live catalog stats.
+function StatNumber({ value, isMobile }: { value: string; isMobile: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const match = value.match(/^([\d.,]+)(.*)$/);
+    if (!match) return;
+    const target = parseFloat(match[1].replace(/,/g, ""));
+    const suffix = match[2];
+    const proxy = { n: 0 };
+    const trigger = ScrollTrigger.create({
+      trigger: el,
+      start: "top 92%",
+      once: true,
+      onEnter: () =>
+        gsap.to(proxy, {
+          n: target,
+          duration: 1.4,
+          ease: "power2.out",
+          onUpdate: () => {
+            el.textContent =
+              Math.round(proxy.n).toLocaleString("en-US") + suffix;
+          },
+        }),
+    });
+    return () => trigger.kill();
+  }, [value]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        fontSize: isMobile ? 56 : 84,
+        lineHeight: 0.95,
+        fontWeight: 800,
+        letterSpacing: "-0.055em",
+        fontVariantNumeric: "tabular-nums",
+      }}
+    >
+      {value}
+    </div>
   );
 }
 
@@ -461,10 +519,12 @@ export function Home({
   const proofRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   useRevealOnScroll(heroMediaRef);
-  useRevealOnScroll(storiesRef);
-  useRevealOnScroll(platformRef);
-  useRevealOnScroll(galleryRef);
-  useRevealOnScroll(proofRef);
+  // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
+  // the stagger re-arms once the async previews actually exist.
+  useRevealOnScroll(storiesRef, { stagger: "article", key: apps.length });
+  useRevealOnScroll(platformRef, { stagger: "article", key: apps.length });
+  useRevealOnScroll(galleryRef, { stagger: "figure", key: apps.length });
+  useRevealOnScroll(proofRef, { stagger: "[data-stat]", key: stats[0].n });
   useRevealOnScroll(ctaRef);
 
   return (
@@ -1075,39 +1135,49 @@ export function Home({
             paddingBottom: isMobile ? 72 : 104,
           }}
         >
+          <div style={{ textAlign: "center", marginBottom: isMobile ? 34 : 54 }}>
+            <Text type="supporting" color="secondary">
+              THE CATALOG, RIGHT NOW
+            </Text>
+          </div>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: 1,
-              background: "var(--color-border)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 18,
-              overflow: "hidden",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))",
             }}
           >
-            {stats.map((stat) => (
+            {stats.map((stat, index) => (
               <div
                 key={stat.label}
+                data-stat
                 style={{
-                  padding: isMobile ? "25px 8px" : "36px 28px",
+                  padding: isMobile ? "26px 8px" : "10px 44px",
                   textAlign: "center",
-                  background: "var(--color-background-body)",
+                  borderLeft:
+                    !isMobile && index > 0
+                      ? "1px solid var(--color-border)"
+                      : undefined,
+                  borderTop:
+                    isMobile && index > 0
+                      ? "1px solid var(--color-border)"
+                      : undefined,
                 }}
               >
+                <StatNumber value={stat.n} isMobile={isMobile} />
                 <div
                   style={{
-                    fontSize: isMobile ? 29 : 46,
-                    lineHeight: 1,
-                    fontWeight: 800,
-                    letterSpacing: "-0.05em",
+                    marginTop: 12,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                   }}
                 >
-                  {stat.n}
+                  {stat.label}
                 </div>
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 7, maxWidth: 260, marginInline: "auto" }}>
                   <Text type="supporting" color="secondary">
-                    {stat.label}
+                    {STAT_DETAILS[index]}
                   </Text>
                 </div>
               </div>
