@@ -13,12 +13,17 @@ import { ThemeModeProvider, useThemeMode } from './theme';
 import { ApplicationToastProvider } from './components/ApplicationToast.tsx';
 import { decideRootRoute } from './routeDecision.ts';
 import type { Route } from './router.ts';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/500.css';
+import '@fontsource/figtree/600.css';
+import '@fontsource/figtree/700.css';
 import './styles.css';
 import './referenceDiscovery.css';
 import './flowPreviewDialog.css';
 import './projectsWorkspace.css';
 import './components/AstryxDropdown.css';
 import './components/AstryxModal.css';
+import './productTypography.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.

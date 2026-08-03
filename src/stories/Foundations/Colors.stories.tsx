@@ -1,90 +1,105 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Badge } from '@astryxdesign/core';
+import { Code, Heading, Text } from '@astryxdesign/core';
+import {
+  FOUNDATION_TOKEN_CONTRACT,
+  UI_FOUNDATION_STANDARD,
+} from '../../vitrine/uiFoundationStandard';
 
 const meta = {
   title: 'Foundations/Color',
   tags: ['autodocs'],
-  parameters: { docs: { description: { component: 'Tokens resolve live from the Neutral theme — toggle the toolbar Theme switch to watch every value adapt to dark mode.' } } },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'The 13 semantic color roles available to Vitrines product UI. Toggle the Storybook theme to verify every role in light and dark modes.',
+      },
+    },
+  },
 } satisfies Meta;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function Swatch({ token, name, hex }: { token: string; name: string; hex: string }) {
+const LABELS: Record<(typeof FOUNDATION_TOKEN_CONTRACT.color)[number], string> = {
+  '--vitrine-color-page': 'Page',
+  '--vitrine-color-surface': 'Surface',
+  '--vitrine-color-surface-muted': 'Muted surface',
+  '--vitrine-color-border': 'Border',
+  '--vitrine-color-border-emphasized': 'Emphasized border',
+  '--vitrine-color-text-primary': 'Primary text',
+  '--vitrine-color-text-secondary': 'Secondary text',
+  '--vitrine-color-text-disabled': 'Disabled text',
+  '--vitrine-color-action-primary': 'Primary action',
+  '--vitrine-color-on-action-primary': 'On primary action',
+  '--vitrine-color-status-success': 'Success',
+  '--vitrine-color-status-warning': 'Warning',
+  '--vitrine-color-status-error': 'Error',
+};
+
+function Swatch({ token }: { token: (typeof FOUNDATION_TOKEN_CONTRACT.color)[number] }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <article
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--spacing-3)',
+        padding: 'var(--spacing-4)',
+        border: 'var(--border-width) solid var(--color-border)',
+        borderRadius: 'var(--radius-container)',
+        background: 'var(--color-background-surface)',
+      }}
+    >
       <div
+        aria-label={`${LABELS[token]} swatch`}
         style={{
-          height: 56,
+          height: 'var(--spacing-12)',
+          border: 'var(--border-width) solid var(--color-border-emphasized)',
           borderRadius: 'var(--radius-element)',
-          background: `var(--color-${token})`,
-          border: '1px solid var(--color-border)',
+          background: `var(${token})`,
         }}
       />
-      <div>
-        <div style={{ fontSize: 12.5, fontWeight: 600 }}>{name}</div>
-        <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)', fontFamily: "'JetBrains Mono', monospace" }}>{hex}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
+        <Text type="label">{LABELS[token]}</Text>
+        <Code>{token}</Code>
       </div>
-    </div>
+    </article>
   );
 }
 
-function Grid({ items }: { items: [string, string, string][] }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 18 }}>
-      {items.map(([token, name, hex]) => (
-        <Swatch key={token} token={token} name={name} hex={hex} />
-      ))}
-    </div>
-  );
-}
-
-export const Surfaces: Story = {
+export const ProductPalette: Story = {
+  name: 'Product palette',
   render: () => (
-    <Grid
-      items={[
-        ['background-body', 'Body', '#f1f1f1'],
-        ['background-surface', 'Surface', '#ffffff'],
-        ['background-card', 'Card', '#ffffff'],
-        ['background-muted', 'Muted', '#f1f1f1'],
-        ['border', 'Border', '#ebebeb'],
-        ['border-emphasized', 'Border strong', '#d4d4d4'],
-      ]}
-    />
-  ),
-};
-
-export const Text: Story = {
-  render: () => (
-    <Grid
-      items={[
-        ['text-primary', 'Primary', '#171717'],
-        ['text-secondary', 'Secondary', '#737373'],
-        ['text-disabled', 'Disabled', '#a3a3a3'],
-      ]}
-    />
-  ),
-};
-
-export const Status: Story = {
-  render: () => (
-    <Grid
-      items={[
-        ['success', 'Success', '#007004'],
-        ['warning', 'Warning', '#745b00'],
-        ['error', 'Error', '#a50c25'],
-      ]}
-    />
-  ),
-};
-
-export const CategoricalHues: Story = {
-  name: 'Categorical hues',
-  render: () => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-      {['blue', 'cyan', 'teal', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'gray'].map((c) => (
-        <Badge key={c} variant={c as never} label={c[0].toUpperCase() + c.slice(1)} />
-      ))}
-    </div>
+    <main
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--spacing-8)',
+        padding: 'var(--spacing-8)',
+        color: 'var(--color-text-primary)',
+        fontFamily: 'var(--font-family-body)',
+      }}
+    >
+      <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', maxWidth: '72ch' }}>
+        <Heading level={1} type="display-3">13 roles, not 149 choices</Heading>
+        <Text type="large" color="secondary">
+          Product screens use this compact semantic palette, extracted from the Vitrines App detail screen. Success and warning stay neutral; error remains the chromatic exception.
+        </Text>
+      </header>
+      <section
+        aria-label="Vitrines product color roles"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+          gap: 'var(--spacing-4)',
+        }}
+      >
+        {FOUNDATION_TOKEN_CONTRACT.color.map((token) => <Swatch key={token} token={token} />)}
+      </section>
+      <Text type="supporting" color="secondary">
+        {UI_FOUNDATION_STANDARD.specializedColorPolicy}
+      </Text>
+    </main>
   ),
 };

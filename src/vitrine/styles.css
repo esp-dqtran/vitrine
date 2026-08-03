@@ -1,27 +1,48 @@
-@import '@astryxdesign/core/reset.css';
-@import '@astryxdesign/core/astryx.css';
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "./uiFoundation.css";
+
+:root {
+  --color-border-subtle: var(--vitrine-color-border);
+  --color-background-raised: var(--vitrine-color-surface);
+  --color-text-danger: var(--vitrine-color-status-error);
+  --color-text-success: var(--vitrine-color-status-success);
+  --project-canvas-text: var(--vitrine-color-text-primary);
+  --project-canvas-muted-text: var(--vitrine-color-text-secondary);
+  --project-canvas-muted-strong: var(--vitrine-color-text-secondary);
+  --project-canvas-disabled-text: var(--vitrine-color-text-disabled);
+  --project-canvas-bg: var(--vitrine-color-page);
+  --project-canvas-surface: var(--vitrine-color-surface);
+  --project-canvas-muted-surface: var(--vitrine-color-surface-muted);
+  --project-canvas-border: var(--vitrine-color-border);
+  --project-canvas-surface-translucent: color-mix(in srgb, var(--vitrine-color-surface) 96%, transparent);
+  --project-canvas-surface-translucent-strong: color-mix(in srgb, var(--vitrine-color-surface) 98%, transparent);
+}
 
 .vitrine-page {
   min-height: 100vh;
   background: var(--color-background-body);
   color: var(--color-text-primary);
-  font-family: var(--reference-font-family, 'Figtree', system-ui, sans-serif);
+  font-family: var(--font-family-body);
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-leading);
 }
 
-button[data-variant='primary'] {
-  border-color: #fff !important;
-  background: #fff !important;
-  color: #111 !important;
+button[data-variant="primary"] {
+  border-color: var(--vitrine-color-action-primary) !important;
+  background: var(--vitrine-color-action-primary) !important;
+  color: var(--vitrine-color-on-action-primary) !important;
 }
 
-button[data-variant='primary']:hover:not(:disabled) {
-  border-color: #f1f1f1 !important;
-  background: #f1f1f1 !important;
+button[data-variant="primary"]:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--vitrine-color-action-primary) 94%, var(--vitrine-color-on-action-primary)) !important;
+  background: color-mix(in srgb, var(--vitrine-color-action-primary) 94%, var(--vitrine-color-on-action-primary)) !important;
 }
 
-button[data-variant='primary']:active:not(:disabled) {
-  border-color: #e5e5e5 !important;
-  background: #e5e5e5 !important;
+button[data-variant="primary"]:active:not(:disabled) {
+  border-color: color-mix(in srgb, var(--vitrine-color-action-primary) 90%, var(--vitrine-color-on-action-primary)) !important;
+  background: color-mix(in srgb, var(--vitrine-color-action-primary) 90%, var(--vitrine-color-on-action-primary)) !important;
 }
 
 .ds-page {

@@ -1,0 +1,207 @@
+/*
+ * Product-screen typography contract.
+ *
+ * Figtree is the product family and the App Screen detail dialog is the measured
+ * hierarchy source. This layer is loaded after route styles so every application
+ * screen shares its compact scale. Editorial overview copy and evidence/document
+ * canvases keep their own type.
+ */
+
+[data-application-surface="true"] {
+  color: var(--vitrine-color-text-primary);
+  font: var(--vitrine-type-body);
+}
+
+[data-application-surface="true"]
+  :where(h1):not(
+    .reference-detail__heading *,
+    .project-files__hero-heading *,
+    .project-document__title,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-title) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where(h2, h3):not(
+    .reference-discovery__taxonomy *,
+    .reference-detail__heading *,
+    .project-files__hero-heading *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-heading) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where(h4, h5, h6, label, legend):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-label) !important;
+  letter-spacing: .2px !important;
+}
+
+[data-application-surface="true"]
+  :where(p, li, dt, dd, blockquote, input, textarea, select):not(
+    .reference-detail__heading *,
+    .project-files__hero-heading *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-body) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where(button, [role="button"], [role="tab"], [role="menuitem"]):not(
+    .reference-discovery__taxonomy *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-label) !important;
+  letter-spacing: .2px !important;
+}
+
+[data-application-surface="true"]
+  :where(
+    button[data-variant="primary"],
+    [role="button"][data-variant="primary"]
+  ):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-action) !important;
+  letter-spacing: .2px !important;
+}
+
+[data-application-surface="true"]
+  :where(small, time, figcaption):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-supporting) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where(
+    [class*="__meta"],
+    [class*="__metadata"],
+    [class*="__caption"],
+    [class*="__count"],
+    [class*="__helper"],
+    [class*="__hint"]
+  ):not(
+    .reference-detail__metadata,
+    .reference-detail__metadata *,
+    .project-files__hero-metadata,
+    .project-files__hero-metadata *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-detail) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where([class*="__brand"] strong):not(
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-title) !important;
+  letter-spacing: normal !important;
+}
+
+[data-application-surface="true"]
+  :where([class*="__copy"] strong, [class*="__identity"] strong):not(
+    .reference-detail__metadata *,
+    .project-files__hero-metadata *,
+    .project-document__editor *,
+    .project-canvas-document-editor *,
+    .document-flow *,
+    .flow-preview-dialog *,
+    .excalidraw *
+  ) {
+  font: var(--vitrine-type-heading) !important;
+  letter-spacing: normal !important;
+}
+
+/* Named presentation exceptions keep their measured editorial hierarchy. */
+.reference-detail__heading h1 {
+  font: var(--vitrine-presentation-display) !important;
+  letter-spacing: -0.045em !important;
+}
+
+.reference-detail__heading p {
+  font: var(--vitrine-presentation-lead) !important;
+  letter-spacing: -0.035em !important;
+}
+
+.project-files__hero-heading h1 {
+  font: var(--vitrine-presentation-display) !important;
+  letter-spacing: -0.045em !important;
+}
+
+.project-files__hero-heading p {
+  font: var(--vitrine-presentation-lead) !important;
+  letter-spacing: -0.025em !important;
+}
+
+/* Admin is rendered outside ApplicationSurface but follows the same product scale. */
+:is([data-admin-dashboard="true"], .admin-users-state) {
+  font: var(--vitrine-type-body);
+}
+
+:is([data-admin-dashboard="true"], .admin-users-state) h1 {
+  font: var(--vitrine-type-title) !important;
+  letter-spacing: normal !important;
+}
+
+:is([data-admin-dashboard="true"], .admin-users-state) :is(h2, h3) {
+  font: var(--vitrine-type-heading) !important;
+  letter-spacing: normal !important;
+}
+
+:is([data-admin-dashboard="true"], .admin-users-state) :is(p, input, select, textarea) {
+  font: var(--vitrine-type-body) !important;
+}
+
+:is([data-admin-dashboard="true"], .admin-users-state) :is(button, [role="button"], [role="tab"]) {
+  font: var(--vitrine-type-label) !important;
+  letter-spacing: .2px !important;
+}
+
+:is([data-admin-dashboard="true"], .admin-users-state) button[data-variant="primary"] {
+  font: var(--vitrine-type-action) !important;
+}

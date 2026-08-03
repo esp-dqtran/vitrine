@@ -2,6 +2,11 @@ import type { Preview } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 import '@astryxdesign/core/reset.css';
 import '@astryxdesign/core/astryx.css';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/500.css';
+import '@fontsource/figtree/600.css';
+import '@fontsource/figtree/700.css';
+import '../src/vitrine/uiFoundation.css';
 
 const preview: Preview = {
   parameters: {
@@ -9,10 +14,28 @@ const preview: Preview = {
     docs: {
       toc: true,
     },
+    options: {
+      storySort: {
+        order: [
+          'Design System',
+          'Foundations',
+          'Actions',
+          'Inputs',
+          'Selection',
+          'Content',
+          'Layout',
+          'Navigation',
+          'Overlays',
+          'Feedback',
+          'DataDisplay',
+          'Disclosure',
+        ],
+      },
+    },
   },
   globalTypes: {
     theme: {
-      description: 'Astryx color scheme',
+      description: 'Vitrines color scheme',
       toolbar: {
         title: 'Theme',
         icon: 'circlehollow',
@@ -37,7 +60,7 @@ const preview: Preview = {
       return (
         <div
           style={{
-            fontFamily: "'Figtree', system-ui, sans-serif",
+            fontFamily: 'var(--font-family-body)',
             background: 'var(--color-background-body)',
             color: 'var(--color-text-primary)',
             minHeight: '100%',
