@@ -1207,9 +1207,21 @@ export function Home({
               span={isMobile ? 1 : 2}
               height={isMobile ? 300 : 480}
             >
-              <div style={{ maxWidth: 620, margin: "0 auto", display: "grid", gap: 12 }}>
+              {/* Fills the whole cell: tiles stretch to the available height
+                  (top-anchored cover crop — vignette, not reference), caption
+                  pinned beneath. */}
+              <div
+                style={{
+                  height: isMobile ? 214 : 394,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}
+              >
                 <div
                   style={{
+                    flex: 1,
+                    minHeight: 0,
                     display: "grid",
                     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                     gap: 10,
@@ -1231,7 +1243,13 @@ export function Home({
                         alt={`Resetting password, captured step ${step + 1}`}
                         loading="lazy"
                         decoding="async"
-                        style={{ display: "block", width: "100%", height: "auto" }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          objectPosition: "top center",
+                        }}
                       />
                       <span
                         aria-hidden="true"
@@ -1271,32 +1289,90 @@ export function Home({
               )}
             </BentoCell>
             <BentoCell label="Research projects" onAction={onLogin} height={240}>
-              {/* Drawn vignette: an evidence note with its citation chip. */}
-              <div style={{ display: "grid", gap: 9, maxWidth: 250, margin: "10px auto 0" }}>
-                {[0.9, 0.72, 0.55].map((w) => (
+              {/* The documents feature in miniature: a project document with
+                  prose and an embedded flow block, the way real docs cite
+                  captured evidence inline. */}
+              <div
+                style={{
+                  maxWidth: 270,
+                  margin: "0 auto",
+                  borderRadius: 12,
+                  border: "1px solid var(--color-border)",
+                  background: "#17181b",
+                  padding: 13,
+                  display: "grid",
+                  gap: 8,
+                  alignContent: "start",
+                }}
+              >
+                <div
+                  style={{
+                    height: 11,
+                    width: "58%",
+                    borderRadius: 5,
+                    background:
+                      "color-mix(in srgb, var(--color-border) 30%, #c7ccd4)",
+                  }}
+                />
+                {[0.94, 0.7].map((w) => (
                   <div
                     key={w}
                     style={{
-                      height: 9,
+                      height: 7,
                       width: `${w * 100}%`,
-                      borderRadius: 5,
-                      background: "color-mix(in srgb, var(--color-border) 62%, #9aa0aa)",
+                      borderRadius: 4,
+                      background:
+                        "color-mix(in srgb, var(--color-border) 68%, #9aa0aa)",
                     }}
                   />
                 ))}
                 <div
                   style={{
-                    justifySelf: "start",
-                    marginTop: 5,
-                    padding: "5px 10px",
-                    borderRadius: 999,
+                    marginTop: 3,
+                    borderRadius: 9,
                     border: "1px solid var(--color-border)",
-                    fontSize: 11,
-                    fontWeight: 650,
-                    color: "var(--color-text-primary)",
+                    background: "#1d1f24",
+                    padding: 8,
+                    display: "grid",
+                    gap: 7,
                   }}
                 >
-                  ⌘ 1Password · step 3 of 12
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 6,
+                    }}
+                  >
+                    {FLOW_VIGNETTE.screens.map((src, step) => (
+                      <div
+                        key={src}
+                        style={{
+                          height: 42,
+                          borderRadius: 6,
+                          overflow: "hidden",
+                          border: "1px solid var(--color-border)",
+                        }}
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            objectPosition: "top center",
+                            opacity: step === 2 ? 0.85 : 1,
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 10.5, fontWeight: 650, opacity: 0.8 }}>
+                    ⌘ 1Password · Resetting password · steps 1–3 of 12
+                  </div>
                 </div>
               </div>
             </BentoCell>
@@ -1320,29 +1396,132 @@ export function Home({
               </div>
             </BentoCell>
             <BentoCell label="Living canvas" onAction={onLogin} height={240}>
-              {/* Drawn vignette: three cards settling on a canvas. */}
-              <div style={{ position: "relative", height: 120, margin: "8px auto 0", maxWidth: 240 }}>
-                {[
-                  { x: 0, y: 16, r: -5 },
-                  { x: 76, y: 0, r: 3 },
-                  { x: 148, y: 22, r: -2 },
-                ].map((c) => (
-                  <div
-                    key={c.x}
-                    style={{
-                      position: "absolute",
-                      left: c.x,
-                      top: c.y,
-                      width: 84,
-                      height: 92,
-                      borderRadius: 10,
-                      border: "1px solid var(--color-border)",
-                      background: "#17181b",
-                      transform: `rotate(${c.r}deg)`,
-                      boxShadow: "0 12px 30px rgba(0,0,0,.35)",
-                    }}
+              {/* Drawn vignette: two pinned captures, a note, a connector and
+                  a collaborator's cursor — the canvas mid-session. */}
+              <div
+                style={{
+                  position: "relative",
+                  height: 132,
+                  margin: "4px auto 0",
+                  maxWidth: 260,
+                }}
+              >
+                <svg
+                  aria-hidden="true"
+                  width="260"
+                  height="132"
+                  style={{ position: "absolute", inset: 0 }}
+                >
+                  <path
+                    d="M84 60 C 118 30, 146 34, 172 52"
+                    fill="none"
+                    stroke="var(--color-border)"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 4"
                   />
-                ))}
+                </svg>
+                {[
+                  { x: 0, y: 18, r: -5, thumb: 0 },
+                  { x: 172, y: 26, r: 2, thumb: 1 },
+                ].map((card) => {
+                  const src = apps[card.thumb]?.screens[0]?.thumbnailUrl;
+                  return (
+                    <div
+                      key={card.x}
+                      style={{
+                        position: "absolute",
+                        left: card.x,
+                        top: card.y,
+                        width: 84,
+                        height: 96,
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        border: "1px solid var(--color-border)",
+                        background: "#17181b",
+                        transform: `rotate(${card.r}deg)`,
+                        boxShadow: "0 12px 30px rgba(0,0,0,.35)",
+                      }}
+                    >
+                      {src && (
+                        <img
+                          src={src}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            objectPosition: "top center",
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+                {/* The note card between the two captures. */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 88,
+                    top: 0,
+                    width: 80,
+                    height: 66,
+                    borderRadius: 9,
+                    border: "1px solid var(--color-border)",
+                    background: "#1d1f24",
+                    transform: "rotate(3deg)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,.35)",
+                    padding: 9,
+                    display: "grid",
+                    gap: 6,
+                    alignContent: "start",
+                  }}
+                >
+                  {[0.85, 0.6, 0.72].map((w) => (
+                    <div
+                      key={w}
+                      style={{
+                        height: 5,
+                        width: `${w * 100}%`,
+                        borderRadius: 3,
+                        background:
+                          "color-mix(in srgb, var(--color-border) 55%, #9aa0aa)",
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Collaborator cursor + comment. */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 96,
+                    top: 84,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  <svg aria-hidden="true" width="13" height="17" viewBox="0 0 12 19">
+                    <path
+                      d="M1 1l10 9.5-4.6.3 2.8 6-2.4 1.1-2.7-6L1 15z"
+                      fill="#7aa2ff"
+                    />
+                  </svg>
+                  <span
+                    style={{
+                      padding: "3px 9px",
+                      borderRadius: 999,
+                      background: "#7aa2ff",
+                      color: "#0b0d12",
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Why 8 steps?
+                  </span>
+                </div>
               </div>
             </BentoCell>
             <BentoCell label="Shareable briefs" onAction={onLogin} height={240}>
