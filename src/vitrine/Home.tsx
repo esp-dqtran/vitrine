@@ -262,18 +262,28 @@ function PromptSearch({
 // Headline stat that counts up from zero the first time it scrolls into view.
 // Parses its own display string ("1,190", "422K") so the animated number and
 // the final rendered value can never disagree with the live catalog stats.
-function StatNumber({ value, isMobile }: { value: string; isMobile: boolean }) {
+// Deliberately not behind the reduced-motion guard: a ticking number is a
+// content change, not vestibular motion, and it is this band's entire point.
+function StatNumber({
+  value,
+  index,
+  isMobile,
+}: {
+  value: string;
+  index: number;
+  isMobile: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const match = value.match(/^([\d.,]+)(.*)$/);
     if (!match) return;
     const target = parseFloat(match[1].replace(/,/g, ""));
     const suffix = match[2];
     const proxy = { n: 0 };
+    el.textContent = `0${suffix}`;
     const trigger = ScrollTrigger.create({
       trigger: el,
       start: "top 92%",
@@ -281,8 +291,10 @@ function StatNumber({ value, isMobile }: { value: string; isMobile: boolean }) {
       onEnter: () =>
         gsap.to(proxy, {
           n: target,
-          duration: 1.4,
-          ease: "power2.out",
+          duration: 2,
+          // One after another, left to right — reads as the catalog tallying.
+          delay: index * 0.18,
+          ease: "power3.out",
           onUpdate: () => {
             el.textContent =
               Math.round(proxy.n).toLocaleString("en-US") + suffix;
@@ -290,7 +302,7 @@ function StatNumber({ value, isMobile }: { value: string; isMobile: boolean }) {
         }),
     });
     return () => trigger.kill();
-  }, [value]);
+  }, [value, index]);
 
   return (
     <div
@@ -1193,7 +1205,7 @@ export function Home({
                       : undefined,
                 }}
               >
-                <StatNumber value={stat.n} isMobile={isMobile} />
+                <StatNumber value={stat.n} index={index} isMobile={isMobile} />
                 <div
                   style={{
                     marginTop: 12,
