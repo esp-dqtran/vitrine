@@ -3,8 +3,10 @@ import type { Server } from "node:http";
 import { test } from "node:test";
 import express from "express";
 
-import type { ProjectDocumentStore } from "../../../src/projectDocumentStore.ts";
-import { mountProjectDocumentRoutes } from "./projectDocuments.ts";
+import {
+  mountProjectDocumentRoutes,
+  type ProjectDocumentRouteDependencies,
+} from "./projectDocuments.ts";
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
 const user = { id: 7, email: "po@example.com", role: "user" as const };
@@ -22,8 +24,7 @@ const document = {
 };
 
 async function serve(
-  store: Pick<ProjectDocumentStore,
-    "ensureDocument" | "getDocument" | "updateDocument" | "listComments" | "addComment" | "resolveComment">,
+  store: ProjectDocumentRouteDependencies["store"],
   enabled = true,
 ): Promise<{ base: string; server: Server }> {
   const app = express();
@@ -103,6 +104,10 @@ test("updates page chrome and manages the page discussion", async (t) => {
     body: "Clarify the approval step",
     authorUserId: 7,
     authorEmail: user.email,
+    blockId: null,
+    quote: null,
+    parentCommentId: null,
+    canDelete: true,
     resolvedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -205,4 +210,72 @@ test("validates document metadata and discussion payload boundaries", async (t) 
   );
   assert.equal((await resolve("0", { resolved: true })).status, 400);
   assert.equal((await resolve("9", { resolved: "yes" })).status, 400);
+});
+
+test("creates anchored threads and deletes only through the document comment route", async (t) => {
+  const calls: Array<{ operation: string; value?: unknown }> = [];
+  const contextualComment = {
+    id: 12,
+    body: "Review this label",
+    authorUserId: user.id,
+    authorEmail: user.email,
+    blockId: "block-1",
+    quote: "Selected label",
+    parentCommentId: null,
+    canDelete: true,
+    resolvedAt: null,
+    createdAt: "2026-08-04T00:00:00.000Z",
+    updatedAt: "2026-08-04T00:00:00.000Z",
+  };
+  const store: ProjectDocumentRouteDependencies["store"] = {
+    ensureDocument: async () => document,
+    getDocument: async () => document,
+    updateDocument: async () => document,
+    listComments: async () => [],
+    addComment: async () => undefined,
+    resolveComment: async () => undefined,
+    listCommentsById: async () => [],
+    async addCommentById(_userId, _projectId, _documentId, input) {
+      calls.push({ operation: "add", value: input });
+      return input.parentCommentId
+        ? { ...contextualComment, id: 13, parentCommentId: input.parentCommentId }
+        : contextualComment;
+    },
+    resolveCommentById: async () => contextualComment,
+    async deleteCommentById(_userId, _projectId, _documentId, commentId) {
+      calls.push({ operation: "delete", value: commentId });
+      return true;
+    },
+  };
+  const { base, server } = await serve(store);
+  t.after(() => close(server));
+  const path = `${base}/research-projects/${PROJECT_ID}/documents/6/comments`;
+
+  const anchored = await fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      body: "Review this label",
+      blockId: "block-1",
+      quote: "Selected label",
+    }),
+  });
+  const reply = await fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ body: "Agreed", parentCommentId: 12 }),
+  });
+  const deleted = await fetch(`${path}/12`, { method: "DELETE" });
+
+  assert.equal(anchored.status, 201);
+  assert.equal(reply.status, 201);
+  assert.equal(deleted.status, 204);
+  assert.deepEqual(calls, [
+    {
+      operation: "add",
+      value: { body: "Review this label", blockId: "block-1", quote: "Selected label" },
+    },
+    { operation: "add", value: { body: "Agreed", parentCommentId: 12 } },
+    { operation: "delete", value: 12 },
+  ]);
 });

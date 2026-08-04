@@ -16,7 +16,7 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
 
   assert.match(component, /aria-label="Document breadcrumb"/);
   assert.match(component, /icon="chevronLeft"/);
-  assert.match(component, /Add comment/);
+  assert.match(component, /Comment on selection/);
   assert.match(component, /Insert from Vitrines/);
   assert.match(component, /insertProjectDocumentEvidenceBlock\(editor\)/);
   assert.match(component, /evidence=\{evidence\}/);
@@ -34,15 +34,25 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
     /new Map\(next\.map\(\(user\) => \[user\.name, user\]\)\)/,
   );
   assert.match(component, /Page width/);
-  assert.match(component, /Page discussion/);
+  assert.match(component, /Contextual review/);
+  assert.match(component, /parentCommentId/);
+  assert.match(component, /deleteProjectDocumentCommentById/);
+  assert.match(component, /label="Reply"/);
+  assert.match(component, /label="Delete"/);
+  assert.match(component, /editor\.getSelectedText\(\)/);
   assert.match(component, /aria-label="Document settings"/);
   assert.match(component, /project-document-action--favorite/);
   assert.match(component, /project-document-action--share/);
   assert.match(component, /project-document-actions-menu__mobile-action/);
   assert.match(
     component,
-    /data-testid="project-document-connection"[\s\S]*?role="status"[\s\S]*?aria-live="polite"/,
+    /data-testid="project-document-connection"[\s\S]*?role="status"[\s\S]*?aria-live="polite"[\s\S]*?aria-label=\{saveStatusLabel\[displayedSaveState\]\}/,
   );
+  assert.match(component, /onStateless: \(\{ payload \}\) =>/);
+  assert.match(component, /projectDocumentStateVectorCoversDocument/);
+  assert.match(component, /<DocumentSaveIcon state=\{displayedSaveState\} \/>/);
+  assert.doesNotMatch(component, /\{connectionLabel\}/);
+  assert.match(css, /\.project-document__connection--saved/);
   assert.match(component, /project-document-discussion__error/);
   assert.match(component, /label="Retry"/);
   assert.match(component, /editable=\{document\.role === "editor"\}/);
@@ -70,7 +80,7 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
     css,
     /\.project-document-comment p[\s\S]*color: var\(--project-document-text/,
   );
-  assert.match(css, /--project-document-surface:\s*light-dark\(/);
+  assert.match(css, /--project-document-surface:\s*var\(--vitrine-color-surface\)/);
   assert.match(
     css,
     /\.project-document__editor \.bn-container\[data-color-scheme\][\s\S]*?--bn-colors-editor-background:\s*transparent;/,

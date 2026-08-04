@@ -137,14 +137,6 @@ export async function setAdminUserActive(input: {
          (SELECT status FROM subscriptions WHERE user_id = users.id) AS subscription_status`,
       [input.userId, input.active],
     );
-    if (!input.active) {
-      await client.query(
-        `UPDATE sessions
-         SET revoked_at = now(), revoked_reason = 'account_disabled'
-         WHERE user_id = $1 AND revoked_at IS NULL`,
-        [input.userId],
-      );
-    }
     await client.query("COMMIT");
     return { status: "updated", user: updated.rows[0] };
   } catch (error) {

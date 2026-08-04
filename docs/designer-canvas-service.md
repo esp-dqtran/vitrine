@@ -53,7 +53,7 @@ flowchart LR
   evidence are outside this service.
 - Browser storage remains the offline fallback. It is not a substitute for
   authenticated remote storage.
-- The collaboration service authenticates the `astryx_session` cookie during
+- The collaboration service verifies the JWT in the `astryx_session` cookie during
   WebSocket upgrade and checks the project UUID through the existing owner-
   scoped project store before the socket joins a room.
 - Reliable `scene` messages synchronize document changes. `cursor` messages
@@ -86,7 +86,8 @@ loopback origin. Set `CANVAS_COLLAB_ALLOWED_ORIGINS` to a comma-separated list
 of exact application origins when a stricter local gate is useful. Production
 fails startup unless this value or `APP_URL` supplies an allowed origin. Route
 the same-origin WebSocket path to this service so the browser sends the secure
-Astryx session cookie.
+Vitrines JWT cookie. The gateway must use the same `JWT_SIGNING_SECRET`,
+`JWT_ISSUER`, and `JWT_AUDIENCE` as the API.
 
 The service follows the useful part of `excalidraw-room`—small project rooms and
 opaque scene relay—without inheriting its anonymous access, obsolete Node 12
@@ -104,7 +105,7 @@ not performed by the room server.
    one collaboration gateway replica; the current in-memory room map is a
    deliberate single-replica boundary.
 4. Add project membership roles when collaboration expands beyond multiple
-   sessions owned by the same user. The gateway must consume that shared access
+   devices owned by the same user. The gateway must consume that shared access
    policy rather than creating a second permission system.
 5. Consider an append-only operation log or CRDT only when offline concurrent
    editing is required. Periodic snapshots remain the fast recovery path.

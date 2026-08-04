@@ -61,6 +61,8 @@ test("moodboard mode presents one intake hub and the bounded direction structure
   assert.match(markup, /Set up board/);
   assert.match(markup, />1<\/strong> Keep/);
   assert.match(markup, />2<\/strong> Maybe/);
+  assert.match(markup, /Smart Compose/);
+  assert.match(markup, /Review Smart Compose/);
 });
 
 test("moodboard reference inspector exposes context and explicit decisions", () => {

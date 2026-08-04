@@ -29,7 +29,7 @@ async function serve(): Promise<{ base: string; server: Server }> {
     flows: [],
   };
   const app = createApiApp({
-    resolveSession: async () => ({
+    verifyAuthToken: async () => ({
       id: 1,
       email: "admin@example.com",
       role: "admin" as const,

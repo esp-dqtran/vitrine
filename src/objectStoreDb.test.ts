@@ -139,6 +139,7 @@ test("customer image lookup is app-scoped, entitled, and in the latest published
   assert.deepEqual(captured?.values, [9, "alpha", "0123456789abcdef"]);
   assert.match(captured!.sql, /JOIN platforms p ON p\.id = i\.platform_id/);
   assert.match(captured!.sql, /JOIN apps a ON a\.id = p\.app_id/);
+  assert.match(captured!.sql, /av\.platform = p\.name/);
   assert.match(captured!.sql, /JOIN LATERAL[\s\S]+status = 'published'[\s\S]+ORDER BY av\.version_number DESC[\s\S]+LIMIT 1/);
   assert.match(captured!.sql, /JOIN version_images vi ON vi\.version_id = published\.id AND vi\.image_id = i\.id/);
   assert.match(captured!.sql, /subscriptions|free_app_unlocks/);
@@ -469,5 +470,6 @@ test("legacy lookup returns only image rows that have no object association", as
   assert.deepEqual(captured?.values, ["alpha", "0123456789abcdef"]);
   assert.match(captured!.sql, /i\.object_key IS NULL/);
   assert.match(captured!.sql, /JOIN platforms p[\s\S]+JOIN apps a/);
+  assert.match(captured!.sql, /av\.platform = p\.name/);
   assert.match(captured!.sql, /status = 'published'[\s\S]+JOIN version_images/);
 });

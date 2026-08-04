@@ -134,6 +134,60 @@ test("lists and creates page discussions for document editors", async () => {
   assert.equal(created?.body, "Clarify the approval step");
 });
 
+test("persists contextual thread anchors and limits deletion to the author", async () => {
+  const statements: Array<{ sql: string; values?: readonly unknown[] }> = [];
+  const documentRow = {
+    id: 41,
+    project_public_id: PROJECT_ID,
+    title: "Checkout notes",
+    icon: "document" as const,
+    is_favorite: false,
+    page_width: "standard" as const,
+    collaboration_document_id: "22222222-2222-4222-8222-222222222222",
+    role: "editor" as const,
+    created_at: "2026-08-01T00:00:00.000Z",
+    updated_at: "2026-08-01T00:00:00.000Z",
+  };
+  const store = createProjectDocumentStore(async (sql, values) => {
+    statements.push({ sql, values });
+    if (sql.includes("INSERT INTO project_document_comments")) {
+      return result([{
+        id: 12,
+        body: "Review this label",
+        block_id: "block-1",
+        quote: "Selected label",
+        parent_comment_id: null,
+        resolved_at: null,
+        created_at: "2026-08-04T00:00:00.000Z",
+        updated_at: "2026-08-04T00:00:00.000Z",
+        author_user_id: 7,
+        author_email: "po@example.com",
+      }]);
+    }
+    if (sql.includes("DELETE FROM project_document_comments")) return result([{ id: 12 }], 1);
+    if (sql.includes("FROM project_documents document")) return result([documentRow]);
+    return result([]);
+  });
+
+  const created = await store.addCommentById(7, PROJECT_ID, 41, {
+    body: "Review this label",
+    blockId: "block-1",
+    quote: "Selected label",
+  });
+  const deleted = await store.deleteCommentById(7, PROJECT_ID, 41, 12);
+
+  const insert = statements.find((statement) =>
+    statement.sql.includes("INSERT INTO project_document_comments"));
+  const remove = statements.find((statement) =>
+    statement.sql.includes("DELETE FROM project_document_comments"));
+  assert.equal(created?.blockId, "block-1");
+  assert.equal(created?.canDelete, true);
+  assert.deepEqual(insert?.values, [41, 7, "Review this label", "block-1", "Selected label", null]);
+  assert.match(insert?.sql ?? "", /parent\.parent_comment_id IS NULL/);
+  assert.equal(deleted, true);
+  assert.match(remove?.sql ?? "", /author_user_id = \$3/);
+});
+
 test("lets viewers read discussion but blocks document and discussion mutations", async () => {
   const statements: string[] = [];
   const store = createProjectDocumentStore(async (sql) => {

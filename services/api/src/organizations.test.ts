@@ -29,7 +29,7 @@ const stubStore = (overrides: Partial<OrganizationStore> = {}): OrganizationStor
 });
 
 const appWith = (store: OrganizationStore, enabled = true) =>
-  createApiApp({ resolveSession: async () => user, organizationStore: store, organizationsEnabled: enabled } as never);
+  createApiApp({ verifyAuthToken: async () => user, organizationStore: store, organizationsEnabled: enabled } as never);
 
 test("hides organization routes entirely until Teams is enabled", async (t) => {
   const { base, server } = await serve(appWith(stubStore(), false));

@@ -19,6 +19,7 @@ import { OpenAICompatibleSearchEmbeddingProvider } from "../../../src/searchEmbe
 import { PostgresSearchStore } from "../../../src/searchStore.ts";
 import { createSearchService } from "./search.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
+import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 
 const PORT = Number(process.env.PORT ?? DEFAULT_API_PORT);
 const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
@@ -27,6 +28,7 @@ await startApi({
   start: async () => {
     const seed = adminSeedFromEnv(process.env);
     const config = billingConfigFromEnv(process.env);
+    const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const referralCampaign = referralCampaignFromEnv(process.env);
     const searchConfig = advancedSearchConfigFromEnv(process.env);
     const searchEmbedder = searchConfig.embedding
@@ -65,6 +67,8 @@ await startApi({
     const app = createApiApp({
       billing,
       objectStore,
+      issueAuthToken: auth.issueAuthToken,
+      verifyAuthToken: auth.verifyAuthToken,
       mediaSigningSecret: config.mediaSigningSecret,
       generalRateLimit: config.generalRateLimit,
       mediaRateLimit: config.mediaRateLimit,

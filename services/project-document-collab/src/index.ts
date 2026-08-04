@@ -1,21 +1,22 @@
-import { resolveSession } from "../../../src/authStore.ts";
 import { pool } from "../../../src/db.ts";
+import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { createProjectDocumentStore } from "../../../src/projectDocumentStore.ts";
-import { cookieValue, SESSION_COOKIE } from "../../api/src/sessionCookie.ts";
+import { AUTH_COOKIE, cookieValue } from "../../api/src/authCookie.ts";
 import { projectDocumentAllowedOrigins } from "./config.ts";
 import { createProjectDocumentCollaborationService } from "./server.ts";
 import { startProjectDocumentCollaboration } from "./start.ts";
 
 const PORT = Number(process.env.PORT ?? 3013);
 const allowedOrigins = projectDocumentAllowedOrigins(process.env);
+const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
 const store = createProjectDocumentStore();
 const collaboration = createProjectDocumentCollaborationService({
   allowedOrigins,
   async authenticate({ token, cookie }) {
-    const sessionToken = cookieValue(cookie, SESSION_COOKIE) ?? (token || undefined);
-    if (!sessionToken) return undefined;
-    const user = await resolveSession(sessionToken);
+    const authToken = cookieValue(cookie, AUTH_COOKIE) ?? (token || undefined);
+    if (!authToken) return undefined;
+    const user = await auth.verifyAuthToken(authToken);
     return user ? { userId: user.id, email: user.email } : undefined;
   },
   async authorize(identity, collaborationDocumentId) {

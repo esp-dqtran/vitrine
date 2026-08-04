@@ -6082,6 +6082,169 @@ body {
   font-size: 12px;
 }
 
+.project-moodboard-panel__smart-compose > .astryx-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.project-moodboard-panel__compose-review {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid #cbd2ff;
+  border-radius: 10px;
+  background: #f3f4ff;
+}
+
+.project-moodboard-panel__compose-review > strong,
+.project-moodboard-panel__compose-label > strong,
+.project-moodboard-panel__direction-reads > strong {
+  color: #283347;
+  font-size: 12px;
+}
+
+.project-moodboard-panel__compose-review > p,
+.project-moodboard-panel__compose-empty,
+.project-moodboard-panel__direction-reads article p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.project-moodboard-panel__compose-review > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.project-moodboard-panel__compose-review .astryx-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.project-moodboard-panel__compose-result {
+  display: grid;
+  gap: 11px;
+  padding-top: 2px;
+}
+
+.project-moodboard-panel__compose-label {
+  display: grid;
+  gap: 2px;
+}
+
+.project-moodboard-panel__compose-label small {
+  color: #7b8493;
+  font-size: 10px;
+}
+
+.project-moodboard-panel__palette {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.project-moodboard-panel__palette > span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.project-moodboard-panel__palette i {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(17 24 39 / 12%);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 28%);
+}
+
+.project-moodboard-panel__palette small {
+  overflow: hidden;
+  color: #667085;
+  font-size: 8px;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.project-moodboard-panel__signals {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e2e6ec;
+  border-radius: 10px;
+  background: #e2e6ec;
+}
+
+.project-moodboard-panel__signals > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.project-moodboard-panel__signals dt {
+  color: #667085;
+  font-size: 10px;
+}
+
+.project-moodboard-panel__signals dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.project-moodboard-panel__signals dd strong {
+  color: #283347;
+  font-size: 10px;
+}
+
+.project-moodboard-panel__signals dd small {
+  color: #7b8493;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.project-moodboard-panel__direction-reads {
+  display: grid;
+  gap: 6px;
+}
+
+.project-moodboard-panel__direction-reads article {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.project-moodboard-panel__direction-reads article > strong {
+  color: #344054;
+  font-size: 11px;
+}
+
+.project-moodboard-panel__direction-reads article > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.project-moodboard-panel__direction-reads a {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #4351c7;
+  background: #eef0ff;
+  font-size: 9px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .project-playground__canvas--tool-panel-open
   .excalidraw
   .selected-shape-actions {
@@ -7490,27 +7653,8 @@ body {
   gap: 6px;
 }
 
-.project-moodboard-reference__section-field > span {
-  color: var(--project-canvas-muted-text, #6b7280);
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.project-moodboard-reference__section-field select {
-  min-height: 38px;
+.project-moodboard-reference__section-field .astryx-selector {
   width: 100%;
-  padding: 0 34px 0 11px;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 14%));
-  border-radius: 9px;
-  color: var(--project-canvas-text, #202124);
-  background: var(--project-canvas-bg, #f7f8fa);
-  font: inherit;
-}
-
-.project-moodboard-reference__section-field select:disabled {
-  color: #8a93a2;
-  cursor: not-allowed;
-  opacity: 0.72;
 }
 
 .project-playground__templates-trigger > span {

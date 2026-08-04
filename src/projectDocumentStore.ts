@@ -37,9 +37,20 @@ export interface ProjectDocumentCommentView {
   body: string;
   authorUserId: number;
   authorEmail: string;
+  blockId: string | null;
+  quote: string | null;
+  parentCommentId: number | null;
+  canDelete: boolean;
   resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProjectDocumentCommentInput {
+  body: string;
+  blockId?: string;
+  quote?: string;
+  parentCommentId?: number;
 }
 
 export interface ProjectDocumentAccess {
@@ -54,8 +65,9 @@ export interface ProjectDocumentStore {
   getDocumentById(userId: number, projectId: ResearchProjectId, documentId: number): Promise<ProjectDocumentView | undefined>;
   updateDocumentById(userId: number, projectId: ResearchProjectId, documentId: number, patch: ProjectDocumentPatch): Promise<ProjectDocumentView | undefined>;
   listCommentsById(userId: number, projectId: ResearchProjectId, documentId: number): Promise<ProjectDocumentCommentView[] | undefined>;
-  addCommentById(userId: number, projectId: ResearchProjectId, documentId: number, body: string): Promise<ProjectDocumentCommentView | undefined>;
+  addCommentById(userId: number, projectId: ResearchProjectId, documentId: number, input: ProjectDocumentCommentInput): Promise<ProjectDocumentCommentView | undefined>;
   resolveCommentById(userId: number, projectId: ResearchProjectId, documentId: number, commentId: number, resolved: boolean): Promise<ProjectDocumentCommentView | undefined>;
+  deleteCommentById(userId: number, projectId: ResearchProjectId, documentId: number, commentId: number): Promise<boolean | undefined>;
   ensureDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
   getDocument(userId: number, projectId: ResearchProjectId): Promise<ProjectDocumentView | undefined>;
   updateDocument(userId: number, projectId: ResearchProjectId, patch: ProjectDocumentPatch): Promise<ProjectDocumentView | undefined>;
@@ -110,16 +122,23 @@ interface CommentRow extends Record<string, unknown> {
   body: string;
   author_user_id: number;
   author_email: string;
+  block_id?: string | null;
+  quote?: string | null;
+  parent_comment_id?: number | null;
   resolved_at: Date | string | null;
   created_at: Date | string;
   updated_at: Date | string;
 }
 
-const commentView = (row: CommentRow): ProjectDocumentCommentView => ({
+const commentView = (row: CommentRow, userId: number): ProjectDocumentCommentView => ({
   id: Number(row.id),
   body: row.body,
   authorUserId: Number(row.author_user_id),
   authorEmail: row.author_email,
+  blockId: row.block_id ?? null,
+  quote: row.quote ?? null,
+  parentCommentId: row.parent_comment_id == null ? null : Number(row.parent_comment_id),
+  canDelete: Number(row.author_user_id) === userId,
   resolvedAt: row.resolved_at ? dateString(row.resolved_at) : null,
   createdAt: dateString(row.created_at),
   updatedAt: dateString(row.updated_at),
@@ -197,14 +216,17 @@ export function createProjectDocumentStore(
     const comments = await databaseQuery(
       `SELECT comment.id, comment.body, comment.author_user_id,
               author.email AS author_email, comment.resolved_at,
+              comment.block_id, comment.quote, comment.parent_comment_id,
               comment.created_at, comment.updated_at
        FROM project_document_comments comment
        JOIN users author ON author.id = comment.author_user_id
        WHERE comment.document_id = $1
-       ORDER BY comment.resolved_at NULLS FIRST, comment.created_at, comment.id`,
+       ORDER BY COALESCE(comment.parent_comment_id, comment.id),
+                comment.parent_comment_id NULLS FIRST, comment.created_at, comment.id`,
       [document.id],
     );
-    return comments.rows.map((row) => commentView(row as CommentRow));
+    const deletableUserId = document.role === "editor" ? userId : -1;
+    return comments.rows.map((row) => commentView(row as CommentRow, deletableUserId));
   };
 
   return {
@@ -279,19 +301,38 @@ export function createProjectDocumentStore(
 
     listCommentsById: listCommentsForDocument,
 
-    async addCommentById(userId, projectId, documentId, body) {
+    async addCommentById(userId, projectId, documentId, input) {
       const document = await getDocumentById(userId, projectId, documentId);
       if (!document || document.role !== "editor") return undefined;
       const inserted = await databaseQuery(
-        `INSERT INTO project_document_comments (project_id, document_id, author_user_id, body)
-         SELECT project_id, id, $2, $3 FROM project_documents
-         WHERE id = $1 AND trashed_at IS NULL
+        `INSERT INTO project_document_comments (
+           project_id, document_id, author_user_id, body,
+           block_id, quote, parent_comment_id
+         )
+         SELECT document.project_id, document.id, $2, $3,
+                COALESCE(parent.block_id, $4), COALESCE(parent.quote, $5), $6
+         FROM project_documents document
+         LEFT JOIN project_document_comments parent
+           ON parent.id = $6
+          AND parent.document_id = document.id
+          AND parent.parent_comment_id IS NULL
+         WHERE document.id = $1
+           AND document.trashed_at IS NULL
+           AND ($6::bigint IS NULL OR parent.id IS NOT NULL)
          RETURNING id, body, author_user_id,
            (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+           block_id, quote, parent_comment_id,
            resolved_at, created_at, updated_at`,
-        [document.id, userId, body],
+        [
+          document.id,
+          userId,
+          input.body,
+          input.blockId ?? null,
+          input.quote ?? null,
+          input.parentCommentId ?? null,
+        ],
       );
-      return inserted.rows[0] ? commentView(inserted.rows[0] as CommentRow) : undefined;
+      return inserted.rows[0] ? commentView(inserted.rows[0] as CommentRow, userId) : undefined;
     },
 
     async resolveCommentById(userId, projectId, documentId, commentId, resolved) {
@@ -301,12 +342,26 @@ export function createProjectDocumentStore(
         `UPDATE project_document_comments comment
          SET resolved_at = CASE WHEN $3 THEN now() ELSE NULL END, updated_at = now()
          WHERE comment.id = $2 AND comment.document_id = $1
+           AND comment.parent_comment_id IS NULL
          RETURNING id, body, author_user_id,
            (SELECT email FROM users WHERE id = author_user_id) AS author_email,
+           block_id, quote, parent_comment_id,
            resolved_at, created_at, updated_at`,
         [document.id, commentId, resolved],
       );
-      return updated.rows[0] ? commentView(updated.rows[0] as CommentRow) : undefined;
+      return updated.rows[0] ? commentView(updated.rows[0] as CommentRow, userId) : undefined;
+    },
+
+    async deleteCommentById(userId, projectId, documentId, commentId) {
+      const document = await getDocumentById(userId, projectId, documentId);
+      if (!document || document.role !== "editor") return undefined;
+      const deleted = await databaseQuery(
+        `DELETE FROM project_document_comments
+         WHERE id = $2 AND document_id = $1 AND author_user_id = $3
+         RETURNING id`,
+        [document.id, commentId, userId],
+      );
+      return Boolean(deleted.rowCount);
     },
 
     async ensureDocument(userId, projectId) {
@@ -424,16 +479,21 @@ export function createProjectDocumentStore(
                 comment.body,
                 comment.author_user_id,
                 author.email AS author_email,
+                comment.block_id,
+                comment.quote,
+                comment.parent_comment_id,
                 comment.resolved_at,
                 comment.created_at,
                 comment.updated_at
          FROM project_document_comments comment
          JOIN users author ON author.id = comment.author_user_id
          WHERE comment.document_id = $1
-         ORDER BY comment.resolved_at NULLS FIRST, comment.created_at, comment.id`,
+         ORDER BY COALESCE(comment.parent_comment_id, comment.id),
+                  comment.parent_comment_id NULLS FIRST, comment.created_at, comment.id`,
         [document.id],
       );
-      return comments.rows.map((row) => commentView(row as CommentRow));
+      const deletableUserId = document.role === "editor" ? userId : -1;
+      return comments.rows.map((row) => commentView(row as CommentRow, deletableUserId));
     },
 
     async addComment(userId, projectId, body) {
@@ -456,7 +516,7 @@ export function createProjectDocumentStore(
         [document.id, userId, body],
       );
       return inserted.rows[0]
-        ? commentView(inserted.rows[0] as CommentRow)
+        ? commentView(inserted.rows[0] as CommentRow, userId)
         : undefined;
     },
 
@@ -478,7 +538,7 @@ export function createProjectDocumentStore(
         [document.id, commentId, resolved],
       );
       return updated.rows[0]
-        ? commentView(updated.rows[0] as CommentRow)
+        ? commentView(updated.rows[0] as CommentRow, userId)
         : undefined;
     },
 

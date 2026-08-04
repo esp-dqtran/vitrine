@@ -7,6 +7,11 @@ import {
 import { WebSocket } from "ws";
 import * as Y from "yjs";
 
+import {
+  decodeProjectDocumentStateVector,
+  parseProjectDocumentPersistenceMessage,
+  projectDocumentStateVectorCoversDocument,
+} from "../../../src/projectDocumentCollaborationProtocol.ts";
 import { createProjectDocumentCollaborationService } from "./server.ts";
 
 const DOCUMENT_ID = "22222222-2222-4222-8222-222222222222";
@@ -22,6 +27,7 @@ function connect(input: {
   url: string;
   token: string;
   document: Y.Doc;
+  onStateless?: (payload: string) => void;
 }): HocuspocusProvider {
   return new HocuspocusProvider({
     url: input.url,
@@ -29,6 +35,7 @@ function connect(input: {
     token: input.token,
     document: input.document,
     WebSocketPolyfill: WebSocket,
+    onStateless: ({ payload }) => input.onStateless?.(payload),
   } as HocuspocusProviderConfiguration & { WebSocketPolyfill: typeof WebSocket });
 }
 
@@ -88,6 +95,104 @@ test("synchronizes two Yjs clients and restores the persisted document", async (
   restored.destroy();
   restoredDocument.destroy();
   await restarted.destroy();
+});
+
+test("acknowledges an edit only after its Yjs snapshot is durably stored", async (t) => {
+  let releaseStore: (() => void) | undefined;
+  let markStoreStarted: (() => void) | undefined;
+  const storeStarted = new Promise<void>((resolve) => { markStoreStarted = resolve; });
+  const storeReleased = new Promise<void>((resolve) => { releaseStore = resolve; });
+  const server = createProjectDocumentCollaborationService({
+    async authenticate() { return { userId: 7, email: "editor@example.com" }; },
+    async authorize() { return { documentId: 41, role: "editor" }; },
+    async load() { return null; },
+    async store() {
+      markStoreStarted?.();
+      await storeReleased;
+    },
+  });
+  await server.listen(0);
+  const document = new Y.Doc();
+  const messages: string[] = [];
+  const provider = connect({
+    url: `ws://127.0.0.1:${server.address.port}`,
+    token: "editor",
+    document,
+    onStateless: (payload) => messages.push(payload),
+  });
+  t.after(async () => {
+    releaseStore?.();
+    provider.destroy();
+    document.destroy();
+    await server.destroy();
+  });
+
+  await waitFor(() => provider.synced, "the editor to sync");
+  document.getText("body").insert(0, "Persist this change");
+  await storeStarted;
+  assert.equal(
+    messages.some((payload) =>
+      parseProjectDocumentPersistenceMessage(payload)?.type
+        === "project-document.persisted"),
+    false,
+  );
+
+  releaseStore?.();
+  await waitFor(
+    () => messages.some((payload) =>
+      parseProjectDocumentPersistenceMessage(payload)?.type
+        === "project-document.persisted"),
+    "the persistence acknowledgement",
+  );
+  const acknowledgement = messages
+    .map(parseProjectDocumentPersistenceMessage)
+    .find((message) => message?.type === "project-document.persisted");
+  assert.ok(acknowledgement?.type === "project-document.persisted");
+  assert.equal(
+    projectDocumentStateVectorCoversDocument(
+      decodeProjectDocumentStateVector(acknowledgement.stateVector),
+      document,
+    ),
+    true,
+  );
+});
+
+test("reports a persistence error when storing the Yjs snapshot fails", async (t) => {
+  const server = createProjectDocumentCollaborationService({
+    async authenticate() { return { userId: 7, email: "editor@example.com" }; },
+    async authorize() { return { documentId: 41, role: "editor" }; },
+    async load() { return null; },
+    async store() { throw new Error("database unavailable"); },
+  });
+  await server.listen(0);
+  const document = new Y.Doc();
+  const messages: string[] = [];
+  const provider = connect({
+    url: `ws://127.0.0.1:${server.address.port}`,
+    token: "editor",
+    document,
+    onStateless: (payload) => messages.push(payload),
+  });
+  t.after(async () => {
+    provider.destroy();
+    document.destroy();
+    await server.destroy();
+  });
+
+  await waitFor(() => provider.synced, "the editor to sync");
+  document.getText("body").insert(0, "Unsaved change");
+  await waitFor(
+    () => messages.some((payload) =>
+      parseProjectDocumentPersistenceMessage(payload)?.type
+        === "project-document.persistence-error"),
+    "the persistence error",
+  );
+  assert.equal(
+    messages.some((payload) =>
+      parseProjectDocumentPersistenceMessage(payload)?.type
+        === "project-document.persisted"),
+    false,
+  );
 });
 
 test("enforces authentication, document authorization, and viewer scope", async (t) => {

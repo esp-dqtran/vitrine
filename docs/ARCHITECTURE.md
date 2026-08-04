@@ -270,6 +270,9 @@ The API requires these values at startup:
 - `STRIPE_PRO_MONTHLY_PRICE_ID`
 - `STRIPE_PRO_YEARLY_PRICE_ID`
 - `APP_URL`
+- `JWT_SIGNING_SECRET` (at least 32 random characters; shared with collaboration gateways)
+- `JWT_ISSUER` (optional; defaults to `APP_URL`)
+- `JWT_AUDIENCE` (optional; defaults to `vitrines`)
 - `REFERRAL_CAMPAIGN_ID`
 - `REFERRAL_CAMPAIGN_START` (ISO-8601 UTC timestamp)
 - `REFERRAL_CAMPAIGN_END` (ISO-8601 UTC timestamp later than the start)
@@ -294,8 +297,11 @@ referrals, rewards, and promotional entitlements.
 The existing PostgreSQL database contains customer subscriptions, permanent
 Free app unlocks, processed Stripe events, monthly export usage, and access
 events.
-Normal customer accounts are capped at two active sessions; signing in on a
-third device revokes the oldest session. Administrator sessions are exempt.
+Authentication uses a signed HS256 JWT in the existing HttpOnly cookie. The API
+and collaboration gateways pin the algorithm, issuer, audience, token type, and
+key ID. Tokens expire after 12 hours and are not stored in PostgreSQL. Logout
+clears the browser cookie; a copied token remains valid until expiry, and user
+disablement or role changes take effect for newly issued tokens.
 
 Default limits are 300 requests per 5 minutes, 500 protected-media requests per
 10 minutes, and traversal of 20 distinct apps per 10 minutes. Limits apply per
@@ -305,7 +311,8 @@ Administrators bypass these customer limits.
 
 ### Explicit follow-ons
 
-1. Add email verification, password reset, session management, and account
-   deletion workflows around the shipped self-service registration route.
+1. Add email verification, password reset, short-lived access-token rotation,
+   and account deletion workflows around the shipped self-service registration
+   route if immediate token revocation becomes a requirement.
 2. Complete deployed-staging browser acceptance for Checkout, Portal,
    cancellation, referral signup, reward activation, and entitlement expiry.

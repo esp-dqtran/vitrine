@@ -270,7 +270,6 @@ const EVIDENCE_TABLES = [
   "images",
   "jobs",
   "users",
-  "sessions",
   "subscriptions",
   "free_app_unlocks",
   "stripe_events",

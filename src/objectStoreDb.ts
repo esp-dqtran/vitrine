@@ -117,7 +117,7 @@ export async function entitledImageObject(
      JOIN apps a ON a.id = p.app_id
      JOIN LATERAL (
        SELECT av.id FROM app_versions av
-       WHERE av.app_id = a.id AND av.status = 'published'
+       WHERE av.app_id = a.id AND av.platform = p.name AND av.status = 'published'
        ORDER BY av.version_number DESC LIMIT 1
      ) published ON true
      JOIN version_images vi ON vi.version_id = published.id AND vi.image_id = i.id
@@ -415,7 +415,7 @@ export async function legacyImageReference(
   const publicationJoin = input.publishedOnly === false ? "" : `
      JOIN LATERAL (
        SELECT av.id FROM app_versions av
-       WHERE av.app_id = a.id AND av.status = 'published'
+       WHERE av.app_id = a.id AND av.platform = p.name AND av.status = 'published'
        ORDER BY av.version_number DESC LIMIT 1
      ) published ON true
      JOIN version_images vi ON vi.version_id = published.id AND vi.image_id = i.id`;

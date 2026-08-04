@@ -33,6 +33,13 @@ import {
 import type { Platform } from "../../platformFromUrl.ts";
 import type { AppsDiscoveryScreenResult } from "../appsDiscovery.ts";
 import type { FlowCatalogItem } from "../flowCatalogApi.ts";
+import {
+  analyzeMoodboardPixels,
+  buildMoodboardSmartComposeResult,
+  normalizeMoodboardSmartComposeResult,
+  type ProjectMoodboardImageAnalysis,
+  type ProjectMoodboardSmartComposeResult,
+} from "../projectMoodboardSmartCompose.ts";
 import type { App } from "../types.ts";
 import { getResearchProject } from "../researchProjectsApi.ts";
 import {
@@ -795,10 +802,41 @@ function moodboardSectionsEqual(
   ));
 }
 
+function moodboardSmartComposeForElement(
+  element: ExcalidrawElement,
+): ProjectMoodboardSmartComposeResult | undefined {
+  const customData = element.customData as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  if (reference?.kind !== "moodboard-section") return undefined;
+  return normalizeMoodboardSmartComposeResult(reference.smartCompose);
+}
+
+function moodboardSmartComposeResultsEqual(
+  left: ProjectMoodboardSmartComposeResult | undefined,
+  right: ProjectMoodboardSmartComposeResult | undefined,
+): boolean {
+  if (!left && !right) return true;
+  if (!left || !right) return false;
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 function moodboardDecisionOpacity(decision: ProjectMoodboardDecision): number {
   if (decision === "keep") return 100;
   if (decision === "reject") return 38;
   return 82;
+}
+
+function withCanvasElementUpdate(
+  element: ExcalidrawElement,
+  patch: Partial<ExcalidrawElement>,
+): ExcalidrawElement {
+  return {
+    ...element,
+    ...patch,
+    version: element.version + 1,
+    versionNonce: Math.floor(Math.random() * 0x7fffffff),
+    updated: Date.now(),
+  } as ExcalidrawElement;
 }
 
 function documentReferenceForElement(
@@ -944,6 +982,53 @@ function imageDimensions(blob: Blob): Promise<{ width: number; height: number }>
     .catch(() => ({ width: 640, height: 400 }));
 }
 
+async function analyzeMoodboardImageFile(
+  referenceId: string,
+  element: ExcalidrawElement,
+  files: BinaryFiles,
+): Promise<ProjectMoodboardImageAnalysis | undefined> {
+  if (element.type !== "image" || !element.fileId) return undefined;
+  const file = files[element.fileId];
+  const customData = element.customData as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  const sources = [
+    file?.dataURL,
+    typeof reference?.mediaUrl === "string" ? reference.mediaUrl : undefined,
+  ].filter((source, index, all): source is string => (
+    Boolean(source) && all.indexOf(source) === index
+  ));
+  for (const source of sources) {
+    try {
+      const response = await fetch(canvasMediaFetchUrl(source), { credentials: "same-origin" });
+      if (!response.ok) continue;
+      const bitmap = await createImageBitmap(await response.blob());
+      try {
+        const scale = Math.min(1, 48 / Math.max(bitmap.width, bitmap.height));
+        const width = Math.max(1, Math.round(bitmap.width * scale));
+        const height = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) continue;
+        context.drawImage(bitmap, 0, 0, width, height);
+        return analyzeMoodboardPixels(
+          referenceId,
+          context.getImageData(0, 0, width, height).data,
+          width,
+          height,
+        );
+      } finally {
+        bitmap.close();
+      }
+    } catch {
+      // Some historical canvas files point at retired media URLs. Smart Compose
+      // still returns the deterministic layout and source-linked summaries.
+    }
+  }
+  return undefined;
+}
+
 function canvasMediaFetchUrl(source: string): string {
   const url = new URL(source, window.location.origin);
   if (url.origin === window.location.origin && url.pathname.startsWith("/api/preview-media/")) {
@@ -976,6 +1061,9 @@ export function ProjectPlayground({
     useState<readonly ProjectMoodboardReference[]>([]);
   const [moodboardSections, setMoodboardSections] =
     useState<readonly AstryxMoodboardSectionReference[]>([]);
+  const [moodboardSmartCompose, setMoodboardSmartCompose] =
+    useState<ProjectMoodboardSmartComposeResult>();
+  const [moodboardSmartComposeBusy, setMoodboardSmartComposeBusy] = useState(false);
   const [selectedMoodboardReference, setSelectedMoodboardReference] =
     useState<ProjectMoodboardReference>();
   const [referencesOpen, setReferencesOpen] = useState(false);
@@ -1061,7 +1149,8 @@ export function ProjectPlayground({
     maybe: moodboardReferences.filter((reference) => reference.decision === "maybe").length,
     reject: moodboardReferences.filter((reference) => reference.decision === "reject").length,
   }), [moodboardReferences]);
-  const canvasReadOnly = references?.access?.role === "viewer";
+  const canvasReadOnly = referencesState !== "ready"
+    || references?.access?.role === "viewer";
 
   const syncCanvasCollaborators = useCallback(() => {
     const collaborators = new Map<SocketId, Collaborator>();
@@ -1390,6 +1479,14 @@ export function ProjectPlayground({
         ? current
         : nextMoodboardSections
     ));
+    const nextMoodboardSmartCompose = elements
+      .map(moodboardSmartComposeForElement)
+      .find((result): result is ProjectMoodboardSmartComposeResult => Boolean(result));
+    setMoodboardSmartCompose((current) => (
+      moodboardSmartComposeResultsEqual(current, nextMoodboardSmartCompose)
+        ? current
+        : nextMoodboardSmartCompose
+    ));
     const selectedDataReferences = elements
       .filter((element) => appState.selectedElementIds[element.id])
       .map(canvasDataReferenceForElement)
@@ -1565,6 +1662,125 @@ export function ProjectPlayground({
     const unsorted = projectMoodboardSectionPresets.find((section) => section.id === "unsorted");
     if (unsorted) createMoodboardSections([unsorted]);
   }, [createMoodboardSections]);
+
+  const composeMoodboard = useCallback(async () => {
+    if (canvasReadOnly || moodboardSmartComposeBusy) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const sceneElements = editor.getSceneElements();
+    const sectionFrames = sceneElements
+      .map((element) => ({ element, section: moodboardSectionForElement(element) }))
+      .filter((entry): entry is {
+        element: ExcalidrawElement;
+        section: AstryxMoodboardSectionReference;
+      } => Boolean(entry.section));
+    const references = sceneElements
+      .map((element) => moodboardReferenceForElement(element, sceneElements))
+      .filter((reference): reference is ProjectMoodboardReference => Boolean(reference));
+    if (sectionFrames.length === 0 || references.length === 0) {
+      setMoodboardMessage("Add a moodboard section and at least one reference before composing.");
+      return;
+    }
+
+    setMoodboardSmartComposeBusy(true);
+    setMoodboardMessage("Composing the board from your confirmed reference decisions…");
+    try {
+      const files = editor.getFiles();
+      const analyses = (await Promise.all(references
+        .filter((reference) => reference.decision === "keep")
+        .map(async (reference) => {
+          const element = sceneElements.find((candidate) => candidate.id === reference.elementId);
+          if (!element) return undefined;
+          try {
+            return await analyzeMoodboardImageFile(reference.elementId, element, files);
+          } catch {
+            return undefined;
+          }
+        })))
+        .filter((analysis): analysis is ProjectMoodboardImageAnalysis => Boolean(analysis));
+      const result = buildMoodboardSmartComposeResult({
+        references,
+        sections: sectionFrames.map(({ section }) => ({ id: section.id, title: section.title })),
+        analyses,
+      });
+
+      const elementPatches = new Map<string, Partial<ExcalidrawElement>>();
+      const decisionOrder: Record<ProjectMoodboardDecision, number> = {
+        keep: 0,
+        maybe: 1,
+        reject: 2,
+      };
+      for (const { element: sectionFrame } of sectionFrames) {
+        const children = sceneElements
+          .filter((element) => element.type === "image" && element.frameId === sectionFrame.id)
+          .map((element) => ({
+            element,
+            reference: moodboardReferenceForElement(element, sceneElements),
+          }))
+          .filter((entry): entry is {
+            element: ExcalidrawElement;
+            reference: ProjectMoodboardReference;
+          } => Boolean(entry.reference))
+          .sort((left, right) => (
+            decisionOrder[left.reference.decision] - decisionOrder[right.reference.decision]
+          ));
+        let requiredFrameHeight = sectionFrame.height;
+        children.forEach(({ element }, index) => {
+          const placement = layoutMoodboardReferenceInSection({
+            image: { width: element.width, height: element.height },
+            section: {
+              x: sectionFrame.x,
+              y: sectionFrame.y,
+              width: sectionFrame.width,
+              height: requiredFrameHeight,
+            },
+            occupiedCount: index,
+          });
+          requiredFrameHeight = Math.max(requiredFrameHeight, placement.requiredFrameHeight);
+          elementPatches.set(element.id, {
+            x: placement.x,
+            y: placement.y,
+            width: placement.width,
+            height: placement.height,
+          });
+        });
+        if (requiredFrameHeight !== sectionFrame.height) {
+          elementPatches.set(sectionFrame.id, { height: requiredFrameHeight });
+        }
+      }
+
+      const anchor = sectionFrames.find(({ section }) => section.id === "unsorted")
+        ?? sectionFrames[0];
+      const anchorCustomData = anchor.element.customData as Record<string, unknown> | undefined;
+      const anchorReference = anchorCustomData?.astryxReference as Record<string, unknown> | undefined;
+      elementPatches.set(anchor.element.id, {
+        ...elementPatches.get(anchor.element.id),
+        customData: {
+          ...anchorCustomData,
+          astryxReference: {
+            ...anchorReference,
+            smartCompose: result,
+          },
+        },
+      });
+
+      const composedElements = sceneElements.map((element) => {
+        const patch = elementPatches.get(element.id);
+        return patch ? withCanvasElementUpdate(element, patch) : element;
+      });
+      editor.updateScene({ elements: composedElements });
+      setMoodboardSmartCompose(result);
+      setMoodboardMessage(
+        analyses.length > 0
+          ? `Board composed from ${analyses.length} Keep ${analyses.length === 1 ? "reference" : "references"}. Review the automated interpretation.`
+          : references.some((reference) => reference.decision === "keep")
+            ? "Board tidied. The Keep images could not be sampled, so visual signals were withheld."
+            : "Board tidied. Mark at least one reference Keep to generate palette and visual signals.",
+      );
+    } finally {
+      setMoodboardSmartComposeBusy(false);
+    }
+  }, [canvasReadOnly, moodboardSmartComposeBusy]);
 
   const moodboardImagePlacement = useCallback((width: number, height: number) => {
     const editor = editorRef.current;
@@ -2142,14 +2358,13 @@ export function ProjectPlayground({
         ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
         ...(patch.decision !== undefined ? { decision: patch.decision } : {}),
       };
-      return {
-        ...element,
+      return withCanvasElementUpdate(element, {
         opacity: moodboardDecisionOpacity(moodboard.decision),
         customData: {
           ...customData,
           astryxReference: { ...reference, moodboard },
         },
-      } as ExcalidrawElement;
+      });
     });
     editor.updateScene({ elements: nextElements });
     setSelectedMoodboardReference({ ...selected, ...patch });
@@ -2188,17 +2403,16 @@ export function ProjectPlayground({
     let movedElement: ExcalidrawElement | undefined;
     const nextElements = elements.map((element) => {
       if (element.id === targetFrame.id && requiredFrameHeight > targetFrame.height) {
-        return { ...element, height: requiredFrameHeight } as ExcalidrawElement;
+        return withCanvasElementUpdate(element, { height: requiredFrameHeight });
       }
       if (element.id !== selected.elementId) return element;
-      movedElement = {
-        ...element,
+      movedElement = withCanvasElementUpdate(element, {
         x,
         y,
         width,
         height,
         frameId: targetFrame.id,
-      } as ExcalidrawElement;
+      });
       return movedElement;
     });
     editor.updateScene({
@@ -2830,7 +3044,7 @@ export function ProjectPlayground({
             name={references?.title ?? "Astryx designer canvas"}
             theme={resolvedTheme}
             gridModeEnabled
-            viewModeEnabled={references?.access?.role === "viewer"}
+            viewModeEnabled={canvasReadOnly}
             initialData={initialData}
             excalidrawAPI={(api) => {
               editorRef.current = api;
@@ -2989,6 +3203,9 @@ export function ProjectPlayground({
             onCreateStarter={() => createMoodboardSections(
               projectMoodboardSectionPresets.filter((section) => section.id !== "direction-c"),
             )}
+            smartCompose={moodboardSmartCompose}
+            smartComposeBusy={moodboardSmartComposeBusy}
+            onSmartCompose={composeMoodboard}
             onClose={() => setMoodboardOpen(false)}
             readOnly={canvasReadOnly}
           />

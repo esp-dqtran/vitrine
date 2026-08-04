@@ -6,6 +6,7 @@ import {
 } from "../../../src/researchProject.ts";
 import type {
   ProjectDocumentCommentView,
+  ProjectDocumentCommentInput,
   ProjectDocumentIcon,
   ProjectDocumentPatch,
   ProjectDocumentPageWidth,
@@ -18,7 +19,7 @@ export interface ProjectDocumentRouteDependencies {
     "ensureDocument" | "getDocument" | "updateDocument" | "listComments" | "addComment" | "resolveComment">
     & Partial<Pick<ProjectDocumentStore,
       "listDocuments" | "createDocument" | "getDocumentById" | "updateDocumentById"
-      | "listCommentsById" | "addCommentById" | "resolveCommentById">>;
+      | "listCommentsById" | "addCommentById" | "resolveCommentById" | "deleteCommentById">>;
   enabled: boolean;
 }
 
@@ -104,6 +105,35 @@ function commentBody(body: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized && normalized.length <= 2000 ? normalized : undefined;
+}
+
+function commentInput(body: unknown): ProjectDocumentCommentInput | undefined {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return undefined;
+  const value = body as Record<string, unknown>;
+  const allowed = new Set(["body", "blockId", "quote", "parentCommentId"]);
+  if (Object.keys(value).some((key) => !allowed.has(key))) return undefined;
+  const normalizedBody = commentBody(value);
+  if (!normalizedBody) return undefined;
+  const input: ProjectDocumentCommentInput = { body: normalizedBody };
+  if ("blockId" in value) {
+    if (typeof value.blockId !== "string") return undefined;
+    const blockId = value.blockId.trim();
+    if (!blockId || blockId.length > 200) return undefined;
+    input.blockId = blockId;
+  }
+  if ("quote" in value) {
+    if (typeof value.quote !== "string" || !input.blockId) return undefined;
+    const quote = value.quote.trim();
+    if (!quote || quote.length > 500) return undefined;
+    input.quote = quote;
+  }
+  if ("parentCommentId" in value) {
+    if (!Number.isSafeInteger(value.parentCommentId) || Number(value.parentCommentId) < 1) {
+      return undefined;
+    }
+    input.parentCommentId = Number(value.parentCommentId);
+  }
+  return input;
 }
 
 function documentIdFromRequest(
@@ -216,19 +246,21 @@ export function mountProjectDocumentRoutes(
   app.post("/research-projects/:id/documents/:documentId/comments", asyncRoute(async (request, response) => {
     const projectId = projectIdFromRequest(request, response);
     const documentId = documentIdFromRequest(request, response);
-    const body = commentBody(request.body);
+    const input = commentInput(request.body);
     if (!projectId || !documentId) return;
-    if (!body) {
-      response.status(400).json({ error: "comment body is required" });
+    if (!input) {
+      response.status(400).json({ error: "invalid comment" });
       return;
     }
     if (!dependencies.store.addCommentById) {
       response.status(404).json({ error: "Not found" });
       return;
     }
-    sendComment(response, await dependencies.store.addCommentById(
-      response.locals.user.id, projectId, documentId, body,
-    ));
+    const comment = await dependencies.store.addCommentById(
+      response.locals.user.id, projectId, documentId, input,
+    );
+    if (comment) response.status(201);
+    sendComment(response, comment);
   }));
 
   app.patch("/research-projects/:id/documents/:documentId/comments/:commentId", asyncRoute(async (request, response) => {
@@ -248,6 +280,29 @@ export function mountProjectDocumentRoutes(
     sendComment(response, await dependencies.store.resolveCommentById(
       response.locals.user.id, projectId, documentId, commentId, resolved,
     ));
+  }));
+
+  app.delete("/research-projects/:id/documents/:documentId/comments/:commentId", asyncRoute(async (request, response) => {
+    const projectId = projectIdFromRequest(request, response);
+    const documentId = documentIdFromRequest(request, response);
+    const commentId = Number(request.params.commentId);
+    if (!projectId || !documentId) return;
+    if (!Number.isSafeInteger(commentId) || commentId < 1) {
+      response.status(400).json({ error: "invalid comment id" });
+      return;
+    }
+    if (!dependencies.store.deleteCommentById) {
+      response.status(404).json({ error: "Not found" });
+      return;
+    }
+    const deleted = await dependencies.store.deleteCommentById(
+      response.locals.user.id, projectId, documentId, commentId,
+    );
+    if (!deleted) {
+      response.status(404).json({ error: "project document or comment not found" });
+      return;
+    }
+    response.status(204).end();
   }));
 
   app.use("/research-projects/:id/document", (_request, response, next) => {

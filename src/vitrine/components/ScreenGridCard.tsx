@@ -1,22 +1,23 @@
-import { Icon, IconButton } from '@astryxdesign/core';
-import type { ResearchCollection } from '../../db.ts';
-import type { Screen } from '../types';
-import { screenAspectRatio } from '../screenAspect';
-import { copyScreenImageAsPng } from '../screenActions.ts';
-import { CollectionPicker } from './CollectionPicker.tsx';
-import { CopyButton } from './CopyButton.tsx';
-import { MediaGridCard } from './MediaGridCard';
+import { Button, Icon, IconButton } from "@astryxdesign/core";
+import type { ResearchCollection } from "../../db.ts";
+import type { Screen } from "../types";
+import { screenAspectRatio } from "../screenAspect";
+import { copyScreenImageAsPng } from "../screenActions.ts";
+import { CollectionPicker } from "./CollectionPicker.tsx";
+import { CopyButton } from "./CopyButton.tsx";
+import { MediaGridCard } from "./MediaGridCard";
 
 interface ScreenGridCardProps {
   screen: Screen;
   accent: string;
   delay: number;
   onOpen: () => void;
+  onSave?: () => void;
   appName?: string;
   appId?: string;
   collections?: ResearchCollection[];
   onCollectionsChange?: (collections: ResearchCollection[]) => void;
-  plan?: 'free' | 'pro';
+  plan?: "free" | "pro";
   flowNames?: string[];
   selected?: boolean;
   onSelectedChange?: (selected: boolean) => void;
@@ -24,7 +25,7 @@ interface ScreenGridCardProps {
 }
 
 const cleanLabel = (value: string | null | undefined) => {
-  const normalized = value?.replace(/\s+/g, ' ').trim();
+  const normalized = value?.replace(/\s+/g, " ").trim();
   return normalized && normalized.length <= 100 ? normalized : null;
 };
 
@@ -36,15 +37,18 @@ export function screenAccessibleLabel(
   const visibleText = screen.visibleText
     ?.map(cleanLabel)
     .find((value): value is string => Boolean(value));
-  const detail = [
-    cleanLabel(screen.description),
-    screen.type !== 'Unclassified' ? cleanLabel(screen.type) : null,
-    screen.productArea !== 'Unclassified' ? cleanLabel(screen.productArea) : null,
-    cleanLabel(screen.stateContext),
-    visibleText,
-    cleanLabel(flowNames[0]),
-  ].find((value): value is string => Boolean(value))
-    ?? `${screen.platform || 'app'} screen`;
+  const detail =
+    [
+      cleanLabel(screen.description),
+      screen.type !== "Unclassified" ? cleanLabel(screen.type) : null,
+      screen.productArea !== "Unclassified"
+        ? cleanLabel(screen.productArea)
+        : null,
+      cleanLabel(screen.stateContext),
+      visibleText,
+      cleanLabel(flowNames[0]),
+    ].find((value): value is string => Boolean(value)) ??
+    `${screen.platform || "app"} screen`;
   return appName ? `${appName}, ${detail}` : detail;
 }
 
@@ -53,11 +57,12 @@ export function ScreenGridCard({
   accent,
   delay,
   onOpen,
+  onSave,
   appName,
   appId,
   collections,
   onCollectionsChange,
-  plan = 'free',
+  plan = "free",
   flowNames = [],
   selected = false,
   onSelectedChange,
@@ -70,10 +75,19 @@ export function ScreenGridCard({
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      {appId && collections && onCollectionsChange ? (
+      {onSave ? (
+        <Button
+          label="Save"
+          variant="primary"
+          size="sm"
+          className="screen-grid-card__save"
+          endContent={<Icon icon="chevronDown" size="sm" />}
+          onClick={onSave}
+        />
+      ) : appId && collections && onCollectionsChange ? (
         <CollectionPicker
           reference={{
-            kind: 'screen',
+            kind: "screen",
             app: appId,
             referenceId: String(screen.id),
             title: flowNames[0] ?? screenLabel,
@@ -117,8 +131,12 @@ export function ScreenGridCard({
         {actions}
         {onSelectedChange ? (
           <IconButton
-            label={selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`}
-            tooltip={selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`}
+            label={
+              selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`
+            }
+            tooltip={
+              selected ? `Deselect ${screenLabel}` : `Select ${screenLabel}`
+            }
             icon={<Icon icon="check" size="sm" />}
             variant="secondary"
             size="sm"

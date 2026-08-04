@@ -214,12 +214,15 @@ export function buildAppMetadata(row: AppMetadataRecord): CatalogAppMetadata {
   };
 }
 
-export function buildEvidencePage(page: EvidencePageRecord): {
+export function buildEvidencePage(
+  page: EvidencePageRecord,
+  imageUrl: (app: string, source: string, variant?: "thumb") => string = publicImageUrl,
+): {
   screens: CatalogScreen[];
   nextCursor: string | null;
 } {
   return {
-    screens: page.rows.map((image) => screen(image.app, image)),
+    screens: page.rows.map((image) => screen(image.app, image, undefined, imageUrl)),
     nextCursor: page.nextCursor,
   };
 }

@@ -289,6 +289,15 @@ const migrationDefinitions = [
     ],
   },
   {
+    file: "0069_project_document_comment_threads.sql",
+    patterns: [
+      /ADD COLUMN parent_comment_id BIGINT/,
+      /REFERENCES project_document_comments\(id\) ON DELETE CASCADE/,
+      /project_document_comments_parent_not_self/,
+      /project_document_comments_thread_idx/,
+    ],
+  },
+  {
     file: "0055_project_document_search.sql",
     patterns: [
       /ADD COLUMN search_text TEXT NOT NULL DEFAULT ''/,
@@ -369,6 +378,20 @@ const migrationDefinitions = [
       /ADD COLUMN provider TEXT NOT NULL DEFAULT 'm'/,
       /app_versions_provider_check/,
       /provider IN \('m', 'f'\)/,
+    ],
+  },
+  {
+    file: "0070_restore_password_auth_constraints.sql",
+    patterns: [
+      /password_hash IS NULL/,
+      /ALTER COLUMN password_hash SET NOT NULL/,
+      /DROP COLUMN IF EXISTS clerk_user_id/,
+    ],
+  },
+  {
+    file: "0071_drop_auth_sessions.sql",
+    patterns: [
+      /DROP TABLE IF EXISTS sessions/,
     ],
   },
 ] as const;

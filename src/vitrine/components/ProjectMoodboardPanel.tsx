@@ -1,5 +1,7 @@
-import { useRef } from "react";
-import { Button, Icon, IconButton, TextInput } from "@astryxdesign/core";
+import { useRef, useState } from "react";
+import { Button, Icon, IconButton, Selector, TextInput } from "@astryxdesign/core";
+
+import type { ProjectMoodboardSmartComposeResult } from "../projectMoodboardSmartCompose.ts";
 
 export type ProjectMoodboardSectionId =
   | "unsorted"
@@ -110,6 +112,9 @@ export function ProjectMoodboardPanel({
   onUpload,
   onCreateSection,
   onCreateStarter,
+  smartCompose,
+  smartComposeBusy = false,
+  onSmartCompose,
   onClose,
   readOnly,
 }: {
@@ -122,10 +127,14 @@ export function ProjectMoodboardPanel({
   onUpload(files: readonly File[]): void;
   onCreateSection(section: ProjectMoodboardSectionPreset): void;
   onCreateStarter(): void;
+  smartCompose?: ProjectMoodboardSmartComposeResult;
+  smartComposeBusy?: boolean;
+  onSmartCompose?(): void | Promise<void>;
   onClose(): void;
   readOnly: boolean;
 }) {
   const uploadRef = useRef<HTMLInputElement>(null);
+  const [smartComposeReviewOpen, setSmartComposeReviewOpen] = useState(false);
   const hasStarter = sectionIds.includes("unsorted")
     && sectionIds.includes("direction-a")
     && sectionIds.includes("direction-b")
@@ -252,6 +261,117 @@ export function ProjectMoodboardPanel({
         <p>Select a reference on the canvas to add context and decide whether it belongs.</p>
       </section>
 
+      <section className="project-moodboard-panel__section project-moodboard-panel__smart-compose">
+        <div className="project-moodboard-panel__section-heading">
+          <div>
+            <span>04</span>
+            <strong>Smart Compose</strong>
+          </div>
+          {smartCompose ? <small>Composed</small> : <small>Optional</small>}
+        </div>
+        <p>
+          Tidy references inside their current sections, extract a palette from Keep images,
+          and draft reviewable direction signals.
+        </p>
+        {!smartComposeReviewOpen ? (
+          <Button
+            label={smartCompose ? "Review and refresh" : "Review Smart Compose"}
+            variant="secondary"
+            size="sm"
+            clickAction={() => setSmartComposeReviewOpen(true)}
+            isDisabled={readOnly || referenceCount === 0 || smartComposeBusy}
+          />
+        ) : (
+          <div className="project-moodboard-panel__compose-review" role="group" aria-label="Review Smart Compose changes">
+            <strong>Review before composing</strong>
+            <p>
+              References stay in their existing sections. Keep, Maybe, Reject, captions,
+              and designer-authored decisions will not change.
+            </p>
+            <div>
+              <Button
+                label="Cancel"
+                variant="secondary"
+                size="sm"
+                clickAction={() => setSmartComposeReviewOpen(false)}
+                isDisabled={smartComposeBusy}
+              />
+              <Button
+                label={smartComposeBusy ? "Composing…" : "Compose board"}
+                variant="primary"
+                size="sm"
+                clickAction={() => {
+                  void onSmartCompose?.();
+                  setSmartComposeReviewOpen(false);
+                }}
+                isDisabled={!onSmartCompose || smartComposeBusy}
+              />
+            </div>
+          </div>
+        )}
+
+        {smartCompose ? (
+          <div className="project-moodboard-panel__compose-result">
+            <div className="project-moodboard-panel__compose-label">
+              <strong>Automated interpretation</strong>
+              <small>Confirm or reject these signals yourself.</small>
+            </div>
+            {smartCompose.palette.length > 0 ? (
+              <div className="project-moodboard-panel__palette" aria-label="Palette from Keep references">
+                {smartCompose.palette.map((color) => (
+                  <span key={color} title={color}>
+                    <i style={{ backgroundColor: color }} aria-hidden="true" />
+                    <small>{color}</small>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="project-moodboard-panel__compose-empty">
+                {smartCompose.basis.keepCount > 0
+                  ? "The Keep images could not be sampled. The board and source-linked summaries are still ready."
+                  : "Mark at least one image Keep to generate palette and visual signals."}
+              </p>
+            )}
+            {smartCompose.signals.length > 0 ? (
+              <dl className="project-moodboard-panel__signals">
+                {smartCompose.signals.map((signal) => (
+                  <div key={signal.label}>
+                    <dt>{signal.label}</dt>
+                    <dd>
+                      <strong>{signal.value}</strong>
+                      <small>{signal.evidence}</small>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            <div className="project-moodboard-panel__direction-reads">
+              <strong>Direction reads</strong>
+              {smartCompose.sections.map((section) => (
+                <article key={section.sectionId}>
+                  <strong>{section.title}</strong>
+                  <p>{section.summary}</p>
+                  {section.sources.length > 0 ? (
+                    <div>
+                      {section.sources.map((source, index) => (
+                        <a
+                          key={`${source.label}:${source.url ?? index}`}
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {source.label}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       {readOnly ? (
         <p className="project-moodboard-panel__readonly" role="status">
           View-only access. Ask a project editor to change this moodboard.
@@ -329,23 +449,17 @@ export function ProjectMoodboardReferenceInspector({
         ))}
       </div>
 
-      <label className="project-moodboard-reference__section-field">
-        <span>Move to section</span>
-        <select
+      <div className="project-moodboard-reference__section-field">
+        <Selector
+          label="Move to section"
           value={reference.sectionId ?? ""}
-          disabled={readOnly || sections.length === 0}
-          onChange={(event) => {
-            if (event.currentTarget.value) {
-              onSectionChange(event.currentTarget.value as ProjectMoodboardSectionId);
-            }
-          }}
-        >
-          <option value="" disabled>Choose a section</option>
-          {sections.map((section) => (
-            <option key={section.id} value={section.id}>{section.title}</option>
-          ))}
-        </select>
-      </label>
+          options={sections.map((section) => ({ value: section.id, label: section.title }))}
+          onChange={(value) => onSectionChange(value as ProjectMoodboardSectionId)}
+          isDisabled={readOnly || sections.length === 0}
+          size="sm"
+          width="100%"
+        />
+      </div>
 
       {readOnly ? (
         <p className="project-moodboard-reference__readonly" role="status">

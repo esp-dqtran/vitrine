@@ -1,5 +1,6 @@
 import { Database } from "@hocuspocus/extension-database";
 import { Server } from "@hocuspocus/server";
+import * as Y from "yjs";
 
 import {
   PROJECT_DOCUMENT_STATE_BYTES_MAX,
@@ -54,9 +55,25 @@ export function createProjectDocumentCollaborationService(
     extensions: [
       new Database({
         fetch: ({ documentName }) => dependencies.load(documentName),
-        store: ({ documentName, state }) => dependencies.store(documentName, state),
+        store: async ({ document, documentName, state }) => {
+          try {
+            await dependencies.store(documentName, state);
+          } catch (error) {
+            document.broadcastStateless(JSON.stringify({
+              type: "project-document.persistence-error",
+            }));
+            throw error;
+          }
+        },
       }),
     ],
+    async afterStoreDocument({ document }) {
+      document.broadcastStateless(JSON.stringify({
+        type: "project-document.persisted",
+        persistedAt: new Date().toISOString(),
+        stateVector: Buffer.from(Y.encodeStateVector(document)).toString("base64"),
+      }));
+    },
     async onAuthenticate({
       documentName,
       token,

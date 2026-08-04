@@ -175,6 +175,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /moodboardDecisionBadgeStyle/);
   assert.match(source, /readOnly={canvasReadOnly}/);
   assert.match(source, /if \(canvasReadOnly\) return/);
+  assert.match(source, /version: element\.version \+ 1/);
   assert.match(source, /onDecisionChange=\{\(decision\)/);
   assert.match(source, /setScreensOpen\(!screensOpen\)/);
   assert.match(source, /setTemplatesOpen\(!templatesOpen\)/);

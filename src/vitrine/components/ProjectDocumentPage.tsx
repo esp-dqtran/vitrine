@@ -12,6 +12,7 @@ import "./projectDocumentEvidence.css";
 
 import {
   addProjectDocumentCommentById,
+  deleteProjectDocumentCommentById,
   ensureProjectDocument,
   getProjectDocument,
   listProjectDocumentCommentsById,
@@ -41,8 +42,19 @@ import {
   type ProjectDocumentFlowOption,
 } from "./projectDocumentFlowBlock.tsx";
 import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
+import {
+  decodeProjectDocumentStateVector,
+  parseProjectDocumentPersistenceMessage,
+  projectDocumentStateVectorCoversDocument,
+} from "../../projectDocumentCollaborationProtocol.ts";
 
-type ConnectionState = "connecting" | "connected" | "disconnected";
+type DocumentSaveState =
+  | "connecting"
+  | "saving"
+  | "saved"
+  | "offline"
+  | "delayed"
+  | "error";
 
 interface Collaborator {
   color: string;
@@ -95,6 +107,15 @@ function PageIcon({
   return <Icon icon="viewColumns" size={size} />;
 }
 
+function DocumentSaveIcon({ state }: { state: DocumentSaveState }) {
+  if (state === "connecting" || state === "saving") {
+    return <Spinner size="sm" />;
+  }
+  if (state === "saved") return <Icon icon="check" size="sm" />;
+  if (state === "error") return <Icon icon="close" size="sm" />;
+  return <Icon icon="info" size="sm" />;
+}
+
 export function projectDocumentCollaborationUrl(
   location: Location = window.location,
 ): string {
@@ -108,38 +129,56 @@ export function projectDocumentCollaborationUrl(
 
 function DocumentDiscussion({
   comments,
+  context,
   draft,
   error,
   loading,
   submitting,
   onClose,
+  onContextClear,
+  onDelete,
   onDraftChange,
+  onJumpToContext,
+  onReply,
   onRetry,
   onResolve,
   onSubmit,
 }: {
   comments: ProjectDocumentCommentView[];
+  context: { blockId: string; quote?: string } | null;
   draft: string;
   error: string;
   loading: boolean;
   submitting: boolean;
   onClose: () => void;
+  onContextClear: () => void;
+  onDelete: (comment: ProjectDocumentCommentView) => Promise<void>;
   onDraftChange: (value: string) => void;
+  onJumpToContext: (comment: ProjectDocumentCommentView) => void;
+  onReply: (comment: ProjectDocumentCommentView, body: string) => Promise<boolean>;
   onRetry: () => void;
   onResolve: (comment: ProjectDocumentCommentView) => void;
   onSubmit: () => void;
 }) {
-  const openComments = comments.filter((comment) => !comment.resolvedAt);
-  const resolvedComments = comments.filter((comment) => comment.resolvedAt);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const roots = comments.filter((comment) => comment.parentCommentId === null);
+  const openComments = roots.filter((comment) => !comment.resolvedAt);
+  const resolvedComments = roots.filter((comment) => comment.resolvedAt);
+  const renderBody = (body: string) => body
+    .split(/(@[A-Za-z0-9._%+-]+(?:@[A-Za-z0-9.-]+\.[A-Za-z]{2,})?)/g)
+    .map((part, index) => part.startsWith("@")
+      ? <mark key={`${part}-${index}`}>{part}</mark>
+      : part);
   return (
     <aside
       id="project-document-discussion"
       className="project-document-discussion"
-      aria-label="Page discussion"
+      aria-label="Contextual review"
     >
       <header>
         <div>
-          <strong>Page discussion</strong>
+          <strong>Contextual review</strong>
           <span>{openComments.length} open</span>
         </div>
         <IconButton
@@ -168,11 +207,17 @@ function DocumentDiscussion({
           onSubmit();
         }}
       >
+        {context ? (
+          <div className="project-document-discussion__context">
+            <span>{context.quote ? `“${context.quote}”` : "Linked block"}</span>
+            <button type="button" onClick={onContextClear}>Remove</button>
+          </div>
+        ) : null}
         <textarea
-          aria-label="Add a page comment"
+          aria-label="Add a review comment"
           value={draft}
           onChange={(event) => onDraftChange(event.currentTarget.value)}
-          placeholder="Leave a comment…"
+          placeholder="Leave feedback or type @email to mention…"
           rows={3}
           maxLength={2000}
         />
@@ -187,10 +232,10 @@ function DocumentDiscussion({
       </form>
       <div className="project-document-discussion__list">
         {loading ? <p>Loading discussion…</p> : null}
-        {!loading && !comments.length ? (
+        {!loading && !roots.length ? (
           <div className="project-document-discussion__empty">
-            <strong>No comments yet</strong>
-            <span>Start a discussion about this page.</span>
+            <strong>No review threads yet</strong>
+            <span>Select text or a block to start one.</span>
           </div>
         ) : null}
         {[...openComments, ...resolvedComments].map((comment) => (
@@ -209,6 +254,15 @@ function DocumentDiscussion({
               {collaboratorInitials(comment.authorEmail)}
             </div>
             <div>
+              {comment.blockId ? (
+                <button
+                  type="button"
+                  className="project-document-comment__anchor"
+                  onClick={() => onJumpToContext(comment)}
+                >
+                  {comment.quote ? `“${comment.quote}”` : "Linked block"}
+                </button>
+              ) : null}
               <header>
                 <strong>{comment.authorEmail}</strong>
                 <time dateTime={comment.createdAt}>
@@ -218,13 +272,85 @@ function DocumentDiscussion({
                   })}
                 </time>
               </header>
-              <p>{comment.body}</p>
-              <Button
-                label={comment.resolvedAt ? "Reopen" : "Resolve"}
-                variant="ghost"
-                size="sm"
-                onClick={() => onResolve(comment)}
-              />
+              <p>{renderBody(comment.body)}</p>
+              <div className="project-document-comment__actions">
+                <Button
+                  label={comment.resolvedAt ? "Reopen" : "Resolve"}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onResolve(comment)}
+                />
+                <Button
+                  label="Reply"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setReplyingTo(comment.id);
+                    setReplyDraft("");
+                  }}
+                />
+                {comment.canDelete ? (
+                  <Button
+                    label="Delete"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void onDelete(comment)}
+                  />
+                ) : null}
+              </div>
+              {comments
+                .filter((reply) => reply.parentCommentId === comment.id)
+                .map((reply) => (
+                  <div className="project-document-comment__reply" key={reply.id}>
+                    <header>
+                      <strong>{reply.authorEmail}</strong>
+                      <time dateTime={reply.createdAt}>
+                        {new Date(reply.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </time>
+                    </header>
+                    <p>{renderBody(reply.body)}</p>
+                    {reply.canDelete ? (
+                      <Button
+                        label="Delete"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void onDelete(reply)}
+                      />
+                    ) : null}
+                  </div>
+                ))}
+              {replyingTo === comment.id ? (
+                <form
+                  className="project-document-comment__reply-composer"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const body = replyDraft.trim();
+                    if (!body) return;
+                    void onReply(comment, body).then((created) => {
+                      if (!created) return;
+                      setReplyingTo(null);
+                      setReplyDraft("");
+                    });
+                  }}
+                >
+                  <textarea
+                    aria-label={`Reply to ${comment.authorEmail}`}
+                    value={replyDraft}
+                    onChange={(event) => setReplyDraft(event.currentTarget.value)}
+                    placeholder="Reply or type @email to mention…"
+                    rows={2}
+                    maxLength={2000}
+                    autoFocus
+                  />
+                  <div>
+                    <Button type="button" label="Cancel" variant="ghost" size="sm" onClick={() => setReplyingTo(null)} />
+                    <Button type="submit" label="Reply" variant="primary" size="sm" isDisabled={!replyDraft.trim()} />
+                  </div>
+                </form>
+              ) : null}
             </div>
           </article>
         ))}
@@ -253,8 +379,8 @@ function CollaborativeProjectDocument({
   onDocumentChange: (document: ProjectDocumentView) => void;
 }) {
   const resolvedTheme = useResolvedThemeMode();
-  const [connection, setConnection] = useState<ConnectionState>("connecting");
-  const [synced, setSynced] = useState(false);
+  const [saveState, setSaveState] = useState<DocumentSaveState>("connecting");
+  const [lastPersistedAt, setLastPersistedAt] = useState<string>();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([
     { name: userName, color: collaboratorColor(userName) },
   ]);
@@ -271,9 +397,26 @@ function CollaborativeProjectDocument({
   const [discussionError, setDiscussionError] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
+  const [commentContext, setCommentContext] = useState<{
+    blockId: string;
+    quote?: string;
+  } | null>(null);
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const cancelTitleCommitRef = useRef(false);
+  const saveDelayTimerRef = useRef<number | undefined>(undefined);
+  const clearSaveDelayTimer = useCallback(() => {
+    if (saveDelayTimerRef.current === undefined) return;
+    window.clearTimeout(saveDelayTimerRef.current);
+    saveDelayTimerRef.current = undefined;
+  }, []);
+  const markSavePending = useCallback(() => {
+    clearSaveDelayTimer();
+    setSaveState("saving");
+    saveDelayTimerRef.current = window.setTimeout(() => {
+      setSaveState((current) => current === "saving" ? "delayed" : current);
+    }, 6_000);
+  }, [clearSaveDelayTimer]);
   const yDocument = useMemo(
     () => new Y.Doc(),
     [document.collaborationDocumentId],
@@ -284,14 +427,39 @@ function CollaborativeProjectDocument({
         url: projectDocumentCollaborationUrl(),
         name: document.collaborationDocumentId,
         document: yDocument,
-        onStatus: ({ status }) => setConnection(status),
-        onSynced: () => setSynced(true),
+        onStatus: ({ status }) => {
+          if (status === "disconnected") setSaveState("offline");
+          else if (status === "connecting") setSaveState("connecting");
+        },
+        onSynced: () => {
+          clearSaveDelayTimer();
+          setSaveState("saved");
+        },
+        onStateless: ({ payload }) => {
+          const message = parseProjectDocumentPersistenceMessage(payload);
+          if (!message) return;
+          if (message.type === "project-document.persistence-error") {
+            clearSaveDelayTimer();
+            setSaveState("error");
+            return;
+          }
+          if (
+            projectDocumentStateVectorCoversDocument(
+              decodeProjectDocumentStateVector(message.stateVector),
+              yDocument,
+            )
+          ) {
+            clearSaveDelayTimer();
+            setLastPersistedAt(message.persistedAt);
+            setSaveState("saved");
+          }
+        },
         onDisconnect: () => {
-          setConnection("disconnected");
-          setSynced(false);
+          clearSaveDelayTimer();
+          setSaveState("offline");
         },
       }),
-    [document.collaborationDocumentId, yDocument],
+    [clearSaveDelayTimer, document.collaborationDocumentId, yDocument],
   );
   const editor = useCreateBlockNote(
     withCollaboration({
@@ -311,6 +479,11 @@ function CollaborativeProjectDocument({
   );
 
   useEffect(() => setTitleDraft(document.title), [document.title]);
+
+  useEffect(() => {
+    yDocument.on("update", markSavePending);
+    return () => yDocument.off("update", markSavePending);
+  }, [markSavePending, yDocument]);
 
   useEffect(() => {
     const input = titleInputRef.current;
@@ -364,10 +537,11 @@ function CollaborativeProjectDocument({
 
   useEffect(
     () => () => {
+      clearSaveDelayTimer();
       provider.destroy();
       yDocument.destroy();
     },
-    [provider, yDocument],
+    [clearSaveDelayTimer, provider, yDocument],
   );
 
   const updateMetadata = async (patch: ProjectDocumentPatch) => {
@@ -379,6 +553,8 @@ function CollaborativeProjectDocument({
         await updateProjectDocumentById(document.projectId, document.id, patch),
       );
     } catch (cause) {
+      clearSaveDelayTimer();
+      setSaveState("error");
       setUiError((cause as Error).message);
       setTitleDraft(document.title);
     } finally {
@@ -415,6 +591,17 @@ function CollaborativeProjectDocument({
     }
   };
 
+  const startContextReview = () => {
+    const selectedBlock = editor.getSelection()?.blocks[0]
+      ?? editor.getTextCursorPosition().block;
+    const quote = editor.getSelectedText().trim().slice(0, 500);
+    setCommentContext({
+      blockId: selectedBlock.id,
+      ...(quote ? { quote } : {}),
+    });
+    void openDiscussion();
+  };
+
   const submitComment = async () => {
     const body = commentDraft.trim();
     if (!body) return;
@@ -425,14 +612,70 @@ function CollaborativeProjectDocument({
         document.projectId,
         document.id,
         body,
+        commentContext ?? {},
       );
       setComments((current) => [...current, comment]);
       setCommentDraft("");
+      setCommentContext(null);
     } catch (cause) {
       setDiscussionError((cause as Error).message);
     } finally {
       setCommentSubmitting(false);
     }
+  };
+
+  const replyToComment = async (
+    comment: ProjectDocumentCommentView,
+    body: string,
+  ) => {
+    setDiscussionError("");
+    try {
+      const reply = await addProjectDocumentCommentById(
+        document.projectId,
+        document.id,
+        body,
+        { parentCommentId: comment.id },
+      );
+      setComments((current) => [...current, reply]);
+      return true;
+    } catch (cause) {
+      setDiscussionError((cause as Error).message);
+      return false;
+    }
+  };
+
+  const deleteComment = async (comment: ProjectDocumentCommentView) => {
+    setDiscussionError("");
+    try {
+      await deleteProjectDocumentCommentById(
+        document.projectId,
+        document.id,
+        comment.id,
+      );
+      setComments((current) => current.filter((item) =>
+        item.id !== comment.id && item.parentCommentId !== comment.id));
+    } catch (cause) {
+      setDiscussionError((cause as Error).message);
+    }
+  };
+
+  const jumpToCommentContext = (comment: ProjectDocumentCommentView) => {
+    if (!comment.blockId) return;
+    try {
+      editor.setTextCursorPosition(comment.blockId, "start");
+    } catch {
+      setDiscussionError("The linked block is no longer in this document");
+      return;
+    }
+    const linkedBlock = window.document.querySelector<HTMLElement>(
+      `[data-id="${comment.blockId}"]`,
+    );
+    linkedBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
+    linkedBlock?.classList.add("project-document-comment-anchor--active");
+    window.setTimeout(
+      () => linkedBlock?.classList.remove("project-document-comment-anchor--active"),
+      1800,
+    );
   };
 
   const toggleComment = async (comment: ProjectDocumentCommentView) => {
@@ -463,14 +706,18 @@ function CollaborativeProjectDocument({
     }
   };
 
-  const connectionLabel =
-    connection === "connected" && synced
-      ? savingMetadata
-        ? "Saving…"
-        : "Saved"
-      : connection === "disconnected"
-        ? "Offline"
-        : "Connecting";
+  const displayedSaveState = savingMetadata ? "saving" : saveState;
+  const saveStatusLabel: Record<DocumentSaveState, string> = {
+    connecting: "Connecting",
+    saving: "Saving",
+    saved: "Saved",
+    offline: "Offline",
+    delayed: "Still saving",
+    error: "Save failed",
+  };
+  const saveStatusTitle = displayedSaveState === "saved" && lastPersistedAt
+    ? `Saved to Vitrines at ${new Date(lastPersistedAt).toLocaleTimeString()}`
+    : saveStatusLabel[displayedSaveState];
 
   return (
     <section
@@ -505,12 +752,14 @@ function CollaborativeProjectDocument({
         </nav>
         <div className="project-document-actions">
           <span
-            className={`project-document__connection project-document__connection--${connection}`}
+            className={`project-document__connection project-document__connection--${displayedSaveState}`}
             data-testid="project-document-connection"
             role="status"
             aria-live="polite"
+            aria-label={saveStatusLabel[displayedSaveState]}
+            title={saveStatusTitle}
           >
-            {connectionLabel}
+            <DocumentSaveIcon state={displayedSaveState} />
           </span>
           <div
             className="project-document-collaborators"
@@ -733,12 +982,12 @@ function CollaborativeProjectDocument({
               ) : null}
             </div>
             <Button
-              label="Add comment"
+              label="Comment on selection"
               variant="ghost"
               size="sm"
               aria-expanded={discussionOpen}
               aria-controls="project-document-discussion"
-              clickAction={() => openDiscussion()}
+              clickAction={startContextReview}
             />
           </div>
 
@@ -803,12 +1052,17 @@ function CollaborativeProjectDocument({
         {discussionOpen ? (
           <DocumentDiscussion
             comments={comments}
+            context={commentContext}
             draft={commentDraft}
             error={discussionError}
             loading={commentsLoading}
             submitting={commentSubmitting}
             onClose={() => setDiscussionOpen(false)}
+            onContextClear={() => setCommentContext(null)}
+            onDelete={deleteComment}
             onDraftChange={setCommentDraft}
+            onJumpToContext={jumpToCommentContext}
+            onReply={replyToComment}
             onRetry={() => void openDiscussion()}
             onResolve={(comment) => void toggleComment(comment)}
             onSubmit={() => void submitComment()}

@@ -40,7 +40,7 @@ Edit `.env` and fill in at minimum:
   ```
   To use local Postgres instead, leave `DATABASE_URL` unset — `docker-compose.yml` falls back to the bundled `postgres` container automatically.
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — bootstrap credentials for the initial admin account.
-- The `STRIPE_*` and `MEDIA_SIGNING_SECRET` placeholders in `.env.example` are fine as-is for local dev (billing/media-signing aren't required to browse the app).
+- The `STRIPE_*`, `MEDIA_SIGNING_SECRET`, and `JWT_SIGNING_SECRET` placeholders in `.env.example` are fine as-is for local dev. Use independent random secrets before deployment.
 - `REFERRAL_CAMPAIGN_ID`, `REFERRAL_CAMPAIGN_START`, and `REFERRAL_CAMPAIGN_END` — the immutable campaign identifier and actual 90-day UTC launch window. Set these explicitly before staging or production deployment instead of relying on Compose defaults.
 
 ## 3. Run database migrations
@@ -134,7 +134,7 @@ upgrades enabled. See [Designer Canvas service](docs/designer-canvas-service.md)
 Each Research Project also has a BlockNote document at
 `/projects/:projectId/document`. Start its Hocuspocus gateway with
 `npm run service:project-document-collab`; it listens on `3013` by default,
-authenticates the existing Astryx session cookie, and stores Yjs state in
+authenticates the existing Vitrines JWT cookie, and stores Yjs state in
 PostgreSQL. In production, set `PROJECT_DOCUMENT_COLLAB_ALLOWED_ORIGINS` to the
 exact app origin and route `/api/project-document-collaboration` to that service
 with WebSocket upgrades enabled.

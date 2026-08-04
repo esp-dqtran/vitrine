@@ -1,6 +1,6 @@
 import express from "express";
 import compression from "compression";
-import { cookieValue, SESSION_COOKIE } from "./sessionCookie.ts";
+import { AUTH_COOKIE, cookieValue } from "./authCookie.ts";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -53,12 +53,10 @@ import {
 import {
   authenticateUser,
   changePassword,
-  createSession,
-  deleteSession,
   registerUser,
-  resolveSession,
-  resolveSessionState,
+  type AuthUser,
 } from "../../../src/authStore.ts";
+import { createJwtAuth } from "../../../src/jwtAuth.ts";
 import { getDailySignups, getGrowthStats } from "../../../src/adminStats.ts";
 import {
   ADMIN_USER_FILTERS,
@@ -341,6 +339,13 @@ export function createCrawlRepairRequester(overrides: Partial<CrawlRepairRequest
 }
 
 const requestCrawlRepair = createCrawlRepairRequester();
+const defaultJwtAuth = createJwtAuth({
+  secret: process.env.JWT_SIGNING_SECRET ?? "development-only-jwt-signing-secret-32-characters",
+  issuer: process.env.JWT_ISSUER?.trim()
+    || process.env.APP_URL?.trim().replace(/\/$/, "")
+    || "http://localhost:5173",
+  audience: process.env.JWT_AUDIENCE?.trim() || "vitrines",
+});
 const categoryStore = createCategoryStore(
   (sql, values) => query(sql, values ? [...values] : undefined),
   (work) => withTransaction((client) =>
@@ -434,10 +439,8 @@ const defaults = {
   authenticateUser,
   registerUser,
   changePassword,
-  createSession,
-  resolveSession,
-  resolveSessionState,
-  deleteSession,
+  issueAuthToken: defaultJwtAuth.issueAuthToken,
+  verifyAuthToken: defaultJwtAuth.verifyAuthToken,
   canAccessApp,
   unlockFreeApp,
   getAccountEntitlements,
@@ -933,8 +936,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       res.status(401).json({ error: "Invalid email or password" });
       return;
     }
-    const session = await deps.createSession(user.id);
-    res.cookie(SESSION_COOKIE, session.token, cookieOptions).json(user);
+    const auth = await deps.issueAuthToken(user);
+    res.cookie(AUTH_COOKIE, auth.token, cookieOptions).json(user);
   });
 
   app.post("/auth/signup", async (req, res) => {
@@ -969,39 +972,23 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         // Referral attribution is best-effort and must never block account creation.
       }
     }
-    const session = await deps.createSession(user.id);
-    res.cookie(SESSION_COOKIE, session.token, cookieOptions).json(user);
+    const auth = await deps.issueAuthToken(user);
+    res.cookie(AUTH_COOKIE, auth.token, cookieOptions).json(user);
   });
 
-  app.post("/auth/logout", async (req, res) => {
-    const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
-    if (token) await deps.deleteSession(token);
-    res.clearCookie(SESSION_COOKIE, cookieOptions).status(204).end();
+  app.post("/auth/logout", (_req, res) => {
+    res.clearCookie(AUTH_COOKIE, cookieOptions).status(204).end();
   });
 
-  const resolveRequestSession = async (
+  const resolveRequestUser = async (
     req: express.Request,
-  ): Promise<Awaited<ReturnType<typeof resolveSessionState>>> => {
-    const token = cookieValue(req.headers.cookie, SESSION_COOKIE);
-    if (!token) return { status: "invalid" };
-    if (overrides.resolveSessionState) return deps.resolveSessionState(token);
-    if (overrides.resolveSession) {
-      const user = await deps.resolveSession(token);
-      return user ? { status: "authenticated", user } : { status: "invalid" };
-    }
-    return deps.resolveSessionState(token);
+  ): Promise<AuthUser | undefined> => {
+    const token = cookieValue(req.headers.cookie, AUTH_COOKIE);
+    return token ? deps.verifyAuthToken(token) : undefined;
   };
 
   app.get("/auth/me", async (req, res) => {
-    const resolution = await resolveRequestSession(req);
-    if (resolution.status === "signed_in_elsewhere") {
-      res.status(401).json({
-        error: "Signed in on another device",
-        code: "signed_in_elsewhere",
-      });
-      return;
-    }
-    res.json(resolution.status === "authenticated" ? resolution.user : null);
+    res.json((await resolveRequestUser(req)) ?? null);
   });
 
   app.get("/catalog", async (req, res) => {
@@ -1470,19 +1457,12 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   mountPublicSitesRoutes(app, sitesRouteDependencies);
 
   app.use(async (req, res, next) => {
-    const resolution = await resolveRequestSession(req);
-    if (resolution.status === "signed_in_elsewhere") {
-      res.status(401).json({
-        error: "Signed in on another device",
-        code: "signed_in_elsewhere",
-      });
-      return;
-    }
-    if (resolution.status !== "authenticated") {
+    const user = await resolveRequestUser(req);
+    if (!user) {
       res.status(401).json({ error: "Authentication required" });
       return;
     }
-    res.locals.user = resolution.user;
+    res.locals.user = user;
     next();
   });
 
@@ -3046,15 +3026,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     try {
-      const page = buildEvidencePage(await deps.appEvidencePage({
-        app: req.params.app,
-        kind: "screen",
-        platform: section.platform,
-        versionNumber: section.version?.version_number,
-        cursor,
-        limit,
-        publishedOnly: section.publishedOnly,
-      }));
+      const page = buildEvidencePage(
+        await deps.appEvidencePage({
+          app: req.params.app,
+          kind: "screen",
+          platform: section.platform,
+          versionNumber: section.version?.version_number,
+          cursor,
+          limit,
+          publishedOnly: section.publishedOnly,
+        }),
+        res.locals.user.role === "admin"
+          ? publicImageUrl
+          : (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
+      );
       await recordAppDetailSuccess(req, res);
       res.json({ ...page, platform: section.platform, version: section.version ?? null });
     } catch (error) {
@@ -3078,15 +3063,20 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     try {
-      const page = buildEvidencePage(await deps.appEvidencePage({
-        app: req.params.app,
-        kind: "ui_element",
-        platform: section.platform,
-        versionNumber: section.version?.version_number,
-        cursor,
-        limit,
-        publishedOnly: section.publishedOnly,
-      }));
+      const page = buildEvidencePage(
+        await deps.appEvidencePage({
+          app: req.params.app,
+          kind: "ui_element",
+          platform: section.platform,
+          versionNumber: section.version?.version_number,
+          cursor,
+          limit,
+          publishedOnly: section.publishedOnly,
+        }),
+        res.locals.user.role === "admin"
+          ? publicImageUrl
+          : (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
+      );
       await recordAppDetailSuccess(req, res);
       res.json({ ...page, platform: section.platform, version: section.version ?? null });
     } catch (error) {

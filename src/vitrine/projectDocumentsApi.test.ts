@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  addProjectDocumentCommentById,
   addProjectDocumentComment,
+  deleteProjectDocumentCommentById,
   ensureProjectDocument,
   listProjectDocumentComments,
   ProjectDocumentApiError,
@@ -72,4 +74,37 @@ test("surfaces project document API failures", async (t) => {
       && error.status === 404
       && error.message === "Project document not found",
   );
+});
+
+test("sends anchored review replies and deletes comments by document id", async (t) => {
+  const original = globalThis.fetch;
+  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), init });
+    return init?.method === "DELETE"
+      ? new Response(null, { status: 204 })
+      : Response.json({ id: 12 });
+  };
+
+  await addProjectDocumentCommentById(PROJECT_ID, 6, "Review this", {
+    blockId: "block-1",
+    quote: "Selected copy",
+  });
+  await addProjectDocumentCommentById(PROJECT_ID, 6, "Agreed", {
+    parentCommentId: 12,
+  });
+  await deleteProjectDocumentCommentById(PROJECT_ID, 6, 12);
+
+  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), {
+    body: "Review this",
+    blockId: "block-1",
+    quote: "Selected copy",
+  });
+  assert.deepEqual(JSON.parse(String(calls[1].init?.body)), {
+    body: "Agreed",
+    parentCommentId: 12,
+  });
+  assert.equal(calls[2].url, `/api/research-projects/${PROJECT_ID}/documents/6/comments/12`);
+  assert.equal(calls[2].init?.method, "DELETE");
 });

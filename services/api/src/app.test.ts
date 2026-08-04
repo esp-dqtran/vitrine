@@ -241,7 +241,7 @@ test("mounts scoped App Knowledge generation after session and admin authorizati
     updatedAt: "2026-07-23T00:00:00.000Z",
   };
   const api = createApiApp({
-    resolveSession: async (token) => token === "admin" ? admin : token === "user" ? user : undefined,
+    verifyAuthToken: async (token) => token === "admin" ? admin : token === "user" ? user : undefined,
     canAccessApp: async () => true,
     resolveAppVersion: async () => ({
       ...publishedVersion,
@@ -565,7 +565,7 @@ test("manages Categories and App assignments through admin-only endpoints", asyn
     },
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     categoryStore,
   } as never));
   t.after(() => close(server));
@@ -638,7 +638,7 @@ test("manages Categories and App assignments through admin-only endpoints", asyn
 test("guards and validates Category management endpoints", async (t) => {
   let calls = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async (token: string) => token === "admin" ? admin : user,
+    verifyAuthToken: async (token: string) => token === "admin" ? admin : user,
     categoryStore: {
       list: async () => { calls += 1; return []; },
       create: async () => { calls += 1; throw new CategoryConflictError("duplicate"); },
@@ -682,7 +682,7 @@ test("guards and validates Category management endpoints", async (t) => {
 test("keeps the progress stream admin-only without opening a subscription", async (t) => {
   let subscriptions = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     readProgress: () => ({ entries: [] }),
     subscribeProgress: () => {
       subscriptions++;
@@ -703,7 +703,7 @@ test("progress stream sends complete snapshots and cleans up its subscription", 
   let listener: ((snapshot: ProgressSnapshot) => void) | undefined;
   let unsubscribeCalls = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     readProgress: () => initial,
     subscribeProgress: (next: (snapshot: ProgressSnapshot) => void) => {
       listener = next;
@@ -740,7 +740,7 @@ test("keeps every crawl administration route admin-only before dependencies run"
     return undefined as never;
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     createJob: touched,
     publishJob: touched,
     listCrawlPlans: touched,
@@ -800,7 +800,7 @@ test("creates and inspects an admin-only autonomous crawl without exposing sessi
     missions: [], states: [], transitions: [],
   };
   const makeApp = (currentUser: typeof admin | typeof user) => createApiApp({
-    resolveSession: async () => currentUser,
+    verifyAuthToken: async () => currentUser,
     ensureActiveAppVersion: async () => ({ id: 8 }),
     createAutonomousRun: async (input: unknown) => { createdInputs.push(input); return detail.run as never; },
     getAutonomousRun: async () => detail as never,
@@ -841,7 +841,7 @@ test("creates and inspects an admin-only autonomous crawl without exposing sessi
 test("rejects unsafe autonomous inputs before creating a parent run", async (t) => {
   let creates = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     ensureActiveAppVersion: async () => ({ id: 8 }),
     createAutonomousRun: async () => { creates++; return crawlRun() as never; },
   } as never));
@@ -871,7 +871,7 @@ test("encrypts shared crawl sessions and returns metadata only", async (t) => {
   let encrypted = "";
   const session = { id: "5", app_id: 4, encrypted_storage_state: "", state_version: 2, updated_by: admin.id, updated_at: new Date("2026-07-16T00:00:00Z") };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     crawlSessionEncryptionKey: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
     saveCrawlAccountSession: async (_app: string, value: string) => { encrypted = value; return { ...session, encrypted_storage_state: value } as never; },
     getCrawlAccountSession: async () => ({ ...session, encrypted_storage_state: encrypted }) as never,
@@ -896,7 +896,7 @@ test("validates crawl slugs, public URLs, plans, modes, ids, and repair requests
     return undefined as never;
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     createJob: touched,
     listCrawlPlans: touched,
     getCrawlPlan: touched,
@@ -949,7 +949,7 @@ test("enqueues research and supports immutable plan revision and approval", asyn
   const saved: unknown[] = [];
   const approvedBy: number[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     createJob: async (type: string, payload: Record<string, unknown>) => {
       assert.equal(type, "research-app");
       assert.deepEqual(payload, { name: "atlassian", homepageUrl: "https://www.atlassian.com/", provider: "claude" });
@@ -997,7 +997,7 @@ test("reports required secret configuration without returning secret values", as
   t.after(() => { delete process.env.ATLASSIAN_TEST_EMAIL; });
   const plan = { id: "11", app: "atlassian", revision: 1, status: "draft", plan: crawlPlanWithSecret() };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     getCrawlPlan: async () => plan as never,
   } as never));
   t.after(() => close(server));
@@ -1049,7 +1049,7 @@ test("persists crawl runs before transport, returns durable details, and control
     proposed_step: crawlPlan().flows[0].steps[0],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     createCrawlRun: async (input: unknown) => { createdInputs.push(input); return queued as never; },
     publishJob: async (job: unknown) => { published.push(job); },
     listCrawlRuns: async () => [queued] as never,
@@ -1113,7 +1113,7 @@ test("persists crawl runs before transport, returns durable details, and control
 test("marks a persisted run interrupted and returns only safe IDs when publishing fails", async (t) => {
   const interrupted: string[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     createCrawlRun: async () => crawlRun() as never,
     publishJob: async () => { throw new Error("broker-password-must-not-leak"); },
     markQueuedCrawlRunInterrupted: async (runId: string) => {
@@ -1154,7 +1154,7 @@ test("serves only the database-bound internal failure object for its exact flow 
     delete: async () => false,
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     objectStore,
     crawlFailureObject: async (input: unknown) => {
       lookup = input;
@@ -1184,7 +1184,7 @@ test("keeps repair suggestion, apply, and reject as separate admin actions", asy
     proposed_step: crawlPlan().flows[0].steps[0],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     requestCrawlRepair: async (input: unknown) => { requests.push(input); return proposed as never; },
     applyCrawlRepair: async (id: string, userId: number) => {
       applies.push({ id, userId });
@@ -1275,7 +1275,7 @@ test("repair suggestions attach only the verified internal failure object", asyn
     [2, jobRecord({ id: 2, type: "import-app", status: "running" })],
   ]);
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     getJob: async (id) => jobs.get(id),
     setJobStatus: async (id, status, message) => {
       jobs.set(id, { ...jobs.get(id)!, status, message: message ?? null });
@@ -1293,7 +1293,7 @@ test("repair suggestions attach only the verified internal failure object", asyn
 test("serves a hydrated structured design system", async (t) => {
   const { base, server } = await serve(
     createApiApp({
-      resolveSession: async () => admin,
+      verifyAuthToken: async () => admin,
       getDesignSystem: async () => ({
         app: "linear",
         generatedAt: "2026-07-10T00:00:00.000Z",
@@ -1372,7 +1372,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     delete: async () => false,
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getAccountEntitlements: async () => proEntitlements,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
@@ -1426,7 +1426,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
 
 test("rejects the retired flow-md export format", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
@@ -1439,7 +1439,7 @@ test("rejects the retired flow-md export format", async (t) => {
 
 test("does not mount the retired flow-doc endpoints", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
   }));
   t.after(() => close(server));
   const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
@@ -1463,7 +1463,7 @@ test("does not fall back to legacy media when an associated object fails verific
   };
   let created = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     objectStore: { ...localObjectStore, get: async () => ({ metadata: expected, body: Buffer.from("wrong") }) },
     imageObjectById: async () => expected,
@@ -1502,7 +1502,7 @@ test("downloads an authorized completed export locally or by short signed redire
     signedGetUrl: async () => signed ? "https://objects.example/signed" : undefined,
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     objectStore: store,
     authorizedExportObject: async ({ exportId }) => {
       if (exportId === 93) throw new Error("exports/91/secret-key");
@@ -1535,7 +1535,7 @@ test("does not complete an export when object upload fails", async (t) => {
   const completed: number[] = [];
   const failed: number[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
     recordAccessEvent: async () => undefined,
@@ -1576,7 +1576,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   ];
   const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getAccountEntitlements: async () => proEntitlements,
     allImages: async () => [{
@@ -1649,7 +1649,7 @@ test("feature-flagged search bypasses legacy catalog assembly and protects media
     degraded: true,
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     getAccountEntitlements: async () => proEntitlements,
     advancedSearchEnabled: true,
     adaptiveSearch: {
@@ -1697,7 +1697,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
   let notes = "";
   const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getAccountEntitlements: async () => proEntitlements,
     countUserCollections: async () => 1,
@@ -1753,7 +1753,7 @@ test("enforces Free search, collection, note, and unlock policy", async (t) => {
   let collectionCount = 0;
   let unlockCalled = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     getAccountEntitlements: async () => freeEntitlements,
     countUserCollections: async () => collectionCount,
     canAccessApp: async () => true,
@@ -1796,7 +1796,7 @@ test("enforces Free search, collection, note, and unlock policy", async (t) => {
 test("prevents active Pro from banking permanent Free unlocks", async (t) => {
   let unlockCalled = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     getAccountEntitlements: async () => proEntitlements,
     unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
   }));
@@ -1811,7 +1811,7 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
   const version = { id: 12, app: "linear", platform: "web", version_number: 2, label: "v2", source_url: null, provider: "m" as const, status: "draft" as const, notes: "", captured_at: "2026-07-11T00:00:00.000Z", submitted_at: null, published_at: null, screen_count: 7, analyzed_count: 7, component_count: 2, token_count: 4, flow_count: 1 };
   let publishedOnly: boolean | undefined;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async (token) => token === "admin" ? admin : user,
+    verifyAuthToken: async (token) => token === "admin" ? admin : user,
     listAppVersions: async (_app, _platform, only) => { publishedOnly = only; return only ? [] : [version]; },
     getVersionPublicationBlockers: async () => [],
     submitAppVersionForReview: async () => ({ ...version, status: "in_review" as const }),
@@ -1830,7 +1830,7 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
 test("returns 404 when an app has no structured design system", async (t) => {
   const { base, server } = await serve(
     createApiApp({
-      resolveSession: async () => admin,
+      verifyAuthToken: async () => admin,
       getDesignSystem: async () => undefined,
       getAppFlows: async () => [],
       appImages: async () => [],
@@ -1850,7 +1850,7 @@ test("serves imported current design when an entitled user has no published vers
     components: [], flows: [], rules: [],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getVersionDesignSystem: async () => undefined,
     getImportedCurrentDesignSystem: async (app, platform) => app === "linear" && platform === "web" ? imported : undefined,
@@ -1873,7 +1873,7 @@ test("serves imported current design when the published version has only an empt
     tokens: [], components: [], flows: [], rules: [],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: placeholder, flows: [] }),
     getImportedCurrentDesignSystem: async () => imported,
@@ -1890,7 +1890,7 @@ test("serves imported current design when the published version has only an empt
 test("never uses imported-current fallback for an explicit version", async (t) => {
   let fallbackReads = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     getVersionDesignSystem: async () => undefined,
     getDesignSystem: async () => undefined,
@@ -1916,7 +1916,7 @@ test("exports imported current design when an entitled user has no published ver
     components: [], flows: [], rules: [],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user, canAccessApp: async () => true,
+    verifyAuthToken: async () => user, canAccessApp: async () => true,
     getAccountEntitlements: async () => proEntitlements,
     reserveExportOperation: async () => ({ status: "reserved" as const, used: 1, limit: 20 as const, resetAt: "2026-08-01T00:00:00.000Z" }),
     createExport: async () => 99, completeExport: async () => undefined, failExport: async () => undefined,
@@ -1938,7 +1938,7 @@ test("exports imported current design when an entitled user has no published ver
 test("serves crawled flows even when an app has not been through AI synthesis", async (t) => {
   const { base, server } = await serve(
     createApiApp({
-      resolveSession: async () => admin,
+      verifyAuthToken: async () => admin,
       getDesignSystem: async () => undefined,
       appImages: async () => [
         { id: 7, app: "lang-chain", platform: "web", image_url: "mobbin-bulk:0123456789abcdef", description: null },
@@ -1968,7 +1968,7 @@ test("serves local bulk media", async (t) => {
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
   const { base, server } = await serve(
-    createApiApp({ dataDir, resolveSession: async () => admin })
+    createApiApp({ dataDir, verifyAuthToken: async () => admin })
   );
   t.after(async () => {
     await close(server);
@@ -2005,7 +2005,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
     dataDir,
     mediaSigningSecret: "0123456789abcdef0123456789abcdef",
     nowSeconds: () => nowSeconds,
-    resolveSession: async (token) => token === "owner" ? user : other,
+    verifyAuthToken: async (token) => token === "owner" ? user : other,
     canAccessApp: async () => true,
     getDesignSystem: async () => signedSnapshot,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: signedSnapshot, flows: [] }),
@@ -2038,7 +2038,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
 
 test("keeps health public and rejects private data without a session", async (t) => {
   const { base, server } = await serve(
-    createApiApp({ resolveSession: async () => undefined })
+    createApiApp({ verifyAuthToken: async () => undefined })
   );
   t.after(() => close(server));
 
@@ -2240,7 +2240,7 @@ test("rejects invalid repeated canonical catalog filters before reading the stor
 test("keeps the catalog public and every App detail endpoint private", async (t) => {
   const { base, server } = await serve(createApiApp({
     publishedCatalogPage: async () => catalogPageRecord,
-    resolveSession: async () => undefined,
+    verifyAuthToken: async () => undefined,
   } as never));
   t.after(() => close(server));
 
@@ -2295,7 +2295,7 @@ test("keeps the Sites catalog public and every Site detail endpoint private", as
   const { base, server } = await serve(createApiApp({
     sitesStore,
     objectStore: localObjectStore,
-    resolveSession: async () => undefined,
+    verifyAuthToken: async () => undefined,
   } as never));
   t.after(() => close(server));
 
@@ -2594,7 +2594,7 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
     },
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     objectStore: signedStore,
     adminImageObject: async () => ({ ...previewMetadata, accessClass: "protected" }),
   }));
@@ -2611,7 +2611,7 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
 test("passes the thumb variant through to the object lookup, defaulting to full otherwise", async (t) => {
   const seenVariants: Array<string | undefined> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     objectStore: localObjectStore,
     adminImageObject: async (input) => {
       seenVariants.push(input.variant);
@@ -2636,7 +2636,7 @@ test("streams protected media through the API when inline delivery is requested"
     },
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     objectStore,
     adminImageObject: async () => protectedMetadata,
   }));
@@ -2657,7 +2657,7 @@ test("streams protected media through the API when inline delivery is requested"
 test("gates customer app detail and unlocks a Free app", async (t) => {
   let unlocked = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     appMetadata: async (app: string) => ({
       app, icon_url: null, categories: [], total_screens: 1, total_ui_elements: 0,
       total_flows: 0, analyzed_screens: 0, last_captured_at: null,
@@ -2687,7 +2687,7 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
 
 test("returns app metadata without invoking section dependencies", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appMetadata: async () => ({
       app: "linear",
@@ -2732,7 +2732,7 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
   };
   const seen: unknown[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appMetadata: async () => ({
       app: "example-com",
@@ -2804,7 +2804,7 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   const calls: Array<{ kind: string; limit?: number }> = [];
   let versionResolutions = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appPlatforms: async () => ["ios"],
     listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
@@ -2832,6 +2832,61 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
+test("signs customer Screen and UI Element media URLs", async (t) => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-section-media-"));
+  mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
+  writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
+  const { base, server } = await serve(createApiApp({
+    dataDir,
+    mediaSigningSecret: "0123456789abcdef0123456789abcdef",
+    nowSeconds: () => 1_000,
+    verifyAuthToken: async () => user,
+    canAccessApp: async () => true,
+    appPlatforms: async () => ["web"],
+    resolveAppVersion: async () => publishedVersion,
+    appEvidencePage: async (input) => ({
+      rows: [{
+        ...catalogImages[0],
+        kind: input.kind,
+        image_url: input.kind === "ui_element"
+          ? "mobbin-bulk:ui_element:0123456789abcdef:1"
+          : "mobbin-bulk:0123456789abcdef",
+        ...(input.kind === "ui_element"
+          ? {
+              source_screen_id: 8,
+              source_screen_image_url: "mobbin-bulk:0123456789abcdef",
+            }
+          : {}),
+      }],
+      nextCursor: null,
+    }),
+    recordAccessEvent: async () => {},
+    recordReferralAppOpen: async () => {},
+  }));
+  t.after(async () => {
+    await close(server);
+    rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  const headers = { cookie: "astryx_session=user" };
+  const screens = await (await fetch(`${base}/apps/linear/screens?platform=web&version=1`, { headers })).json();
+  const elements = await (await fetch(`${base}/apps/linear/ui-elements?platform=web&version=1`, { headers })).json();
+  const screenUrl = new URL(screens.screens[0].url, base);
+  const screenThumbnailUrl = new URL(screens.screens[0].thumbnailUrl, base);
+  const elementUrl = new URL(elements.screens[0].url, base);
+  const sourceScreenUrl = new URL(elements.screens[0].sourceScreen.url, base);
+
+  for (const url of [screenUrl, screenThumbnailUrl, elementUrl, sourceScreenUrl]) {
+    assert.equal(url.searchParams.get("expires"), "1300");
+    assert.ok(url.searchParams.get("token"));
+  }
+  assert.equal(screenThumbnailUrl.searchParams.get("variant"), "thumb");
+  assert.equal(elementUrl.searchParams.get("kind"), "ui_element");
+  assert.equal(elementUrl.searchParams.get("i"), "1");
+  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`, { headers })).status, 200);
+  assert.equal((await fetch(`${base}${elementUrl.pathname.replace("/api", "")}${elementUrl.search}`, { headers })).status, 200);
+});
+
 test("summarizes analyzed UI element crops for the Design System", async (t) => {
   let requested: {
     app: string;
@@ -2840,7 +2895,7 @@ test("summarizes analyzed UI element crops for the Design System", async (t) => 
     limit?: number;
   } | undefined;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appPlatforms: async () => ["ios"],
     resolveAppVersion: async () => ({ ...publishedVersion, app: "shopee", platform: "ios" }),
@@ -2887,7 +2942,7 @@ test("summarizes analyzed UI element crops for the Design System", async (t) => 
 test("loads flows without loading a design-system snapshot", async (t) => {
   let evidenceIds: number[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     appPlatforms: async () => ["ios"],
     listAppVersions: async () => [{ ...publishedVersion, app: "linear", platform: "ios" }],
@@ -2916,7 +2971,7 @@ test("uses app-scoped evidence for an admin app without a published version", as
   const platformMetadata = { appPlatforms: async () => ["web"] };
   const { base, server } = await serve(createApiApp({
     ...platformMetadata,
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     canAccessApp: async () => true,
     listAppVersions: async () => { throw new Error("section routes must not list all versions"); },
     resolveAppVersion: async () => undefined,
@@ -2936,7 +2991,7 @@ test("uses app-scoped evidence for an admin app without a published version", as
 
 test("keeps the old gallery and pipeline state admin-only", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     allImages: async () => catalogImages,
     listJobs: async () => [],
     listAdminUsersPage: async () => { throw new Error("should not be called"); },
@@ -2961,7 +3016,7 @@ test("paginates the admin app gallery without loading every image", async (t) =>
     appId: 42,
   });
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     allImages: async () => { throw new Error("legacy full-gallery query must not run"); },
     adminAppPage: async (input) => {
       requested = input;
@@ -2995,7 +3050,7 @@ test("paginates the admin app gallery without loading every image", async (t) =>
 test("serves canonical filtered admin Apps discovery with progress and facets", async (t) => {
   const inputs: unknown[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     adminAppPage: async () => { throw new Error("legacy admin page must not run"); },
     adminCatalogPage: async (input: unknown) => {
       inputs.push(input);
@@ -3041,7 +3096,7 @@ test("serves canonical filtered admin Apps discovery with progress and facets", 
 test("rejects invalid canonical admin Apps discovery before reading stores", async (t) => {
   let calls = 0;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     adminCatalogPage: async () => {
       calls += 1;
       return catalogPageRecord;
@@ -3059,7 +3114,7 @@ test("rejects invalid canonical admin Apps discovery before reading stores", asy
 
 test("returns 400 for an invalid admin Apps cursor", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     adminAppPage: async () => { throw new CatalogCursorError(); },
   }));
   t.after(() => close(server));
@@ -3082,7 +3137,7 @@ test("returns a paginated user directory and growth stats for an admin", async (
   const userRow = { id: 2, email: user.email, role: "user" as const, active: true, created_at: "2026-07-14T00:00:00.000Z", subscription_status: null };
   let requested: unknown;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     listAdminUsersPage: async (input) => {
       requested = input;
       return { users: [userRow], nextCursor: "next", total: 42 };
@@ -3105,7 +3160,7 @@ test("returns a paginated user directory and growth stats for an admin", async (
 test("updates account state and maps safety errors", async (t) => {
   let requested: unknown;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     setAdminUserActive: async (input) => {
       requested = input;
       return { status: "forbidden", reason: "self_disable" };
@@ -3136,7 +3191,7 @@ test("returns global and per-user usage for supported ranges", async (t) => {
   };
   const requested: unknown[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     getFeatureUsageOverview: async (range) => { requested.push(["global", range]); return overview; },
     getUserFeatureUsage: async (userId, range) => { requested.push(["user", userId, range]); return detail; },
   }));
@@ -3156,7 +3211,7 @@ test("returns global and per-user usage for supported ranges", async (t) => {
 
 test("validates user analytics ranges and missing users", async (t) => {
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     getUserFeatureUsage: async () => undefined,
   }));
   t.after(() => close(server));
@@ -3164,17 +3219,11 @@ test("validates user analytics ranges and missing users", async (t) => {
   assert.equal((await fetch(`${base}/users/999/usage?range=30d`, { headers: adminCookie })).status, 404);
 });
 
-test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
-  let deletedToken: string | undefined;
+test("logs in with a JWT cookie, resolves me, and clears the cookie on logout", async (t) => {
   const { base, server } = await serve(
     createApiApp({
       authenticateUser: async (email, password) =>
         email === admin.email && password === "admin password" ? admin : undefined,
-      createSession: async () => ({ token: "raw-session-token", expiresAt: new Date() }),
-      resolveSession: async (token) => (token === "raw-session-token" ? admin : undefined),
-      deleteSession: async (token) => {
-        deletedToken = token;
-      },
     })
   );
   t.after(() => close(server));
@@ -3186,21 +3235,29 @@ test("logs in with a secure cookie, resolves me, and logs out", async (t) => {
   });
   assert.equal(login.status, 200);
   const cookie = login.headers.get("set-cookie") ?? "";
-  assert.match(cookie, /astryx_session=raw-session-token/);
+  const token = cookie.match(/astryx_session=([^;]+)/)?.[1];
+  assert.ok(token);
+  assert.equal(token.split(".").length, 3);
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=Strict/i);
 
   const me = await fetch(`${base}/auth/me`, {
-    headers: { cookie: "astryx_session=raw-session-token" },
+    headers: { cookie: `astryx_session=${token}` },
   });
   assert.deepEqual(await me.json(), admin);
 
   const logout = await fetch(`${base}/auth/logout`, {
     method: "POST",
-    headers: { cookie: "astryx_session=raw-session-token" },
+    headers: { cookie: `astryx_session=${token}` },
   });
   assert.equal(logout.status, 204);
-  assert.equal(deletedToken, "raw-session-token");
+  assert.match(logout.headers.get("set-cookie") ?? "", /astryx_session=;/);
+
+  // Stateless logout cannot revoke a copied token before its expiry.
+  const copiedToken = await fetch(`${base}/auth/me`, {
+    headers: { cookie: `astryx_session=${token}` },
+  });
+  assert.deepEqual(await copiedToken.json(), admin);
 });
 
 test("resolves an anonymous me request as no user", async (t) => {
@@ -3233,7 +3290,6 @@ test("signs up a new user with a secure cookie", async (t) => {
     createApiApp({
       registerUser: async (email, password) =>
         email === newUser.email && password === "a long enough password" ? newUser : undefined,
-      createSession: async () => ({ token: "signup-session-token", expiresAt: new Date() }),
     })
   );
   t.after(() => close(server));
@@ -3246,7 +3302,9 @@ test("signs up a new user with a secure cookie", async (t) => {
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), newUser);
   const cookie = response.headers.get("set-cookie") ?? "";
-  assert.match(cookie, /astryx_session=signup-session-token/);
+  const token = cookie.match(/astryx_session=([^;]+)/)?.[1];
+  assert.ok(token);
+  assert.equal(token.split(".").length, 3);
   assert.match(cookie, /HttpOnly/i);
 });
 
@@ -3295,7 +3353,6 @@ test("validates referral links publicly and keeps signup available when attribut
       attributedUserId = invitedUserId;
       throw new Error("referral store unavailable");
     },
-    createSession: async () => ({ token: "referred-session", expiresAt: new Date() }),
   } as never));
   t.after(() => close(server));
 
@@ -3328,7 +3385,7 @@ test("returns safe referral state, creates a share link, and activates a banked 
     referrals: [{ id: "11", state: "rewarded" as const }],
   };
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     referralCampaign,
     appUrl: "https://astryx.example",
     createReferralCode: async () => ({ token: "s".repeat(48) }),
@@ -3357,7 +3414,7 @@ test("records only authorized app-detail opens for referral activation", async (
   const recorded: string[] = [];
   let allowed = true;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     referralCampaign,
     canAccessApp: async () => allowed,
     recordReferralAppOpen: async (_userId: number, appSlug: string) => {
@@ -3395,7 +3452,7 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
   };
   let metricCalls = 0;
   const userApp = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     referralCampaign,
     referralCampaignMetrics: async () => { metricCalls += 1; return metrics; },
   } as never));
@@ -3407,7 +3464,7 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
 
   const revoked: string[] = [];
   const adminApp = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     referralCampaign,
     referralCampaignMetrics: async () => metrics,
     revokeReferral: async (id: number) => { revoked.push(`referral:${id}`); return id === 11; },
@@ -3425,23 +3482,18 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
   assert.deepEqual(revoked, ["referral:11", "reward:12", "entitlement:13", "referral:99"]);
 });
 
-test("explains when a normal-user session was evicted", async (t) => {
-  const { base, server } = await serve(
-    createApiApp({ resolveSessionState: async () => ({ status: "signed_in_elsewhere" }) })
-  );
+test("rejects legacy opaque authentication cookies after the JWT cutover", async (t) => {
+  const { base, server } = await serve(createApiApp());
   t.after(() => close(server));
   const response = await fetch(`${base}/auth/me`, {
-    headers: { cookie: "astryx_session=evicted" },
+    headers: { cookie: "astryx_session=legacy-opaque-token" },
   });
-  assert.equal(response.status, 401);
-  assert.deepEqual(await response.json(), {
-    error: "Signed in on another device",
-    code: "signed_in_elsewhere",
-  });
+  assert.equal(response.status, 200);
+  assert.equal(await response.json(), null);
 });
 
 test("rejects normal users and keeps imports disabled for admins", async (t) => {
-  const userApp = await serve(createApiApp({ resolveSession: async () => user }));
+  const userApp = await serve(createApiApp({ verifyAuthToken: async () => user }));
   t.after(() => close(userApp.server));
   const denied = await fetch(`${userApp.base}/jobs`, {
     method: "POST",
@@ -3457,7 +3509,7 @@ test("rejects normal users and keeps imports disabled for admins", async (t) => 
   let created = false;
   const adminApp = await serve(
     createApiApp({
-      resolveSession: async () => admin,
+      verifyAuthToken: async () => admin,
       createJob: async () => {
         created = true;
         return 9;
@@ -3505,7 +3557,7 @@ test("accepts raw Stripe webhooks before JSON parsing", async (t) => {
 test("creates Checkout and returns safe subscription state", async (t) => {
   const events: Array<{ action: string; outcome: string; metadata?: Record<string, unknown> }> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     billing: {
       createCheckout: async (_user, interval) => ({ status: "created", url: `https://stripe/${interval}` }),
       createPortal: async () => ({ url: "https://stripe/portal" }),
@@ -3557,7 +3609,7 @@ test("creates Checkout and returns safe subscription state", async (t) => {
 test("records only allowed authenticated app funnel events", async (t) => {
   const events: Array<{ action: string; outcome: string; appSlug?: string }> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
@@ -3584,7 +3636,7 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
     { ...catalogImages[0], id: 8, app: "notion", image_url: "mobbin-bulk:1111111111111111" },
   ];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     appMetadata: async (app) => ({
       app, icon_url: null, categories: [],
@@ -3612,7 +3664,7 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
   let receivedUserId: number | undefined;
   const events: Array<{ featureKey?: string; action: string; outcome: string }> = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     appImages: async () => catalogImages,
     recordAccessEvent: async (event) => { events.push(event); },
@@ -3643,7 +3695,7 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
 test("rejects oversized or unavailable export reservations", async (t) => {
   let reserved = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => false,
     reserveExportOperation: async () => {
       reserved = true;
@@ -3670,7 +3722,7 @@ test("rejects oversized or unavailable export reservations", async (t) => {
 test("rejects component exports that do not belong to the app design system", async (t) => {
   let reserved = false;
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getDesignSystem: async () => ({
       app: "linear",

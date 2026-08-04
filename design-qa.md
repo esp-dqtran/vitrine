@@ -1,3 +1,165 @@
+# Design QA — Save to Project & Evidence Handoff
+
+Source visual truth:
+
+- `http://127.0.0.1:5173/apps/aboard-ea683077-aadb-47c5-a771-d21fd9676510/screens?platform=web&version=1`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/source-app-detail.png`
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-storybook.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-saved.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-mobile.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/comparison-app-detail-vs-story.png`
+
+Viewport and normalization: the production source and desktop interaction captures use 1280 × 720 CSS px at 1× density; the full Storybook implementation is 1280 × 2125 px; the compact implementation is 579 × 863 CSS px. The combined comparison uses equal 1280 × 720 crops, yielding a 2560 × 720 side-by-side image without density scaling.
+
+State: dark-mode Aboard App Detail source and the Save-to-Project visual review. The desktop interaction capture shows the successful handoff result; the compact capture shows the create-project bottom sheet.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain for the visual-review prototype.
+- Fonts and typography: the review inherits the current Vitrines Figtree product tokens, 16px control text, and existing title/body hierarchy. Labels remain legible at desktop and compact widths.
+- Spacing and layout rhythm: desktop uses the production page gutter and surface rhythm; the 560px dialog remains focused. At 579px, the sheet measures 563px wide with 8px side gutters and no horizontal overflow.
+- Colors and visual tokens: surfaces, borders, primary/secondary actions, success, and error states use the existing Vitrines semantic tokens.
+- Image quality and asset fidelity: the Aboard screen loads at its full 1920 × 1199 source dimensions with `object-fit: contain`; the Aboard icon loads at 512 × 512. No placeholder or cropped substitute is used.
+- Copy and content: destination, duplicate, success, error, retry, and View project labels describe a single-item save flow and avoid the rejected multi-selection model.
+- Interaction states: Save opens the project chooser; Save to project produces the successful handoff; Create new project opens the form; Try again returns to the chooser. The duplicate state is harmless and disables the repeated save.
+
+## Full-view comparison evidence
+
+`comparison-app-detail-vs-story.png` places the production App Detail source and the rendered Storybook entry point together at equal 1280 × 720 crops. The implementation preserves the source evidence treatment, dark surface balance, button language, typography family, and card rhythm while adding the destination workflow requested for review.
+
+## Focused region comparison evidence
+
+- Desktop result dialog: `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-saved.png` confirms the centered success state and reachable Done/View project actions.
+- Compact create sheet: `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-mobile.png` confirms one-column fields, stacked full-width actions, 8px viewport gutters, and no horizontal overflow.
+- A separate focused crop was not needed for the evidence asset because browser geometry and natural image dimensions confirmed the full source raster is contained without cropping.
+
+## Comparison history
+
+1. Captured the live App Detail source and the first Storybook implementation at 1280 × 720.
+2. Verified the source and implementation evidence images load at native dimensions and use the same product typography, surface, and action tokens.
+3. Exercised Save, destination confirmation, successful handoff, and create-project states.
+4. Re-captured the compact create state at 579 × 863 and confirmed the 563px bottom sheet remains within the viewport with no horizontal overflow.
+
+## Primary interactions tested
+
+- Open Save from the production-style evidence card.
+- Choose `Onboarding audit` and confirm Save to project.
+- Reach the Saved to Onboarding audit result with Done and View project.
+- Open Create new project and render the project-name/description form.
+- Confirm compact bottom-sheet behavior and stacked actions.
+- Focused Storybook tests pass; the Vite production build passes.
+
+final result: passed
+
+---
+
+# Design QA — Save to Project Production Screen Card
+
+Source visual truth: the production `ScreenGridCard` rendered in the Media & Evidence Storybook review at 697 × 863 CSS px in dark mode.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/source-production-screen-card-current.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-production-screen-card-current.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/implementation-save-modal-current.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/production-card-comparison.png`
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/save-to-project-review/save-workflow-comparison.png`
+
+Viewport and state: source and implementation were captured at 697 × 863 CSS/image pixels. The focused region covers the production Screen card with its action overlay visible. The workflow comparison places that card beside the open Save-to-Project modal.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- Component fidelity: the Storybook entry point now renders the same production `ScreenGridCard` used by App Detail instead of a handcrafted approximation.
+- Media and layout: the full source image uses the production contain-fit behavior, natural web aspect ratio, radius, elevation, and action overlay without cropping or layout shift.
+- Actions: hover or keyboard focus reveals the white Save action and dark Copy image action. The direct Save workflow preserves the production trailing choice indicator and opens the Save-to-Project modal.
+- Typography, color, and spacing: the card inherits the shared Figtree roles, product action colors, production padding, and action sizing from the real component.
+- Copy and context: Aboard, Onboarding, Web, and the screen title remain available to the workflow without adding custom card copy.
+- Workflow boundary: this review covers one Screen and one destination. Multi-select remains a separate bulk-selection state with its centered action control and is not substituted for the single-item Save modal.
+
+## Full-view comparison evidence
+
+`production-card-comparison.png` places the production gallery source and the Save-to-Project story in one input. The page composition differs by story, but the evidence fit, card surface, selected/action overlay, button treatment, and image quality resolve through the same component.
+
+## Focused-region comparison evidence
+
+The live browser check focused the production Screen card, confirmed the action overlay opacity, and exercised its visible Save action. `save-workflow-comparison.png` shows the unchanged card geometry before the modal and the modal state after activation.
+
+## Comparison history
+
+1. Initial P1: the workflow story used a bespoke evidence card that did not match App Detail.
+2. Fix: replaced the bespoke card with the production `ScreenGridCard` and preserved its shared styling and media behavior.
+3. Interaction fix: provided a single-item `onSave` handoff so the card Save action opens the existing Save-to-Project modal.
+4. Post-fix: side-by-side visual review, live browser interaction, six focused tests, production build, and `git diff --check` pass.
+
+## Primary interactions tested
+
+- Keyboard focus reveals the production card action overlay.
+- Clicking the visible Screen card Save action opens the dialog (`open: true`, visible flex surface).
+- The dialog exposes project selection, create-project, duplicate, success, and retry states without changing the underlying card layout.
+- Multi-select behavior remains outside this single-item workflow.
+
+final result: passed
+
+---
+
+# Design QA — Search, Filters & Results
+
+Source visual truth:
+
+- `http://127.0.0.1:6008/iframe.html?id=patterns-search-filters-and-results--visual-review&viewMode=story&globals=theme%3Adark`
+- `/tmp/vitrines-search-filters-story.png`
+
+Implementation evidence:
+
+- `/tmp/vitrines-search-filters-production-success.png`
+- `/tmp/vitrines-search-filters-mobile.png`
+
+Viewport and normalization: desktop story and production use 1440 × 1024 CSS px; mobile production uses 579 × 863 CSS px. All captures are CSS-pixel normalized at 1× density.
+
+State: dark-mode Apps discovery with latest results; mobile search open with a typed query; Sites and Flows controls reviewed at the mobile breakpoint.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain for the approved Search, Filters & Results pattern.
+- Hierarchy: the shared search entry, filter toolbar, result count, and result area follow the approved Storybook composition across Apps, Sites, and Flows.
+- Toolbar: desktop filters remain aligned on one line; mobile collapses the detailed controls into the shared `Filters` action while preserving platform and sort controls.
+- Result states: loading, empty, error, retry, and successful results preserve the result footprint and use the same responsive shell.
+- Media: successful production cards load their source previews without substituting the unavailable-evidence state.
+- Content: route-specific labels, result counts, and sort choices remain intact for Apps, Sites, and Flows.
+- Responsiveness: the mobile product header remains on one line, and search opens from the compact trigger without clipping or horizontal overflow.
+- Runtime: a transient catalog 500 rendered the standardized error state; Retry recovered 24 cards. The browser console contains no errors.
+
+## Full-view comparison evidence
+
+The approved Storybook pattern and the production Apps route were captured in the same browser session at 1440 × 1024. Search placement, toolbar alignment, result count, card hierarchy, and responsive gutters match the shared production composition.
+
+## Focused region comparison evidence
+
+- Desktop: product header, taxonomy, filter toolbar, result count, and loaded card grid.
+- Mobile: single-line product header, compact search trigger, merged Filters action, platform control, and sort control.
+
+## Comparison history
+
+1. Approved Storybook Search, Filters & Results visual review.
+2. Confirmed the shared production components already compose Apps, Sites, and Flows through the same discovery layout.
+3. Verified the transient error and Retry recovery path without changing layout.
+4. Re-captured the successful production result state after Retry.
+
+## Primary interactions tested
+
+- Mobile search opens and accepts a query.
+- Retry recovers a transient catalog failure and renders 24 Apps cards.
+- Sites and Flows expose the same responsive control structure with their route-specific labels.
+- Focused component tests, pattern tests, responsive tests, and the production build pass.
+
+final result: passed
+
+---
+
 # Design QA — Focused Project Document Shell
 
 Source visual truth:

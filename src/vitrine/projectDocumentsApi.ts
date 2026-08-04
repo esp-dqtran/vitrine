@@ -26,6 +26,10 @@ export interface ProjectDocumentCommentView {
   body: string;
   authorUserId: number;
   authorEmail: string;
+  blockId: string | null;
+  quote: string | null;
+  parentCommentId: number | null;
+  canDelete: boolean;
   resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -113,12 +117,35 @@ export function addProjectDocumentCommentById(
   projectId: string,
   documentId: number,
   body: string,
+  context: {
+    blockId?: string;
+    quote?: string;
+    parentCommentId?: number;
+  } = {},
 ): Promise<ProjectDocumentCommentView> {
   return projectDocumentRequest(`${documentPath(projectId, documentId)}/comments`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ body }),
+    body: JSON.stringify({ body, ...context }),
   });
+}
+
+export async function deleteProjectDocumentCommentById(
+  projectId: string,
+  documentId: number,
+  commentId: number,
+): Promise<void> {
+  const response = await fetch(
+    `${documentPath(projectId, documentId)}/comments/${commentId}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: string };
+    throw new ProjectDocumentApiError(
+      body.error ?? "Project document request failed",
+      response.status,
+    );
+  }
 }
 
 export function resolveProjectDocumentCommentById(

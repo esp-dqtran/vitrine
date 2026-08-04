@@ -510,7 +510,7 @@ test("returns the media-specific status for an unsupported upload type", async (
 
 test("mounts research projects inside the authenticated API", async (t) => {
   const app = createApiApp({
-    resolveSession: async () => user,
+    verifyAuthToken: async () => user,
     researchProjectStore: store,
     researchProjectsEnabled: true,
     listResearchCandidates: async () => [],

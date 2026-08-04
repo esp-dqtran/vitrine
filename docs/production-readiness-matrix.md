@@ -41,14 +41,14 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 | Requirement | Status | Current evidence | Remaining gate |
 |---|---|---|---|
 | Normalized sign-in and generic failure | Complete | `normalizeEmail`, hash verification, `/auth/login`, API/frontend tests | Distributed abuse limit and browser acceptance |
-| Logout and secure production cookie | Partial | HttpOnly, SameSite=Strict, production Secure, logout route/tests | Explicit max-age/domain policy, trusted proxy, origin protection |
-| `signed_in_elsewhere` | Complete | Two-session policy and explicit API state/tests | Friendly browser recovery acceptance |
+| Logout and secure production cookie | Partial | HttpOnly, SameSite=Strict, production Secure, stateless logout route/tests | Explicit max-age/domain policy, trusted proxy, origin protection; copied JWTs remain valid until expiry |
+| JWT trust boundary | Complete | HS256 algorithm pinning, issuer/audience/type/key-ID checks, 12-hour expiry, API and collaboration-gateway verification | Production secret distribution and rotation drill |
 | Self-service registration | Complete | `/auth/signup`, normalized unique email persistence, AuthProvider/SignIn UI, API tests, and isolated API smoke | Email verification and distributed public-route abuse limits are separate gates |
 | Email verification | Missing | No token/store/SMTP contract | Hashed single-use expiring token and browser flow |
-| Password reset/change | Missing | No route/store/UI | Neutral request, hashed token, expiry, reuse prevention, session revocation |
-| Session list/revoke | Missing | Only create/resolve/delete current session | Safe device metadata, list, individual/all-other revocation |
+| Password reset/change | Missing | No reset route/store/UI; change-password route exists | Neutral request, hashed token, expiry, reuse prevention, and JWT invalidation policy |
+| Immediate token revocation | Missing | JWTs are stateless and expire after 12 hours | Short-lived access tokens plus rotating refresh-token family or a revocation/version check |
 | Account profile/deletion request | Missing | No account surface | Profile, auditable support-assisted deletion request, retention copy |
-| Idempotent admin bootstrap | Missing | `seedAdmin()` currently rehashes password and deletes sessions at every API start | One-time bootstrap/explicit command with non-rotation test |
+| Idempotent admin bootstrap | Missing | `seedAdmin()` currently rehashes the password at every API start | One-time bootstrap/explicit command with non-rotation test |
 
 ## Billing and customer experience
 

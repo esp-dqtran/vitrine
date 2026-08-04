@@ -26,7 +26,7 @@ function close(server: Server): Promise<void> {
 test('rejects every product import and recapture request before touching jobs or versions', async (t) => {
   const touched: string[] = [];
   const { base, server } = await serve(createApiApp({
-    resolveSession: async () => admin,
+    verifyAuthToken: async () => admin,
     createJob: async () => {
       touched.push('create-job');
       return 1;
