@@ -27,21 +27,16 @@ test('publishes crawlable catalog metadata', async () => {
   assert.equal(robots, 'User-agent: *\nAllow: /\n');
 });
 
-test('keeps every in-app Vitrines mark center theme-contrasting', async () => {
-  const marks = [
-    ['./SignIn.tsx', 11],
-    ['./Pricing.tsx', 11],
-    ['./components/AdminSidebar.tsx', 9],
-  ] as const;
+test('renders the real Vitrines mark everywhere the brand icon appears', async () => {
+  const signIn = await readFile(new URL('./SignIn.tsx', import.meta.url), 'utf8');
+  assert.match(signIn, /const iconSize = enlarged \? 48 : 26;/);
+  assert.match(signIn, /src="\/favicon\.svg"[^>]*width=\{iconSize\}/);
 
-  for (const [path, size] of marks) {
-    const source = await readFile(new URL(path, import.meta.url), 'utf8');
-    assert.match(
-      source,
-      new RegExp(`width: ${size}, height: ${size}, borderRadius: \\d+, background: 'var\\(--color-on-accent\\)'`),
-      path,
-    );
-  }
+  const pricing = await readFile(new URL('./Pricing.tsx', import.meta.url), 'utf8');
+  assert.match(pricing, /src="\/favicon\.svg"[^>]*width=\{26\}/);
+
+  const adminSidebar = await readFile(new URL('./components/AdminSidebar.tsx', import.meta.url), 'utf8');
+  assert.match(adminSidebar, /src="\/favicon\.svg"[^>]*width=\{22\}/);
 
   const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
   assert.equal((home.match(/src="\/favicon\.svg"/g) ?? []).length, 2);

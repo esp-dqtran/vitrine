@@ -51,11 +51,7 @@ function Wordmark({ enlarged = false }: { enlarged?: boolean }) {
   const iconSize = enlarged ? 48 : 26;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: enlarged ? 6 : 9 }}>
-      <div style={{ width: iconSize, height: iconSize, borderRadius: enlarged ? 12 : 8, background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-        {enlarged
-          ? <div style={{ width: 20, height: 20, borderRadius: 5, background: 'var(--color-on-accent)' }} />
-          : <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} />}
-      </div>
+      <img src="/favicon.svg" alt="" aria-hidden="true" width={iconSize} style={{ flex: '0 0 auto' }} />
       <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrines</span>
     </div>
   );

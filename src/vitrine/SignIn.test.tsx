@@ -33,7 +33,7 @@ test("renders only the real email/password authentication controls", () => {
   assert.match(html, /Password/);
   assert.match(html, /Sign in/);
   assert.match(html, /data-sign-in-layout="page"/);
-  assert.match(html, /width:26px;height:26px;border-radius:8px/);
+  assert.match(html, /src="\/favicon\.svg"[^>]*width="26"/);
   assert.match(html, /Welcome back/);
   assert.match(html, /data-sign-in-showcase="true"/);
   assert.doesNotMatch(html, /Continue with Google/);
@@ -103,7 +103,7 @@ test("renders the shared authentication form in an embedded layout", () => {
 
   assert.match(html, /data-sign-in-layout="embedded"/);
   assert.match(html, /display:flex;align-items:center;gap:6px/);
-  assert.match(html, /width:48px;height:48px;border-radius:12px/);
+  assert.match(html, /src="\/favicon\.svg"[^>]*width="48"/);
   assert.match(html, /font-size:24px;font-weight:700/);
   assert.match(html, /margin-bottom:30px;text-align:left/);
   assert.match(html, /Sign in to Vitrines/);

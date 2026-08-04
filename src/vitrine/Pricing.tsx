@@ -311,7 +311,7 @@ export function PricingView({
         }}
       >
         <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <Button type="button" label="Vitrines" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrines" variant="ghost" onClick={onBrowse} icon={<img src="/favicon.svg" alt="" aria-hidden="true" width={26} />} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
               <AstryxMenu
