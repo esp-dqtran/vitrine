@@ -65,6 +65,206 @@ export interface ProjectActions {
   remove(projectId: string): Promise<void>;
 }
 
+export function CreateProjectDialog({
+  isOpen,
+  title,
+  scope,
+  teams,
+  isCreating,
+  onTitleChange,
+  onScopeChange,
+  onCancel,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  title: string;
+  scope: string;
+  teams: TeamSummary[];
+  isCreating: boolean;
+  onTitleChange(value: string): void;
+  onScopeChange(value: string): void;
+  onCancel(): void;
+  onSubmit(): void;
+}) {
+  return (
+    <AstryxModal
+      className="projects-workspace__modal"
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      purpose="form"
+      width={460}
+    >
+      <form
+        className="projects-workspace__dialog"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <div>
+          <Heading level={3}>New project</Heading>
+          <Text color="secondary">
+            Start with a name. Add modules, flows, and design context when you
+            open it.
+          </Text>
+        </div>
+        <TextInput
+          label="Project name"
+          placeholder="e.g. Personal finance app"
+          value={title}
+          onChange={onTitleChange}
+          autoFocus
+          width="100%"
+          isDisabled={isCreating}
+        />
+        {teams.length > 0 && (
+          <Selector
+            label="Team"
+            value={scope}
+            onChange={onScopeChange}
+            options={[
+              { value: "personal", label: "Personal" },
+              ...teams.map((team) => ({
+                value: String(team.id),
+                label: team.name,
+              })),
+            ]}
+            width="100%"
+            isDisabled={isCreating}
+          />
+        )}
+        <div className="projects-workspace__dialog-actions">
+          <Button
+            label="Cancel"
+            variant="ghost"
+            isDisabled={isCreating}
+            clickAction={onCancel}
+          />
+          <Button
+            label="Create project"
+            variant="primary"
+            isDisabled={!title.trim()}
+            isLoading={isCreating}
+            clickAction={onSubmit}
+          />
+        </div>
+      </form>
+    </AstryxModal>
+  );
+}
+
+export function RenameProjectDialog({
+  project,
+  title,
+  isRenaming,
+  onTitleChange,
+  onCancel,
+  onSubmit,
+}: {
+  project: ResearchProjectSummary | null;
+  title: string;
+  isRenaming: boolean;
+  onTitleChange(value: string): void;
+  onCancel(): void;
+  onSubmit(): void;
+}) {
+  return (
+    <AstryxModal
+      className="projects-workspace__modal"
+      isOpen={Boolean(project)}
+      onOpenChange={(open) => {
+        if (!open && !isRenaming) onCancel();
+      }}
+      purpose="form"
+      width={460}
+    >
+      <form
+        className="projects-workspace__dialog"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <Heading level={3}>Rename project</Heading>
+        <TextInput
+          label="Project name"
+          value={title}
+          onChange={onTitleChange}
+          autoFocus
+          width="100%"
+          isDisabled={isRenaming}
+        />
+        <div className="projects-workspace__dialog-actions">
+          <Button
+            label="Cancel"
+            variant="ghost"
+            isDisabled={isRenaming}
+            clickAction={onCancel}
+          />
+          <Button
+            label="Save"
+            variant="primary"
+            isDisabled={!title.trim()}
+            isLoading={isRenaming}
+            clickAction={onSubmit}
+          />
+        </div>
+      </form>
+    </AstryxModal>
+  );
+}
+
+export function DeleteProjectDialog({
+  project,
+  isDeleting,
+  onCancel,
+  onConfirm,
+}: {
+  project: ResearchProjectSummary | null;
+  isDeleting: boolean;
+  onCancel(): void;
+  onConfirm(): void;
+}) {
+  return (
+    <AstryxModal
+      className="projects-workspace__modal"
+      isOpen={Boolean(project)}
+      onOpenChange={(open) => {
+        if (!open && !isDeleting) onCancel();
+      }}
+      purpose="form"
+      width={440}
+    >
+      <div className="projects-workspace__dialog">
+        <div>
+          <Heading level={3}>Delete project?</Heading>
+          <Text color="secondary">
+            {project
+              ? `“${project.title}” and everything inside it will be permanently deleted.`
+              : ""}
+          </Text>
+        </div>
+        <div className="projects-workspace__dialog-actions">
+          <Button
+            label="Cancel"
+            variant="ghost"
+            isDisabled={isDeleting}
+            clickAction={onCancel}
+          />
+          <Button
+            label="Delete project"
+            variant="destructive"
+            isLoading={isDeleting}
+            clickAction={onConfirm}
+          />
+        </div>
+      </div>
+    </AstryxModal>
+  );
+}
+
 export function sortProjects(
   projects: ResearchProjectSummary[],
   sort: ProjectSort,
@@ -111,7 +311,7 @@ function formatMemberDate(createdAt: string): string {
   }).format(new Date(timestamp));
 }
 
-function ProjectCard({
+export function ProjectCard({
   project,
   actions,
   onRename,
@@ -208,7 +408,8 @@ function ProjectCard({
           </summary>
           <div
             className="projects-workspace__menu-popover"
-            role="menu" aria-label={`Actions for ${project.title}`}
+            role="menu"
+            aria-label={`Actions for ${project.title}`}
           >
             <Button
               label="Share"
@@ -896,7 +1097,13 @@ export function ResearchProjectsView({
 
           {section === "projects" && (
             <>
-              <div className="projects-workspace__toolbar">
+              <div
+                className="projects-workspace__toolbar"
+                aria-label="Project controls"
+              >
+                <span className="projects-workspace__toolbar-label">
+                  Sort by
+                </span>
                 <DiscoverySortDropdown
                   value={sort}
                   open={sortOpen}
@@ -1029,7 +1236,11 @@ export function ResearchProjectsView({
                   </div>
                 ) : (
                   visibleMembers.map((member) => (
-                    <div className="team-people__member" key={member.userId} role="row">
+                    <div
+                      className="team-people__member"
+                      key={member.userId}
+                      role="row"
+                    >
                       <span className="team-people__member-profile" role="cell">
                         <span
                           className="team-people__member-avatar"
@@ -1039,8 +1250,12 @@ export function ResearchProjectsView({
                         </span>
                         <span>{member.email}</span>
                       </span>
-                      <span className="team-people__role" role="cell">{member.role}</span>
-                      <span role="cell">{formatMemberDate(member.createdAt)}</span>
+                      <span className="team-people__role" role="cell">
+                        {member.role}
+                      </span>
+                      <span role="cell">
+                        {formatMemberDate(member.createdAt)}
+                      </span>
                       <span role="cell">
                         {canManageTeam && member.role !== "owner" ? (
                           <Button
@@ -1245,71 +1460,17 @@ export function ResearchProjectsView({
         </form>
       </AstryxModal>
 
-      <AstryxModal
-        className="projects-workspace__modal"
+      <CreateProjectDialog
         isOpen={createOpen}
-        onOpenChange={(open) => {
-          if (!open) closeCreate();
-        }}
-        purpose="form"
-        width={460}
-      >
-        <form
-          className="projects-workspace__dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitCreate();
-          }}
-        >
-          <div>
-            <Heading level={3}>New project</Heading>
-            <Text color="secondary">
-              Start with a name. Add modules, flows, and design context when you
-              open it.
-            </Text>
-          </div>
-          <TextInput
-            label="Project name"
-            placeholder="e.g. Personal finance app"
-            value={newTitle}
-            onChange={setNewTitle}
-            autoFocus
-            width="100%"
-            isDisabled={creating}
-          />
-          {teamOptions.length > 0 && (
-            <Selector
-              label="Team"
-              value={newProjectScope}
-              onChange={setNewProjectScope}
-              options={[
-                { value: "personal", label: "Personal" },
-                ...teamOptions.map((team) => ({
-                  value: String(team.id),
-                  label: team.name,
-                })),
-              ]}
-              width="100%"
-              isDisabled={creating}
-            />
-          )}
-          <div className="projects-workspace__dialog-actions">
-            <Button
-              label="Cancel"
-              variant="ghost"
-              isDisabled={creating}
-              clickAction={closeCreate}
-            />
-            <Button
-              label="Create project"
-              variant="primary"
-              isDisabled={!newTitle.trim()}
-              isLoading={creating}
-              clickAction={submitCreate}
-            />
-          </div>
-        </form>
-      </AstryxModal>
+        title={newTitle}
+        scope={newProjectScope}
+        teams={teamOptions}
+        isCreating={creating}
+        onTitleChange={setNewTitle}
+        onScopeChange={setNewProjectScope}
+        onCancel={closeCreate}
+        onSubmit={() => void submitCreate()}
+      />
 
       <ProjectAccessDialog
         project={shareProject}
@@ -1319,83 +1480,21 @@ export function ResearchProjectsView({
         }}
       />
 
-      <AstryxModal
-        className="projects-workspace__modal"
-        isOpen={Boolean(renameProject)}
-        onOpenChange={(open) => {
-          if (!open && !renaming) setRenameProject(null);
-        }}
-        purpose="form"
-        width={460}
-      >
-        <form
-          className="projects-workspace__dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitRename();
-          }}
-        >
-          <Heading level={3}>Rename project</Heading>
-          <TextInput
-            label="Project name"
-            value={renameTitle}
-            onChange={setRenameTitle}
-            autoFocus
-            width="100%"
-            isDisabled={renaming}
-          />
-          <div className="projects-workspace__dialog-actions">
-            <Button
-              label="Cancel"
-              variant="ghost"
-              isDisabled={renaming}
-              clickAction={() => setRenameProject(null)}
-            />
-            <Button
-              label="Save"
-              variant="primary"
-              isDisabled={!renameTitle.trim()}
-              isLoading={renaming}
-              clickAction={submitRename}
-            />
-          </div>
-        </form>
-      </AstryxModal>
+      <RenameProjectDialog
+        project={renameProject}
+        title={renameTitle}
+        isRenaming={renaming}
+        onTitleChange={setRenameTitle}
+        onCancel={() => setRenameProject(null)}
+        onSubmit={() => void submitRename()}
+      />
 
-      <AstryxModal
-        className="projects-workspace__modal"
-        isOpen={Boolean(deleteProject)}
-        onOpenChange={(open) => {
-          if (!open && !deleting) setDeleteProject(null);
-        }}
-        purpose="form"
-        width={440}
-      >
-        <div className="projects-workspace__dialog">
-          <div>
-            <Heading level={3}>Delete project?</Heading>
-            <Text color="secondary">
-              {deleteProject
-                ? `“${deleteProject.title}” and everything inside it will be permanently deleted.`
-                : ""}
-            </Text>
-          </div>
-          <div className="projects-workspace__dialog-actions">
-            <Button
-              label="Cancel"
-              variant="ghost"
-              isDisabled={deleting}
-              clickAction={() => setDeleteProject(null)}
-            />
-            <Button
-              label="Delete project"
-              variant="destructive"
-              isLoading={deleting}
-              clickAction={confirmDelete}
-            />
-          </div>
-        </div>
-      </AstryxModal>
+      <DeleteProjectDialog
+        project={deleteProject}
+        isDeleting={deleting}
+        onCancel={() => setDeleteProject(null)}
+        onConfirm={() => void confirmDelete()}
+      />
     </main>
   );
 }

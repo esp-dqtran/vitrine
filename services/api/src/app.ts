@@ -115,7 +115,6 @@ import {
   reserveExportOperation,
   unlockFreeApp,
 } from "../../../src/pricingStore.ts";
-import { createMediaToken, verifyMediaToken } from "../../../src/mediaToken.ts";
 import type { BillingService } from "./billing.ts";
 import { createDistinctValueLimiter, createFixedWindowLimiter, ipPrefix } from "./rateLimit.ts";
 import { buildComparison, searchCatalog, type CatalogEntityKind } from "../../../src/catalogResearch.ts";
@@ -873,7 +872,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   const app = express();
   app.use(compression());
   const generalLimiter = createFixedWindowLimiter({ limit: deps.generalRateLimit, windowMs: 5 * 60_000 });
-  const mediaLimiter = createFixedWindowLimiter({ limit: deps.mediaRateLimit, windowMs: 10 * 60_000 });
   const traversalLimiter = createDistinctValueLimiter({ limit: deps.appTraversalLimit, windowMs: 10 * 60_000 });
   app.post("/billing/webhook", express.raw({ type: "application/json" }), async (req, res) => {
     try {
@@ -1465,6 +1463,59 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     },
   };
   mountPublicSitesRoutes(app, sitesRouteDependencies);
+
+  // Media is intentionally public for now. Browser-native image requests cannot attach the
+  // bearer token kept in session storage, so this route must be mounted before protected API
+  // middleware and must not depend on res.locals.user.
+  app.get("/media/:app/:hash", async (req, res) => {
+    if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
+      res.status(400).json({ error: "invalid media reference" });
+      return;
+    }
+    const variant = req.query.variant === "thumb" ? "thumb" : "full";
+    const imageKind = typeof req.query.kind === "string" && /^[a-z_]+$/.test(req.query.kind)
+      ? req.query.kind
+      : undefined;
+    const imageIndex = typeof req.query.i === "string" && /^\d+$/.test(req.query.i)
+      ? req.query.i
+      : undefined;
+    const ref = legacyRefSuffix({ hash: req.params.hash, imageKind, index: imageIndex });
+    if (deps.objectStore) {
+      const metadata = await deps.adminImageObject({
+        app: req.params.app,
+        hash: ref,
+        variant,
+      });
+      if (metadata) {
+        try {
+          await sendStoredObject(
+            deps.objectStore,
+            metadata,
+            res,
+            req.query.delivery === "inline",
+          );
+        } catch {
+          res.status(503).json({ error: "media storage unavailable" });
+        }
+        return;
+      }
+      const legacy = await deps.legacyImageReference({
+        app: req.params.app,
+        hash: ref,
+        publishedOnly: false,
+      });
+      if (!legacy) {
+        res.status(404).json({ error: "image not found" });
+        return;
+      }
+    }
+    const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
+    if (!path) {
+      res.status(404).json({ error: "image not found" });
+      return;
+    }
+    res.sendFile(resolve(path));
+  });
 
   app.use(async (req, res, next) => {
     const user = await resolveRequestUser(req);
@@ -2263,23 +2314,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  const protectedMediaUrl = (userId: number, appSlug: string, source: string, variant?: "thumb"): string => {
-    const parsed = parseImageSource(source);
-    if (!parsed) return "";
-    if (parsed.kind === "external") return parsed.url;
-    const hash = parsed.hash;
-    const expiresAt = deps.nowSeconds() + 300;
-    const token = createMediaToken(deps.mediaSigningSecret, { userId, app: appSlug, hash, expiresAt });
-    // kind/i must survive signing: a crop shares its source screen's hash, so dropping them
-    // here would silently resolve the element URL to the full screen. Signed over the hash
-    // only (like `variant`) — both qualifiers stay within the app the token already grants.
-    const params = new URLSearchParams({ expires: String(expiresAt), token });
-    if (variant) params.set("variant", variant);
-    if (parsed.imageKind) params.set("kind", parsed.imageKind);
-    if (parsed.index) params.set("i", parsed.index);
-    return `/api/media/${appSlug}/${hash}?${params.toString()}`;
-  };
-
   app.post("/auth/password", async (req, res) => {
     const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
     const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
@@ -3046,9 +3080,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           limit,
           publishedOnly: section.publishedOnly,
         }),
-        res.locals.user.role === "admin"
-          ? publicImageUrl
-          : (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
+        publicImageUrl,
       );
       await recordAppDetailSuccess(req, res);
       res.json({ ...page, platform: section.platform, version: section.version ?? null });
@@ -3083,9 +3115,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           limit,
           publishedOnly: section.publishedOnly,
         }),
-        res.locals.user.role === "admin"
-          ? publicImageUrl
-          : (appSlug, source, variant) => protectedMediaUrl(res.locals.user.id, appSlug, source, variant),
+        publicImageUrl,
       );
       await recordAppDetailSuccess(req, res);
       res.json({ ...page, platform: section.platform, version: section.version ?? null });
@@ -3158,9 +3188,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       publishedOnly: section.publishedOnly,
     });
     const emptySnapshot = { app: req.params.app, generatedAt: new Date().toISOString(), tokens: [], components: [], flows };
-    const hydrated = res.locals.user.role === "admin"
-      ? hydrateDesignSystem(emptySnapshot, images)
-      : hydrateDesignSystem(emptySnapshot, images, (appSlug, source) => protectedMediaUrl(res.locals.user.id, appSlug, source));
+    const hydrated = hydrateDesignSystem(emptySnapshot, images);
     await recordAppDetailSuccess(req, res);
     res.json({ flows: hydrated.flows, platform: section.platform, version: section.version ?? null });
   });
@@ -3610,96 +3638,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       : (await deps.appImages(appSlug, ["ui_element"]))
           .filter(({ id }) => cropImageIds.has(id));
     const images = [...sourceImages, ...cropImages];
-    const hydrated = res.locals.user.role === "admin"
-      ? hydrateDesignSystem({ ...effectiveSnapshot, flows }, images)
-      : hydrateDesignSystem(
-          { ...effectiveSnapshot, flows },
-          images,
-          (app, source) => protectedMediaUrl(res.locals.user.id, app, source),
-        );
+    const hydrated = hydrateDesignSystem({ ...effectiveSnapshot, flows }, images);
     res.json({ ...hydrated, version: versioned?.version ?? null });
-  });
-
-  app.get("/media/:app/:hash", async (req, res) => {
-    if (!isAppSlug(req.params.app) || !/^[0-9a-f]{16}$/.test(req.params.hash)) {
-      res.status(400).json({ error: "invalid media reference" });
-      return;
-    }
-    const variant = req.query.variant === "thumb" ? "thumb" : "full";
-    // Derived crops (ui_element/flow_step) share their source screen's hash, so the kind — and
-    // the occurrence index when one screen yields several crops — is what disambiguates them.
-    // Validated here so the value is only ever composed from a known-safe shape.
-    const imageKind = typeof req.query.kind === "string" && /^[a-z_]+$/.test(req.query.kind)
-      ? req.query.kind
-      : undefined;
-    const imageIndex = typeof req.query.i === "string" && /^\d+$/.test(req.query.i)
-      ? req.query.i
-      : undefined;
-    const ref = legacyRefSuffix({ hash: req.params.hash, imageKind, index: imageIndex });
-    if (res.locals.user.role !== "admin") {
-      const media = mediaLimiter.check(`user:${res.locals.user.id}`);
-      if (!media.allowed) {
-        res.setHeader("Retry-After", String(media.retryAfterSeconds));
-        res.status(429).json({
-          error: "Security verification required",
-          code: "verification_required",
-          retryAfterSeconds: media.retryAfterSeconds,
-        });
-        return;
-      }
-      if (!(await deps.canAccessApp(res.locals.user, req.params.app))) {
-        res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
-        return;
-      }
-      const expiresAt = Number(req.query.expires);
-      const token = typeof req.query.token === "string" ? req.query.token : "";
-      if (expiresAt <= deps.nowSeconds()) {
-        res.status(410).json({ error: "media URL expired" });
-        return;
-      }
-      if (!verifyMediaToken(deps.mediaSigningSecret, token, {
-        userId: res.locals.user.id,
-        app: req.params.app,
-        hash: req.params.hash,
-        expiresAt,
-      }, deps.nowSeconds())) {
-        res.status(403).json({ error: "invalid media token" });
-        return;
-      }
-    }
-    if (deps.objectStore) {
-      const metadata = res.locals.user.role === "admin"
-        ? await deps.adminImageObject({ app: req.params.app, hash: ref, variant })
-        : await deps.entitledImageObject({ userId: res.locals.user.id, app: req.params.app, hash: ref, variant });
-      if (metadata) {
-        try {
-          await sendStoredObject(
-            deps.objectStore,
-            metadata,
-            res,
-            req.query.delivery === "inline",
-          );
-        } catch {
-          res.status(503).json({ error: "media storage unavailable" });
-        }
-        return;
-      }
-      const legacy = await deps.legacyImageReference({
-        app: req.params.app,
-        hash: ref,
-        publishedOnly: res.locals.user.role !== "admin",
-      });
-      if (!legacy) {
-        res.status(404).json({ error: "image not found" });
-        return;
-      }
-    }
-    const path = findBulkImage(deps.dataDir, req.params.app, req.params.hash);
-    if (!path) {
-      res.status(404).json({ error: "image not found" });
-      return;
-    }
-    res.sendFile(resolve(path));
   });
 
   return app;

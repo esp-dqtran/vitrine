@@ -56,6 +56,33 @@ final result: passed
 
 ---
 
+# Design QA — Projects Component System 02–03
+
+## Cards and lists
+
+- The Project Cards & Lists Storybook review is approved.
+- The review renders the exported production `ProjectCard` component rather than a parallel mock.
+- Default, hover/focus, action-menu, and responsive list behavior preserve the production card footprint without layout shift.
+- The action menu was opened in the in-app browser and exposes Share, Rename, Duplicate, and Delete using the shared menu contract.
+
+## Forms and dialogs
+
+- The Project Forms & Dialogs review renders the exported production `CreateProjectDialog`, `RenameProjectDialog`, and `DeleteProjectDialog` components.
+- Create and rename retain the approved white primary action with black text; destructive red is reserved for final deletion confirmation.
+- Labels, inputs, team selection, modal surface, spacing, and action hierarchy match the production Projects implementation.
+- Create, rename, and delete states were opened and visually inspected at the current Storybook viewport with no horizontal overflow.
+
+## Verification
+
+- Six focused Projects component-review tests pass.
+- The static Storybook build succeeds.
+- The production Vite build succeeds.
+- A fresh unauthenticated production `/projects` tab remains sign-in gated, so this checkpoint does not claim a new authenticated production-browser pass.
+
+final result: passed
+
+---
+
 # Design QA — Save to Project Production Screen Card
 
 Source visual truth: the production `ScreenGridCard` rendered in the Media & Evidence Storybook review at 697 × 863 CSS px in dark mode.

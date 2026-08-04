@@ -64,7 +64,9 @@ test("renders a personal projects workspace without project status", () => {
   assert.match(populated, /Pinned/);
   assert.match(populated, /Rename/);
   assert.match(populated, /data-app-discovery-card="true"/);
+  assert.match(populated, />Sort by</);
   assert.match(populated, /aria-label="Sort: Last updated"/);
+  assert.match(populated, /data-variant="primary"[\s\S]*New project/);
   assert.doesNotMatch(populated, /Filter projects/);
   assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
 });
@@ -114,6 +116,10 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
     new URL("./projectsWorkspace.css", import.meta.url),
     "utf8",
   );
+  const modalCss = readFileSync(
+    new URL("./components/AstryxModal.css", import.meta.url),
+    "utf8",
+  );
   const source = readFileSync(
     new URL("./components/ResearchProjectsPage.tsx", import.meta.url),
     "utf8",
@@ -121,7 +127,7 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
 
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*width:\s*320px;[^}]*border-radius:\s*16px;[^}]*transition:\s*opacity \.15s, transform \.15s;/s,
+    /\.projects-team-drawer\s*\{[^}]*width:\s*320px;[^}]*border-radius:\s*16px;[^}]*transition:\s*opacity 0\.15s,\s*transform 0\.15s;/s,
   );
   assert.match(
     css,
@@ -129,11 +135,11 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
   );
   assert.match(
     css,
-    /@media \(max-width:\s*700px\)[\s\S]*?\.projects-team-drawer\s*\{[^}]*width:\s*min\(280px, calc\(100vw - 32px\)\);[^}]*transform:\s*translateX\(-100%\);[^}]*transition:\s*transform \.3s;/,
+    /@media \(max-width:\s*700px\)[\s\S]*?\.projects-team-drawer\s*\{[^}]*width:\s*min\(280px, calc\(100vw - 32px\)\);[^}]*transform:\s*translateX\(-100%\);[^}]*transition:\s*transform 0\.3s;/,
   );
   assert.match(
-    css,
-    /dialog\.astryx-modal\.projects-workspace__modal\s*\{[^}]*border-radius:\s*16px\s*!important;[^}]*animation:\s*projects-workspace-modal-in \.25s/s,
+    modalCss,
+    /dialog\.astryx-modal\s*\{[^}]*border-radius:\s*24px\s*!important;/s,
   );
   assert.match(
     css,
@@ -145,7 +151,7 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
   );
   assert.match(
     source,
-    /role="menu" aria-label=\{`Actions for \$\{project\.title\}`\}/,
+    /role="menu"\s*aria-label=\{`Actions for \$\{project\.title\}`\}/,
   );
   assert.match(
     css,

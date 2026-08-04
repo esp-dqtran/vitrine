@@ -23,7 +23,7 @@ export function useDesignSystem(appId: string, platform: Platform, version?: num
   const storeRef = useRef<DesignSystemStore | null>(null);
   if (!storeRef.current) {
     storeRef.current = createDesignSystemStore((key, signal) =>
-      loadDesignSystem(key.appId, key.platform, signal, fetch, key.version));
+      loadDesignSystem(key.appId, key.platform, signal, apiFetch, key.version));
   }
   const store = storeRef.current;
   const [, render] = useState(0);

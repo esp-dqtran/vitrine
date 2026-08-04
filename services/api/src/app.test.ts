@@ -1985,12 +1985,10 @@ test("serves local bulk media", async (t) => {
   );
 });
 
-test("binds signed design-system media to the entitled user and expiry", async (t) => {
-  const dataDir = mkdtempSync(join(tmpdir(), "astryx-signed-media-"));
+test("returns public design-system media without exposing invalid sources", async (t) => {
+  const dataDir = mkdtempSync(join(tmpdir(), "astryx-public-media-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
-  let nowSeconds = 1_000;
-  const other = { id: 3, email: "other@example.com", role: "user" as const };
   const signedSnapshot = {
     app: "linear",
     generatedAt: "2026-07-10T00:00:00.000Z",
@@ -2003,9 +2001,7 @@ test("binds signed design-system media to the entitled user and expiry", async (
   };
   const { base, server } = await serve(createApiApp({
     dataDir,
-    mediaSigningSecret: "0123456789abcdef0123456789abcdef",
-    nowSeconds: () => nowSeconds,
-    verifyAuthToken: async (token) => token === "owner" ? user : other,
+    verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     getDesignSystem: async () => signedSnapshot,
     getVersionDesignSystem: async () => ({ version: publishedVersion, snapshot: signedSnapshot, flows: [] }),
@@ -2023,17 +2019,8 @@ test("binds signed design-system media to the entitled user and expiry", async (
   })).json();
   const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
   assert.equal(snapshot.tokens[1].evidence[0].imageUrl, "");
-  assert.match(mediaUrl, /\?expires=1300&token=/);
-  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { authorization: "Bearer owner" },
-  })).status, 200);
-  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { authorization: "Bearer other" },
-  })).status, 403);
-  nowSeconds = 1_301;
-  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { authorization: "Bearer owner" },
-  })).status, 410);
+  assert.equal(mediaUrl, "/api/media/linear/0123456789abcdef");
+  assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`)).status, 200);
 });
 
 test("keeps health public and rejects private data without a session", async (t) => {
@@ -2832,14 +2819,12 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   assert.equal((await elements.json()).nextCursor, "next");
 });
 
-test("signs customer Screen and UI Element media URLs", async (t) => {
+test("returns public Screen and UI Element media URLs", async (t) => {
   const dataDir = mkdtempSync(join(tmpdir(), "astryx-section-media-"));
   mkdirSync(join(dataDir, "images", "linear"), { recursive: true });
   writeFileSync(join(dataDir, "images", "linear", "0123456789abcdef.webp"), "image");
   const { base, server } = await serve(createApiApp({
     dataDir,
-    mediaSigningSecret: "0123456789abcdef0123456789abcdef",
-    nowSeconds: () => 1_000,
     verifyAuthToken: async () => user,
     canAccessApp: async () => true,
     appPlatforms: async () => ["web"],
@@ -2877,14 +2862,14 @@ test("signs customer Screen and UI Element media URLs", async (t) => {
   const sourceScreenUrl = new URL(elements.screens[0].sourceScreen.url, base);
 
   for (const url of [screenUrl, screenThumbnailUrl, elementUrl, sourceScreenUrl]) {
-    assert.equal(url.searchParams.get("expires"), "1300");
-    assert.ok(url.searchParams.get("token"));
+    assert.equal(url.searchParams.has("expires"), false);
+    assert.equal(url.searchParams.has("token"), false);
   }
   assert.equal(screenThumbnailUrl.searchParams.get("variant"), "thumb");
   assert.equal(elementUrl.searchParams.get("kind"), "ui_element");
   assert.equal(elementUrl.searchParams.get("i"), "1");
-  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`, { headers })).status, 200);
-  assert.equal((await fetch(`${base}${elementUrl.pathname.replace("/api", "")}${elementUrl.search}`, { headers })).status, 200);
+  assert.equal((await fetch(`${base}${screenUrl.pathname.replace("/api", "")}${screenUrl.search}`)).status, 200);
+  assert.equal((await fetch(`${base}${elementUrl.pathname.replace("/api", "")}${elementUrl.search}`)).status, 200);
 });
 
 test("summarizes analyzed UI element crops for the Design System", async (t) => {
