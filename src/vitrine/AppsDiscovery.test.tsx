@@ -124,6 +124,23 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   assert.match(html, />Setting Up</);
 });
 
+test('limits the Storybook chrome review without attaching infinite pagination', () => {
+  const html = renderAppsPage(
+    pageController({
+      items: [
+        makeApp({ id: 'aboard', app: 'Aboard' }),
+        makeApp({ id: 'linear', app: 'Linear' }),
+      ],
+      totalCount: 452,
+    }),
+    { reviewItemLimit: 1 },
+  );
+
+  assert.match(html, /Aboard/);
+  assert.doesNotMatch(html, /Linear/);
+  assert.doesNotMatch(html, /data-discovery-sentinel="apps"/);
+});
+
 test('filters Apps across Mobbin taxonomy fields and platform', () => {
   const apps = [
     makeApp({ id: 'web', app: 'Web App' }),
@@ -413,16 +430,16 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(html, /aria-label="Open Linear"/);
 });
 
-test('renders a calm shared loading state while the initial App page loads', () => {
+test('renders the approved shared skeleton while the initial App page loads', () => {
   const html = renderAppsPage(pageController({
     items: [],
     totalCount: null,
     loading: true,
   }), { isAdmin: true });
 
-  assert.match(html, /discovery-page-layout__state/);
+  assert.match(html, /discovery-page-layout__skeleton-grid/);
   assert.match(html, /aria-label="Loading apps"/);
-  assert.doesNotMatch(html, /data-app-card-skeleton="true"/);
+  assert.equal((html.match(/data-app-card-skeleton="true"/g) ?? []).length, 3);
 });
 
 test('keeps App cards stable and shows compact progress while loading another page', () => {
@@ -556,6 +573,7 @@ test('composes Apps through the shared reference discovery shell', async () => {
 
 test('defines the Apps-led shared discovery design contract', async () => {
   const css = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+  const legacyCss = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
 
   assert.match(css, /--reference-font-family:\s*var\(--font-family-body\)/);
   assert.match(css, /--reference-nav-height:\s*72px/);
@@ -563,7 +581,7 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /--reference-facet-size:\s*24px/);
   assert.match(css, /--reference-card-radius:\s*24px/);
   assert.match(css, /\.reference-discovery-nav\s*\{[^}]*height:\s*var\(--reference-nav-height\)/);
-  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*var\(--reference-chrome-bg\)/);
+  assert.match(css, /\.reference-discovery-nav\s*\{[^}]*background:\s*var\(--reference-chrome-bg,\s*var\(--color-background-body\)\)/);
   assert.match(css, /\.reference-discovery-nav__types button\s*\{[^}]*background:\s*transparent\s*!important/);
   assert.match(css, /\.reference-discovery-nav__types button\[aria-selected="true"\]\s*\{/);
   assert.match(css, /\.reference-discovery-nav__search\s+\.reference-search-trigger\s*\{[^}]*max-width:\s*none/);
@@ -575,6 +593,7 @@ test('defines the Apps-led shared discovery design contract', async () => {
   assert.match(css, /\.reference-discovery__facet button:hover,[\s\S]*\.reference-discovery__facet button:focus-visible\s*\{[^}]*transform:\s*translateX\(4px\)/);
   assert.match(css, /\.discovery-card\s*\{[^}]*border-radius:\s*var\(--reference-card-radius\)/);
   assert.match(css, /\.reference-discovery__state\s*\{[^}]*min-height:\s*360px/);
+  assert.match(legacyCss, /\.apps-top-nav\s*\{[^}]*background:\s*var\(--color-background-body\);[^}]*backdrop-filter:\s*none;/s);
 });
 
 test('styles Apps as the three-column Mobbin results layout with a mobile fallback', async () => {

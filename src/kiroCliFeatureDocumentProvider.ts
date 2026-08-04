@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import sharp from "sharp";
 import type { RasterImage } from "./evidenceAnalysisProvider.ts";
 import {
   featureDocumentClaimBudget,
@@ -44,6 +45,34 @@ const IMAGE_EXTENSIONS: Record<RasterImage["contentType"], string> = {
   "image/jpeg": "jpg",
   "image/webp": "webp",
 };
+// Kiro caps the base64 string at 5 MiB, so leave headroom for 4:3 encoding growth.
+const MAX_KIRO_IMAGE_BYTES = 3_500_000;
+const MAX_KIRO_IMAGE_DIMENSION = 2_000;
+const MAX_KIRO_INPUT_PIXELS = 40_000_000;
+
+async function kiroFlowImage(image: RasterImage): Promise<{ bytes: Uint8Array; extension: string }> {
+  if (image.bytes.byteLength <= MAX_KIRO_IMAGE_BYTES) {
+    return { bytes: image.bytes, extension: IMAGE_EXTENSIONS[image.contentType] };
+  }
+  try {
+    const bytes = await sharp(image.bytes, { limitInputPixels: MAX_KIRO_INPUT_PIXELS })
+      .autoOrient()
+      .resize({
+        width: MAX_KIRO_IMAGE_DIMENSION,
+        height: MAX_KIRO_IMAGE_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 90, effort: 4 })
+      .toBuffer();
+    if (bytes.byteLength > MAX_KIRO_IMAGE_BYTES) {
+      throw new Error("normalized image remains too large");
+    }
+    return { bytes, extension: "webp" };
+  } catch {
+    throw new Error("Kiro Flow image is invalid or exceeds the safe image limit");
+  }
+}
 
 export function positiveInteger(value: string | undefined, fallback: number): number {
   if (!value?.trim()) return fallback;
@@ -697,11 +726,12 @@ export function createCliFeatureDocumentProvider(
       const directory = await mkdtemp(join(tmpdir(), "astryx-cli-flow-"));
       try {
         const orderedImages = await Promise.all(images.map(async ({ evidence, image }, index) => {
+          const normalized = await kiroFlowImage(image);
           const imagePath = join(
             directory,
-            `${String(index + 1).padStart(3, "0")}.${IMAGE_EXTENSIONS[image.contentType]}`,
+            `${String(index + 1).padStart(3, "0")}.${normalized.extension}`,
           );
-          await writeFile(imagePath, image.bytes, { mode: 0o600 });
+          await writeFile(imagePath, normalized.bytes, { mode: 0o600 });
           return {
             evidenceId: evidence.evidenceId,
             stepIndex: evidence.stepIndex,

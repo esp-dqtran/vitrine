@@ -112,6 +112,7 @@ export interface AppsDiscoveryPageProps {
   onOpenApp: (appId: string) => void;
   accountControls?: ReactNode;
   beforeGrid?: ReactNode;
+  reviewItemLimit?: number;
 }
 
 export interface AppsDiscoveryPageViewProps
@@ -323,6 +324,7 @@ export function AppsDiscoveryPageView({
   onFacetChange,
   onOpenApp,
   beforeGrid,
+  reviewItemLimit,
 }: AppsDiscoveryPageViewProps) {
   const state = filterState(controller.state);
   const activeFacets = appsDiscoveryFacets(state);
@@ -360,7 +362,13 @@ export function AppsDiscoveryPageView({
     || controller.state.contentType === 'elements'
     || activeFacets.some(({ group }) => group === 'screens' || group === 'elements');
   const appsMode = !screenMediaMode;
-  const renderedCount = appsMode ? controller.items.length : visibleScreens.length;
+  const renderedApps = reviewItemLimit === undefined
+    ? controller.items
+    : controller.items.slice(0, reviewItemLimit);
+  const renderedScreens = reviewItemLimit === undefined
+    ? visibleScreens
+    : visibleScreens.slice(0, reviewItemLimit);
+  const renderedCount = appsMode ? renderedApps.length : renderedScreens.length;
   // The API total is an App total. Non-App modes render matching cards derived
   // only from the Apps returned so far, so their count intentionally reflects
   // visible cards rather than mislabeling the server's App total.
@@ -500,7 +508,8 @@ export function AppsDiscoveryPageView({
       loadMoreError={controller.loadMoreError}
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
-      sentinelRef={controller.sentinelRef}
+      onReset={() => changeState({ ...state, filters: {} })}
+      sentinelRef={reviewItemLimit === undefined ? controller.sentinelRef : undefined}
       beforeResults={beforeGrid}
     >
       {appsMode ? (
@@ -508,7 +517,7 @@ export function AppsDiscoveryPageView({
           data-apps-discovery-grid="true"
           className="reference-discovery__grid apps-discovery__grid"
         >
-          {controller.items.map((app) => (
+          {renderedApps.map((app) => (
             <AppCard
               key={app.id}
               app={app}
@@ -526,7 +535,7 @@ export function AppsDiscoveryPageView({
           data-apps-discovery-screen-grid="true"
           className="apps-discovery__screen-grid"
         >
-          {visibleScreens.map((result) => (
+          {renderedScreens.map((result) => (
             <AppsDiscoveryScreenCard
               key={`${result.app.id}:${result.screen.id}`}
               result={result}

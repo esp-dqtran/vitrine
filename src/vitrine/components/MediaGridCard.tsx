@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
-import { Badge, ClickableCard } from '@astryxdesign/core';
+import { ClickableCard } from '@astryxdesign/core';
 import { observeNearViewportMedia } from './deferredMedia.ts';
 
 interface MediaGridCardProps {
@@ -14,7 +14,6 @@ interface MediaGridCardProps {
   preserveNaturalAspectRatio?: boolean;
   preferFullImage?: boolean;
   deferMedia?: boolean;
-  badges?: string[];
   title?: string;
   overlay?: ReactNode;
   delay?: number;
@@ -29,11 +28,10 @@ export function MediaGridCard({
   posterUrl,
   accent,
   aspectRatio = '16 / 10',
-  imageFit = 'cover',
+  imageFit = 'contain',
   preserveNaturalAspectRatio = false,
   preferFullImage = false,
   deferMedia = false,
-  badges = [],
   title,
   overlay,
   delay = 0,
@@ -98,7 +96,7 @@ export function MediaGridCard({
           preload="metadata"
           onError={() => setMediaFailed(true)}
           onClick={(event) => event.stopPropagation()}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', background: '#111' }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#111' }}
         />
       ) : (
         <img
@@ -132,9 +130,6 @@ export function MediaGridCard({
           {title}
         </div>
       )}
-      <div style={{ position: 'absolute', left: 10, right: 10, ...(title ? { top: 8, justifyContent: 'flex-end' } : { bottom: 10 }), zIndex: 2, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'none' }}>
-        {badges.filter(Boolean).map((badge) => <Badge key={badge} label={badge} variant="neutral" style={{ background: 'rgba(24,24,27,.72)', color: '#fff', backdropFilter: 'blur(4px)' }} />)}
-      </div>
       {overlay}
     </>
   );

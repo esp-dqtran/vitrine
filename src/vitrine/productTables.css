@@ -1,0 +1,186 @@
+/*
+ * Vitrines tables and data-grid contract.
+ *
+ * Shared Table primitives and legacy record grids use the same surface,
+ * hierarchy, row feedback, and responsive behavior. Domain-specific evidence,
+ * gallery cards, and reconstructed third-party specimens stay out of scope.
+ */
+
+[data-application-surface="true"] [data-comp="table-scroll-wrapper"],
+.product-data-table,
+.product-data-grid {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+
+[data-application-surface="true"] [data-comp="table-scroll-wrapper"] {
+  width: 100%;
+  overflow-x: auto;
+}
+
+[data-application-surface="true"] [data-comp="table"] {
+  width: 100%;
+  min-width: 720px;
+}
+
+.product-data-table [role="columnheader"] {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.product-data-table [role="cell"],
+.product-data-table [role="rowheader"] {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.settings-workspace__subscription-table.product-data-table {
+  overflow-x: auto;
+}
+
+.settings-workspace__subscription-table.product-data-table
+  :where(.settings-workspace__subscription-head, .settings-workspace__subscription-row) {
+  min-width: 720px;
+  padding: 12px 16px;
+}
+
+.settings-workspace__subscription-table.product-data-table
+  .settings-workspace__subscription-head {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.settings-workspace__subscription-table.product-data-table
+  .settings-workspace__subscription-row {
+  min-height: 64px;
+  transition: background-color var(--motion-duration-fast)
+    var(--motion-easing-standard);
+}
+
+.settings-workspace__subscription-table.product-data-table
+  .settings-workspace__subscription-row:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-background-muted) 72%,
+    transparent
+  );
+}
+
+.team-people__list.product-data-table {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.team-people__list.product-data-table .team-people__list-heading {
+  padding: 12px 16px;
+  background: var(--color-background-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.team-people__list.product-data-table .team-people__member {
+  min-height: 64px;
+  padding: 12px 16px;
+  transition: background-color var(--motion-duration-fast)
+    var(--motion-easing-standard);
+}
+
+.team-people__list.product-data-table .team-people__member:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-background-muted) 72%,
+    transparent
+  );
+}
+
+.team-people__list.product-data-table .team-people__member-profile > span:last-child {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.team-people__pagination button.is-active {
+  border-radius: 50%;
+  background: var(--color-background-inverted);
+  color: var(--color-background-body);
+}
+
+.admin-users-list.product-data-grid {
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-users-list.product-data-grid .admin-users-member-row {
+  min-height: 72px;
+  padding: 12px 16px;
+}
+
+.admin-users-list.product-data-grid .admin-users-member-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-users-list.product-data-grid .admin-users-member-copy strong {
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.admin-users-list.product-data-grid
+  :where(.admin-users-member-copy span, .admin-users-status) {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.inspiration-comparison-table.product-data-table {
+  overflow-x: auto;
+}
+
+.inspiration-comparison-table.product-data-table > [role="row"] {
+  min-width: max-content;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inspiration-comparison-table.product-data-table > [role="row"]:first-child {
+  background: var(--color-background-muted);
+}
+
+.inspiration-comparison-table.product-data-table > [role="row"]:last-child {
+  border-bottom: 0;
+}
+
+.inspiration-comparison-table.product-data-table > [role="row"]:not(:first-child) {
+  transition: background-color var(--motion-duration-fast)
+    var(--motion-easing-standard);
+}
+
+.inspiration-comparison-table.product-data-table > [role="row"]:not(:first-child):hover {
+  background: color-mix(
+    in srgb,
+    var(--color-background-muted) 72%,
+    transparent
+  );
+}
+
+@media (max-width: 700px) {
+  .settings-workspace__subscription-table.product-data-table
+    .settings-workspace__subscription-row {
+    min-width: 0;
+  }
+
+  .admin-users-list.product-data-grid .admin-users-member-row {
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-workspace__subscription-table.product-data-table
+    .settings-workspace__subscription-row,
+  .team-people__list.product-data-table .team-people__member,
+  .inspiration-comparison-table.product-data-table > [role="row"] {
+    transition: none;
+  }
+}

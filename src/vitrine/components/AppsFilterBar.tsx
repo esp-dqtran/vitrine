@@ -30,6 +30,7 @@ export function isInsideAstryxDropdownPortal(target: EventTarget | null) {
 export type DiscoveryOpenMenu =
   | { type: 'platform' }
   | { type: 'sort' }
+  | { type: 'merged' }
   | { type: 'filter'; id: string }
   | null;
 
@@ -474,6 +475,10 @@ export function DiscoveryFilterBar({
   const [preview, setPreview] = useState<DiscoveryFilterOption | null>(null);
   const openMenuContainerRef = useRef<HTMLDivElement>(null);
   const resultLabel = resultCount === 1 ? resultLabels[0] : resultLabels[1];
+  const selectedFilterCount = filters.reduce(
+    (count, group) => count + group.selected.length,
+    0,
+  );
 
   useEffect(() => {
     if (!openMenu) return;
@@ -543,6 +548,37 @@ export function DiscoveryFilterBar({
           </AstryxDropdown>
         </div>
         <span className="apps-filterbar__divider" aria-hidden="true" />
+        <div className="apps-filterbar__filter apps-filterbar__filter--merged">
+          <AstryxDropdown
+            label="Filters"
+            ariaLabel={selectedFilterCount
+              ? `Filters (${selectedFilterCount} selected)`
+              : 'Filters'}
+            open={isMenuOpen({ type: 'merged' })}
+            triggerClassName="apps-filterbar__filter-button"
+            triggerEndContent={selectedFilterCount ? (
+              <>
+                <span className="apps-filterbar__selection-count">
+                  {selectedFilterCount}
+                </span>
+                <Icon icon="chevronDown" size="sm" />
+              </>
+            ) : undefined}
+            menuWidth={200}
+            onOpenChange={(open) => setSingleSelectOpen({ type: 'merged' }, open)}
+          >
+            {filters.map((group) => (
+              <AstryxDropdownItem
+                key={group.id}
+                label={group.selected.length
+                  ? `${group.label} (${group.selected.length})`
+                  : group.label}
+                selected={group.selected.length > 0}
+                onSelect={() => setOpenMenu({ type: 'filter', id: group.id })}
+              />
+            ))}
+          </AstryxDropdown>
+        </div>
         {filters.map((group) => (
           <DiscoveryFilterMenu
             key={group.id}

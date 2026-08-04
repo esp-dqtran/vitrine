@@ -75,6 +75,14 @@ export function createDesignerCanvasCollaborationService(
     ...(rooms.get(roomId) ?? []),
   ].map((client) => client.id);
 
+  const collaborators = (roomId: string) => [
+    ...(rooms.get(roomId) ?? []),
+  ].map((client) => ({
+    clientId: client.id,
+    userId: client.identity.userId,
+    name: client.identity.name,
+  }));
+
   const broadcast = (
     roomId: string,
     message: DesignerCanvasServerMessage,
@@ -91,6 +99,7 @@ export function createDesignerCanvasCollaborationService(
   const broadcastPresence = (roomId: string) => broadcast(roomId, {
     type: "presence",
     collaboratorIds: collaboratorIds(roomId),
+    collaborators: collaborators(roomId),
   });
 
   const removeClient = (client: RoomClient) => {
@@ -125,6 +134,7 @@ export function createDesignerCanvasCollaborationService(
       projectId,
       clientId: client.id,
       collaboratorIds: collaboratorIds(roomId),
+      collaborators: collaborators(roomId),
     });
     broadcastPresence(roomId);
 

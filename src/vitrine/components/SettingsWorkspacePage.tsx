@@ -358,7 +358,7 @@ export function SettingsWorkspacePage({
           {section === 'billing' ? (
             <div className="settings-workspace__panel settings-workspace__billing">
               <div className="settings-workspace__title-row"><div><h1 id="settings-billing-title">Subscription</h1><p>Manage and view your Vitrine plan.</p></div></div>
-              <div className="settings-workspace__subscription-table" role="table" aria-label="Subscription">
+              <div className="settings-workspace__subscription-table product-data-table" role="table" aria-label="Subscription">
                 <div className="settings-workspace__subscription-head" role="row">
                   <span role="columnheader">Product</span><span role="columnheader">Tier</span><span role="columnheader">Info</span><span role="columnheader">Action</span>
                 </div>

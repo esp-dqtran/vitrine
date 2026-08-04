@@ -8,7 +8,7 @@ function ComparisonSection({ title, rows, apps }: { title: string; rows: Compari
     <section>
       <h3>{title}</h3>
       <div
-        className="inspiration-comparison-table"
+        className="inspiration-comparison-table product-data-table"
         role="table"
         style={{ "--comparison-columns": apps.length } as CSSProperties}
       >

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import pg from "pg";
@@ -54,6 +54,22 @@ function prefixSummary(rows: StoredObjectRow[]): Array<{ prefix: string; objects
   return [...summaries.entries()]
     .map(([prefix, summary]) => ({ prefix, ...summary }))
     .sort((left, right) => right.bytes - left.bytes);
+}
+
+function storedObjectRows(value: unknown): StoredObjectRow[] {
+  if (!Array.isArray(value)) throw new Error("repair_input_invalid");
+  return value.map((row) => {
+    if (!row || typeof row !== "object") throw new Error("repair_input_invalid");
+    const item = row as Partial<StoredObjectRow>;
+    if (typeof item.object_key !== "string"
+      || typeof item.sha256 !== "string"
+      || typeof item.byte_size !== "string"
+      || typeof item.content_type !== "string"
+      || typeof item.access_class !== "string") {
+      throw new Error("repair_input_invalid");
+    }
+    return item as StoredObjectRow;
+  }).sort((left, right) => left.object_key.localeCompare(right.object_key));
 }
 
 async function missingFromBucket(input: {
@@ -127,18 +143,21 @@ if (!databaseUrl) {
        ORDER BY 1, 2`,
     );
     const predicates = referencePredicates(references.rows, "stored");
-    const candidates = await database.query<StoredObjectRow>(
-      `SELECT stored.object_key, stored.sha256, stored.byte_size,
-              stored.content_type, stored.access_class
-       FROM stored_objects stored
-       WHERE ${predicates}
-       ORDER BY stored.object_key`,
-    );
+    const inputPath = process.env.OBJECT_INVENTORY_REPAIR_INPUT?.trim();
+    const candidateRows = inputPath
+      ? storedObjectRows(JSON.parse(await readFile(path.resolve(inputPath), "utf8")))
+      : (await database.query<StoredObjectRow>(
+          `SELECT stored.object_key, stored.sha256, stored.byte_size,
+                  stored.content_type, stored.access_class
+           FROM stored_objects stored
+           WHERE ${predicates}
+           ORDER BY stored.object_key`,
+        )).rows;
     const firstPass = await missingFromBucket({
       client: storage,
       bucket: config.bucket,
       prefix: config.prefix,
-      candidates: candidates.rows,
+      candidates: candidateRows,
     });
     const absent = process.env.OBJECT_INVENTORY_REPAIR_APPLY === "1"
       ? await missingFromBucket({
@@ -167,7 +186,6 @@ if (!databaseUrl) {
           const result = await database.query(
             `DELETE FROM stored_objects stored
              WHERE stored.object_key = ANY($1::text[])
-               AND ${predicates}
              RETURNING stored.object_key`,
             [keys],
           );
@@ -184,7 +202,7 @@ if (!databaseUrl) {
     console.log(JSON.stringify({
       status: "ok",
       mode: process.env.OBJECT_INVENTORY_REPAIR_APPLY === "1" ? "apply" : "dry-run",
-      unreferenced_candidates: candidates.rows.length,
+      unreferenced_candidates: candidateRows.length,
       missing_unreferenced_objects: absent.length,
       missing_summary: prefixSummary(absent),
       deleted_objects: deleted,

@@ -8,6 +8,13 @@ export const DESIGNER_CANVAS_COLLAB_MAX_BYTES = 5 * 1024 * 1024;
 
 export interface DesignerCanvasIdentity {
   userId: number;
+  name: string;
+}
+
+export interface DesignerCanvasCollaborator {
+  clientId: string;
+  userId: number;
+  name: string;
 }
 
 export type DesignerCanvasClientMessage =
@@ -29,10 +36,12 @@ export type DesignerCanvasServerMessage =
     projectId: string;
     clientId: string;
     collaboratorIds: readonly string[];
+    collaborators: readonly DesignerCanvasCollaborator[];
   }
   | {
     type: "presence";
     collaboratorIds: readonly string[];
+    collaborators: readonly DesignerCanvasCollaborator[];
   }
   | {
     type: "scene";

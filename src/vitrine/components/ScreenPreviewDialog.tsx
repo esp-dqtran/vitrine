@@ -171,7 +171,7 @@ export function ScreenPreviewDialog({
               {mediaFailed ? (
                 <PlaceholderImage
                   seed={`${appName}-${screen.id}`}
-                  style={{ objectFit: 'cover', background: '#fff' }}
+                  style={{ objectFit: 'contain', background: '#fff' }}
                 />
               ) : (
                 <img

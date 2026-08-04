@@ -12,9 +12,12 @@ import type {
   AppState,
   BinaryFileData,
   BinaryFiles,
+  Collaborator,
   DataURL,
   ExcalidrawImperativeAPI,
+  ExcalidrawProps,
   PointerDownState,
+  SocketId,
 } from "@excalidraw/excalidraw/types";
 import type {
   ExcalidrawElement,
@@ -41,7 +44,10 @@ import {
 } from "../designerCanvasApi.ts";
 import {
   openDesignerCanvasCollaboration,
+  type DesignerCanvasCollaborator,
   type DesignerCanvasCollaborationSession,
+  type DesignerCanvasCollaborationStatus,
+  type DesignerCanvasRemoteCursor,
 } from "../designerCanvasCollaboration.ts";
 import { uploadProjectCanvasAsset } from "../projectCanvasAssets.ts";
 import { navigate } from "../router.ts";
@@ -52,6 +58,16 @@ import {
   ProjectCanvasCommentPanel,
   ProjectCanvasCommentPin,
 } from "./ProjectCanvasComments.tsx";
+import {
+  ProjectMoodboardPanel,
+  ProjectMoodboardReferenceInspector,
+  layoutMoodboardReferenceInSection,
+  projectMoodboardSectionPresets,
+  type ProjectMoodboardDecision,
+  type ProjectMoodboardReference,
+  type ProjectMoodboardSectionId,
+  type ProjectMoodboardSectionPreset,
+} from "./ProjectMoodboardPanel.tsx";
 import { ProjectReferencePanel, type ProjectReferenceState } from "./ProjectReferencePanel.tsx";
 import { ProjectScreenLibrary, projectScreenKey } from "./ProjectScreenLibrary.tsx";
 import {
@@ -103,9 +119,35 @@ const expandedCanvasDocumentHeight = 1_240;
 const canvasDocumentViewportTopSafeArea = 72;
 const researchFrameWidth = 960;
 const researchFrameHeight = 640;
+const canvasCollaborationColors = [
+  { background: "#5b67f1", stroke: "#3f46bc" },
+  { background: "#0f9f6e", stroke: "#087454" },
+  { background: "#d97706", stroke: "#a95605" },
+  { background: "#db2777", stroke: "#a81d5b" },
+  { background: "#7c3aed", stroke: "#5d2bb4" },
+  { background: "#0284c7", stroke: "#03699c" },
+] as const;
 
 type ElementSkeleton = NonNullable<Parameters<typeof convertToExcalidrawElements>[0]>[number];
 type StickyPlacementMode = "single" | "stack";
+type CanvasPointerUpdate = Parameters<NonNullable<ExcalidrawProps["onPointerUpdate"]>>[0];
+
+function canvasCollaboratorColor(identity: string) {
+  let hash = 0;
+  for (const character of identity) {
+    hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
+  }
+  return canvasCollaborationColors[Math.abs(hash) % canvasCollaborationColors.length];
+}
+
+function canvasCollaboratorInitials(name: string): string {
+  return name
+    .split(/[@\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "?";
+}
 
 interface StickyPlacement {
   color: ProjectStickyNoteColor;
@@ -136,6 +178,7 @@ const commentPlacementCursor = `url("data:image/svg+xml,${encodeURIComponent(
 )}") 6 5, crosshair`;
 
 type ProjectCanvasTool =
+  | "moodboard"
   | "research-frames"
   | "screens"
   | "sticky"
@@ -154,10 +197,16 @@ interface ProjectCanvasToolCatalogItem {
 
 const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
   {
+    tool: "moodboard",
+    title: "Moodboard",
+    description: "Collect references, shape directions, and record visual decisions.",
+    pinned: true,
+  },
+  {
     tool: "screens",
     title: "Screens",
     description: "Search captured product screens and add them to the canvas.",
-    pinned: true,
+    pinned: false,
   },
   {
     tool: "sticky",
@@ -198,6 +247,7 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
 ];
 
 const projectCanvasToolIcons: Record<Exclude<ProjectCanvasTool, "sticky" | "comments">, IconName> = {
+  moodboard: "viewColumns",
   "research-frames": "viewColumns",
   screens: "viewColumns",
   document: "copy",
@@ -481,6 +531,22 @@ export interface ExcalidrawProjectSnapshot {
 
 type CanvasSaveState = "loading" | "saving" | "saved" | "offline" | "unavailable";
 
+interface StoredMoodboardReference {
+  sourceKind: ProjectMoodboardReference["sourceKind"];
+  sourceId: string;
+  sourceLabel: string;
+  sourceUrl?: string;
+  caption: string;
+  decision: ProjectMoodboardDecision;
+  addedAt: string;
+}
+
+interface AstryxMoodboardSectionReference {
+  elementId: string;
+  id: ProjectMoodboardSectionId;
+  title: string;
+}
+
 interface AstryxScreenReference {
   elementId: string;
   appId: string;
@@ -640,6 +706,99 @@ function screenReferenceForElement(element: ExcalidrawElement): AstryxScreenRefe
     screenType: reference.screenType,
     platform: reference.platform,
   };
+}
+
+function moodboardReferenceForElement(
+  element: ExcalidrawElement,
+  elements: readonly ExcalidrawElement[] = [],
+): ProjectMoodboardReference | undefined {
+  if (element.isDeleted || element.type !== "image") return undefined;
+  const customData = element.customData as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  const moodboard = reference?.moodboard as Record<string, unknown> | undefined;
+  if (
+    !moodboard
+    || !["project-reference", "screen", "upload"].includes(String(moodboard.sourceKind))
+    || typeof moodboard.sourceId !== "string"
+    || typeof moodboard.sourceLabel !== "string"
+  ) return undefined;
+  const decision = ["keep", "maybe", "reject"].includes(String(moodboard.decision))
+    ? moodboard.decision as ProjectMoodboardDecision
+    : "maybe";
+  const section = element.frameId
+    ? elements
+      .map(moodboardSectionForElement)
+      .find((candidate) => candidate?.elementId === element.frameId)
+    : undefined;
+  return {
+    elementId: element.id,
+    sourceKind: moodboard.sourceKind as ProjectMoodboardReference["sourceKind"],
+    sourceId: moodboard.sourceId,
+    sourceLabel: moodboard.sourceLabel,
+    sourceUrl: typeof moodboard.sourceUrl === "string" ? moodboard.sourceUrl : undefined,
+    caption: typeof moodboard.caption === "string" ? moodboard.caption : "",
+    decision,
+    sectionId: section?.id,
+    x: element.x,
+    y: element.y,
+    width: element.width,
+    height: element.height,
+  };
+}
+
+function moodboardReferencesEqual(
+  left: readonly ProjectMoodboardReference[],
+  right: readonly ProjectMoodboardReference[],
+): boolean {
+  return left.length === right.length && left.every((reference, index) => {
+    const other = right[index];
+    return reference.elementId === other?.elementId
+      && reference.sourceKind === other.sourceKind
+      && reference.sourceId === other.sourceId
+      && reference.sourceLabel === other.sourceLabel
+      && reference.sourceUrl === other.sourceUrl
+      && reference.caption === other.caption
+      && reference.decision === other.decision
+      && reference.sectionId === other.sectionId
+      && reference.x === other.x
+      && reference.y === other.y
+      && reference.width === other.width
+      && reference.height === other.height;
+  });
+}
+
+function moodboardSectionForElement(
+  element: ExcalidrawElement,
+): AstryxMoodboardSectionReference | undefined {
+  if (element.isDeleted || element.type !== "frame") return undefined;
+  const customData = element.customData as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  if (
+    reference?.kind !== "moodboard-section"
+    || !projectMoodboardSectionPresets.some((section) => section.id === reference.sectionId)
+  ) return undefined;
+  return {
+    elementId: element.id,
+    id: reference.sectionId as ProjectMoodboardSectionId,
+    title: element.name?.trim() || "Moodboard section",
+  };
+}
+
+function moodboardSectionsEqual(
+  left: readonly AstryxMoodboardSectionReference[],
+  right: readonly AstryxMoodboardSectionReference[],
+): boolean {
+  return left.length === right.length && left.every((section, index) => (
+    section.elementId === right[index]?.elementId
+    && section.id === right[index]?.id
+    && section.title === right[index]?.title
+  ));
+}
+
+function moodboardDecisionOpacity(decision: ProjectMoodboardDecision): number {
+  if (decision === "keep") return 100;
+  if (decision === "reject") return 38;
+  return 82;
 }
 
 function documentReferenceForElement(
@@ -807,6 +966,18 @@ export function ProjectPlayground({
   const resolvedTheme = useResolvedThemeMode();
   const [saveState, setSaveState] = useState<CanvasSaveState>("loading");
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
+  const [collaborationStatus, setCollaborationStatus] =
+    useState<DesignerCanvasCollaborationStatus>("connecting");
+  const [remoteCollaborators, setRemoteCollaborators] =
+    useState<readonly DesignerCanvasCollaborator[]>([]);
+  const [moodboardOpen, setMoodboardOpen] = useState(false);
+  const [moodboardMessage, setMoodboardMessage] = useState("");
+  const [moodboardReferences, setMoodboardReferences] =
+    useState<readonly ProjectMoodboardReference[]>([]);
+  const [moodboardSections, setMoodboardSections] =
+    useState<readonly AstryxMoodboardSectionReference[]>([]);
+  const [selectedMoodboardReference, setSelectedMoodboardReference] =
+    useState<ProjectMoodboardReference>();
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
@@ -860,6 +1031,8 @@ export function ProjectPlayground({
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const uploadingFileIdsRef = useRef(new Set<string>());
   const collaborationRef = useRef<DesignerCanvasCollaborationSession | null>(null);
+  const remoteCollaboratorsRef = useRef(new Map<string, DesignerCanvasCollaborator>());
+  const remoteCursorsRef = useRef(new Map<string, DesignerCanvasRemoteCursor>());
   const remoteElementsVersionRef = useRef<number | undefined>(undefined);
   const remoteBroadcastSuppressedUntilRef = useRef(0);
   const localStorageKey = useMemo(
@@ -869,6 +1042,58 @@ export function ProjectPlayground({
   const stickyDraftFocusKey = stickyDraft
     ? `${stickyDraft.x}:${stickyDraft.y}`
     : "";
+  const onlineCollaborators = useMemo(() => {
+    const collaborators = new Map<string, { id: string; name: string }>();
+    collaborators.set(`user:${userId}`, { id: `user:${userId}`, name: userName });
+    for (const collaborator of remoteCollaborators) {
+      const id = `user:${collaborator.userId}`;
+      if (!collaborators.has(id)) collaborators.set(id, { id, name: collaborator.name });
+    }
+    return [...collaborators.values()];
+  }, [remoteCollaborators, userId, userName]);
+  const collaborationStatusLabel = collaborationStatus === "live"
+    ? `${onlineCollaborators.length} ${onlineCollaborators.length === 1 ? "person" : "people"} online`
+    : collaborationStatus === "connecting"
+      ? "Connecting"
+      : "Collaboration offline";
+  const moodboardDecisionCounts = useMemo(() => ({
+    keep: moodboardReferences.filter((reference) => reference.decision === "keep").length,
+    maybe: moodboardReferences.filter((reference) => reference.decision === "maybe").length,
+    reject: moodboardReferences.filter((reference) => reference.decision === "reject").length,
+  }), [moodboardReferences]);
+  const canvasReadOnly = references?.access?.role === "viewer";
+
+  const syncCanvasCollaborators = useCallback(() => {
+    const collaborators = new Map<SocketId, Collaborator>();
+    for (const collaborator of remoteCollaboratorsRef.current.values()) {
+      const cursor = remoteCursorsRef.current.get(collaborator.clientId);
+      collaborators.set(collaborator.clientId as SocketId, {
+        id: String(collaborator.userId),
+        socketId: collaborator.clientId as SocketId,
+        username: collaborator.name,
+        color: canvasCollaboratorColor(collaborator.name),
+        pointer: cursor?.pointer
+          ? { ...cursor.pointer, tool: "pointer", renderCursor: true }
+          : undefined,
+        button: cursor?.button,
+        selectedElementIds: Object.fromEntries(
+          (cursor?.selectedElementIds ?? []).map((id) => [id, true]),
+        ),
+      });
+    }
+    editorRef.current?.updateScene({ collaborators });
+  }, []);
+
+  const handleCanvasPointerUpdate = useCallback(({ pointer, button }: CanvasPointerUpdate) => {
+    const selectedElementIds = Object.keys(
+      editorRef.current?.getAppState().selectedElementIds ?? {},
+    );
+    collaborationRef.current?.publishCursor({
+      pointer: { x: pointer.x, y: pointer.y },
+      button,
+      selectedElementIds,
+    });
+  }, []);
 
   useEffect(() => {
     if (!stickyDraftFocusKey) return undefined;
@@ -1129,6 +1354,42 @@ export function ProjectPlayground({
     const selectedScreen = selectedScreens.length === 1 ? selectedScreens[0] : undefined;
     setSelectedScreenReference((current) =>
       current?.elementId === selectedScreen?.elementId ? current : selectedScreen);
+    const nextMoodboardReferences = elements
+      .map((element) => moodboardReferenceForElement(element, elements))
+      .filter((reference): reference is ProjectMoodboardReference => Boolean(reference));
+    setMoodboardReferences((current) => (
+      moodboardReferencesEqual(current, nextMoodboardReferences)
+        ? current
+        : nextMoodboardReferences
+    ));
+    const selectedMoodboardReferences = nextMoodboardReferences.filter((reference) => (
+      appState.selectedElementIds[reference.elementId]
+    ));
+    const selectedMoodboard = selectedMoodboardReferences.length === 1
+      ? selectedMoodboardReferences[0]
+      : undefined;
+    setSelectedMoodboardReference((current) => {
+      if (!current && !selectedMoodboard) return current;
+      if (
+        current?.elementId === selectedMoodboard?.elementId
+        && current?.caption === selectedMoodboard?.caption
+        && current?.decision === selectedMoodboard?.decision
+        && current?.sectionId === selectedMoodboard?.sectionId
+        && current?.x === selectedMoodboard?.x
+        && current?.y === selectedMoodboard?.y
+        && current?.width === selectedMoodboard?.width
+        && current?.height === selectedMoodboard?.height
+      ) return current;
+      return selectedMoodboard;
+    });
+    const nextMoodboardSections = elements
+      .map(moodboardSectionForElement)
+      .filter((section): section is AstryxMoodboardSectionReference => Boolean(section));
+    setMoodboardSections((current) => (
+      moodboardSectionsEqual(current, nextMoodboardSections)
+        ? current
+        : nextMoodboardSections
+    ));
     const selectedDataReferences = elements
       .filter((element) => appState.selectedElementIds[element.id])
       .map(canvasDataReferenceForElement)
@@ -1202,6 +1463,23 @@ export function ProjectPlayground({
     const collaboration = openDesignerCanvasCollaboration({
       projectId,
       canvasId,
+      onStatus: setCollaborationStatus,
+      onPresence(collaborators) {
+        remoteCollaboratorsRef.current = new Map(
+          collaborators.map((collaborator) => [collaborator.clientId, collaborator]),
+        );
+        for (const clientId of remoteCursorsRef.current.keys()) {
+          if (!remoteCollaboratorsRef.current.has(clientId)) {
+            remoteCursorsRef.current.delete(clientId);
+          }
+        }
+        setRemoteCollaborators(collaborators);
+        syncCanvasCollaborators();
+      },
+      onCursor(cursor) {
+        remoteCursorsRef.current.set(cursor.clientId, cursor);
+        syncCanvasCollaborators();
+      },
       onScene(value) {
         if (!isExcalidrawSnapshot(value)) return;
         const editor = editorRef.current;
@@ -1226,7 +1504,106 @@ export function ProjectPlayground({
       collaboration.close();
       if (collaborationRef.current === collaboration) collaborationRef.current = null;
     };
-  }, [canvasId, projectId, queueSnapshot]);
+  }, [canvasId, projectId, queueSnapshot, syncCanvasCollaborators]);
+
+  const createMoodboardSections = useCallback((
+    presets: readonly ProjectMoodboardSectionPreset[],
+  ) => {
+    if (canvasReadOnly) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const sceneElements = editor.getSceneElements();
+    const existingIds = new Set(sceneElements
+      .map(moodboardSectionForElement)
+      .filter((section): section is AstryxMoodboardSectionReference => Boolean(section))
+      .map((section) => section.id));
+    const missing = presets.filter((preset) => !existingIds.has(preset.id));
+    if (missing.length === 0) {
+      setMoodboardMessage("Those moodboard sections are already on the canvas.");
+      return;
+    }
+
+    const existingFrames = sceneElements.filter((element) => moodboardSectionForElement(element));
+    const appState = editor.getAppState();
+    const zoom = appState.zoom.value;
+    const baseX = existingFrames.length > 0
+      ? Math.max(...existingFrames.map((frame) => frame.x + frame.width)) + 96
+      : -appState.scrollX + appState.width / (2 * zoom) - 360;
+    const baseY = existingFrames.length > 0
+      ? existingFrames[0].y
+      : -appState.scrollY + appState.height / (2 * zoom) - 310;
+    const created = missing.map((preset, index) => {
+      const [frame] = convertToExcalidrawElements([{
+        type: "frame",
+        children: [],
+        x: baseX + index * 816,
+        y: baseY,
+        width: 720,
+        height: 620,
+        name: preset.title,
+        customData: {
+          astryxReference: {
+            kind: "moodboard-section",
+            sectionId: preset.id,
+            createdAt: new Date().toISOString(),
+          },
+        },
+      } as ElementSkeleton]);
+      return frame;
+    });
+    editor.setActiveTool({ type: "selection" });
+    editor.updateScene({ elements: [...sceneElements, ...created] });
+    editor.scrollToContent(created, { animate: true, fitToViewport: true });
+    setMoodboardMessage(
+      missing.length === 1
+        ? `Added ${missing[0].title}.`
+        : "Moodboard structure is ready. New references will land in Unsorted.",
+    );
+  }, [canvasReadOnly]);
+
+  const ensureMoodboardInbox = useCallback(() => {
+    const unsorted = projectMoodboardSectionPresets.find((section) => section.id === "unsorted");
+    if (unsorted) createMoodboardSections([unsorted]);
+  }, [createMoodboardSections]);
+
+  const moodboardImagePlacement = useCallback((width: number, height: number) => {
+    const editor = editorRef.current;
+    if (!editor) return { x: 0, y: 0, width, height, frameId: undefined };
+    const elements = editor.getSceneElements();
+    const unsorted = elements.find((element) => moodboardSectionForElement(element)?.id === "unsorted");
+    if (unsorted) {
+      const children = elements.filter((element) => (
+        !element.isDeleted && element.type === "image" && element.frameId === unsorted.id
+      ));
+      const cellWidth = 304;
+      const maxHeight = 230;
+      const scale = Math.min(1, cellWidth / width, maxHeight / height);
+      const placedWidth = Math.max(80, Math.round(width * scale));
+      const placedHeight = Math.max(80, Math.round(height * scale));
+      const column = children.length % 2;
+      const row = Math.floor(children.length / 2);
+      return {
+        x: unsorted.x + 32 + column * 344,
+        y: unsorted.y + 64 + row * 264,
+        width: placedWidth,
+        height: placedHeight,
+        frameId: unsorted.id,
+      };
+    }
+    const appState = editor.getAppState();
+    const zoom = appState.zoom.value;
+    const maxWidth = 640;
+    const scale = Math.min(1, maxWidth / width);
+    const placedWidth = Math.max(80, Math.round(width * scale));
+    const placedHeight = Math.max(80, Math.round(height * scale));
+    return {
+      x: -appState.scrollX + appState.width / (2 * zoom) - placedWidth / 2,
+      y: -appState.scrollY + appState.height / (2 * zoom) - placedHeight / 2,
+      width: placedWidth,
+      height: placedHeight,
+      frameId: undefined,
+    };
+  }, []);
 
   const insertReference = useCallback(async (item: ResearchProjectItem) => {
     const editor = editorRef.current;
@@ -1243,14 +1620,7 @@ export function ProjectPlayground({
       const fileId = crypto.randomUUID() as FileId;
       const src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
       const dimensions = await imageDimensions(blob);
-      const maxWidth = 640;
-      const scale = Math.min(1, maxWidth / dimensions.width);
-      const width = Math.max(80, Math.round(dimensions.width * scale));
-      const height = Math.max(80, Math.round(dimensions.height * scale));
-      const appState = editor.getAppState();
-      const zoom = appState.zoom.value;
-      const x = -appState.scrollX + appState.width / (2 * zoom) - width / 2;
-      const y = -appState.scrollY + appState.height / (2 * zoom) - height / 2;
+      const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
       const file: BinaryFileData = {
         id: fileId,
         mimeType: blob.type as BinaryFileData["mimeType"],
@@ -1259,23 +1629,48 @@ export function ProjectPlayground({
       };
       const [image] = convertToExcalidrawElements([{
         type: "image",
-        x,
-        y,
-        width,
-        height,
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
         fileId,
         status: "saved",
       }]);
+      const moodboard: StoredMoodboardReference = {
+        sourceKind: "project-reference",
+        sourceId: String(item.id),
+        sourceLabel: item.stepLabel || item.snapshot.title,
+        sourceUrl: item.snapshot.sourcePath || item.mediaUrl,
+        caption: item.note,
+        decision: "maybe",
+        addedAt: new Date().toISOString(),
+      };
+      const referenceImage = {
+        ...image,
+        frameId: placement.frameId ?? null,
+        opacity: moodboardDecisionOpacity(moodboard.decision),
+        customData: {
+          ...image.customData,
+          astryxReference: {
+            kind: "research-reference",
+            itemId: item.id,
+            appId: item.appId ?? null,
+            title: item.snapshot.title,
+            moodboard,
+          },
+        },
+      } as ExcalidrawElement;
       editor.addFiles([file]);
-      editor.updateScene({ elements: [...editor.getSceneElements(), image] });
-      editor.scrollToContent(image, { animate: true, fitToViewport: false });
+      editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
+      editor.scrollToContent(referenceImage, { animate: true, fitToViewport: false });
       setReferenceMessage(`Added ${item.stepLabel || item.snapshot.title} to the moodboard.`);
+      setMoodboardMessage(`Added ${item.stepLabel || item.snapshot.title} to Unsorted.`);
     } catch (error) {
       setReferenceMessage((error as Error).message);
     } finally {
       setInsertingReferenceId(undefined);
     }
-  }, [projectId]);
+  }, [moodboardImagePlacement, projectId]);
 
   const insertCatalogScreen = useCallback(async (result: AppsDiscoveryScreenResult) => {
     const editor = editorRef.current;
@@ -1299,14 +1694,7 @@ export function ProjectPlayground({
         storedInProject = false;
       }
       const dimensions = await imageDimensions(blob);
-      const maxWidth = 720;
-      const scale = Math.min(1, maxWidth / dimensions.width);
-      const width = Math.max(120, Math.round(dimensions.width * scale));
-      const height = Math.max(120, Math.round(dimensions.height * scale));
-      const appState = editor.getAppState();
-      const zoom = appState.zoom.value;
-      const x = -appState.scrollX + appState.width / (2 * zoom) - width / 2;
-      const y = -appState.scrollY + appState.height / (2 * zoom) - height / 2;
+      const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
       const file: BinaryFileData = {
         id: fileId,
         mimeType: blob.type as BinaryFileData["mimeType"],
@@ -1315,15 +1703,26 @@ export function ProjectPlayground({
       };
       const [image] = convertToExcalidrawElements([{
         type: "image",
-        x,
-        y,
-        width,
-        height,
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
         fileId,
         status: "saved",
       }]);
+      const moodboard: StoredMoodboardReference = {
+        sourceKind: "screen",
+        sourceId: `${app.id}:${screen.id}`,
+        sourceLabel: `${app.app} · ${screen.type || "Screen"}`,
+        sourceUrl: screen.sourceUrl ?? screen.url,
+        caption: "",
+        decision: "maybe",
+        addedAt: new Date().toISOString(),
+      };
       const referenceImage = {
         ...image,
+        frameId: placement.frameId ?? null,
+        opacity: moodboardDecisionOpacity(moodboard.decision),
         customData: {
           ...image.customData,
           astryxReference: {
@@ -1335,6 +1734,7 @@ export function ProjectPlayground({
             platform: screen.platform,
             mediaUrl: screen.url,
             sourceUrl: screen.sourceUrl ?? null,
+            moodboard,
           },
         },
       } as ExcalidrawElement;
@@ -1346,12 +1746,77 @@ export function ProjectPlayground({
           ? `Added ${app.app} · ${screen.type || "Screen"}.`
           : `Added ${app.app} · ${screen.type || "Screen"} locally. Sign in to sync it.`,
       );
+      setMoodboardMessage(`Added ${app.app} · ${screen.type || "Screen"} to Unsorted.`);
     } catch (error) {
       setScreenMessage((error as Error).message);
     } finally {
       setInsertingScreenKey(undefined);
     }
-  }, [projectId]);
+  }, [moodboardImagePlacement, projectId]);
+
+  const insertMoodboardUploads = useCallback(async (uploads: readonly File[]) => {
+    if (canvasReadOnly) return;
+    const editor = editorRef.current;
+    if (!editor || uploads.length === 0) return;
+    ensureMoodboardInbox();
+    setMoodboardMessage(`Adding ${uploads.length} ${uploads.length === 1 ? "image" : "images"}…`);
+    let inserted = 0;
+    for (const upload of uploads) {
+      if (!canvasMediaMimeTypeSet.has(upload.type)) continue;
+      try {
+        const fileId = crypto.randomUUID() as FileId;
+        const src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, upload);
+        const dimensions = await imageDimensions(upload);
+        const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
+        const file: BinaryFileData = {
+          id: fileId,
+          mimeType: upload.type as BinaryFileData["mimeType"],
+          dataURL: src as DataURL,
+          created: Date.now(),
+        };
+        const [image] = convertToExcalidrawElements([{
+          type: "image",
+          x: placement.x,
+          y: placement.y,
+          width: placement.width,
+          height: placement.height,
+          fileId,
+          status: "saved",
+        }]);
+        const moodboard: StoredMoodboardReference = {
+          sourceKind: "upload",
+          sourceId: fileId,
+          sourceLabel: upload.name,
+          caption: "",
+          decision: "maybe",
+          addedAt: new Date().toISOString(),
+        };
+        const referenceImage = {
+          ...image,
+          frameId: placement.frameId ?? null,
+          opacity: moodboardDecisionOpacity(moodboard.decision),
+          customData: {
+            ...image.customData,
+            astryxReference: {
+              kind: "upload",
+              fileName: upload.name,
+              moodboard,
+            },
+          },
+        } as ExcalidrawElement;
+        editor.addFiles([file]);
+        editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
+        inserted += 1;
+      } catch (error) {
+        setMoodboardMessage(error instanceof Error ? error.message : "Image upload failed");
+      }
+    }
+    if (inserted > 0) {
+      setMoodboardMessage(
+        `Added ${inserted} ${inserted === 1 ? "image" : "images"} to Unsorted.`,
+      );
+    }
+  }, [canvasReadOnly, ensureMoodboardInbox, moodboardImagePlacement, projectId]);
 
   const insertCanvasDataReference = useCallback((
     reference: AstryxCanvasDataPayload,
@@ -1512,6 +1977,7 @@ export function ProjectPlayground({
     setStickyDraft(undefined);
     setStickyPlacement(undefined);
     setDocumentPlacement(false);
+    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -1553,6 +2019,7 @@ export function ProjectPlayground({
     setCommentDraft("");
     setSelectedCommentId(undefined);
     setResearchFramesOpen(false);
+    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -1571,6 +2038,7 @@ export function ProjectPlayground({
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
     stopStickyPlacement();
+    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -1627,6 +2095,7 @@ export function ProjectPlayground({
     setResearchFramesOpen(false);
     setStickyDraft(undefined);
     setStickyPlacement({ color, mode });
+    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -1653,6 +2122,100 @@ export function ProjectPlayground({
     stopStickyPlacement,
   ]);
 
+  const updateSelectedMoodboardReference = useCallback((patch: {
+    caption?: string;
+    decision?: ProjectMoodboardDecision;
+  }) => {
+    if (canvasReadOnly) return;
+    const editor = editorRef.current;
+    const selected = selectedMoodboardReference;
+    if (!editor || !selected) return;
+    const elements = editor.getSceneElements();
+    const nextElements = elements.map((element) => {
+      if (element.id !== selected.elementId) return element;
+      const customData = element.customData as Record<string, unknown> | undefined;
+      const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+      const currentMoodboard = reference?.moodboard as StoredMoodboardReference | undefined;
+      if (!reference || !currentMoodboard) return element;
+      const moodboard: StoredMoodboardReference = {
+        ...currentMoodboard,
+        ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
+        ...(patch.decision !== undefined ? { decision: patch.decision } : {}),
+      };
+      return {
+        ...element,
+        opacity: moodboardDecisionOpacity(moodboard.decision),
+        customData: {
+          ...customData,
+          astryxReference: { ...reference, moodboard },
+        },
+      } as ExcalidrawElement;
+    });
+    editor.updateScene({ elements: nextElements });
+    setSelectedMoodboardReference({ ...selected, ...patch });
+  }, [canvasReadOnly, selectedMoodboardReference]);
+
+  const moveSelectedMoodboardReference = useCallback((sectionId: ProjectMoodboardSectionId) => {
+    if (canvasReadOnly) return;
+    const editor = editorRef.current;
+    const selected = selectedMoodboardReference;
+    if (!editor || !selected || selected.sectionId === sectionId) return;
+
+    const elements = editor.getSceneElements();
+    const selectedElement = elements.find((element) => (
+      element.id === selected.elementId && !element.isDeleted && element.type === "image"
+    ));
+    const targetFrame = elements.find((element) => (
+      moodboardSectionForElement(element)?.id === sectionId
+    ));
+    if (!selectedElement || !targetFrame) {
+      setMoodboardMessage("That moodboard section is no longer available.");
+      return;
+    }
+
+    const targetChildren = elements.filter((element) => (
+      element.id !== selected.elementId
+      && !element.isDeleted
+      && element.type === "image"
+      && element.frameId === targetFrame.id
+      && Boolean(moodboardReferenceForElement(element))
+    ));
+    const { x, y, width, height, requiredFrameHeight } = layoutMoodboardReferenceInSection({
+      image: selectedElement,
+      section: targetFrame,
+      occupiedCount: targetChildren.length,
+    });
+    let movedElement: ExcalidrawElement | undefined;
+    const nextElements = elements.map((element) => {
+      if (element.id === targetFrame.id && requiredFrameHeight > targetFrame.height) {
+        return { ...element, height: requiredFrameHeight } as ExcalidrawElement;
+      }
+      if (element.id !== selected.elementId) return element;
+      movedElement = {
+        ...element,
+        x,
+        y,
+        width,
+        height,
+        frameId: targetFrame.id,
+      } as ExcalidrawElement;
+      return movedElement;
+    });
+    editor.updateScene({
+      elements: nextElements,
+      appState: { selectedElementIds: { [selected.elementId]: true } },
+    });
+    if (movedElement) editor.scrollToContent(movedElement, { animate: true, fitToViewport: false });
+    setSelectedMoodboardReference({ ...selected, sectionId, x, y, width, height });
+    const targetTitle = moodboardSectionForElement(targetFrame)?.title ?? "the selected section";
+    setMoodboardMessage(`Moved ${selected.sourceLabel} to ${targetTitle}.`);
+  }, [canvasReadOnly, selectedMoodboardReference]);
+
+  const dismissMoodboardReference = useCallback(() => {
+    editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
+    setSelectedMoodboardReference(undefined);
+  }, []);
+
   const activateCanvasTool = useCallback((tool: ProjectCanvasTool) => {
     setToolsCatalogQuery("");
 
@@ -1661,6 +2224,7 @@ export function ProjectPlayground({
       stopStickyPlacement();
       stopDocumentPlacement();
       setResearchFramesOpen(false);
+      setMoodboardOpen(false);
       setScreensOpen(false);
       setTemplatesOpen(false);
       setDataToolsOpen(false);
@@ -1688,12 +2252,17 @@ export function ProjectPlayground({
     stopDocumentPlacement();
     stopCommentPlacement();
     setResearchFramesOpen(false);
+    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
     setReferencesOpen(false);
 
-    if (tool === "screens") {
+    if (tool === "moodboard") {
+      editorRef.current?.setActiveTool({ type: "selection" });
+      editorRef.current?.resetCursor();
+      setMoodboardOpen(!moodboardOpen);
+    } else if (tool === "screens") {
       setScreensOpen(!screensOpen);
     } else if (tool === "research-frames") {
       editorRef.current?.setActiveTool({ type: "selection" });
@@ -1709,6 +2278,7 @@ export function ProjectPlayground({
     armDocumentPlacement,
     dataToolsOpen,
     documentPlacement,
+    moodboardOpen,
     researchFramesOpen,
     screensOpen,
     stopDocumentPlacement,
@@ -1852,6 +2422,7 @@ export function ProjectPlayground({
         event.preventDefault();
         setToolsCatalogOpen(false);
         setResearchFramesOpen(false);
+        setMoodboardOpen(false);
         setScreensOpen(false);
         setTemplatesOpen(false);
         setDataToolsOpen(false);
@@ -2088,10 +2659,26 @@ export function ProjectPlayground({
     )));
   }, [commitCanvasComments, selectedCommentId]);
 
+  const deleteSelectedComment = useCallback(() => {
+    if (!selectedCommentId) return;
+    commitCanvasComments(
+      canvasCommentsRef.current.filter((thread) => thread.id !== selectedCommentId),
+    );
+    setCommentDraftAnchor(undefined);
+    setCommentDraft("");
+    setSelectedCommentId(undefined);
+  }, [commitCanvasComments, selectedCommentId]);
+
   const commentPinStyle = useCallback((thread: DesignerCanvasCommentThread) => ({
     left: `${(thread.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
     top: `${(thread.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
     opacity: canvasViewport.zoom < 0.2 ? 0 : 1,
+  } as CSSProperties), [canvasViewport]);
+
+  const moodboardDecisionBadgeStyle = useCallback((reference: ProjectMoodboardReference) => ({
+    left: `${(reference.x + canvasViewport.scrollX) * canvasViewport.zoom + 8}px`,
+    top: `${(reference.y + canvasViewport.scrollY) * canvasViewport.zoom + 8}px`,
+    opacity: canvasViewport.zoom < 0.22 ? 0 : 1,
   } as CSSProperties), [canvasViewport]);
 
   const saveStatusLabel = saveErrorMessage
@@ -2104,6 +2691,7 @@ export function ProjectPlayground({
     || `${item.title} ${item.description}`.toLowerCase().includes(normalizedToolsCatalogQuery)
   ));
   const canvasToolPanelOpen = toolsCatalogOpen
+    || moodboardOpen
     || researchFramesOpen
     || screensOpen
     || templatesOpen
@@ -2175,6 +2763,26 @@ export function ProjectPlayground({
           className="project-canvas-header__group project-canvas-header__actions"
           data-canvas-toolbar-region="top-right"
         >
+          <div
+            className="project-canvas-collaborators"
+            data-state={collaborationStatus}
+            role="status"
+            aria-live="polite"
+            aria-label={collaborationStatusLabel}
+            title={collaborationStatusLabel}
+          >
+            <span className="project-canvas-collaborators__avatars" aria-hidden="true">
+              {onlineCollaborators.slice(0, 3).map((collaborator) => (
+                <span
+                  key={collaborator.id}
+                  style={{ backgroundColor: canvasCollaboratorColor(collaborator.name).background }}
+                >
+                  {canvasCollaboratorInitials(collaborator.name)}
+                </span>
+              ))}
+            </span>
+            <span className="project-canvas-collaborators__label">{collaborationStatusLabel}</span>
+          </div>
           <ProjectAccessButton
             project={{ id: projectId, title: references?.title ?? "Designer project" }}
             emphasized
@@ -2186,6 +2794,8 @@ export function ProjectPlayground({
           ref={canvasRootRef}
           className={`project-playground__canvas${
             selectedScreenReference ? " project-playground__canvas--screen-selected" : ""
+          }${
+            selectedMoodboardReference ? " project-playground__canvas--moodboard-reference-selected" : ""
           }${
             selectedCanvasDocument ? " project-playground__canvas--document-selected" : ""
           }${
@@ -2222,8 +2832,13 @@ export function ProjectPlayground({
             gridModeEnabled
             viewModeEnabled={references?.access?.role === "viewer"}
             initialData={initialData}
-            excalidrawAPI={(api) => { editorRef.current = api; }}
+            excalidrawAPI={(api) => {
+              editorRef.current = api;
+              syncCanvasCollaborators();
+            }}
+            isCollaborating={collaborationStatus === "live"}
             onChange={handleCanvasChange}
+            onPointerUpdate={handleCanvasPointerUpdate}
             onPointerUp={handleCanvasPointerUp}
             autoFocus
             handleKeyboardGlobally={!stickyDraft && !canvasTextEditing && !commentDraftAnchor && !selectedComment}
@@ -2248,13 +2863,13 @@ export function ProjectPlayground({
             <span className="project-playground__astryx-tools-divider" aria-hidden="true" />
             <button
               type="button"
-              className="project-playground__screens-trigger"
-              aria-label={screensOpen ? "Close screens" : "Screens"}
-              aria-pressed={screensOpen}
-              title="Screens"
-              onClick={() => activateCanvasTool("screens")}
+              className="project-playground__moodboard-trigger"
+              aria-label={moodboardOpen ? "Close moodboard" : "Moodboard"}
+              aria-pressed={moodboardOpen}
+              title="Moodboard"
+              onClick={() => activateCanvasTool("moodboard")}
             >
-              <ProjectCanvasToolGlyph tool="screens" />
+              <ProjectCanvasToolGlyph tool="moodboard" />
             </button>
             <button
               type="button"
@@ -2305,6 +2920,17 @@ export function ProjectPlayground({
           </div>,
           canvasToolbarHost,
         )}
+        {moodboardReferences.map((reference) => (
+          <span
+            key={reference.elementId}
+            className="project-moodboard-decision-badge"
+            data-decision={reference.decision}
+            style={moodboardDecisionBadgeStyle(reference)}
+            aria-label={`${reference.sourceLabel}: ${reference.decision}`}
+          >
+            {reference.decision}
+          </span>
+        ))}
         {canvasComments.map((thread, index) => (
           <ProjectCanvasCommentPin
             key={thread.id}
@@ -2334,11 +2960,37 @@ export function ProjectPlayground({
             onDraftChange={setCommentDraft}
             onSubmit={submitCanvasComment}
             onResolve={toggleSelectedCommentResolved}
+            onDelete={deleteSelectedComment}
             onClose={() => {
               setCommentDraftAnchor(undefined);
               setCommentDraft("");
               setSelectedCommentId(undefined);
             }}
+          />
+        ) : null}
+        {moodboardOpen ? (
+          <ProjectMoodboardPanel
+            sectionIds={moodboardSections.map((section) => section.id)}
+            referenceCount={moodboardReferences.length}
+            decisionCounts={moodboardDecisionCounts}
+            message={moodboardMessage}
+            onOpenProjectReferences={() => {
+              ensureMoodboardInbox();
+              setMoodboardOpen(false);
+              setReferencesOpen(true);
+            }}
+            onOpenScreens={() => {
+              ensureMoodboardInbox();
+              setMoodboardOpen(false);
+              setScreensOpen(true);
+            }}
+            onUpload={(files) => { void insertMoodboardUploads(files); }}
+            onCreateSection={(section) => createMoodboardSections([section])}
+            onCreateStarter={() => createMoodboardSections(
+              projectMoodboardSectionPresets.filter((section) => section.id !== "direction-c"),
+            )}
+            onClose={() => setMoodboardOpen(false)}
+            readOnly={canvasReadOnly}
           />
         ) : null}
         {toolsCatalogOpen && (
@@ -2498,7 +3150,31 @@ export function ProjectPlayground({
             onDismiss={dismissCanvasDocument}
           />
         ))}
-        {selectedScreenReference && !screensOpen && (
+        {selectedMoodboardReference
+          && !moodboardOpen
+          && !screensOpen
+          && !referencesOpen ? (
+          <ProjectMoodboardReferenceInspector
+            reference={selectedMoodboardReference}
+            sections={moodboardSections}
+            onCaptionChange={(caption) => updateSelectedMoodboardReference({ caption })}
+            onDecisionChange={(decision) => {
+              updateSelectedMoodboardReference({ decision });
+              setMoodboardMessage(`Marked ${selectedMoodboardReference.sourceLabel} as ${decision}.`);
+            }}
+            onSectionChange={moveSelectedMoodboardReference}
+            onOpenSource={selectedMoodboardReference.sourceUrl ? () => {
+              const source = new URL(
+                selectedMoodboardReference.sourceUrl!,
+                window.location.origin,
+              );
+              window.open(source.toString(), "_blank", "noopener,noreferrer");
+            } : undefined}
+            onClose={dismissMoodboardReference}
+            readOnly={canvasReadOnly}
+          />
+        ) : null}
+        {selectedScreenReference && !selectedMoodboardReference && !screensOpen && (
           <aside className="project-screen-inspector" aria-label="Selected catalog screen">
             <header className="project-screen-inspector__header">
               <span className="project-screen-inspector__icon" aria-hidden="true">

@@ -19,44 +19,43 @@
 @media (min-width: 721px) and (max-width: 1100px) {
   .apps-discovery {
     --vitrine-responsive-gutter: var(--vitrine-page-gutter-medium);
-    --reference-nav-height: 112px;
+    --reference-nav-height: 72px;
   }
 
   .reference-discovery-nav.apps-top-nav {
-    --reference-nav-height: 112px;
+    --reference-nav-height: 72px;
     --vitrine-responsive-gutter: var(--vitrine-page-gutter-medium);
     height: var(--reference-nav-height);
     min-height: var(--reference-nav-height);
-    grid-template-columns: 32px minmax(220px, 360px) minmax(160px, 1fr);
-    grid-template-rows: 64px 48px;
-    gap: 0 20px;
+    grid-template-columns:
+      minmax(236px, auto)
+      minmax(180px, 1fr)
+      minmax(144px, auto);
+    grid-template-rows: 72px;
+    gap: 16px;
     padding-inline: var(--vitrine-responsive-gutter);
   }
 
   .apps-top-nav .reference-discovery-nav__left {
-    display: contents;
-  }
-
-  .apps-top-nav .reference-discovery-nav__brand {
-    grid-column: 1;
-    grid-row: 1;
+    display: flex;
+    gap: 12px;
   }
 
   .apps-top-nav .reference-discovery-nav__types {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    align-self: start;
+    min-width: 0;
   }
 
   .apps-top-nav .reference-discovery-nav__types button {
-    height: 40px !important;
-    padding-inline: 0 16px !important;
+    height: 36px !important;
+    padding-inline: 8px !important;
   }
 
   .reference-discovery-nav.apps-top-nav .apps-top-nav__search {
     grid-column: 2;
     grid-row: 1;
-    width: min(360px, 100%);
+    width: 100%;
+    max-width: 360px;
+    justify-self: center;
   }
 
   .apps-top-nav .reference-discovery-nav__actions {
@@ -77,21 +76,27 @@
 
   .apps-filterbar {
     top: var(--reference-nav-height);
-    min-height: 88px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    min-height: var(--reference-nav-height);
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 8px 16px;
-    padding-block: 12px;
+    padding-block: calc((var(--reference-nav-height) - var(--vitrine-control-height)) / 2);
   }
 
   .apps-filterbar__controls {
-    flex-wrap: wrap;
-    overflow: visible;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .apps-filterbar__controls::-webkit-scrollbar {
+    display: none;
   }
 
   .apps-filterbar__meta {
     position: relative;
-    align-self: center;
+    align-self: auto;
     padding-left: 12px;
     background: var(--reference-chrome-bg);
   }
@@ -105,13 +110,62 @@
 @media (max-width: 720px) {
   .apps-discovery {
     --vitrine-responsive-gutter: var(--vitrine-page-gutter-compact);
-    --reference-nav-height: 96px;
+    --reference-nav-height: 64px;
   }
 
   .reference-discovery-nav.apps-top-nav {
-    --reference-nav-height: 96px;
+    --reference-nav-height: 64px;
     --vitrine-responsive-gutter: var(--vitrine-page-gutter-compact);
+    height: var(--reference-nav-height);
+    min-height: var(--reference-nav-height);
+    grid-template-columns: 32px minmax(132px, 1fr) 44px 72px;
+    grid-template-rows: 64px;
+    gap: 8px;
+    padding-block: 0;
     padding-inline: var(--vitrine-responsive-gutter);
+  }
+
+  .apps-top-nav .reference-discovery-nav__left {
+    display: contents;
+  }
+
+  .apps-top-nav .reference-discovery-nav__brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .apps-top-nav .reference-discovery-nav__types {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center !important;
+    min-width: 0;
+    gap: 0;
+  }
+
+  .apps-top-nav .reference-discovery-nav__types button {
+    height: 34px !important;
+    padding-inline: 6px !important;
+    font-size: 14px !important;
+  }
+
+  .reference-discovery-nav.apps-top-nav .apps-top-nav__search {
+    grid-column: 3;
+    grid-row: 1;
+    width: 44px;
+    overflow: hidden;
+  }
+
+  .reference-discovery-nav.apps-top-nav .apps-top-nav__search .reference-search-trigger__button {
+    width: 44px !important;
+    min-width: 44px !important;
+    padding-inline: 12px !important;
+  }
+
+  .apps-top-nav .reference-discovery-nav__actions {
+    grid-column: 4;
+    grid-row: 1;
+    width: 72px;
+    max-width: 72px;
   }
 
   .apps-discovery__taxonomy,
@@ -122,16 +176,40 @@
 
   .apps-filterbar {
     top: var(--reference-nav-height);
+    height: var(--reference-nav-height);
+    min-height: var(--reference-nav-height);
+    display: flex;
+    padding-block: calc((var(--reference-nav-height) - var(--vitrine-control-height)) / 2);
+    flex-wrap: nowrap;
+    gap: 8px;
   }
 
   .apps-filterbar__controls {
+    width: auto;
+    height: auto;
+    flex: 1 1 auto;
+    overflow: visible;
     overscroll-behavior-x: contain;
-    scroll-snap-type: inline proximity;
+    scroll-snap-type: none;
   }
 
-  .apps-filterbar__filter,
-  .apps-filterbar .apps-platform-switcher {
-    scroll-snap-align: start;
+  .apps-filterbar__controls > .apps-filterbar__filter[data-filter-group] {
+    display: none;
+  }
+
+  .apps-filterbar__filter--merged {
+    display: inline-flex;
+  }
+
+  .apps-filterbar__meta {
+    width: auto;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .apps-filterbar__count,
+  .apps-filterbar__meta > .apps-filterbar__divider {
+    display: none;
   }
 
   .apps-filterbar__filter--selected .apps-filterbar__filter-button {

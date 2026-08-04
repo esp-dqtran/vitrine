@@ -44,8 +44,8 @@
   align-items: center;
   gap: 32px;
   padding: 0 var(--reference-content-padding);
-  border-bottom: 1px solid var(--reference-chrome-border);
-  background: var(--reference-chrome-bg);
+  border-bottom: 1px solid var(--reference-chrome-border, var(--color-border));
+  background: var(--reference-chrome-bg, var(--color-background-body));
 }
 
 .reference-discovery-nav__left {
@@ -482,10 +482,11 @@
   position: sticky;
   top: var(--reference-nav-height);
   z-index: 35;
-  min-height: 64px;
+  min-height: var(--reference-nav-height);
   display: flex;
   align-items: center;
   gap: 20px;
+  padding-block: calc((var(--reference-nav-height) - var(--vitrine-control-height)) / 2);
   margin-bottom: 10px;
   background: var(--reference-chrome-bg);
 }
@@ -549,6 +550,10 @@
   border: 1px solid var(--reference-chrome-border);
   border-radius: 999px;
   background: var(--reference-chrome-surface-raised);
+}
+
+.apps-filterbar__filter--merged {
+  display: none;
 }
 
 .apps-filterbar__filter--selected {
@@ -837,12 +842,37 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 0;
   color: var(--color-text-secondary);
 }
 
-.discovery-page-layout__state p {
-  margin: 0;
+.discovery-page-layout__state {
+  min-height: 430px;
+  justify-content: center;
+  padding: 24px;
+  border-radius: var(--radius-container);
+  background: var(--color-background-body);
+}
+
+.discovery-page-layout__skeleton-grid {
+  padding: 0;
+}
+
+.discovery-page-layout__flow-skeletons {
+  display: grid;
+  gap: 24px;
+}
+
+.discovery-page-layout__flow-skeleton {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: var(--radius-container);
+  background: var(--reference-chrome-surface);
+}
+
+.discovery-page-layout__flow-skeleton-copy {
+  display: grid;
+  gap: 10px;
 }
 
 .discovery-page-layout__load-more-error {
@@ -852,6 +882,13 @@
   border: 1px solid var(--reference-chrome-border);
   border-radius: 12px;
   background: var(--reference-chrome-surface);
+}
+
+@media (max-width: 720px) {
+  .discovery-page-layout__state {
+    min-height: 390px;
+    padding: 16px;
+  }
 }
 
 .discovery-page-layout__sentinel {
@@ -952,7 +989,7 @@
   }
 
   .apps-filterbar {
-    align-items: flex-start;
+    align-items: center;
     flex-wrap: wrap;
     padding-block: 14px;
   }
@@ -966,12 +1003,17 @@
 
   .apps-filterbar__controls {
     flex-wrap: wrap;
+    min-width: 0;
     overflow: visible;
+  }
+
+  .apps-filterbar__controls::-webkit-scrollbar {
+    display: none;
   }
 
   .apps-filterbar__meta {
     position: relative;
-    align-self: center;
+    align-self: auto;
     padding-left: 12px;
     background: var(--reference-chrome-bg);
   }
@@ -1143,5 +1185,39 @@
 @media (prefers-reduced-motion: reduce) {
   .reference-discovery .apps-filterbar .astryx-dropdown-panel {
     animation: none;
+  }
+}
+
+/* Production Apps scroll behavior. Once the taxonomy scrolls away, the full
+ * product header remains visible and the existing toolbar becomes a second
+ * sticky row without adding a divider between the two chrome regions. */
+[data-sticky-chrome] .reference-discovery-nav.apps-top-nav {
+  border-bottom: 0;
+}
+
+[data-sticky-chrome] .reference-discovery-nav.apps-top-nav {
+  transition:
+    height 180ms cubic-bezier(.2, .8, .2, 1),
+    min-height 180ms cubic-bezier(.2, .8, .2, 1);
+}
+
+[data-sticky-chrome='merged'] .apps-filterbar {
+  top: var(--reference-nav-height);
+  margin-bottom: 10px;
+  border-top: 0;
+  background: var(--reference-chrome-bg);
+}
+
+@media (max-width: 720px) {
+  [data-sticky-chrome='merged'] .apps-filterbar {
+    top: 64px;
+    height: 64px;
+    min-height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sticky-chrome] .reference-discovery-nav.apps-top-nav {
+    transition: none;
   }
 }

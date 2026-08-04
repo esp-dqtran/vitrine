@@ -58,7 +58,9 @@ test("authenticates project rooms and relays reliable and volatile updates", asy
   const service = createDesignerCanvasCollaborationService({
     allowedOrigins: new Set([ORIGIN]),
     async authenticate(request) {
-      return request.headers.cookie === "astryx_session=valid" ? { userId: 7 } : undefined;
+      return request.headers.cookie === "astryx_session=valid"
+        ? { userId: 7, name: "designer@vitrines.test" }
+        : undefined;
     },
     async canAccessProject(identity, projectId) {
       assert.equal(identity.userId, 7);
@@ -81,11 +83,17 @@ test("authenticates project rooms and relays reliable and volatile updates", asy
   const initialPresence = await first.next("presence");
   assert.equal(initialPresence.type, "presence");
   assert.equal(initialPresence.collaboratorIds.length, 1);
+  assert.deepEqual(initialPresence.collaborators, [{
+    clientId: firstReady.clientId,
+    userId: 7,
+    name: "designer@vitrines.test",
+  }]);
 
   const second = await connect(roomUrl);
   const secondReady = await second.next("ready");
   assert.equal(secondReady.type, "ready");
   assert.equal(secondReady.collaboratorIds.length, 2);
+  assert.equal(secondReady.collaborators.length, 2);
   const presence = await first.next("presence");
   assert.equal(presence.type, "presence");
   assert.equal(presence.collaboratorIds.length, 2);
@@ -127,7 +135,9 @@ test("rejects unauthenticated, unauthorized, cross-origin, and invalid project u
   const service = createDesignerCanvasCollaborationService({
     allowedOrigins: new Set([ORIGIN]),
     async authenticate(request) {
-      return request.headers.cookie === "astryx_session=valid" ? { userId: 7 } : undefined;
+      return request.headers.cookie === "astryx_session=valid"
+        ? { userId: 7, name: "designer@vitrines.test" }
+        : undefined;
     },
     async canAccessProject(_identity, projectId) {
       return projectId === PROJECT_ID;
@@ -157,7 +167,7 @@ test("rejects unauthenticated, unauthorized, cross-origin, and invalid project u
 
 test("closes clients that send invalid collaboration messages", async (t) => {
   const service = createDesignerCanvasCollaborationService({
-    authenticate: async () => ({ userId: 7 }),
+    authenticate: async () => ({ userId: 7, name: "designer@vitrines.test" }),
     canAccessProject: async () => true,
   });
   service.server.listen(0, "127.0.0.1");

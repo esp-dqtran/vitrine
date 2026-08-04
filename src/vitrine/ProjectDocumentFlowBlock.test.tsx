@@ -7,6 +7,8 @@ import * as Y from "yjs";
 import type { ResearchProjectWorkspace } from "../researchProject.ts";
 import {
   catalogFlowOption,
+  insertProjectDocumentEvidenceBlock,
+  projectDocumentEvidenceOptions,
   projectDocumentFlowView,
   projectDocumentFlowOptions,
   projectDocumentSchema,
@@ -74,7 +76,30 @@ const workspace = {
           note: "",
           tags: [],
           important: false,
-          snapshot: { title: "Receipt", app: "Shopify" },
+          snapshot: {
+            title: "Receipt",
+            app: "Shopify",
+            platform: "web",
+            sourcePath: "/apps/shopify/screens/12",
+            description: "Confirmation after a completed order.",
+          },
+          mediaUrl: "/api/media/receipt.png",
+        },
+        {
+          id: 13,
+          projectId: "3d48a5c7-20b5-480a-a268-c3de515d8344",
+          laneId: 1,
+          position: 3,
+          sourceKind: "private_upload",
+          stepLabel: "Competitor notes",
+          note: "Annotated checkout review",
+          tags: [],
+          important: true,
+          snapshot: {
+            title: "Checkout annotations",
+            capturedAt: "2026-08-01T09:30:00.000Z",
+          },
+          mediaUrl: "/api/research-projects/project/uploads/13",
         },
       ],
     },
@@ -113,6 +138,41 @@ test("groups project flow evidence into embeddable flow options", () => {
     stepCount: 2,
     title: "Guest checkout",
   });
+});
+
+test("turns Project screens and uploads into stable evidence references", () => {
+  const evidence = projectDocumentEvidenceOptions(workspace);
+
+  assert.deepEqual(evidence, [
+    {
+      app: "Shopify",
+      appIconUrl: "",
+      appId: "",
+      capturedAt: "",
+      description: "Confirmation after a completed order.",
+      id: "project-evidence:12",
+      lane: "Examples",
+      mediaUrl: "/api/media/receipt.png",
+      platform: "web",
+      sourcePath: "/apps/shopify/screens/12",
+      title: "Receipt",
+      type: "screen",
+    },
+    {
+      app: "",
+      appIconUrl: "",
+      appId: "",
+      capturedAt: "2026-08-01T09:30:00.000Z",
+      description: "Annotated checkout review",
+      id: "project-evidence:13",
+      lane: "Examples",
+      mediaUrl: "/api/research-projects/project/uploads/13",
+      platform: "",
+      sourcePath: "",
+      title: "Checkout annotations",
+      type: "upload",
+    },
+  ]);
 });
 
 test("converts a catalog result into a stable embeddable Flow reference", () => {
@@ -239,6 +299,46 @@ test("inserts the custom Flow block from the slash menu", () => {
   assert.equal(editor.document[0]?.type, "astryxReference");
   assert.equal(editor.document[0]?.props.referenceType, "flow");
   document.destroy();
+});
+
+test("inserts the Evidence Composer from the slash menu and toolbar helper", () => {
+  const slash = collaborativeEditor();
+  const evidenceItem = projectDocumentSlashMenuItems(slash.editor, "evidence")
+    .find((item) => item.title === "Vitrines evidence");
+
+  assert.ok(evidenceItem);
+  evidenceItem.onItemClick();
+  assert.equal(slash.editor.document[0]?.type, "vitrinesEvidence");
+  slash.document.destroy();
+
+  const toolbar = collaborativeEditor();
+  insertProjectDocumentEvidenceBlock(toolbar.editor);
+  assert.equal(toolbar.editor.document[0]?.type, "vitrinesEvidence");
+  toolbar.document.destroy();
+});
+
+test("keeps evidence identity, snapshot, caption, and layout in collaboration", () => {
+  const first = collaborativeEditor();
+  const block = first.editor.updateBlock(first.editor.document[0], {
+    type: "vitrinesEvidence",
+    props: {
+      referenceType: "screen",
+      referenceId: "project-evidence:12",
+      title: "Receipt",
+      app: "Shopify",
+      description: "Confirmation after a completed order.",
+      mediaUrl: "/api/media/receipt.png",
+      sourcePath: "/apps/shopify/screens/12",
+      caption: "Keep the next action visible after confirmation.",
+      layout: "wide",
+    },
+  });
+
+  assert.equal(block.type, "vitrinesEvidence");
+  assert.equal(block.props.referenceType, "screen");
+  assert.equal(block.props.caption, "Keep the next action visible after confirmation.");
+  assert.equal(block.props.layout, "wide");
+  first.document.destroy();
 });
 
 test("keeps Flow block identity and snapshot in the collaborative schema", () => {

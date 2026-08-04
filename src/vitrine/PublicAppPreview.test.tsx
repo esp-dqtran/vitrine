@@ -16,6 +16,7 @@ const preview: PublicAppPreview = {
   previewScreens: [1, 2, 3].map((id) => ({
     id, type: `Screen ${id}`, productArea: 'Workspace', theme: 'dark' as const,
     visibleStates: [], platform: 'web', description: null, url: `/preview-${id}.png`,
+    thumbnailUrl: `/preview-${id}-thumb.webp`,
   })),
   previewUiElements: [{
     type: 'Navigation Menu', group: 'Navigation', count: 12,
@@ -65,6 +66,11 @@ test('public app preview emphasizes the app identity and keeps conversion on loc
   assert.match(html, /Choose template/);
   assert.match(html, /Unlock more/);
   assert.match(html, /aria-label="Unlock more screens"/);
+  assert.match(html, /src="\/preview-1\.png"/);
+  assert.doesNotMatch(html, /preview-1-thumb\.webp/);
+  assert.match(html, /object-fit:contain/);
+  assert.match(html, /data-variant="primary"/);
+  assert.doesNotMatch(html, /astryx-badge/);
 });
 
 test('public app preview omits the old guest and exhausted account panels', () => {

@@ -1,5 +1,6 @@
 import { type ReactNode, type RefObject } from 'react';
-import { Button } from '@astryxdesign/core';
+import { Button, EmptyState, Skeleton } from '@astryxdesign/core';
+import { AppCardSkeleton } from './AppCardSkeleton.tsx';
 import { ReferenceDiscoveryPageShell } from './ReferenceDiscoveryPageShell.tsx';
 
 export interface DiscoveryPageLayoutProps {
@@ -19,7 +20,8 @@ export interface DiscoveryPageLayoutProps {
   loadMoreError: string | null;
   onRetry: () => void;
   onRetryLoadMore: () => void;
-  sentinelRef: RefObject<HTMLDivElement | null>;
+  onReset?: () => void;
+  sentinelRef?: RefObject<HTMLDivElement | null>;
   beforeResults?: ReactNode;
   children: ReactNode;
 }
@@ -41,6 +43,7 @@ export function DiscoveryPageLayout({
   loadMoreError,
   onRetry,
   onRetryLoadMore,
+  onReset,
   sentinelRef,
   beforeResults,
   children,
@@ -73,16 +76,23 @@ export function DiscoveryPageLayout({
         <div className="discovery-page-layout__results">
           {error ? (
             <div className="discovery-page-layout__state" role="alert">
-              <p>Could not load {resultLabel}: {error}</p>
-              <Button label="Retry" variant="primary" onClick={onRetry} />
+              <EmptyState
+                title={`Could not load ${resultLabel}`}
+                description={error}
+                actions={<Button label="Retry" variant="primary" onClick={onRetry} />}
+              />
             </div>
           ) : initialLoading ? (
-            <div className="discovery-page-layout__state" role="status" aria-label={`Loading ${resultLabel}`}>
-              Loading {resultLabel}…
-            </div>
+            <DiscoveryResultsSkeleton kind={kind} resultLabel={resultLabel} />
           ) : empty ? (
             <div className="discovery-page-layout__state" role="status">
-              No {resultLabel} found
+              <EmptyState
+                title={`No ${resultLabel} found`}
+                description="Try another search or remove one or more filters."
+                actions={onReset
+                  ? <Button label="Clear filters" variant="primary" onClick={onReset} />
+                  : undefined}
+              />
             </div>
           ) : children}
         </div>
@@ -101,13 +111,52 @@ export function DiscoveryPageLayout({
             <Button label="Retry" variant="secondary" onClick={onRetryLoadMore} />
           </div>
         ) : null}
-        <div
-          ref={sentinelRef}
-          className="discovery-page-layout__sentinel"
-          data-discovery-sentinel={kind}
-          aria-hidden="true"
-        />
+        {sentinelRef ? (
+          <div
+            ref={sentinelRef}
+            className="discovery-page-layout__sentinel"
+            data-discovery-sentinel={kind}
+            aria-hidden="true"
+          />
+        ) : null}
       </section>
     </ReferenceDiscoveryPageShell>
+  );
+}
+
+function DiscoveryResultsSkeleton({
+  kind,
+  resultLabel,
+}: Pick<DiscoveryPageLayoutProps, 'kind' | 'resultLabel'>) {
+  if (kind !== 'flows') {
+    return (
+      <div
+        className={`reference-discovery__grid ${kind === 'apps' ? 'apps-discovery__grid' : 'sites-discovery__grid'} discovery-page-layout__skeleton-grid`}
+        role="status"
+        aria-label={`Loading ${resultLabel}`}
+      >
+        {Array.from({ length: 3 }, (_, index) => (
+          <AppCardSkeleton key={index} index={index} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="discovery-page-layout__flow-skeletons"
+      role="status"
+      aria-label={`Loading ${resultLabel}`}
+    >
+      {Array.from({ length: 2 }, (_, index) => (
+        <article key={index} className="discovery-page-layout__flow-skeleton" aria-hidden="true">
+          <Skeleton width="100%" height={160} radius={14} index={index} />
+          <div className="discovery-page-layout__flow-skeleton-copy">
+            <Skeleton width="34%" height={18} radius={3} index={index} />
+            <Skeleton width="54%" height={14} radius={3} index={index} />
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }

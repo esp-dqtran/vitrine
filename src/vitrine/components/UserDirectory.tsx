@@ -129,7 +129,7 @@ export function UserDirectory(props: UserDirectoryProps) {
         </div>
       ) : (
         <>
-          <ul className="admin-users-list">
+          <ul className="admin-users-list product-data-grid">
             {props.users.map((user) => <MemberRow key={user.id} user={user} onSetActive={props.onSetActive} onSelectUser={props.onSelectUser} />)}
           </ul>
           <div ref={sentinel} className="admin-users-load-more">

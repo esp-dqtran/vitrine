@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Badge, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
+import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
 import type { PublicAppPreview } from '../publicAppPreviewApi.ts';
 import { AstryxModal } from './AstryxModal.tsx';
 import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
@@ -14,12 +14,7 @@ const evidenceCardStyle = {
 
 function LockedEvidenceCard({ kind, onUnlock }: { kind: string; onUnlock: () => void }) {
   return (
-    <button
-      type="button"
-      aria-label={`Unlock more ${kind}`}
-      onClick={onUnlock}
-      style={{ ...evidenceCardStyle, position: 'relative', minHeight: 174, padding: 0, color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
-    >
+    <div style={{ ...evidenceCardStyle, position: 'relative', minHeight: 174 }}>
       <div aria-hidden="true" style={{ padding: 14, filter: 'blur(5px)', opacity: 0.72 }}>
         <div style={{ height: 92, padding: 14, boxSizing: 'border-box', borderRadius: 10, background: 'color-mix(in srgb, var(--color-text-primary) 16%, var(--color-background-muted))' }}>
           <div style={{ width: '58%', height: 10, borderRadius: 5, background: 'color-mix(in srgb, var(--color-text-primary) 38%, transparent)' }} />
@@ -29,10 +24,17 @@ function LockedEvidenceCard({ kind, onUnlock }: { kind: string; onUnlock: () => 
         <div style={{ width: '72%', height: 12, borderRadius: 6, marginTop: 14, background: 'color-mix(in srgb, var(--color-text-primary) 26%, transparent)' }} />
         <div style={{ width: '46%', height: 10, borderRadius: 6, marginTop: 9, background: 'color-mix(in srgb, var(--color-text-primary) 20%, transparent)' }} />
       </div>
-      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none', background: 'color-mix(in srgb, var(--color-background-surface) 18%, transparent)' }}>
-        <Badge label="Unlock more" variant="neutral" />
+      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'color-mix(in srgb, var(--color-background-surface) 18%, transparent)' }}>
+        <Button
+          label="Unlock more"
+          aria-label={`Unlock more ${kind}`}
+          variant="primary"
+          size="md"
+          onClick={onUnlock}
+          style={{ font: 'var(--vitrine-type-action)', letterSpacing: '0.2px' }}
+        />
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -114,10 +116,10 @@ function PublicAppPreviewContent({
             <figure key={screen.id} style={{ ...evidenceCardStyle, margin: 0 }}>
               <div style={{ aspectRatio: '4 / 3', display: 'grid', placeItems: 'center', overflow: 'hidden', background: 'var(--color-background-muted)' }}>
                 <img
-                  src={screen.thumbnailUrl ?? screen.url}
+                  src={screen.url}
                   alt={`${app.app} ${screen.type}`}
                   loading="lazy"
-                  style={{ width: '100%', height: '100%', objectFit: screen.platform === 'ios' || screen.platform === 'android' ? 'contain' : 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
               <figcaption style={{ padding: '12px 14px' }}>
@@ -141,7 +143,7 @@ function PublicAppPreviewContent({
                   alt={`${app.app} ${item.type}`}
                   loading="lazy"
                   onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
               <div style={{ padding: '12px 14px' }}>

@@ -68,7 +68,8 @@ test('renders the compact sticky Apps filter controls and result summary', () =>
   assert.match(html, /Clear Screens filter/);
   assert.match(html, /UI Elements/);
   assert.match(html, /Flows/);
-  assert.doesNotMatch(html, /More filters/);
+  assert.match(html, /aria-label="Filters \(4 selected\)"/);
+  assert.match(html, /apps-filterbar__filter--merged/);
   assert.match(html, /27 screens/);
   assert.match(html, /Trending/);
 });
@@ -325,7 +326,7 @@ test('uses the Astryx dropdown system for compact selects and searchable facet p
     readFile(new URL('./components/AstryxDropdown.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.equal((source.match(/<AstryxDropdown(?:\s|\n)/g) ?? []).length, 3);
+  assert.equal((source.match(/<AstryxDropdown(?:\s|\n)/g) ?? []).length, 4);
   assert.match(source, /<DiscoveryPlatformFilterOptions/);
   assert.match(source, /<DiscoverySingleSelectOptions/);
   assert.match(source, /triggerVariant="primary"/);

@@ -17,6 +17,9 @@ test("presents the BlockNote document as a Notion-like native page", async () =>
   assert.match(component, /aria-label="Document breadcrumb"/);
   assert.match(component, /icon="chevronLeft"/);
   assert.match(component, /Add comment/);
+  assert.match(component, /Insert from Vitrines/);
+  assert.match(component, /insertProjectDocumentEvidenceBlock\(editor\)/);
+  assert.match(component, /evidence=\{evidence\}/);
   assert.match(component, /label=\{copied \? "Copied" : "Copy link"\}/);
   assert.match(component, /aria-label="Document title"/);
   assert.match(component, /<textarea[\s\S]*aria-label="Document title"/);

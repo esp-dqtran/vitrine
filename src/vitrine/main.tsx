@@ -32,6 +32,7 @@ import './productIconography.css';
 import './productMotion.css';
 import './productResponsive.css';
 import './productDataDisplay.css';
+import './productTables.css';
 import './productForms.css';
 
 // No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.

@@ -35,7 +35,7 @@ export function PlaceholderImage({ src, srcSet, accent, style }: PlaceholderImag
         inset: 0,
         width: '100%',
         height: '100%',
-        objectFit: 'cover',
+        objectFit: 'contain',
         background: accent ? `${accent}22` : 'var(--color-background-muted)',
         ...style,
       }}

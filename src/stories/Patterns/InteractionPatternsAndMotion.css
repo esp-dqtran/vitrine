@@ -1,0 +1,373 @@
+.interaction-review {
+  min-height: 100vh;
+  padding: var(--vitrine-page-gutter-wide);
+  color: var(--color-text-primary);
+  background: var(--color-background-body);
+}
+
+.interaction-review__intro,
+.interaction-review__section {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.interaction-review__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--spacing-8);
+  padding: var(--spacing-3) 0 var(--spacing-8);
+}
+
+.interaction-review__eyebrow,
+.interaction-review__lede,
+.interaction-review__section-header p,
+.interaction-review__specimen-card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.interaction-review__eyebrow {
+  margin-bottom: var(--spacing-2);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.interaction-review__intro h1 {
+  margin: 0 0 var(--spacing-2);
+  font: var(--vitrine-presentation-display);
+  letter-spacing: -.045em;
+}
+
+.interaction-review__lede {
+  max-width: 68ch;
+  font: var(--vitrine-type-body);
+}
+
+.interaction-review__review-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.interaction-review__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: var(--radius-full);
+  background: var(--color-background-surface);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.interaction-review__status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+  content: '';
+}
+
+.interaction-review__section {
+  padding: var(--spacing-8) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.interaction-review__section-header {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+}
+
+.interaction-review__section-header > span {
+  padding-top: 3px;
+  color: var(--color-text-disabled);
+  font: var(--vitrine-type-supporting);
+}
+
+.interaction-review__section-header h2 {
+  margin: 0 0 var(--spacing-1);
+  font: var(--vitrine-type-title);
+}
+
+.interaction-review__section-header p,
+.interaction-review__specimen-card p {
+  font: var(--vitrine-type-detail);
+}
+
+.interaction-review__direct-grid,
+.interaction-review__selection-grid,
+.interaction-review__context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.interaction-review__specimen-card,
+.interaction-review__duration-card {
+  min-width: 0;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+
+.interaction-review__specimen-card {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-4);
+}
+
+.interaction-review__specimen-label {
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-supporting);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.interaction-review__control-row,
+.interaction-review__specimen-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.interaction-review__specimen-heading {
+  justify-content: space-between;
+}
+
+.interaction-review__specimen-heading > div {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.interaction-review__duration-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.interaction-review__duration-card {
+  display: grid;
+  align-content: end;
+  gap: var(--spacing-1);
+}
+
+.interaction-review__duration-card strong {
+  margin-top: var(--spacing-3);
+  font: var(--vitrine-type-heading);
+}
+
+.interaction-review__duration-card > span:not(.interaction-review__duration-line),
+.interaction-review__duration-card code {
+  color: var(--color-text-secondary);
+  font: var(--vitrine-type-supporting);
+}
+
+.interaction-review__duration-line {
+  width: 32%;
+  height: 8px;
+  display: block;
+  border-radius: var(--radius-full);
+  background: var(--color-text-primary);
+  animation: interaction-review-duration var(--motion-duration) var(--vitrine-motion-ease) infinite alternate;
+}
+
+@keyframes interaction-review-duration {
+  to { width: 100%; }
+}
+
+.interaction-review__selection-card {
+  overflow: hidden;
+}
+
+.interaction-review__app-card {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--radius-container);
+}
+
+.interaction-review__app-card .app-discovery-card {
+  width: 100%;
+}
+
+.interaction-review__overlay-card {
+  position: relative;
+  min-height: 640px;
+}
+
+.interaction-review__loading-stage,
+.interaction-review__detail-stage {
+  min-height: 190px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-body);
+}
+
+.interaction-review__skeleton {
+  height: 100%;
+  min-height: 190px;
+  display: grid;
+  align-content: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5);
+}
+
+.interaction-review__skeleton span {
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-background-muted), var(--color-background-surface), var(--color-background-muted));
+  background-size: 200% 100%;
+  animation: interaction-review-shimmer 1.2s ease-in-out infinite;
+}
+
+.interaction-review__skeleton span:first-child { width: 62%; height: 72px; border-radius: var(--radius-element); }
+.interaction-review__skeleton span:nth-child(2) { width: 78%; }
+.interaction-review__skeleton span:last-child { width: 48%; }
+
+@keyframes interaction-review-shimmer {
+  to { background-position: -200% 0; }
+}
+
+.interaction-review__loaded-result {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  animation: interaction-review-enter var(--vitrine-motion-medium) var(--vitrine-motion-ease) both;
+}
+
+.interaction-review__loaded-result img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-element);
+}
+
+.interaction-review__loaded-result > div {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.interaction-review__loaded-result span {
+  color: var(--color-text-secondary);
+}
+
+@keyframes interaction-review-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.interaction-review__detail-stage {
+  position: relative;
+}
+
+.interaction-review__detail-stage > div {
+  position: absolute;
+  inset: var(--spacing-4);
+  display: grid;
+  align-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-element);
+  background: var(--color-background-muted);
+  opacity: 0;
+  transform: translateY(12px) scale(.985);
+  transition: opacity var(--vitrine-transition-slow), transform var(--vitrine-transition-slow);
+}
+
+.interaction-review__detail-stage[data-open='true'] > div {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.interaction-review__sticky-review {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.interaction-review__sticky-review > p {
+  max-width: 78ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.interaction-review__live-apps {
+  width: 100%;
+  height: 520px;
+  display: block;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-body);
+}
+
+.interaction-review[data-reduced-motion='true'] *,
+.interaction-review[data-reduced-motion='true'] *::before,
+.interaction-review[data-reduced-motion='true'] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+}
+
+@media (max-width: 900px) {
+  .interaction-review {
+    padding: var(--vitrine-page-gutter-medium);
+  }
+
+  .interaction-review__intro,
+  .interaction-review__direct-grid,
+  .interaction-review__selection-grid,
+  .interaction-review__context-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .interaction-review__intro {
+    align-items: start;
+    gap: var(--spacing-4);
+  }
+
+  .interaction-review__review-controls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .interaction-review {
+    padding: var(--vitrine-page-gutter-compact);
+  }
+
+  .interaction-review__duration-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .interaction-review__live-apps {
+    width: 100vw;
+    margin-inline: calc(var(--vitrine-page-gutter-compact) * -1);
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interaction-review *,
+  .interaction-review *::before,
+  .interaction-review *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

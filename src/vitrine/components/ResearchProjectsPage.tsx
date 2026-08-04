@@ -1013,13 +1013,14 @@ export function ResearchProjectsView({
               </div>
 
               <section
-                className="team-people__list"
+                className="team-people__list product-data-table"
                 aria-label={`${selectedTeam.name} members`}
+                role="table"
               >
-                <div className="team-people__list-heading">
-                  <strong>Member</strong>
-                  <span>Role</span>
-                  <span>Joined</span>
+                <div className="team-people__list-heading" role="row">
+                  <strong role="columnheader">Member</strong>
+                  <span role="columnheader">Role</span>
+                  <span role="columnheader">Joined</span>
                   <span aria-hidden="true" />
                 </div>
                 {membersLoading ? (
@@ -1028,8 +1029,8 @@ export function ResearchProjectsView({
                   </div>
                 ) : (
                   visibleMembers.map((member) => (
-                    <div className="team-people__member" key={member.userId}>
-                      <span className="team-people__member-profile">
+                    <div className="team-people__member" key={member.userId} role="row">
+                      <span className="team-people__member-profile" role="cell">
                         <span
                           className="team-people__member-avatar"
                           aria-hidden="true"
@@ -1038,9 +1039,9 @@ export function ResearchProjectsView({
                         </span>
                         <span>{member.email}</span>
                       </span>
-                      <span className="team-people__role">{member.role}</span>
-                      <span>{formatMemberDate(member.createdAt)}</span>
-                      <span>
+                      <span className="team-people__role" role="cell">{member.role}</span>
+                      <span role="cell">{formatMemberDate(member.createdAt)}</span>
+                      <span role="cell">
                         {canManageTeam && member.role !== "owner" ? (
                           <Button
                             label="Remove"

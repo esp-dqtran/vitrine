@@ -182,6 +182,29 @@ test("head rejects incomplete or inexact S3 metadata", async () => {
   await assert.rejects(() => store.head(metadata.key), /Invalid S3 object metadata/);
 });
 
+test("head accepts providers that preserve SHA-256 metadata but omit the optional checksum header", async () => {
+  const { ChecksumSHA256: _checksum, ...withoutChecksum } = headOutput();
+  const store = new S3ObjectStore({
+    bucket: "private-media",
+    prefix: "objects",
+    send: async () => withoutChecksum,
+    sign: async () => "unused",
+  });
+
+  assert.deepEqual(await store.head(metadata.key), metadata);
+});
+
+test("head still rejects an incorrect checksum header when the provider returns one", async () => {
+  const store = new S3ObjectStore({
+    bucket: "private-media",
+    prefix: "objects",
+    send: async () => ({ ...headOutput(), ChecksumSHA256: "incorrect" }),
+    sign: async () => "unused",
+  });
+
+  await assert.rejects(() => store.head(metadata.key), /Invalid S3 object metadata/);
+});
+
 test("head does not hide bucket-level 404 failures as missing objects", async () => {
   const store = new S3ObjectStore({
     bucket: "missing-bucket",

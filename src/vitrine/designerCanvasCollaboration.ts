@@ -5,6 +5,19 @@ import {
 
 export type DesignerCanvasCollaborationStatus = "connecting" | "live" | "offline";
 
+export interface DesignerCanvasCollaborator {
+  clientId: string;
+  userId: number;
+  name: string;
+}
+
+export interface DesignerCanvasRemoteCursor {
+  clientId: string;
+  pointer: { x: number; y: number } | null;
+  button: "up" | "down";
+  selectedElementIds?: readonly string[];
+}
+
 interface CollaborationSocket {
   readyState: number;
   onopen: ((event: Event) => void) | null;
@@ -30,6 +43,8 @@ export interface DesignerCanvasCollaborationOptions {
   canvasId?: string;
   onScene(snapshot: DesignerCanvasSnapshot): void;
   onStatus?(status: DesignerCanvasCollaborationStatus): void;
+  onPresence?(collaborators: readonly DesignerCanvasCollaborator[]): void;
+  onCursor?(cursor: DesignerCanvasRemoteCursor): void;
   createSocket?(url: string): CollaborationSocket;
   location?: Pick<Location, "host" | "protocol">;
   reconnect?: boolean;
@@ -40,6 +55,57 @@ const record = (value: unknown): Record<string, unknown> | undefined => value
   && !Array.isArray(value)
   ? value as Record<string, unknown>
   : undefined;
+
+const finiteCoordinate = (value: unknown): number | undefined => typeof value === "number"
+  && Number.isFinite(value)
+  && Math.abs(value) <= 10_000_000
+  ? value
+  : undefined;
+
+function normalizeCollaborators(value: unknown): DesignerCanvasCollaborator[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    const collaborator = record(entry);
+    if (!collaborator
+      || typeof collaborator.clientId !== "string"
+      || !collaborator.clientId
+      || typeof collaborator.userId !== "number"
+      || !Number.isSafeInteger(collaborator.userId)
+      || typeof collaborator.name !== "string"
+      || !collaborator.name.trim()) return [];
+    return [{
+      clientId: collaborator.clientId,
+      userId: collaborator.userId,
+      name: collaborator.name.trim().slice(0, 160),
+    }];
+  });
+}
+
+function normalizeRemoteCursor(value: unknown): DesignerCanvasRemoteCursor | undefined {
+  const message = record(value);
+  if (!message || message.type !== "cursor" || typeof message.clientId !== "string") {
+    return undefined;
+  }
+  const pointerRecord = message.pointer === null ? null : record(message.pointer);
+  const x = pointerRecord ? finiteCoordinate(pointerRecord.x) : undefined;
+  const y = pointerRecord ? finiteCoordinate(pointerRecord.y) : undefined;
+  if (message.pointer !== null && (x === undefined || y === undefined)) return undefined;
+  if (message.button !== "up" && message.button !== "down") return undefined;
+  const selectedElementIds = message.selectedElementIds === undefined
+    ? undefined
+    : Array.isArray(message.selectedElementIds)
+      && message.selectedElementIds.length <= 100
+      && message.selectedElementIds.every((id) => typeof id === "string" && id.length <= 120)
+      ? message.selectedElementIds as string[]
+      : undefined;
+  if (message.selectedElementIds !== undefined && !selectedElementIds) return undefined;
+  return {
+    clientId: message.clientId,
+    pointer: message.pointer === null ? null : { x: x!, y: y! },
+    button: message.button,
+    selectedElementIds,
+  };
+}
 
 export function designerCanvasCollaborationUrl(
   projectId: string,
@@ -75,6 +141,7 @@ export function openDesignerCanvasCollaboration(
   let publishTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingScene: DesignerCanvasSnapshot | undefined;
   let sequence = 0;
+  let clientId: string | undefined;
 
   const report = (status: DesignerCanvasCollaborationStatus) => options.onStatus?.(status);
 
@@ -121,14 +188,39 @@ export function openDesignerCanvasCollaboration(
         return;
       }
       const message = record(parsed);
-      if (message?.type !== "scene") return;
-      const snapshot = normalizeDesignerCanvasSnapshot(message.snapshot);
-      if (snapshot) options.onScene(snapshot);
+      if (message?.type === "ready") {
+        clientId = typeof message.clientId === "string" ? message.clientId : undefined;
+        options.onPresence?.(
+          normalizeCollaborators(message.collaborators)
+            .filter((collaborator) => collaborator.clientId !== clientId),
+        );
+        return;
+      }
+      if (message?.type === "presence") {
+        options.onPresence?.(
+          normalizeCollaborators(message.collaborators)
+            .filter((collaborator) => collaborator.clientId !== clientId),
+        );
+        return;
+      }
+      if (message?.type === "cursor") {
+        const cursor = normalizeRemoteCursor(message);
+        if (cursor && cursor.clientId !== clientId) options.onCursor?.(cursor);
+        return;
+      }
+      if (message?.type === "scene") {
+        const snapshot = normalizeDesignerCanvasSnapshot(message.snapshot);
+        if (snapshot) options.onScene(snapshot);
+      }
     };
-    socket.onerror = () => report("offline");
+    socket.onerror = () => {
+      report("offline");
+      options.onPresence?.([]);
+    };
     socket.onclose = () => {
       if (disposed) return;
       report("offline");
+      options.onPresence?.([]);
       scheduleReconnect();
     };
   };
@@ -153,6 +245,7 @@ export function openDesignerCanvasCollaboration(
       if (publishTimer) clearTimeout(publishTimer);
       reconnectTimer = undefined;
       publishTimer = undefined;
+      options.onPresence?.([]);
       socket?.close(1000, "Canvas closed");
     },
   };

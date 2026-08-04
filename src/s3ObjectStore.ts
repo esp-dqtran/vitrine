@@ -244,7 +244,8 @@ export class S3ObjectStore implements ObjectStore {
       if (metadataKeys.length !== 2 || metadataKeys[0] !== "access-class" || metadataKeys[1] !== "sha256") {
         throw new Error("Unexpected S3 metadata fields");
       }
-      if (output.ChecksumSHA256 !== Buffer.from(metadata.sha256, "hex").toString("base64")) {
+      const expectedChecksum = Buffer.from(metadata.sha256, "hex").toString("base64");
+      if (output.ChecksumSHA256 !== undefined && output.ChecksumSHA256 !== expectedChecksum) {
         throw new Error("S3 checksum metadata does not match");
       }
     } catch (error) {

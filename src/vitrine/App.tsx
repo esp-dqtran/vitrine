@@ -104,6 +104,8 @@ export function App() {
   const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
   const route = useRoute();
+  const stickyChromeEnabled = route.name === "apps";
+  const [stickyChromeMerged, setStickyChromeMerged] = useState(false);
   const [flowsDiscoveryAdapter] = useState(() => createFlowsDiscoveryAdapter());
   const flowDiscoveryState =
     route.name === "flows"
@@ -147,6 +149,42 @@ export function App() {
       query: q,
     }),
   );
+
+  useEffect(() => {
+    if (!stickyChromeEnabled) {
+      setStickyChromeMerged(false);
+      return;
+    }
+
+    let frame = 0;
+    const updateStickyChrome = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const toolbar = document.querySelector<HTMLElement>(".apps-filterbar");
+        const header = document.querySelector<HTMLElement>(
+          ".reference-discovery-nav.apps-top-nav",
+        );
+
+        if (!toolbar || !header) return;
+
+        const toolbarTop = toolbar.getBoundingClientRect().top;
+        const headerBottom = header.getBoundingClientRect().bottom;
+        setStickyChromeMerged(
+          window.scrollY > 0 && toolbarTop <= headerBottom + 1,
+        );
+      });
+    };
+
+    updateStickyChrome();
+    window.addEventListener("scroll", updateStickyChrome, { passive: true });
+    window.addEventListener("resize", updateStickyChrome);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateStickyChrome);
+      window.removeEventListener("resize", updateStickyChrome);
+    };
+  }, [stickyChromeEnabled]);
   const searchSnapshot = useSyncExternalStore(
     searchSession.subscribe,
     searchSession.snapshot,
@@ -242,12 +280,12 @@ export function App() {
 
   const retryEntitlements = () => setEntitlementsRevision((value) => value + 1);
 
-  const openPalette = async (
+  const openPalette = (
     scope: SearchScope,
     seed: Partial<AdvancedSearchFilters> = {},
   ) => {
-    if (user) await ensureCollections().catch(() => []);
     searchSession.open(scope, seed);
+    if (user) void ensureCollections().catch(() => []);
   };
 
   const closeDiscoveryOverlays = () => {
@@ -992,7 +1030,17 @@ export function App() {
     route.name !== "project-canvas";
 
   const pageWithPersistentDiscoveryHeader = hasPersistentDiscoveryHeader ? (
-    <div data-persistent-discovery-frame="true" style={{ display: "contents" }}>
+    <div
+      data-persistent-discovery-frame="true"
+      data-sticky-chrome={
+        stickyChromeEnabled
+          ? stickyChromeMerged
+            ? "merged"
+            : "expanded"
+          : undefined
+      }
+      style={{ display: "contents" }}
+    >
       <ReferenceDiscoveryTopNav
         active={discoveryRoute ?? "apps"}
         className="apps-top-nav"

@@ -22,6 +22,13 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /DesignerCanvasApiError/);
   assert.match(source, /openDesignerCanvasCollaboration/);
   assert.match(source, /collaborationRef\.current\?\.publishScene\(snapshot\)/);
+  assert.match(source, /onPointerUpdate=\{handleCanvasPointerUpdate\}/);
+  assert.match(source, /collaborationRef\.current\?\.publishCursor/);
+  assert.match(source, /onPresence\(collaborators\)/);
+  assert.match(source, /onCursor\(cursor\)/);
+  assert.match(source, /editorRef\.current\?\.updateScene\(\{ collaborators \}\)/);
+  assert.match(source, /className="project-canvas-collaborators"/);
+  assert.match(source, /isCollaborating=\{collaborationStatus === "live"\}/);
   assert.match(source, /const selectedElementIds = editor\.getAppState\(\)\.selectedElementIds/);
   assert.match(source, /editor\.updateScene\(\{[\s\S]*elements: value\.elements,[\s\S]*appState: \{ selectedElementIds \}/);
   assert.match(source, /remoteElementsVersionRef/);
@@ -58,7 +65,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /role="group"[\s\S]*?aria-label="Astryx canvas tools"/);
   assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.match(source, /function ProjectCanvasToolGlyph/);
-  assert.match(source, /tool="screens"/);
+  assert.match(source, /tool="moodboard"/);
   assert.match(source, /tool="document"/);
   assert.match(source, /className="project-playground__sticky-trigger"/);
   assert.match(source, /className="project-playground__document-trigger"/);
@@ -69,7 +76,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /tool: "research-frames"/);
   assert.match(source, /tool: "data"/);
   assert.match(source, /tool: "templates"/);
-  assert.match(source, /activateCanvasTool\("screens"\)/);
+  assert.match(source, /activateCanvasTool\("moodboard"\)/);
   assert.match(source, /activateCanvasTool\("sticky"\)/);
   assert.match(source, /activateCanvasTool\("document"\)/);
   assert.match(source, /activateCanvasTool\("more"\)/);
@@ -140,6 +147,9 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /customType: "astryx-comment"/);
   assert.match(source, /<ProjectCanvasCommentPin/);
   assert.match(source, /<ProjectCanvasCommentPanel/);
+  assert.match(source, /const deleteSelectedComment = useCallback/);
+  assert.match(source, /canvasCommentsRef\.current\.filter\(\(thread\) => thread\.id !== selectedCommentId\)/);
+  assert.match(source, /onDelete=\{deleteSelectedComment\}/);
   assert.match(source, /comments: readonly DesignerCanvasCommentThread\[\]/);
   assert.match(source, /normalizeDesignerCanvasComments/);
   assert.match(source, /onKeyDown=\{\(event\) => \{\s*event\.stopPropagation\(\)/);
@@ -149,8 +159,23 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /editor\?\.refresh\(\)/);
   assert.doesNotMatch(source, /label="Add note"/);
   assert.doesNotMatch(source, /placeholder="Type your note…"/);
-  assert.match(source, /aria-label=\{screensOpen \? "Close screens" : "Screens"\}/);
-  assert.match(source, /className="project-playground__screens-trigger"/);
+  assert.match(source, /aria-label=\{moodboardOpen \? "Close moodboard" : "Moodboard"\}/);
+  assert.match(source, /className="project-playground__moodboard-trigger"/);
+  assert.match(source, /<ProjectMoodboardPanel/);
+  assert.match(source, /kind: "moodboard-section"/);
+  assert.match(source, /sourceKind: "project-reference"/);
+  assert.match(source, /sourceKind: "screen"/);
+  assert.match(source, /sourceKind: "upload"/);
+  assert.match(source, /frameId: placement\.frameId \?\? null/);
+  assert.match(source, /moodboardDecisionOpacity\(moodboard\.decision\)/);
+  assert.match(source, /updateSelectedMoodboardReference/);
+  assert.match(source, /moveSelectedMoodboardReference/);
+  assert.match(source, /onSectionChange={moveSelectedMoodboardReference}/);
+  assert.match(source, /className="project-moodboard-decision-badge"/);
+  assert.match(source, /moodboardDecisionBadgeStyle/);
+  assert.match(source, /readOnly={canvasReadOnly}/);
+  assert.match(source, /if \(canvasReadOnly\) return/);
+  assert.match(source, /onDecisionChange=\{\(decision\)/);
   assert.match(source, /setScreensOpen\(!screensOpen\)/);
   assert.match(source, /setTemplatesOpen\(!templatesOpen\)/);
   assert.match(source, /const \[saveErrorMessage, setSaveErrorMessage\] = useState\(""\)/);
@@ -262,6 +287,8 @@ test("matches the compact Miro-style board header proportions", () => {
   );
 
   assert.match(css, /\.project-canvas-header__group\s*\{[^}]*height:\s*48px;[^}]*gap:\s*4px;[^}]*pointer-events:\s*all;[^}]*border:\s*\.5px solid[^}]*border-radius:\s*8px;[^}]*box-shadow:\s*0 2px 4px rgb\(34 36 40 \/ 8%\);/s);
+  assert.match(css, /\.project-canvas-collaborators\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;/s);
+  assert.match(css, /\.project-canvas-collaborators__avatars > span\s*\{[^}]*border-radius:\s*50%;/s);
   assert.match(source, /label="Astryx projects home"/);
   assert.match(source, /className="project-canvas-header__brand-mark" src="\/favicon\.svg"/);
   assert.match(css, /\.project-canvas-header__group--left \.project-canvas-header__brand-mark\s*\{[^}]*width:\s*32px;[^}]*height:\s*32px;[^}]*border-radius:\s*10px;/s);

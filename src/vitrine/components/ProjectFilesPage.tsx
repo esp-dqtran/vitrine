@@ -147,7 +147,6 @@ function CanvasScreenCard({
           imageFit="contain"
           preferFullImage
           title={canvas.title}
-          badges={[`Updated ${updatedLabel(canvas.updatedAt)}`]}
           onOpen={() =>
             navigate({
               name: "project-canvas",

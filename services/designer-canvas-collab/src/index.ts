@@ -16,7 +16,7 @@ const collaboration = createDesignerCanvasCollaborationService({
     const token = cookieValue(request.headers.cookie, SESSION_COOKIE);
     if (!token) return undefined;
     const user = await resolveSession(token);
-    return user ? { userId: user.id } : undefined;
+    return user ? { userId: user.id, name: user.email } : undefined;
   },
   async canAccessProject(identity, projectId) {
     return Boolean(await store.getProject(identity.userId, projectId));

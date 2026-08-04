@@ -89,6 +89,127 @@ test("Cloudflare keeps non-API requests on static assets and fails closed withou
   });
 });
 
+test("Cloudflare gives immutable and landing assets explicit browser caching", async () => {
+  const headers = await readDeploymentFile("public/_headers");
+  assert.match(
+    headers,
+    /\/assets\/\*[\s\S]*Cache-Control: public, max-age=31536000, immutable/,
+  );
+  assert.match(
+    headers,
+    /\/landing\/\*[\s\S]*Cache-Control: public, max-age=604800, stale-while-revalidate=86400/,
+  );
+  assert.match(
+    headers,
+    /\/favicon\.svg[\s\S]*Cache-Control: public, max-age=604800, stale-while-revalidate=86400/,
+  );
+  assert.doesNotMatch(headers, /^\/\*$/m);
+});
+
+test("Cloudflare edge-caches only successful explicitly public API responses", async () => {
+  const module = await import("./cloudflareFrontendWorker.ts").catch(() => null);
+  assert.ok(module, "cloudflareFrontendWorker.ts must exist");
+
+  const stored = new Map<string, Response>();
+  const edgeCache = {
+    match: async (request: Request) => stored.get(request.url)?.clone(),
+    put: async (request: Request, response: Response) => {
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", "public, max-age=14400");
+      stored.set(request.url, new Response(response.body, {
+        status: response.status,
+        headers,
+      }));
+    },
+  };
+  let originCalls = 0;
+  const worker = module.createCloudflareFrontendWorker(async (request: Request) => {
+    originCalls += 1;
+    if (new URL(request.url).pathname === "/auth/me") {
+      return Response.json({ user: null }, {
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
+    return Response.json({ total: 42 }, {
+      headers: { "Cache-Control": "public, max-age=600" },
+    });
+  }, edgeCache);
+  const environment = {
+    ASSETS: { fetch: async () => new Response("asset") },
+    API_ORIGIN: "https://api.vitrines.ai",
+  };
+
+  const first = await worker.fetch(
+    new Request("https://vitrines.ai/api/catalog/stats"),
+    environment,
+  );
+  const second = await worker.fetch(
+    new Request("https://vitrines.ai/api/catalog/stats"),
+    environment,
+  );
+  await worker.fetch(new Request("https://vitrines.ai/api/auth/me"), environment);
+  await worker.fetch(new Request("https://vitrines.ai/api/auth/me"), environment);
+
+  assert.equal(first.headers.get("x-vitrines-edge-cache"), "MISS");
+  assert.equal(second.headers.get("x-vitrines-edge-cache"), "HIT");
+  assert.equal(second.headers.get("cache-control"), "public, max-age=600");
+  assert.equal(second.headers.has("x-vitrines-origin-cache-control"), false);
+  assert.deepEqual(await second.json(), { total: 42 });
+  assert.equal(originCalls, 3);
+  assert.equal(stored.size, 1);
+});
+
+test("Cloudflare does not cache public-route errors or origin no-store responses", async () => {
+  const module = await import("./cloudflareFrontendWorker.ts").catch(() => null);
+  assert.ok(module, "cloudflareFrontendWorker.ts must exist");
+
+  const stored = new Map<string, Response>();
+  const edgeCache = {
+    match: async (request: Request) => stored.get(request.url)?.clone(),
+    put: async (request: Request, response: Response) => {
+      stored.set(request.url, response.clone());
+    },
+  };
+  let originCalls = 0;
+  const worker = module.createCloudflareFrontendWorker(async (request: Request) => {
+    originCalls += 1;
+    const url = new URL(request.url);
+    if (url.pathname === "/catalog/facet-preview") {
+      return Response.json({ error: "invalid facet preview" }, {
+        status: 400,
+        headers: { "Cache-Control": "public, max-age=300" },
+      });
+    }
+    return Response.json({ items: [] }, {
+      headers: { "Cache-Control": "no-store" },
+    });
+  }, edgeCache);
+  const environment = {
+    ASSETS: { fetch: async () => new Response("asset") },
+    API_ORIGIN: "https://api.vitrines.ai",
+  };
+
+  await worker.fetch(
+    new Request("https://vitrines.ai/api/catalog/facet-preview"),
+    environment,
+  );
+  await worker.fetch(
+    new Request("https://vitrines.ai/api/catalog/facet-preview"),
+    environment,
+  );
+  await worker.fetch(
+    new Request("https://vitrines.ai/api/sites?refresh=1"),
+    environment,
+  );
+  await worker.fetch(
+    new Request("https://vitrines.ai/api/sites?refresh=1"),
+    environment,
+  );
+
+  assert.equal(originCalls, 4);
+  assert.equal(stored.size, 0);
+});
+
 test("Railway deploys the API Dockerfile, migrates first, and checks real readiness", async () => {
   const source = await readDeploymentFile("railway.json");
   assert.notEqual(source, "", "railway.json must exist");

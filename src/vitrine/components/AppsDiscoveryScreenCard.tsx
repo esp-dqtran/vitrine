@@ -28,10 +28,7 @@ export function AppsDiscoveryScreenCard({
     >
       <div className="apps-discovery-screen-card__media">
         <PlaceholderImage
-          src={screen.thumbnailUrl ?? screen.url}
-          srcSet={screen.thumbnailUrl && screen.url && screen.thumbnailUrl !== screen.url
-            ? `${screen.thumbnailUrl} 1x,${screen.url} 2x`
-            : undefined}
+          src={screen.url}
           accent={app.accent}
           style={{ objectFit: 'contain' }}
         />

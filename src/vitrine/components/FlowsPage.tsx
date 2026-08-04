@@ -179,6 +179,7 @@ export function FlowsPageView({
       loadMoreError={controller.loadMoreError}
       onRetry={controller.retry}
       onRetryLoadMore={controller.retryLoadMore}
+      onReset={() => controller.setState({ ...controller.state, filters: [] })}
       sentinelRef={controller.sentinelRef}
     >
       <FlowGallery

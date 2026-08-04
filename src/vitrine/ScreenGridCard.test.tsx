@@ -17,7 +17,7 @@ const screen: Screen = {
   sourceUrl: 'https://mobbin.com/screens/42',
 };
 
-test('renders Screen cards with a thumbnail fallback and full image for high-density displays', () => {
+test('renders Screen cards from the full source without cropping or badge overlays', () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard
       screen={screen}
@@ -27,15 +27,14 @@ test('renders Screen cards with a thumbnail fallback and full image for high-den
     />,
   );
 
-  assert.match(html, /src="\/media\/thumb-screen\.webp"/);
-  assert.doesNotMatch(html, /src="\/media\/full-screen\.png"/);
-  assert.match(
-    html,
-    /srcSet="\/media\/thumb-screen\.webp 1x,\/media\/full-screen\.png 2x"/,
-  );
+  assert.match(html, /src="\/media\/full-screen\.png"/);
+  assert.doesNotMatch(html, /thumb-screen\.webp/);
+  assert.doesNotMatch(html, /srcSet=/);
   assert.match(html, /object-fit:contain/);
   assert.doesNotMatch(html, /object-fit:cover/);
   assert.doesNotMatch(html, /scale\(1\.04\)/);
+  assert.doesNotMatch(html, />Account</);
+  assert.doesNotMatch(html, />Default</);
 });
 
 test('renders hover collection and copy actions inside the card without a source action', () => {

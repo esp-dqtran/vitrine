@@ -45,7 +45,8 @@ test('keeps native-app flow screens in the mobile presentation', () => {
   );
 
   assert.match(html, /flow-strip-card__stage" data-platform="ios"/);
-  assert.match(html, /object-fit:cover/);
+  assert.match(html, /object-fit:contain/);
+  assert.doesNotMatch(html, /object-fit:cover/);
 });
 
 test('uses the captured-preview fallback when a flow has no evidence image', () => {

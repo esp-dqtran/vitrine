@@ -109,10 +109,8 @@ export function ScreenGridCard({
           accent={accent}
           aspectRatio={screenAspectRatio(screen.platform)}
           imageFit="contain"
-          badges={[
-            screen.productArea,
-            ...(screen.visibleStates ?? []).slice(0, 1),
-          ].filter((label) => Boolean(label) && label !== 'Unclassified')}
+          preferFullImage
+          preserveNaturalAspectRatio
           delay={delay}
           onOpen={onOpen}
         />

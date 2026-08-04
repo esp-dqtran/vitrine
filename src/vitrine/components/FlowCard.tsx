@@ -259,7 +259,7 @@ export function FlowCard({
                 <PlaceholderImage
                   src={evidence?.imageUrl ?? evidence?.thumbnailUrl}
                   accent="#111"
-                  style={{ objectFit: platform === 'web' ? 'contain' : 'cover' }}
+                  style={{ objectFit: 'contain' }}
                 />
               </span>
             ))}

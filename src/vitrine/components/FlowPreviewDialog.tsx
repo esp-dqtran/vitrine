@@ -258,7 +258,7 @@ export function FlowPreviewDialog({
     failedScreens.has(screen.stepNumber) ? (
       <PlaceholderImage
         seed={`${flowId}-${screen.stepNumber}`}
-        style={{ objectFit: platform === 'web' ? 'contain' : 'cover', background: '#fff' }}
+        style={{ objectFit: 'contain', background: '#fff' }}
       />
     ) : (
       <img

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Button, Icon, IconButton, TextArea } from "@astryxdesign/core";
 
 import type { DesignerCanvasCommentThread } from "../../designerCanvas.ts";
@@ -46,6 +46,7 @@ export function ProjectCanvasCommentPanel({
   onDraftChange,
   onSubmit,
   onResolve,
+  onDelete,
   onClose,
 }: {
   thread?: DesignerCanvasCommentThread;
@@ -53,15 +54,26 @@ export function ProjectCanvasCommentPanel({
   onDraftChange(value: string): void;
   onSubmit(value: string): void;
   onResolve(): void;
+  onDelete(): void;
   onClose(): void;
 }) {
   const [reply, setReply] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const value = thread ? reply : draft;
   const setValue = thread ? setReply : onDraftChange;
+
+  useEffect(() => {
+    setConfirmingDelete(false);
+  }, [thread?.id]);
+
   const submit = () => {
     if (!value.trim()) return;
     onSubmit(value.trim());
     if (thread) setReply("");
+  };
+  const deleteThread = () => {
+    setConfirmingDelete(false);
+    onDelete();
   };
   return (
     <aside className="project-canvas-comments" aria-label={thread ? "Comment thread" : "New comment"}>
@@ -98,22 +110,52 @@ export function ProjectCanvasCommentPanel({
         width="100%"
         autoFocus
       />
-      <footer>
-        {thread ? (
-          <Button
-            label={thread.resolved ? "Reopen" : "Resolve"}
-            variant="secondary"
-            size="sm"
-            clickAction={onResolve}
-          />
-        ) : <span />}
-        <Button
-          label={thread ? "Reply" : "Comment"}
-          variant="primary"
-          size="sm"
-          isDisabled={!value.trim()}
-          clickAction={submit}
-        />
+      <footer data-confirming-delete={confirmingDelete || undefined}>
+        {thread && confirmingDelete ? (
+          <>
+            <span className="project-canvas-comments__delete-prompt">Delete this thread?</span>
+            <div className="project-canvas-comments__delete-actions">
+              <Button
+                label="Cancel"
+                variant="secondary"
+                size="sm"
+                clickAction={() => setConfirmingDelete(false)}
+              />
+              <Button
+                label="Delete thread"
+                variant="destructive"
+                size="sm"
+                clickAction={deleteThread}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {thread ? (
+              <div className="project-canvas-comments__thread-actions">
+                <Button
+                  label="Delete"
+                  variant="destructive"
+                  size="sm"
+                  clickAction={() => setConfirmingDelete(true)}
+                />
+                <Button
+                  label={thread.resolved ? "Reopen" : "Resolve"}
+                  variant="secondary"
+                  size="sm"
+                  clickAction={onResolve}
+                />
+              </div>
+            ) : <span />}
+            <Button
+              label={thread ? "Reply" : "Comment"}
+              variant="primary"
+              size="sm"
+              isDisabled={!value.trim()}
+              clickAction={submit}
+            />
+          </>
+        )}
       </footer>
     </aside>
   );

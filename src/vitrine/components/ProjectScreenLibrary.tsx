@@ -119,7 +119,7 @@ export function ProjectScreenLibrary({
               <Card key={key} padding={1} className="project-screen-library__card">
                 <div className="project-screen-library__preview">
                   <PlaceholderImage
-                    src={screen.thumbnailUrl ?? screen.url}
+                    src={screen.url}
                     accent={app.accent}
                     style={{ objectFit: "contain" }}
                   />

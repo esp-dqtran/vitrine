@@ -6,7 +6,7 @@
   --project-document-muted: var(--vitrine-color-text-secondary);
   --project-document-disabled: var(--vitrine-color-text-disabled);
   --project-document-border: var(--vitrine-color-border);
-  --project-document-topbar: color-mix(in srgb, var(--vitrine-color-surface) 96%, transparent);
+  --project-document-topbar: var(--vitrine-color-surface);
   min-height: 100vh;
   padding: 0;
   background: var(--project-document-surface, #fff);
@@ -44,8 +44,8 @@
   gap: 20px;
   padding: 0 12px 0 16px;
   border-bottom: 1px solid transparent;
-  background: var(--project-document-topbar, rgb(255 255 255 / 96%));
-  backdrop-filter: blur(10px);
+  background: var(--project-document-topbar, var(--project-document-surface, #fff));
+  backdrop-filter: none;
 }
 
 .project-document-page__topbar:hover {

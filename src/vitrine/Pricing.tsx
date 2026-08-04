@@ -305,8 +305,8 @@ export function PricingView({
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          background: 'color-mix(in srgb, var(--color-background-body) 92%, transparent)',
-          backdropFilter: 'blur(10px)',
+          background: 'var(--color-background-body)',
+          backdropFilter: 'none',
           borderBottom: '1px solid var(--color-border)',
         }}
       >

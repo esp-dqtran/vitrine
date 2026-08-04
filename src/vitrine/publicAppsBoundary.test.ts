@@ -7,7 +7,7 @@ test('keeps guest Apps discovery on public catalog capabilities', async () => {
 
   assert.match(source, /const isGuest = user === null/);
   assert.match(source, /const canUseAdvancedSearch = advancedSearchEnabled && user !== null/);
-  assert.match(source, /if \(user\) await ensureCollections\(\)/);
+  assert.match(source, /searchSession\.open\(scope, seed\);\s*if \(user\) void ensureCollections\(\)/);
   assert.match(source, /searchMode=\{canUseAdvancedSearch \? ["']advanced["'] : ["']legacy["']\}/);
   assert.match(
     source,

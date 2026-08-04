@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { access } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { access, stat } from "node:fs/promises";
 import { test } from "node:test";
+import sharp from "sharp";
 import {
   featureDocumentClaimBudget,
   type FeatureStepPrompt,
@@ -360,6 +362,39 @@ test("analyzes all ordered Flow screenshots in one Kiro invocation", async () =>
   assert.match(invocation?.args.at(-1) ?? "", /ImplementationBrief/);
   assert.match(invocation?.args.at(-1) ?? "", /Do not invent vendor names/);
   await Promise.all(imagePaths.map((path) => assert.rejects(() => access(path))));
+});
+
+test("normalizes oversized Flow screenshots below Kiro's image limit", async () => {
+  const width = 1_800;
+  const height = 1_800;
+  const oversized = await sharp(randomBytes(width * height * 3), {
+    raw: { width, height, channels: 3 },
+  }).png({ compressionLevel: 0 }).toBuffer();
+  assert.ok(oversized.byteLength > 5 * 1024 * 1024);
+
+  let imagePath = "";
+  let imageBytes = 0;
+  const provider = createKiroCliFeatureDocumentProvider(environment, async (input) => {
+    const prompt = input.args.at(-1)!;
+    const serialized = prompt.match(/Ordered screenshots: (.+)\nFlow input:/)?.[1] ?? "[]";
+    imagePath = (JSON.parse(serialized) as Array<{ path: string }>)[0]?.path ?? "";
+    imageBytes = (await stat(imagePath)).size;
+    throw new Error("stop after image inspection");
+  })!;
+
+  await assert.rejects(() => provider.analyzeFlow!({
+    source,
+    focusInstruction: step.focusInstruction,
+    evidenceManifest: synthesis.evidenceManifest,
+    allowedEvidenceIds: [step.evidenceId],
+  }, [{
+    evidence: synthesis.evidenceManifest[0],
+    image: { bytes: oversized, contentType: "image/png" },
+  }], new AbortController().signal), /stop after image inspection/);
+
+  assert.match(imagePath, /\.webp$/);
+  assert.ok(imageBytes <= 3_500_000);
+  await assert.rejects(() => access(imagePath));
 });
 
 test("synthesizes the canonical Feature Document shape without image paths", async () => {

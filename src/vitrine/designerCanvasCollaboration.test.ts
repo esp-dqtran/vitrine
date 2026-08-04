@@ -56,6 +56,8 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
   const socket = new FakeSocket();
   const received: unknown[] = [];
   const statuses: string[] = [];
+  const presence: unknown[] = [];
+  const cursors: unknown[] = [];
   const session = openDesignerCanvasCollaboration({
     projectId: "11111111-1111-4111-8111-111111111111",
     location: { protocol: "http:", host: "localhost:5174" },
@@ -63,8 +65,18 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
     createSocket: () => socket,
     onScene: (scene) => received.push(scene),
     onStatus: (status) => statuses.push(status),
+    onPresence: (collaborators) => presence.push(collaborators),
+    onCursor: (cursor) => cursors.push(cursor),
   });
   socket.open();
+  socket.receive({
+    type: "ready",
+    clientId: "local-client",
+    collaborators: [
+      { clientId: "local-client", userId: 7, name: "local@vitrines.test" },
+      { clientId: "remote-client", userId: 8, name: "remote@vitrines.test" },
+    ],
+  });
   session.publishScene(snapshot);
   session.publishScene({ ...snapshot, elements: [{ id: "shape-2" }] });
   await new Promise((resolve) => setTimeout(resolve, 70));
@@ -81,7 +93,39 @@ test("coalesces local scenes and applies remote scenes without owning persistenc
     snapshot: { ...snapshot, files: {} },
   });
   assert.equal(received.length, 1);
+  assert.deepEqual(presence, [[{
+    clientId: "remote-client",
+    userId: 8,
+    name: "remote@vitrines.test",
+  }]]);
+
+  socket.receive({
+    type: "cursor",
+    clientId: "remote-client",
+    pointer: { x: 24, y: 36 },
+    button: "down",
+    selectedElementIds: ["shape-1"],
+  });
+  assert.deepEqual(cursors, [{
+    clientId: "remote-client",
+    pointer: { x: 24, y: 36 },
+    button: "down",
+    selectedElementIds: ["shape-1"],
+  }]);
+
+  session.publishCursor({
+    pointer: { x: 12, y: 18 },
+    button: "up",
+    selectedElementIds: ["shape-2"],
+  });
+  assert.deepEqual(JSON.parse(socket.sent.at(-1)!), {
+    type: "cursor",
+    pointer: { x: 12, y: 18 },
+    button: "up",
+    selectedElementIds: ["shape-2"],
+  });
   assert.deepEqual(statuses, ["connecting", "live"]);
   session.close();
   assert.equal(socket.closed, true);
+  assert.deepEqual(presence.at(-1), []);
 });

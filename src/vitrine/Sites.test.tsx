@@ -716,16 +716,19 @@ test('shows only Preview and Sections to normal Site users', () => {
 });
 
 test('renders images and native videos through the shared media primitives', () => {
-  const image = renderToStaticMarkup(<MediaGridCard label="Open Home" kind="image" url="/home.png" badges={['Home']} onOpen={() => undefined} />);
-  const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" badges={['Home', 'Video']} onOpen={() => undefined} />);
+  const image = renderToStaticMarkup(<MediaGridCard label="Open Home" kind="image" url="/home.png" onOpen={() => undefined} />);
+  const video = renderToStaticMarkup(<MediaGridCard label="Open Hero video" kind="video" url="/hero.mp4" posterUrl="/hero.webp" onOpen={() => undefined} />);
   const deferredImage = renderToStaticMarkup(<MediaGridCard label="Open deferred Home" kind="image" url="/deferred-home.png" deferMedia onOpen={() => undefined} />);
   assert.match(image, /home\.png/);
   assert.match(image, /astryx-clickable-card/);
   assert.match(image, /<button[^>]+aria-label="Open Home"/);
   assert.match(image, /<img[^>]+src="\/home\.png"/);
+  assert.match(image, /object-fit:contain/);
+  assert.doesNotMatch(image, /astryx-badge/);
   assert.match(video, /<video/);
   assert.match(video, /controls=""/);
   assert.match(video, /poster="\/hero\.webp"/);
+  assert.match(video, /object-fit:contain/);
   assert.doesNotMatch(deferredImage, /deferred-home\.png/);
 });
 
@@ -860,9 +863,9 @@ test('uses the shared neutral tokens for Site media overlays', () => {
   const source = `${lightboxSource}\n${inspectorSource}`;
 
   assert.match(source, /var\(--color-background-body\)/);
-  assert.match(source, /var\(--color-text-primary\)/);
   assert.match(source, /var\(--color-text-secondary\)/);
   assert.match(source, /var\(--shadow-high\)/);
+  assert.match(source, /objectFit:\s*'contain'/);
   assert.doesNotMatch(source, /#fff|#d4d4d8|rgba\(10,\s*10,\s*11/);
 });
 

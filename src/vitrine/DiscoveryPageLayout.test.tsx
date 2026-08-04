@@ -77,15 +77,38 @@ test('keeps kind-specific shell classes and data attributes for every discovery 
 test('uses explicit renderedCount for initial loading, error, and empty state precedence', () => {
   const loading = renderLayout({ loading: true, renderedCount: 0, children: <></> });
   const error = renderLayout({ error: 'Network failed' });
-  const empty = renderLayout({ totalCount: 0, renderedCount: 0, children: <></> });
+  const empty = renderLayout({
+    totalCount: 0,
+    renderedCount: 0,
+    onReset: () => undefined,
+    children: <></>,
+  });
 
   assert.match(loading, /role="status"[^>]*aria-label="Loading sites"/);
+  assert.equal((loading.match(/data-app-card-skeleton="true"/g) ?? []).length, 3);
   assert.match(error, /role="alert"/);
+  assert.match(error, /Could not load sites/);
   assert.match(error, /Network failed/);
   assert.match(error, />Retry</);
   assert.doesNotMatch(error, /data-layout-part="result"/);
   assert.match(empty, /role="status"/);
   assert.match(empty, /No sites found/);
+  assert.match(empty, />Clear filters</);
+});
+
+test('uses a flow-shaped loading footprint for the Flows catalog', () => {
+  const loading = renderLayout({
+    kind: 'flows',
+    resultLabel: 'flows',
+    singularResultLabel: 'flow',
+    loading: true,
+    renderedCount: 0,
+    children: <></>,
+  });
+
+  assert.match(loading, /aria-label="Loading flows"/);
+  assert.equal((loading.match(/discovery-page-layout__flow-skeleton"/g) ?? []).length, 2);
+  assert.doesNotMatch(loading, /data-app-card-skeleton="true"/);
 });
 
 test('keeps loaded children when loading more fails and places the sentinel last', () => {

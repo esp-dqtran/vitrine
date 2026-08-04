@@ -8,6 +8,7 @@ import { Button, Icon, IconButton, Spinner } from "@astryxdesign/core";
 
 import "@blocknote/mantine/style.css";
 import "./projectDocument.css";
+import "./projectDocumentEvidence.css";
 
 import {
   addProjectDocumentCommentById,
@@ -32,6 +33,8 @@ import type { Platform } from "../../platformFromUrl.ts";
 import type { ResearchProjectWorkspace } from "../../researchProject.ts";
 import {
   ProjectDocumentFlowProvider,
+  insertProjectDocumentEvidenceBlock,
+  projectDocumentEvidenceOptions,
   projectDocumentFlowOptions,
   projectDocumentSchema,
   projectDocumentSlashMenuItems,
@@ -232,6 +235,7 @@ function DocumentDiscussion({
 
 function CollaborativeProjectDocument({
   document,
+  evidence,
   flows,
   initialPlatform,
   userName,
@@ -239,6 +243,7 @@ function CollaborativeProjectDocument({
   onDocumentChange,
 }: {
   document: ProjectDocumentView;
+  evidence: ReturnType<typeof projectDocumentEvidenceOptions>;
   flows: ProjectDocumentFlowOption[];
   initialPlatform: Platform;
   userName: string;
@@ -681,6 +686,13 @@ function CollaborativeProjectDocument({
           ) : null}
 
           <div className="project-document__page-controls">
+            <Button
+              label="Insert from Vitrines"
+              variant="ghost"
+              size="sm"
+              onClick={() => insertProjectDocumentEvidenceBlock(editor)}
+              isDisabled={document.role !== "editor"}
+            />
             <div className="project-document-popover-anchor">
               <Button
                 label={document.icon === "none" ? "Add icon" : "Change icon"}
@@ -760,6 +772,7 @@ function CollaborativeProjectDocument({
             data-testid="project-document-editor"
           >
             <ProjectDocumentFlowProvider
+              evidence={evidence}
               flows={flows}
               initialPlatform={initialPlatform}
               onAttachCatalogFlow={onAttachCatalogFlow}
@@ -826,6 +839,10 @@ export function ProjectDocumentPage({
   const [error, setError] = useState("");
   const flows = useMemo(
     () => (workspace ? projectDocumentFlowOptions(workspace) : []),
+    [workspace],
+  );
+  const evidence = useMemo(
+    () => (workspace ? projectDocumentEvidenceOptions(workspace) : []),
     [workspace],
   );
 
@@ -922,6 +939,7 @@ export function ProjectDocumentPage({
       {document ? (
         <CollaborativeProjectDocument
           document={document}
+          evidence={evidence}
           flows={flows}
           initialPlatform={flowPlatform}
           userName={userName}
