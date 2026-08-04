@@ -9,3 +9,4 @@ storybook-static/
 .dev.vars.*
 !.dev.vars.example
 backups/
+.playwright-mcp/

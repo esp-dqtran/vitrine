@@ -1,8 +1,0 @@
-[     125ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/client--C8cioMw.js?v=e5e0cc42:14335
-[     168ms] [WARNING] [Astryx] Theme "neutral" is using runtime style injection. For better performance, use the pre-built theme:
-
-  import {neutralTheme} from '@astryxdesign/theme-neutral/built';
-  import '@astryxdesign/theme-neutral/theme.css';
-
-For custom themes, run `npx astryx theme build <file>` to generate the built artifacts. @ http://127.0.0.1:5173/node_modules/.vite/deps/@astryxdesign_core.js?v=e5e0cc42:10788
-[     941ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:5173/flows?platform=web&sort=popular:0
