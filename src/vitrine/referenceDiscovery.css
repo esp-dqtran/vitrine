@@ -64,7 +64,7 @@
 
 .reference-discovery-nav__brand > img {
   width: 32px;
-  height: 32px;
+  height: auto;
   display: block;
   border-radius: 10px;
 }

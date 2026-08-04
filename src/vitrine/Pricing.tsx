@@ -311,7 +311,7 @@ export function PricingView({
         }}
       >
         <Section style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-          <Button type="button" label="Vitrine" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrines" variant="ghost" onClick={onBrowse} icon={<span style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
             {isCompactNav ? (
               <AstryxMenu
@@ -340,7 +340,7 @@ export function PricingView({
         <Heading level={1} type="display-2">Free to explore. $8.99/month to go deeper.</Heading>
         <div style={{ margin: '16px auto 0', maxWidth: 560 }}>
           <Text type="large" color="secondary">
-            Vitrine is a research library of observed application design systems — screens, flows, components, tokens and evidence, reconstructed once and reused by every subscriber.
+            Vitrines is a research library of observed application design systems — screens, flows, components, tokens and evidence, reconstructed once and reused by every subscriber.
           </Text>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
@@ -449,7 +449,7 @@ export function PricingView({
       <Section style={{ padding: '0 32px 48px' }}>
         <Divider />
         <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <Text type="supporting" color="secondary">Vitrine · a research library of observed application design systems.</Text>
+          <Text type="supporting" color="secondary">Vitrines · a research library of observed application design systems.</Text>
           <div style={{ display: 'flex', gap: 20 }}>
             <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
             <Button label="Sign in" variant="ghost" size="sm" onClick={onSignIn} style={{ ...navLink, fontSize: 13 }} />

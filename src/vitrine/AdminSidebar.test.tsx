@@ -14,10 +14,10 @@ test('renders Users and Categories with exactly one selected destination', () =>
     />,
   );
 
-  assert.match(html, /Vitrine Admin/);
+  assert.match(html, /Vitrines Admin/);
   assert.match(html, /Users/);
   assert.match(html, /Categories/);
-  assert.match(html, /Back to Vitrine/);
+  assert.match(html, /Back to Vitrines/);
   assert.match(html, /admin@example\.com/);
   assert.match(html, /Log out/);
   assert.doesNotMatch(html, />Search</);

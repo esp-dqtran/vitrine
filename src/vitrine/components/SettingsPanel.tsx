@@ -319,7 +319,7 @@ export function TeamSettings({ currentUserId }: { currentUserId: number }) {
             <div className="team-settings__invite">
               <div>
                 <h3>Invite a member</h3>
-                <p>Add an existing Vitrine account and choose their access level.</p>
+                <p>Add an existing Vitrines account and choose their access level.</p>
               </div>
               <div className="team-settings__invite-form">
                 <TextInput

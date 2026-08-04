@@ -272,7 +272,7 @@ export function SettingsWorkspacePage({
             <div ref={profileMenuRef} id="settings-profile-menu" className="settings-profile-menu" role="dialog" aria-label="Account menu" tabIndex={-1}>
               <section className="settings-profile-menu__card settings-profile-menu__identity">
                 <span className="settings-profile-menu__avatar" aria-hidden="true"><UserIcon /></span>
-                <strong>Vitrine account</strong>
+                <strong>Vitrines account</strong>
                 <span>{user.email}</span>
                 <small>{user.role === 'admin' ? 'Administrator' : 'Member'}</small>
               </section>
@@ -282,7 +282,7 @@ export function SettingsWorkspacePage({
                 <div className="settings-profile-menu__plan-row">
                   <img src="/favicon.svg" alt="" aria-hidden="true" />
                   <div>
-                    <strong>Vitrine — {planLabel}</strong>
+                    <strong>Vitrines — {planLabel}</strong>
                     <span>{planInfo}</span>
                   </div>
                   {subscription?.plan !== 'pro' ? (
@@ -334,7 +334,7 @@ export function SettingsWorkspacePage({
           {section === 'overview' ? (
             <div className="settings-workspace__panel settings-workspace__profile">
               <div className="settings-workspace__title-row">
-                <div><h1 id="settings-overview-title">Profile</h1><p>Manage your Vitrine account details.</p></div>
+                <div><h1 id="settings-overview-title">Profile</h1><p>Manage your Vitrines account details.</p></div>
               </div>
               <div className="settings-workspace__profile-card">
                 <span className="settings-workspace__profile-avatar" aria-hidden="true">{user.email.charAt(0).toUpperCase()}</span>
@@ -357,13 +357,13 @@ export function SettingsWorkspacePage({
 
           {section === 'billing' ? (
             <div className="settings-workspace__panel settings-workspace__billing">
-              <div className="settings-workspace__title-row"><div><h1 id="settings-billing-title">Subscription</h1><p>Manage and view your Vitrine plan.</p></div></div>
+              <div className="settings-workspace__title-row"><div><h1 id="settings-billing-title">Subscription</h1><p>Manage and view your Vitrines plan.</p></div></div>
               <div className="settings-workspace__subscription-table product-data-table" role="table" aria-label="Subscription">
                 <div className="settings-workspace__subscription-head" role="row">
                   <span role="columnheader">Product</span><span role="columnheader">Tier</span><span role="columnheader">Info</span><span role="columnheader">Action</span>
                 </div>
                 <div className="settings-workspace__subscription-row" role="row">
-                  <span role="cell" className="settings-workspace__product"><img src="/favicon.svg" alt="" aria-hidden="true" /><strong>Vitrine</strong></span>
+                  <span role="cell" className="settings-workspace__product"><img src="/favicon.svg" alt="" aria-hidden="true" /><strong>Vitrines</strong></span>
                   <span role="cell">{planLabel}</span>
                   <span role="cell">{planInfo}</span>
                   <span role="cell">
@@ -392,7 +392,7 @@ export function SettingsWorkspacePage({
 
           {section === 'security' ? (
             <div className="settings-workspace__panel settings-workspace__security">
-              <div className="settings-workspace__title-row"><div><h1 id="settings-security-title">Authentication</h1><p>Keep your Vitrine account secure.</p></div></div>
+              <div className="settings-workspace__title-row"><div><h1 id="settings-security-title">Authentication</h1><p>Keep your Vitrines account secure.</p></div></div>
               <section className="settings-workspace__form-card">
                 <h2>Change password</h2>
                 <p>Use at least eight characters for your new password.</p>
@@ -409,7 +409,7 @@ export function SettingsWorkspacePage({
 
           {section === 'appearance' ? (
             <div className="settings-workspace__panel settings-workspace__appearance">
-              <div className="settings-workspace__title-row"><div><h1 id="settings-appearance-title">Appearance</h1><p>Choose how Vitrine looks on this device.</p></div></div>
+              <div className="settings-workspace__title-row"><div><h1 id="settings-appearance-title">Appearance</h1><p>Choose how Vitrines looks on this device.</p></div></div>
               <section className="settings-workspace__form-card">
                 <h2>Theme</h2>
                 <p>Use a light theme, dark theme, or follow your system.</p>

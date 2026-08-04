@@ -170,7 +170,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
 
       <header style={{ ...wrap, paddingTop: 20 }}>
         <nav aria-label="Public navigation" style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '9px 10px 9px 16px', border: '1px solid var(--color-border)', borderRadius: 999, background: 'color-mix(in srgb, var(--color-background-body) 86%, transparent)', backdropFilter: 'blur(18px)', position: 'relative', zIndex: 2 }}>
-          <Button type="button" label="Vitrine" variant="ghost" onClick={onHome} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
+          <Button type="button" label="Vitrines" variant="ghost" onClick={onHome} icon={<span style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--color-on-accent)' }} /></span>} style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div className="bip-public-nav-secondary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Button label="Pricing" variant="ghost" onClick={onPricing} style={navLink} />
@@ -250,7 +250,7 @@ export function BuildInPublicPage({ onHome, onBrowse, onPricing }: {
       <footer style={{ ...wrap, paddingTop: 36, paddingBottom: 44 }}>
         <Divider />
         <div style={{ paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-          <Text type="supporting" color="secondary">Vitrine · building Astryx in public.</Text>
+          <Text type="supporting" color="secondary">Vitrines · building Astryx in public.</Text>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             <Button label="Home" variant="ghost" size="sm" onClick={onHome} style={navLink} />
             <Button label="Pricing" variant="ghost" size="sm" onClick={onPricing} style={navLink} />

@@ -35,7 +35,7 @@ export function ReferenceDiscoveryTopNav({
       <div className={`reference-discovery-nav__left ${className}__left`}>
         <a
           href={`/${active}`}
-          aria-label={`Vitrine ${activeLabel}`}
+          aria-label={`Vitrines ${activeLabel}`}
           className={`reference-discovery-nav__brand ${className}__brand`}
           data-reference-gallery-identity="true"
           onClick={(event) => {
@@ -43,7 +43,7 @@ export function ReferenceDiscoveryTopNav({
             navigate(activeRoute);
           }}
         >
-          <img src="/favicon.svg" alt="" aria-hidden="true" width="32" height="32" />
+          <img src="/favicon.svg" alt="" aria-hidden="true" width="32" />
         </a>
         <ReferenceTypeTabs
           active={active}

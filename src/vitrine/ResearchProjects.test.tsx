@@ -178,7 +178,7 @@ test("renders a responsive Lumin-style Projects header", () => {
     />,
   );
 
-  assert.match(html, /aria-label="Vitrine Projects"/);
+  assert.match(html, /aria-label="Vitrines Projects"/);
   assert.match(html, /aria-label="Search projects"/);
   assert.match(html, /aria-label="Help"/);
   assert.match(html, /aria-label="Notifications"/);

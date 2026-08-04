@@ -1,5 +1,4 @@
 import { useEffect, type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { Button, Icon, Skeleton, ToggleButton } from '@astryxdesign/core';
 import { useSlidingIndicator } from '../useSlidingIndicator';
 
@@ -71,19 +70,14 @@ export function ReferenceDetailShell<T extends string>({
   children,
 }: ReferenceDetailShellProps<T>) {
   const { indicatorRef, registerItem } = useSlidingIndicator<T>(activeTab);
-  const shouldReduceMotion = useReducedMotion();
   useEffect(() => resetReferenceDetailScroll(), [identityKey]);
   const accessibleTitle = ariaLabel ?? (typeof title === 'string' ? title : 'Reference');
 
   return (
-    <motion.main
+    <main
       data-reference-detail={dataDetailKind}
       className={`vitrine-page reference-detail${className ? ` ${className}` : ''}`}
       aria-busy={loading || undefined}
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 18 }}
-      transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
     >
       <header className="reference-detail__hero">
         <div className="reference-detail__hero-inner">
@@ -97,9 +91,7 @@ export function ReferenceDetailShell<T extends string>({
               className="reference-detail__back"
             />
           ) : null}
-          <motion.div
-            layoutId={identityKey}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+          <div
             className={`reference-detail__logo${identityImageUrl ? ` reference-detail__logo--image reference-detail__logo--image-${identityImageTone}` : ''}${loading ? ' app-detail-loading__logo' : ''}`}
             style={identityImageUrl ? undefined : { background: accent }}
           >
@@ -125,7 +117,7 @@ export function ReferenceDetailShell<T extends string>({
                   </>
                 )
               : <span>{identityLabel}</span>)}
-          </motion.div>
+          </div>
           <div className={`reference-detail__heading${loading ? ' app-detail-loading__heading' : ''}`}>
             <h1>{title}</h1>
             {description ? <p>{description}</p> : null}
@@ -141,42 +133,42 @@ export function ReferenceDetailShell<T extends string>({
           </div>
           {actions && <div className={`reference-detail__actions${loading ? ' app-detail-loading__actions' : ''}`}>{actions}</div>}
         </div>
-        <div className="reference-detail__navigation">
-          {tabLeading ? <div className="reference-detail__tab-leading">{tabLeading}</div> : null}
-          <div role="tablist" aria-label={`${accessibleTitle} sections`} className={`reference-detail__tabs${loading ? ' app-detail-loading__tabs' : ''}`}>
-            {tabs.map((tab, index) => loading ? (
-              <Skeleton
-                key={tab.id}
-                width={index === 2 || index === 5 ? 112 : 78}
-                height={20}
-                radius={2}
-              />
-            ) : (
-              <ToggleButton
-                key={tab.id}
-                ref={registerItem(tab.id)}
-                label={tab.label}
-                isPressed={activeTab === tab.id}
-                onPressedChange={() => onTabChange(tab.id)}
-                role="tab"
-                aria-pressed={undefined}
-                aria-selected={activeTab === tab.id}
-                size="sm"
-                className="reference-detail__tab"
-                style={{ color: activeTab === tab.id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
-              />
-            ))}
-            {!loading ? <div ref={indicatorRef} className="reference-detail__tab-indicator" /> : null}
-          </div>
-          {tabControls ? <div className="reference-detail__tab-controls">{tabControls}</div> : null}
-          {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
-        </div>
       </header>
+      <div className="reference-detail__navigation">
+        {tabLeading ? <div className="reference-detail__tab-leading">{tabLeading}</div> : null}
+        <div role="tablist" aria-label={`${accessibleTitle} sections`} className={`reference-detail__tabs${loading ? ' app-detail-loading__tabs' : ''}`}>
+          {tabs.map((tab, index) => loading ? (
+            <Skeleton
+              key={tab.id}
+              width={index === 2 || index === 5 ? 112 : 78}
+              height={20}
+              radius={2}
+            />
+          ) : (
+            <ToggleButton
+              key={tab.id}
+              ref={registerItem(tab.id)}
+              label={tab.label}
+              isPressed={activeTab === tab.id}
+              onPressedChange={() => onTabChange(tab.id)}
+              role="tab"
+              aria-pressed={undefined}
+              aria-selected={activeTab === tab.id}
+              size="sm"
+              className="reference-detail__tab"
+              style={{ color: activeTab === tab.id ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
+            />
+          ))}
+          {!loading ? <div ref={indicatorRef} className="reference-detail__tab-indicator" /> : null}
+        </div>
+        {tabControls ? <div className="reference-detail__tab-controls">{tabControls}</div> : null}
+        {tabTrailing && <div className="reference-detail__tab-trailing">{tabTrailing}</div>}
+      </div>
       <div style={{ minHeight: 400 }}>
         <div className="reference-detail__body-inner" style={{ paddingTop: bodyPadding.split(' ')[0], paddingBottom: bodyPadding.split(' ')[2] ?? bodyPadding.split(' ')[0] }}>
           {children}
         </div>
       </div>
-    </motion.main>
+    </main>
   );
 }

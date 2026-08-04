@@ -354,7 +354,7 @@ test('renders the shared full-width discovery navigation for Apps', () => {
   assert.match(html, /class="[^"]*reference-discovery-nav[^"]*apps-top-nav[^"]*"/);
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /aria-selected="true"/);
-  assert.match(html, /aria-label="Vitrine Apps"/);
+  assert.match(html, /aria-label="Vitrines Apps"/);
   assert.doesNotMatch(html, /<strong>Vitrine<\/strong>/);
   assert.match(html, /Search on Web/);
   assert.doesNotMatch(html, /Import App/);

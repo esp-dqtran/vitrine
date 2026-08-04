@@ -68,7 +68,7 @@ interface CompletedDiscoveryPage<T> {
 
 const defaultObserverFactory: DiscoveryObserverFactory = (callback) => {
   if (typeof IntersectionObserver === 'undefined') return null;
-  return new IntersectionObserver(callback);
+  return new IntersectionObserver(callback, { rootMargin: '400px' });
 };
 
 const errorMessage = (error: unknown) =>

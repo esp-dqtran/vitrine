@@ -4,7 +4,7 @@ import {
   type ScreenAnalysis,
 } from "./screenAnalysis.ts";
 
-export const UI_ELEMENT_PROMPT_VERSION = 5;
+export const UI_ELEMENT_PROMPT_VERSION = 6;
 export const UI_ELEMENT_AUTO_ACCEPT_CONFIDENCE = 0.82;
 export const UI_ELEMENT_MINIMUM_CONFIDENCE = 0.55;
 
@@ -81,7 +81,6 @@ export interface UiElementCandidate {
   variant: string;
   purpose: string;
   anatomy: string[];
-  visibleStates: string[];
   observedProperties: string[];
   region: AppKnowledgeNormalizedRegion;
   confidence: number;
@@ -188,7 +187,6 @@ export function parseUiElementExtraction(value: unknown): UiElementExtraction {
       variant,
       purpose,
       anatomy,
-      visibleStates: strings(candidate.visibleStates, `components[${index}].visibleStates`),
       observedProperties: strings(
         candidate.observedProperties,
         `components[${index}].observedProperties`,
@@ -465,7 +463,6 @@ Return raw JSON only with this exact shape:
     "variant": "short visible variant such as Primary, Disabled, Filled, Modal, or Default",
     "purpose": "what this visible occurrence enables or communicates",
     "anatomy": ["visible parts inside the component"],
-    "visibleStates": ["only states visibly present"],
     "observedProperties": ["concrete visual properties"],
     "region": {"x": 0.0, "y": 0.0, "width": 0.0, "height": 0.0},
     "confidence": 0.0

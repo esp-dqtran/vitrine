@@ -810,24 +810,24 @@ export function Home({
             gap: 20,
           }}
         >
-          <Button
-            type="button"
-            label="Vitrines"
-            variant="ghost"
-            size="lg"
-            onClick={onBrowse}
-            icon={
-              <img
-                src="/favicon.svg"
-                alt=""
-                aria-hidden="true"
-                width={24}
-                height={24}
-                style={{ display: "block" }}
-              />
-            }
-            style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em" }}
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <img
+              src="/favicon.svg"
+              alt=""
+              aria-hidden="true"
+              width={44}
+              style={{ display: "block", cursor: "pointer" }}
+              onClick={onBrowse}
+            />
+            <Button
+              type="button"
+              label="Vitrines"
+              variant="ghost"
+              size="lg"
+              onClick={onBrowse}
+              style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em" }}
+            />
+          </div>
           {isCompactNav ? (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <Button
@@ -1910,7 +1910,6 @@ export function Home({
                   alt=""
                   aria-hidden="true"
                   width={24}
-                  height={24}
                 />{" "}
                 Vitrines
               </div>

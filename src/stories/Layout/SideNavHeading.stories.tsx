@@ -5,7 +5,7 @@ const meta = {
   title: 'Components/Layout/SideNavHeading',
   component: SideNavHeading,
   tags: ['autodocs'],
-  args: { heading: 'Vitrine' },
+  args: { heading: 'Vitrines' },
 } satisfies Meta<typeof SideNavHeading>;
 
 export default meta;
@@ -14,7 +14,7 @@ type Story = StoryObj<typeof meta>;
 export const Playground: Story = {
   render: () => (
     <div style={{ width: 260, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', padding: 8 }}>
-      <SideNavHeading heading="Vitrine" superheading="Acme Inc." />
+      <SideNavHeading heading="Vitrines" superheading="Acme Inc." />
     </div>
   ),
 };
@@ -24,7 +24,7 @@ export const WithMenu: Story = {
   render: () => (
     <div style={{ width: 260, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', padding: 8 }}>
       <SideNavHeading
-        heading="Vitrine"
+        heading="Vitrines"
         superheading="Acme Inc."
         menu={
           <NavHeadingMenu>

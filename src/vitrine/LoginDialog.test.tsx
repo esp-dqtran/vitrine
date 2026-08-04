@@ -19,7 +19,7 @@ test('renders shared authentication inside the catalog login dialog', () => {
   assert.match(html, /width:460px/);
   assert.match(html, /min-height:min\(600px, 68vh\)/);
   assert.match(html, /data-sign-in-layout="embedded"/);
-  assert.match(html, /Sign in to Vitrine/);
+  assert.match(html, /Sign in to Vitrines/);
   assert.match(html, /Access your saved apps, sites, screens, and collections\./);
   assert.match(html, /background:transparent/);
   assert.doesNotMatch(html, /background:var\(--color-background-body\)/);

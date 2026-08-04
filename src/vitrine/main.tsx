@@ -35,7 +35,7 @@ import './productDataDisplay.css';
 import './productTables.css';
 import './productForms.css';
 
-// No token overrides — @astryxdesign/core/astryx.css already ships Vitrine's palette at :root.
+// No token overrides — @astryxdesign/core/astryx.css already ships Vitrines' palette at :root.
 // This theme object exists only so <Theme> can drive data-theme (and thus color-scheme) from `mode`.
 const appTheme = defineTheme({ name: 'neutral' });
 

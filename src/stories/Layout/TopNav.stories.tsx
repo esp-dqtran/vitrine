@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 export const Playground: Story = {
   render: () => (
     <TopNav
-      heading={<TopNavHeading heading="Vitrine" />}
+      heading={<TopNavHeading heading="Vitrines" />}
       startContent={
         <>
           <TopNavItem label="Home" href="#" isSelected />

@@ -15,7 +15,7 @@ export const Playground: Story = {
   render: (args) => (
     <div style={{ maxWidth: 260 }}>
       <ClickableCard {...args}>
-        <Heading level={4}>Vitrine</Heading>
+        <Heading level={4}>Vitrines</Heading>
         <Text type="body" color="secondary">
           Design inspiration platform.
         </Text>

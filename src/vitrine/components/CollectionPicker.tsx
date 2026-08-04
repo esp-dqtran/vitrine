@@ -94,7 +94,7 @@ export function CollectionPicker({
 
   const ensureSavedCollection = async () => (
     collections.find(isSavedCollection)
-    ?? await createCollection('Saved', 'Screens and references saved from Vitrine.')
+    ?? await createCollection('Saved', 'Screens and references saved from Vitrines.')
   );
 
   const saveReferences = async (collectionId?: number) => {

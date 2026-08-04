@@ -436,7 +436,7 @@ export function FlowPreviewDialog({
             </ol>
           )}
 
-          {(activeMode === 'prototype' || (activeMode === 'screens' && platform === 'web'))
+          {(activeMode === 'prototype' || activeMode === 'screens')
             && activeIndex > 0 ? (
             <IconButton
               label="Previous Flow screen"
@@ -447,7 +447,7 @@ export function FlowPreviewDialog({
               onClick={() => selectScreen(activeIndex - 1)}
             />
           ) : null}
-          {(activeMode === 'prototype' || (activeMode === 'screens' && platform === 'web'))
+          {(activeMode === 'prototype' || activeMode === 'screens')
             && activeIndex < screens.length - 1 ? (
             <IconButton
               label="Next Flow screen"

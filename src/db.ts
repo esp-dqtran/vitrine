@@ -420,7 +420,6 @@ export interface UiElementSummaryItem {
   image_url: string;
   description: string | null;
   purpose: string | null;
-  visible_states: string[];
 }
 
 export interface UiElementSummary {
@@ -715,7 +714,6 @@ export async function appEvidencePage(input: {
            'pageType', reference.component_type,
            'productArea', reference.component_group,
            'theme', reference.screen_theme,
-           'visibleStates', to_jsonb(COALESCE(reference.component_visible_states, ARRAY[]::text[])),
            'componentNames', jsonb_build_array(reference.component_type),
            'visibleText', '[]'::jsonb,
            'layoutPatterns', '[]'::jsonb,
@@ -739,7 +737,6 @@ export async function appEvidencePage(input: {
          SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
            type.name AS component_type, type.group_name AS component_group,
            occurrence.purpose AS component_purpose,
-           occurrence.visible_states AS component_visible_states,
            occurrence.confidence AS component_confidence,
            CASE WHEN screen.analysis->>'theme' IN ('light', 'dark', 'mixed')
              THEN screen.analysis->>'theme' ELSE 'mixed' END AS screen_theme
@@ -754,6 +751,11 @@ export async function appEvidencePage(input: {
        ) reference ON i.kind = 'ui_element'
        WHERE a.name = $1 AND p.name = $3 AND i.kind = $2
          AND $4::integer IS NULL AND $5::boolean = false
+         AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
+           AND EXISTS (
+             SELECT 1 FROM ui_element_extractions e
+             WHERE e.source_image_id = i.id AND e.status = 'complete'
+           ))
        UNION ALL
        SELECT i.id, a.name AS app, p.name AS platform, i.image_url, i.kind, i.description,
          CASE WHEN reference.component_type IS NOT NULL THEN jsonb_build_object(
@@ -762,7 +764,6 @@ export async function appEvidencePage(input: {
            'pageType', reference.component_type,
            'productArea', reference.component_group,
            'theme', reference.screen_theme,
-           'visibleStates', to_jsonb(COALESCE(reference.component_visible_states, ARRAY[]::text[])),
            'componentNames', jsonb_build_array(reference.component_type),
            'visibleText', '[]'::jsonb,
            'layoutPatterns', '[]'::jsonb,
@@ -788,7 +789,6 @@ export async function appEvidencePage(input: {
          SELECT occurrence.screen_image_id, screen.image_url AS screen_image_url,
            type.name AS component_type, type.group_name AS component_group,
            occurrence.purpose AS component_purpose,
-           occurrence.visible_states AS component_visible_states,
            occurrence.confidence AS component_confidence,
            CASE WHEN screen.analysis->>'theme' IN ('light', 'dark', 'mixed')
              THEN screen.analysis->>'theme' ELSE 'mixed' END AS screen_theme
@@ -802,6 +802,11 @@ export async function appEvidencePage(input: {
          LIMIT 1
        ) reference ON i.kind = 'ui_element'
        WHERE i.kind = $2 AND ($4::integer IS NOT NULL OR $5::boolean = true)
+         AND NOT (i.kind = 'ui_element' AND i.image_url LIKE 'mobbin-bulk:ui_element:%'
+           AND EXISTS (
+             SELECT 1 FROM ui_element_extractions e
+             WHERE e.source_image_id = i.id AND e.status = 'complete'
+           ))
      )
      SELECT * FROM eligible
      WHERE ($6::integer IS NULL OR id > $6)
@@ -849,7 +854,7 @@ export async function appUiElementSummary(input: {
        LIMIT 1
      ), eligible AS (
        SELECT occurrence.id, occurrence.review_status, occurrence.confidence,
-         occurrence.purpose, occurrence.visible_states,
+         occurrence.purpose,
          type.id AS component_type_id, type.name AS component_type,
          type.group_name AS component_group,
          crop.id AS image_id, crop.image_url, crop.description
@@ -884,7 +889,7 @@ export async function appUiElementSummary(input: {
      )
      SELECT ranked.component_type, ranked.component_group,
        ranked.occurrence_count, ranked.image_id, ranked.image_url,
-       ranked.description, ranked.purpose, ranked.visible_states,
+       ranked.description, ranked.purpose,
        totals.total_occurrences, totals.total_types
      FROM ranked
      CROSS JOIN totals
@@ -908,7 +913,6 @@ export async function appUiElementSummary(input: {
       image_url: row.image_url,
       description: row.description,
       purpose: row.purpose,
-      visible_states: row.visible_states,
     })),
     totalOccurrences: result.rows[0]?.total_occurrences ?? 0,
     totalTypes: result.rows[0]?.total_types ?? 0,
@@ -1379,7 +1383,13 @@ const versionSelect = `SELECT av.id, av.app_id, platform_identity.id AS platform
     AND platform_identity.name = av.platform
   LEFT JOIN LATERAL (
     SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
-      COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count,
+      COUNT(*) FILTER (WHERE i.kind = 'ui_element' AND NOT (
+        i.image_url LIKE 'mobbin-bulk:ui_element:%'
+        AND EXISTS (
+          SELECT 1 FROM ui_element_extractions e
+          WHERE e.source_image_id = i.id AND e.status = 'complete'
+        )
+      ))::int AS ui_element_count,
       COUNT(*) FILTER (WHERE i.kind = 'screen' AND i.analysis IS NOT NULL)::int AS analyzed_count
     FROM version_images vi JOIN images i ON i.id = vi.image_id
     WHERE vi.version_id = av.id
@@ -1598,7 +1608,13 @@ export async function publishAppVersion(versionId: number, userId: number): Prom
     const updated = await client.query(
       `WITH counts AS (
          SELECT COUNT(*) FILTER (WHERE i.kind = 'screen')::int AS screen_count,
-           COUNT(*) FILTER (WHERE i.kind = 'ui_element')::int AS ui_element_count
+           COUNT(*) FILTER (WHERE i.kind = 'ui_element' AND NOT (
+             i.image_url LIKE 'mobbin-bulk:ui_element:%'
+             AND EXISTS (
+               SELECT 1 FROM ui_element_extractions e
+               WHERE e.source_image_id = i.id AND e.status = 'complete'
+             )
+           ))::int AS ui_element_count
          FROM version_images vi
          JOIN images i ON i.id = vi.image_id
          WHERE vi.version_id = $1

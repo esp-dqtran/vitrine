@@ -31,7 +31,7 @@ const free: SubscriptionView = {
   exportUsage: { used: 0, limit: 20, resetAt: null },
 };
 
-test('renders the Lumin-style full Settings workspace around real Vitrine billing', () => {
+test('renders the Lumin-style full Settings workspace around real Vitrines billing', () => {
   const html = renderToStaticMarkup(
     <ThemeModeProvider>
       <SettingsWorkspacePage

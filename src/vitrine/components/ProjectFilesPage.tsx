@@ -298,7 +298,7 @@ export function ProjectFilesPage({
             onSelect: () => navigate({ name: "collections" }),
           },
         ]}
-        secondaryLabel="Vitrine libraries"
+        secondaryLabel="Vitrines libraries"
         secondaryActions={[
           {
             label: "Apps",

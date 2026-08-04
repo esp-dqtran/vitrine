@@ -16,7 +16,7 @@ export const Playground: Story = {
     <Breadcrumbs>
       <BreadcrumbItem href="#">Home</BreadcrumbItem>
       <BreadcrumbItem href="#">Projects</BreadcrumbItem>
-      <BreadcrumbItem isCurrent>Vitrine</BreadcrumbItem>
+      <BreadcrumbItem isCurrent>Vitrines</BreadcrumbItem>
     </Breadcrumbs>
   ),
 };
@@ -33,7 +33,7 @@ export const WithOverflowMenu: Story = {
           items={[{ label: 'Workspace' }, { label: 'Team' }, { label: 'Projects' }]}
         />
       </BreadcrumbItem>
-      <BreadcrumbItem href="#">Vitrine</BreadcrumbItem>
+      <BreadcrumbItem href="#">Vitrines</BreadcrumbItem>
       <BreadcrumbItem isCurrent>Settings</BreadcrumbItem>
     </Breadcrumbs>
   ),

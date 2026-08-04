@@ -160,14 +160,14 @@ export function WorkspaceHeader({
       <a
         href="/projects"
         className={brandClassName}
-        aria-label="Vitrine Projects"
+        aria-label="Vitrines Projects"
         onClick={(event) => {
           event.preventDefault();
           onBrandSelect();
         }}
       >
         <img src="/favicon.svg" alt="" aria-hidden="true" />
-        <strong>Vitrine</strong>
+        <strong>Vitrines</strong>
       </a>
       {children}
       <div className={actionsClassName}>{actions}</div>

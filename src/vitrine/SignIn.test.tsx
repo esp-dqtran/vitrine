@@ -106,7 +106,7 @@ test("renders the shared authentication form in an embedded layout", () => {
   assert.match(html, /width:48px;height:48px;border-radius:12px/);
   assert.match(html, /font-size:24px;font-weight:700/);
   assert.match(html, /margin-bottom:30px;text-align:left/);
-  assert.match(html, /Sign in to Vitrine/);
+  assert.match(html, /Sign in to Vitrines/);
   assert.match(html, /Access your saved apps, sites, screens, and collections\./);
   assert.match(html, /background:transparent/);
   assert.doesNotMatch(html, /background:var\(--color-background-body\)/);

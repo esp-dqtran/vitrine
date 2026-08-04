@@ -72,7 +72,7 @@ function IssueTracker() {
             header={
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--color-accent)', flex: '0 0 auto' }} />
-                <Text weight="bold">Vitrine</Text>
+                <Text weight="bold">Vitrines</Text>
                 <Text type="supporting">▾</Text>
               </div>
             }

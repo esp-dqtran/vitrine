@@ -56,7 +56,7 @@ function Wordmark({ enlarged = false }: { enlarged?: boolean }) {
           ? <div style={{ width: 20, height: 20, borderRadius: 5, background: 'var(--color-on-accent)' }} />
           : <div style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--color-on-accent)' }} />}
       </div>
-      <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrine</span>
+      <span style={{ fontSize: enlarged ? 24 : 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>Vitrines</span>
     </div>
   );
 }
@@ -669,7 +669,7 @@ export function SignIn({
 
   const headingText = mode === 'signup'
     ? 'Create your account'
-    : embedded ? 'Sign in to Vitrine' : 'Welcome back';
+    : embedded ? 'Sign in to Vitrines' : 'Welcome back';
   const supportingText = mode === 'signup'
     ? 'Sign up to start saving screens and boards.'
     : embedded

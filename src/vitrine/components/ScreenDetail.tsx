@@ -149,7 +149,6 @@ const MEMBER_SECTIONS: DetailSection[] = ['screens', 'elements', 'flows', 'desig
 export function appDetailTabs(hasDesignSystem: boolean) {
   return [
     { id: 'screens' as const, label: 'Screens' },
-    { id: 'elements' as const, label: 'UI Elements' },
     { id: 'flows' as const, label: 'Flows' },
     ...(hasDesignSystem
       ? [{ id: 'design-system' as const, label: 'Design System' }]
@@ -706,11 +705,12 @@ export function ScreenDetail({
     typeLabel: string,
     componentLabel: string,
     includeFlowContext = false,
+    includeStates = true,
   ): MetadataFilterGroup[] => [
     { id: 'types', label: typeLabel, options: screenFilterOptions.types, selected: selected.types },
     { id: 'layouts', label: 'Layouts', options: screenFilterOptions.layouts, selected: selected.layouts },
     { id: 'components', label: componentLabel, options: screenFilterOptions.components, selected: selected.components },
-    { id: 'states', label: 'States', options: screenFilterOptions.states, selected: selected.states },
+    ...(includeStates ? [{ id: 'states' as const, label: 'States', options: screenFilterOptions.states, selected: selected.states }] : []),
     ...(includeFlowContext ? [{
       id: 'flowContext',
       label: 'Found in Flows',
@@ -746,7 +746,7 @@ export function ScreenDetail({
     : section === 'elements'
       ? {
           label: 'UI Elements',
-          groups: evidenceFilterGroups(elementFilters, 'Element types', 'Components'),
+          groups: evidenceFilterGroups(elementFilters, 'Element types', 'Components', false, false),
           onToggle: (group: string, value: string, checked: boolean) => {
             const filterGroup = group as ScreenFilterGroup;
             setElementFilters((current) => ({

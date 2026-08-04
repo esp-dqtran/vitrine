@@ -17,7 +17,7 @@ test('renders the Users outlet inside the dedicated Admin shell', () => {
   );
 
   assert.match(html, /data-admin-dashboard="true"/);
-  assert.match(html, /Vitrine Admin/);
+  assert.match(html, /Vitrines Admin/);
   assert.match(html, /data-admin-page="users"/);
   assert.match(html, /Users content/);
   assert.match(html, /Categories/);

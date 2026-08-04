@@ -16,7 +16,7 @@ export const InSideNavHeading: Story = {
   render: () => (
     <div style={{ width: 260, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', padding: 8 }}>
       <SideNavHeading
-        heading="Vitrine"
+        heading="Vitrines"
         superheading="Acme Inc."
         menu={
           <NavHeadingMenu>

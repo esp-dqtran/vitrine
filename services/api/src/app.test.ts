@@ -2248,7 +2248,7 @@ test("keeps the catalog public and every App detail endpoint private", async (t)
   }
 });
 
-test("keeps the Sites catalog public and every Site detail endpoint private", async (t) => {
+test("keeps the Sites catalog and media public, but the Site detail JSON private", async (t) => {
   const sitesStore = {
     listReadySitesPage: async () => ({
       items: [{
@@ -2292,17 +2292,19 @@ test("keeps the Sites catalog public and every Site detail endpoint private", as
     200,
   );
 
-  const privatePaths = [
-    "/sites/1/versions/2",
+  // Media is public: <video>/<img src> loads can't attach a bearer header.
+  const publicMediaPaths = [
     "/sites/1/versions/2/media/preview",
     "/sites/1/versions/2/media/mobile",
     "/sites/1/versions/2/pages/10/media",
     "/sites/1/versions/2/sections/10/media",
     "/sites/1/versions/2/sections/10/poster",
   ];
-  for (const path of privatePaths) {
-    assert.equal((await fetch(`${base}${path}`)).status, 401, path);
+  for (const path of publicMediaPaths) {
+    assert.equal((await fetch(`${base}${path}`)).status, 200, path);
   }
+
+  assert.equal((await fetch(`${base}/sites/1/versions/2`)).status, 401);
 });
 
 test("serves only the first three public preview images", async (t) => {

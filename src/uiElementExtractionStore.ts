@@ -358,12 +358,12 @@ export async function completeUiElementExtraction(input: {
       const occurrence = await client.query(
         `INSERT INTO screen_ui_elements
            (version_id, screen_image_id, source_image_id, ui_element_type_id,
-           cropped_image_id, variant, purpose, anatomy, visible_states,
+           cropped_image_id, variant, purpose, anatomy,
             observed_properties, region_x, region_y, region_width, region_height,
             confidence, provider_model, prompt_version, review_status, crop_quality)
          VALUES (
-           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-           $11, $12, $13, $14, $15, $16, $17, $18, $19::jsonb
+           $1, $2, $3, $4, $5, $6, $7, $8, $9,
+           $10, $11, $12, $13, $14, $15, $16, $17::jsonb
          )
          ON CONFLICT (
            version_id, screen_image_id, ui_element_type_id,
@@ -375,7 +375,6 @@ export async function completeUiElementExtraction(input: {
            variant = EXCLUDED.variant,
            purpose = EXCLUDED.purpose,
            anatomy = EXCLUDED.anatomy,
-           visible_states = EXCLUDED.visible_states,
            observed_properties = EXCLUDED.observed_properties,
            confidence = EXCLUDED.confidence,
            review_status = EXCLUDED.review_status,
@@ -391,7 +390,6 @@ export async function completeUiElementExtraction(input: {
           crop.candidate.variant,
           crop.candidate.purpose,
           crop.candidate.anatomy,
-          crop.candidate.visibleStates,
           crop.candidate.observedProperties,
           crop.candidate.region.x,
           crop.candidate.region.y,

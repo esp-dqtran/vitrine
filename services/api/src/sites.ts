@@ -19,6 +19,7 @@ export function mountSitesRoutes(
   dependencies: SitesRouteDependencies,
 ): void {
   mountLegacyReadySitesList(app, dependencies);
+  mountPublicSitesRoutes(app, dependencies);
   mountPrivateSitesRoutes(app, dependencies);
 }
 
@@ -40,6 +41,14 @@ export function mountPublicSitesRoutes(
       await sendPublicCatalogMedia(req, res, dependencies, "poster");
     },
   );
+
+  // ponytail: public so <video>/<img src> tags can load them without a bearer
+  // header; mountMedia already 404s accessClass "internal" media either way.
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/mobile", "mobile");
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/pages/:recordId/media", "page");
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/media", "section");
+  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/poster", "poster");
 }
 
 export function mountPrivateSitesRoutes(
@@ -95,12 +104,6 @@ export function mountPrivateSitesRoutes(
     }
     res.json({ ...clientSiteVersion(version), routeSlug: site.routeSlug });
   });
-
-  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/preview", "preview");
-  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/media/mobile", "mobile");
-  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/pages/:recordId/media", "page");
-  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/media", "section");
-  mountMedia(app, dependencies, "/sites/:siteId/versions/:versionId/sections/:recordId/poster", "poster");
 }
 
 function clientSiteVersion(version: SiteVersionDetail) {

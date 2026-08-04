@@ -19,7 +19,7 @@ test('renders the member identity, controls, tabs, count, and shared grid', () =
 
   assert.match(html, /data-reference-gallery-shell="sites"/);
   assert.match(html, /data-reference-gallery-identity="true"/);
-  assert.match(html, />Vitrine</);
+  assert.match(html, />Vitrines</);
   assert.match(html, />Account</);
   assert.match(html, /aria-label="Reference type"/);
   assert.match(html, /2 sites/);

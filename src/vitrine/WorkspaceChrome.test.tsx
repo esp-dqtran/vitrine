@@ -38,5 +38,5 @@ test('renders project and Settings headers through the same component', () => {
   assert.match(projects, /class="projects-workspace__header-actions"/);
   assert.match(settings, /<header class="settings-workspace__header">/);
   assert.match(settings, /class="settings-workspace__header-actions"/);
-  assert.match(settings, /aria-label="Vitrine Projects"/);
+  assert.match(settings, /aria-label="Vitrines Projects"/);
 });

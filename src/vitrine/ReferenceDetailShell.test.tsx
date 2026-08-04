@@ -131,7 +131,7 @@ test('renders a white identity mark on a black plate when requested', () => {
   );
 });
 
-test('renders Vitrine primary actions as white buttons with black content', async () => {
+test('renders Vitrines primary actions as white buttons with black content', async () => {
   const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
   const primaryActionRule = styles.match(
     /button\[data-variant=["']primary["']\]\s*\{[^}]+\}/,

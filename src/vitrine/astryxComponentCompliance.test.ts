@@ -33,7 +33,7 @@ function controlsIn(file: string): Record<string, number> {
   return counts;
 }
 
-test('Vitrine native interactive controls match the shrinking Astryx migration baseline', () => {
+test('Vitrines native interactive controls match the shrinking Astryx migration baseline', () => {
   const actual = Object.fromEntries(
     productionTsxFiles(vitrineRoot)
       .map((file) => [relative(vitrineRoot, file), controlsIn(file)] as const)

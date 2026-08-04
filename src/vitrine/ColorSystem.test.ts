@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
 
-test('defines one Apps-led color foundation for every Vitrine page', async () => {
+test('defines one Apps-led color foundation for every Vitrines page', async () => {
   const css = await read('./styles.css');
   const foundation = await read('./uiFoundation.css');
 

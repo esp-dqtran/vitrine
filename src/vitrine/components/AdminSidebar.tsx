@@ -23,7 +23,7 @@ function AdminWordmarkIcon() {
         justifyContent: 'center',
       }}
     >
-      <div style={{ width: 9, height: 9, borderRadius: 3, background: '#FFFFFF' }} />
+      <div style={{ width: 9, height: 9, borderRadius: 3, background: 'var(--color-on-accent)' }} />
     </div>
   );
 }
@@ -37,7 +37,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <SideNav
-      header={<SideNavHeading icon={<AdminWordmarkIcon />} heading="Vitrine Admin" />}
+      header={<SideNavHeading icon={<AdminWordmarkIcon />} heading="Vitrines Admin" />}
       footerIcons={(
         <div style={{ display: 'grid', gap: 8, width: '100%' }}>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 12 }}>
@@ -57,7 +57,7 @@ export function AdminSidebar({
         isSelected={section === 'categories'}
         onClick={() => onSectionChange('categories')}
       />
-      <SideNavItem label="Back to Vitrine" isSelected={false} onClick={onBack} />
+      <SideNavItem label="Back to Vitrines" isSelected={false} onClick={onBack} />
     </SideNav>
   );
 }
