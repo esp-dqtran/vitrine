@@ -29,6 +29,12 @@ test("Cloudflare serves the SPA and runs the Worker first for API routes", async
   assert.doesNotMatch(source, /API_ORIGIN/);
 });
 
+test("Cloudflare deploys preserve dashboard-managed production bindings", async () => {
+  const source = await readDeploymentFile("package.json");
+  const scripts = (JSON.parse(source) as { scripts?: Record<string, string> }).scripts;
+  assert.match(scripts?.["deploy:cloudflare"] ?? "", /wrangler deploy --keep-vars/);
+});
+
 test("Cloudflare proxies API requests without changing the frontend API contract", async () => {
   const module = await import("./cloudflareFrontendWorker.ts").catch(() => null);
   assert.ok(module, "cloudflareFrontendWorker.ts must exist");
