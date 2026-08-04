@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+
 export interface SubscriptionView {
   plan: 'free' | 'pro';
   entitlementSource: 'paid' | 'promotion' | 'free';
@@ -21,11 +23,11 @@ async function jsonOrError<T>(response: Response): Promise<T> {
   return body as T;
 }
 
-export function loadSubscription(fetcher: Fetcher = fetch): Promise<SubscriptionView> {
+export function loadSubscription(fetcher: Fetcher = apiFetch): Promise<SubscriptionView> {
   return fetcher('/api/billing/subscription').then(jsonOrError<SubscriptionView>);
 }
 
-export function createCheckout(interval: 'month' | 'year', fetcher: Fetcher = fetch): Promise<{ url: string }> {
+export function createCheckout(interval: 'month' | 'year', fetcher: Fetcher = apiFetch): Promise<{ url: string }> {
   return fetcher('/api/billing/checkout', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -33,6 +35,6 @@ export function createCheckout(interval: 'month' | 'year', fetcher: Fetcher = fe
   }).then(jsonOrError<{ url: string }>);
 }
 
-export function createPortal(fetcher: Fetcher = fetch): Promise<{ url: string }> {
+export function createPortal(fetcher: Fetcher = apiFetch): Promise<{ url: string }> {
   return fetcher('/api/billing/portal', { method: 'POST' }).then(jsonOrError<{ url: string }>);
 }

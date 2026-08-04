@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+import { createApiEventSource } from './apiEventSource.ts';
 import type {
   AppKnowledgeCoverage,
   AppKnowledgeReviewStatus,
@@ -217,7 +219,7 @@ export function getAppKnowledge(
   version: number | undefined,
   role: AppKnowledgeRole,
   signal?: AbortSignal,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeView> {
   const params = new URLSearchParams({ platform });
   if (version !== undefined) params.set('version', pathId(version));
@@ -229,7 +231,7 @@ export function startAppKnowledge(
   app: string,
   platform: Platform,
   version: number,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeJobView> {
   return json('/api/app-knowledge/jobs', {
     method: 'POST',
@@ -240,7 +242,7 @@ export function startAppKnowledge(
 
 export function cancelAppKnowledgeJob(
   jobId: number,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeJobView> {
   return json(`/api/app-knowledge/jobs/${pathId(jobId)}/cancel`, {
     method: 'POST',
@@ -251,7 +253,7 @@ export function cancelAppKnowledgeJob(
 
 export function resumeAppKnowledgeJob(
   jobId: number,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeJobView> {
   return json(`/api/app-knowledge/jobs/${pathId(jobId)}/resume`, {
     method: 'POST',
@@ -262,7 +264,7 @@ export function resumeAppKnowledgeJob(
 
 export function retryAppKnowledgeJob(
   jobId: number,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeJobView> {
   return json(`/api/app-knowledge/jobs/${pathId(jobId)}/retry-failed-evidence`, {
     method: 'POST',
@@ -273,7 +275,7 @@ export function retryAppKnowledgeJob(
 
 export function regenerateAppKnowledge(
   snapshotId: number,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeJobView> {
   return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/regenerations`, {
     method: 'POST',
@@ -286,7 +288,7 @@ export function saveAppKnowledgeRevision(
   snapshotId: number,
   revisionId: number,
   content: AppKnowledgeSnapshot,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeRevisionView> {
   pathId(revisionId);
   return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/revisions`, {
@@ -300,7 +302,7 @@ export function setAppKnowledgeReviewStatus(
   snapshotId: number,
   revisionId: number,
   status: Exclude<AppKnowledgeReviewStatus, 'superseded'>,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<AppKnowledgeRevisionView> {
   pathId(revisionId);
   return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/review-status`, {
@@ -314,7 +316,7 @@ export function acknowledgeAppKnowledgeCoverage(
   snapshotId: number,
   revisionId: number,
   note = '',
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<unknown> {
   pathId(revisionId);
   return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/coverage-acknowledgements`, {
@@ -341,7 +343,7 @@ export function recordAppKnowledgeReviewAction(
     | 'snapshot_submitted'
     | 'snapshot_approved',
   entityId: string,
-  request: Fetch = fetch,
+  request: Fetch = apiFetch,
 ): Promise<unknown> {
   pathId(revisionId);
   return json(`/api/app-knowledge/snapshots/${pathId(snapshotId)}/review-actions`, {
@@ -355,7 +357,7 @@ export function subscribeAppKnowledgeJob(
   jobId: number,
   onUpdate: (job: AppKnowledgeJobView) => void,
   onError: (error: Error) => void,
-  eventSourceFactory: AppKnowledgeEventSourceFactory = (url) => new EventSource(url),
+  eventSourceFactory: AppKnowledgeEventSourceFactory = createApiEventSource,
 ): () => void {
   pathId(jobId);
   const source = eventSourceFactory(`/api/app-knowledge/jobs/${jobId}/events`);

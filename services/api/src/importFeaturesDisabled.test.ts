@@ -5,7 +5,7 @@ import { createApiApp } from './app.ts';
 
 const admin = { id: 1, email: 'admin@example.com', role: 'admin' as const };
 const adminHeaders = {
-  cookie: 'astryx_session=admin',
+  authorization: 'Bearer admin',
   'content-type': 'application/json',
 };
 

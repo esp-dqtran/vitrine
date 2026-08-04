@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type { Category } from './types.ts';
 
 export interface CategorySummary extends Category {
@@ -32,7 +33,7 @@ async function json<T>(
 
 export async function fetchCatalogCategories(
   signal?: AbortSignal,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<CategorySummary[]> {
   const body = await json<{ categories: CategorySummary[] }>(
     '/api/catalog/categories',
@@ -45,7 +46,7 @@ export async function fetchCatalogCategories(
 const jsonHeaders = { 'content-type': 'application/json' };
 
 export async function listCategories(
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<CategorySummary[]> {
   return (await json<{ categories: CategorySummary[] }>(
     '/api/admin/categories',
@@ -56,7 +57,7 @@ export async function listCategories(
 
 export function createCategory(
   input: { name: string; slug: string },
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<Category> {
   return json('/api/admin/categories', {
     method: 'POST',
@@ -68,7 +69,7 @@ export function createCategory(
 export function updateCategory(
   id: number,
   input: { name: string; slug: string },
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<Category> {
   return json(`/api/admin/categories/${encodeURIComponent(id)}`, {
     method: 'PATCH',
@@ -79,7 +80,7 @@ export function updateCategory(
 
 export function deleteCategory(
   id: number,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<{ category: Category; removedAppCount: number }> {
   return json(`/api/admin/categories/${encodeURIComponent(id)}`, {
     method: 'DELETE',
@@ -88,7 +89,7 @@ export function deleteCategory(
 
 export async function listCategoryApps(
   id: number,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<CategoryApp[]> {
   return (await json<{ apps: CategoryApp[] }>(
     `/api/admin/categories/${encodeURIComponent(id)}/apps`,
@@ -100,7 +101,7 @@ export async function listCategoryApps(
 export function attachCategoryApp(
   id: number,
   app: string,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<{ app: string; categoryId: number }> {
   return json(`/api/admin/categories/${encodeURIComponent(id)}/apps`, {
     method: 'POST',
@@ -112,7 +113,7 @@ export function attachCategoryApp(
 export function detachCategoryApp(
   id: number,
   app: string,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<void> {
   return json(
     `/api/admin/categories/${encodeURIComponent(id)}/apps/${encodeURIComponent(app)}`,

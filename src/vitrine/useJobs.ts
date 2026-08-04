@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { apiFetch } from './apiFetch.ts';
 import type { Job } from './types';
 
 export function useJobs() {
@@ -6,7 +7,7 @@ export function useJobs() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const response = await fetch('/api/jobs');
+    const response = await apiFetch('/api/jobs');
     if (!response.ok) throw new Error(`/api/jobs returned ${response.status}`);
     setJobs(await response.json());
     setError(null);
@@ -23,7 +24,7 @@ export function useJobs() {
   }, [jobs, refresh]);
 
   const cancelJob = async (id: number) => {
-    const response = await fetch(`/api/jobs/${id}/cancel`, { method: 'POST' });
+    const response = await apiFetch(`/api/jobs/${id}/cancel`, { method: 'POST' });
     if (!response.ok) throw new Error(`Cancel returned ${response.status}`);
     await refresh();
   };

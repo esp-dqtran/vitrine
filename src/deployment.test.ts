@@ -45,7 +45,10 @@ test("Cloudflare proxies API requests without changing the frontend API contract
   const response = await worker.fetch(
     new Request("https://app.example.com/api/catalog?limit=24", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        authorization: "Bearer signed.jwt.token",
+        "content-type": "application/json",
+      },
       body: JSON.stringify({ cursor: "next" }),
     }),
     { ASSETS: assets, API_ORIGIN: "https://api.example.com" },
@@ -54,6 +57,7 @@ test("Cloudflare proxies API requests without changing the frontend API contract
   assert.equal(response.status, 202);
   assert.equal(forwarded?.url, "https://api.example.com/catalog?limit=24");
   assert.equal(forwarded?.method, "POST");
+  assert.equal(forwarded?.headers.get("authorization"), "Bearer signed.jwt.token");
   assert.equal(await forwarded?.text(), JSON.stringify({ cursor: "next" }));
 });
 

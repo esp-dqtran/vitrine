@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type {
   AdminUser,
   AdminUsersPage,
@@ -16,7 +17,7 @@ export interface GrowthResponse {
 }
 
 async function apiJson<T>(input: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, init);
+  const response = await apiFetch(input, init);
   const body = await response.json().catch(() => ({})) as { error?: string };
   if (!response.ok) throw new Error(body.error ?? `${input} returned ${response.status}`);
   return body as T;
@@ -61,7 +62,7 @@ export function fetchReferralCampaignMetrics(): Promise<ReferralCampaignMetrics>
 }
 
 async function postEmpty(path: string): Promise<void> {
-  const response = await fetch(path, { method: 'POST' });
+  const response = await apiFetch(path, { method: 'POST' });
   if (response.ok) return;
   const body = await response.json().catch(() => ({})) as { error?: string };
   throw new Error(body.error ?? `${path} returned ${response.status}`);

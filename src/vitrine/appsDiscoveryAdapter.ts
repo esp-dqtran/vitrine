@@ -1,4 +1,5 @@
 import type { App } from './types.ts';
+import { apiFetch } from './apiFetch.ts';
 import type {
   DiscoveryAdapter,
   DiscoveryFilter,
@@ -152,7 +153,7 @@ export function createAppsDiscoveryAdapter(
     async request(state, cursor, signal) {
       if (initial.source === 'admin') {
         const endpoint = appsCatalogRequestPath(state, cursor, 'admin');
-        const response = await fetch(endpoint, { signal });
+        const response = await apiFetch(endpoint, { signal });
         if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
         const page = parseAdminAppsPage(await response.json());
         return {

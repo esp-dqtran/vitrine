@@ -1,4 +1,5 @@
 import { fetchAppMetadata } from './appsApi.ts';
+import { apiFetch } from './apiFetch.ts';
 import type { AppMetadata } from './types.ts';
 
 type Requester = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
@@ -7,7 +8,7 @@ const prefetchedDetails = new Map<string, Promise<AppMetadata>>();
 
 export function prefetchAppDetail(
   appId: string,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<AppMetadata> {
   const existing = prefetchedDetails.get(appId);
   if (existing) return existing;
@@ -22,7 +23,7 @@ export function prefetchAppDetail(
 export function loadAppDetail(
   appId: string,
   signal?: AbortSignal,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<AppMetadata> {
   return prefetchedDetails.get(appId) ?? fetchAppMetadata(appId, signal, request);
 }

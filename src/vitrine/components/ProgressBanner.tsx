@@ -1,4 +1,5 @@
 import { Button, ProgressBar } from '@astryxdesign/core';
+import { apiFetch } from '../apiFetch.ts';
 import { useProgress } from '../useProgress';
 import type { Progress, ProgressSnapshot } from '../types';
 
@@ -10,7 +11,7 @@ const STAGE_LABEL: Record<string, string> = {
 };
 
 function cancel() {
-  fetch('/api/progress/cancel', { method: 'POST' }).catch(() => {});
+  apiFetch('/api/progress/cancel', { method: 'POST' }).catch(() => {});
 }
 
 function compareProgress(left: Progress, right: Progress): number {

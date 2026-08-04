@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type {
   AddResearchItemInput,
   AttachResearchFlowInput,
@@ -27,7 +28,7 @@ export class ResearchProjectApiError extends Error {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await apiFetch(url, init);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as {
       error?: string;
@@ -198,7 +199,7 @@ export const synthesizeResearch = (projectId: string): Promise<ResearchSynthesis
   request(`${projectPath(projectId)}/synthesize`, { method: 'POST' });
 
 export async function downloadResearchMarkdown(projectId: string): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(`${projectPath(projectId)}/export.md`);
+  const response = await apiFetch(`${projectPath(projectId)}/export.md`);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string; code?: string };
     throw new ResearchProjectApiError(body.error ?? `Export returned ${response.status}`, response.status, body.code);

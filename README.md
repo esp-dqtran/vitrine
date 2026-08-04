@@ -134,7 +134,7 @@ upgrades enabled. See [Designer Canvas service](docs/designer-canvas-service.md)
 Each Research Project also has a BlockNote document at
 `/projects/:projectId/document`. Start its Hocuspocus gateway with
 `npm run service:project-document-collab`; it listens on `3013` by default,
-authenticates the existing Vitrines JWT cookie, and stores Yjs state in
+authenticates the current Vitrines JWT Bearer token, and stores Yjs state in
 PostgreSQL. In production, set `PROJECT_DOCUMENT_COLLAB_ALLOWED_ORIGINS` to the
 exact app origin and route `/api/project-document-collaboration` to that service
 with WebSocket upgrades enabled.

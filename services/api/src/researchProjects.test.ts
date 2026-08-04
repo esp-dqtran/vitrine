@@ -524,7 +524,7 @@ test("mounts research projects inside the authenticated API", async (t) => {
   const response = await fetch(
     `http://127.0.0.1:${address.port}/research-projects`,
     {
-      headers: { cookie: "astryx_session=user" },
+      headers: { authorization: "Bearer user" },
     },
   );
   assert.equal(response.status, 200);

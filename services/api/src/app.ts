@@ -1,6 +1,6 @@
 import express from "express";
 import compression from "compression";
-import { AUTH_COOKIE, cookieValue } from "./authCookie.ts";
+import { bearerToken } from "./bearerAuth.ts";
 import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -771,7 +771,8 @@ function boundedText(value: unknown, max: number, required = false): string | un
   return parsed;
 }
 
-const cookieOptions = {
+const LEGACY_AUTH_COOKIE = "astryx_session";
+const legacyCookieOptions = {
   httpOnly: true,
   sameSite: "strict" as const,
   secure: process.env.NODE_ENV === "production",
@@ -937,7 +938,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       return;
     }
     const auth = await deps.issueAuthToken(user);
-    res.cookie(AUTH_COOKIE, auth.token, cookieOptions).json(user);
+    res.clearCookie(LEGACY_AUTH_COOKIE, legacyCookieOptions).json({
+      user,
+      token: auth.token,
+      expiresAt: auth.expiresAt.toISOString(),
+    });
   });
 
   app.post("/auth/signup", async (req, res) => {
@@ -973,22 +978,27 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       }
     }
     const auth = await deps.issueAuthToken(user);
-    res.cookie(AUTH_COOKIE, auth.token, cookieOptions).json(user);
+    res.clearCookie(LEGACY_AUTH_COOKIE, legacyCookieOptions).json({
+      user,
+      token: auth.token,
+      expiresAt: auth.expiresAt.toISOString(),
+    });
   });
 
   app.post("/auth/logout", (_req, res) => {
-    res.clearCookie(AUTH_COOKIE, cookieOptions).status(204).end();
+    res.clearCookie(LEGACY_AUTH_COOKIE, legacyCookieOptions).status(204).end();
   });
 
   const resolveRequestUser = async (
     req: express.Request,
   ): Promise<AuthUser | undefined> => {
-    const token = cookieValue(req.headers.cookie, AUTH_COOKIE);
+    const token = bearerToken(req.headers.authorization);
     return token ? deps.verifyAuthToken(token) : undefined;
   };
 
   app.get("/auth/me", async (req, res) => {
-    res.json((await resolveRequestUser(req)) ?? null);
+    res.clearCookie(LEGACY_AUTH_COOKIE, legacyCookieOptions)
+      .json((await resolveRequestUser(req)) ?? null);
   });
 
   app.get("/catalog", async (req, res) => {

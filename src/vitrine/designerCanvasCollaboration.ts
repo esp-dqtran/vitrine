@@ -2,6 +2,7 @@ import {
   normalizeDesignerCanvasSnapshot,
   type DesignerCanvasSnapshot,
 } from "../designerCanvas.ts";
+import { getAuthToken } from './apiFetch.ts';
 
 export type DesignerCanvasCollaborationStatus = "connecting" | "live" | "offline";
 
@@ -131,7 +132,10 @@ export function openDesignerCanvasCollaboration(
   options: DesignerCanvasCollaborationOptions,
 ): DesignerCanvasCollaborationSession {
   const socketFactory = options.createSocket
-    ?? ((url: string) => new WebSocket(url) as unknown as CollaborationSocket);
+    ?? ((url: string) => {
+      const token = getAuthToken();
+      return new WebSocket(url, token ? ["vitrines-bearer", token] : undefined) as unknown as CollaborationSocket;
+    });
   const location = options.location
     ?? (typeof window === "undefined" ? undefined : window.location);
   let socket: CollaborationSocket | undefined;

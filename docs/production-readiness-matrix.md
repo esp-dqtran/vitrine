@@ -41,7 +41,7 @@ Status: **Complete**, **Partial**, **Missing**, or **External**.
 | Requirement | Status | Current evidence | Remaining gate |
 |---|---|---|---|
 | Normalized sign-in and generic failure | Complete | `normalizeEmail`, hash verification, `/auth/login`, API/frontend tests | Distributed abuse limit and browser acceptance |
-| Logout and secure production cookie | Partial | HttpOnly, SameSite=Strict, production Secure, stateless logout route/tests | Explicit max-age/domain policy, trusted proxy, origin protection; copied JWTs remain valid until expiry |
+| Logout and frontend Bearer-token lifecycle | Partial | Session-scoped token storage, guarded same-origin Authorization injection, stateless logout route/tests | Refresh-token rotation or server-side revocation; copied JWTs remain valid until expiry |
 | JWT trust boundary | Complete | HS256 algorithm pinning, issuer/audience/type/key-ID checks, 12-hour expiry, API and collaboration-gateway verification | Production secret distribution and rotation drill |
 | Self-service registration | Complete | `/auth/signup`, normalized unique email persistence, AuthProvider/SignIn UI, API tests, and isolated API smoke | Email verification and distributed public-route abuse limits are separate gates |
 | Email verification | Missing | No token/store/SMTP contract | Hashed single-use expiring token and browser flow |

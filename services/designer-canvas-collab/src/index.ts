@@ -2,7 +2,7 @@ import { pool } from "../../../src/db.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { createResearchProjectStore } from "../../../src/researchProjectStore.ts";
-import { AUTH_COOKIE, cookieValue } from "../../api/src/authCookie.ts";
+import { webSocketBearerToken } from "../../api/src/bearerAuth.ts";
 import { designerCanvasAllowedOrigins } from "./config.ts";
 import { createDesignerCanvasCollaborationService } from "./server.ts";
 import { startDesignerCanvasCollaboration } from "./start.ts";
@@ -14,7 +14,7 @@ const store = createResearchProjectStore();
 const collaboration = createDesignerCanvasCollaborationService({
   allowedOrigins,
   async authenticate(request) {
-    const token = cookieValue(request.headers.cookie, AUTH_COOKIE);
+    const token = webSocketBearerToken(request.headers["sec-websocket-protocol"]);
     if (!token) return undefined;
     const user = await auth.verifyAuthToken(token);
     return user ? { userId: user.id, name: user.email } : undefined;

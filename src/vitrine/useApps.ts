@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { apiFetch } from './apiFetch.ts';
 import type { DiscoveryFacet } from './discoveryTypes.ts';
 import {
   parseAdminAppsPage,
@@ -53,7 +54,7 @@ export async function fetchCatalogPage(
     const cached = cachedCatalogPage(endpoint);
     if (cached) return cached;
   }
-  const response = await fetch(endpoint, {
+  const response = await apiFetch(endpoint, {
     signal,
     ...(options.bypassCache ? { cache: 'no-store' as const } : {}),
   });
@@ -100,7 +101,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     setLoadMoreError(null);
     return (async () => {
       if (role === 'admin') {
-        const response = await fetch('/api/apps', { signal });
+        const response = await apiFetch('/api/apps', { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = parseAdminAppsPage(await response.json());
         if (generation !== requestGenerationRef.current) return;
@@ -156,7 +157,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     try {
       const endpoint = role === 'admin' ? `/api/apps?cursor=${encodeURIComponent(nextCursor)}`
         : `/api/catalog?cursor=${encodeURIComponent(nextCursor)}`;
-      const response = await fetch(endpoint, { signal: controller.signal });
+      const response = await apiFetch(endpoint, { signal: controller.signal });
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
       const page = role === 'admin'
         ? parseAdminAppsPage(await response.json())

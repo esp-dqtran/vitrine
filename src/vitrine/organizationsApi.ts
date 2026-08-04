@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+
 export type TeamRole = 'owner' | 'admin' | 'member';
 
 export interface TeamSummary {
@@ -16,7 +18,7 @@ export interface TeamMember {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await apiFetch(url, init);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
     throw new Error(body.error ?? `${url} returned ${response.status}`);

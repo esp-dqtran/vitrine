@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+
 export interface ProjectDocumentView {
   id: number;
   projectId: string;
@@ -50,7 +52,7 @@ export class ProjectDocumentApiError extends Error {
 export async function ensureProjectDocument(
   projectId: string,
 ): Promise<ProjectDocumentView> {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/research-projects/${encodeURIComponent(projectId)}/document`,
     { method: "POST" },
   );
@@ -135,7 +137,7 @@ export async function deleteProjectDocumentCommentById(
   documentId: number,
   commentId: number,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${documentPath(projectId, documentId)}/comments/${commentId}`,
     { method: "DELETE" },
   );
@@ -165,7 +167,7 @@ async function projectDocumentRequest<T>(
   url: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await apiFetch(url, init);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
     throw new ProjectDocumentApiError(

@@ -49,7 +49,7 @@ const referralCampaign = {
   rewardCap: 3 as const,
 };
 const publishedVersion = { id: 1, app: "linear", platform: "web", version_number: 1, label: "v1", source_url: null, provider: "m" as const, status: "published" as const, notes: "", captured_at: "2026-07-10T00:00:00.000Z", submitted_at: null, published_at: "2026-07-10T01:00:00.000Z", screen_count: 1, analyzed_count: 1, component_count: 1, token_count: 1, flow_count: 0 };
-const adminCookie = { cookie: "astryx_session=admin" };
+const adminAuth = { authorization: "Bearer admin" };
 const previewSha256 = createHash("sha256").update("image").digest("hex");
 const previewMetadata: ObjectMetadata = {
   key: `images/7/${previewSha256}.webp`, sha256: previewSha256, byteSize: 5,
@@ -269,11 +269,11 @@ test("mounts scoped App Knowledge generation after session and admin authorizati
     assert.equal((await fetch(`${base}/app-knowledge/jobs`, request)).status, 401);
     assert.equal((await fetch(`${base}/app-knowledge/jobs`, {
       ...request,
-      headers: { ...request.headers, cookie: "astryx_session=user" },
+      headers: { ...request.headers, authorization: "Bearer user" },
     })).status, 403);
     const response = await fetch(`${base}/app-knowledge/jobs`, {
       ...request,
-      headers: { ...request.headers, cookie: "astryx_session=admin" },
+      headers: { ...request.headers, authorization: "Bearer admin" },
     });
     assert.equal(response.status, 201);
     assert.equal((await response.json() as { id: number }).id, 44);
@@ -570,8 +570,8 @@ test("manages Categories and App assignments through admin-only endpoints", asyn
   } as never));
   t.after(() => close(server));
 
-  const jsonHeaders = { ...adminCookie, "content-type": "application/json" };
-  const listed = await fetch(`${base}/admin/categories`, { headers: adminCookie });
+  const jsonHeaders = { ...adminAuth, "content-type": "application/json" };
+  const listed = await fetch(`${base}/admin/categories`, { headers: adminAuth });
   assert.equal(listed.status, 200);
   assert.deepEqual(await listed.json(), {
     categories: [{ ...category, appCount: 1 }],
@@ -594,7 +594,7 @@ test("manages Categories and App assignments through admin-only endpoints", asyn
   assert.equal((await updated.json()).name, "Work");
 
   const assignedApps = await fetch(`${base}/admin/categories/7/apps`, {
-    headers: adminCookie,
+    headers: adminAuth,
   });
   assert.deepEqual(await assignedApps.json(), {
     apps: [{ id: 42, slug: "linear", name: "Linear" }],
@@ -610,18 +610,18 @@ test("manages Categories and App assignments through admin-only endpoints", asyn
 
   const detached = await fetch(`${base}/admin/categories/7/apps/linear`, {
     method: "DELETE",
-    headers: adminCookie,
+    headers: adminAuth,
   });
   assert.equal(detached.status, 204);
   const detachedAgain = await fetch(`${base}/admin/categories/7/apps/linear`, {
     method: "DELETE",
-    headers: adminCookie,
+    headers: adminAuth,
   });
   assert.equal(detachedAgain.status, 204);
 
   const removed = await fetch(`${base}/admin/categories/7`, {
     method: "DELETE",
-    headers: adminCookie,
+    headers: adminAuth,
   });
   assert.deepEqual(await removed.json(), { category, removedAppCount: 1 });
   assert.deepEqual(calls, [
@@ -649,13 +649,13 @@ test("guards and validates Category management endpoints", async (t) => {
 
   assert.equal(
     (await fetch(`${base}/admin/categories`, {
-      headers: { cookie: "astryx_session=user" },
+      headers: { authorization: "Bearer user" },
     })).status,
     403,
   );
   assert.equal(calls, 0);
 
-  const headers = { ...adminCookie, "content-type": "application/json" };
+  const headers = { ...adminAuth, "content-type": "application/json" };
   assert.equal((await fetch(`${base}/admin/categories/not-an-id`, {
     method: "PATCH",
     headers,
@@ -691,7 +691,7 @@ test("keeps the progress stream admin-only without opening a subscription", asyn
   } as never));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/progress/stream`, { headers: { cookie: "astryx_session=user" } });
+  const response = await fetch(`${base}/progress/stream`, { headers: { authorization: "Bearer user" } });
   assert.equal(response.status, 403);
   assert.equal(subscriptions, 0);
 });
@@ -714,7 +714,7 @@ test("progress stream sends complete snapshots and cleans up its subscription", 
   const controller = new AbortController();
 
   const response = await fetch(`${base}/progress/stream`, {
-    headers: adminCookie,
+    headers: adminAuth,
     signal: controller.signal,
   });
   assert.equal(response.status, 200);
@@ -761,7 +761,7 @@ test("keeps every crawl administration route admin-only before dependencies run"
     rejectCrawlRepair: touched,
   } as never));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
   const cases = [
     ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "https://www.atlassian.com" }],
     ["GET", "/crawl/apps/atlassian/plans"],
@@ -820,11 +820,11 @@ test("creates and inspects an admin-only autonomous crawl without exposing sessi
     agentConcurrency: 3,
   };
   const denied = await fetch(`${deniedServer.base}/crawl/apps/linear/autonomous-runs`, {
-    method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" }, body: JSON.stringify(body),
+    method: "POST", headers: { authorization: "Bearer user", "content-type": "application/json" }, body: JSON.stringify(body),
   });
   assert.equal(denied.status, 403);
   const created = await fetch(`${adminServer.base}/crawl/apps/linear/autonomous-runs`, {
-    method: "POST", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify(body),
+    method: "POST", headers: { ...adminAuth, "content-type": "application/json" }, body: JSON.stringify(body),
   });
   assert.equal(created.status, 202);
   const view = await created.json();
@@ -833,7 +833,7 @@ test("creates and inspects an admin-only autonomous crawl without exposing sessi
   assert.equal(createdInputs.length, 1);
   assert.deepEqual(published, [{ type: "autonomous-crawl-app", name: "linear", runId: "42" }]);
 
-  const inspected = await fetch(`${adminServer.base}/crawl/autonomous-runs/42`, { headers: adminCookie });
+  const inspected = await fetch(`${adminServer.base}/crawl/autonomous-runs/42`, { headers: adminAuth });
   assert.equal(inspected.status, 200);
   assert.equal(JSON.stringify(await inspected.json()).includes("encrypted_storage_state"), false);
 });
@@ -860,7 +860,7 @@ test("rejects unsafe autonomous inputs before creating a parent run", async (t) 
     { ...valid, requiredSecrets: ["secret-value@example.com"] },
   ]) {
     const response = await fetch(`${base}/crawl/apps/linear/autonomous-runs`, {
-      method: "POST", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify(body),
+      method: "POST", headers: { ...adminAuth, "content-type": "application/json" }, body: JSON.stringify(body),
     });
     assert.equal(response.status, 400);
   }
@@ -879,12 +879,12 @@ test("encrypts shared crawl sessions and returns metadata only", async (t) => {
   t.after(() => close(server));
   const storageState = { cookies: [{ name: "session", value: "secret", domain: "app.test", path: "/", expires: -1, httpOnly: true, secure: true, sameSite: "Lax" }], origins: [] };
   const saved = await fetch(`${base}/crawl/apps/linear/session`, {
-    method: "PUT", headers: { ...adminCookie, "content-type": "application/json" }, body: JSON.stringify({ storageState }),
+    method: "PUT", headers: { ...adminAuth, "content-type": "application/json" }, body: JSON.stringify({ storageState }),
   });
   assert.equal(saved.status, 200);
   assert.doesNotMatch(encrypted, /secret/);
   assert.equal(JSON.stringify(await saved.json()).includes("encrypted_storage_state"), false);
-  const viewed = await fetch(`${base}/crawl/apps/linear/session`, { headers: adminCookie });
+  const viewed = await fetch(`${base}/crawl/apps/linear/session`, { headers: adminAuth });
   assert.equal(viewed.status, 200);
   assert.equal(JSON.stringify(await viewed.json()).includes("encrypted_storage_state"), false);
 });
@@ -911,7 +911,7 @@ test("validates crawl slugs, public URLs, plans, modes, ids, and repair requests
     rejectCrawlRepair: touched,
   } as never));
   t.after(() => close(server));
-  const headers = { ...adminCookie, "content-type": "application/json" };
+  const headers = { ...adminAuth, "content-type": "application/json" };
   const cases = [
     ["POST", "/crawl/apps/not%20safe/research", { homepageUrl: "https://example.com" }],
     ["POST", "/crawl/apps/atlassian/research", { homepageUrl: "http://127.0.0.1/private" }],
@@ -968,7 +968,7 @@ test("enqueues research and supports immutable plan revision and approval", asyn
     },
   } as never));
   t.after(() => close(server));
-  const headers = { ...adminCookie, "content-type": "application/json" };
+  const headers = { ...adminAuth, "content-type": "application/json" };
 
   const research = await fetch(`${base}/crawl/apps/atlassian/research`, {
     method: "POST", headers, body: JSON.stringify({ homepageUrl: "https://www.atlassian.com", provider: "claude" }),
@@ -1001,7 +1001,7 @@ test("reports required secret configuration without returning secret values", as
     getCrawlPlan: async () => plan as never,
   } as never));
   t.after(() => close(server));
-  const response = await fetch(`${base}/crawl/plans/11`, { headers: adminCookie });
+  const response = await fetch(`${base}/crawl/plans/11`, { headers: adminAuth });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.deepEqual(body.requiredSecrets, [{ name: "ATLASSIAN_TEST_EMAIL", configured: true }]);
@@ -1064,7 +1064,7 @@ test("persists crawl runs before transport, returns durable details, and control
     },
   } as never));
   t.after(() => close(server));
-  const headers = { ...adminCookie, "content-type": "application/json" };
+  const headers = { ...adminAuth, "content-type": "application/json" };
 
   const started = await fetch(`${base}/crawl/apps/atlassian/runs`, {
     method: "POST",
@@ -1124,7 +1124,7 @@ test("marks a persisted run interrupted and returns only safe IDs when publishin
   t.after(() => close(server));
   const response = await fetch(`${base}/crawl/apps/atlassian/runs`, {
     method: "POST",
-    headers: { ...adminCookie, "content-type": "application/json" },
+    headers: { ...adminAuth, "content-type": "application/json" },
     body: JSON.stringify({ planId: "11", mode: "full" }),
   });
   assert.equal(response.status, 503, await response.clone().text());
@@ -1163,7 +1163,7 @@ test("serves only the database-bound internal failure object for its exact flow 
   } as never));
   t.after(() => close(server));
   const response = await fetch(`${base}/crawl/runs/21/failures/browse-products/open-software/screenshot`, {
-    headers: adminCookie,
+    headers: adminAuth,
     redirect: "manual",
   });
   assert.equal(response.status, 200);
@@ -1196,7 +1196,7 @@ test("keeps repair suggestion, apply, and reject as separate admin actions", asy
     },
   } as never));
   t.after(() => close(server));
-  const headers = { ...adminCookie, "content-type": "application/json" };
+  const headers = { ...adminAuth, "content-type": "application/json" };
   const requested = await fetch(`${base}/crawl/runs/21/repairs`, {
     method: "POST",
     headers,
@@ -1284,9 +1284,9 @@ test("repair suggestions attach only the verified internal failure object", asyn
   }));
   t.after(() => close(server));
 
-  assert.equal((await fetch(`${base}/jobs/1/cancel`, { method: "POST", headers: adminCookie })).status, 200);
+  assert.equal((await fetch(`${base}/jobs/1/cancel`, { method: "POST", headers: adminAuth })).status, 200);
   assert.equal(appCancellationSignals, 0);
-  assert.equal((await fetch(`${base}/jobs/2/cancel`, { method: "POST", headers: adminCookie })).status, 200);
+  assert.equal((await fetch(`${base}/jobs/2/cancel`, { method: "POST", headers: adminAuth })).status, 200);
   assert.equal(appCancellationSignals, 1);
 });
 
@@ -1330,7 +1330,7 @@ test("serves a hydrated structured design system", async (t) => {
   );
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminCookie });
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminAuth });
   assert.equal(response.status, 200);
   const snapshot = await response.json();
   assert.equal(snapshot.tokens[0].evidence[0].imageUrl, "/api/media/linear/0123456789abcdef");
@@ -1389,7 +1389,7 @@ test("downloads a complete editable Figma library and secondary exports", async 
     versionImages: async () => catalogImages,
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
   const figma = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST", headers, body: JSON.stringify({ format: "figma", platform: "web", selection: { kind: "design-system" } }),
   });
@@ -1430,7 +1430,7 @@ test("rejects the retired flow-md export format", async (t) => {
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
-    method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    method: "POST", headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ format: "flow-md", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 400);
@@ -1442,7 +1442,7 @@ test("does not mount the retired flow-doc endpoints", async (t) => {
     verifyAuthToken: async () => user,
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
 
   const get = await fetch(`${base}/design-systems/linear/flow-doc?platform=web`, { headers });
   const put = await fetch(`${base}/design-systems/linear/flow-doc`, {
@@ -1480,7 +1480,7 @@ test("does not fall back to legacy media when an associated object fails verific
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
-    method: "POST", headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    method: "POST", headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ format: "figma", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 503);
@@ -1510,22 +1510,22 @@ test("downloads an authorized completed export locally or by short signed redire
     },
   }));
   t.after(() => close(server));
-  const local = await fetch(`${base}/exports/91`, { headers: { cookie: "astryx_session=user" } });
+  const local = await fetch(`${base}/exports/91`, { headers: { authorization: "Bearer user" } });
   assert.equal(local.status, 200);
   assert.deepEqual(Buffer.from(await local.arrayBuffer()), body);
   assert.equal(local.headers.get("content-type"), "application/json");
   assert.equal(local.headers.get("content-disposition"), 'attachment; filename="linear_tokens__unsafe.json"');
 
   signed = true;
-  const redirect = await fetch(`${base}/exports/91`, { headers: { cookie: "astryx_session=user" }, redirect: "manual" });
+  const redirect = await fetch(`${base}/exports/91`, { headers: { authorization: "Bearer user" }, redirect: "manual" });
   assert.equal(redirect.status, 302);
   assert.equal(redirect.headers.get("location"), "https://objects.example/signed");
   assert.equal(redirect.headers.get("content-type"), "application/json");
   assert.equal(redirect.headers.get("content-disposition"), 'attachment; filename="linear_tokens__unsafe.json"');
-  const missing = await fetch(`${base}/exports/92`, { headers: { cookie: "astryx_session=user" } });
+  const missing = await fetch(`${base}/exports/92`, { headers: { authorization: "Bearer user" } });
   assert.equal(missing.status, 404);
   assert.doesNotMatch(await missing.text(), /exports\/91|object_key|signed/i);
-  const failed = await fetch(`${base}/exports/93`, { headers: { cookie: "astryx_session=user" } });
+  const failed = await fetch(`${base}/exports/93`, { headers: { authorization: "Bearer user" } });
   assert.equal(failed.status, 503);
   assert.deepEqual(await failed.json(), { error: "Export storage unavailable" });
 });
@@ -1549,7 +1549,7 @@ test("does not complete an export when object upload fails", async (t) => {
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ format: "json", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 503);
@@ -1597,7 +1597,7 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   }));
   t.after(() => close(server));
 
-  const search = await fetch(`${base}/search?q=primary&kind=component`, { headers: { cookie: "astryx_session=user" } });
+  const search = await fetch(`${base}/search?q=primary&kind=component`, { headers: { authorization: "Bearer user" } });
   assert.equal(search.status, 200);
   const searchBody = await search.json() as CatalogSearchResult;
   assert.equal(searchBody.items[0].id, "component:linear:button");
@@ -1605,10 +1605,10 @@ test("serves evidence-backed search and 2-app comparison", async (t) => {
   assert.equal(searchBody.items[0].thumbnailUrl, "/api/media/linear/0123456789abcdef?variant=thumb");
   assert.deepEqual(events[0], { userId: user.id, featureKey: "search", action: "catalog-search", outcome: "success" });
 
-  const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { cookie: "astryx_session=user" } });
+  const compare = await fetch(`${base}/compare?apps=linear,airbnb`, { headers: { authorization: "Bearer user" } });
   assert.equal(compare.status, 200);
   assert.deepEqual((await compare.json()).foundations[0].values, ["#5E6AD2", "#FF385C"]);
-  assert.equal((await fetch(`${base}/compare?apps=linear`, { headers: { cookie: "astryx_session=user" } })).status, 400);
+  assert.equal((await fetch(`${base}/compare?apps=linear`, { headers: { authorization: "Bearer user" } })).status, 400);
 });
 
 test("feature-flagged search bypasses legacy catalog assembly and protects media", async (t) => {
@@ -1666,7 +1666,7 @@ test("feature-flagged search bypasses legacy catalog assembly and protects media
   t.after(() => close(server));
 
   const response = await fetch(`${base}/search?q=checkout&type=screen`, {
-    headers: { cookie: "astryx_session=user" },
+    headers: { authorization: "Bearer user" },
   });
   assert.equal(response.status, 200, await response.clone().text());
   const body = await response.json();
@@ -1676,7 +1676,7 @@ test("feature-flagged search bypasses legacy catalog assembly and protects media
   assert.equal(JSON.stringify(body).includes("prod/private"), false);
 
   const suggestions = await fetch(`${base}/search/suggestions?prefix=Lin`, {
-    headers: { cookie: "astryx_session=user" },
+    headers: { authorization: "Bearer user" },
   });
   assert.deepEqual((await suggestions.json()).items, [{
     kind: "app",
@@ -1685,7 +1685,7 @@ test("feature-flagged search bypasses legacy catalog assembly and protects media
   }]);
   assert.equal(
     (await fetch(`${base}/search?type=token`, {
-      headers: { cookie: "astryx_session=user" },
+      headers: { authorization: "Bearer user" },
     })).status,
     400,
   );
@@ -1722,7 +1722,7 @@ test("creates user-owned collections and edits item notes", async (t) => {
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
 
   const created = await fetch(`${base}/collections`, { method: "POST", headers, body: JSON.stringify({ name: "Onboarding" }) });
   assert.equal(created.status, 201);
@@ -1772,7 +1772,7 @@ test("enforces Free search, collection, note, and unlock policy", async (t) => {
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
 
   const search = await fetch(`${base}/search?q=checkout`, { headers });
   assert.equal(search.status, 403);
@@ -1801,7 +1801,7 @@ test("prevents active Pro from banking permanent Free unlocks", async (t) => {
     unlockFreeApp: async () => { unlockCalled = true; return { status: "unlocked", remaining: 2 }; },
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/apps/linear/unlock`, { method: "POST", headers: { cookie: "astryx_session=user" } });
+  const response = await fetch(`${base}/apps/linear/unlock`, { method: "POST", headers: { authorization: "Bearer user" } });
   assert.equal(response.status, 409);
   assert.equal((await response.json()).code, "already_pro");
   assert.equal(unlockCalled, false);
@@ -1818,11 +1818,11 @@ test("reviews and publishes an existing admin draft while hiding drafts from des
     publishAppVersion: async () => ({ ...version, status: "published" as const, published_at: "2026-07-11T01:00:00.000Z" }),
   }));
   t.after(() => close(server));
-  assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminCookie })).status, 200);
-  assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminCookie })).status, 200);
-  assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminCookie })).json()).status, "published");
+  assert.equal((await fetch(`${base}/versions/12/blockers`, { headers: adminAuth })).status, 200);
+  assert.equal((await fetch(`${base}/versions/12/submit`, { method: "POST", headers: adminAuth })).status, 200);
+  assert.equal((await (await fetch(`${base}/versions/12/publish`, { method: "POST", headers: adminAuth })).json()).status, "published");
 
-  const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { cookie: "astryx_session=user" } });
+  const designerVersions = await fetch(`${base}/apps/linear/versions?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(designerVersions.status, 200);
   assert.equal(publishedOnly, true);
 });
@@ -1838,7 +1838,7 @@ test("returns 404 when an app has no structured design system", async (t) => {
   );
   t.after(() => close(server));
   assert.equal(
-    (await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminCookie })).status,
+    (await fetch(`${base}/design-systems/linear?platform=web`, { headers: adminAuth })).status,
     404
   );
 });
@@ -1857,7 +1857,7 @@ test("serves imported current design when an entitled user has no published vers
     getAppFlows: async () => [], appImages: async () => [],
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { cookie: "astryx_session=user" } });
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(response.status, 200);
   assert.equal((await response.json()).summary, "Dark product UI");
 });
@@ -1880,7 +1880,7 @@ test("serves imported current design when the published version has only an empt
     getAppFlows: async () => [], appImages: async () => [], versionImages: async () => [],
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { cookie: "astryx_session=user" } });
+  const response = await fetch(`${base}/design-systems/linear?platform=web`, { headers: { authorization: "Bearer user" } });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.summary, "Dark product UI");
@@ -1898,7 +1898,7 @@ test("never uses imported-current fallback for an explicit version", async (t) =
     getAppFlows: async () => [], appImages: async () => [],
   }));
   t.after(() => close(server));
-  const response = await fetch(`${base}/design-systems/linear?platform=web&version=2`, { headers: adminCookie });
+  const response = await fetch(`${base}/design-systems/linear?platform=web&version=2`, { headers: adminAuth });
   assert.equal(response.status, 404);
   assert.equal(fallbackReads, 0);
 });
@@ -1928,7 +1928,7 @@ test("exports imported current design when an entitled user has no published ver
   t.after(() => close(server));
   const response = await fetch(`${base}/design-systems/linear/exports`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ format: "json", platform: "web", selection: { kind: "design-system" } }),
   });
   assert.equal(response.status, 200);
@@ -1954,7 +1954,7 @@ test("serves crawled flows even when an app has not been through AI synthesis", 
   );
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/design-systems/lang-chain?platform=web`, { headers: adminCookie });
+  const response = await fetch(`${base}/design-systems/lang-chain?platform=web`, { headers: adminAuth });
   assert.equal(response.status, 200);
   const snapshot = await response.json();
   assert.deepEqual(snapshot.components, []);
@@ -1976,11 +1976,11 @@ test("serves local bulk media", async (t) => {
   });
 
   assert.equal(
-    (await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminCookie })).status,
+    (await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminAuth })).status,
     200
   );
   assert.equal(
-    (await fetch(`${base}/media/linear/not-a-hash`, { headers: adminCookie })).status,
+    (await fetch(`${base}/media/linear/not-a-hash`, { headers: adminAuth })).status,
     400
   );
 });
@@ -2019,20 +2019,20 @@ test("binds signed design-system media to the entitled user and expiry", async (
   });
 
   const snapshot = await (await fetch(`${base}/design-systems/linear?platform=web`, {
-    headers: { cookie: "astryx_session=owner" },
+    headers: { authorization: "Bearer owner" },
   })).json();
   const mediaUrl = snapshot.tokens[0].evidence[0].imageUrl as string;
   assert.equal(snapshot.tokens[1].evidence[0].imageUrl, "");
   assert.match(mediaUrl, /\?expires=1300&token=/);
   assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { cookie: "astryx_session=owner" },
+    headers: { authorization: "Bearer owner" },
   })).status, 200);
   assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { cookie: "astryx_session=other" },
+    headers: { authorization: "Bearer other" },
   })).status, 403);
   nowSeconds = 1_301;
   assert.equal((await fetch(`${base}${mediaUrl.replace("/api", "")}`, {
-    headers: { cookie: "astryx_session=owner" },
+    headers: { authorization: "Bearer owner" },
   })).status, 410);
 });
 
@@ -2600,7 +2600,7 @@ test("redirects authorized object-backed media to a short-lived signed URL", asy
   }));
   t.after(() => close(server));
   const response = await fetch(`${base}/media/linear/0123456789abcdef`, {
-    headers: adminCookie,
+    headers: adminAuth,
     redirect: "manual",
   });
   assert.equal(response.status, 302);
@@ -2619,8 +2619,8 @@ test("passes the thumb variant through to the object lookup, defaulting to full 
     },
   }));
   t.after(() => close(server));
-  await fetch(`${base}/media/linear/0123456789abcdef?variant=thumb`, { headers: adminCookie, redirect: "manual" });
-  await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminCookie, redirect: "manual" });
+  await fetch(`${base}/media/linear/0123456789abcdef?variant=thumb`, { headers: adminAuth, redirect: "manual" });
+  await fetch(`${base}/media/linear/0123456789abcdef`, { headers: adminAuth, redirect: "manual" });
   assert.deepEqual(seenVariants, ["thumb", "full"]);
 });
 
@@ -2644,7 +2644,7 @@ test("streams protected media through the API when inline delivery is requested"
 
   const response = await fetch(
     `${base}/media/linear/0123456789abcdef?delivery=inline`,
-    { headers: adminCookie, redirect: "manual" },
+    { headers: adminAuth, redirect: "manual" },
   );
 
   assert.equal(response.status, 200);
@@ -2672,15 +2672,15 @@ test("gates customer app detail and unlocks a Free app", async (t) => {
     recordAccessEvent: async () => {},
   }));
   t.after(() => close(server));
-  const locked = await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } });
+  const locked = await fetch(`${base}/apps/linear`, { headers: { authorization: "Bearer user" } });
   assert.equal(locked.status, 403);
   assert.deepEqual(await locked.json(), { error: "Upgrade required", code: "upgrade_required" });
   const unlock = await fetch(`${base}/apps/linear/unlock`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user" },
+    headers: { authorization: "Bearer user" },
   });
   assert.equal(unlock.status, 201);
-  const detail = await fetch(`${base}/apps/linear`, { headers: { cookie: "astryx_session=user" } });
+  const detail = await fetch(`${base}/apps/linear`, { headers: { authorization: "Bearer user" } });
   assert.equal(detail.status, 200);
   assert.deepEqual((await detail.json()).app.platforms, ["web", "ios", "android"]);
 });
@@ -2708,7 +2708,7 @@ test("returns app metadata without invoking section dependencies", async (t) => 
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps/linear`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps/linear`, { headers: adminAuth });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.app.totalScreens, 236);
@@ -2718,7 +2718,7 @@ test("returns app metadata without invoking section dependencies", async (t) => 
   assert.equal("screens" in body.app, false);
   assert.equal("version" in body, false);
   assert.equal("nextCursor" in body, false);
-  assert.equal((await fetch(`${base}/apps/linear?limit=48`, { headers: adminCookie })).status, 400);
+  assert.equal((await fetch(`${base}/apps/linear?limit=48`, { headers: adminAuth })).status, 400);
 });
 
 test("returns captured website metadata and serves its app-scoped scrolling preview", async (t) => {
@@ -2767,7 +2767,7 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
   } as never));
   t.after(() => close(server));
 
-  const detail = await fetch(`${base}/apps/example-com`, { headers: adminCookie });
+  const detail = await fetch(`${base}/apps/example-com`, { headers: adminAuth });
   assert.equal(detail.status, 200);
   assert.deepEqual((await detail.json()).app, {
     id: "example-com",
@@ -2789,13 +2789,13 @@ test("returns captured website metadata and serves its app-scoped scrolling prev
     previewVideoUrl: "/api/apps/example-com/page-preview/71",
   });
 
-  const media = await fetch(`${base}/apps/example-com/page-preview/71`, { headers: adminCookie });
+  const media = await fetch(`${base}/apps/example-com/page-preview/71`, { headers: adminAuth });
   assert.equal(media.status, 200);
   assert.equal(media.headers.get("content-type"), "video/webm");
   assert.deepEqual(Buffer.from(await media.arrayBuffer()), previewBody);
   assert.deepEqual(seen, [["example-com", 71, false]]);
   assert.equal(
-    (await fetch(`${base}/apps/another-app/page-preview/71`, { headers: adminCookie })).status,
+    (await fetch(`${base}/apps/another-app/page-preview/71`, { headers: adminAuth })).status,
     404,
   );
 });
@@ -2822,8 +2822,8 @@ test("loads screens and UI elements from dedicated paged endpoints", async (t) =
   }));
   t.after(() => close(server));
 
-  const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&limit=48`, { headers: adminCookie });
-  const elements = await fetch(`${base}/apps/linear/ui-elements?platform=ios&version=1&limit=24`, { headers: adminCookie });
+  const screens = await fetch(`${base}/apps/linear/screens?platform=ios&version=1&limit=48`, { headers: adminAuth });
+  const elements = await fetch(`${base}/apps/linear/ui-elements?platform=ios&version=1&limit=24`, { headers: adminAuth });
   assert.equal(screens.status, 200);
   assert.equal(elements.status, 200);
   assert.deepEqual(calls, [{ kind: "screen", limit: 48 }, { kind: "ui_element", limit: 24 }]);
@@ -2868,7 +2868,7 @@ test("signs customer Screen and UI Element media URLs", async (t) => {
     rmSync(dataDir, { recursive: true, force: true });
   });
 
-  const headers = { cookie: "astryx_session=user" };
+  const headers = { authorization: "Bearer user" };
   const screens = await (await fetch(`${base}/apps/linear/screens?platform=web&version=1`, { headers })).json();
   const elements = await (await fetch(`${base}/apps/linear/ui-elements?platform=web&version=1`, { headers })).json();
   const screenUrl = new URL(screens.screens[0].url, base);
@@ -2922,7 +2922,7 @@ test("summarizes analyzed UI element crops for the Design System", async (t) => 
 
   const response = await fetch(
     `${base}/apps/shopee/ui-element-summary?platform=ios&version=1&limit=12`,
-    { headers: adminCookie },
+    { headers: adminAuth },
   );
   assert.equal(response.status, 200);
   assert.deepEqual(requested, {
@@ -2960,7 +2960,7 @@ test("loads flows without loading a design-system snapshot", async (t) => {
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps/linear/flows?platform=ios&version=1`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps/linear/flows?platform=ios&version=1`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.deepEqual(evidenceIds, [7]);
   assert.equal((await response.json()).flows[0].id, "login");
@@ -2983,7 +2983,7 @@ test("uses app-scoped evidence for an admin app without a published version", as
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps/linear/screens?platform=web&limit=1`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps/linear/screens?platform=web&limit=1`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.deepEqual(requested, { app: "linear", kind: "screen", platform: "web" });
   assert.equal((await response.json()).screens.length, 1);
@@ -3002,7 +3002,7 @@ test("keeps the old gallery and pipeline state admin-only", async (t) => {
   }));
   t.after(() => close(server));
   for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress", "/users", "/users/growth", "/users/usage", "/users/2/usage"]) {
-    assert.equal((await fetch(`${base}${path}`, { headers: { cookie: "astryx_session=user" } })).status, 403);
+    assert.equal((await fetch(`${base}${path}`, { headers: { authorization: "Bearer user" } })).status, 403);
   }
 });
 
@@ -3035,7 +3035,7 @@ test("paginates the admin app gallery without loading every image", async (t) =>
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=1`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=1`, { headers: adminAuth });
   assert.equal(response.status, 200);
   assert.deepEqual(requested, { cursor: validCursor, limit: 1 });
   const body = await response.json();
@@ -3070,7 +3070,7 @@ test("serves canonical filtered admin Apps discovery with progress and facets", 
   const response = await fetch(
     `${base}/apps?platform=web&query=linear&sort=trending`
       + `&filter=categories.Business&filter=screens.Dashboard&limit=3`,
-    { headers: adminCookie },
+    { headers: adminAuth },
   );
 
   assert.equal(response.status, 200);
@@ -3106,7 +3106,7 @@ test("rejects invalid canonical admin Apps discovery before reading stores", asy
 
   const response = await fetch(
     `${base}/apps?platform=desktop&sort=trending&filter=screens.Dashboard`,
-    { headers: adminCookie },
+    { headers: adminAuth },
   );
   assert.equal(response.status, 400);
   assert.equal(calls, 0);
@@ -3119,7 +3119,7 @@ test("returns 400 for an invalid admin Apps cursor", async (t) => {
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps?cursor=***`, { headers: adminCookie });
+  const response = await fetch(`${base}/apps?cursor=***`, { headers: adminAuth });
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
 });
@@ -3147,12 +3147,12 @@ test("returns a paginated user directory and growth stats for an admin", async (
   }));
   t.after(() => close(server));
 
-  const users = await fetch(`${base}/users?limit=30&q=pro&filter=pro`, { headers: adminCookie });
+  const users = await fetch(`${base}/users?limit=30&q=pro&filter=pro`, { headers: adminAuth });
   assert.equal(users.status, 200);
   assert.deepEqual(requested, { limit: 30, cursor: undefined, query: "pro", filter: "pro" });
   assert.deepEqual(await users.json(), { users: [userRow], nextCursor: "next", total: 42 });
 
-  const growth = await fetch(`${base}/users/growth`, { headers: adminCookie });
+  const growth = await fetch(`${base}/users/growth`, { headers: adminAuth });
   assert.equal(growth.status, 200);
   assert.deepEqual(await growth.json(), { stats: growthStats, dailySignups });
 });
@@ -3170,7 +3170,7 @@ test("updates account state and maps safety errors", async (t) => {
 
   const response = await fetch(`${base}/users/${admin.id}/active`, {
     method: "PATCH",
-    headers: { ...adminCookie, "content-type": "application/json" },
+    headers: { ...adminAuth, "content-type": "application/json" },
     body: JSON.stringify({ active: false }),
   });
   assert.equal(response.status, 403);
@@ -3197,10 +3197,10 @@ test("returns global and per-user usage for supported ranges", async (t) => {
   }));
   t.after(() => close(server));
 
-  const global = await fetch(`${base}/users/usage?range=30d`, { headers: adminCookie });
+  const global = await fetch(`${base}/users/usage?range=30d`, { headers: adminAuth });
   assert.equal(global.status, 200);
   assert.deepEqual(await global.json(), overview);
-  const perUser = await fetch(`${base}/users/2/usage?range=7d`, { headers: adminCookie });
+  const perUser = await fetch(`${base}/users/2/usage?range=7d`, { headers: adminAuth });
   assert.equal(perUser.status, 200);
   assert.deepEqual(await perUser.json(), detail);
   assert.deepEqual(requested, [
@@ -3215,11 +3215,11 @@ test("validates user analytics ranges and missing users", async (t) => {
     getUserFeatureUsage: async () => undefined,
   }));
   t.after(() => close(server));
-  assert.equal((await fetch(`${base}/users/usage?range=365d`, { headers: adminCookie })).status, 400);
-  assert.equal((await fetch(`${base}/users/999/usage?range=30d`, { headers: adminCookie })).status, 404);
+  assert.equal((await fetch(`${base}/users/usage?range=365d`, { headers: adminAuth })).status, 400);
+  assert.equal((await fetch(`${base}/users/999/usage?range=30d`, { headers: adminAuth })).status, 404);
 });
 
-test("logs in with a JWT cookie, resolves me, and clears the cookie on logout", async (t) => {
+test("logs in with a JWT Bearer token and resolves me", async (t) => {
   const { base, server } = await serve(
     createApiApp({
       authenticateUser: async (email, password) =>
@@ -3234,28 +3234,32 @@ test("logs in with a JWT cookie, resolves me, and clears the cookie on logout", 
     body: JSON.stringify({ email: admin.email, password: "admin password" }),
   });
   assert.equal(login.status, 200);
-  const cookie = login.headers.get("set-cookie") ?? "";
-  const token = cookie.match(/astryx_session=([^;]+)/)?.[1];
-  assert.ok(token);
+  const loginBody = await login.json() as {
+    user: typeof admin;
+    token: string;
+    expiresAt: string;
+  };
+  const { token } = loginBody;
+  assert.deepEqual(loginBody.user, admin);
   assert.equal(token.split(".").length, 3);
-  assert.match(cookie, /HttpOnly/i);
-  assert.match(cookie, /SameSite=Strict/i);
+  assert.ok(Date.parse(loginBody.expiresAt) > Date.now());
+  assert.match(login.headers.get("set-cookie") ?? "", /astryx_session=;/);
+  assert.doesNotMatch(login.headers.get("set-cookie") ?? "", /eyJ/);
 
   const me = await fetch(`${base}/auth/me`, {
-    headers: { cookie: `astryx_session=${token}` },
+    headers: { authorization: `Bearer ${token}` },
   });
   assert.deepEqual(await me.json(), admin);
 
   const logout = await fetch(`${base}/auth/logout`, {
     method: "POST",
-    headers: { cookie: `astryx_session=${token}` },
+    headers: { authorization: `Bearer ${token}` },
   });
   assert.equal(logout.status, 204);
-  assert.match(logout.headers.get("set-cookie") ?? "", /astryx_session=;/);
 
   // Stateless logout cannot revoke a copied token before its expiry.
   const copiedToken = await fetch(`${base}/auth/me`, {
-    headers: { cookie: `astryx_session=${token}` },
+    headers: { authorization: `Bearer ${token}` },
   });
   assert.deepEqual(await copiedToken.json(), admin);
 });
@@ -3267,6 +3271,7 @@ test("resolves an anonymous me request as no user", async (t) => {
   const response = await fetch(`${base}/auth/me`);
   assert.equal(response.status, 200);
   assert.equal(await response.json(), null);
+  assert.match(response.headers.get("set-cookie") ?? "", /astryx_session=;/);
 });
 
 test("returns one generic login failure", async (t) => {
@@ -3284,7 +3289,7 @@ test("returns one generic login failure", async (t) => {
   assert.deepEqual(await response.json(), { error: "Invalid email or password" });
 });
 
-test("signs up a new user with a secure cookie", async (t) => {
+test("signs up a new user with a JWT Bearer token", async (t) => {
   const newUser = { id: 3, email: "new@example.com", role: "user" as const };
   const { base, server } = await serve(
     createApiApp({
@@ -3300,12 +3305,12 @@ test("signs up a new user with a secure cookie", async (t) => {
     body: JSON.stringify({ email: newUser.email, password: "a long enough password" }),
   });
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), newUser);
-  const cookie = response.headers.get("set-cookie") ?? "";
-  const token = cookie.match(/astryx_session=([^;]+)/)?.[1];
-  assert.ok(token);
-  assert.equal(token.split(".").length, 3);
-  assert.match(cookie, /HttpOnly/i);
+  const body = await response.json() as { user: typeof newUser; token: string; expiresAt: string };
+  assert.deepEqual(body.user, newUser);
+  assert.equal(body.token.split(".").length, 3);
+  assert.ok(Date.parse(body.expiresAt) > Date.now());
+  assert.match(response.headers.get("set-cookie") ?? "", /astryx_session=;/);
+  assert.doesNotMatch(response.headers.get("set-cookie") ?? "", /eyJ/);
 });
 
 test("rejects a duplicate email and invalid signup input", async (t) => {
@@ -3371,7 +3376,7 @@ test("validates referral links publicly and keeps signup available when attribut
     }),
   });
   assert.equal(signup.status, 200);
-  assert.deepEqual(await signup.json(), newUser);
+  assert.deepEqual((await signup.json() as { user: typeof newUser }).user, newUser);
   assert.equal(attributedUserId, newUser.id);
 });
 
@@ -3397,7 +3402,7 @@ test("returns safe referral state, creates a share link, and activates a banked 
     }),
   } as never));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user" };
+  const headers = { authorization: "Bearer user" };
 
   const link = await fetch(`${base}/referrals/link`, { method: "POST", headers });
   assert.equal(link.status, 201);
@@ -3429,7 +3434,7 @@ test("records only authorized app-detail opens for referral activation", async (
     recordAccessEvent: async () => undefined,
   } as never));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user" };
+  const headers = { authorization: "Bearer user" };
 
   assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
   allowed = false;
@@ -3458,7 +3463,7 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
   } as never));
   t.after(() => close(userApp.server));
   assert.equal((await fetch(`${userApp.base}/admin/referrals/metrics`, {
-    headers: { cookie: "astryx_session=user" },
+    headers: { authorization: "Bearer user" },
   })).status, 403);
   assert.equal(metricCalls, 0);
 
@@ -3472,7 +3477,7 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
     revokePromotionalEntitlement: async (id: number) => { revoked.push(`entitlement:${id}`); return true; },
   } as never));
   t.after(() => close(adminApp.server));
-  const headers = { cookie: "astryx_session=admin" };
+  const headers = { authorization: "Bearer admin" };
   assert.deepEqual(await (await fetch(`${adminApp.base}/admin/referrals/metrics`, { headers })).json(), metrics);
   assert.equal((await fetch(`${adminApp.base}/admin/referrals/11/revoke`, { method: "POST", headers })).status, 204);
   assert.equal((await fetch(`${adminApp.base}/admin/referral-rewards/12/revoke`, { method: "POST", headers })).status, 204);
@@ -3482,7 +3487,7 @@ test("keeps referral metrics and revocations admin-only", async (t) => {
   assert.deepEqual(revoked, ["referral:11", "reward:12", "entitlement:13", "referral:99"]);
 });
 
-test("rejects legacy opaque authentication cookies after the JWT cutover", async (t) => {
+test("rejects legacy cookie authentication after the Bearer-token cutover", async (t) => {
   const { base, server } = await serve(createApiApp());
   t.after(() => close(server));
   const response = await fetch(`${base}/auth/me`, {
@@ -3497,7 +3502,7 @@ test("rejects normal users and keeps imports disabled for admins", async (t) => 
   t.after(() => close(userApp.server));
   const denied = await fetch(`${userApp.base}/jobs`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({
       type: "import-app",
       name: "linear",
@@ -3520,7 +3525,7 @@ test("rejects normal users and keeps imports disabled for admins", async (t) => 
   t.after(() => close(adminApp.server));
   const allowed = await fetch(`${adminApp.base}/jobs`, {
     method: "POST",
-    headers: { cookie: "astryx_session=admin", "content-type": "application/json" },
+    headers: { authorization: "Bearer admin", "content-type": "application/json" },
     body: JSON.stringify({
       type: "import-app",
       name: "linear",
@@ -3588,13 +3593,13 @@ test("creates Checkout and returns safe subscription state", async (t) => {
   t.after(() => close(server));
   const checkout = await fetch(`${base}/billing/checkout`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ interval: "month" }),
   });
   assert.equal(checkout.status, 201);
   assert.deepEqual(await checkout.json(), { url: "https://stripe/month" });
   const subscription = await (await fetch(`${base}/billing/subscription`, {
-    headers: { cookie: "astryx_session=user" },
+    headers: { authorization: "Bearer user" },
   })).json();
   assert.equal(subscription.plan, "pro");
   assert.equal(subscription.interval, "month");
@@ -3613,7 +3618,7 @@ test("records only allowed authenticated app funnel events", async (t) => {
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
 
   const accepted = await fetch(`${base}/apps/linear/funnel-events`, {
     method: "POST", headers, body: JSON.stringify({ action: "unlock_clicked" }),
@@ -3648,7 +3653,7 @@ test("blocks catalog-wide traversal and records a redacted audit event", async (
     recordAccessEvent: async (event) => { events.push(event); },
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user" };
+  const headers = { authorization: "Bearer user" };
   assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
   assert.equal((await fetch(`${base}/apps/linear`, { headers })).status, 200);
   const blocked = await fetch(`${base}/apps/notion`, { headers });
@@ -3676,7 +3681,7 @@ test("reserves a validated selected export for entitled Pro", async (t) => {
   t.after(() => close(server));
   const response = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ kind: "screens", ids: [7] }),
   });
   assert.equal(response.status, 201);
@@ -3703,7 +3708,7 @@ test("rejects oversized or unavailable export reservations", async (t) => {
     },
   }));
   t.after(() => close(server));
-  const headers = { cookie: "astryx_session=user", "content-type": "application/json" };
+  const headers = { authorization: "Bearer user", "content-type": "application/json" };
   const invalid = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
     headers,
@@ -3740,7 +3745,7 @@ test("rejects component exports that do not belong to the app design system", as
   t.after(() => close(server));
   const response = await fetch(`${base}/apps/linear/exports/reservations?platform=web`, {
     method: "POST",
-    headers: { cookie: "astryx_session=user", "content-type": "application/json" },
+    headers: { authorization: "Bearer user", "content-type": "application/json" },
     body: JSON.stringify({ kind: "component-family", id: "buttons" }),
   });
   assert.equal(response.status, 400);

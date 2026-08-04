@@ -1,4 +1,5 @@
 import type { AdvancedSearchResult, SearchFilters } from "../searchTypes.ts";
+import { apiFetch } from './apiFetch.ts';
 import type { SearchSuggestion } from "../searchStore.ts";
 import type { SearchPageState } from "./searchState.ts";
 
@@ -18,7 +19,7 @@ const filterKeys: Array<keyof SearchFilters> = [
 ];
 
 async function json<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, { signal });
+  const response = await apiFetch(url, { signal });
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
     throw new Error(body.error ?? `${url} returned ${response.status}`);

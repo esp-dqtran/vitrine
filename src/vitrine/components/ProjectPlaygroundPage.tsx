@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { apiFetch } from '../apiFetch.ts';
 import { createPortal } from "react-dom";
 import { Button, Icon, IconButton, TextInput, type IconName } from "@astryxdesign/core";
 import {
@@ -999,7 +1000,7 @@ async function analyzeMoodboardImageFile(
   ));
   for (const source of sources) {
     try {
-      const response = await fetch(canvasMediaFetchUrl(source), { credentials: "same-origin" });
+      const response = await apiFetch(canvasMediaFetchUrl(source), { credentials: "same-origin" });
       if (!response.ok) continue;
       const bitmap = await createImageBitmap(await response.blob());
       try {
@@ -1383,7 +1384,7 @@ export function ProjectPlayground({
     for (const file of Object.values(files)) {
       if (!file.dataURL.startsWith("data:") || uploadingFileIdsRef.current.has(file.id)) continue;
       uploadingFileIdsRef.current.add(file.id);
-      void fetch(file.dataURL)
+      void apiFetch(file.dataURL)
         .then((response) => response.blob())
         .then(async (blob) => {
           const src = await uploadProjectCanvasAsset(projectId, `asset:${file.id}`, blob);
@@ -1827,7 +1828,7 @@ export function ProjectPlayground({
     setInsertingReferenceId(item.id);
     setReferenceMessage("");
     try {
-      const response = await fetch(item.mediaUrl, { credentials: "same-origin" });
+      const response = await apiFetch(item.mediaUrl, { credentials: "same-origin" });
       if (!response.ok) throw new Error(`Reference image returned ${response.status}`);
       const blob = await response.blob();
       if (!canvasMediaMimeTypeSet.has(blob.type)) {
@@ -1895,7 +1896,7 @@ export function ProjectPlayground({
     setInsertingScreenKey(projectScreenKey(result));
     setScreenMessage("");
     try {
-      const response = await fetch(canvasMediaFetchUrl(screen.url), { credentials: "same-origin" });
+      const response = await apiFetch(canvasMediaFetchUrl(screen.url), { credentials: "same-origin" });
       if (!response.ok) throw new Error(`Screen image returned ${response.status}`);
       const blob = await response.blob();
       if (!canvasMediaMimeTypeSet.has(blob.type)) {

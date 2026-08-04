@@ -1,4 +1,5 @@
 import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem, CatalogEntityKind } from '../catalogResearch';
+import { apiFetch } from './apiFetch.ts';
 import type { CollectionItemKind, ResearchCollection } from '../db';
 import type { AppVersion } from '../db';
 import type { ExportFormat, ExportScope } from '../exportEngine';
@@ -41,7 +42,7 @@ export interface SaveReference {
 }
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await apiFetch(url, init);
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error ?? `${url} returned ${response.status}`);
@@ -90,7 +91,7 @@ export const removeCollectionItem = (collectionId: number, itemId: number): Prom
   json(`/api/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' });
 
 export async function requestExport(app: string, platform: Platform, format: ExportFormat, selection: ExportScope): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(`/api/design-systems/${app}/exports`, {
+  const response = await apiFetch(`/api/design-systems/${app}/exports`, {
     method: 'POST', headers: jsonHeaders, body: JSON.stringify({ format, platform, selection }),
   });
   if (!response.ok) {

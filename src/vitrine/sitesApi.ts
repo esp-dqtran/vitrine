@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type {
   SiteSectionView,
   SiteSummary,
@@ -139,7 +140,7 @@ async function requestSitesDiscoveryPage(
   if (cursor) params.set('cursor', cursor);
   params.set('limit', String(limit));
   if (options.noStore) params.set('refresh', '1');
-  const response = await fetch(`/api/sites?${params.toString()}`, {
+  const response = await apiFetch(`/api/sites?${params.toString()}`, {
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.noStore ? { cache: 'no-store' as const } : {}),
   });
@@ -194,7 +195,7 @@ async function requestSiteVersion(
   path: string,
   expected: { siteId: number; versionId: number } | { siteSlug: string; versionId?: number },
 ): Promise<SiteVersionDetail> {
-  const response = await fetch(path);
+  const response = await apiFetch(path);
   const body = await responseBody(response);
   if (!response.ok) throw new Error(errorMessage(body, `Site version returned ${response.status}`));
   if (!isRecord(body) || !positiveId(body.siteId) || !positiveId(body.versionId)) {

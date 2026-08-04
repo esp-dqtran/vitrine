@@ -1,4 +1,5 @@
 import type { ResearchCollection } from '../db.ts';
+import { apiFetch } from './apiFetch.ts';
 import type { SaveReference } from './researchApi.ts';
 
 export const SAVED_COLLECTION_NAMES = new Set(['saved', 'all saved']);
@@ -53,7 +54,7 @@ export const screenImageCopyUrl = (url: string) => {
 };
 
 const fetchImageBlob = async (url: string) => {
-  const response = await fetch(screenImageCopyUrl(url));
+  const response = await apiFetch(screenImageCopyUrl(url));
   if (!response.ok) {
     throw new Error(`Image request failed with ${response.status}`);
   }

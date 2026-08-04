@@ -5,7 +5,7 @@ import { createApiApp } from "./app.ts";
 import type { OrganizationStore } from "../../../src/organizationStore.ts";
 
 const user = { id: 2, email: "user@example.com", role: "user" as const };
-const cookie = { cookie: "astryx_session=user", "content-type": "application/json" };
+const cookie = { authorization: "Bearer user", "content-type": "application/json" };
 
 async function serve(app: ReturnType<typeof createApiApp>): Promise<{ base: string; server: Server }> {
   const server = app.listen(0);

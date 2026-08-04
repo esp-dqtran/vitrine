@@ -1,21 +1,38 @@
+import { apiFetch, clearAuthToken, getAuthToken, setAuthToken } from "./apiFetch.ts";
+
 export interface AuthUser {
   id: number;
   email: string;
   role: "admin" | "user";
 }
 
-async function jsonOrError(response: Response): Promise<AuthUser> {
+interface AuthResponse {
+  user: AuthUser;
+  token: string;
+  expiresAt: string;
+}
+
+async function authResponseOrError(response: Response): Promise<AuthUser> {
   const body = await response.json();
   if (!response.ok) {
     throw new Error(body.error ?? `Authentication returned ${response.status}`);
   }
-  return body;
+  const auth = body as AuthResponse;
+  setAuthToken(auth.token);
+  return auth.user;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const response = await fetch("/api/auth/me");
-  if (response.status === 401) return null;
-  return jsonOrError(response);
+  const response = await apiFetch("/api/auth/me");
+  const body = await response.json();
+  if (!response.ok || body === null) {
+    clearAuthToken();
+    if (!response.ok && response.status !== 401) {
+      throw new Error(body?.error ?? `Authentication returned ${response.status}`);
+    }
+    return null;
+  }
+  return body as AuthUser;
 }
 
 export function login(email: string, password: string): Promise<AuthUser> {
@@ -23,7 +40,7 @@ export function login(email: string, password: string): Promise<AuthUser> {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password }),
-  }).then(jsonOrError);
+  }).then(authResponseOrError);
 }
 
 export function signup(email: string, password: string, referralToken?: string): Promise<AuthUser> {
@@ -31,16 +48,22 @@ export function signup(email: string, password: string, referralToken?: string):
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password, ...(referralToken ? { referralToken } : {}) }),
-  }).then(jsonOrError);
+  }).then(authResponseOrError);
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetch("/api/auth/logout", { method: "POST" });
-  if (!response.ok) throw new Error(`Logout returned ${response.status}`);
+  try {
+    if (getAuthToken()) {
+      const response = await apiFetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) throw new Error(`Logout returned ${response.status}`);
+    }
+  } finally {
+    clearAuthToken();
+  }
 }
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
-  const response = await fetch("/api/auth/password", {
+  const response = await apiFetch("/api/auth/password", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ currentPassword, newPassword }),

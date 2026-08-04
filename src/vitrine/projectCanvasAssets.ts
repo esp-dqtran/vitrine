@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+
 interface CanvasAssetUploadResponse {
   src: string;
 }
@@ -9,7 +11,7 @@ export async function uploadProjectCanvasAsset(
   signal?: AbortSignal,
 ): Promise<string> {
   const assetPath = `/api/designer-canvases/${projectId}/assets`;
-  const response = await fetch(`${assetPath}/${encodeURIComponent(assetId)}`, {
+  const response = await apiFetch(`${assetPath}/${encodeURIComponent(assetId)}`, {
     method: "POST",
     headers: { "content-type": file.type },
     body: file,

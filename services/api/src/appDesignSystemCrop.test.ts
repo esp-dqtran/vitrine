@@ -65,7 +65,7 @@ test("admin Design System hydrates referenced crop media without storage fields"
     server.close((error) => error ? reject(error) : resolve())));
 
   const response = await fetch(`${base}/design-systems/linear?platform=web`, {
-    headers: { cookie: "astryx_session=admin" },
+    headers: { authorization: "Bearer admin" },
   });
   assert.equal(response.status, 200);
   const body = await response.json() as {

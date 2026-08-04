@@ -53,8 +53,8 @@ flowchart LR
   evidence are outside this service.
 - Browser storage remains the offline fallback. It is not a substitute for
   authenticated remote storage.
-- The collaboration service verifies the JWT in the `astryx_session` cookie during
-  WebSocket upgrade and checks the project UUID through the existing owner-
+- The collaboration service verifies the JWT Bearer credential carried in the
+  WebSocket subprotocol list during upgrade and checks the project UUID through the existing owner-
   scoped project store before the socket joins a room.
 - Reliable `scene` messages synchronize document changes. `cursor` messages
   are best-effort and dropped for slow peers. Embedded data URLs never enter
@@ -85,8 +85,8 @@ The gateway listens on port `3012` by default. Development accepts the active
 loopback origin. Set `CANVAS_COLLAB_ALLOWED_ORIGINS` to a comma-separated list
 of exact application origins when a stricter local gate is useful. Production
 fails startup unless this value or `APP_URL` supplies an allowed origin. Route
-the same-origin WebSocket path to this service so the browser sends the secure
-Vitrines JWT cookie. The gateway must use the same `JWT_SIGNING_SECRET`,
+the same-origin WebSocket path to this service so the browser sends the Vitrines
+JWT Bearer credential through the `vitrines-bearer` subprotocol. The gateway must use the same `JWT_SIGNING_SECRET`,
 `JWT_ISSUER`, and `JWT_AUDIENCE` as the API.
 
 The service follows the useful part of `excalidraw-room`—small project rooms and

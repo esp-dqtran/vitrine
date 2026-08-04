@@ -5,7 +5,6 @@ RUN npm install --global npm@11.6.2 \
     && npm ci --omit=dev --legacy-peer-deps
 COPY src ./src
 COPY migrations ./migrations
-COPY services/api/src/authCookie.ts ./services/api/src/authCookie.ts
 COPY services/project-document-collab/src ./services/project-document-collab/src
 ENV NODE_ENV=production
 ENV PORT=3013

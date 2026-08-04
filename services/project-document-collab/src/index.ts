@@ -2,7 +2,6 @@ import { pool } from "../../../src/db.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { createProjectDocumentStore } from "../../../src/projectDocumentStore.ts";
-import { AUTH_COOKIE, cookieValue } from "../../api/src/authCookie.ts";
 import { projectDocumentAllowedOrigins } from "./config.ts";
 import { createProjectDocumentCollaborationService } from "./server.ts";
 import { startProjectDocumentCollaboration } from "./start.ts";
@@ -13,8 +12,8 @@ const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
 const store = createProjectDocumentStore();
 const collaboration = createProjectDocumentCollaborationService({
   allowedOrigins,
-  async authenticate({ token, cookie }) {
-    const authToken = cookieValue(cookie, AUTH_COOKIE) ?? (token || undefined);
+  async authenticate({ token }) {
+    const authToken = token || undefined;
     if (!authToken) return undefined;
     const user = await auth.verifyAuthToken(authToken);
     return user ? { userId: user.id, email: user.email } : undefined;

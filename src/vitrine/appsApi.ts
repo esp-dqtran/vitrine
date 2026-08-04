@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type { AppVersion } from '../db';
 import type { DesignFlow, EvidenceView } from '../designSystem';
 import type { Platform } from '../platformFromUrl';
@@ -60,7 +61,7 @@ async function responseJson<T>(response: Response, endpoint: string): Promise<T>
 export async function fetchAppMetadata(
   appId: string,
   signal?: AbortSignal,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<AppMetadata> {
   const endpoint = `/api/apps/${encodeURIComponent(appId)}`;
   const response = await request(endpoint, { signal });
@@ -90,7 +91,7 @@ async function fetchEvidenceSection(
 export function fetchAppScreens(
   appId: string,
   input: EvidenceSectionRequest,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<EvidenceSectionPage> {
   return fetchEvidenceSection(appId, 'screens', input, request);
 }
@@ -98,7 +99,7 @@ export function fetchAppScreens(
 export function fetchAppUiElements(
   appId: string,
   input: EvidenceSectionRequest,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<EvidenceSectionPage> {
   return fetchEvidenceSection(appId, 'ui-elements', input, request);
 }
@@ -106,7 +107,7 @@ export function fetchAppUiElements(
 export async function fetchAppUiElementSummary(
   appId: string,
   input: Omit<EvidenceSectionRequest, 'cursor'>,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<UiElementSummaryResult> {
   const params = new URLSearchParams({ platform: input.platform });
   if (input.version !== undefined) params.set('version', String(input.version));
@@ -119,7 +120,7 @@ export async function fetchAppUiElementSummary(
 export async function fetchAppFlows(
   appId: string,
   input: FlowSectionRequest,
-  request: Requester = fetch,
+  request: Requester = apiFetch,
 ): Promise<FlowSectionResult> {
   const params = new URLSearchParams({ platform: input.platform });
   if (input.version !== undefined) params.set('version', String(input.version));

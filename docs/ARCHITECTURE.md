@@ -297,10 +297,10 @@ referrals, rewards, and promotional entitlements.
 The existing PostgreSQL database contains customer subscriptions, permanent
 Free app unlocks, processed Stripe events, monthly export usage, and access
 events.
-Authentication uses a signed HS256 JWT in the existing HttpOnly cookie. The API
+Authentication uses a signed HS256 JWT sent as an `Authorization: Bearer` credential. The API
 and collaboration gateways pin the algorithm, issuer, audience, token type, and
-key ID. Tokens expire after 12 hours and are not stored in PostgreSQL. Logout
-clears the browser cookie; a copied token remains valid until expiry, and user
+key ID. The SPA keeps the token in session storage, and tokens expire after 12
+hours without being stored in PostgreSQL. Logout clears the local token; a copied token remains valid until expiry, and user
 disablement or role changes take effect for newly issued tokens.
 
 Default limits are 300 requests per 5 minutes, 500 protected-media requests per

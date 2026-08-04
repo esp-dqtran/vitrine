@@ -1,3 +1,4 @@
+import { apiFetch } from './apiFetch.ts';
 import type {
   DesignerCanvasDocument,
   DesignerCanvasFile,
@@ -16,7 +17,7 @@ export class DesignerCanvasApiError extends Error {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await apiFetch(url, init);
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as {
       error?: string;

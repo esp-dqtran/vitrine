@@ -183,7 +183,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /`\$\{saveLabels\[saveState\]\}: \$\{saveErrorMessage\}`/);
   assert.match(source, /icon="viewColumns"/);
   assert.match(source, /searchParams\.set\("inline", "1"\)/);
-  assert.match(source, /fetch\(canvasMediaFetchUrl\(screen\.url\)/);
+  assert.match(source, /apiFetch\(canvasMediaFetchUrl\(screen\.url\)/);
   assert.match(source, /astryxReference:\s*\{[\s\S]*kind: "screen"/);
   assert.doesNotMatch(source, /link: `\/apps\/\$\{encodeURIComponent\(app\.id\)\}/);
   assert.match(source, /screenReferenceForElement/);

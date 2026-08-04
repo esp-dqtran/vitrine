@@ -6,6 +6,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { apiFetch } from './apiFetch.ts';
 import { AnimatePresence } from "framer-motion";
 import { Button, EmptyState, Spinner } from "@astryxdesign/core";
 import { useAuth } from "./AuthProvider";
@@ -364,7 +365,7 @@ export function App() {
 
   const confirmUnlock = async () => {
     if (!unlockTarget || !entitlements) return;
-    const response = await fetch(`/api/apps/${unlockTarget}/unlock`, {
+    const response = await apiFetch(`/api/apps/${unlockTarget}/unlock`, {
       method: "POST",
     });
     if (!response.ok) {

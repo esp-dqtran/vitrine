@@ -21,7 +21,6 @@ export interface ProjectDocumentCollaborationDependencies {
   allowedOrigins?: ReadonlySet<string>;
   authenticate(input: {
     token: string;
-    cookie: string | undefined;
   }): Promise<ProjectDocumentCollaborationIdentity | undefined>;
   authorize(
     identity: ProjectDocumentCollaborationIdentity,
@@ -84,10 +83,7 @@ export function createProjectDocumentCollaborationService(
       if (allowedOrigins.size > 0 && (!origin || !allowedOrigins.has(normalizedOrigin(origin)))) {
         throw new Error("Origin not allowed");
       }
-      const identity = await dependencies.authenticate({
-        token,
-        cookie: requestHeaders.get("cookie") ?? undefined,
-      });
+      const identity = await dependencies.authenticate({ token });
       if (!identity) throw new Error("Authentication required");
       const access = await dependencies.authorize(identity, documentName);
       if (!access) throw new Error("Document access denied");

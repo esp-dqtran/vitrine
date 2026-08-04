@@ -1,4 +1,5 @@
 import type { DiscoveryFacet } from "./discoveryTypes.ts";
+import { apiFetch } from './apiFetch.ts';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -31,7 +32,7 @@ export async function loadDiscoveryFacets(
   path: string,
   signal?: AbortSignal,
 ): Promise<DiscoveryFacet[]> {
-  const response = await fetch(path, { signal });
+  const response = await apiFetch(path, { signal });
   if (!response.ok) throw new Error(`Discovery facets returned ${response.status}`);
   const body: unknown = await response.json();
   if (!isRecord(body) || !Array.isArray(body.facets)) {

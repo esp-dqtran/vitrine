@@ -61,7 +61,7 @@ test("legacy load-more requests own an AbortController and pass its signal", () 
   const source = readFileSync(new URL("./useApps.ts", import.meta.url), "utf8");
   assert.match(source, /loadMoreControllerRef/);
   assert.match(source, /loadMoreControllerRef\.current\?\.abort\(\)/);
-  assert.match(source, /fetch\(endpoint,\s*\{\s*signal:\s*controller\.signal\s*\}\)/);
+  assert.match(source, /apiFetch\(endpoint,\s*\{\s*signal:\s*controller\.signal\s*\}\)/);
 });
 
 test("does not cache an invalid catalog response", async () => {

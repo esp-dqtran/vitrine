@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createApiEventSource } from './apiEventSource.ts';
 import type { Progress, ProgressSnapshot } from './types';
 
 export interface ProgressEventSource {
@@ -37,7 +38,7 @@ function parseSnapshot(data: string): ProgressSnapshot | null {
 
 export function subscribeToProgress(
   update: (snapshot: ProgressSnapshot) => void,
-  createSource: ProgressSourceFactory = (url) => new EventSource(url),
+  createSource: ProgressSourceFactory = createApiEventSource,
 ): () => void {
   const source = createSource('/api/progress/stream');
   source.addEventListener('progress', ((event: MessageEvent<string>) => {

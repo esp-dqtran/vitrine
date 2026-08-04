@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { test } from "node:test";
 import { WebSocket } from "ws";
+import { webSocketBearerToken } from "../../api/src/bearerAuth.ts";
 import { createDesignerCanvasCollaborationService } from "./server.ts";
 import type { DesignerCanvasServerMessage } from "./protocol.ts";
 
@@ -15,11 +16,8 @@ interface TestClient {
 }
 
 async function connect(url: string): Promise<TestClient> {
-  const socket = new WebSocket(url, {
-    headers: {
-      cookie: "astryx_session=valid",
-      origin: ORIGIN,
-    },
+  const socket = new WebSocket(url, ["vitrines-bearer", "valid"], {
+    headers: { origin: ORIGIN },
   });
   const messages: DesignerCanvasServerMessage[] = [];
   const waiters: Array<(message: DesignerCanvasServerMessage) => void> = [];
@@ -44,7 +42,13 @@ async function connect(url: string): Promise<TestClient> {
 
 async function rejectedStatus(url: string, headers: Record<string, string>): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    const socket = new WebSocket(url, { headers });
+    const protocolHeader = headers["sec-websocket-protocol"];
+    const requestHeaders = { ...headers };
+    delete requestHeaders["sec-websocket-protocol"];
+    const protocols = protocolHeader?.split(",").map((value) => value.trim());
+    const socket = protocols?.length
+      ? new WebSocket(url, protocols, { headers: requestHeaders })
+      : new WebSocket(url, { headers: requestHeaders });
     socket.once("unexpected-response", (_request, response) => {
       resolve(response.statusCode ?? 0);
       socket.terminate();
@@ -58,7 +62,7 @@ test("authenticates project rooms and relays reliable and volatile updates", asy
   const service = createDesignerCanvasCollaborationService({
     allowedOrigins: new Set([ORIGIN]),
     async authenticate(request) {
-      return request.headers.cookie === "astryx_session=valid"
+      return webSocketBearerToken(request.headers["sec-websocket-protocol"]) === "valid"
         ? { userId: 7, name: "designer@vitrines.test" }
         : undefined;
     },
@@ -135,7 +139,7 @@ test("rejects unauthenticated, unauthorized, cross-origin, and invalid project u
   const service = createDesignerCanvasCollaborationService({
     allowedOrigins: new Set([ORIGIN]),
     async authenticate(request) {
-      return request.headers.cookie === "astryx_session=valid"
+      return webSocketBearerToken(request.headers["sec-websocket-protocol"]) === "valid"
         ? { userId: 7, name: "designer@vitrines.test" }
         : undefined;
     },
@@ -153,15 +157,15 @@ test("rejects unauthenticated, unauthorized, cross-origin, and invalid project u
   assert.equal(await rejectedStatus(`${base}?projectId=${PROJECT_ID}`, { origin: ORIGIN }), 401);
   assert.equal(await rejectedStatus(`${base}?projectId=${OTHER_PROJECT_ID}`, {
     origin: ORIGIN,
-    cookie: "astryx_session=valid",
+    "sec-websocket-protocol": "vitrines-bearer, valid",
   }), 403);
   assert.equal(await rejectedStatus(`${base}?projectId=${PROJECT_ID}`, {
     origin: "http://attacker.test",
-    cookie: "astryx_session=valid",
+    "sec-websocket-protocol": "vitrines-bearer, valid",
   }), 403);
   assert.equal(await rejectedStatus(`${base}?projectId=not-a-uuid`, {
     origin: ORIGIN,
-    cookie: "astryx_session=valid",
+    "sec-websocket-protocol": "vitrines-bearer, valid",
   }), 400);
 });
 

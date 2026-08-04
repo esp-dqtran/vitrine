@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { apiFetch } from './apiFetch.ts';
 import type { DesignSystemSnapshot, EvidenceView } from "../designSystem";
 import type { Platform } from "../platformFromUrl";
 import { createDesignSystemStore, type DesignSystemStore } from "./designSystemStore.ts";
@@ -9,7 +10,7 @@ export async function loadDesignSystem(
   appId: string,
   platform: Platform,
   signal?: AbortSignal,
-  fetcher: Fetcher = fetch,
+  fetcher: Fetcher = apiFetch,
   version?: number,
 ): Promise<DesignSystemSnapshot<EvidenceView> | null> {
   const response = await fetcher(`/api/design-systems/${appId}?platform=${platform}${version ? `&version=${version}` : ''}`, { signal });

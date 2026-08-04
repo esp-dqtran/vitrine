@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from './apiFetch.ts';
 import {
   parseCatalogDiscoveryPage,
 } from './catalogPageParser.ts';
@@ -93,7 +94,7 @@ export function useCatalogStats(): CatalogStatCounts | null {
   const [stats, setStats] = useState<CatalogStatCounts | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/catalog/stats', { signal: controller.signal })
+    apiFetch('/api/catalog/stats', { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((s: CatalogStatCounts) => { if (s && s.apps > 0) setStats(s); })
       .catch(() => { /* keep null → marketing fallback */ });
@@ -109,7 +110,7 @@ export function useCatalogPreview(limit = 12): PreviewApp[] | null {
   const [apps, setApps] = useState<PreviewApp[] | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/catalog?limit=${limit}`, { signal: controller.signal })
+    apiFetch(`/api/catalog?limit=${limit}`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((page) => setApps(toPreviewApps(parseCatalogDiscoveryPage(page))))
       .catch((err: Error) => { if (err.name !== 'AbortError') setApps([]); });

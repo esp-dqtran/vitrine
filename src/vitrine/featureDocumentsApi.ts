@@ -1,3 +1,5 @@
+import { apiFetch } from './apiFetch.ts';
+import { createApiEventSource } from './apiEventSource.ts';
 import type {
   FeatureDocumentContent,
   FeatureDocumentJobStage,
@@ -56,18 +58,18 @@ function pathId(value: number): string {
 
 export function createFeatureDocument(
   input: CreateFeatureDocumentRequest,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<{ documentId: number; jobId: number }> {
   return json('/api/feature-documents', { method: 'POST', headers, body: JSON.stringify(input) }, request);
 }
 
-export function getFeatureDocument(documentId: number, request: typeof fetch = fetch): Promise<FeatureDocumentView> {
+export function getFeatureDocument(documentId: number, request: typeof fetch = apiFetch): Promise<FeatureDocumentView> {
   return json(`/api/feature-documents/${pathId(documentId)}`, undefined, request);
 }
 
 export function getFeatureDocumentByFlow(
   source: FeatureDocumentFlowSource,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentView> {
   if (!Number.isSafeInteger(source.version) || source.version < 1) {
     throw new Error('Invalid Document Flow version');
@@ -85,7 +87,7 @@ export function saveFeatureDocumentRevision(
   documentId: number,
   revisionId: number,
   content: FeatureDocumentContent,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentRevisionView> {
   pathId(revisionId);
   return json(`/api/feature-documents/${pathId(documentId)}/revisions`, {
@@ -96,7 +98,7 @@ export function saveFeatureDocumentRevision(
 export function regenerateFeatureDocument(
   documentId: number,
   focusInstruction: string,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentJobView> {
   return json(`/api/feature-documents/${pathId(documentId)}/regenerations`, {
     method: 'POST', headers, body: JSON.stringify({ focusInstruction }),
@@ -106,7 +108,7 @@ export function regenerateFeatureDocument(
 export function restoreFeatureDocumentRevision(
   documentId: number,
   revisionId: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentRevisionView> {
   return json(`/api/feature-documents/${pathId(documentId)}/revisions/${pathId(revisionId)}/restore`, {
     method: 'POST', headers, body: '{}',
@@ -117,7 +119,7 @@ export function setFeatureDocumentReviewStatus(
   documentId: number,
   revisionId: number,
   status: FeatureDocumentReviewStatus,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentView> {
   return json(`/api/feature-documents/${pathId(documentId)}/review-status`, {
     method: 'POST', headers, body: JSON.stringify({ revisionId, status }),
@@ -126,25 +128,25 @@ export function setFeatureDocumentReviewStatus(
 
 export function acknowledgeFeatureDocumentSourceChange(
   documentId: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentView> {
   return json(`/api/feature-documents/${pathId(documentId)}/source-change/acknowledge`, {
     method: 'POST', headers, body: '{}',
   }, request);
 }
 
-export function cancelFeatureDocumentJob(jobId: number, request: typeof fetch = fetch): Promise<FeatureDocumentJobView> {
+export function cancelFeatureDocumentJob(jobId: number, request: typeof fetch = apiFetch): Promise<FeatureDocumentJobView> {
   return json(`/api/feature-document-jobs/${pathId(jobId)}/cancel`, { method: 'POST', headers, body: '{}' }, request);
 }
 
-export function retryFeatureDocumentJob(jobId: number, request: typeof fetch = fetch): Promise<FeatureDocumentJobView> {
+export function retryFeatureDocumentJob(jobId: number, request: typeof fetch = apiFetch): Promise<FeatureDocumentJobView> {
   return json(`/api/feature-document-jobs/${pathId(jobId)}/retry`, { method: 'POST', headers, body: '{}' }, request);
 }
 
 export function createFeatureDocumentShare(
   documentId: number,
   revisionId: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<FeatureDocumentShareView> {
   return json(`/api/feature-documents/${pathId(documentId)}/shares`, {
     method: 'POST', headers, body: JSON.stringify({ revisionId }),
@@ -154,7 +156,7 @@ export function createFeatureDocumentShare(
 export function revokeFeatureDocumentShare(
   documentId: number,
   shareId: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<void> {
   return json(`/api/feature-documents/${pathId(documentId)}/shares/${pathId(shareId)}`, { method: 'DELETE' }, request);
 }
@@ -162,7 +164,7 @@ export function revokeFeatureDocumentShare(
 export async function downloadFeatureDocumentMarkdown(
   documentId: number,
   revisionId: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<{ blob: Blob; filename: string }> {
   pathId(revisionId);
   const response = await request(`/api/feature-documents/${pathId(documentId)}/export.md?revisionId=${revisionId}`);
@@ -178,7 +180,7 @@ export async function downloadFeatureDocumentMarkdown(
 export async function getFeatureDocumentMarkdown(
   documentId: number,
   revisionId?: number,
-  request: typeof fetch = fetch,
+  request: typeof fetch = apiFetch,
 ): Promise<string> {
   const suffix = revisionId === undefined ? '' : `?revisionId=${pathId(revisionId)}`;
   const response = await request(`/api/feature-documents/${pathId(documentId)}/export.md${suffix}`);
@@ -189,7 +191,7 @@ export async function getFeatureDocumentMarkdown(
   return response.text();
 }
 
-export function getPublicFeatureDocumentShare(token: string, request: typeof fetch = fetch): Promise<PublicFeatureDocumentShare> {
+export function getPublicFeatureDocumentShare(token: string, request: typeof fetch = apiFetch): Promise<PublicFeatureDocumentShare> {
   return json(`/api/feature-document-shares/${encodeURIComponent(token)}`, undefined, request);
 }
 
@@ -213,7 +215,7 @@ export function subscribeFeatureDocumentJob(
   jobId: number,
   onUpdate: (job: FeatureDocumentJobView) => void,
   onError: (error: Error) => void,
-  createEventSource: EventSourceFactory = (url) => new EventSource(url),
+  createEventSource: EventSourceFactory = createApiEventSource,
 ): () => void {
   pathId(jobId);
   const source = createEventSource(`/api/feature-document-jobs/${jobId}/events`);
