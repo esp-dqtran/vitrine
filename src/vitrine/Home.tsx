@@ -158,12 +158,13 @@ const STAT_ICONS = [
   "M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.035 1.008-1.875 2.25-1.875 1.243 0 2.25.84 2.25 1.875 0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .658-.663 48.422 48.422 0 0 0-.37-5.36c-1.886.342-3.81.574-5.766.689a.578.578 0 0 1-.61-.58v0Z",
 ];
 
-// Real flow, same capture set the ad kit uses — the first three public steps
-// of "Resetting password" (1Password, web). The claim is the catalog's own.
+// A real captured mobile flow: the first three public steps of Trello's
+// "Adding a card" (iOS). Handset captures read better in the bento's tall
+// cells than web pages, and the counts are the catalog's own.
 const FLOW_VIGNETTE = {
-  caption: "Resetting password · 12 screens · observed in 277 apps",
+  caption: "Adding a card · 64 screens · observed in 47 apps",
   screens: [1, 2, 3].map(
-    (step) => `/api/catalog/flow-media/1password/web/273/18360/${step}?variant=full`,
+    (step) => `/api/catalog/flow-media/trello/ios/1575/7912/${step}?variant=full`,
   ),
 };
 
@@ -401,34 +402,6 @@ function LiveHeroEmbed({ onBrowse }: { onBrowse: () => void }) {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") onBrowse();
       }}
-      // Slight perspective tilt toward the pointer; snaps flat on leave.
-      onMouseMove={(event) => {
-        const box = boxRef.current;
-        if (!box) return;
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          return;
-        }
-        const rect = box.getBoundingClientRect();
-        gsap.to(box, {
-          rotateX: ((event.clientY - rect.top) / rect.height - 0.5) * -5,
-          rotateY: ((event.clientX - rect.left) / rect.width - 0.5) * 5,
-          transformPerspective: 1000,
-          duration: 0.45,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
-      }}
-      onMouseLeave={() => {
-        const box = boxRef.current;
-        if (box) {
-          gsap.to(box, {
-            rotateX: 0,
-            rotateY: 0,
-            duration: 0.6,
-            ease: "power3.out",
-          });
-        }
-      }}
       style={{
         position: "relative",
         aspectRatio: "16 / 9",
@@ -516,9 +489,7 @@ export function Home({
     return picked;
   };
 
-  const carouselApps = apps
-    .flatMap((app) => (app.iconUrl ? [{ ...app, iconUrl: app.iconUrl }] : []))
-    .slice(0, 8);
+
   const stats = statCounts
     ? [
         { n: compact(statCounts.apps), label: "apps" },
@@ -578,15 +549,24 @@ export function Home({
   // used on the page becomes a chromeless tile, mixed sizes, cropped at the
   // viewport edges — the crop itself says the catalog is bigger than the
   // screen. Captions are dropped; the artifacts are the pitch.
-  const mosaic = apps
-    .filter((app) => !used.has(app.id))
-    .map((app) => toShot(app))
-    .filter((shot): shot is ShotSource => shot !== null)
-    .map((shot) => ({ ...shot, iconUrl: null, meta: null }));
-  const mosaicRows: ShotSource[][] = [
-    mosaic.filter((_, i) => i % 2 === 0),
-    mosaic.filter((_, i) => i % 2 === 1),
-  ];
+  // Three typed belts — web screens, mobile screens, then the app icons the
+  // logo carousel used to carry on its own. Grouping by kind makes each row a
+  // legible claim instead of a jumble, and folds two sections into one.
+  const unusedApps = apps.filter((app) => !used.has(app.id));
+  const stripShot = (shot: ShotSource | null): ShotSource | null =>
+    shot && { ...shot, iconUrl: null, meta: null };
+  const mosaicWeb = unusedApps
+    .map((app) => stripShot(toShot(app, { prefer: "web" })))
+    .filter((shot): shot is ShotSource => shot?.platform === "web");
+  const mosaicPhone = unusedApps
+    .map((app) => stripShot(toShot(app, { prefer: "phone" })))
+    .filter(
+      (shot): shot is ShotSource => shot !== null && shot.platform !== "web",
+    );
+  const mosaicIcons = apps.filter(
+    (app): app is PreviewApp & { iconUrl: string } => Boolean(app.iconUrl),
+  );
+  const mosaicBelts = [mosaicWeb, mosaicPhone] as const;
 
   const heroMediaRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
@@ -622,9 +602,9 @@ export function Home({
     return () => trigger.kill();
   }, []);
 
-  // Marquee reacts to scroll: GSAP takes over the CSS keyframe loop so fast
-  // scrolling spins the logo belt up briefly before it settles back to
-  // cruising speed. Hover still pauses it.
+  // The icon belt (third mosaic row) reacts to scroll: GSAP takes over the CSS
+  // keyframe loop so fast scrolling spins it up briefly before it settles back
+  // to cruising speed. Hover still pauses it.
   const marqueeTrackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const track = marqueeTrackRef.current;
@@ -675,7 +655,7 @@ export function Home({
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rows = [mosaicRowARef.current, mosaicRowBRef.current];
-    if (rows.some((row) => !row) || mosaic.length === 0) return;
+    if (rows.some((row) => !row) || mosaicWeb.length === 0) return;
     const belts = rows.map((row, index) =>
       index === 0
         ? gsap.fromTo(
@@ -707,7 +687,7 @@ export function Home({
       trigger.kill();
       for (const belt of belts) belt.kill();
     };
-  }, [mosaic.length]);
+  }, [mosaicWeb.length, mosaicPhone.length]);
 
   useRevealOnScroll(heroMediaRef);
   // Cards cascade in instead of arriving as one slab. Keyed on the catalog so
@@ -753,10 +733,9 @@ export function Home({
           zIndex: 20,
           borderBottom:
             "1px solid color-mix(in srgb, var(--color-border) 70%, transparent)",
-          background:
-            "color-mix(in srgb, var(--color-background-body) 88%, transparent)",
-          backdropFilter: "blur(18px) saturate(150%)",
-          WebkitBackdropFilter: "blur(18px) saturate(150%)",
+          background: "var(--color-background-body)",
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
         }}
       >
         <div
@@ -974,42 +953,6 @@ export function Home({
         </div>
       </div>
 
-      <Section style={{ paddingBottom: isMobile ? 70 : 108 }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <Text type="supporting" color="secondary">
-            CAPTURED FROM PRODUCTS YOUR USERS ALREADY KNOW
-          </Text>
-        </div>
-        <div
-          className="home-logo-carousel"
-          aria-label="Products in the Vitrines research catalog"
-          style={{ paddingBlock: isMobile ? 20 : 24 }}
-        >
-          <div ref={marqueeTrackRef} className="home-logo-carousel__track">
-            {[0, 1].map((group) => (
-              <div
-                key={group}
-                className="home-logo-carousel__group"
-                aria-hidden={group === 1 ? "true" : undefined}
-              >
-                {carouselApps.map((app) => (
-                  <div
-                    key={`${group}-${app.id}`}
-                    className="home-logo-carousel__item"
-                  >
-                    <img
-                      src={app.iconUrl}
-                      alt={group === 0 ? `${app.name} app icon` : ""}
-                      loading="lazy"
-                    />
-                    <span>{app.name}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
 
       <div
         ref={storiesRef}
@@ -1233,15 +1176,16 @@ export function Home({
                     >
                       <img
                         src={src}
-                        alt={`Resetting password, captured step ${step + 1}`}
+                        alt={`Adding a card, captured step ${step + 1}`}
                         loading="lazy"
                         decoding="async"
                         style={{
                           display: "block",
                           width: "100%",
                           height: "100%",
-                          objectFit: "cover",
-                          objectPosition: "top center",
+                          // Whole capture, never a crop.
+                          objectFit: "contain",
+                          objectPosition: "center",
                         }}
                       />
                       <span
@@ -1369,7 +1313,7 @@ export function Home({
                     ))}
                   </div>
                   <div style={{ fontSize: 10.5, fontWeight: 650, opacity: 0.8 }}>
-                    ⌘ 1Password · Resetting password · steps 1–3 of 12
+                    ⌘ Trello · Adding a card · steps 1–3 of 64
                   </div>
                 </div>
               </div>
@@ -1564,9 +1508,12 @@ export function Home({
               height={isMobile ? 300 : 480}
             >
               {bentoShots[1] && (
-                <div style={{ marginRight: isMobile ? 0 : -70 }}>
-                  <Shot shot={bentoShots[1]} style={{ width: "100%" }} />
-                </div>
+                <Shot
+                  shot={bentoShots[1]}
+                  // Whole capture, no bleed: the cell is about full pages, so
+                  // clipping the page undercuts the point.
+                  style={{ width: "100%", maxWidth: 620, margin: "0 auto" }}
+                />
               )}
             </BentoCell>
             <BentoCell
@@ -1670,7 +1617,7 @@ export function Home({
               gap: isMobile ? 14 : 20,
             }}
           >
-            {mosaicRows.map((row, rowIndex) => (
+            {mosaicBelts.map((row, rowIndex) => (
               <div
                 key={rowIndex}
                 ref={rowIndex === 0 ? mosaicRowARef : mosaicRowBRef}
@@ -1689,7 +1636,6 @@ export function Home({
                     <Shot
                       key={`${copy}-${shot.url}`}
                       shot={shot}
-                      eager={copy === 0}
                       style={{
                         flex: "none",
                         width:
@@ -1706,6 +1652,36 @@ export function Home({
                 )}
               </div>
             ))}
+            {/* Third belt: the app icons, folded in from the old standalone
+                logo carousel — same catalog, one section instead of two. */}
+            <div
+              className="home-logo-carousel"
+              aria-label="Products in the Vitrines research catalog"
+            >
+              <div ref={marqueeTrackRef} className="home-logo-carousel__track">
+                {[0, 1].map((group) => (
+                  <div
+                    key={group}
+                    className="home-logo-carousel__group"
+                    aria-hidden={group === 1 ? "true" : undefined}
+                  >
+                    {mosaicIcons.map((app) => (
+                      <div
+                        key={`${group}-${app.id}`}
+                        className="home-logo-carousel__item"
+                      >
+                        <img
+                          src={app.iconUrl}
+                          alt={group === 0 ? `${app.name} app icon` : ""}
+                          loading="lazy"
+                        />
+                        <span>{app.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </Section>
       </div>
