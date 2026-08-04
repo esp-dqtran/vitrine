@@ -84,17 +84,27 @@ function screensOn(app: PreviewApp, kind: "web" | "phone") {
   );
 }
 
+// Server thumbnails are 480px JPEGs (~87KB); full captures are ~1180px PNGs
+// (~3.3MB) — a 38x difference. Anything rendered at 240 CSS px or less still
+// gets a full 2x-DPR pixel budget from the thumbnail, so only genuinely large
+// slots pay for the original.
+const THUMB_PIXEL_WIDTH = 480;
+
 // One catalog app → one framed shot. Returns null when the catalog has not
 // loaded, so every call site can fall back to a Vitrines product capture.
-// Always the full-resolution variant: the server thumbnails are 10–20x
-// smaller and visibly soft at the sizes the landing renders. Every <img> is
-// lazy, so the weight only loads as the visitor reaches it.
+// Pass `renderWidth` (CSS px of the slot) to get the cheapest variant that
+// still looks sharp on a 2x display.
 function toShot(
   app: PreviewApp | undefined,
   {
     screen = 0,
     prefer,
-  }: { screen?: number; prefer?: "web" | "phone" } = {},
+    renderWidth,
+  }: {
+    screen?: number;
+    prefer?: "web" | "phone";
+    renderWidth?: number;
+  } = {},
 ): ShotSource | null {
   if (!app) return null;
   // A multi-platform app (WhatsApp ships web, iOS and Android) can land in the
@@ -103,7 +113,8 @@ function toShot(
   const pool = prefer ? screensOn(app, prefer) : app.screens;
   const picked = pool[screen] ?? pool[0] ?? app.screens[screen] ?? app.screens[0];
   if (!picked) return null;
-  const pick = (s: PreviewScreen) => s.url;
+  const pick = (s: PreviewScreen) =>
+    renderWidth && renderWidth * 2 <= THUMB_PIXEL_WIDTH ? s.thumbnailUrl : s.url;
   return {
     url: pick(picked),
     platform: picked.platform,
@@ -123,19 +134,19 @@ const STORIES = [
   {
     eyebrow: "BROWSE BY PRODUCT",
     title: "Start with the product, not a blank search box.",
-    copy: "Open a real app and stay inside it. Every screen keeps the product, platform, and capture date around it, so a reference never arrives stripped of the thing that made it work.",
+    copy: "Open a real app and stay inside it — every screen keeps its product, platform and capture date.",
     action: "Explore the library",
   },
   {
     eyebrow: "FOLLOW THE WHOLE JOURNEY",
     title: "See what happens before and after the perfect screen.",
-    copy: "One screenshot hides the decision. Step through the captured flow — the empty state before it, the confirmation after it — and you can tell whether a pattern will survive contact with your users.",
+    copy: "Step through the captured flow: the empty state before, the confirmation after.",
     action: "Browse product flows",
   },
   {
     eyebrow: "KEEP THE TRAIL",
     title: "Collect the references. Keep the reasoning attached.",
-    copy: "Pull screens, flow steps, notes and tokens into one project. Six weeks later, when someone asks why the flow looks like that, the answer is still attached to the evidence.",
+    copy: "Screens, flow steps and notes in one project — with the source still one click away.",
     action: "Start a research project",
   },
 ];
@@ -163,8 +174,10 @@ const STAT_ICONS = [
 // cells than web pages, and the counts are the catalog's own.
 const FLOW_VIGNETTE = {
   caption: "Adding a card · 64 screens · observed in 47 apps",
+  // Rendered at ~200 CSS px in the bento and ~80px in the document vignette,
+  // so the thumbnail variant is the right size in both places.
   screens: [1, 2, 3].map(
-    (step) => `/api/catalog/flow-media/trello/ios/1575/7912/${step}?variant=full`,
+    (step) => `/api/catalog/flow-media/trello/ios/1575/7912/${step}?variant=thumb`,
   ),
 };
 
@@ -578,9 +591,9 @@ export function Home({
   const bentoPhones = take(phoneApps, 2);
   const [bentoWebApp] = take(webApps, 1);
   const bentoShots = [
-    toShot(bentoPhones[0], { prefer: "phone" }),
-    toShot(bentoWebApp, { prefer: "web" }),
-    toShot(bentoPhones[1], { prefer: "phone" }),
+    toShot(bentoPhones[0], { prefer: "phone", renderWidth: 180 }),
+    toShot(bentoWebApp, { prefer: "web", renderWidth: 620 }),
+    toShot(bentoPhones[1], { prefer: "phone", renderWidth: 180 }),
   ].map((shot) => shot && { ...shot, iconUrl: null, meta: null });
 
   // Full-bleed mosaic (the "Shipped with Framer" pattern): every app not yet
@@ -594,10 +607,10 @@ export function Home({
   const stripShot = (shot: ShotSource | null): ShotSource | null =>
     shot && { ...shot, iconUrl: null, meta: null };
   const mosaicWeb = unusedApps
-    .map((app) => stripShot(toShot(app, { prefer: "web" })))
+    .map((app) => stripShot(toShot(app, { prefer: "web", renderWidth: 440 })))
     .filter((shot): shot is ShotSource => shot?.platform === "web");
   const mosaicPhone = unusedApps
-    .map((app) => stripShot(toShot(app, { prefer: "phone" })))
+    .map((app) => stripShot(toShot(app, { prefer: "phone", renderWidth: 172 })))
     .filter(
       (shot): shot is ShotSource => shot !== null && shot.platform !== "web",
     );
