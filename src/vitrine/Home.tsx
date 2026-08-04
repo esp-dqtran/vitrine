@@ -366,6 +366,44 @@ function StatNumber({
   );
 }
 
+// Warms the browser cache for every catalog image once the page goes idle.
+// Images stay `loading="lazy"` so they never block first paint, but by the
+// time a visitor scrolls to them the bytes are already there — no blank
+// frames filling in behind the scroll. Fetches are queued a few at a time so
+// the warm-up never competes with what is on screen now.
+function useImagePrefetch(urls: string[]) {
+  const key = urls.join("|");
+  useEffect(() => {
+    const queue = [...new Set(urls.filter(Boolean))];
+    if (queue.length === 0) return;
+    let cancelled = false;
+    const pump = () => {
+      if (cancelled) return;
+      const url = queue.shift();
+      if (!url) return;
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = pump;
+      img.onerror = pump;
+      img.src = url;
+    };
+    const start = () => {
+      for (let i = 0; i < 4; i += 1) pump();
+    };
+    // Safari only shipped requestIdleCallback recently; fall back to a timer.
+    const canIdle = typeof window.requestIdleCallback === "function";
+    const handle = canIdle
+      ? window.requestIdleCallback(start, { timeout: 2500 })
+      : window.setTimeout(start, 600);
+    return () => {
+      cancelled = true;
+      if (canIdle) window.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+}
+
 // The hero is the real product, not a recording of it. Same origin, so an
 // iframe of /apps just works, and "Live Vitrines catalog" is literally true —
 // on-brand for a product whose pitch is real evidence. Ambient, not
@@ -567,6 +605,17 @@ export function Home({
     (app): app is PreviewApp & { iconUrl: string } => Boolean(app.iconUrl),
   );
   const mosaicBelts = [mosaicWeb, mosaicPhone] as const;
+
+  // Everything below the fold, warmed in the background after first paint.
+  useImagePrefetch([
+    ...storyShots.map((shot) => shot.url),
+    ...flowShots.map((shot) => shot.url),
+    ...FLOW_VIGNETTE.screens,
+    ...bentoShots.map((shot) => shot?.url ?? ""),
+    ...mosaicWeb.map((shot) => shot.url),
+    ...mosaicPhone.map((shot) => shot.url),
+    ...mosaicIcons.map((app) => app.iconUrl),
+  ]);
 
   const heroMediaRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
