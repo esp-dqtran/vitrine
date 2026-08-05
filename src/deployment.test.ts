@@ -224,3 +224,53 @@ test("no Railway config remains now that the API isn't deployed there", async ()
   const source = await readDeploymentFile("railway.json");
   assert.equal(source, "", "railway.json should not exist");
 });
+
+test("Cloudflare serves only public media prefixes straight from R2", async () => {
+  const module = await import("./cloudflareFrontendWorker.ts");
+  const { publicMediaKey } = module;
+
+  // Public: already shown to signed-out visitors on the catalog.
+  assert.equal(publicMediaKey("/assets/thumbnails/1/abc.jpg"), "thumbnails/1/abc.jpg");
+  assert.equal(publicMediaKey("/assets/sites/9/preview.webp"), "sites/9/preview.webp");
+  assert.equal(publicMediaKey("/assets/ui-elements/3/x.png"), "ui-elements/3/x.png");
+
+  // Private: full-resolution screens sit behind the unlock paywall, and
+  // research assets are user-owned. Neither may be reachable this way.
+  assert.equal(publicMediaKey("/assets/images/1/secret.png"), null);
+  assert.equal(publicMediaKey("/assets/research/1/private.png"), null);
+  assert.equal(publicMediaKey("/assets/"), null);
+  assert.equal(publicMediaKey("/assets/../images/1/secret.png"), null);
+  assert.equal(publicMediaKey("/assets/thumbnails/../images/1/secret.png"), null);
+  assert.equal(publicMediaKey("/assets/%2e%2e/images/1/secret.png"), null);
+  assert.equal(publicMediaKey("/api/catalog"), null);
+
+  const worker = module.createCloudflareFrontendWorker(async () => new Response("api"));
+  const assets = { fetch: async () => new Response("asset") };
+
+  // A private prefix must never reach the bucket at all.
+  let reads = 0;
+  const media = { get: async () => { reads++; return null; } };
+  const denied = await worker.fetch(
+    new Request("https://vitrines.ai/assets/images/1/secret.png"),
+    { ASSETS: assets, MEDIA: media } as never,
+  );
+  assert.equal(reads, 0, "private prefixes must not hit R2");
+  assert.equal(denied.status, 200, "unmatched paths fall through to static assets");
+
+  const served = await worker.fetch(
+    new Request("https://vitrines.ai/assets/thumbnails/1/abc.jpg"),
+    {
+      ASSETS: assets,
+      MEDIA: {
+        get: async () => ({
+          body: null,
+          httpMetadata: { contentType: "image/jpeg" },
+          writeHttpMetadata: (headers: Headers) => headers.set("content-type", "image/jpeg"),
+        }),
+      },
+    } as never,
+  );
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get("content-type"), "image/jpeg");
+  assert.match(served.headers.get("Cache-Control") ?? "", /immutable/);
+});

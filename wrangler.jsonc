@@ -3,6 +3,12 @@
   "name": "astryx-web",
   "main": "src/cloudflareFrontendWorker.ts",
   "compatibility_date": "2026-07-27",
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "vitrines-prod-private"
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

@@ -2,9 +2,49 @@ interface StaticAssetsBinding {
   fetch(request: Request): Promise<Response>;
 }
 
+interface R2ObjectBody {
+  body: ReadableStream | null;
+  httpMetadata?: { contentType?: string };
+  writeHttpMetadata?(headers: Headers): void;
+}
+
+interface MediaBucketBinding {
+  get(key: string): Promise<R2ObjectBody | null>;
+}
+
 export interface CloudflareFrontendEnvironment {
   ASSETS: StaticAssetsBinding;
   API_ORIGIN?: string;
+  /** R2 bucket holding crawled media. Optional so local dev works without it. */
+  MEDIA?: MediaBucketBinding;
+}
+
+// Object keys are namespaced by kind, and that namespace *is* the access
+// boundary: `images/` and `research/` hold full-resolution screens and
+// user-owned assets, which sit behind the unlock paywall. Everything below is
+// already displayed to signed-out visitors on the public catalog, so it can be
+// served straight from R2 without an origin call or a database lookup.
+//
+// Serving by prefix keeps that decision in one place. The bucket itself stays
+// private — only these prefixes are reachable, and only through this Worker.
+const PUBLIC_MEDIA_PREFIXES = ["thumbnails/", "sites/", "ui-elements/"];
+
+// Keys embed a sha256 of their contents, so a changed image is a new key and
+// these can never go stale.
+const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+export function publicMediaKey(pathname: string): string | null {
+  if (!pathname.startsWith("/assets/")) return null;
+  let key: string;
+  try {
+    key = decodeURIComponent(pathname.slice("/assets/".length));
+  } catch {
+    return null;
+  }
+  // `..` cannot escape an R2 keyspace, but reject it anyway so the allowlist
+  // below can never be sidestepped by a traversal-looking key.
+  if (!key || key.includes("..")) return null;
+  return PUBLIC_MEDIA_PREFIXES.some((prefix) => key.startsWith(prefix)) ? key : null;
 }
 
 type ApiFetch = (request: Request) => Promise<Response>;
@@ -129,6 +169,26 @@ export function createCloudflareFrontendWorker(
       context?: ExecutionContext,
     ): Promise<Response> {
       const url = new URL(request.url);
+
+      const mediaKey = publicMediaKey(url.pathname);
+      if (mediaKey) {
+        if (request.method !== "GET" && request.method !== "HEAD") {
+          return new Response("Method not allowed", { status: 405 });
+        }
+        if (!environment.MEDIA) {
+          return Response.json({ error: "Media bucket is not configured" }, { status: 503 });
+        }
+        const object = await environment.MEDIA.get(mediaKey);
+        if (!object) return new Response("Not found", { status: 404 });
+        const headers = new Headers();
+        object.writeHttpMetadata?.(headers);
+        if (!headers.has("content-type") && object.httpMetadata?.contentType) {
+          headers.set("content-type", object.httpMetadata.contentType);
+        }
+        headers.set("Cache-Control", IMMUTABLE_CACHE_CONTROL);
+        return new Response(request.method === "HEAD" ? null : object.body, { headers });
+      }
+
       if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
         const origin = apiOrigin(environment.API_ORIGIN);
         if (!origin) {
