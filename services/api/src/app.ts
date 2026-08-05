@@ -1060,8 +1060,11 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           iconUrl: row.icon_url,
           description: row.description,
           websiteUrl: row.website_url,
+          // Served by the Worker straight from R2 — no API call, no database
+          // lookup, no presigned redirect. Keys are content-addressed, so the
+          // response is cached immutably at the edge.
           previewUrl: row.preview_object_key
-            ? `/api/apps/${encodeURIComponent(row.app)}/preview-image`
+            ? `/assets/${row.preview_object_key}`
             : null,
           platforms: row.available_platforms,
           totalScreens: row.total_screens,
