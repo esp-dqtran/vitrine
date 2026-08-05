@@ -312,6 +312,12 @@ function commonCtes(): string {
         AND av.published_at IS NOT NULL
         AND av.published_at <= $2::timestamptz
       ORDER BY av.app_id, av.published_at DESC, av.version_number DESC, av.id DESC
+    ), page_limit AS MATERIALIZED (
+      -- $6 (the page LIMIT) is only referenced by pageSql, not by metadataSql's own
+      -- text. Postgres can't infer a type for a parameter absent from the whole
+      -- query, so metadataSql (which shares these CTEs) fails to parse without this
+      -- no-op typed reference keeping $6 resolvable in both queries.
+      SELECT $6::int AS value
     ), relevant_taxonomy AS MATERIALIZED (
       SELECT
         canonical.id AS flow_id,

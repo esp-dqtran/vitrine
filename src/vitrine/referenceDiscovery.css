@@ -13,9 +13,9 @@
   --reference-motion-fast: 180ms;
   --reference-motion-standard: 240ms;
   --reference-motion-easing: cubic-bezier(.2, .8, .2, 1);
-}
-
-.reference-discovery {
+  /* Defined at :root (not scoped to .reference-discovery) because the
+   * persistent top nav renders as a sibling of main.reference-discovery,
+   * not a descendant — scoping these there left the nav with no value. */
   --reference-chrome-bg: var(--vitrine-color-page);
   --reference-chrome-surface: var(--vitrine-color-surface);
   --reference-chrome-surface-raised: var(--vitrine-color-surface);
@@ -25,6 +25,9 @@
   --reference-chrome-on-text: var(--vitrine-color-on-action-primary);
   --reference-chrome-muted: var(--vitrine-color-text-secondary);
   --reference-chrome-disabled: var(--vitrine-color-text-disabled);
+}
+
+.reference-discovery {
   width: 100%;
   min-height: 100vh;
   margin: 0;
@@ -683,12 +686,17 @@
   --reference-chrome-on-text: var(--vitrine-color-on-action-primary);
   --reference-chrome-muted: var(--vitrine-color-text-secondary);
   --reference-chrome-disabled: var(--vitrine-color-text-disabled);
+  /* Shrink to fit short option lists instead of the design system's fixed
+   * 520px dropdown height; still caps and scrolls for longer lists. */
+  height: auto;
+  max-height: min(70dvh, 520px);
 }
 
 .apps-filterbar__menu {
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  height: auto;
+  max-height: inherit;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   padding: 12px;

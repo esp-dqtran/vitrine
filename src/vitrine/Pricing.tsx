@@ -325,7 +325,7 @@ export function PricingView({
               <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
                 <Button label="Browse" variant="ghost" onClick={onBrowse} style={navLink} />
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-text-primary)', paddingBottom: 2 }}>Pricing</span>
-                <Button label="Sign in" variant="ghost" onClick={onSignIn} style={navLink} />
+                <Button variant="primary" size="sm" label="Sign in" clickAction={onSignIn} />
               </div>
             )}
             <Button variant="primary" size="sm" label="Get started" clickAction={onSignIn} />
@@ -452,7 +452,7 @@ export function PricingView({
           <Text type="supporting" color="secondary">Vitrines · a research library of observed application design systems.</Text>
           <div style={{ display: 'flex', gap: 20 }}>
             <Button label="Browse" variant="ghost" size="sm" onClick={onBrowse} style={{ ...navLink, fontSize: 13 }} />
-            <Button label="Sign in" variant="ghost" size="sm" onClick={onSignIn} style={{ ...navLink, fontSize: 13 }} />
+            <Button label="Sign in" variant="primary" size="sm" onClick={onSignIn} />
           </div>
         </div>
       </Section>

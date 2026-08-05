@@ -1,5 +1,5 @@
 export const PUBLIC_APP_STATIC_FACETS = [
-  { group: "screens", label: "Screens", values: ["My Account & Profile", "Filter & Sort", "Chat Bot", "Signup", "Settings & Preferences", "Charts"] },
+  { group: "screens", label: "Screens", values: ["My Account & Profile", "Filter & Sort", "Chat Bot", "Signup", "Settings & Preferences"] },
   { group: "elements", label: "UI Elements", values: ["Navigation Menu", "Dialog", "Card", "Dropdown Menu", "Text Field"] },
   { group: "flows", label: "Flows", values: ["Setting Up", "Searching & Finding", "Filtering & Sorting", "Resetting Password", "Reporting"] },
 ] as const;

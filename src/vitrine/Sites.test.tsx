@@ -195,7 +195,6 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /class="[^"]*reference-discovery__content[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__taxonomy[^"]*reference-discovery__taxonomy--sites[^"]*"/);
   assert.match(html, /class="[^"]*reference-discovery__facet[^"]*"/);
-  assert.match(html, /class="[^"]*reference-discovery__facet--wide[^"]*"/);
   assert.match(html, /Categories/);
   assert.match(html, /Sections/);
   assert.match(html, /Styles/);

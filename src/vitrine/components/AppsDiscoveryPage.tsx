@@ -17,7 +17,6 @@ import {
 } from '../appsDiscoveryState.ts';
 import {
   createAppsDiscoveryAdapter,
-  loadAppsDiscoveryFacets,
   type AppsDiscoveryControllerState,
 } from '../appsDiscoveryAdapter.ts';
 import type { DiscoveryFacet, DiscoveryFilter } from '../discoveryTypes.ts';
@@ -331,10 +330,7 @@ export function AppsDiscoveryPageView({
   const { previewRef, showPreview, movePreview, hidePreview } = useCategoryHoverPreview();
   const hoverRequestRef = useRef(0);
   const hoverPointRef = useRef({ x: 0, y: 0 });
-  const options = useMemo(
-    () => appsDiscoveryFacetOptions(controller.facets, controller.items),
-    [controller.facets, controller.items],
-  );
+  const options = useMemo(() => buildAppsFilterOptions([]), []);
   const visibleScreens = useMemo(() => {
     const exactFacetKeys = new Set(activeFacets
       .filter(({ group }) => group === 'screens' || group === 'elements')
@@ -392,7 +388,7 @@ export function AppsDiscoveryPageView({
       taxonomyLabel="App discovery filters"
       taxonomy={(
         <>
-          {APP_DISCOVERY_TAXONOMY.map((group) => (
+          {APP_DISCOVERY_TAXONOMY.filter((group) => group.group !== 'flows').map((group) => (
             <ReferenceDiscoveryFacetGroup
               key={group.group}
               label={group.label}
@@ -460,23 +456,14 @@ export function AppsDiscoveryPageView({
             ariaLabel: 'App platform',
             onChange: (platform) => changeState({ ...state, platform }),
           }}
-          filters={(Object.keys(FILTER_LABELS) as AppsFacet['group'][]).map((group) => ({
-            id: group,
-            label: FILTER_LABELS[group],
-            selected: state.filters[group] ?? [],
-            options: options[group],
-            loadOptions: async (query, signal) => {
-              const facets = await loadAppsDiscoveryFacets(
-                controller.state,
-                group,
-                query,
-                state.filters[group] ?? [],
-                isAdmin ? 'admin' : 'catalog',
-                signal,
-              );
-              return appsDiscoveryFacetOptions(facets, controller.items)[group];
-            },
-          }))}
+          filters={(Object.keys(FILTER_LABELS) as AppsFacet['group'][])
+            .filter((group) => group !== 'flows')
+            .map((group) => ({
+              id: group,
+              label: FILTER_LABELS[group],
+              selected: state.filters[group] ?? [],
+              options: options[group],
+            }))}
           resultCount={renderedCount}
           resultLabels={[labels.singular, labels.plural]}
           sort={state.sort}

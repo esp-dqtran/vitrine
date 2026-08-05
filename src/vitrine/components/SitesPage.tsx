@@ -20,8 +20,6 @@ import {
   useDiscoveryController,
   type DiscoveryController,
 } from '../useDiscoveryController.ts';
-import { loadSitesDiscoveryFacets } from '../sitesApi.ts';
-
 export type SiteSort = 'latest' | 'popular';
 export type SiteFacet = { group: 'categories' | 'sections' | 'styles'; value: string };
 export type SiteFacetPreviewPools = Map<string, FacetPreview[]>;
@@ -33,10 +31,47 @@ const DISCOVERY_FACETS: Array<{
   group: SiteFacet['group'];
   label: string;
   defaults: string[];
+  // Full catalog values (from `/api/sites/facets`), used to seed the toolbar filter
+  // dropdown so it doesn't need a live facet query. `defaults` above stays a short
+  // curated list for the taxonomy quick-links panel.
+  allValues: string[];
 }> = [
-  { group: 'categories', label: 'Categories', defaults: ['Portfolio', 'Lifestyle', 'Finance', 'Business', 'Shopping'] },
-  { group: 'sections', label: 'Sections', defaults: ['Pricing', 'How It Works', 'About', 'Social Proof', 'FAQ', '404', 'Blog', 'Hero', 'Showcase', 'Footer'] },
-  { group: 'styles', label: 'Styles', defaults: ['Minimal', 'Dark', 'Photography', 'Motion', 'Colorful'] },
+  {
+    group: 'categories',
+    label: 'Categories',
+    defaults: ['Portfolio', 'Lifestyle', 'Finance', 'Business', 'Shopping'],
+    allValues: [
+      'AI', 'Business', 'Crypto', 'Education', 'Entertainment', 'Finance', 'Food',
+      'Health', 'Lifestyle', 'Other', 'Portfolio', 'Shopping', 'Social', 'Technology',
+      'Travel',
+    ],
+  },
+  {
+    group: 'sections',
+    label: 'Sections',
+    defaults: ['Pricing', 'How It Works', 'About', 'FAQ', 'Hero'],
+    allValues: [
+      '404', 'About', 'About Section', 'About Us', 'Blog', 'Brand', 'CTA Section',
+      'Call to Action Section', 'Careers', 'Company', 'Comparison', 'Contact',
+      'Contact Us', 'Content Section', 'Customer Stories', 'Customers', 'Demo',
+      'Download', 'Downloads', 'Enterprise', 'FAQ', 'FAQ Section', 'Faq',
+      'Feature Section', 'Features', 'Footer Section', 'Hero Section', 'Home',
+      'How It Works', 'How It Works Section', 'Integrations', 'Navigation Section',
+      'News', 'Newsletter', 'Newsroom', 'Pricing', 'Product', 'Resources',
+      'Showcase Section', 'Social Proof', 'Social Proof Section', 'Stats Section',
+      'Store', 'Templates', 'Work',
+    ],
+  },
+  {
+    group: 'styles',
+    label: 'Styles',
+    defaults: ['Minimal', 'Dark', 'Photography', 'Motion', 'Colorful'],
+    allValues: [
+      '3D', 'Black & White', 'Bold', 'Brutalist', 'Colorful', 'Dark', 'Editorial',
+      'Fun', 'Glass', 'Grid', 'Illustration', 'Light', 'Minimal', 'Motion',
+      'Photography', 'Scroll Effects', 'Typography',
+    ],
+  },
 ];
 
 const siteFacetKey = (facet: SiteFacet) => `${facet.group}:${facet.value.toLowerCase()}`;
@@ -192,49 +227,18 @@ export function SitesPageView({
       selected: controller.state.filters
         .filter((filter) => filter.group === group.group)
         .map(({ value }) => value),
-      options: [
-        ...controller.facets.filter((facet) => facet.group === group.group),
-        ...group.defaults.map((value) => ({
-          group: group.group,
+      options: group.allValues.map((value) => {
+        const preview = previewPools.get(siteFacetKey({ group: group.group, value }))?.[0];
+        return {
           value,
-          count: 0,
           section: group.label,
-        })),
-      ]
-        .filter((facet, index, facets) =>
-          facets.findIndex(({ value }) => value === facet.value) === index)
-        .map((facet) => {
-          const preview = previewPools.get(siteFacetKey({
-            group: group.group,
-            value: facet.value,
-          }))?.[0];
-          return {
-            value: facet.value,
-            section: facet.section?.trim() || group.label,
-            count: facet.count,
-            previewUrl: preview ? siteFacetPreviewUrl(preview) : undefined,
-            previewLabel: preview ? `${preview.app} · ${facet.value}` : facet.value,
-          };
-        }),
-      loadOptions: async (query, signal) => {
-        const selected = controller.state.filters
-          .filter((filter) => filter.group === group.group)
-          .map(({ value }) => value);
-        const facets = await loadSitesDiscoveryFacets(
-          controller.state,
-          group.group,
-          query,
-          selected,
-          signal,
-        );
-        return facets.map((facet) => ({
-          value: facet.value,
-          section: facet.section?.trim() || group.label,
-          count: facet.count,
-        }));
-      },
+          count: 0,
+          previewUrl: preview ? siteFacetPreviewUrl(preview) : undefined,
+          previewLabel: preview ? `${preview.app} · ${value}` : value,
+        };
+      }),
     })),
-  [controller.facets, controller.state.filters, previewPools]);
+  [controller.state.filters, previewPools]);
   return (
     <DiscoveryPageLayout
       kind="sites"
@@ -246,7 +250,6 @@ export function SitesPageView({
             <ReferenceDiscoveryFacetGroup
               key={group.group}
               label={group.label}
-              wide={group.group === 'sections'}
               className={`sites-discovery__facet sites-discovery__facet--${group.group}`}
             >
               {group.defaults.map((value) => {

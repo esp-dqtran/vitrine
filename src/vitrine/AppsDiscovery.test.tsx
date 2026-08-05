@@ -111,7 +111,7 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   assert.match(html, /aria-label="Open Categories filters"/);
   assert.match(html, /aria-label="Open Screens filters"/);
   assert.match(html, /aria-label="Open UI Elements filters"/);
-  assert.match(html, /aria-label="Open Flows filters"/);
+  assert.doesNotMatch(html, /aria-label="Open Flows filters"/);
   assert.doesNotMatch(html, /aria-label="More filters"/);
   assert.match(html, /aria-label="App discovery filters"/);
   assert.match(html, />Categories</);
@@ -120,8 +120,7 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   assert.match(html, />My Account &amp; Profile</);
   assert.match(html, />UI Elements</);
   assert.match(html, />Navigation Menu</);
-  assert.match(html, />Flows</);
-  assert.match(html, />Setting Up</);
+  assert.doesNotMatch(html, />Flows</);
 });
 
 test('limits the Storybook chrome review without attaching infinite pagination', () => {
@@ -311,19 +310,19 @@ test('accepts a Flow-search platform handoff as the selected App platform', () =
   assert.match(html, /aria-label="App platform: iOS"/);
 });
 
-test('shows an active Flow as a removable filter-bar pill', () => {
+test('shows an active Category as a removable filter-bar pill', () => {
   const html = renderAppsPage(pageController({
     state: {
       platform: 'web',
-      contentType: 'flows',
+      contentType: 'apps',
       sort: 'trending',
       query: '',
-      filters: [{ group: 'flows', value: 'Logging in' }],
+      filters: [{ group: 'categories', value: 'AI' }],
     },
   }), { activeFilterCount: 3 });
 
-  assert.match(html, /Logging in/);
-  assert.match(html, /aria-label="Clear Flows filter"/);
+  assert.match(html, /AI/);
+  assert.match(html, /aria-label="Clear Categories filter"/);
   assert.match(html, /data-apps-filterbar="true"/);
   assert.doesNotMatch(html, /reference-discovery-nav/);
 });
@@ -405,11 +404,11 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(html, /Categories/);
   assert.match(html, /Screens/);
   assert.match(html, /UI Elements/);
-  assert.match(html, /Flows/);
+  assert.doesNotMatch(html, /Flows/);
   assert.match(html, /data-facet-preview="categories"/);
   assert.match(html, /data-facet-preview="screens"/);
   assert.match(html, /data-facet-preview="elements"/);
-  assert.match(html, /data-facet-preview="flows"/);
+  assert.doesNotMatch(html, /data-facet-preview="flows"/);
   assert.match(html, /class="apps-discovery__hover-preview"/);
   assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
   assert.match(html, /aria-label="App platform: Web"/);

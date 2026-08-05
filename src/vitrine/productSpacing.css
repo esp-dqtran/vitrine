@@ -148,16 +148,16 @@
 }
 
 /* Discovery: 24px gutters, 32px section entry, and 48px major separation. */
-.reference-discovery__content:not(.flows-discovery__content) {
+.reference-discovery__content {
   padding-inline: var(--spacing-6) !important;
 }
 
-.reference-discovery__taxonomy:not(.flows-discovery__taxonomy) {
+.reference-discovery__taxonomy {
   gap: var(--spacing-12) !important;
   padding-block: var(--spacing-8) var(--spacing-12) !important;
 }
 
-.reference-discovery__taxonomy:not(.flows-discovery__taxonomy) :where(ul, [role="list"]) {
+.reference-discovery__taxonomy :where(ul, [role="list"]) {
   gap: var(--spacing-2);
 }
 

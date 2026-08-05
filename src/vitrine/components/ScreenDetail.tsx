@@ -100,17 +100,23 @@ function MetadataFilterControl({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setOpen(false);
+      }
     };
     const onPointerDown = (event: PointerEvent) => {
       if (isOutsideAppsFilterMenu(containerRef.current, event.target)) {
         setOpen(false);
       }
     };
-    window.addEventListener('keydown', onKeyDown);
+    // capture: true so this fires before ScreenDetail's page-level Escape
+    // listener regardless of mount order, and stopPropagation keeps that
+    // listener from also firing onBack().
+    window.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', onPointerDown);
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keydown', onKeyDown, true);
       document.removeEventListener('pointerdown', onPointerDown);
     };
   }, [open]);

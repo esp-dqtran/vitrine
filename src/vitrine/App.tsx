@@ -105,7 +105,8 @@ export function App() {
   const { user, authenticate, register, completeLogin, logout } = useAuth();
   const isGuest = user === null;
   const route = useRoute();
-  const stickyChromeEnabled = route.name === "apps";
+  const stickyChromeEnabled =
+    route.name === "apps" || route.name === "sites" || route.name === "flows";
   const [stickyChromeMerged, setStickyChromeMerged] = useState(false);
   const [flowsDiscoveryAdapter] = useState(() => createFlowsDiscoveryAdapter());
   const flowDiscoveryState =
@@ -230,11 +231,19 @@ export function App() {
   const detailLocked = route.name === "app" && isFreeGated(route.appId);
   const detailPreview =
     route.name === "app" && entitlementsResolved && (isGuest || detailLocked);
+  // Debounce the palette's search text before it hits the catalog endpoint,
+  // matching the pacing already used for the pro adaptive-search request below.
+  const [debouncedLegacyQuery, setDebouncedLegacyQuery] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedLegacyQuery(q), 180);
+    return () => window.clearTimeout(timer);
+  }, [q]);
   // The Apps page owns its catalog request through the discovery controller.
   // Keep this legacy list lazy and isolated to the legacy command palette.
   const { apps } = useApps(
     user?.role,
     searchSnapshot.open && (!canUseAdvancedSearch || route.name === "flows"),
+    debouncedLegacyQuery,
   );
   const {
     detail,
@@ -1050,9 +1059,13 @@ export function App() {
             label={
               discoveryRoute === "apps"
                 ? "Search Apps…"
-                : discoveryRoute === "projects"
-                  ? "Search references…"
-                  : "Search on Web..."
+                : discoveryRoute === "sites"
+                  ? "Search Sites…"
+                  : discoveryRoute === "flows"
+                    ? "Search Flows…"
+                    : discoveryRoute === "projects"
+                      ? "Search references…"
+                      : "Search on Web..."
             }
             activeCategory={
               discoveryRoute === "flows"

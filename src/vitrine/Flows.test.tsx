@@ -140,8 +140,8 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.equal((html.match(/23 flows/g) ?? []).length, 1);
   assert.match(html, />Popular</);
   assert.doesNotMatch(html, /data-reference-discovery-toolbar="true"/);
-  assert.match(html, />Account Management</);
-  assert.match(html, />New User Experience</);
+  assert.match(html, />Settings</);
+  assert.match(html, />Home</);
   assert.match(html, /aria-label="Preview Logging in from Account Management flow screens"/);
   assert.match(
     html,
@@ -162,7 +162,7 @@ test('renders a first-class searchable Flow catalog beside Apps and Sites', () =
   assert.doesNotMatch(html, /Load more Flows/);
 });
 
-test('renders complete API facets and selected Flow groups independently of loaded cards', () => {
+test('shows the server total independently of loaded cards', () => {
   const html = renderToStaticMarkup(
     <FlowsPageView
       controller={controller({
@@ -172,12 +172,8 @@ test('renders complete API facets and selected Flow groups independently of load
           platform: 'web',
           sort: 'popular',
           query: '',
-          filters: [{ group: 'flowGroups', value: 'Account Management' }],
+          filters: [{ group: 'flowGroups', value: 'Home' }],
         },
-        facets: [
-          { group: 'flowGroups', value: 'Account Management', count: 25 },
-          { group: 'flowGroups', value: 'New User Experience', count: 15 },
-        ],
       })}
       onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
@@ -185,30 +181,19 @@ test('renders complete API facets and selected Flow groups independently of load
     />,
   );
 
-  assert.match(html, />New User Experience</);
-  assert.match(html, /aria-pressed="true"[\s\S]*?Account Management/);
   assert.match(html, /40 flows/);
   assert.doesNotMatch(html, /Load more Flows/);
 });
 
-test('keeps the top Flow taxonomy compact while retaining a selected deep facet', () => {
+test('keeps the top Flow taxonomy a fixed 5-item list regardless of API facets', () => {
   const facets = Array.from({ length: 5_880 }, (_, index) => ({
     group: 'flowGroups',
     value: `Flow group ${String(index).padStart(4, '0')}`,
     count: 5_880 - index,
   }));
-  const selected = facets.at(-1)!.value;
   const html = renderToStaticMarkup(
     <FlowsPageView
-      controller={controller({
-        state: {
-          platform: 'web',
-          sort: 'popular',
-          query: '',
-          filters: [{ group: 'flowGroups', value: selected }],
-        },
-        facets,
-      })}
+      controller={controller({ facets })}
       onOpenSearch={() => undefined}
       onSelectFlow={() => undefined}
       onSelectApp={() => undefined}
@@ -216,10 +201,10 @@ test('keeps the top Flow taxonomy compact while retaining a selected deep facet'
   );
 
   const taxonomy = html.match(/data-reference-component="facet-group"[\s\S]*?<\/section>/)?.[0] ?? '';
-  assert.equal((taxonomy.match(/data-flow-taxonomy-option="true"/g) ?? []).length, 15);
-  assert.match(taxonomy, /Flow group 0000/);
-  assert.match(taxonomy, /Flow group 5879/);
-  assert.doesNotMatch(taxonomy, /Flow group 0014/);
+  assert.equal((taxonomy.match(/data-flow-taxonomy-option="true"/g) ?? []).length, 5);
+  assert.match(taxonomy, />Settings</);
+  assert.match(taxonomy, />Logging in</);
+  assert.doesNotMatch(taxonomy, /Flow group 0000/);
 });
 
 test('delegates initial, empty, and load-more error states to the shared layout', () => {

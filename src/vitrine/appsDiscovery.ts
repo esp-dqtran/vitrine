@@ -30,6 +30,43 @@ export interface AppsDiscoveryScreenResult {
 export const APPS_DISCOVERY_CATEGORIES = ['AI', 'Finance', 'CRM', 'Business', 'News'];
 export const APPS_DISCOVERY_STATIC_FACETS = PUBLIC_APP_STATIC_FACETS;
 
+// Full catalog values (from `/api/catalog/facets`), used to seed the toolbar filter
+// dropdowns so they don't need a live facet query. APPS_DISCOVERY_CATEGORIES above stays
+// a short curated list for the taxonomy quick-links panel.
+export const ALL_APPS_CATEGORIES = [
+  'AI', 'Business', 'CRM', 'Collaboration', 'Communication', 'Crypto & Web3',
+  'Developer Tools', 'Education', 'Entertainment', 'Finance', 'Food & Drink',
+  'Graphics & Design', 'Health & Fitness', 'Jobs & Recruitment', 'Lifestyle',
+  'Maps & Navigation', 'Medical', 'Music & Audio', 'News', 'Photo & Video',
+  'Productivity', 'Real Estate', 'Reference', 'Shopping', 'Social Networking',
+  'Sports', 'Travel & Transportation', 'Utilities',
+];
+
+export const ALL_APPS_SCREENS = [
+  'Account Setup', 'Achievements & Awards', 'Acknowledgement & Success', 'Action Option',
+  'Add & Create', 'Article Detail', 'Audio & Video Recorder', 'Audio Player', 'Ban & Block',
+  'Billing', 'Bookmarks & Collections', 'Browse & Discover', 'Calendar', 'Call', 'Cancel',
+  'Canvas', 'Cart & Bag', 'Charts', 'Chat Bot', 'Chat Detail', 'Checkout',
+  'Class & Lesson Detail', 'Code Editor', 'Command Palette', 'Comments', 'Confirmation',
+  'Dark Mode', 'Dashboard', 'Date & Time', 'Delete', 'Delete & Deactivate Account',
+  'Draw & Annotate', 'Edit', 'Emails & Messages', 'Empty State', 'Error', 'Event Detail',
+  'Favorite & Pin', 'Feature Info', 'Feedback', 'Filter & Sort', 'Flag & Report',
+  'Follow & Subscribe', 'Followers & Following', 'Forgot Password', 'Goal & Task',
+  'Guided Tour & Tutorial', 'Help & Support', 'Home', 'Import & Export', 'Internal Tool',
+  'Invite & Refer Friends', 'Invite Teammates', 'Kanban Board', 'Leaderboard', 'Like & Upvote',
+  'Loading', 'Login', 'Map', 'Media Editor', 'Misc', 'Move', 'Multi-Column Layout',
+  'My Account & Profile', 'News Feed', 'Note Detail', 'Notifications', 'Order Confirmation',
+  'Order Detail', 'Order History', 'Other Action', 'Other Content', 'Payment Method',
+  'Permission', 'Playlists', 'Post Detail', 'Pricing', 'Product Detail', 'Progress',
+  'Promotions & Rewards', 'Publish', 'QR Code', 'Quiz', 'Recipe Detail', 'Reorder',
+  'Reviews & Ratings', 'Save', 'Schedule', 'Search', 'Select', 'Set', 'Settings & Preferences',
+  'Share', 'Shop & Storefront', 'Signup', 'Social Feed', 'Song & Podcast Detail', 'Stories',
+  'Subscription & Paywall', 'Suggestions & Similar Items', 'TV Show & Movie Detail',
+  'Timeline & History', 'Timer & Clock', 'Transfer & Send Money', 'Trash & Archive',
+  'Upload & Download', 'User / Group Profile', 'Verification', 'Video Player',
+  'Wallet & Balance',
+];
+
 const searchableText = (values: Array<string | null | undefined>) =>
   values.filter(Boolean).join(' ').toLowerCase();
 
@@ -191,8 +228,10 @@ export function buildAppsFilterOptions(
     });
   };
 
-  APPS_DISCOVERY_CATEGORIES.forEach((value) => add('categories', value, 'Categories'));
+  ALL_APPS_CATEGORIES.forEach((value) => add('categories', value, 'Categories'));
+  ALL_APPS_SCREENS.forEach((value) => add('screens', value, 'Screens'));
   APPS_DISCOVERY_STATIC_FACETS.forEach(({ group, label, values }) => {
+    if (group === 'screens') return;
     values.forEach((value) => add(group, value, label));
   });
   apps.forEach((app) => {

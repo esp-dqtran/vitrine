@@ -13155,14 +13155,9 @@ body {
   background: var(--color-background-body);
 }
 
-.flows-discovery__content {
-  padding: 0 32px 96px;
-}
-
 .flows-discovery__taxonomy {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  padding: 29px 0 73px;
 }
 
 .flows-discovery__facet h2 {
@@ -13174,7 +13169,7 @@ body {
 
 .flows-discovery__facet > div {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0 28px;
 }
 
@@ -13213,17 +13208,8 @@ body {
 }
 
 @media (max-width: 720px) {
-  .flows-discovery__content {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-
-  .flows-discovery__taxonomy {
-    padding-bottom: 32px;
-  }
-
   .flows-discovery__facet > div {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     column-gap: 20px;
   }
 

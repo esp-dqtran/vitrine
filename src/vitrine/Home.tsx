@@ -18,6 +18,7 @@ import {
 } from "@astryxdesign/core";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { AppIcon } from "./components/AppIcon";
 import { AstryxMenu } from "./components/AstryxDropdown";
 import { Shot, type ShotSource } from "./components/Shot";
 import {
@@ -1732,11 +1733,7 @@ export function Home({
                         key={`${group}-${app.id}`}
                         className="home-logo-carousel__item"
                       >
-                        <img
-                          src={app.iconUrl}
-                          alt={group === 0 ? `${app.name} app icon` : ""}
-                          loading="lazy"
-                        />
+                        <AppIcon name={app.name} iconUrl={app.iconUrl} accent={app.accent} size={52} />
                         <span>{app.name}</span>
                       </div>
                     ))}
@@ -2029,10 +2026,9 @@ export function Home({
                 />
                 <Button
                   label="Sign in"
-                  variant="ghost"
+                  variant="primary"
                   size="sm"
                   onClick={onLogin}
-                  style={navLink}
                 />
               </div>
             </div>
