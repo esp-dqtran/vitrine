@@ -1056,7 +1056,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           id: row.app,
           app: row.display_name ?? row.app,
           categories: row.categories,
-          accent: row.accent_color,
+          // The parser requires a string; accent_color is null for most rows.
+          accent: row.accent_color ?? "#2f3136",
           iconUrl: row.icon_url,
           description: row.description,
           websiteUrl: row.website_url,
@@ -1066,11 +1067,17 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           previewUrl: row.preview_object_key
             ? `/assets/${row.preview_object_key}`
             : null,
+          // The grid renders from previewUrl; previewScreens stays present and
+          // empty so the existing discovery parser keeps accepting this shape.
+          previewScreens: [],
           platforms: row.available_platforms,
           totalScreens: row.total_screens,
           lastCapturedAt: new Date(row.updated_at).toISOString(),
         })),
         totalCount: page.totalCount,
+        // The grid reads facets from /catalog/facets on demand, so this list
+        // deliberately ships none — the key is present for shape compatibility.
+        facets: [],
         nextCursor: page.nextCursor
           ? Buffer.from(JSON.stringify(page.nextCursor)).toString("base64url")
           : null,

@@ -45,6 +45,8 @@ export interface AppSummary {
   lastCapturedAt?: string | null;
   websiteUrl?: string | null;
   iconUrl?: string | null;
+  /** Thumbnail served straight from R2 by the Worker. */
+  previewUrl?: string | null;
   description?: string | null;
   previewVideoUrl?: string | null;
 }

@@ -79,7 +79,7 @@ export function appsCatalogRequestPath(
     params.append('filter', `${filter.group}.${filter.value}`);
   }
   if (cursor) params.set('cursor', cursor);
-  return `/api/${source === 'admin' ? 'apps' : 'catalog'}?${params.toString()}`;
+  return `/api/apps?${params.toString()}`;
 }
 
 export function loadAppsDiscoveryFacets(

@@ -47,9 +47,13 @@ export function AppCard({
   const active = platform
     ? app.screens.find((screen) => screen.platform === platform)
     : app.screens[0];
+  // app.previewUrl is the stored thumbnail, served straight from R2. Prefer it
+  // over the per-card sitePreviewUrl lookup, which stays as the fallback for
+  // apps whose thumbnail has not been backfilled yet.
+  const resolvedPreviewUrl = app.previewUrl ?? sitePreviewUrl;
   const [sitePreviewFailed, setSitePreviewFailed] = useState(false);
-  useEffect(() => { setSitePreviewFailed(false); }, [sitePreviewUrl]);
-  const usingSitePreview = Boolean(sitePreviewUrl) && !sitePreviewFailed;
+  useEffect(() => { setSitePreviewFailed(false); }, [resolvedPreviewUrl]);
+  const usingSitePreview = Boolean(resolvedPreviewUrl) && !sitePreviewFailed;
   // A site capture is always a desktop page, so it must not get the phone frame
   // even when the app itself is iOS/Android.
   const isMobilePreview = !usingSitePreview
@@ -72,9 +76,9 @@ export function AppCard({
   // to an unreadable sliver — anchor to the top instead and show the hero.
   // On failure fall through to the screen capture rather than PlaceholderImage's
   // empty state, so a bad site preview never leaves the card worse than before.
-  const preview = sitePreviewUrl && !sitePreviewFailed ? (
+  const preview = resolvedPreviewUrl && !sitePreviewFailed ? (
     <img
-      src={sitePreviewUrl}
+      src={resolvedPreviewUrl}
       alt=""
       loading="lazy"
       decoding="async"
