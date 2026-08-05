@@ -565,6 +565,33 @@ async function dismissRecognizedConsent(page: Page): Promise<void> {
       return;
     }
   }
+  await hideUnreachableConsent(page);
+}
+
+// Nothing clickable matched. Some CMPs render their banner inside a *closed*
+// shadow root, which no selector engine can enter — getByRole finds zero
+// buttons while the banner sits on screen and gets composited into the
+// full-page capture. The host element is still ordinary DOM, so hide that.
+//
+// Scoped to documentElement rather than body on purpose: Transcend mounts its
+// host as a direct child of <html>, so a body-rooted query misses it silently.
+//
+// Hiding instead of clicking "Accept all" is also deliberate. We only need the
+// banner out of the screenshot; clicking it would record a tracking consent on
+// the visitor's behalf on every site we crawl.
+async function hideUnreachableConsent(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const identity = /(?:cookie|consent|privacy|gdpr|cmp)/i;
+    for (const node of document.documentElement.querySelectorAll("*")) {
+      const name = `${node.id} ${node.getAttribute("class") ?? ""}`;
+      if (!identity.test(name)) continue;
+      // Only overlays: a fixed/sticky box is what covers the page. Plain links
+      // like "Cookie Policy" in a footer match the name test but must stay.
+      const position = getComputedStyle(node).position;
+      if (position !== "fixed" && position !== "sticky") continue;
+      (node as HTMLElement).style.setProperty("display", "none", "important");
+    }
+  }).catch(() => undefined);
 }
 
 async function primeLazyContent(page: Page): Promise<void> {
