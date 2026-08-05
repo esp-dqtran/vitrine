@@ -506,7 +506,10 @@ function publicSiteSummary(
   const root = `/api/sites/${site.siteId}/versions/${site.versionId}/catalog-media`;
   return {
     ...site,
-    previewUrl: `${root}/preview`,
+    // The store hands back an /assets path when the preview is public catalog
+    // media the Worker can serve from R2 directly. Rewriting it here would put
+    // the presigned-redirect round trip back in front of every card.
+    previewUrl: site.previewUrl.startsWith("/assets/") ? site.previewUrl : `${root}/preview`,
     previews: site.previews.map((preview) => ({
       ...preview,
       url: `${root}/posters/${preview.id}`,

@@ -1,5 +1,7 @@
 import { resolveAppIcon, type ResolvedAppIcon } from "../src/appIconResolver.ts";
-import { closePool, query, withTransaction } from "../src/db.ts";
+import { storeSiteIcon } from "../src/appIconStore.ts";
+import { closePool, query } from "../src/db.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { runPool } from "../src/pool.ts";
 
 interface SiteIconRow {
@@ -27,15 +29,17 @@ const apply = hasFlag("--apply");
 const refresh = hasFlag("--refresh");
 const concurrency = positiveArgument("--concurrency", 8);
 const limit = hasFlag("--limit") ? positiveArgument("--limit", 1) : null;
+// Anything without an icon_object_key is still hotlinking a third party.
 const source = await query<SiteIconRow>(
   `SELECT id::text, name, source_url, logo_url
    FROM sites
    WHERE source_url IS NOT NULL
-     AND ($1::boolean OR logo_url IS NULL OR lower(logo_url) LIKE '%mobbin%' OR lower(logo_url) LIKE '%bytescale%')
+     AND ($1::boolean OR icon_object_key IS NULL)
    ORDER BY id
    ${limit === null ? "" : "LIMIT $2"}`,
   limit === null ? [refresh] : [refresh, limit],
 );
+const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 const results: Result[] = [];
 let completed = 0;
 
@@ -47,31 +51,18 @@ try {
       if (!icon) {
         results.push({ id: row.id, site: row.name, status: "unresolved", reason: "No valid square icon was found" });
       } else {
-        results.push({ id: row.id, site: row.name, status: "resolved", previousUrl: row.logo_url, icon });
-        if (apply) {
-          await withTransaction(async (client) => {
-            const updated = await client.query(
-              `UPDATE sites SET logo_url = $1, updated_at = now()
-               WHERE id = $2
-                 AND ($3::boolean OR logo_url IS NULL OR lower(logo_url) LIKE '%mobbin%' OR lower(logo_url) LIKE '%bytescale%')
-               RETURNING id`,
-              [icon.url, row.id, refresh],
-            );
-            if (!updated.rowCount) return;
-            await client.query(
-              `UPDATE site_versions
-               SET catalog_snapshot = jsonb_set(
-                     COALESCE(catalog_snapshot, '{}'::jsonb),
-                     '{logoUrl}',
-                     to_jsonb($1::text),
-                     true
-                   ),
-                   updated_at = now()
-               WHERE site_id = $2`,
-              [icon.url, row.id],
-            );
-          });
-        }
+        // Store the bytes rather than the source URL: these hotlinks 404, serve
+        // undecodable formats, and are sized for whatever the site felt like.
+        const storedPath = apply
+          ? await storeSiteIcon({ objectStore }, Number(row.id), icon.url)
+          : null;
+        results.push({
+          id: row.id,
+          site: row.name,
+          status: "resolved",
+          previousUrl: row.logo_url,
+          icon: storedPath ? { ...icon, url: storedPath } : icon,
+        });
       }
     } catch (error) {
       results.push({

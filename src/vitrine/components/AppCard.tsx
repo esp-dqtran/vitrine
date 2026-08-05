@@ -1,56 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Badge, type BadgeVariant } from '@astryxdesign/core';
 import type { AppsPlatform } from '../appsDiscovery';
-import { categoryNames, type App, type RowStatus } from '../types';
+import { categoryNames, type App } from '../types';
 import { AppIcon } from './AppIcon';
 import { DiscoveryCard } from './DiscoveryCard';
 import { PlaceholderImage } from './PlaceholderImage';
-
-const STATUS_VARIANT: Record<RowStatus, BadgeVariant> = {
-  Queued: 'neutral',
-  'In progress': 'info',
-  Complete: 'success',
-  'Needs attention': 'error',
-  Cancelled: 'neutral',
-};
-
-const APP_DATE_FORMAT = new Intl.DateTimeFormat('en', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  timeZone: 'UTC',
-});
 
 interface AppCardProps {
   app: App;
   platform?: AppsPlatform;
   onOpen: () => void;
-  /** Import/analysis status — omit or pass 'Complete' to render the card exactly as before. */
-  status?: RowStatus;
-  progressLabel?: string;
-  /**
-   * Full-page capture of the app's marketing site, when one has been crawled.
-   * Preferred over a screen capture because screens are unclassified — the
-   * first one is arbitrary, so the grid reads as incoherent without this.
-   */
-  sitePreviewUrl?: string | null;
 }
 
 export function AppCard({
   app,
   platform,
   onOpen,
-  status,
-  progressLabel,
-  sitePreviewUrl,
 }: AppCardProps) {
   const active = platform
     ? app.screens.find((screen) => screen.platform === platform)
     : app.screens[0];
-  // app.previewUrl is the stored thumbnail, served straight from R2. Prefer it
-  // over the per-card sitePreviewUrl lookup, which stays as the fallback for
-  // apps whose thumbnail has not been backfilled yet.
-  const resolvedPreviewUrl = app.previewUrl ?? sitePreviewUrl;
+  const resolvedPreviewUrl = app.previewUrl;
   const [sitePreviewFailed, setSitePreviewFailed] = useState(false);
   useEffect(() => { setSitePreviewFailed(false); }, [resolvedPreviewUrl]);
   const usingSitePreview = Boolean(resolvedPreviewUrl) && !sitePreviewFailed;
@@ -58,16 +27,6 @@ export function AppCard({
   // even when the app itself is iOS/Android.
   const isMobilePreview = !usingSitePreview
     && (active?.platform === 'ios' || active?.platform === 'android');
-  const capturedAt = app.lastCapturedAt ? new Date(app.lastCapturedAt) : null;
-  const updatedLabel = capturedAt && !Number.isNaN(capturedAt.getTime())
-    ? APP_DATE_FORMAT.format(capturedAt)
-    : null;
-  const screenLabel = `${app.totalScreens} ${app.totalScreens === 1 ? 'screen' : 'screens'}`;
-  const metadata = [
-    updatedLabel,
-    screenLabel,
-    progressLabel && status && status !== 'Complete' ? progressLabel : null,
-  ].filter(Boolean).join(' · ');
   const previewSrc = active?.thumbnailUrl ?? active?.url;
   const previewSrcSet = active?.thumbnailUrl && active.url && active.thumbnailUrl !== active.url
     ? `${active.thumbnailUrl} 1x,${active.url} 2x`
@@ -109,23 +68,21 @@ export function AppCard({
       kind="app"
       ariaLabel={`Open ${app.app}`}
       onOpen={onOpen}
+      // A real href, like the Site cards already have: middle-click and
+      // open-in-new-tab work, and the card is a link to assistive tech.
+      href={`/apps/${encodeURIComponent(app.id)}`}
       articleProps={{ 'data-preview-platform': active?.platform }}
       media={(
         <>
           {isMobilePreview
             ? <span className="app-discovery-card__phone-preview">{preview}</span>
             : preview}
-          {status && status !== 'Complete' ? (
-            <span className="app-discovery-card__badge">
-              <Badge label={status} variant={STATUS_VARIANT[status]} />
-            </span>
-          ) : null}
+          <span className="discovery-card__badge">{app.isUpdated ? 'Updated' : 'New'}</span>
         </>
       )}
       logo={<AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={44} />}
       title={app.app}
       description={app.description || categoryNames(app).join(', ')}
-      metadata={metadata}
     />
   );
 }

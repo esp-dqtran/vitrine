@@ -47,8 +47,8 @@ test('renders only the selected full preview for a multi-screen App card', () =>
   assert.doesNotMatch(html, /src="\/two\.png"/);
   assert.doesNotMatch(html, /app-discovery-card__overlay/);
   assert.doesNotMatch(html, /<button/);
-  assert.match(html, /Jul 25, 2026 · 2 screens/);
-  assert.doesNotMatch(html, /Productivity · 2 screens/);
+  assert.doesNotMatch(html, /Jul 25, 2026/);
+  assert.doesNotMatch(html, /2 screens/);
 });
 
 test('offers the full preview to high-density displays while keeping the thumbnail fallback', () => {
@@ -111,18 +111,6 @@ test('keeps a single-screen App card free from an empty next layer', () => {
   assert.doesNotMatch(html, /app-discovery-card__preview/);
   assert.doesNotMatch(html, /data-app-card-preview/);
   assert.doesNotMatch(html, /app-discovery-card__overlay/);
-  assert.match(html, /Jul 25, 2026 · 1 screen/);
+  assert.doesNotMatch(html, /Jul 25, 2026/);
 });
 
-test('appends analysis progress to the shared App metadata row', () => {
-  const html = renderToStaticMarkup(
-    <AppCard
-      app={app([screen(1, '/one.png'), screen(2, '/two.png')])}
-      status="In progress"
-      progressLabel="1/2 analyzed"
-      onOpen={() => undefined}
-    />,
-  );
-
-  assert.match(html, /Jul 25, 2026 · 2 screens · 1\/2 analyzed/);
-});

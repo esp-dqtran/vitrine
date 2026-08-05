@@ -11,6 +11,11 @@ export interface AppIconProps {
   className?: string;
   /** Fallback initial color — override on light/accent-colored backgrounds. */
   fallbackTextColor?: string;
+  /**
+   * App icons are square, so they fill the tile. Site logos are often wordmarks
+   * and have to be letterboxed instead of cropped.
+   */
+  fit?: 'cover' | 'contain';
 }
 
 // Shared app logo tile: renders the icon image, and falls back to an
@@ -24,6 +29,7 @@ export function AppIcon({
   size = 52,
   className,
   fallbackTextColor = '#fff',
+  fit = 'cover',
 }: AppIconProps) {
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(iconUrl) && !failed;
@@ -50,7 +56,7 @@ export function AppIcon({
           alt=""
           loading="lazy"
           onError={() => setFailed(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: fit }}
         />
       ) : (
         <span

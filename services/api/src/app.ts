@@ -97,12 +97,7 @@ import {
   FlowCatalogCursorError,
   publishedFlowCatalogPage,
 } from "../../../src/flowCatalogStore.ts";
-import {
-  CategoryConflictError,
-  CategoryNotFoundError,
-  CategoryValidationError,
-  createCategoryStore,
-} from "../../../src/categoryStore.ts";
+import { createCategoryStore } from "../../../src/categoryStore.ts";
 import {
   authorizedExportObject,
   canAccessApp,
@@ -1059,6 +1054,8 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
           // The parser requires a string; accent_color is null for most rows.
           accent: row.accent_color ?? "#2f3136",
           iconUrl: row.icon_url,
+          // Drives the card badge: "Updated" once an App has been re-crawled.
+          isUpdated: row.is_updated === true,
           description: row.description,
           websiteUrl: row.website_url,
           // Served by the Worker straight from R2 — no API call, no database
@@ -1685,127 +1682,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         selected,
       }),
     });
-  });
-
-  const sendCategoryError = (res: express.Response, error: unknown): void => {
-    if (error instanceof CategoryValidationError) {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    if (error instanceof CategoryConflictError) {
-      res.status(409).json({ error: error.message });
-      return;
-    }
-    if (error instanceof CategoryNotFoundError) {
-      res.status(404).json({ error: error.message });
-      return;
-    }
-    throw error;
-  };
-
-  app.get("/admin/categories", requireAdmin, async (_req, res) => {
-    res.json({ categories: await deps.categoryStore.list() });
-  });
-
-  app.post("/admin/categories", requireAdmin, async (req, res) => {
-    const body = exactBody(req.body, ["name", "slug"]);
-    if (!body) {
-      res.status(400).json({ error: "invalid category" });
-      return;
-    }
-    try {
-      res.status(201).json(await deps.categoryStore.create(
-        body as { name: string; slug: string },
-      ));
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
-  });
-
-  app.patch("/admin/categories/:categoryId", requireAdmin, async (req, res) => {
-    const categoryId = positiveId(Array.isArray(req.params.categoryId)
-      ? req.params.categoryId[0]
-      : req.params.categoryId);
-    const body = exactBody(req.body, ["name", "slug"]);
-    if (!categoryId || !body) {
-      res.status(400).json({ error: "invalid category" });
-      return;
-    }
-    try {
-      res.json(await deps.categoryStore.update(
-        categoryId,
-        body as { name: string; slug: string },
-      ));
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
-  });
-
-  app.delete("/admin/categories/:categoryId", requireAdmin, async (req, res) => {
-    const categoryId = positiveId(Array.isArray(req.params.categoryId)
-      ? req.params.categoryId[0]
-      : req.params.categoryId);
-    if (!categoryId) {
-      res.status(400).json({ error: "invalid category id" });
-      return;
-    }
-    try {
-      res.json(await deps.categoryStore.remove(categoryId));
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
-  });
-
-  app.get("/admin/categories/:categoryId/apps", requireAdmin, async (req, res) => {
-    const categoryId = positiveId(Array.isArray(req.params.categoryId)
-      ? req.params.categoryId[0]
-      : req.params.categoryId);
-    if (!categoryId) {
-      res.status(400).json({ error: "invalid category id" });
-      return;
-    }
-    try {
-      res.json({ apps: await deps.categoryStore.listApps(categoryId) });
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
-  });
-
-  app.post("/admin/categories/:categoryId/apps", requireAdmin, async (req, res) => {
-    const categoryId = positiveId(Array.isArray(req.params.categoryId)
-      ? req.params.categoryId[0]
-      : req.params.categoryId);
-    const body = exactBody(req.body, ["app"]);
-    const appSlug = typeof body?.app === "string" && isAppSlug(body.app)
-      ? body.app
-      : undefined;
-    if (!categoryId || !appSlug) {
-      res.status(400).json({ error: "invalid category assignment" });
-      return;
-    }
-    try {
-      await deps.categoryStore.attach(appSlug, categoryId);
-      res.json({ app: appSlug, categoryId });
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
-  });
-
-  app.delete("/admin/categories/:categoryId/apps/:app", requireAdmin, async (req, res) => {
-    const categoryId = positiveId(Array.isArray(req.params.categoryId)
-      ? req.params.categoryId[0]
-      : req.params.categoryId);
-    const appSlug = Array.isArray(req.params.app) ? req.params.app[0] : req.params.app;
-    if (!categoryId || !isAppSlug(appSlug)) {
-      res.status(400).json({ error: "invalid category assignment" });
-      return;
-    }
-    try {
-      await deps.categoryStore.detach(appSlug, categoryId);
-      res.status(204).end();
-    } catch (error) {
-      sendCategoryError(res, error);
-    }
   });
 
   const effectiveCustomerPlan = async (res: express.Response): Promise<"free" | "pro"> =>
@@ -3473,7 +3349,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(await deps.listJobs());
   });
 
-  app.get("/users", requireAdmin, async (req, res) => {
+  app.get("/admin/users", requireAdmin, async (req, res) => {
     const limit = req.query.limit === undefined ? 30 : Number(req.query.limit);
     const filter = req.query.filter === undefined ? "all" : String(req.query.filter);
     if (!Number.isInteger(limit) || !ADMIN_USER_FILTERS.has(filter as AdminUserFilter)) {
@@ -3496,7 +3372,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     }
   });
 
-  app.get("/users/growth", requireAdmin, async (_req, res) => {
+  app.get("/admin/users/growth", requireAdmin, async (_req, res) => {
     const [stats, dailySignups] = await Promise.all([deps.getGrowthStats(), deps.getDailySignups()]);
     res.json({ stats, dailySignups });
   });
@@ -3544,7 +3420,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.status(204).end();
   });
 
-  app.get("/users/usage", requireAdmin, async (req, res) => {
+  app.get("/admin/users/usage", requireAdmin, async (req, res) => {
     const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
     if (!range) {
       res.status(400).json({ error: "range must be 7d, 30d, or 90d" });
@@ -3553,7 +3429,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(await deps.getFeatureUsageOverview(range));
   });
 
-  app.get("/users/:id/usage", requireAdmin, async (req, res) => {
+  app.get("/admin/users/:id/usage", requireAdmin, async (req, res) => {
     const userId = positiveId(String(req.params.id));
     const range = parseUsageRange(req.query.range === undefined ? undefined : String(req.query.range));
     if (!userId || !range) {
@@ -3568,7 +3444,7 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
     res.json(usage);
   });
 
-  app.patch("/users/:id/active", requireAdmin, async (req, res) => {
+  app.patch("/admin/users/:id/active", requireAdmin, async (req, res) => {
     const userId = positiveId(String(req.params.id));
     if (!userId || typeof req.body?.active !== "boolean") {
       res.status(400).json({ error: "invalid account state request" });

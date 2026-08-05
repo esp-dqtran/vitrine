@@ -1,5 +1,7 @@
 import { resolveAppIcon, type ResolvedAppIcon } from "../src/appIconResolver.ts";
+import { storeAppIcon } from "../src/appIconStore.ts";
 import { closePool, query } from "../src/db.ts";
+import { createObjectStore, objectStoreConfigFromEnvironment } from "../src/objectStoreConfig.ts";
 import { runPool } from "../src/pool.ts";
 
 interface AppIconRow {
@@ -28,15 +30,18 @@ const apply = hasFlag("--apply");
 const refresh = hasFlag("--refresh");
 const concurrency = positiveArgument("--concurrency", 8);
 const limit = hasFlag("--limit") ? positiveArgument("--limit", 1) : null;
+// Anything without an icon_object_key is still hotlinking a third party — that
+// is exactly what this backfill replaces with a stored copy.
 const source = await query<AppIconRow>(
   `SELECT id, name, display_name, website_url, icon_url
    FROM apps
    WHERE website_url IS NOT NULL
-     AND ($1::boolean OR icon_url IS NULL OR lower(icon_url) LIKE '%mobbin%' OR lower(icon_url) LIKE '%bytescale%')
+     AND ($1::boolean OR icon_object_key IS NULL)
    ORDER BY id
    ${limit === null ? "" : "LIMIT $2"}`,
   limit === null ? [refresh] : [refresh, limit],
 );
+const objectStore = createObjectStore(objectStoreConfigFromEnvironment(process.env));
 const results: Result[] = [];
 let completed = 0;
 
@@ -49,15 +54,16 @@ try {
       if (!icon) {
         results.push({ id: row.id, app, status: "unresolved", reason: "No valid square icon was found" });
       } else {
-        results.push({ id: row.id, app, status: "resolved", previousUrl: row.icon_url, icon });
-        if (apply) {
-          await query(
-            `UPDATE apps SET icon_url = $1
-             WHERE id = $2
-               AND ($3::boolean OR icon_url IS NULL OR lower(icon_url) LIKE '%mobbin%' OR lower(icon_url) LIKE '%bytescale%')`,
-            [icon.url, row.id, refresh],
-          );
-        }
+        // Store the bytes rather than the source URL: app-store CDNs and site
+        // favicons 403 direct <img> loads and change without notice.
+        const storedPath = apply ? await storeAppIcon({ objectStore }, row.id, icon.url) : null;
+        results.push({
+          id: row.id,
+          app,
+          status: "resolved",
+          previousUrl: row.icon_url,
+          icon: storedPath ? { ...icon, url: storedPath } : icon,
+        });
       }
     } catch (error) {
       results.push({

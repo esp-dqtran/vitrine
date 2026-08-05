@@ -39,6 +39,7 @@ export interface AppsListRow {
   description: string | null;
   website_url: string | null;
   preview_object_key: string | null;
+  is_updated: boolean;
   total_screens: number;
   updated_at: Date;
   categories: Array<{ id: number; name: string; slug: string }>;
@@ -95,6 +96,9 @@ SELECT page.id, page.name AS app, page.display_name, page.icon_url,
        page.accent_color, page.description, page.website_url, page.preview_object_key,
        page.total_screens, page.updated_at, page.available_platforms,
        totals.total_count,
+       -- More than one capture means we have re-crawled this App since it
+       -- first landed, which is what the card's badge distinguishes.
+       (SELECT count(*) > 1 FROM app_versions av WHERE av.app_id = page.id) AS is_updated,
        COALESCE((
          SELECT jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug)
                           ORDER BY lower(c.name), c.id)

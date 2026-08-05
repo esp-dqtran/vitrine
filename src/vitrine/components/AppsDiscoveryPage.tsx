@@ -25,7 +25,6 @@ import type { SearchFilters } from '../../searchTypes.ts';
 import type { App } from '../types.ts';
 import { updateLocation, useLocationKey } from '../router.ts';
 import { useCategoryHoverPreview } from '../useCategoryHoverPreview.ts';
-import { useSitePreviews, websiteHost } from '../useSitePreviews.ts';
 import {
   useDiscoveryController,
   type DiscoveryController,
@@ -366,7 +365,6 @@ export function AppsDiscoveryPageView({
     ? visibleScreens
     : visibleScreens.slice(0, reviewItemLimit);
   const renderedCount = appsMode ? renderedApps.length : renderedScreens.length;
-  const sitePreviews = useSitePreviews(renderedApps);
   // The API total is an App total. Non-App modes render matching cards derived
   // only from the Apps returned so far, so their count intentionally reflects
   // visible cards rather than mislabeling the server's App total.
@@ -511,12 +509,7 @@ export function AppsDiscoveryPageView({
               key={app.id}
               app={app}
               platform={controller.state.platform}
-              sitePreviewUrl={sitePreviews.get(websiteHost(app.websiteUrl) ?? '')}
               onOpen={() => onOpenApp(app.id)}
-              status={isAdmin
-                ? (app.analyzedScreens ?? 0) >= app.totalScreens ? 'Complete' : 'In progress'
-                : undefined}
-              progressLabel={`${app.analyzedScreens ?? 0}/${app.totalScreens} analyzed`}
             />
           ))}
         </div>

@@ -99,7 +99,8 @@
     .flow-workspace *,
     .flows-discovery *,
     .flow-preview-dialog *,
-    .excalidraw *
+    .excalidraw *,
+    .discovery-card__copy
   ) {
   gap: var(--spacing-3) !important;
 }
@@ -161,11 +162,8 @@
   gap: var(--spacing-2);
 }
 
-/* App-card title, category, and metadata read as one compact text group. */
-.apps-discovery .discovery-card__copy {
-  gap: var(--spacing-1) !important;
-}
-
+/* Card title and description spacing is the shared .discovery-card__copy rule,
+   so App and Site cards stay identical; an !important here forced them apart. */
 .apps-discovery .discovery-card__copy small {
   margin-top: 0;
 }

@@ -351,14 +351,23 @@ export async function discoverAppIconCandidates(websiteUrl: string): Promise<App
   }
 }
 
-async function inspectCandidate(candidate: AppIconCandidate): Promise<ResolvedAppIcon | null> {
-  const response = await fetch(candidate.url, {
+export async function downloadIcon(url: string): Promise<Buffer> {
+  const response = await fetch(url, {
     headers: { accept: "image/*,*/*;q=0.5", "user-agent": USER_AGENT },
     redirect: "follow",
     signal: AbortSignal.timeout(20_000),
   });
-  if (!response.ok) return null;
-  const body = await boundedBody(response, MAX_ICON_BYTES);
+  if (!response.ok) throw new Error(`${new URL(url).hostname} returned ${response.status}`);
+  return boundedBody(response, MAX_ICON_BYTES);
+}
+
+async function inspectCandidate(candidate: AppIconCandidate): Promise<ResolvedAppIcon | null> {
+  let body: Buffer;
+  try {
+    body = await downloadIcon(candidate.url);
+  } catch {
+    return null;
+  }
   if (!body.length) return null;
   const metadata = await sharp(body, { limitInputPixels: 64 * 1024 * 1024 }).metadata();
   const width = metadata.width ?? null;

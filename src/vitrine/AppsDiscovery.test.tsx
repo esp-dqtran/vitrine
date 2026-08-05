@@ -426,7 +426,7 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.match(html, /data-app-discovery-card="true"/);
   assert.doesNotMatch(html, /apps-discovery__count/);
   assert.match(html, /Purpose-built tool/);
-  assert.match(html, /aria-label="Open Linear"/);
+  assert.match(html, /<a[^>]+href="\/apps\/linear-web"[^>]+class="discovery-card__link app-discovery-card__link"/);
 });
 
 test('renders the approved shared skeleton while the initial App page loads', () => {
@@ -511,23 +511,10 @@ test('preserves app navigation affordance, admin status, and beforeGrid content'
   });
 
   assert.match(html, /data-before-grid="true"/);
-  assert.match(html, /aria-label="Open Base"/);
-  assert.match(html, />In progress</);
-  assert.match(html, /0\/2 analyzed/);
-});
-
-test('does not mark a platform-scoped admin App complete from other-platform progress', () => {
-  const html = renderAppsPage(pageController({
-    items: [makeApp({
-      platforms: ['web'],
-      analyzedScreens: 1,
-      totalScreens: 4,
-    })],
-  }), { isAdmin: true });
-
-  assert.match(html, />In progress</);
-  assert.match(html, /1\/4 analyzed/);
-  assert.doesNotMatch(html, />Complete</);
+  assert.match(html, /<a[^>]+href="\/apps\/base"[^>]+class="discovery-card__link app-discovery-card__link"/);
+  assert.doesNotMatch(html, />In progress</);
+  assert.doesNotMatch(html, /0\/2 analyzed/);
+  assert.match(html, /<span class="discovery-card__badge">New<\/span>/);
 });
 
 test('uses controller facets and has no page-owned catalog fan-out or pagination observer', async () => {

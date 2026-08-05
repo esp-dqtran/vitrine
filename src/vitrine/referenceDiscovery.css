@@ -350,11 +350,13 @@
   border-radius: var(--reference-logo-radius);
 }
 
+/* 15/20 leaves 2.5px of half-leading under the title, which reads as space
+   between it and the description on top of whatever gap the grid declares. */
 .discovery-card__copy strong {
   color: var(--color-text-primary);
   font-size: 15px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 18px;
 }
 
 .discovery-card__copy > span {

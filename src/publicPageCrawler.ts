@@ -33,6 +33,9 @@ export interface PublicPageCrawlerDependencies {
   browser: Pick<PublicPageBrowser, "capture">;
   objectStore: ObjectStore;
   pageStore: PublicPageStore;
+  /** Copies the page's icon into the object store. Optional: a missing or
+   *  broken icon must never fail an import. */
+  storeIcon?(appId: number, sourceUrl: string): Promise<unknown>;
   isCancelled(): Promise<boolean>;
   report?(message: string): Promise<void>;
 }
@@ -158,6 +161,12 @@ async function completeNewCapture(
   await assertNotCancelled(deps);
   await deps.report?.("Finalizing page import");
   const completed = await deps.pageStore.completeCapture(begin, assets, objects);
+
+  const iconUrl = result.capture.metadata.iconUrl;
+  if (deps.storeIcon && iconUrl) {
+    // Hotlinked icons 403, rate-limit and disappear, so keep our own copy.
+    await deps.storeIcon(begin.appId, iconUrl).catch(() => deps.report?.("Icon capture failed"));
+  }
   return { ...completed, reused: false };
 }
 

@@ -1,76 +1,41 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { SiteSummary } from '../types.ts';
+import { AppIcon } from './AppIcon.tsx';
 import { DiscoveryCard } from './DiscoveryCard.tsx';
-
-type VisibilityObserver = Pick<IntersectionObserver, 'observe' | 'disconnect'>;
-type VisibilityObserverFactory = (
-  callback: IntersectionObserverCallback,
-  options: IntersectionObserverInit,
-) => VisibilityObserver;
-
-export function observeSiteCardMedia(
-  target: Element,
-  onVisible: () => void,
-  createObserver: VisibilityObserverFactory = (callback, options) =>
-    new IntersectionObserver(callback, options),
-) {
-  const observer = createObserver((entries) => {
-    if (!entries.some((entry) => entry.isIntersecting)) return;
-    onVisible();
-    observer.disconnect();
-  }, { rootMargin: '320px 0px', threshold: 0.01 });
-  observer.observe(target);
-  return () => observer.disconnect();
-}
 
 export function SiteCard({
   site,
   onOpen,
-  deferMediaUntilIntent = false,
-  showMetadata = true,
 }: {
   site: SiteSummary;
   onOpen: () => void;
-  deferMediaUntilIntent?: boolean;
-  showMetadata?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const shouldPlayRef = useRef(false);
-  const [mediaActive, setMediaActive] = useState(
-    site.previewMediaKind === 'image' && !deferMediaUntilIntent,
-  );
-  const [mediaFailed, setMediaFailed] = useState(false);
+  // Preview videos are multi-megabyte, so nothing about them is fetched — not
+  // even metadata — until someone hovers. Once loaded the element stays mounted
+  // so a second hover replays from cache instead of re-fetching.
+  const [videoRequested, setVideoRequested] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const hostname = safeHostname(site.sourceUrl);
   const description = site.description || `${site.sectionCount} captured sections from ${hostname}.`;
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || mediaActive || deferMediaUntilIntent) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setMediaActive(true);
-      return;
-    }
-    return observeSiteCardMedia(video, () => setMediaActive(true));
-  }, [deferMediaUntilIntent, mediaActive]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!mediaActive || !video || !shouldPlayRef.current) return;
-    void video.play().catch(() => undefined);
-  }, [mediaActive]);
+  // The derived card thumbnail: for a video Site this is the video's own first
+  // frame, so playback starts on exactly the image already on screen.
+  const thumbnailUrl = site.posterUrl
+    ?? (site.previewMediaKind === 'image' ? site.previewUrl : site.previews[0]?.url);
+  const playsVideo = site.previewMediaKind !== 'image' && !videoFailed;
 
   const startPreview = () => {
-    shouldPlayRef.current = true;
-    setMediaActive(true);
+    if (!playsVideo) return;
+    setVideoRequested(true);
     const video = videoRef.current;
-    if (!video) return;
-    void video.play().catch(() => undefined);
+    if (video) void video.play().catch(() => undefined);
   };
   const stopPreview = () => {
-    shouldPlayRef.current = false;
     const video = videoRef.current;
     if (!video) return;
     video.pause();
+    // Frame 0 is the thumbnail, so resetting leaves the card looking untouched.
     video.currentTime = 0;
   };
 
@@ -88,35 +53,40 @@ export function SiteCard({
       }}
       media={(
         <>
-          {deferMediaUntilIntent && !mediaActive ? (
-            <span className="site-discovery-card__fallback" aria-hidden="true" />
-          ) : site.previewMediaKind === 'image' ? (
-            <img src={site.previewUrl} alt={`${site.name} website preview`} loading="lazy" />
-          ) : !mediaFailed ? (
-            <video
-              ref={videoRef}
-              src={mediaActive ? site.previewUrl : undefined}
-              poster={mediaActive ? site.previews[0]?.url : undefined}
-              muted
-              loop
-              playsInline
-              preload={mediaActive ? 'metadata' : 'none'}
-              onError={() => setMediaFailed(true)}
-            />
-          ) : site.previews[0] ? (
-            <img src={site.previews[0].url} alt={`${site.name} website preview`} loading="lazy" />
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={`${site.name} website preview`} loading="lazy" />
           ) : (
             <span className="site-discovery-card__fallback">Preview unavailable</span>
           )}
-          {site.isLatest ? <span className="site-discovery-card__badge">New</span> : null}
+          {playsVideo && videoRequested ? (
+            <video
+              ref={videoRef}
+              className="site-discovery-card__video"
+              src={site.previewUrl}
+              poster={thumbnailUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onError={() => setVideoFailed(true)}
+            />
+          ) : null}
+          <span className="discovery-card__badge">{site.isUpdated ? 'Updated' : 'New'}</span>
         </>
       )}
-      logo={site.logoUrl
-        ? <img src={site.logoUrl} alt="" loading="lazy" />
-        : site.name.slice(0, 1).toUpperCase()}
+      // The same tile the App cards use: it handles the initial fallback when a
+      // logo is missing *or* fails to load, which hotlinked logos still do.
+      logo={(
+        <AppIcon
+          name={site.name}
+          iconUrl={site.logoUrl}
+          size={44}
+          fallbackTextColor="var(--color-text-primary)"
+        />
+      )}
       title={site.name}
       description={description}
-      metadata={showMetadata ? <>{site.label} · {site.sectionCount} sections</> : undefined}
     />
   );
 }

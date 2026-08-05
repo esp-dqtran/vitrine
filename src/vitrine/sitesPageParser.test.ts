@@ -58,6 +58,7 @@ test("parses every Site summary and facet field in the discovery envelope", () =
       pageCount: 8,
       sectionCount: 20,
       previewUrl: "/api/sites/1/versions/2/catalog-media/preview",
+      isUpdated: false,
       previewMediaKind: "image",
       previews: [{
         id: 10,

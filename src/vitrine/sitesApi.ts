@@ -214,7 +214,7 @@ async function requestSiteVersion(
   const slug = requiredText(body.slug);
   const sourceUrl = requiredText(body.sourceUrl);
   const label = requiredText(body.label);
-  const previewUrl = apiPath(body.previewUrl);
+  const previewUrl = mediaPath(body.previewUrl);
   const analysisStatus = body.analysisStatus === undefined
     ? 'evidence-only'
     : body.analysisStatus;
@@ -260,6 +260,9 @@ async function requestSiteVersion(
       label,
       isLatest: body.isLatest === true,
       previewUrl,
+      ...(typeof body.posterUrl === 'string' && body.posterUrl.startsWith('/assets/')
+        ? { posterUrl: body.posterUrl }
+        : {}),
       previewMediaKind: parsePreviewMediaKind(body.previewMediaKind),
     },
     versionOptions,
@@ -414,5 +417,15 @@ function requiredText(value: unknown): string {
 function apiPath(value: unknown): string {
   const path = requiredText(value);
   if (!path.startsWith('/api/sites/')) throw new Error('Sites returned an invalid response');
+  return path;
+}
+
+// Public catalog media (preview, poster) is served from R2 by the Worker, so it
+// is an /assets path; everything entitlement-checked still comes from the API.
+function mediaPath(value: unknown): string {
+  const path = requiredText(value);
+  if (!path.startsWith('/assets/') && !path.startsWith('/api/sites/')) {
+    throw new Error('Sites returned an invalid response');
+  }
   return path;
 }

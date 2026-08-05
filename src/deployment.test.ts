@@ -24,7 +24,17 @@ test("Cloudflare serves the SPA and runs the Worker first for API routes", async
     directory: "./dist",
     binding: "ASSETS",
     not_found_handling: "single-page-application",
-    run_worker_first: ["/api", "/api/*"],
+    // Without a run_worker_first entry the static-asset router answers first
+    // and single-page-application handling returns index.html, so the media
+    // handler never runs. Every public media prefix needs one.
+    run_worker_first: [
+      "/api",
+      "/api/*",
+      "/assets/icons/*",
+      "/assets/thumbnails/*",
+      "/assets/sites/*",
+      "/assets/ui-elements/*",
+    ],
   });
   assert.doesNotMatch(source, /API_ORIGIN/);
 });
@@ -231,8 +241,26 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
 
   // Public: already shown to signed-out visitors on the catalog.
   assert.equal(publicMediaKey("/assets/thumbnails/1/abc.jpg"), "thumbnails/1/abc.jpg");
-  assert.equal(publicMediaKey("/assets/sites/9/preview.webp"), "sites/9/preview.webp");
+  assert.equal(
+    publicMediaKey("/assets/sites/abc/versions/def/preview/ghi/9.webp"),
+    "sites/abc/versions/def/preview/ghi/9.webp",
+  );
+  assert.equal(
+    publicMediaKey("/assets/sites/abc/versions/def/poster/ghi/9.webp"),
+    "sites/abc/versions/def/poster/ghi/9.webp",
+  );
+
+  // A Site version keeps its card media next to the paid product. Full-page
+  // screenshots, section crops, the capture graph and the analysis evidence
+  // must stay behind the API's entitlement checks.
+  assert.equal(publicMediaKey("/assets/sites/abc/versions/def/page/ghi/9.webp"), null);
+  assert.equal(publicMediaKey("/assets/sites/abc/versions/def/section/ghi/9.webp"), null);
+  assert.equal(publicMediaKey("/assets/sites/abc/versions/def/source/ghi/9.json"), null);
+  assert.equal(publicMediaKey("/assets/sites/abc/versions/def/analysis/ghi/9.json"), null);
+  assert.equal(publicMediaKey("/assets/sites/abc/versions/def/mobile/ghi/9.mp4"), null);
+  assert.equal(publicMediaKey("/assets/sites/9/preview.webp"), null, "malformed site keys are not public");
   assert.equal(publicMediaKey("/assets/ui-elements/3/x.png"), "ui-elements/3/x.png");
+  assert.equal(publicMediaKey("/assets/icons/7/abc.webp"), "icons/7/abc.webp");
 
   // Private: full-resolution screens sit behind the unlock paywall, and
   // research assets are user-owned. Neither may be reachable this way.
@@ -243,6 +271,14 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
   assert.equal(publicMediaKey("/assets/thumbnails/../images/1/secret.png"), null);
   assert.equal(publicMediaKey("/assets/%2e%2e/images/1/secret.png"), null);
   assert.equal(publicMediaKey("/api/catalog"), null);
+
+  // A prefix the asset router answers first is a prefix this Worker never sees.
+  const routes = (JSON.parse(await readDeploymentFile("wrangler.jsonc")) as {
+    assets?: { run_worker_first?: string[] };
+  }).assets?.run_worker_first ?? [];
+  for (const prefix of module.PUBLIC_MEDIA_PREFIXES) {
+    assert.ok(routes.includes(`/assets/${prefix}*`), `${prefix} needs a run_worker_first route`);
+  }
 
   const worker = module.createCloudflareFrontendWorker(async () => new Response("api"));
   const assets = { fetch: async () => new Response("asset") };
@@ -257,20 +293,97 @@ test("Cloudflare serves only public media prefixes straight from R2", async () =
   assert.equal(reads, 0, "private prefixes must not hit R2");
   assert.equal(denied.status, 200, "unmatched paths fall through to static assets");
 
+  // Database object keys omit the store's write prefix, so the Worker has to
+  // add it back — without this the bucket read misses every time.
+  let requestedKey: string | null = null;
   const served = await worker.fetch(
     new Request("https://vitrines.ai/assets/thumbnails/1/abc.jpg"),
     {
       ASSETS: assets,
+      MEDIA_PREFIX: "prod",
       MEDIA: {
-        get: async () => ({
-          body: null,
-          httpMetadata: { contentType: "image/jpeg" },
-          writeHttpMetadata: (headers: Headers) => headers.set("content-type", "image/jpeg"),
-        }),
+        get: async (key: string) => {
+          requestedKey = key;
+          return {
+            body: null,
+            httpMetadata: { contentType: "image/jpeg" },
+            writeHttpMetadata: (headers: Headers) => headers.set("content-type", "image/jpeg"),
+          };
+        },
       },
     } as never,
   );
+  assert.equal(requestedKey, "prod/thumbnails/1/abc.jpg");
   assert.equal(served.status, 200);
+  assert.equal(served.headers.get("Accept-Ranges"), "bytes");
+
+  // Video elements request byte ranges. Answering with the whole file makes
+  // seeking impossible, so a Range request must come back as a 206.
+  assert.deepEqual(module.parseByteRange("bytes=0-1023"), { offset: 0, length: 1024 });
+  assert.deepEqual(module.parseByteRange("bytes=512-"), { offset: 512 });
+  assert.deepEqual(module.parseByteRange("bytes=-256"), { suffix: 256 });
+  assert.equal(module.parseByteRange("bytes=0-1023, 2048-4095"), null, "multi-range falls back to the full body");
+  assert.equal(module.parseByteRange(null), null);
+
+  let rangeOptions: unknown = null;
+  const partial = await worker.fetch(
+    new Request("https://vitrines.ai/assets/sites/a/versions/b/preview/c/9.webm", {
+      headers: { range: "bytes=100-199" },
+    }),
+    {
+      ASSETS: assets,
+      MEDIA_PREFIX: "prod",
+      MEDIA: {
+        get: async (_key: string, options?: unknown) => {
+          rangeOptions = options;
+          return {
+            body: null,
+            size: 5_000,
+            range: { offset: 100, length: 100 },
+            httpMetadata: { contentType: "video/webm" },
+            writeHttpMetadata: (headers: Headers) => headers.set("content-type", "video/webm"),
+          };
+        },
+      },
+    } as never,
+  );
+  assert.deepEqual(rangeOptions, { range: { offset: 100, length: 100 } });
+  assert.equal(partial.status, 206);
+  assert.equal(partial.headers.get("Content-Range"), "bytes 100-199/5000");
+  assert.equal(partial.headers.get("Content-Length"), "100");
+
+  // Content-addressed keys never change, so a repeat request must come from the
+  // colo cache instead of paying for another R2 read.
+  const entries = new Map<string, Response>();
+  const cachingWorker = module.createCloudflareFrontendWorker(
+    async () => new Response("api"),
+    {
+      match: async (request: Request) => entries.get(request.url),
+      put: async (request: Request, response: Response) => {
+        entries.set(request.url, response);
+      },
+    },
+  );
+  let bucketReads = 0;
+  const cachedEnvironment = {
+    ASSETS: assets,
+    MEDIA_PREFIX: "prod",
+    MEDIA: {
+      get: async () => {
+        bucketReads += 1;
+        return {
+          body: null,
+          httpMetadata: { contentType: "image/webp" },
+          writeHttpMetadata: (headers: Headers) => headers.set("content-type", "image/webp"),
+        };
+      },
+    },
+  } as never;
+  const iconRequest = () => new Request("https://vitrines.ai/assets/icons/7/abc.webp");
+  await cachingWorker.fetch(iconRequest(), cachedEnvironment);
+  const repeat = await cachingWorker.fetch(iconRequest(), cachedEnvironment);
+  assert.equal(bucketReads, 1, "a cached image must not read R2 again");
+  assert.equal(repeat.headers.get("content-type"), "image/webp");
   assert.equal(served.headers.get("content-type"), "image/jpeg");
   assert.match(served.headers.get("Cache-Control") ?? "", /immutable/);
 });

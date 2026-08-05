@@ -66,6 +66,10 @@ export interface SiteSummary {
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  /** Still shown before playback: the preview video's own first frame. */
+  posterUrl?: string;
+  /** True once the Site has been re-captured; drives the New/Updated badge. */
+  isUpdated: boolean;
   previewMediaKind: "image" | "video";
   previews: Array<{
     id: number;
@@ -116,6 +120,8 @@ export interface SiteVersionDetail {
   analysisModel?: string;
   mobilePageUrl?: string;
   previewUrl: string;
+  /** Still shown before playback: the preview video's own first frame. */
+  posterUrl?: string;
   previewMediaKind: "image" | "video";
   versions: SiteVersionOption[];
   pages: Array<{
@@ -486,7 +492,10 @@ export function createSitesStore(
                 to_jsonb(s)->'categories' AS categories,
                 to_jsonb(s)->'styles' AS styles,
                 (to_jsonb(s)->>'popularity')::integer AS popularity,
-                sv.label, sv.is_latest, sv.updated_at,
+                sv.label, sv.is_latest, sv.updated_at, sv.poster_object_key,
+                sv.preview_object_key,
+                (SELECT count(*) > 1 FROM site_versions v
+                 WHERE v.site_id = s.id AND v.status = 'ready') AS is_updated,
                 preview_object.content_type AS preview_content_type,
                 (SELECT count(*)::integer FROM site_pages sp WHERE sp.version_id = sv.id) AS page_count,
                 (SELECT count(*)::integer FROM site_sections ss
@@ -634,7 +643,7 @@ export function createSitesStore(
                AS selected(site_id, version_id)
            ), catalog_rows AS (
              SELECT selected.site_id, selected.version_id, sv.label, sv.is_latest,
-               sv.updated_at, sv.preview_object_key,
+               sv.updated_at, sv.preview_object_key, sv.poster_object_key,
                sv.catalog_snapshot
              FROM selected
              JOIN site_versions sv
@@ -653,6 +662,9 @@ export function createSitesStore(
                   COALESCE((catalog.catalog_snapshot->>'popularity')::integer, 0)
                     AS popularity,
                   catalog.label, catalog.is_latest, catalog.updated_at,
+                  catalog.poster_object_key, catalog.preview_object_key,
+                  (SELECT count(*) > 1 FROM site_versions v
+                   WHERE v.site_id = catalog.site_id AND v.status = 'ready') AS is_updated,
                   preview_object.content_type AS preview_content_type,
                   (SELECT count(*)::integer
                    FROM site_pages sp
@@ -728,7 +740,8 @@ export function createSitesStore(
                 to_jsonb(s)->'categories' AS categories,
                 to_jsonb(s)->'styles' AS styles,
                 (to_jsonb(s)->>'popularity')::integer AS popularity,
-                sv.canonical_url, sv.label, sv.is_latest,
+                sv.canonical_url, sv.label, sv.is_latest, sv.poster_object_key,
+                sv.preview_object_key,
                 preview_object.content_type AS preview_content_type
          FROM sites s
          JOIN site_versions sv ON sv.site_id = s.id
@@ -837,7 +850,11 @@ export function createSitesStore(
         ...(analysisRow.mobile_page_object_key
           ? { mobilePageUrl: mediaPath(siteId, versionId, "mobile") }
           : {}),
-        previewUrl: mediaPath(siteId, versionId, "preview"),
+        previewUrl: publicMediaUrl(headerRow.preview_object_key)
+          ?? mediaPath(siteId, versionId, "preview"),
+        ...(typeof headerRow.poster_object_key === "string" && headerRow.poster_object_key
+          ? { posterUrl: `/assets/${headerRow.poster_object_key}` }
+          : {}),
         previewMediaKind: previewMediaKind(headerRow.preview_content_type),
         versions: versionResult.rows.map((row) => ({
           id: positiveId(row.id),
@@ -1253,6 +1270,13 @@ function mediaPath(
   return `${base}/sections/${recordId}/poster`;
 }
 
+// Preview and poster objects are public catalog media, so the Worker serves
+// them from R2 directly: one request instead of an API redirect plus a
+// presigned fetch, and a stable URL the edge can actually cache.
+function publicMediaUrl(objectKey: unknown): string | undefined {
+  return typeof objectKey === "string" && objectKey ? `/assets/${objectKey}` : undefined;
+}
+
 function siteSummaryFromRow(row: Record<string, unknown>): SiteSummary {
   const siteId = positiveId(row.site_id);
   const versionId = positiveId(row.version_id);
@@ -1281,7 +1305,11 @@ function siteSummaryFromRow(row: Record<string, unknown>): SiteSummary {
     isLatest: row.is_latest === true,
     pageCount: nonNegativeInteger(row.page_count),
     sectionCount: nonNegativeInteger(row.section_count),
-    previewUrl: mediaPath(siteId, versionId, "preview"),
+    previewUrl: publicMediaUrl(row.preview_object_key) ?? mediaPath(siteId, versionId, "preview"),
+    ...(typeof row.poster_object_key === "string" && row.poster_object_key
+      ? { posterUrl: `/assets/${row.poster_object_key}` }
+      : {}),
+    isUpdated: row.is_updated === true,
     previewMediaKind: previewMediaKind(row.preview_content_type),
     previews,
     updatedAt: isoDate(row.updated_at),

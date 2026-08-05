@@ -108,6 +108,34 @@ export function thumbnailObjectKey(imageId: number, sha256: string): string {
   return `thumbnails/${imageId}/${sha256}.jpg`;
 }
 
+export function appIconObjectKey(appId: number, sha256: string): string {
+  if (!Number.isSafeInteger(appId) || appId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid app icon object identity");
+  }
+  return `icons/${appId}/${sha256}.webp`;
+}
+
+export function appPreviewThumbnailObjectKey(appId: number, sha256: string): string {
+  if (!Number.isSafeInteger(appId) || appId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid app preview thumbnail identity");
+  }
+  return `thumbnails/apps/${appId}/${sha256}.webp`;
+}
+
+export function sitePreviewPosterObjectKey(versionId: number, sha256: string): string {
+  if (!Number.isSafeInteger(versionId) || versionId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid site preview poster identity");
+  }
+  return `thumbnails/site-previews/${versionId}/${sha256}.webp`;
+}
+
+export function siteIconObjectKey(siteId: number, sha256: string): string {
+  if (!Number.isSafeInteger(siteId) || siteId <= 0 || !SHA256_PATTERN.test(sha256)) {
+    throw new Error("Invalid site icon object identity");
+  }
+  return `icons/sites/${siteId}/${sha256}.webp`;
+}
+
 export function failureObjectKey(runId: string, flowId: string, stepId: string, sha256: string): string {
   if (!/^[1-9][0-9]*$/.test(runId) || !SHA256_PATTERN.test(sha256)) {
     throw new Error("Invalid failure object identity");

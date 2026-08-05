@@ -342,7 +342,6 @@ export function SiteVersionView({
                     key={`${site.id}:${site.versionId}`}
                     site={site}
                     onOpen={() => onRelatedOpen(site)}
-                    showMetadata={false}
                   />
                 ))}
               </div>
@@ -462,6 +461,7 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
                   ref={videoRef}
                   data-site-preview-video="true"
                   src={detail.version.previewUrl}
+                  poster={detail.version.posterUrl}
                   muted
                   loop
                   playsInline

@@ -224,9 +224,13 @@ test('renders the Mobbin Sites catalog taxonomy and a semantic full-card link', 
   assert.match(html, /class="discovery-card__media site-discovery-card__media"/);
   assert.match(html, /class="discovery-card__identity site-discovery-card__identity"/);
   assert.match(html, /data-site-discovery-card="true"/);
-  assert.match(html, /46 sections/);
+  assert.doesNotMatch(html, /Latest · 46 sections/);
+  // A first capture reads "New"; a re-captured Site reads "Updated".
+  assert.match(html, /<span class="discovery-card__badge">New<\/span>/);
   assert.match(html, /AI-powered visual data platform/);
-  assert.match(html, /<video/);
+  // The card is a still until hover; the video element mounts on intent.
+  assert.doesNotMatch(html, /<video/);
+  assert.match(html, /<img[^>]+alt="V7 website preview"/);
   assert.match(html, /<a[^>]+href="\/sites\/v7"[^>]+class="discovery-card__link site-discovery-card__link"/);
   assert.doesNotMatch(html, /Refresh/);
   assert.equal((html.match(/Showing/g) ?? []).length, 1);
@@ -389,31 +393,34 @@ test('renders image-only Mobbin Site previews without a broken video element', (
   assert.doesNotMatch(version, /<video/);
 });
 
-test('defers Site video assets until the card is near the viewport', () => {
+test('shows only the derived thumbnail until the card is hovered', () => {
+  const postered: SiteSummary = { ...site, posterUrl: '/assets/thumbnails/site-previews/2/abc.webp' };
   const html = renderToStaticMarkup(
-    <SiteCardModule.SiteCard site={site} onOpen={() => undefined} />,
+    <SiteCardModule.SiteCard site={postered} onOpen={() => undefined} />,
   );
 
-  assert.match(html, /<video[^>]+preload="none"/);
+  // No <video> at all before intent: not the element, not its metadata, and
+  // above all not the multi-megabyte preview itself.
+  assert.doesNotMatch(html, /<video/);
   assert.doesNotMatch(html, new RegExp(`src="${site.previewUrl}"`));
-  assert.doesNotMatch(html, /poster=/);
+  assert.match(html, /<img[^>]+src="\/assets\/thumbnails\/site-previews\/2\/abc\.webp"/);
 });
 
-test('keeps related Site preview media inactive until user intent', () => {
-  const imageSite: SiteSummary = { ...site, previewMediaKind: 'image' };
+test('renders an image Site from its derived thumbnail, never the raw capture', () => {
+  const imageSite: SiteSummary = {
+    ...site,
+    previewMediaKind: 'image',
+    posterUrl: '/assets/thumbnails/site-previews/2/def.webp',
+  };
   const html = renderToStaticMarkup(
-    <SiteCardModule.SiteCard
-      site={imageSite}
-      onOpen={() => undefined}
-      deferMediaUntilIntent
-    />,
+    <SiteCardModule.SiteCard site={imageSite} onOpen={() => undefined} />,
   );
 
   assert.match(html, /data-site-discovery-card="true"/);
   assert.match(html, />V7</);
+  // The raw preview is the full-page capture — megabytes for a 320px card.
   assert.doesNotMatch(html, new RegExp(`src="${imageSite.previewUrl}"`));
-  assert.doesNotMatch(html, new RegExp(`src="${imageSite.previews[0]?.url}"`));
-  assert.doesNotMatch(html, /aria-label="Open V7"/);
+  assert.match(html, /<img[^>]+src="\/assets\/thumbnails\/site-previews\/2\/def\.webp"/);
 });
 
 test('uses an AA text token for related Site metadata', () => {
@@ -429,7 +436,6 @@ test('loads a bounded Mobbin-style related Site page on detail routes', () => {
   assert.doesNotMatch(source, /listSites\(\)/);
   assert.match(source, /relatedSites\.slice\(0,\s*6\)/);
   assert.match(source, /More like \{detail\.site\.name\}/);
-  assert.match(source, /showMetadata=\{false\}/);
   assert.doesNotMatch(source, /Continue exploring/);
   assert.doesNotMatch(source, /<SiteCard[\s\S]*?deferMediaUntilIntent/);
 });
@@ -452,50 +458,6 @@ test('renders related Sites with visible previews and compact identity copy', ()
   assert.match(html, new RegExp(`src="${relatedSite.previewUrl}"`));
   assert.doesNotMatch(html, /Continue exploring/);
   assert.doesNotMatch(html, new RegExp(`${relatedSite.label} · ${relatedSite.sectionCount} sections`));
-});
-
-test('activates deferred Site media once near the viewport and disconnects', () => {
-  const observeSiteCardMedia = (
-    SiteCardModule as typeof SiteCardModule & {
-      observeSiteCardMedia?: (
-        target: Element,
-        onVisible: () => void,
-        createObserver: (
-          callback: IntersectionObserverCallback,
-          options: IntersectionObserverInit,
-        ) => Pick<IntersectionObserver, 'observe' | 'disconnect'>,
-      ) => () => void;
-    }
-  ).observeSiteCardMedia;
-  assert.equal(typeof observeSiteCardMedia, 'function');
-  if (!observeSiteCardMedia) return;
-
-  let callback: IntersectionObserverCallback | undefined;
-  let visibleCalls = 0;
-  let disconnectCalls = 0;
-  const target = {} as Element;
-  const cleanup = observeSiteCardMedia(
-    target,
-    () => { visibleCalls += 1; },
-    (next, options) => {
-      callback = next;
-      assert.deepEqual(options, { rootMargin: '320px 0px', threshold: 0.01 });
-      return {
-        observe: (value) => assert.equal(value, target),
-        disconnect: () => { disconnectCalls += 1; },
-      };
-    },
-  );
-
-  callback?.(
-    [{ isIntersecting: true } as IntersectionObserverEntry],
-    {} as IntersectionObserver,
-  );
-  assert.equal(visibleCalls, 1);
-  assert.equal(disconnectCalls, 1);
-
-  cleanup();
-  assert.equal(disconnectCalls, 2);
 });
 
 test('delegates query, sort, filters, pagination, and retry state to the generic controller', () => {

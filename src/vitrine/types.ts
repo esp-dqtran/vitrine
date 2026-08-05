@@ -47,6 +47,8 @@ export interface AppSummary {
   iconUrl?: string | null;
   /** Thumbnail served straight from R2 by the Worker. */
   previewUrl?: string | null;
+  /** True once the App has been re-captured; drives the New/Updated badge. */
+  isUpdated?: boolean;
   description?: string | null;
   previewVideoUrl?: string | null;
 }
@@ -88,6 +90,10 @@ export interface SiteSummary {
   pageCount: number;
   sectionCount: number;
   previewUrl: string;
+  /** The preview video's own first frame, so the still matches playback start. */
+  posterUrl?: string;
+  /** True once the Site has been re-captured; drives the New/Updated badge. */
+  isUpdated?: boolean;
   previewMediaKind?: 'image' | 'video';
   previews: SitePagePreview[];
   updatedAt: string;
@@ -153,6 +159,7 @@ export interface SiteVersionDetail {
     label: string;
     isLatest: boolean;
     previewUrl: string;
+    posterUrl?: string;
     previewMediaKind?: 'image' | 'video';
   };
   versionOptions: SiteVersionOption[];
@@ -265,6 +272,9 @@ export interface GrowthStats {
   dau: number;
   wau: number;
   total_free_unlocks: number;
+  active_monthly: number;
+  active_yearly: number;
+  canceled_30d: number;
 }
 
 export interface DailySignupPoint {

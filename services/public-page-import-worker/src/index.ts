@@ -1,3 +1,4 @@
+import { storeAppIcon } from "../../../src/appIconStore.ts";
 import { pool } from "../../../src/db.ts";
 import { assertMigrationsCurrent } from "../../../src/migrations.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
@@ -25,6 +26,7 @@ await startPublicPageImportWorker({
         browser,
         objectStore,
         pageStore,
+        storeIcon: (appId, sourceUrl) => storeAppIcon({ objectStore }, appId, sourceUrl),
         isCancelled: controls.isCancelled,
         report: controls.report,
       }),

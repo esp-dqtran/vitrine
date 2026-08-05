@@ -7,6 +7,11 @@ const CANVAS_COLLAB_TARGET = process.env.VITRINE_CANVAS_COLLAB_TARGET
 const PROJECT_DOCUMENT_COLLAB_TARGET = process.env.VITRINE_PROJECT_DOCUMENT_COLLAB_TARGET
   ?? "http://127.0.0.1:3013";
 
+// Catalog media lives in R2 and is served by the Cloudflare Worker, which does
+// not run under `vite dev`. Point the same public prefixes at the deployed
+// Worker — it reads the same prod bucket, so dev sees exactly what ships.
+const MEDIA_TARGET = process.env.VITRINE_MEDIA_TARGET ?? "https://vitrines.ai";
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -15,6 +20,10 @@ export default defineConfig({
     // than pinning one hostname that'll go stale next time the tunnel is recreated.
     allowedHosts: [".ngrok-free.app"],
     proxy: {
+      "^/assets/(icons|thumbnails|sites|ui-elements)/": {
+        target: MEDIA_TARGET,
+        changeOrigin: true,
+      },
       "/api/project-document-collaboration": {
         target: PROJECT_DOCUMENT_COLLAB_TARGET,
         ws: true,

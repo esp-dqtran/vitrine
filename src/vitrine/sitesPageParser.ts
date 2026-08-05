@@ -40,6 +40,13 @@ function apiPath(value: unknown): string {
   return path.startsWith("/api/sites/") ? path : invalid();
 }
 
+// Public catalog media (preview, poster) is served from R2 by the Worker, so it
+// is an /assets path; everything entitlement-checked still comes from the API.
+function mediaPath(value: unknown): string {
+  const path = requiredText(value);
+  return path.startsWith("/assets/") || path.startsWith("/api/sites/") ? path : invalid();
+}
+
 function optionalText(
   item: Record<string, unknown>,
   key: string,
@@ -110,7 +117,12 @@ export function parseSiteSummary(value: unknown): SiteSummary {
     isLatest: item.isLatest,
     pageCount: nonNegativeInteger(item.pageCount),
     sectionCount: nonNegativeInteger(item.sectionCount),
-    previewUrl: apiPath(item.previewUrl),
+    previewUrl: mediaPath(item.previewUrl),
+    // Served by the Worker from R2, so it is not an /api path.
+    ...(typeof item.posterUrl === "string" && item.posterUrl.startsWith("/assets/")
+      ? { posterUrl: item.posterUrl }
+      : {}),
+    isUpdated: item.isUpdated === true,
     previewMediaKind: mediaKind,
     previews,
     updatedAt,

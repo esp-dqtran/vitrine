@@ -163,7 +163,8 @@
     .project-canvas-document-editor *,
     .document-flow *,
     .flow-preview-dialog *,
-    .excalidraw *
+    .excalidraw *,
+    .discovery-card__copy *
   ) {
   font: var(--vitrine-type-heading) !important;
   letter-spacing: normal !important;
