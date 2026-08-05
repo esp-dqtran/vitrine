@@ -378,6 +378,18 @@ async function captureScrolledPagePng(
   const tiles: Array<{ input: Buffer; top: number; left: 0 }> = [];
   const clipBottom = clip.y + clip.height;
   const maximumScrollTop = Math.max(0, clipBottom - viewport.height);
+  // Measure sticky chrome from a scrolled position rather than at rest. Plenty
+  // of headers sit in normal flow at scroll 0 — below a promo bar, say — and
+  // only pin once the page moves. Measured at rest they fail the rect.top <= 1
+  // test below, the inset comes out 0, and the header is then re-painted into
+  // the top of every stitched tile instead of appearing once.
+  await page.evaluate(async (top) => {
+    window.scrollTo(0, top);
+    await new Promise<void>((resolve) => requestAnimationFrame(() =>
+      requestAnimationFrame(() => resolve())
+    ));
+  }, Math.min(maximumScrollTop, viewport.height));
+  await page.waitForTimeout(120);
   const topOverlayHeight = await page.evaluate(({ width, height }) => {
     let bottom = 0;
     for (const element of document.querySelectorAll("*")) {
