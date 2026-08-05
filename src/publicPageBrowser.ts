@@ -246,6 +246,12 @@ async function createCaptureContext(
     deviceScaleFactor: 1,
     acceptDownloads: false,
     serviceWorkers: "block",
+    // Capture injects a stylesheet to freeze animations and scroll-snap before
+    // screenshotting. Sites with a strict style-src CSP (1password.com, for
+    // one) reject that injected <style>, addStyleTag throws, and the whole
+    // crawl fails. This only relaxes CSP inside our own headless context — the
+    // page is still fetched and rendered normally.
+    bypassCSP: true,
     ...(proxyServer ? { proxy: { server: proxyServer } } : {}),
   });
   await context.route("**/*", async (route) => {

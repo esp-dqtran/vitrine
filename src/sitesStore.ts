@@ -935,11 +935,20 @@ export function createSitesStore(
         popularity: graph.site.popularity ?? 0,
       });
       return runTransaction(async (tx) => {
+        // Normalize scheme and a leading `www.` as well as the trailing slash:
+        // an existing row may hold https://www.1password.com/ while a re-crawl
+        // reports https://1password.com/, and matching on the trailing slash
+        // alone treated those as different sites — forking a duplicate
+        // ("1password-2") instead of adding a version to the existing one.
+        //
+        // The path is deliberately preserved. Reducing to bare hostname would
+        // merge genuinely distinct sites such as adobe.com and
+        // adobe.com/express.
         const matchingSite = await tx(
           `SELECT id
            FROM sites
-           WHERE regexp_replace(lower(source_url), '/+$', '') =
-                 regexp_replace(lower($1), '/+$', '')
+           WHERE regexp_replace(regexp_replace(lower(source_url), '^https?://(www\\.)?', ''), '/+$', '') =
+                 regexp_replace(regexp_replace(lower($1), '^https?://(www\\.)?', ''), '/+$', '')
            ORDER BY id
            LIMIT 1
            FOR UPDATE`,

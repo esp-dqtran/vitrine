@@ -1,5 +1,4 @@
 import type { App } from './types.ts';
-import { apiFetch } from './apiFetch.ts';
 import type {
   DiscoveryAdapter,
   DiscoveryFilter,
@@ -16,7 +15,6 @@ import {
 import type { AppsFacet, AppsPlatform } from './appsDiscovery.ts';
 import { normalizeDiscoveryFilters } from './discoveryState.ts';
 import { fetchCatalogPage } from './useApps.ts';
-import { parseAdminAppsPage } from './catalogPageParser.ts';
 import {
   appendFacetSearchParams,
   loadDiscoveryFacets,
@@ -151,18 +149,8 @@ export function createAppsDiscoveryAdapter(
       return params.toString();
     },
     async request(state, cursor, signal) {
-      if (initial.source === 'admin') {
-        const endpoint = appsCatalogRequestPath(state, cursor, 'admin');
-        const response = await apiFetch(endpoint, { signal });
-        if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
-        const page = parseAdminAppsPage(await response.json());
-        return {
-          items: page.apps,
-          nextCursor: page.nextCursor,
-          totalCount: page.total,
-          facets: page.facets,
-        };
-      }
+      // No admin branch: /api/apps is the public Apps grid now, and the admin
+      // list it used to serve is gone. Admins read the same endpoint.
       const page = await fetchCatalogPage(
         appsCatalogRequestPath(state, cursor),
         signal,

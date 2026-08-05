@@ -1,57 +1,25 @@
-import { useState, type CSSProperties } from 'react';
-import { Badge, Button, EmptyState, SegmentedControl, SegmentedControlItem, Spinner, Text, TextInput } from '@astryxdesign/core';
+import { type CSSProperties } from 'react';
+import { Button, EmptyState, Spinner, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
 import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
 import type { UiElementSummaryItem } from '../appsApi.ts';
 import type { DesignSystemGenerationView } from '../useDesignSystemGeneration.ts';
 import { DESIGN_SYSTEM_REFERENCE_STYLES } from '../designSystemReferenceStyles.ts';
 import { DesignSystemReferencePane } from './DesignSystemReferencePane.tsx';
-
-const KIND_LABELS: Record<TokenKind, string> = {
-  color: 'Colors',
-  typography: 'Typography',
-  spacing: 'Spacing',
-  radius: 'Radii',
-  border: 'Borders',
-  effect: 'Effects',
-};
-
-const SECTION_LABELS: Record<TokenKind, string> = {
-  color: 'Color palette',
-  typography: 'Typography scale',
-  spacing: 'Spacing rhythm',
-  radius: 'Corner radii',
-  border: 'Border styles',
-  effect: 'Effects & elevation',
-};
-
-const REVIEW_VARIANT: Record<ReviewStatus, 'success' | 'warning' | 'error'> = {
-  reviewed: 'success',
-  needs_review: 'warning',
-  rejected: 'error',
-};
+import {
+  ColorSection,
+  FoundationSection,
+  KIND_LABELS,
+  ReviewFooter,
+  SectionHeading,
+  safeColor,
+  ThemeCanvas,
+  titleCase,
+  TypographySection,
+} from './DesignSystemShowcase.tsx';
 
 type Snapshot = DesignSystemSnapshot<EvidenceView>;
 type Token = Snapshot['tokens'][number];
-
-const titleCase = (value: string) => value
-  .replace(/[-_]+/g, ' ')
-  .replace(/\b\w/g, (letter) => letter.toUpperCase());
-
-const pxValue = (value: string): number | undefined => {
-  const match = /(-?\d+(?:\.\d+)?)\s*px/.exec(value);
-  return match ? Number(match[1]) : undefined;
-};
-
-const typographyProperty = (value: string, property: string): string | undefined => {
-  const match = new RegExp(`${property}:\\s*([^;]+)`, 'i').exec(value);
-  return match?.[1]?.trim();
-};
-
-const safeColor = (value: string | undefined, fallback: string): string => {
-  if (!value) return fallback;
-  return /^(?:#[0-9a-f]{3,8}|rgba?\(|hsla?\(|[a-z]+$|var\()/i.test(value.trim()) ? value.trim() : fallback;
-};
 
 const markdownText = (value: string): string => value.replace(/\|/g, '\\|').replace(/\n+/g, ' ');
 
@@ -103,108 +71,6 @@ function EvidenceLinks({ evidence }: { evidence: EvidenceView[] }) {
         ))}
       </div>
     </div>
-  );
-}
-
-function ReviewFooter({ confidence, reviewStatus }: { confidence?: number; reviewStatus?: ReviewStatus }) {
-  if (confidence == null && !reviewStatus) return null;
-  return (
-    <div className="ds-review">
-      {reviewStatus ? <Badge variant={REVIEW_VARIANT[reviewStatus]} label={reviewStatus === 'reviewed' ? 'Reviewed' : reviewStatus === 'rejected' ? 'Rejected' : 'Needs review'} /> : null}
-      {confidence != null ? <Text type="supporting" color="secondary">{Math.round(confidence * 100)}% confidence</Text> : null}
-    </div>
-  );
-}
-
-function SectionHeading({ index, title, description }: { index: number; title: string; description: string }) {
-  return (
-    <header className="ds-section__heading">
-      <span>{String(index).padStart(2, '0')}</span>
-      <div>
-        <h3>{title}</h3>
-        <p>{description}</p>
-      </div>
-    </header>
-  );
-}
-
-function TokenMeta({ token }: { token: Token }) {
-  return (
-    <div className="ds-token__meta">
-      <div className="ds-token__name">{token.name}</div>
-      <code>{token.value}</code>
-      <p>{token.role}</p>
-      <EvidenceLinks evidence={token.evidence} />
-      <ReviewFooter confidence={token.confidence} reviewStatus={token.reviewStatus} />
-    </div>
-  );
-}
-
-function ColorSection({ index, tokens }: { index: number; tokens: Token[] }) {
-  return (
-    <section className="ds-section">
-      <SectionHeading index={index} title="Color palette" description="Core colors and the roles they play across the product." />
-      <div className="ds-colors">
-        {tokens.map((token) => (
-          <article className="ds-color" key={token.id}>
-            <div className="ds-color__swatch" style={{ background: safeColor(token.value, 'var(--ds-muted)') }} />
-            <TokenMeta token={token} />
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function TypographySection({ index, tokens }: { index: number; tokens: Token[] }) {
-  return (
-    <section className="ds-section">
-      <SectionHeading index={index} title="Typography scale" description="Type roles shown at their extracted size, weight, and rhythm." />
-      <div className="ds-type-list">
-        {tokens.map((token) => {
-          const size = Math.min(Number.parseFloat(typographyProperty(token.value, 'font-size') ?? '') || pxValue(token.value) || 18, 64);
-          const weight = typographyProperty(token.value, 'font-weight');
-          const lineHeight = typographyProperty(token.value, 'line-height');
-          const family = typographyProperty(token.value, 'font-family');
-          return (
-            <article className="ds-type" key={token.id}>
-              <div className="ds-type__sample" style={{ fontSize: size, fontWeight: weight, lineHeight, fontFamily: family }}>{token.name}</div>
-              <TokenMeta token={token} />
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function FoundationSample({ token }: { token: Token }) {
-  const amount = Math.max(2, Math.min(pxValue(token.value) ?? 16, 144));
-  if (token.kind === 'spacing') return <div className="ds-foundation__spacing" style={{ width: amount }} />;
-  if (token.kind === 'radius') return <div className="ds-foundation__shape" style={{ borderRadius: amount }} />;
-  if (token.kind === 'border') return <div className="ds-foundation__shape" style={{ borderWidth: Math.min(amount, 8) }} />;
-  return <div className="ds-foundation__effect" style={{ boxShadow: token.value }} />;
-}
-
-function FoundationSection({ index, kind, tokens }: { index: number; kind: TokenKind; tokens: Token[] }) {
-  const descriptions: Partial<Record<TokenKind, string>> = {
-    spacing: 'A consistent spacing rhythm for layout and controls.',
-    radius: 'Corner treatments used to shape product surfaces.',
-    border: 'Stroke treatments that separate and define surfaces.',
-    effect: 'Elevation and visual effects used to establish depth.',
-  };
-  return (
-    <section className="ds-section">
-      <SectionHeading index={index} title={SECTION_LABELS[kind]} description={descriptions[kind] ?? 'Extracted foundation tokens.'} />
-      <div className="ds-foundations">
-        {tokens.map((token) => (
-          <article className="ds-foundation" key={token.id}>
-            <div className="ds-foundation__preview"><FoundationSample token={token} /></div>
-            <TokenMeta token={token} />
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -432,7 +298,7 @@ export function DesignSystemPanel({
   totalComponentOccurrences = 0,
   totalComponentTypes = 0,
 }: DesignSystemPanelProps) {
-  const [stage, setStage] = useState<'light' | 'dark'>('dark');
+  const renderEvidence = (evidence: EvidenceView[]) => <EvidenceLinks evidence={evidence} />;
   const cropOverview = componentCrops.length ? (
     <ComponentCropOverview
       appName={appName ?? snapshot?.app ?? 'App'}
@@ -506,34 +372,22 @@ export function DesignSystemPanel({
         <div className="ds-refero-reference">
           {screenshot ? <figure className="ds-refero-hero"><img src={screenshot} alt={`${titleCase(snapshot.app)} source website`} /></figure> : null}
           {cropOverview}
-          <div className="ds-toolbar">
-            <span className="ds-page__eyebrow">Style preview</span>
-            <SegmentedControl className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
-              <SegmentedControlItem value="light" label="Light" />
-              <SegmentedControlItem value="dark" label="Dark" />
-            </SegmentedControl>
-          </div>
-          <div className={`ds-canvas ds-canvas--${stage}`} data-theme={stage}>
-          <header className="ds-canvas__intro">
-            <div className="ds-canvas__intro-copy">
-              <span>Living styleguide</span>
-              <h3>{titleCase(snapshot.app)} foundations &amp; components</h3>
-              <p>Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Vitrines.</p>
-            </div>
-            {showcaseComponent && showcaseVariant ? (
-              <div className="ds-canvas__showcase"><ComponentSample componentName={showcaseComponent.name} variant={showcaseVariant} /></div>
-            ) : null}
-          </header>
-
-          {tokenGroups.map(([kind, tokens]) => {
-            sectionIndex += 1;
-            if (kind === 'color') return <ColorSection key={kind} index={sectionIndex} tokens={tokens} />;
-            if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} />;
-            return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} />;
-          })}
-          {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
-          {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} /> : null}
-          </div>
+          <ThemeCanvas
+            title={`${titleCase(snapshot.app)} foundations & components`}
+            description="Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Vitrines."
+            showcase={showcaseComponent && showcaseVariant
+              ? <ComponentSample componentName={showcaseComponent.name} variant={showcaseVariant} />
+              : undefined}
+          >
+            {tokenGroups.map(([kind, tokens]) => {
+              sectionIndex += 1;
+              if (kind === 'color') return <ColorSection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} />;
+              if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} />;
+              return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} renderEvidence={renderEvidence} />;
+            })}
+            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
+            {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} /> : null}
+          </ThemeCanvas>
         </div>
         <DesignSystemReferencePane snapshot={snapshot} markdown={designSystemMarkdown(snapshot)} />
       </div>

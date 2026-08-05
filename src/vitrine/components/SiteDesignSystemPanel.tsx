@@ -1,9 +1,15 @@
-import { EmptyState } from '@astryxdesign/core';
+import { EmptyState, Text } from '@astryxdesign/core';
 import type { DesignSystemSnapshot, TokenKind } from '../../designSystem.ts';
 import { createSiteDesignSystem } from '../../siteDesignSystem.ts';
 import { DESIGN_SYSTEM_REFERENCE_STYLES } from '../designSystemReferenceStyles.ts';
 import type { SiteVersionDetail } from '../types.ts';
 import { DesignSystemReferencePane } from './DesignSystemReferencePane.tsx';
+import { ColorSection, FoundationSection, ThemeCanvas, TypographySection } from './DesignSystemShowcase.tsx';
+
+function renderSiteEvidence(evidence: string[]) {
+  if (!evidence.length) return null;
+  return <Text as="div" type="supporting" color="secondary">{evidence.length} source element{evidence.length === 1 ? '' : 's'}</Text>;
+}
 
 const SITE_DESIGN_SYSTEM_STYLES = String.raw`
 .site-design-system {
@@ -212,25 +218,18 @@ export function SiteDesignSystemPanel({ detail }: { detail: SiteVersionDetail })
               <span>Captured evidence</span>
             </div>
           </section>
-          <section className="site-design-system__section">
-            <header><h3>Foundations</h3><span>{snapshot.tokens.length} observed tokens</span></header>
-            <div className="site-design-system__token-groups">
-              {grouped.map(([kind, tokens]) => (
-                <div className="site-design-system__token-group" key={kind}>
-                  <strong>{kind}</strong>
-                  <div className="site-design-system__tokens">
-                    {tokens.map((token) => (
-                      <span className="site-design-system__token" title={token.role} key={token.id}>
-                        {kind === 'color' ? <i className="site-design-system__swatch" style={{ background: token.value }} /> : null}
-                        <span>{token.name}</span>
-                        <code>{token.value}</code>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          {grouped.length ? (
+            <ThemeCanvas
+              title={`${snapshot.app} foundations`}
+              description="Color, typography, and spacing tokens read directly from the rendered page's computed CSS."
+            >
+              {grouped.map(([kind, tokens], index) => {
+                if (kind === 'color') return <ColorSection key={kind} index={index + 1} tokens={tokens} renderEvidence={renderSiteEvidence} />;
+                if (kind === 'typography') return <TypographySection key={kind} index={index + 1} tokens={tokens} renderEvidence={renderSiteEvidence} />;
+                return <FoundationSection key={kind} index={index + 1} kind={kind} tokens={tokens} renderEvidence={renderSiteEvidence} />;
+              })}
+            </ThemeCanvas>
+          ) : null}
           <section className="site-design-system__section">
             <header><h3>Components</h3><span>{snapshot.components.length} families</span></header>
             <div className="site-design-system__components">
