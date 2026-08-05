@@ -17,21 +17,37 @@ const MATCHES = `
 SELECT a.id,
        a.name,
        a.preview_object_key AS current_key,
-       sv.preview_object_key AS preview_object_key
+       m.key                AS preview_object_key,
+       m.source             AS source
 FROM apps a
 JOIN LATERAL (
-  SELECT sv.id AS vid
-  FROM sites s
-  JOIN site_versions sv ON sv.site_id = s.id
-  JOIN stored_objects so ON so.object_key = sv.preview_object_key
-  WHERE sv.status = 'ready'
-    AND so.content_type LIKE 'image/%'
-    AND regexp_replace(regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
-      = regexp_replace(regexp_replace(lower(a.website_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
-  ORDER BY sv.created_at DESC
+  SELECT key, source FROM (
+    -- Preferred: the version's own card preview, when it is an image.
+    SELECT so.object_key AS key, 'preview' AS source, 0 AS rank, sv.created_at
+    FROM sites s
+    JOIN site_versions sv ON sv.site_id = s.id
+    JOIN stored_objects so ON so.object_key = sv.preview_object_key
+    WHERE sv.status = 'ready'
+      AND so.content_type LIKE 'image/%'
+      AND regexp_replace(regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+        = regexp_replace(regexp_replace(lower(a.website_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+    UNION ALL
+    -- Fallback: the full-page screenshot. site_versions.preview_object_key is
+    -- often a scroll video, which an <img> cannot render, but the crawl also
+    -- stores a real full-page capture and those are always images.
+    SELECT so.object_key AS key, 'full_page' AS source, 1 AS rank, sv.created_at
+    FROM sites s
+    JOIN site_versions sv ON sv.site_id = s.id
+    JOIN site_pages sp ON sp.version_id = sv.id
+    JOIN stored_objects so ON so.object_key = sp.full_page_object_key
+    WHERE sv.status = 'ready'
+      AND so.content_type LIKE 'image/%'
+      AND regexp_replace(regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+        = regexp_replace(regexp_replace(lower(a.website_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+  ) candidates
+  ORDER BY rank, created_at DESC, key
   LIMIT 1
 ) m ON TRUE
-JOIN site_versions sv ON sv.id = m.vid
 WHERE a.website_url IS NOT NULL
   -- App-store listings are not the product's site; a capture of one would show
   -- a store page rather than the app.
@@ -45,7 +61,7 @@ async function main() {
   console.log(`apps matched to an image site capture: ${rows.length}`);
   console.log(`would change:                          ${changed.length}`);
   for (const row of changed.slice(0, 8)) {
-    console.log(`  ${String(row.name).slice(0, 44).padEnd(46)} -> ${row.preview_object_key}`);
+    console.log(`  ${String(row.name).slice(0, 34).padEnd(36)} ${String(row.source).padEnd(10)} ${String(row.preview_object_key).slice(0, 48)}`);
   }
   if (changed.length > 8) console.log(`  … and ${changed.length - 8} more`);
 
