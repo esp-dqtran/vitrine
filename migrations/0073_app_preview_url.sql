@@ -1,0 +1,11 @@
+-- The Apps grid renders one thumbnail per card. Today that costs a
+-- /api/preview-media/{app}/1 request per card (22 of the 32 API calls on a
+-- single Apps page load), and the list query has to carry a preview-screen
+-- pass — two LATERAL joins plus ~6 NOT EXISTS anti-joins — purely to work out
+-- which screen to show. Screens are unclassified, so that choice is arbitrary
+-- anyway.
+--
+-- Storing the thumbnail on the app collapses both: the list query returns a
+-- URL, and the card loads it directly. Nullable so it degrades to the existing
+-- screen-capture behaviour wherever it is not set.
+ALTER TABLE apps ADD COLUMN IF NOT EXISTS preview_url TEXT;

@@ -9,6 +9,7 @@ import type { UiElementCandidate } from "./uiElementExtraction.ts";
 
 export type UiElementCropQualityIssue =
   | "content-clipped"
+  | "excess-padding"
   | "implausible-geometry"
   | "semantic-type-mismatch"
   | "too-small";
@@ -107,6 +108,60 @@ function paddedContentRegion(cropRegion: PixelRegion, bounds: PixelRegion): Pixe
   return { left, top, width: right - left, height: bottom - top };
 }
 
+// Container/layout types legitimately carry generous internal whitespace by design
+// (a Dialog's padding, a Carousel's inter-card gaps), so the excess-padding check would
+// false-positive on them. Everything else is a compact, self-contained control or glyph
+// that should fill most of its own crop.
+const PADDING_TOLERANT_TYPES = new Set([
+  "Banner",
+  "Card",
+  "Carousel",
+  "Coach Marks",
+  "Context Menu",
+  "Dialog",
+  "Drawer",
+  "Dropdown Menu",
+  "Full-Screen Overlay",
+  "Gallery",
+  "Grid List",
+  "Navigation Menu",
+  "Popover",
+  "Side Navigation",
+  "Stacked List",
+  "Table",
+  "Table of Contents",
+  "Toolbar",
+  "Top Navigation Bar",
+  "Tree",
+]);
+
+// ponytail: one-sided threshold (content touches the opposite edge while leaving a wide
+// gap on this one) rather than a flat fill-ratio, so a Card with even, deliberate padding
+// on both sides doesn't get flagged as loose. Raise the tolerated-gap fraction if compact
+// controls start false-positiving on legitimate internal padding.
+const EXCESS_PADDING_GAP_FRACTION = 0.15;
+// validateComponentCropRegion pads the requested region by a few pixels before extraction,
+// so a genuinely flush side rarely lands at exactly 0px — this tolerates that jitter without
+// being loose enough to miss a real wide gap on the opposite side.
+const NEAR_EDGE_FRACTION = 0.05;
+
+function hasExcessPadding(type: string, cropRegion: PixelRegion, bounds: PixelRegion): boolean {
+  if (PADDING_TOLERANT_TYPES.has(type)) return false;
+  const leftGap = bounds.left;
+  const rightGap = cropRegion.width - (bounds.left + bounds.width);
+  const topGap = bounds.top;
+  const bottomGap = cropRegion.height - (bounds.top + bounds.height);
+  const wideHorizontalGap = cropRegion.width * EXCESS_PADDING_GAP_FRACTION;
+  const wideVerticalGap = cropRegion.height * EXCESS_PADDING_GAP_FRACTION;
+  const nearHorizontalEdge = Math.max(2, cropRegion.width * NEAR_EDGE_FRACTION);
+  const nearVerticalEdge = Math.max(2, cropRegion.height * NEAR_EDGE_FRACTION);
+  const oneSidedHorizontal = (leftGap > wideHorizontalGap && rightGap <= nearHorizontalEdge)
+    || (rightGap > wideHorizontalGap && leftGap <= nearHorizontalEdge);
+  const oneSidedVertical = (topGap > wideVerticalGap && bottomGap <= nearVerticalEdge)
+    || (bottomGap > wideVerticalGap && topGap <= nearVerticalEdge);
+  return oneSidedHorizontal || oneSidedVertical;
+}
+
 function compactGeometryIsPlausible(type: string, bounds: PixelRegion): boolean {
   const ratio = bounds.width / bounds.height;
   if (type === "Status Dot") return ratio >= 0.72 && ratio <= 1.38;
@@ -197,6 +252,11 @@ export async function deriveUiElementCrop(input: {
   const issues: UiElementCropQualityIssue[] = [];
   if (cropRegion.width < 24 || cropRegion.height < 24) issues.push("too-small");
   if (edgeRefinable && anyTouched(touched)) issues.push("content-clipped");
+  // Symmetric edge-touching (e.g. a genuinely full-width filter row) is fine and left to
+  // the check above; this catches the asymmetric case content-clipped never covered — one
+  // side flush against the crop boundary while the opposite side has a wide gap, which is
+  // what a misplaced (not intentionally full-bleed) crop boundary looks like.
+  if (hasExcessPadding(input.candidate.type, cropRegion, bounds)) issues.push("excess-padding");
   if (
     !compactGeometryIsPlausible(input.candidate.type, bounds)
     || !menuGeometryIsPlausible({

@@ -220,39 +220,7 @@ test("Cloudflare does not cache public-route errors or origin no-store responses
   assert.equal(stored.size, 0);
 });
 
-test("Railway deploys the API Dockerfile, migrates first, and checks real readiness", async () => {
+test("no Railway config remains now that the API isn't deployed there", async () => {
   const source = await readDeploymentFile("railway.json");
-  assert.notEqual(source, "", "railway.json must exist");
-
-  const config = JSON.parse(source) as {
-    build?: { builder?: string; dockerfilePath?: string };
-    deploy?: {
-      preDeployCommand?: string[];
-      healthcheckPath?: string;
-      healthcheckTimeout?: number;
-      restartPolicyType?: string;
-      restartPolicyMaxRetries?: number;
-    };
-  };
-
-  assert.deepEqual(config.build, {
-    builder: "DOCKERFILE",
-    dockerfilePath: "services/api/Dockerfile",
-  });
-  assert.deepEqual(config.deploy, {
-    preDeployCommand: ["node --experimental-strip-types scripts/migrate.ts"],
-    healthcheckPath: "/ready",
-    healthcheckTimeout: 300,
-    restartPolicyType: "ON_FAILURE",
-    restartPolicyMaxRetries: 10,
-  });
-
-  const dockerfile = await readDeploymentFile("services/api/Dockerfile");
-  assert.match(dockerfile, /RUN npm ci --omit=dev/);
-  assert.match(dockerfile, /COPY scripts \.\/scripts/);
-  assert.match(
-    dockerfile,
-    /CMD \["node", "--experimental-strip-types", "services\/api\/src\/index\.ts"\]/,
-  );
-  assert.doesNotMatch(dockerfile, /npx/);
+  assert.equal(source, "", "railway.json should not exist");
 });

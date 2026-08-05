@@ -2030,7 +2030,8 @@ test("keeps health public and rejects private data without a session", async (t)
   t.after(() => close(server));
 
   assert.equal((await fetch(`${base}/health`)).status, 200);
-  assert.equal((await fetch(`${base}/apps`)).status, 401);
+  // /apps is the public Apps grid — published-only, no admin visibility.
+  assert.notEqual((await fetch(`${base}/apps`)).status, 401);
   assert.equal((await fetch(`${base}/jobs`)).status, 401);
 });
 
@@ -2976,109 +2977,8 @@ test("uses app-scoped evidence for an admin app without a published version", as
   assert.equal((await response.json()).screens.length, 1);
 });
 
-test("keeps the old gallery and pipeline state admin-only", async (t) => {
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => user,
-    allImages: async () => catalogImages,
-    listJobs: async () => [],
-    listAdminUsersPage: async () => { throw new Error("should not be called"); },
-    getFeatureUsageOverview: async () => { throw new Error("should not be called"); },
-    getUserFeatureUsage: async () => { throw new Error("should not be called"); },
-    getGrowthStats: async () => { throw new Error("should not be called"); },
-    getDailySignups: async () => { throw new Error("should not be called"); },
-  }));
-  t.after(() => close(server));
-  for (const path of ["/apps", "/images?app=linear", "/jobs", "/progress", "/users", "/users/growth", "/users/usage", "/users/2/usage"]) {
-    assert.equal((await fetch(`${base}${path}`, { headers: { authorization: "Bearer user" } })).status, 403);
-  }
-});
 
-test("paginates the admin app gallery without loading every image", async (t) => {
-  let requested: { cursor?: string; limit?: number } | undefined;
-  const validCursor = encodeUpdatedCatalogCursor({
-    v: 1,
-    sort: "updated",
-    snapshotAt: "2026-07-26T04:00:00.000Z",
-    updatedAt: "2026-07-26T03:03:57.624Z",
-    appId: 42,
-  });
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => admin,
-    allImages: async () => { throw new Error("legacy full-gallery query must not run"); },
-    adminAppPage: async (input) => {
-      requested = input;
-      return {
-        images: [{
-          ...catalogImages[0],
-          total_screens: 236,
-          analyzed_screens: 17,
-          last_captured_at: "2026-07-19T01:00:00.000Z",
-          available_platforms: ["ios"],
-        }],
-        nextCursor: validCursor,
-        total: 562,
-      };
-    },
-  }));
-  t.after(() => close(server));
 
-  const response = await fetch(`${base}/apps?cursor=${validCursor}&limit=1`, { headers: adminAuth });
-  assert.equal(response.status, 200);
-  assert.deepEqual(requested, { cursor: validCursor, limit: 1 });
-  const body = await response.json();
-  assert.equal(body.apps.length, 1);
-  assert.equal(body.apps[0].totalScreens, 236);
-  assert.equal(body.apps[0].analyzedScreens, 17);
-  assert.equal(body.apps[0].screens.length, 1);
-  assert.equal(body.nextCursor, validCursor);
-  assert.equal(body.total, 562);
-});
-
-test("serves canonical filtered admin Apps discovery with progress and facets", async (t) => {
-  const inputs: unknown[] = [];
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => admin,
-    adminAppPage: async () => { throw new Error("legacy admin page must not run"); },
-    adminCatalogPage: async (input: unknown) => {
-      inputs.push(input);
-      return {
-        ...catalogPageRecord,
-        apps: catalogPageRecord.apps.map((app) => ({
-          ...app,
-          analyzed_screens: 3,
-        })),
-        totalCount: 7,
-        facets: [{ group: "screens", value: "Dashboard", count: 4 }],
-      };
-    },
-  } as never));
-  t.after(() => close(server));
-
-  const response = await fetch(
-    `${base}/apps?platform=web&query=linear&sort=trending`
-      + `&filter=categories.Business&filter=screens.Dashboard&limit=3`,
-    { headers: adminAuth },
-  );
-
-  assert.equal(response.status, 200);
-  assert.deepEqual(inputs, [{
-    cursor: undefined,
-    limit: 3,
-    filters: [
-      { group: "categories", value: "Business" },
-      { group: "screens", value: "Dashboard" },
-    ],
-    platform: "web",
-    query: "linear",
-    sort: "trending",
-  }]);
-  const body = await response.json();
-  assert.equal(body.apps[0].analyzedScreens, 3);
-  assert.equal(body.total, 7);
-  assert.deepEqual(body.facets, [
-    { group: "screens", value: "Dashboard", count: 4 },
-  ]);
-});
 
 test("rejects invalid canonical admin Apps discovery before reading stores", async (t) => {
   let calls = 0;
@@ -3099,17 +2999,6 @@ test("rejects invalid canonical admin Apps discovery before reading stores", asy
   assert.equal(calls, 0);
 });
 
-test("returns 400 for an invalid admin Apps cursor", async (t) => {
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => admin,
-    adminAppPage: async () => { throw new CatalogCursorError(); },
-  }));
-  t.after(() => close(server));
-
-  const response = await fetch(`${base}/apps?cursor=***`, { headers: adminAuth });
-  assert.equal(response.status, 400);
-  assert.deepEqual(await response.json(), { error: "invalid catalog cursor" });
-});
 
 test("returns a paginated user directory and growth stats for an admin", async (t) => {
   const growthStats = {

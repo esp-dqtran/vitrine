@@ -173,7 +173,7 @@ test("selects admin discovery Apps from unpublished versions with filters, progr
   assert.doesNotMatch(calls[0]?.sql ?? "", /av\.published_at IS NOT NULL/);
   assert.match(calls[0]?.sql ?? "", /lower\(c\.name\) = ANY/);
   assert.match(calls[0]?.sql ?? "", /pfp\.facet_group = 'screens'/);
-  assert.match(calls[0]?.sql ?? "", /ORDER BY total_screens DESC/);
+  assert.match(calls[0]?.sql ?? "", /ORDER BY popularity_score DESC/);
 });
 
 test("scopes admin analyzed progress to the requested platform", async () => {
@@ -234,6 +234,7 @@ test("emits stable latest and trending cursors for admin discovery", async () =>
             app: "newer",
             updated_at: "2026-07-26T03:00:00.000Z",
             total_screens: 9,
+            popularity_score: 9,
             total_count: 2,
           },
           {
@@ -241,6 +242,7 @@ test("emits stable latest and trending cursors for admin discovery", async () =>
             app: "older",
             updated_at: "2026-07-26T02:00:00.000Z",
             total_screens: 4,
+            popularity_score: 4,
             total_count: 2,
           },
         ]);
@@ -271,7 +273,7 @@ test("emits stable latest and trending cursors for admin discovery", async () =>
 
     assert.equal(decoded.sort, sort);
     assert.equal(decoded.appId, 2);
-    if (decoded.sort === "trending") assert.equal(decoded.totalScreens, 9);
+    if (decoded.sort === "trending") assert.equal(decoded.popularityScore, 9);
   }
 });
 
@@ -674,12 +676,14 @@ test("scopes trending totals, App metadata, and previews to the requested platfo
             app: "web-leader",
             updated_at: "2026-07-26T03:00:00.000Z",
             total_screens: 4,
+            popularity_score: 4,
             total_count: 2,
           }, {
             app_id: 2,
             app: "mobile-heavy",
             updated_at: "2026-07-26T02:00:00.000Z",
             total_screens: 3,
+            popularity_score: 3,
             total_count: 2,
           }]
         : [{
@@ -687,12 +691,14 @@ test("scopes trending totals, App metadata, and previews to the requested platfo
             app: "mobile-heavy",
             updated_at: "2026-07-26T02:00:00.000Z",
             total_screens: 103,
+            popularity_score: 103,
             total_count: 2,
           }, {
             app_id: 1,
             app: "web-leader",
             updated_at: "2026-07-26T03:00:00.000Z",
             total_screens: 4,
+            popularity_score: 4,
             total_count: 2,
           }]);
     }
@@ -747,7 +753,7 @@ test("scopes trending totals, App metadata, and previews to the requested platfo
     "web",
   ]);
   const cursor = decodeCatalogCursor(page.nextCursor!, "trending");
-  assert.equal(cursor.sort === "trending" ? cursor.totalScreens : null, 4);
+  assert.equal(cursor.sort === "trending" ? cursor.popularityScore : null, 4);
 });
 
 test("prioritizes exact screen and element facet preview images with match metadata", async () => {
@@ -823,12 +829,12 @@ test("paginates latest and trending with matching deterministic keyset boundarie
         identityCalls += 1;
         const rows = sort === "latest"
           ? [
-              { app_id: 2, app: "newer", updated_at: "2026-07-26T03:00:00.000Z", total_screens: 10, total_count: 2 },
-              { app_id: 1, app: "older", updated_at: "2026-07-26T02:00:00.000Z", total_screens: 99, total_count: 2 },
+              { app_id: 2, app: "newer", updated_at: "2026-07-26T03:00:00.000Z", total_screens: 10, popularity_score: 10, total_count: 2 },
+              { app_id: 1, app: "older", updated_at: "2026-07-26T02:00:00.000Z", total_screens: 99, popularity_score: 99, total_count: 2 },
             ]
           : [
-              { app_id: 1, app: "popular", updated_at: "2026-07-26T02:00:00.000Z", total_screens: 99, total_count: 2 },
-              { app_id: 2, app: "recent", updated_at: "2026-07-26T03:00:00.000Z", total_screens: 10, total_count: 2 },
+              { app_id: 1, app: "popular", updated_at: "2026-07-26T02:00:00.000Z", total_screens: 99, popularity_score: 99, total_count: 2 },
+              { app_id: 2, app: "recent", updated_at: "2026-07-26T03:00:00.000Z", total_screens: 10, popularity_score: 10, total_count: 2 },
             ];
         return result(identityCalls === 1 ? rows : [rows[1]!]);
       }
@@ -869,9 +875,9 @@ test("paginates latest and trending with matching deterministic keyset boundarie
     const decoded = decodeCatalogCursor(first.nextCursor!, sort);
     assert.equal(decoded.sort, sort);
     if (decoded.sort === "trending") {
-      assert.equal(decoded.totalScreens, 99);
-      assert.match(identitySql[0]!, /ORDER BY total_screens DESC, updated_at DESC, app_id DESC/);
-      assert.match(identitySql[1]!, /\(total_screens, updated_at, app_id\) </);
+      assert.equal(decoded.popularityScore, 99);
+      assert.match(identitySql[0]!, /ORDER BY popularity_score DESC, updated_at DESC, app_id DESC/);
+      assert.match(identitySql[1]!, /\(popularity_score, updated_at, app_id\) </);
       assert.deepEqual(identityValues[1], [
         "2026-07-26T04:00:00.000Z",
         "2026-07-26T02:00:00.000Z",

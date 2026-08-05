@@ -8,7 +8,11 @@ import { searchDiscoveryFacets } from "../../../src/discoveryFacetSearch.ts";
 export interface SitesRouteDependencies {
   store: Pick<
     SitesStore,
-    "listReadySites" | "listReadySitesPage" | "readyVersionDetail" | "siteMediaObject"
+    | "listReadySites"
+    | "listReadySitesPage"
+    | "readyVersionDetail"
+    | "siteMediaObject"
+    | "readyVersionsByHost"
   >;
   cursorSecret: string;
   sendObject(metadata: ObjectMetadata, res: express.Response): Promise<void>;
@@ -28,6 +32,31 @@ export function mountPublicSitesRoutes(
   dependencies: SitesRouteDependencies,
 ): void {
   mountPublicReadySitesList(app, dependencies);
+
+  // Batch host -> crawled-site preview lookup. Kept off /catalog on purpose:
+  // that query is already the slowest read in the product, and this result is
+  // cacheable on its own because crawled sites change far less often than the
+  // app catalog does.
+  app.get("/site-previews", async (req, res) => {
+    const raw = typeof req.query.hosts === "string" ? req.query.hosts : "";
+    const hosts = raw.split(",").map((host) => host.trim()).filter(Boolean);
+    if (hosts.length === 0) {
+      res.json({ previews: {} });
+      return;
+    }
+    try {
+      const matches = await dependencies.store.readyVersionsByHost(hosts);
+      const previews: Record<string, string> = {};
+      for (const match of matches) {
+        previews[match.host] =
+          `/api/sites/${match.siteId}/versions/${match.versionId}/catalog-media/preview`;
+      }
+      res.setHeader("Cache-Control", "public, max-age=600");
+      res.json({ previews });
+    } catch {
+      res.status(503).json({ error: "Site previews are unavailable" });
+    }
+  });
 
   app.get(
     "/sites/:siteId/versions/:versionId/catalog-media/preview",

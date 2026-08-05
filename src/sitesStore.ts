@@ -146,6 +146,9 @@ export interface SitesStore extends Partial<GenericSitesStoreMethods> {
   readyVersionByCanonicalUrl(
     url: string,
   ): Promise<{ siteId: number; versionId: number } | undefined>;
+  readyVersionsByHost(
+    hosts: readonly string[],
+  ): Promise<Array<{ host: string; siteId: number; versionId: number }>>;
   listReadySites(): Promise<SiteSummary[]>;
   listReadySitesPage(input: ReadySitesPageInput): Promise<ReadySitesPage>;
   readyVersionDetail(
@@ -491,6 +494,45 @@ export function createSitesStore(
       return row
         ? { siteId: positiveId(row.site_id), versionId: positiveId(row.version_id) }
         : undefined;
+    },
+
+    // Matches on bare hostname rather than canonical_url: an app's website_url
+    // and the crawled site's source_url routinely disagree on the `www.`
+    // prefix and trailing slash (Aboard is https://www.aboardhr.com/ vs
+    // https://aboardhr.com/), and classifySiteImportUrl preserves both, so
+    // exact canonical matching silently returns nothing.
+    async readyVersionsByHost(hosts) {
+      const wanted = [...new Set(
+        hosts.map((host) => host.trim().toLowerCase().replace(/^www\./, ''))
+          .filter((host) => host.length > 0 && host.length <= 253),
+      )].slice(0, 200);
+      if (wanted.length === 0) return [];
+      const result = await runQuery(
+        `SELECT DISTINCT ON (host) host, site_id, version_id
+         FROM (
+           SELECT regexp_replace(
+                    regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''),
+                    '[/?#].*$', ''
+                  ) AS host,
+                  s.id AS site_id, sv.id AS version_id, sv.created_at
+           FROM sites s
+           JOIN site_versions sv ON sv.site_id = s.id
+           JOIN stored_objects preview_object
+             ON preview_object.object_key = sv.preview_object_key
+           WHERE sv.status = 'ready'
+             -- Some site previews are captured as video; callers render these
+             -- in an <img>, which would fail and blank the card.
+             AND preview_object.content_type LIKE 'image/%'
+         ) matched
+         WHERE host = ANY($1)
+         ORDER BY host, created_at DESC`,
+        [wanted],
+      );
+      return result.rows.map((row) => ({
+        host: text(row.host),
+        siteId: positiveId(row.site_id),
+        versionId: positiveId(row.version_id),
+      }));
     },
 
     async listReadySites() {

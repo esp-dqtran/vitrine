@@ -189,9 +189,7 @@ APP_KNOWLEDGE_FLOW_CHUNK_BYTES=24000
 The Design System tab streams progress over SSE, keeps the previous draft
 visible during regeneration, and distinguishes verified component crops from
 inferred previews. Run `npm run analysis:pilot:verify` before expanding the
-allowlist. See
-[App Knowledge with Antigravity](docs/operations/app-knowledge-antigravity.md)
-for provider setup, recovery, rollout order, and acceptance gates.
+allowlist.
 
 ## Bulk-importing apps from Mobbin (optional, advanced)
 

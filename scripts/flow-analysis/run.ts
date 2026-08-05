@@ -9,8 +9,6 @@ import {
   type ChatSession,
 } from "../../src/llmChat.ts";
 import { parseBrowserJsonObject } from "../../src/appKnowledgeBrowserProvider.ts";
-import { ANTIGRAVITY_BROWSER_MODEL_LABEL } from "../../src/appKnowledgeBrowserProvider.ts";
-import { startAntigravitySession } from "../../src/antigravityChat.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../src/objectStoreConfig.ts";
 import type { ObjectMetadata, ObjectStore } from "../../src/objectStore.ts";
 import { readCurrentFlows } from "../../src/normalizedFlowStore.ts";
@@ -178,13 +176,11 @@ function stringifyError(error: unknown): string {
 }
 
 function providerModel(provider: FlowAnalysisProvider): string {
-  if (provider === "antigravity") return ANTIGRAVITY_BROWSER_MODEL_LABEL;
   if (provider === "gemini") return "gemini-web";
   return "chatgpt-web";
 }
 
 function providerConcurrency(provider: FlowAnalysisProvider): number {
-  if (provider === "antigravity") return 1;
   const concurrency = provider === "chatgpt" ? CHATGPT_CONCURRENCY : GEMINI_CONCURRENCY;
   if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
     throw new Error(`Invalid ${provider.toUpperCase()}_CONCURRENCY`);
@@ -195,10 +191,6 @@ function providerConcurrency(provider: FlowAnalysisProvider): number {
 async function startProviderPool(
   provider: FlowAnalysisProvider,
 ): Promise<{ sessions: ChatSession[]; closeAll: () => Promise<void> }> {
-  if (provider === "antigravity") {
-    const session = await startAntigravitySession(ANTIGRAVITY_BROWSER_MODEL_LABEL);
-    return { sessions: [session], closeAll: () => session.close() };
-  }
   return await startChatPool(provider, providerConcurrency(provider));
 }
 

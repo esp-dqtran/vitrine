@@ -6,7 +6,7 @@ import {
   runProviderLanes,
 } from "./provider-distributor.ts";
 
-const providers = ["chatgpt", "antigravity", "gemini"] as const;
+const providers = ["chatgpt", "gemini"] as const;
 
 test("assigns each Flow deterministically to exactly one provider", () => {
   const items = Array.from({ length: 120 }, (_, index) => ({
@@ -24,7 +24,7 @@ test("assigns each Flow deterministically to exactly one provider", () => {
   }
 });
 
-test("keeps the workload reasonably balanced across three providers", () => {
+test("keeps the workload reasonably balanced across providers", () => {
   const items = Array.from({ length: 300 }, (_, index) => ({
     id: `mobbin-flow-${index}`,
   }));
@@ -56,7 +56,7 @@ test("runs provider lanes concurrently", async () => {
     },
   );
 
-  assert.equal(maxActive, 3);
+  assert.equal(maxActive, 2);
 });
 
 test("waits for every provider lane before reporting a failure", async () => {
@@ -73,5 +73,5 @@ test("waits for every provider lane before reporting a failure", async () => {
     /login unavailable/,
   );
 
-  assert.deepEqual(completed.sort(), ["antigravity", "gemini"]);
+  assert.deepEqual(completed.sort(), ["gemini"]);
 });

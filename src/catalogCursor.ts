@@ -21,7 +21,7 @@ export type CatalogCursor =
       sort: "trending";
       snapshotAt: string;
       updatedAt: string;
-      totalScreens: number;
+      popularityScore: number;
       appId: number;
     };
 
@@ -116,7 +116,7 @@ export function decodeCatalogCursor(
     && Number.isSafeInteger(item.appId)
     && Number(item.appId) > 0;
   const validMetric = item.sort !== "trending"
-    || (Number.isSafeInteger(item.totalScreens) && Number(item.totalScreens) >= 0);
+    || (Number.isSafeInteger(item.popularityScore) && Number(item.popularityScore) >= 0);
   if (!validBase || !validMetric) throw new CatalogCursorError();
   return item as unknown as CatalogCursor;
 }

@@ -2,7 +2,6 @@ import { join } from "node:path";
 
 export const FLOW_ANALYSIS_PROVIDERS = [
   "chatgpt",
-  "antigravity",
   "gemini",
 ] as const;
 

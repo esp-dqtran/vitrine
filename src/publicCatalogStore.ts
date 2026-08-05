@@ -372,7 +372,7 @@ async function catalogPage(
   const after = parameters.add(afterUpdatedAt);
   const afterId = parameters.add(afterAppId);
   const afterMetric = sort === "trending"
-    ? parameters.add(decoded?.sort === "trending" ? decoded.totalScreens : null)
+    ? parameters.add(decoded?.sort === "trending" ? decoded.popularityScore : null)
     : null;
   const platform = parameters.add(input.platform ?? null);
   const search = parameters.add(input.query?.trim() || null);
@@ -402,11 +402,23 @@ async function catalogPage(
        FROM latest
        WHERE latest.screen_count > 0
        GROUP BY latest.app_id
+     ), popularity AS MATERIALIZED (
+       -- Real usage signal for the "Popular" sort: page views over the last 30
+       -- days (relative to this page's stable snapshot, not wall-clock now(),
+       -- so counts stay consistent across cursor pages of the same request).
+       SELECT app_slug, COUNT(*)::integer AS popularity_score
+       FROM access_events
+       WHERE action IN ('app-detail', 'preview_viewed')
+         AND created_at >= ${snapshot}::timestamptz - INTERVAL '30 days'
+         AND created_at <= ${snapshot}::timestamptz
+       GROUP BY app_slug
      ), eligible AS (
        SELECT a.id AS app_id, a.name AS app, app_updates.updated_at,
-         app_updates.total_screens
+         app_updates.total_screens,
+         COALESCE(popularity.popularity_score, 0) AS popularity_score
        FROM app_updates
        JOIN apps a ON a.id = app_updates.app_id
+       LEFT JOIN popularity ON popularity.app_slug = a.name
        WHERE (
          ${platform}::text IS NULL
          OR EXISTS (
@@ -426,29 +438,29 @@ async function catalogPage(
      ), totals AS (
        SELECT COUNT(*)::integer AS total_count FROM eligible
      ), page AS (
-       SELECT app_id, app, updated_at, total_screens
+       SELECT app_id, app, updated_at, total_screens, popularity_score
        FROM eligible
        WHERE (
          ${after}::timestamptz IS NULL
          OR ${sort === "trending"
-           ? `(total_screens, updated_at, app_id) < (${afterMetric}::integer, ${after}::timestamptz, ${afterId}::integer)`
+           ? `(popularity_score, updated_at, app_id) < (${afterMetric}::integer, ${after}::timestamptz, ${afterId}::integer)`
            : `(updated_at, app_id) < (${after}::timestamptz, ${afterId}::integer)`}
        )
        ORDER BY ${sort === "trending"
-         ? "total_screens DESC, updated_at DESC, app_id DESC"
+         ? "popularity_score DESC, updated_at DESC, app_id DESC"
          : "updated_at DESC, app_id DESC"}
        LIMIT ${resultLimit}
      )
      SELECT page.app_id, page.app, page.updated_at, page.total_screens,
-       totals.total_count
+       page.popularity_score, totals.total_count
      FROM page CROSS JOIN totals
      UNION ALL
      SELECT NULL::integer, NULL::text, NULL::timestamptz, NULL::integer,
-       totals.total_count
+       NULL::integer, totals.total_count
      FROM totals
      WHERE NOT EXISTS (SELECT 1 FROM page)
      ORDER BY ${sort === "trending"
-       ? "total_screens DESC NULLS LAST, updated_at DESC NULLS LAST, app_id DESC NULLS LAST"
+       ? "popularity_score DESC NULLS LAST, updated_at DESC NULLS LAST, app_id DESC NULLS LAST"
        : "updated_at DESC NULLS LAST, app_id DESC NULLS LAST"}`,
     parameters.values,
   );
@@ -457,6 +469,7 @@ async function catalogPage(
     app: string;
     updated_at: string | Date;
     total_screens: number;
+    popularity_score: number;
     total_count?: number;
   }>;
   const totalCount = Number(selectedRows[0]?.total_count ?? selectedRows.length);
@@ -802,7 +815,7 @@ async function catalogPage(
             sort,
             snapshotAt,
             updatedAt: new Date(lastIdentity.updated_at).toISOString(),
-            totalScreens: lastIdentity.total_screens,
+            popularityScore: lastIdentity.popularity_score,
             appId: lastIdentity.app_id,
           }
         : {

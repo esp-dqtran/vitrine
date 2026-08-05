@@ -83,6 +83,7 @@ import {
   buildPublishedPreviewScreens,
 } from "../../../src/gallery.ts";
 import { adminCatalogPage, publishedCatalogPage } from "../../../src/publicCatalogStore.ts";
+import { publishedAppsPage } from "../../../src/appsListStore.ts";
 import { CatalogCursorError } from "../../../src/catalogCursor.ts";
 import {
   parsePublicFacet,
@@ -217,10 +218,15 @@ import {
 } from "../../../src/referralStore.ts";
 
 const JOB_TYPES = ["discover-catalog", "import-app", "caption-app", "synthesize-app", "import-site", "crawl-public-page"] as const;
+// The product's Site import UI was deliberately removed, but the site crawler
+// is still the only way the Sites catalog gets populated and refreshed (app
+// card thumbnails read from it, and captures go stale as marketing sites are
+// redesigned). Keep the job type disabled by default and let an operator opt
+// back in explicitly rather than deleting the guard.
 const DISABLED_IMPORT_JOB_TYPES = new Set([
   "discover-catalog",
   "import-app",
-  "import-site",
+  ...(process.env.SITE_IMPORTS_ENABLED === "true" ? [] : ["import-site"]),
   "crawl-public-page",
 ]);
 const IMPORTS_DISABLED_RESPONSE = { error: "Imports are disabled" } as const;
@@ -997,6 +1003,78 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
   app.get("/auth/me", async (req, res) => {
     res.clearCookie(LEGACY_AUTH_COOKIE, legacyCookieOptions)
       .json((await resolveRequestUser(req)) ?? null);
+  });
+
+  // The Apps grid. Public and published-only by construction — there is no
+  // admin visibility branch here, so an unpublished version can never be served
+  // from this path. Returns only what a card renders: no facet aggregation and
+  // no preview-screen pass, which is what /catalog carries for its other
+  // consumers (palette, project libraries, Flows).
+  app.get("/apps", async (req, res) => {
+    const platform = req.query.platform === undefined
+      ? undefined
+      : platformQuery(req.query.platform);
+    if (platform === undefined && req.query.platform !== undefined) {
+      res.status(400).json({ error: "invalid platform" });
+      return;
+    }
+    const filters = catalogFilters(req.query.filter);
+    if (filters === null) {
+      res.status(400).json({ error: "invalid filter" });
+      return;
+    }
+    const category = filters.find(({ group }) => group === "categories")?.value;
+    if (filters.some(({ group }) => group !== "categories")) {
+      res.status(400).json({ error: "only categories filters are supported" });
+      return;
+    }
+    let cursor: { updatedAt: string; id: number } | null = null;
+    if (typeof req.query.cursor === "string" && req.query.cursor) {
+      try {
+        const decoded = JSON.parse(
+          Buffer.from(req.query.cursor, "base64url").toString("utf8"),
+        ) as { updatedAt?: unknown; id?: unknown };
+        if (typeof decoded.updatedAt !== "string" || !Number.isSafeInteger(decoded.id)) {
+          throw new Error("invalid cursor");
+        }
+        cursor = { updatedAt: decoded.updatedAt, id: decoded.id as number };
+      } catch {
+        res.status(400).json({ error: "invalid cursor" });
+        return;
+      }
+    }
+    try {
+      const page = await publishedAppsPage({
+        platform: platform ?? null,
+        category: category ?? null,
+        cursor,
+        limit: typeof req.query.limit === "string" ? Number(req.query.limit) : undefined,
+      });
+      res.setHeader("Cache-Control", "public, max-age=280");
+      res.json({
+        items: page.rows.map((row) => ({
+          id: row.app,
+          app: row.display_name ?? row.app,
+          categories: row.categories,
+          accent: row.accent_color,
+          iconUrl: row.icon_url,
+          description: row.description,
+          websiteUrl: row.website_url,
+          previewUrl: row.preview_object_key
+            ? `/api/apps/${encodeURIComponent(row.app)}/preview-image`
+            : null,
+          platforms: row.available_platforms,
+          totalScreens: row.total_screens,
+          lastCapturedAt: new Date(row.updated_at).toISOString(),
+        })),
+        totalCount: page.totalCount,
+        nextCursor: page.nextCursor
+          ? Buffer.from(JSON.stringify(page.nextCursor)).toString("base64url")
+          : null,
+      });
+    } catch {
+      res.status(503).json({ error: "Apps are unavailable" });
+    }
   });
 
   app.get("/catalog", async (req, res) => {
@@ -3235,72 +3313,6 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
       await sendStoredObject(deps.objectStore, metadata, res);
     } catch {
       res.status(503).json({ error: "media storage unavailable" });
-    }
-  });
-
-  app.get("/apps", requireAdmin, async (req, res) => {
-    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
-    const limit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
-    const discovery = req.query.platform !== undefined
-      || req.query.query !== undefined
-      || req.query.sort !== undefined
-      || req.query.facets !== undefined
-      || req.query.filter !== undefined;
-    try {
-      if (discovery) {
-        const platform = req.query.platform === undefined
-          ? undefined
-          : platformQuery(req.query.platform);
-        const search = req.query.query === undefined
-          ? undefined
-          : typeof req.query.query === "string" && req.query.query.length <= 120
-            ? req.query.query.trim() || undefined
-            : null;
-        const sort = req.query.sort === undefined ? "latest" : req.query.sort;
-        const includeFacets = req.query.facets !== "summary";
-        const filters = req.query.filter === undefined
-          ? []
-          : catalogFilters(req.query.filter);
-        if (platform === undefined && req.query.platform !== undefined
-          || search === null
-          || (sort !== "latest" && sort !== "trending")
-          || (req.query.facets !== undefined && req.query.facets !== "summary")
-          || filters === null) {
-          res.status(400).json({ error: "invalid admin Apps discovery query" });
-          return;
-        }
-        const page = await deps.adminCatalogPage({
-          cursor,
-          limit,
-          filters,
-          ...(includeFacets ? {} : { includeFacets: false }),
-          ...(platform ? { platform } : {}),
-          ...(search ? { query: search } : {}),
-          sort,
-        });
-        const catalog = buildPublishedCatalogPage(page);
-        res.json({
-          apps: catalog.apps.map(({ previewScreens, ...app }) => ({
-            ...app,
-            screens: previewScreens.filter(
-              (screen): screen is typeof screen & { url: string } =>
-                typeof screen.url === "string",
-            ),
-          })),
-          nextCursor: page.nextCursor,
-          total: page.totalCount ?? catalog.apps.length,
-          facets: page.facets ?? [],
-        });
-        return;
-      }
-      const page = await deps.adminAppPage({ cursor, limit });
-      res.json({ apps: buildAdminGalleryApps(page.images), nextCursor: page.nextCursor, total: page.total });
-    } catch (error) {
-      if (error instanceof CatalogCursorError) {
-        res.status(400).json({ error: error.message });
-        return;
-      }
-      throw error;
     }
   });
 

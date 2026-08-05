@@ -48,7 +48,7 @@ test("round-trips latest and trending catalog cursors and enforces the requested
   const trending = {
     ...latest,
     sort: "trending" as const,
-    totalScreens: 845,
+    popularityScore: 845,
   };
 
   assert.deepEqual(decodeCatalogCursor(encodeCatalogCursor(latest), "latest"), latest);

@@ -27,6 +27,7 @@ const PUBLIC_API_CACHE_PATHS = new Set([
   "/api/catalog/flows",
   "/api/catalog/flow-groups",
   "/api/catalog/facet-preview",
+  "/api/apps",
   "/api/sites",
   "/api/sites/facets",
 ]);

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   ChatRateLimitError,
-  type ChatAttachment,
   type ChatAttachments,
   type ChatSession,
 } from "./llmChat.ts";
@@ -180,32 +179,4 @@ test("requires one or two browser sessions", () => {
     ]),
     /one or two sessions/i,
   );
-});
-
-test("Antigravity provider sends real image bytes and records the selected Gemini model", async () => {
-  const module = await import("./appKnowledgeBrowserProvider.ts") as Record<string, unknown>;
-  assert.equal(typeof module.createAntigravityBrowserAppKnowledgeProvider, "function");
-  const createProvider = module.createAntigravityBrowserAppKnowledgeProvider as
-    ((session: ChatSession) => ReturnType<typeof createChatGptBrowserAppKnowledgeProvider>);
-  let uploaded: ChatAttachments | undefined;
-  const session: ChatSession = {
-    async ask(_prompt, file) {
-      uploaded = file;
-      return '{"ok":true}';
-    },
-    close: async () => {},
-  };
-
-  const provider = createProvider(session);
-  await provider.analyzeEvidence(evidencePrompt("SCREEN-ANTIGRAVITY"), {
-    bytes: Buffer.from("real-image"),
-    contentType: "image/png",
-  }, AbortSignal.timeout(1_000));
-
-  assert.equal(provider.model, "gemini-3.6-flash-high");
-  assert.deepEqual(uploaded, {
-    name: "app-knowledge.png",
-    mimeType: "image/png",
-    buffer: Buffer.from("real-image"),
-  });
 });

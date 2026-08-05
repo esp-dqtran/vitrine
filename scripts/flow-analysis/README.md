@@ -3,7 +3,7 @@
 The runner analyzes each pending Flow exactly once and stores artifacts under
 `data/feature-descriptions/<app>/`.
 
-Run all three website providers in parallel:
+Run both website providers in parallel:
 
 ```bash
 FLOW_APP=stripe \
@@ -17,7 +17,7 @@ screenshots or artifacts first:
 
 ```bash
 FLOW_ANALYSIS_PROVIDERS=chatgpt \
-FLOW_REANALYZE_PROVIDERS=gemini,antigravity \
+FLOW_REANALYZE_PROVIDERS=gemini \
 npm run flow-analysis
 ```
 
@@ -26,11 +26,10 @@ the same run does not duplicate completed work. Each provider has an independent
 worker lane:
 
 - `CHATGPT_CONCURRENCY` defaults to `2`.
-- Antigravity uses one shared CDP conversation.
 - `GEMINI_CONCURRENCY` defaults to `1`.
 
 Legacy single-provider runs remain supported with
-`FLOW_ANALYSIS_PROVIDER=chatgpt`, `antigravity`, or `gemini`.
+`FLOW_ANALYSIS_PROVIDER=chatgpt` or `gemini`.
 
 Every generated JSON artifact records its provider, model label, quality score,
 and quality warnings. The quality gate enforces ordered evidence coverage,

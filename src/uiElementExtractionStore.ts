@@ -363,7 +363,7 @@ export async function completeUiElementExtraction(input: {
             confidence, provider_model, prompt_version, review_status, crop_quality)
          VALUES (
            $1, $2, $3, $4, $5, $6, $7, $8, $9,
-           $10, $11, $12, $13, $14, $15, $16, $17::jsonb
+           $10, $11, $12, $13, $14, $15, $16, $17, $18::jsonb
          )
          ON CONFLICT (
            version_id, screen_image_id, ui_element_type_id,

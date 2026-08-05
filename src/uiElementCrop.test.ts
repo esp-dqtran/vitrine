@@ -10,7 +10,6 @@ function candidate(type: string, region: UiElementCandidate["region"]): UiElemen
     variant: "Default",
     purpose: "Test component",
     anatomy: [],
-    visibleStates: [],
     observedProperties: [],
     region,
     confidence: 0.99,
@@ -122,6 +121,53 @@ test("keeps a large success-check icon out of Status Dot", async () => {
 
   assert.equal(crop.quality.passed, false);
   assert.ok(crop.quality.issues.includes("semantic-type-mismatch"));
+});
+
+test("flags a Button crop with a wide blank margin on one side as excess-padding", async () => {
+  // Mirrors a real doji extraction defect: the crop region started too high, leaving a
+  // large blank gap above the button while its bottom edge sits flush against the crop
+  // boundary. content-clipped never caught this (Button isn't edge-refinable), and it
+  // auto-accepted as a false pass.
+  const source = await sharp({
+    create: { width: 400, height: 300, channels: 4, background: "white" },
+  })
+    .composite([{
+      input: Buffer.from(
+        `<svg width="160" height="50"><rect width="160" height="50" rx="12" fill="black"/></svg>`,
+      ),
+      left: 60,
+      top: 130,
+    }])
+    .png()
+    .toBuffer();
+  const crop = await deriveUiElementCrop({
+    source,
+    candidate: candidate("Button", { x: 0.1, y: 0.1, width: 0.5, height: 0.5 }),
+    platform: "ios",
+  });
+
+  assert.equal(crop.quality.passed, false);
+  assert.ok(crop.quality.issues.includes("excess-padding"));
+});
+
+test("does not flag a genuinely full-width Toolbar as excess-padding", async () => {
+  const source = await sharp({
+    create: { width: 400, height: 300, channels: 4, background: "white" },
+  })
+    .composite([{
+      input: Buffer.from(`<svg width="400" height="60"><rect width="400" height="60" fill="black"/></svg>`),
+      left: 0,
+      top: 0,
+    }])
+    .png()
+    .toBuffer();
+  const crop = await deriveUiElementCrop({
+    source,
+    candidate: candidate("Toolbar", { x: 0, y: 0, width: 1, height: 0.2 }),
+    platform: "ios",
+  });
+
+  assert.ok(!crop.quality.issues.includes("excess-padding"));
 });
 
 test("outputs full-colour lossless PNG without resizing ordinary components", async () => {

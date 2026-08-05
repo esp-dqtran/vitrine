@@ -14,32 +14,14 @@ test("keeps the legacy single-provider option", () => {
     flowRunConfig({
       FLOW_APP: "binance",
       FLOW_PRODUCT: "Binance",
-      FLOW_ANALYSIS_PROVIDER: "antigravity",
+      FLOW_ANALYSIS_PROVIDER: "gemini",
     }, "/workspace"),
     {
       app: "binance",
       product: "Binance",
       root: "/workspace/data/feature-descriptions/binance",
       applicationName: "astryx-binance-flow-feature-descriptions",
-      providers: ["antigravity"],
-      reanalyzeProviders: [],
-    },
-  );
-});
-
-test("selects the remaining browser providers for distributed Flow analysis", () => {
-  assert.deepEqual(
-    flowRunConfig({
-      FLOW_APP: "stripe",
-      FLOW_PRODUCT: "Stripe",
-      FLOW_ANALYSIS_PROVIDERS: "antigravity, gemini",
-    }, "/workspace"),
-    {
-      app: "stripe",
-      product: "Stripe",
-      root: "/workspace/data/feature-descriptions/stripe",
-      applicationName: "astryx-stripe-flow-feature-descriptions",
-      providers: ["antigravity", "gemini"],
+      providers: ["gemini"],
       reanalyzeProviders: [],
     },
   );
@@ -49,7 +31,7 @@ test("selects saved provider outputs to replace without changing the active prov
   assert.deepEqual(
     flowRunConfig({
       FLOW_ANALYSIS_PROVIDERS: "gemini",
-      FLOW_REANALYZE_PROVIDERS: "antigravity,antigravity",
+      FLOW_REANALYZE_PROVIDERS: "gemini,gemini",
     }, "/workspace"),
     {
       app: "1password",
@@ -57,7 +39,7 @@ test("selects saved provider outputs to replace without changing the active prov
       root: "/workspace/data/feature-descriptions/1password",
       applicationName: "astryx-1password-flow-feature-descriptions",
       providers: ["gemini"],
-      reanalyzeProviders: ["antigravity"],
+      reanalyzeProviders: ["gemini"],
     },
   );
 });
@@ -65,9 +47,9 @@ test("selects saved provider outputs to replace without changing the active prov
 test("deduplicates providers while preserving their configured order", () => {
   assert.deepEqual(
     flowRunConfig({
-      FLOW_ANALYSIS_PROVIDERS: "gemini,antigravity,gemini",
+      FLOW_ANALYSIS_PROVIDERS: "gemini,gemini",
     }, "/workspace").providers,
-    ["gemini", "antigravity"],
+    ["gemini"],
   );
 });
 

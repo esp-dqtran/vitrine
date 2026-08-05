@@ -15,8 +15,6 @@ import {
 } from "./appKnowledgeProvider.ts";
 
 export const CHATGPT_BROWSER_MODEL = "chatgpt-browser";
-export const ANTIGRAVITY_BROWSER_MODEL = "gemini-3.6-flash-high";
-export const ANTIGRAVITY_BROWSER_MODEL_LABEL = "Gemini 3.6 Flash (High)";
 
 export function parseBrowserJsonObject(reply: string): Record<string, unknown> {
   const trimmed = reply.trim();
@@ -147,10 +145,4 @@ export function createChatGptBrowserAppKnowledgeProvider(
   sessions: readonly ChatSession[],
 ): AppKnowledgeProvider {
   return createBrowserAppKnowledgeProvider(sessions, CHATGPT_BROWSER_MODEL);
-}
-
-export function createAntigravityBrowserAppKnowledgeProvider(
-  session: ChatSession,
-): AppKnowledgeProvider {
-  return createBrowserAppKnowledgeProvider([session], ANTIGRAVITY_BROWSER_MODEL);
 }
