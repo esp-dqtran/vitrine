@@ -3394,11 +3394,18 @@ export function createApiApp(overrides: Partial<ApiDeps> = {}) {
         });
         return;
       }
-      const existing = await deps.sitesStore.readyVersionByCanonicalUrl(canonicalUrl);
-      if (existing) {
-        res.status(200).json({ existing: true, ...existing });
-        return;
-      }
+      // Deliberately no "already imported, skip" short-circuit. It matched on
+      // site_versions.canonical_url, which is a per-version UNIQUE key rather
+      // than a site identity — for Mobbin imports it holds a mobbin.com URL,
+      // so it never matched the real site and the check silently did nothing.
+      //
+      // It cannot be repaired by pointing it at the real URL either: 64 sites
+      // have several versions, and they would all need the same canonical_url.
+      // Site identity belongs to sites.source_url, which beginImport matches on
+      // (hostname-normalized) to attach a re-crawl as a new version.
+      //
+      // Recrawling is the point — it is how a Site gets a fresher version — so
+      // the request proceeds and beginImport decides new-site vs new-version.
       if (!await requireStorageReady(res)) return;
       const id = await deps.createJob(type, { url: canonicalUrl });
       try {

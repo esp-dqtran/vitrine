@@ -82,7 +82,9 @@ test('renders an analyzed Site as a Refero-style design-system reference', () =>
   const html = renderToStaticMarkup(<SiteDesignSystemPanel detail={detail} />);
 
   assert.match(html, /Example design system/);
-  assert.match(html, /Foundations/);
+  assert.match(html, /Color palette/);
+  assert.match(html, /rgb\(115, 92, 255\)/);
+  assert.match(html, /Preview theme/);
   assert.match(html, /Button/);
   assert.match(html, /DESIGN\.md/);
   assert.match(html, /Tailwind v4/);

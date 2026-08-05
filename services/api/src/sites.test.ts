@@ -39,7 +39,6 @@ const detail: SiteVersionDetail = {
 
 function fakeStore(overrides: Partial<SitesStore> = {}): SitesStore {
   return {
-    readyVersionByCanonicalUrl: async () => undefined,
     listReadySites: async () => [{
       siteId: 1,
       versionId: 2,
