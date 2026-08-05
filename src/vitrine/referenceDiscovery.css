@@ -186,11 +186,11 @@
 
 .reference-discovery__taxonomy--apps {
   --reference-taxonomy-bottom: 48px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .reference-discovery__taxonomy--sites {
-  grid-template-columns: minmax(180px, .8fr) minmax(360px, 1.65fr) minmax(180px, .8fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .reference-discovery__facet h2 {

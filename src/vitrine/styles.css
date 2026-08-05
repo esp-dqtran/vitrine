@@ -12639,7 +12639,7 @@ body {
 
 .apps-discovery__taxonomy {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 48px;
   padding: 29px 0 73px;
 }
