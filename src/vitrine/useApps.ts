@@ -80,7 +80,11 @@ export function refreshCatalogPage(
   return fetchCatalogPage(endpoint, signal, { bypassCache: true });
 }
 
-export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
+export function useApps(
+  role: 'admin' | 'user' | undefined,
+  enabled: boolean,
+  query = '',
+) {
   const [apps, setApps] = useState<App[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
@@ -90,6 +94,8 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
   const loadingMoreRef = useRef(false);
   const requestGenerationRef = useRef(0);
   const loadMoreControllerRef = useRef<AbortController | null>(null);
+  const trimmedQuery = query.trim();
+  const querySuffix = trimmedQuery ? `?query=${encodeURIComponent(trimmedQuery)}` : '';
 
   const refresh = useCallback((signal?: AbortSignal) => {
     loadMoreControllerRef.current?.abort();
@@ -101,7 +107,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     setLoadMoreError(null);
     return (async () => {
       if (role === 'admin') {
-        const response = await apiFetch('/api/apps', { signal });
+        const response = await apiFetch(`/api/apps${querySuffix}`, { signal });
         if (!response.ok) throw new Error(`/api/apps returned ${response.status}`);
         const page = parseAdminAppsPage(await response.json());
         if (generation !== requestGenerationRef.current) return;
@@ -110,7 +116,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
         setTotalApps(Number.isFinite(page.total) ? page.total : page.apps.length);
         return;
       }
-      const page = await refreshCatalogPage('/api/catalog', signal);
+      const page = await refreshCatalogPage(`/api/catalog${querySuffix}`, signal);
       const firstPage = page.apps;
       if (generation !== requestGenerationRef.current) return;
       setApps(firstPage);
@@ -121,7 +127,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
           setError(err.message);
         }
       });
-  }, [role]);
+  }, [role, querySuffix]);
 
   useEffect(() => () => {
     loadMoreControllerRef.current?.abort();
@@ -155,8 +161,9 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
     setLoadingMore(true);
     setLoadMoreError(null);
     try {
-      const endpoint = role === 'admin' ? `/api/apps?cursor=${encodeURIComponent(nextCursor)}`
-        : `/api/catalog?cursor=${encodeURIComponent(nextCursor)}`;
+      const cursorSuffix = `${querySuffix ? '&' : '?'}cursor=${encodeURIComponent(nextCursor)}`;
+      const endpoint = role === 'admin' ? `/api/apps${querySuffix}${cursorSuffix}`
+        : `/api/catalog${querySuffix}${cursorSuffix}`;
       const response = await apiFetch(endpoint, { signal: controller.signal });
       if (!response.ok) throw new Error(`${endpoint} returned ${response.status}`);
       const page = role === 'admin'
@@ -187,7 +194,7 @@ export function useApps(role: 'admin' | 'user' | undefined, enabled: boolean) {
         setLoadingMore(false);
       }
     }
-  }, [nextCursor, role]);
+  }, [nextCursor, role, querySuffix]);
 
   return {
     apps,

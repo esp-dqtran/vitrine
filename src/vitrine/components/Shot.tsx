@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Text } from "@astryxdesign/core";
 import type { PreviewPlatform } from "../useCatalogPreview.ts";
+import { AppIcon } from "./AppIcon.tsx";
 
 export interface ShotSource {
   url: string;
@@ -128,15 +129,7 @@ export function Shot({
           }}
         >
           {shot.iconUrl && (
-            <img
-              src={shot.iconUrl}
-              alt=""
-              aria-hidden="true"
-              width={22}
-              height={22}
-              loading="lazy"
-              style={{ borderRadius: 6, flex: "none" }}
-            />
+            <AppIcon name={shot.appName} iconUrl={shot.iconUrl} accent={shot.accent} size={22} />
           )}
           <span style={{ minWidth: 0, display: "grid" }}>
             <Text type="body">{shot.appName}</Text>

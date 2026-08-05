@@ -4,6 +4,7 @@ import { Button, Card, TextInput } from "@astryxdesign/core";
 import type { AppsDiscoveryScreenResult, AppsPlatform } from "../appsDiscovery.ts";
 import { filterAppsDiscoveryScreens } from "../appsDiscovery.ts";
 import { fetchCatalogPage } from "../useApps.ts";
+import { AppIcon } from "./AppIcon.tsx";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 
 type ScreenLibraryState = "loading" | "ready" | "error";
@@ -125,11 +126,13 @@ export function ProjectScreenLibrary({
                   />
                 </div>
                 <div className="project-screen-library__identity">
-                  <span className="project-screen-library__app-icon" aria-hidden="true">
-                    {app.iconUrl
-                      ? <img src={app.iconUrl} alt="" loading="lazy" />
-                      : app.app.slice(0, 1).toUpperCase()}
-                  </span>
+                  <AppIcon
+                    name={app.app}
+                    iconUrl={app.iconUrl}
+                    accent={app.accent}
+                    size={26}
+                    className="project-screen-library__app-icon"
+                  />
                   <span>
                     <strong>{app.app}</strong>
                     <small>{screen.type || screen.productArea || "Screen"}</small>

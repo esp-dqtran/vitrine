@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import gsap from 'gsap';
 import { Button, Heading, Icon, IconButton, Text, TextInput, useMediaQuery, type InputStatus } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
+import { AppIcon } from './components/AppIcon';
 import { validateReferral } from './referralApi';
 import { useFloatDrift } from './useFloatDrift';
 import { useCatalogPreview, type PreviewApp } from './useCatalogPreview';
@@ -218,16 +219,13 @@ export function AppPill({ slide }: { slide: Slide }) {
         animation: 'vtFadeUp .4s cubic-bezier(.16,1,.3,1) .15s both',
       }}
     >
-      {slide.iconUrl ? (
-        <img
-          src={slide.iconUrl}
-          alt=""
-          loading="lazy"
-          style={{ width: 18, height: 18, borderRadius: 5, objectFit: 'contain' }}
-        />
-      ) : (
-        <div style={{ width: 18, height: 18, borderRadius: 5, background: slide.accent }} />
-      )}
+      <AppIcon
+        name={slide.app}
+        iconUrl={slide.iconUrl}
+        accent={slide.accent}
+        size={18}
+        fallbackTextColor="#18181b"
+      />
       <span style={{ fontSize: 12, fontWeight: 600, color: '#18181b' }}>{slide.app}</span>
     </div>
   );

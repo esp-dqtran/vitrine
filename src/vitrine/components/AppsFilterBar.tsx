@@ -371,6 +371,7 @@ export function DiscoveryFilterMenu({
           ? `Filter (${selectedCount} selected): ${selectedCount === 1 ? group.selected[0] : group.label}`
           : `Open ${group.label} filters`}
         panelAriaLabel={`${group.label} filters`}
+        panelPortal
         open={open}
         triggerClassName="apps-filterbar__filter-button"
         triggerEndContent={selectedCount > 1

@@ -109,17 +109,17 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   const html = renderAppsPage();
   assert.match(html, /data-apps-filterbar="true"/);
   assert.match(html, /aria-label="Open Categories filters"/);
-  assert.match(html, /aria-label="Open Screens filters"/);
-  assert.match(html, /aria-label="Open UI Elements filters"/);
+  assert.doesNotMatch(html, /aria-label="Open Screens filters"/);
+  assert.doesNotMatch(html, /aria-label="Open UI Elements filters"/);
   assert.doesNotMatch(html, /aria-label="Open Flows filters"/);
   assert.doesNotMatch(html, /aria-label="More filters"/);
   assert.match(html, /aria-label="App discovery filters"/);
   assert.match(html, />Categories</);
   assert.match(html, />AI</);
-  assert.match(html, />Screens</);
-  assert.match(html, />My Account &amp; Profile</);
-  assert.match(html, />UI Elements</);
-  assert.match(html, />Navigation Menu</);
+  assert.doesNotMatch(html, />Screens</);
+  assert.doesNotMatch(html, />My Account &amp; Profile</);
+  assert.doesNotMatch(html, />UI Elements</);
+  assert.doesNotMatch(html, />Navigation Menu</);
   assert.doesNotMatch(html, />Flows</);
 });
 
@@ -402,12 +402,12 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.doesNotMatch(html, /Import App/);
   assert.match(html, /Categories/);
-  assert.match(html, /Screens/);
-  assert.match(html, /UI Elements/);
+  assert.doesNotMatch(html, /Screens/);
+  assert.doesNotMatch(html, /UI Elements/);
   assert.doesNotMatch(html, /Flows/);
   assert.match(html, /data-facet-preview="categories"/);
-  assert.match(html, /data-facet-preview="screens"/);
-  assert.match(html, /data-facet-preview="elements"/);
+  assert.doesNotMatch(html, /data-facet-preview="screens"/);
+  assert.doesNotMatch(html, /data-facet-preview="elements"/);
   assert.doesNotMatch(html, /data-facet-preview="flows"/);
   assert.match(html, /class="apps-discovery__hover-preview"/);
   assert.equal((html.match(/data-preview-frame=/g) ?? []).length, 3);
@@ -417,8 +417,8 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
     html.indexOf('aria-label="Open Categories filters"'),
   );
   assert.doesNotMatch(platformMarkup, /role="radiogroup"/);
-  assert.match(html, /Latest/);
-  assert.match(html, /aria-label="Sort: Latest"/);
+  assert.match(html, /Newest/);
+  assert.match(html, /aria-label="Sort: Newest"/);
   assert.match(html, /1 app/);
   assert.doesNotMatch(html, /Most popular/);
   assert.match(html, /data-apps-discovery-grid="true"/);
@@ -603,7 +603,7 @@ test('styles Apps as the three-column Mobbin results layout with a mobile fallba
   const cardRule = css.match(/\.discovery-card\s*\{[^}]+\}/)?.[0] ?? '';
   const mediaRule = css.match(/\.discovery-card__media\s*\{[^}]+\}/)?.[0] ?? '';
 
-  assert.match(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.doesNotMatch(discoveryCss, /\.reference-discovery__taxonomy--apps\s*\{[^}]*display:\s*none/);
   assert.match(discoveryCss, /\.apps-discovery__grid,[\s\S]*\.apps-discovery__screen-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(discoveryCss, /\.apps-discovery-screen-card__media\s*\{[^}]*position:\s*relative/);

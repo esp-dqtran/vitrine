@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button, Heading, Icon, IconButton, Text } from '@astryxdesign/core';
 import type { PublicAppPreview } from '../publicAppPreviewApi.ts';
+import { AppIcon } from './AppIcon.tsx';
 import { AstryxModal } from './AstryxModal.tsx';
 import { ReferenceDetailNavigation } from './ReferenceDetailPage.tsx';
 
@@ -95,9 +96,7 @@ function PublicAppPreviewContent({
     >
         <header style={{ maxWidth: 820, paddingRight: isModal ? 52 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            {app.iconUrl ? (
-              <img src={app.iconUrl} alt="" style={{ width: 72, height: 72, borderRadius: 20, flex: '0 0 auto' }} />
-            ) : null}
+            <AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={72} />
             <Heading level={1} style={{ fontSize: 'clamp(42px, 6vw, 56px)', lineHeight: 1, letterSpacing: '-0.035em' }}>{app.app}</Heading>
           </div>
           {app.description ? (

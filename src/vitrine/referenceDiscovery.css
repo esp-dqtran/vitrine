@@ -186,7 +186,7 @@
 
 .reference-discovery__taxonomy--apps {
   --reference-taxonomy-bottom: 48px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .reference-discovery__taxonomy--sites {
@@ -1137,7 +1137,10 @@
     max-width: 220px;
   }
 
-  .reference-discovery .apps-filterbar .astryx-dropdown-panel {
+  /* Not ancestor-scoped to .apps-filterbar: this panel now portals to
+   * document.body (see AstryxDropdown.tsx's panelPortal), so :has() is what
+   * still recognizes it as "the apps filter panel" regardless of DOM position. */
+  .astryx-dropdown-panel:has(.apps-filterbar__menu) {
     position: fixed;
     top: auto;
     right: max(12px, env(safe-area-inset-right));
@@ -1191,7 +1194,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reference-discovery .apps-filterbar .astryx-dropdown-panel {
+  .astryx-dropdown-panel:has(.apps-filterbar__menu) {
     animation: none;
   }
 }

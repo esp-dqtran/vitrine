@@ -5,6 +5,7 @@ import type { Platform } from "../../platformFromUrl.ts";
 import { flowCatalogItemKey, loadFlowCatalogPage, type FlowCatalogItem } from "../flowCatalogApi.ts";
 import type { App } from "../types.ts";
 import { fetchCatalogPage } from "../useApps.ts";
+import { AppIcon } from "./AppIcon.tsx";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 
 export type ProjectCanvasDataMode = "apps" | "flows";
@@ -166,11 +167,13 @@ export function ProjectCanvasDataLibrary({
                   />
                 </div>
                 <div className="project-canvas-data-library__identity">
-                  <span className="project-canvas-data-library__app-icon" aria-hidden="true">
-                    {app.iconUrl
-                      ? <img src={app.iconUrl} alt="" loading="lazy" />
-                      : app.app.slice(0, 1).toUpperCase()}
-                  </span>
+                  <AppIcon
+                    name={app.app}
+                    iconUrl={app.iconUrl}
+                    accent={app.accent}
+                    size={28}
+                    className="project-canvas-data-library__app-icon"
+                  />
                   <span>
                     <strong>{app.app}</strong>
                     <small>{app.totalScreens} screens · {app.categories[0]?.name ?? platform}</small>

@@ -388,7 +388,7 @@ export function AppsDiscoveryPageView({
       taxonomyLabel="App discovery filters"
       taxonomy={(
         <>
-          {APP_DISCOVERY_TAXONOMY.filter((group) => group.group !== 'flows').map((group) => (
+          {APP_DISCOVERY_TAXONOMY.filter((group) => group.group === 'categories').map((group) => (
             <ReferenceDiscoveryFacetGroup
               key={group.group}
               label={group.label}
@@ -457,7 +457,7 @@ export function AppsDiscoveryPageView({
             onChange: (platform) => changeState({ ...state, platform }),
           }}
           filters={(Object.keys(FILTER_LABELS) as AppsFacet['group'][])
-            .filter((group) => group !== 'flows')
+            .filter((group) => group === 'categories')
             .map((group) => ({
               id: group,
               label: FILTER_LABELS[group],
@@ -468,8 +468,8 @@ export function AppsDiscoveryPageView({
           resultLabels={[labels.singular, labels.plural]}
           sort={state.sort}
           sortOptions={[
-            { value: 'latest', label: 'Latest' },
-            { value: 'trending', label: 'Trending' },
+            { value: 'latest', label: 'Newest' },
+            { value: 'trending', label: 'Popular' },
           ]}
           onSortChange={(sort) => changeState({
             ...state,

@@ -1,10 +1,59 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { createPortal } from 'react-dom';
 import {
   Button,
   DropdownMenu,
   Icon,
   type DropdownMenuProps,
 } from '@astryxdesign/core';
+
+const PANEL_BREAKPOINT_QUERY = '(max-width: 720px)';
+
+// Anchors a portaled panel under its trigger. Skipped below the 720px
+// breakpoint, where CSS takes over and renders the panel as a fixed
+// bottom sheet instead (see .astryx-dropdown-panel:has(.apps-filterbar__menu)
+// in referenceDiscovery.css).
+function usePortalPanelPosition(
+  open: boolean,
+  anchorRef: RefObject<HTMLElement | null>,
+): CSSProperties | undefined {
+  const [style, setStyle] = useState<CSSProperties | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setStyle(undefined);
+      return;
+    }
+    const update = () => {
+      const anchor = anchorRef.current;
+      if (!anchor) return;
+      if (window.matchMedia(PANEL_BREAKPOINT_QUERY).matches) {
+        setStyle(undefined);
+        return;
+      }
+      const rect = anchor.getBoundingClientRect();
+      setStyle({ position: 'fixed', top: rect.bottom + 8, left: rect.left });
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open, anchorRef]);
+
+  return style;
+}
 
 export type AstryxDropdownVariant = 'primary' | 'secondary';
 
@@ -15,6 +64,17 @@ export interface AstryxDropdownProps {
   children: ReactNode;
   mode?: 'menu' | 'panel';
   panelAriaLabel?: string;
+  /**
+   * Render the panel through a portal to document.body instead of inline.
+   * Needed when the trigger sits inside a `position: sticky` toolbar over a
+   * scrolling results grid — Chromium can paint the sticky ancestor's later
+   * siblings above an inline absolutely-positioned panel despite z-index,
+   * even at z-index 999999 (verified via elementFromPoint). Off by default
+   * since other call sites (e.g. reference-detail tab controls, the sticky
+   * note toolbar) already position the inline panel correctly with their
+   * own ancestor-scoped CSS, which a portal would bypass.
+   */
+  panelPortal?: boolean;
   triggerClassName?: string;
   triggerVariant?: AstryxDropdownVariant;
   triggerEndContent?: ReactNode;
@@ -37,6 +97,7 @@ export function AstryxDropdown({
   children,
   mode = 'menu',
   panelAriaLabel,
+  panelPortal = false,
   triggerClassName,
   triggerVariant = 'secondary',
   triggerEndContent,
@@ -52,6 +113,7 @@ export function AstryxDropdown({
   const panelId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(open);
+  const portalPosition = usePortalPanelPosition(panelPortal && open, triggerRef);
 
   useEffect(() => {
     if (mode === 'panel' && wasOpenRef.current && !open) {
@@ -82,6 +144,8 @@ export function AstryxDropdown({
           <AstryxDropdownPanel
             id={panelId}
             ariaLabel={panelAriaLabel ?? ariaLabel}
+            portal={panelPortal}
+            style={portalPosition}
           >
             {children}
           </AstryxDropdownPanel>
@@ -198,20 +262,31 @@ export function AstryxDropdownPanel({
   ariaLabel,
   children,
   className = '',
+  portal = false,
+  style,
 }: {
   id?: string;
   ariaLabel: string;
   children: ReactNode;
   className?: string;
+  portal?: boolean;
+  style?: CSSProperties;
 }) {
-  return (
+  const panel = (
     <div
       id={id}
-      className={`astryx-dropdown-panel ${className}`.trim()}
+      // "astryx-dropdown" (not just "-panel") so the existing outside-click
+      // guard (isInsideAstryxDropdownPortal in AppsFilterBar.tsx) recognizes
+      // clicks inside this portaled panel as inside the dropdown, same as it
+      // already does for the design system's own portaled DropdownMenu.
+      className={`${portal ? 'astryx-dropdown ' : ''}astryx-dropdown-panel ${className}`.trim()}
       role="dialog"
       aria-label={ariaLabel}
+      style={style}
     >
       {children}
     </div>
   );
+  if (!portal || typeof document === 'undefined') return panel;
+  return createPortal(panel, document.body);
 }

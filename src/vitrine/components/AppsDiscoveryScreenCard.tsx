@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import type { AppsDiscoveryScreenResult } from '../appsDiscovery.ts';
+import { AppIcon } from './AppIcon.tsx';
 import { PlaceholderImage } from './PlaceholderImage.tsx';
 
 interface AppsDiscoveryScreenCardProps {
@@ -34,11 +35,13 @@ export function AppsDiscoveryScreenCard({
         />
       </div>
       <div className="apps-discovery-screen-card__identity">
-        <span className="apps-discovery-screen-card__logo" aria-hidden="true">
-          {app.iconUrl
-            ? <img src={app.iconUrl} alt="" loading="lazy" />
-            : app.app.slice(0, 1).toUpperCase()}
-        </span>
+        <AppIcon
+          name={app.app}
+          iconUrl={app.iconUrl}
+          accent={app.accent}
+          size={36}
+          className="apps-discovery-screen-card__logo"
+        />
         <span>
           <strong>{app.app}</strong>
           <small>{screen.type}</small>

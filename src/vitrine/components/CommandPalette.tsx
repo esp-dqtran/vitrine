@@ -13,6 +13,7 @@ import { InspirationPreview } from './InspirationPreview';
 import { InspirationPrompts } from './InspirationPrompts';
 import { InspirationResults } from './InspirationResults';
 import { PlaceholderImage } from './PlaceholderImage';
+import { AppIcon } from './AppIcon';
 import { AstryxModal } from './AstryxModal.tsx';
 
 export type CommandPaletteNav =
@@ -47,11 +48,7 @@ function AppTile({ app, onSelect }: { app: App; onSelect: () => void }) {
       padding={3}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, borderRadius: 12, background: 'transparent', border: 'none' }}
     >
-      <div style={{ width: 56, height: 56, borderRadius: 16, background: app.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        {app.iconUrl
-          ? <img src={app.iconUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{app.app[0]}</span>}
-      </div>
+      <AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={56} />
       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-primary)', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{app.app}</span>
     </ClickableCard>
   );
@@ -477,11 +474,7 @@ export function CommandPalette({
               label={app.app}
               variant="secondary"
               onClick={() => selectApp(app.id)}
-              icon={<span className="command-palette-app-logo" style={{ background: app.accent }}>
-                {app.iconUrl
-                  ? <img src={app.iconUrl} alt="" />
-                  : <span aria-hidden="true">{app.app.slice(0, 1)}</span>}
-              </span>}
+              icon={<AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={22} className="command-palette-app-logo" />}
             />
           ))}
         </div>

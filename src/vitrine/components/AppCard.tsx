@@ -1,6 +1,7 @@
 import { Badge, type BadgeVariant } from '@astryxdesign/core';
 import type { AppsPlatform } from '../appsDiscovery';
 import { categoryNames, type App, type RowStatus } from '../types';
+import { AppIcon } from './AppIcon';
 import { DiscoveryCard } from './DiscoveryCard';
 import { PlaceholderImage } from './PlaceholderImage';
 
@@ -77,9 +78,7 @@ export function AppCard({ app, platform, onOpen, status, progressLabel }: AppCar
           ) : null}
         </>
       )}
-      logo={app.iconUrl
-        ? <img src={app.iconUrl} alt="" loading="lazy" />
-        : app.app.slice(0, 1).toUpperCase()}
+      logo={<AppIcon name={app.app} iconUrl={app.iconUrl} accent={app.accent} size={44} />}
       title={app.app}
       description={app.description || categoryNames(app).join(', ')}
       metadata={metadata}
