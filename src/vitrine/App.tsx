@@ -453,6 +453,15 @@ export function App() {
             setSettingsOpen(true);
           }}
         />
+        {isAdmin ? (
+          <AstryxDropdownItem
+            label="Admin dashboard"
+            onSelect={() => {
+              setAccountMenuOpen(false);
+              navigate({ name: "admin" });
+            }}
+          />
+        ) : null}
         <AstryxDropdownDivider />
         <AstryxDropdownItem
           label="Log out"

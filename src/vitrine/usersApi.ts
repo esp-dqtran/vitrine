@@ -34,23 +34,23 @@ export function fetchAdminUsersPage(input: {
   if (input.cursor) params.set('cursor', input.cursor);
   if (input.query?.trim()) params.set('q', input.query.trim());
   params.set('filter', input.filter ?? 'all');
-  return apiJson(`/api/users?${params}`);
+  return apiJson(`/api/admin/users?${params}`);
 }
 
 export function fetchGrowth(): Promise<GrowthResponse> {
-  return apiJson('/api/users/growth');
+  return apiJson('/api/admin/users/growth');
 }
 
 export function fetchFeatureUsage(range: UsageRangeKey): Promise<FeatureUsageOverview> {
-  return apiJson(`/api/users/usage?range=${range}`);
+  return apiJson(`/api/admin/users/usage?range=${range}`);
 }
 
 export function fetchUserFeatureUsage(userId: number, range: UsageRangeKey): Promise<UserFeatureUsage> {
-  return apiJson(`/api/users/${userId}/usage?range=${range}`);
+  return apiJson(`/api/admin/users/${userId}/usage?range=${range}`);
 }
 
 export function setAdminUserActive(userId: number, active: boolean): Promise<AdminUser> {
-  return apiJson(`/api/users/${userId}/active`, {
+  return apiJson(`/api/admin/users/${userId}/active`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ active }),

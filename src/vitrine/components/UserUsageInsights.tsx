@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
-import type { FeatureUsageOverview, ReferralCampaignMetrics, UsageRangeKey } from '../types.ts';
+import type { FeatureUsageOverview, GrowthStats, ReferralCampaignMetrics, UsageRangeKey } from '../types.ts';
 import type { GrowthResponse } from '../usersApi.ts';
-import { formatConversion } from '../usersPageModel.ts';
+import { formatCents, formatConversion } from '../usersPageModel.ts';
+import { revenueSummary } from '../../pricing.ts';
 
 const CHART_FONT = "'Figtree', system-ui, sans-serif";
 const axisTick = { fill: 'var(--color-text-secondary)', fontSize: 11, fontFamily: CHART_FONT };
@@ -15,14 +16,15 @@ export function UserUsageInsights({ usage, growth, referrals, range, onRangeChan
   range: UsageRangeKey;
   onRangeChange: (range: UsageRangeKey) => void;
 }) {
-  const [view, setView] = useState<'usage' | 'growth' | 'referrals'>('usage');
+  const [view, setView] = useState<InsightView>('usage');
   return (
     <aside className="admin-users-insights" aria-labelledby="admin-users-insights-title">
       <div className="admin-users-insights-heading">
         <h2 id="admin-users-insights-title">Insights</h2>
-        <SegmentedControl label="Insight view" value={view} onChange={(value) => setView(value as 'usage' | 'growth' | 'referrals')}>
+        <SegmentedControl label="Insight view" value={view} onChange={(value) => setView(value as InsightView)}>
           <SegmentedControlItem value="usage" label="Feature usage" />
           <SegmentedControlItem value="growth" label="Growth" />
+          <SegmentedControlItem value="revenue" label="Revenue" />
           <SegmentedControlItem value="referrals" label="Referrals" />
         </SegmentedControl>
       </div>
@@ -74,8 +76,28 @@ export function UserUsageInsights({ usage, growth, referrals, range, onRangeChan
             <div><dt>Conversion</dt><dd>{formatConversion(growth.stats.active_subscribers, growth.stats.total_users)}</dd></div>
           </dl>
         </>
+      ) : view === 'revenue' ? (
+        <RevenueInsights stats={growth.stats} />
       ) : <ReferralInsights metrics={referrals} />}
     </aside>
+  );
+}
+
+type InsightView = 'usage' | 'growth' | 'revenue' | 'referrals';
+
+export function RevenueInsights({ stats }: { stats: GrowthStats }) {
+  const { mrrCents, arrCents, churnRate } = revenueSummary(stats);
+  const paying = stats.active_monthly + stats.active_yearly;
+  return (
+    <dl className="admin-users-growth-metrics">
+      <div><dt>MRR</dt><dd>{formatCents(mrrCents)}</dd></div>
+      <div><dt>ARR</dt><dd>{formatCents(arrCents)}</dd></div>
+      <div><dt>Churn (30d)</dt><dd>{churnRate}%</dd></div>
+      <div><dt>ARPU</dt><dd>{formatCents(paying ? Math.round(mrrCents / paying) : 0)}</dd></div>
+      <div><dt>Monthly plans</dt><dd>{stats.active_monthly}</dd></div>
+      <div><dt>Yearly plans</dt><dd>{stats.active_yearly}</dd></div>
+      <div><dt>Canceled (30d)</dt><dd>{stats.canceled_30d}</dd></div>
+    </dl>
   );
 }
 

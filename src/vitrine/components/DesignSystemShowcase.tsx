@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
-import { Badge, SegmentedControl, SegmentedControlItem, Text } from '@astryxdesign/core';
-import type { DesignToken, ReviewStatus, TokenKind } from '../../designSystem.ts';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { Badge, Button, SegmentedControl, SegmentedControlItem, Text, TextInput } from '@astryxdesign/core';
+import type { ComponentVariant, DesignComponent, DesignToken, ReviewStatus, TokenKind } from '../../designSystem.ts';
+import { usagePatternSummary } from '../../usagePatterns.ts';
 
 export const KIND_LABELS: Record<TokenKind, string> = {
   color: 'Colors',
@@ -157,6 +158,188 @@ export function FoundationSection<E>({ index, kind, tokens, renderEvidence }: {
         ))}
       </div>
     </section>
+  );
+}
+
+function reconstructionStyle(spec: ComponentVariant<unknown>['reconstruction']): CSSProperties {
+  return {
+    background: safeColor(spec?.fill, 'var(--ds-accent)'),
+    borderColor: safeColor(spec?.stroke, 'transparent'),
+    borderRadius: spec?.radius ?? 8,
+    padding: spec?.padding ?? 12,
+    gap: spec?.gap ?? 8,
+    width: spec?.width,
+    minHeight: spec?.height,
+  };
+}
+
+export function ComponentSample<E>({ componentName, variant, resolveCropUrl }: {
+  componentName: string;
+  variant: ComponentVariant<E>;
+  resolveCropUrl?: (variant: ComponentVariant<E>) => string | undefined;
+}) {
+  const cropUrl = resolveCropUrl?.(variant);
+  if (cropUrl) {
+    return (
+      <figure className="ds-specimen">
+        <img src={cropUrl} alt={`${componentName} ${variant.name}`} />
+        <figcaption>Observed specimen</figcaption>
+      </figure>
+    );
+  }
+  const kind = componentName.toLowerCase();
+  const label = variant.reconstruction?.visibleText || (variant.name.toLowerCase() === 'default' ? componentName : variant.name);
+  const style = reconstructionStyle(variant.reconstruction);
+  let preview;
+  if (/market.*table|table.*card/.test(kind)) {
+    preview = (
+      <div className="ds-sample-market" style={style}>
+        <div className="ds-sample-market__tabs"><strong>Popular</strong><span>New listings</span><span>Top gainers</span></div>
+        <table>
+          <tbody>
+            <tr><th>BTC/USDT</th><td>78,065.04</td><td>+1.42%</td></tr>
+            <tr><th>ETH/USDT</th><td>3,219.18</td><td>+0.85%</td></tr>
+            <tr><th>SOL/USDT</th><td>162.40</td><td className="is-down">-2.31%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  } else if (/input|field|search/.test(kind)) {
+    preview = <div className="ds-sample-field"><TextInput label={componentName} value={label} onChange={() => undefined} width="100%" /></div>;
+  } else if (/badge|chip|tag/.test(kind)) {
+    preview = <span className="ds-sample-badge" style={style}>{label}</span>;
+  } else if (/card|panel|tile/.test(kind)) {
+    preview = <article className="ds-sample-card" style={style}><strong>{label}</strong><span>{variant.description}</span></article>;
+  } else if (/nav|tab|menu/.test(kind)) {
+    preview = <nav className="ds-sample-nav"><Button label={label} className="is-active" size="sm" /><Button label="Overview" variant="ghost" size="sm" /><Button label="Activity" variant="ghost" size="sm" /></nav>;
+  } else {
+    preview = <Button label={label} className="ds-sample-button" style={style} />;
+  }
+  return <div className="ds-inferred-preview">{preview}<small>Inferred preview</small></div>;
+}
+
+export function ComponentsSection<E>({ index, components, renderEvidence, resolveCropUrl }: {
+  index: number;
+  components: DesignComponent<E>[];
+  renderEvidence: (evidence: E[]) => ReactNode;
+  resolveCropUrl?: (variant: ComponentVariant<E>) => string | undefined;
+}) {
+  return (
+    <section className="ds-section">
+      <SectionHeading index={index} title="Component gallery" description="Reusable interface patterns rendered in their available variants." />
+      <div className="ds-components">
+        {components.map((component) => (
+          <article className="ds-component" key={component.id}>
+            <header>
+              <div><span>{component.category}</span><h4>{component.name}</h4></div>
+              <p>{component.description}</p>
+            </header>
+            <div className="ds-component__variants">
+              {component.variants.map((variant) => (
+                <div className="ds-variant" key={variant.id}>
+                  <div className="ds-variant__stage"><ComponentSample componentName={component.name} variant={variant} resolveCropUrl={resolveCropUrl} /></div>
+                  <div className="ds-variant__meta">
+                    <strong>{variant.name}</strong>
+                    <p>{variant.description}</p>
+                    {renderEvidence(variant.evidence)}
+                    <ReviewFooter confidence={variant.confidence} reviewStatus={variant.reviewStatus} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function PatternsSection<E>({ index, rules, renderEvidence }: {
+  index: number;
+  rules: Array<{
+    id: string;
+    kind: string;
+    name: string;
+    description: string;
+    evidence: E[];
+    confidence?: number;
+    reviewStatus?: ReviewStatus;
+  }>;
+  renderEvidence: (evidence: E[]) => ReactNode;
+}) {
+  const byKind = new Map<string, typeof rules>();
+  for (const rule of rules) byKind.set(rule.kind, [...(byKind.get(rule.kind) ?? []), rule]);
+  return (
+    <section className="ds-section">
+      <SectionHeading index={index} title="Usage patterns" description="Layout, responsive, interaction, imagery, and content guidance." />
+      <div className="ds-patterns">
+        {[...byKind.entries()].map(([kind, kindRules]) => (
+          <article className="ds-pattern" key={kind}>
+            <span>{titleCase(kind)}</span>
+            {kindRules.map((rule) => (
+              <div key={rule.id}>
+                <h4>{rule.name}</h4>
+                <p className="ds-pattern__summary">{usagePatternSummary(rule.description)}</p>
+                {usagePatternSummary(rule.description) !== rule.description.replace(/\s+/g, ' ').trim() ? (
+                  <details className="ds-pattern__details">
+                    <summary>View details</summary>
+                    <p>{rule.description}</p>
+                  </details>
+                ) : null}
+                {renderEvidence(rule.evidence)}
+                <ReviewFooter confidence={rule.confidence} reviewStatus={rule.reviewStatus} />
+              </div>
+            ))}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function pickShowcaseComponent<E>(components: DesignComponent<E>[]): {
+  component: DesignComponent<E>;
+  variant: ComponentVariant<E>;
+} | undefined {
+  const component = components.find((item) => /market.*table|table.*card/i.test(item.name))
+    ?? components.find((item) => /stat.*card/i.test(item.name))
+    ?? components.find((item) => /nav/i.test(item.name))
+    ?? components[0];
+  const variant = component?.variants[0];
+  return component && variant ? { component, variant } : undefined;
+}
+
+export function DesignSystemHeader({
+  eyebrow, title, summary, sourceLabel, originalUrl, sourceUrl, tokenCount, componentCount, patternCount,
+}: {
+  eyebrow: string;
+  title: string;
+  summary: string;
+  sourceLabel: string;
+  originalUrl?: string;
+  sourceUrl?: string;
+  tokenCount: number;
+  componentCount: number;
+  patternCount: number;
+}) {
+  return (
+    <header className="ds-page__header">
+      <div>
+        <span className="ds-page__eyebrow">{eyebrow}</span>
+        <h2>{title}</h2>
+        <p>{summary}</p>
+        <div className="ds-refero-source">
+          <span>{sourceLabel}</span>
+          {originalUrl ? <a href={originalUrl} target="_blank" rel="noreferrer">Original website</a> : null}
+          {sourceUrl && sourceUrl !== originalUrl ? <a href={sourceUrl} target="_blank" rel="noreferrer">Source reference</a> : null}
+        </div>
+      </div>
+      <div className="ds-page__stats">
+        <span><strong>{tokenCount}</strong> tokens</span>
+        <span><strong>{componentCount}</strong> components</span>
+        <span><strong>{patternCount}</strong> patterns</span>
+      </div>
+    </header>
   );
 }
 

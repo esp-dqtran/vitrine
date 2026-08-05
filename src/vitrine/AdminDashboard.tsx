@@ -10,10 +10,6 @@ import {
 const UsersPage = lazy(() => import('./components/UsersPage').then((module) => ({
   default: module.UsersPage,
 })));
-const CategoriesPage = lazy(() => import('./components/CategoriesPage').then((module) => ({
-  default: module.CategoriesPage,
-})));
-
 interface AdminDashboardShellProps {
   email: string;
   section: AdminSection;
@@ -68,7 +64,7 @@ export function AdminDashboard({
       onLogout={onLogout}
       page={(
         <Suspense fallback={<AdminPageSpinner />}>
-          {section === 'users' ? <UsersPage /> : <CategoriesPage />}
+          <UsersPage />
         </Suspense>
       )}
     />

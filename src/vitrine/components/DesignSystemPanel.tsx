@@ -1,25 +1,25 @@
-import { type CSSProperties } from 'react';
-import { Button, EmptyState, Spinner, Text, TextInput } from '@astryxdesign/core';
-import type { ComponentVariant, DesignSystemSnapshot, EvidenceView, ReviewStatus, TokenKind } from '../../designSystem';
-import { isActionableUsageRule, usagePatternSummary } from '../../usagePatterns';
+import { Button, EmptyState, Spinner, Text } from '@astryxdesign/core';
+import type { DesignSystemSnapshot, EvidenceView, TokenKind } from '../../designSystem';
+import { isActionableUsageRule } from '../../usagePatterns';
 import type { UiElementSummaryItem } from '../appsApi.ts';
 import type { DesignSystemGenerationView } from '../useDesignSystemGeneration.ts';
 import { DESIGN_SYSTEM_REFERENCE_STYLES } from '../designSystemReferenceStyles.ts';
 import { DesignSystemReferencePane } from './DesignSystemReferencePane.tsx';
 import {
   ColorSection,
+  ComponentSample,
+  ComponentsSection,
+  DesignSystemHeader,
   FoundationSection,
   KIND_LABELS,
-  ReviewFooter,
-  SectionHeading,
-  safeColor,
+  PatternsSection,
+  pickShowcaseComponent,
   ThemeCanvas,
   titleCase,
   TypographySection,
 } from './DesignSystemShowcase.tsx';
 
 type Snapshot = DesignSystemSnapshot<EvidenceView>;
-type Token = Snapshot['tokens'][number];
 
 const markdownText = (value: string): string => value.replace(/\|/g, '\\|').replace(/\n+/g, ' ');
 
@@ -71,121 +71,6 @@ function EvidenceLinks({ evidence }: { evidence: EvidenceView[] }) {
         ))}
       </div>
     </div>
-  );
-}
-
-function reconstructionStyle(spec: ComponentVariant<EvidenceView>['reconstruction']): CSSProperties {
-  return {
-    background: safeColor(spec?.fill, 'var(--ds-accent)'),
-    borderColor: safeColor(spec?.stroke, 'transparent'),
-    borderRadius: spec?.radius ?? 8,
-    padding: spec?.padding ?? 12,
-    gap: spec?.gap ?? 8,
-    width: spec?.width,
-    minHeight: spec?.height,
-  };
-}
-
-function ComponentSample({ componentName, variant }: { componentName: string; variant: ComponentVariant<EvidenceView> }) {
-  const crop = variant.occurrences?.find((occurrence) => occurrence.crop)?.crop;
-  if (crop) {
-    return (
-      <figure className="ds-specimen">
-        <img src={crop.imageUrl} alt={`${componentName} ${variant.name}`} />
-        <figcaption>Observed specimen</figcaption>
-      </figure>
-    );
-  }
-  const kind = componentName.toLowerCase();
-  const label = variant.reconstruction?.visibleText || (variant.name.toLowerCase() === 'default' ? componentName : variant.name);
-  const style = reconstructionStyle(variant.reconstruction);
-  let preview;
-  if (/market.*table|table.*card/.test(kind)) {
-    preview = (
-      <div className="ds-sample-market" style={style}>
-        <div className="ds-sample-market__tabs"><strong>Popular</strong><span>New listings</span><span>Top gainers</span></div>
-        <table>
-          <tbody>
-            <tr><th>BTC/USDT</th><td>78,065.04</td><td>+1.42%</td></tr>
-            <tr><th>ETH/USDT</th><td>3,219.18</td><td>+0.85%</td></tr>
-            <tr><th>SOL/USDT</th><td>162.40</td><td className="is-down">-2.31%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  } else if (/input|field|search/.test(kind)) {
-    preview = <div className="ds-sample-field"><TextInput label={componentName} value={label} onChange={() => undefined} width="100%" /></div>;
-  } else if (/badge|chip|tag/.test(kind)) {
-    preview = <span className="ds-sample-badge" style={style}>{label}</span>;
-  } else if (/card|panel|tile/.test(kind)) {
-    preview = <article className="ds-sample-card" style={style}><strong>{label}</strong><span>{variant.description}</span></article>;
-  } else if (/nav|tab|menu/.test(kind)) {
-    preview = <nav className="ds-sample-nav"><Button label={label} className="is-active" size="sm" /><Button label="Overview" variant="ghost" size="sm" /><Button label="Activity" variant="ghost" size="sm" /></nav>;
-  } else {
-    preview = <Button label={label} className="ds-sample-button" style={style} />;
-  }
-  return <div className="ds-inferred-preview">{preview}<small>Inferred preview</small></div>;
-}
-
-function ComponentsSection({ index, components }: { index: number; components: Snapshot['components'] }) {
-  return (
-    <section className="ds-section">
-      <SectionHeading index={index} title="Component gallery" description="Reusable interface patterns rendered in their available variants." />
-      <div className="ds-components">
-        {components.map((component) => (
-          <article className="ds-component" key={component.id}>
-            <header>
-              <div><span>{component.category}</span><h4>{component.name}</h4></div>
-              <p>{component.description}</p>
-            </header>
-            <div className="ds-component__variants">
-              {component.variants.map((variant) => (
-                <div className="ds-variant" key={variant.id}>
-                  <div className="ds-variant__stage"><ComponentSample componentName={component.name} variant={variant} /></div>
-                  <div className="ds-variant__meta">
-                    <strong>{variant.name}</strong>
-                    <p>{variant.description}</p>
-                    <EvidenceLinks evidence={variant.evidence} />
-                    <ReviewFooter confidence={variant.confidence} reviewStatus={variant.reviewStatus} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PatternsSection({ index, rules }: { index: number; rules: NonNullable<Snapshot['rules']> }) {
-  const byKind = new Map<string, typeof rules>();
-  for (const rule of rules) byKind.set(rule.kind, [...(byKind.get(rule.kind) ?? []), rule]);
-  return (
-    <section className="ds-section">
-      <SectionHeading index={index} title="Usage patterns" description="Layout, responsive, interaction, imagery, and content guidance." />
-      <div className="ds-patterns">
-        {[...byKind.entries()].map(([kind, kindRules]) => (
-          <article className="ds-pattern" key={kind}>
-            <span>{titleCase(kind)}</span>
-            {kindRules.map((rule) => (
-              <div key={rule.id}>
-                <h4>{rule.name}</h4>
-                <p className="ds-pattern__summary">{usagePatternSummary(rule.description)}</p>
-                {usagePatternSummary(rule.description) !== rule.description.replace(/\s+/g, ' ').trim() ? (
-                  <details className="ds-pattern__details">
-                    <summary>View details</summary>
-                    <p>{rule.description}</p>
-                  </details>
-                ) : null}
-                <EvidenceLinks evidence={rule.evidence} />
-                <ReviewFooter confidence={rule.confidence} reviewStatus={rule.reviewStatus} />
-              </div>
-            ))}
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -332,11 +217,7 @@ export function DesignSystemPanel({
   const hasComponents = snapshot.components.length > 0;
   const usageRules = (snapshot.rules ?? []).filter(isActionableUsageRule);
   const hasRules = usageRules.length > 0;
-  const showcaseComponent = snapshot.components.find((component) => /market.*table|table.*card/i.test(component.name))
-    ?? snapshot.components.find((component) => /stat.*card/i.test(component.name))
-    ?? snapshot.components.find((component) => /nav/i.test(component.name))
-    ?? snapshot.components[0];
-  const showcaseVariant = showcaseComponent?.variants[0];
+  const showcase = pickShowcaseComponent(snapshot.components);
 
   if (!tokenGroups.length && !hasComponents && !hasRules) {
     if (cropOverview) return <div className="ds-page">{cropOverview}</div>;
@@ -346,27 +227,23 @@ export function DesignSystemPanel({
   let sectionIndex = 0;
   const screenshot = snapshot.provenance?.screenshotUrl ?? snapshot.provenance?.thumbnailUrl;
   const isRefero = snapshot.provenance?.provider === 'refero';
+  const resolveCropUrl = (variant: Snapshot['components'][number]['variants'][number]) =>
+    variant.occurrences?.find((occurrence) => occurrence.crop)?.crop?.imageUrl;
   return (
     <div className="ds-page">
       <style>{DESIGN_SYSTEM_REFERENCE_STYLES}</style>
       {generation ? <GenerationBanner generation={generation} onRetry={onRetryGeneration} /> : null}
-      <header className="ds-page__header">
-        <div>
-          <span className="ds-page__eyebrow">{isRefero ? 'Imported style reference' : 'Design system analysis'}</span>
-          <h2>{titleCase(snapshot.app)}</h2>
-          <p>{snapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}</p>
-          <div className="ds-refero-source">
-            <span>{isRefero ? 'Refero source · External import' : 'Vitrines · Observed evidence'}</span>
-            {snapshot.provenance?.originalUrl ? <a href={snapshot.provenance.originalUrl} target="_blank" rel="noreferrer">Original website</a> : null}
-            {snapshot.provenance?.sourceUrl ? <a href={snapshot.provenance.sourceUrl} target="_blank" rel="noreferrer">Source reference</a> : null}
-          </div>
-        </div>
-        <div className="ds-page__stats">
-          <span><strong>{snapshot.tokens.length}</strong> tokens</span>
-          <span><strong>{snapshot.components.length}</strong> components</span>
-          <span><strong>{usageRules.length}</strong> patterns</span>
-        </div>
-      </header>
+      <DesignSystemHeader
+        eyebrow={isRefero ? 'Imported style reference' : 'Design system analysis'}
+        title={titleCase(snapshot.app)}
+        summary={snapshot.summary ?? 'A living styleguide reconstructed from the available product evidence.'}
+        sourceLabel={isRefero ? 'Refero source · External import' : 'Vitrines · Observed evidence'}
+        originalUrl={snapshot.provenance?.originalUrl}
+        sourceUrl={snapshot.provenance?.sourceUrl}
+        tokenCount={snapshot.tokens.length}
+        componentCount={snapshot.components.length}
+        patternCount={usageRules.length}
+      />
 
       <div className="ds-refero-layout">
         <div className="ds-refero-reference">
@@ -375,8 +252,8 @@ export function DesignSystemPanel({
           <ThemeCanvas
             title={`${titleCase(snapshot.app)} foundations & components`}
             description="Visual specimens reconstructed from the design tokens, component definitions, and product rules available in Vitrines."
-            showcase={showcaseComponent && showcaseVariant
-              ? <ComponentSample componentName={showcaseComponent.name} variant={showcaseVariant} />
+            showcase={showcase
+              ? <ComponentSample componentName={showcase.component.name} variant={showcase.variant} resolveCropUrl={resolveCropUrl} />
               : undefined}
           >
             {tokenGroups.map(([kind, tokens]) => {
@@ -385,8 +262,8 @@ export function DesignSystemPanel({
               if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} />;
               return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} renderEvidence={renderEvidence} />;
             })}
-            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} /> : null}
-            {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} /> : null}
+            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} renderEvidence={renderEvidence} resolveCropUrl={resolveCropUrl} /> : null}
+            {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} renderEvidence={renderEvidence} /> : null}
           </ThemeCanvas>
         </div>
         <DesignSystemReferencePane snapshot={snapshot} markdown={designSystemMarkdown(snapshot)} />

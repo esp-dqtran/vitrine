@@ -7,6 +7,9 @@ export interface GrowthStats {
   dau: number;
   wau: number;
   total_free_unlocks: number;
+  active_monthly: number;
+  active_yearly: number;
+  canceled_30d: number;
 }
 
 // Every count excludes role='admin' — the one or two seeded admin accounts would
@@ -24,7 +27,17 @@ export async function getGrowthStats(): Promise<GrowthStats> {
        (SELECT count(DISTINCT ae.user_id)::int FROM access_events ae JOIN users u ON u.id = ae.user_id
           WHERE u.role = 'user' AND ae.created_at >= now() - interval '7 days') AS wau,
        (SELECT count(*)::int FROM free_app_unlocks f JOIN users u ON u.id = f.user_id
-          WHERE u.role = 'user') AS total_free_unlocks`
+          WHERE u.role = 'user') AS total_free_unlocks,
+       (SELECT count(*)::int FROM subscriptions s JOIN users u ON u.id = s.user_id
+          WHERE u.role = 'user' AND s.status = 'active' AND s.billing_interval = 'month') AS active_monthly,
+       (SELECT count(*)::int FROM subscriptions s JOIN users u ON u.id = s.user_id
+          WHERE u.role = 'user' AND s.status = 'active' AND s.billing_interval = 'year') AS active_yearly,
+       -- ponytail: subscriptions keeps one row per user, overwritten in place, so this is
+       -- "cancellations still on record from the last 30d" off updated_at — not cohort churn.
+       -- Add a subscription_events history table if real cohort/net-revenue churn is needed.
+       (SELECT count(*)::int FROM subscriptions s JOIN users u ON u.id = s.user_id
+          WHERE u.role = 'user' AND s.status = 'canceled'
+            AND s.updated_at >= now() - interval '30 days') AS canceled_30d`
   );
   return result.rows[0];
 }

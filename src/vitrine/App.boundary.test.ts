@@ -16,6 +16,7 @@ test('uses the shared Astryx dropdown for authenticated account actions', async 
   assert.match(source, /from ['"]\.\/components\/AstryxDropdown\.tsx['"]/);
   assert.match(source, /<AstryxDropdown[\s\S]*ariaLabel=\{`Account menu: \$\{user\.email\}`\}/);
   assert.match(source, /<AstryxDropdownItem[\s\S]*label="Settings"/);
+  assert.match(source, /isAdmin \? \([\s\S]*label="Admin dashboard"[\s\S]*navigate\(\{ name: ['"]admin['"] \}\)/);
   assert.match(source, /<AstryxDropdownDivider/);
   assert.match(source, /<AstryxDropdownItem[\s\S]*label="Log out"/);
   assert.doesNotMatch(source, /<DropdownMenu/);

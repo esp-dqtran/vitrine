@@ -43,6 +43,14 @@ export function formatJoinedDate(value: string) {
   }).format(date);
 }
 
+export function formatCents(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 export function formatConversion(activeSubscribers: number, totalUsers: number) {
   return totalUsers > 0
     ? `${((activeSubscribers / totalUsers) * 100).toFixed(1)}%`

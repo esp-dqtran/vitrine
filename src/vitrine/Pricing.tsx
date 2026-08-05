@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { Badge, Button, Divider, Heading, Icon, SegmentedControl, SegmentedControlItem, Text, useMediaQuery } from '@astryxdesign/core';
 import type { AuthUser } from './authApi';
 import { createCheckout, loadSubscription, type SubscriptionView } from './billingApi';
+import { PRO_PRICE_CENTS } from '../pricing.ts';
 import { AstryxMenu } from './components/AstryxDropdown';
 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
@@ -293,7 +294,7 @@ export function PricingView({
   error = '',
 }: PricingViewProps) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
-  const proPrice = yearly ? '$79.99' : '$8.99';
+  const proPrice = `$${(PRO_PRICE_CENTS[yearly ? 'year' : 'month'] / 100).toFixed(2)}`;
   const proNote = yearly ? '/year' : '/month';
   const proSub = yearly ? 'billed yearly · save 26% vs monthly' : 'billed monthly';
   const navLink: CSSProperties = { fontSize: 14, fontWeight: 500, color: 'var(--color-text-secondary)' };

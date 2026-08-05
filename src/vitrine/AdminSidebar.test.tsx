@@ -3,11 +3,11 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AdminSidebar } from './components/AdminSidebar.tsx';
 
-test('renders Users and Categories with exactly one selected destination', () => {
+test('renders Users as the only selected destination', () => {
   const html = renderToStaticMarkup(
     <AdminSidebar
       email="admin@example.com"
-      section="categories"
+      section="users"
       onSectionChange={() => undefined}
       onBack={() => undefined}
       onLogout={() => undefined}
@@ -16,7 +16,7 @@ test('renders Users and Categories with exactly one selected destination', () =>
 
   assert.match(html, /Vitrines Admin/);
   assert.match(html, /Users/);
-  assert.match(html, /Categories/);
+  assert.doesNotMatch(html, /Categories/);
   assert.match(html, /Back to Vitrines/);
   assert.match(html, /admin@example\.com/);
   assert.match(html, /Log out/);

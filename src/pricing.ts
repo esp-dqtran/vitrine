@@ -22,6 +22,32 @@ export interface SubscriptionRecord {
   grace_expires_at: string | null;
 }
 
+// Stripe only hands us price IDs, never amounts, so the Pro list price lives here —
+// the marketing page and the admin revenue panel must read the same numbers.
+export const PRO_PRICE_CENTS: Record<BillingInterval, number> = { month: 899, year: 7999 };
+
+export interface RevenueSummary {
+  mrrCents: number;
+  arrCents: number;
+  churnRate: number;
+}
+
+export function revenueSummary(input: {
+  active_monthly: number;
+  active_yearly: number;
+  canceled_30d: number;
+}): RevenueSummary {
+  const mrrCents =
+    input.active_monthly * PRO_PRICE_CENTS.month +
+    Math.round((input.active_yearly * PRO_PRICE_CENTS.year) / 12);
+  const churnBase = input.active_monthly + input.active_yearly + input.canceled_30d;
+  return {
+    mrrCents,
+    arrCents: mrrCents * 12,
+    churnRate: churnBase ? Math.round((input.canceled_30d / churnBase) * 1000) / 10 : 0,
+  };
+}
+
 export function effectivePlan(
   subscription: Pick<SubscriptionRecord, "status" | "grace_expires_at"> | undefined,
   now = new Date(),

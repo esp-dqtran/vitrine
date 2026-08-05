@@ -197,10 +197,6 @@
     display: none;
   }
 
-  .apps-filterbar__filter--merged {
-    display: inline-flex;
-  }
-
   .apps-filterbar__meta {
     width: auto;
     flex: 0 0 auto;

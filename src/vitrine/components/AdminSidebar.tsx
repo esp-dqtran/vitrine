@@ -1,6 +1,6 @@
 import { Button, SideNav, SideNavHeading, SideNavItem } from '@astryxdesign/core';
 
-export type AdminSection = 'users' | 'categories';
+export type AdminSection = 'users';
 
 interface AdminSidebarProps {
   email: string;
@@ -37,11 +37,6 @@ export function AdminSidebar({
         label="Users"
         isSelected={section === 'users'}
         onClick={() => onSectionChange('users')}
-      />
-      <SideNavItem
-        label="Categories"
-        isSelected={section === 'categories'}
-        onClick={() => onSectionChange('categories')}
       />
       <SideNavItem label="Back to Vitrines" isSelected={false} onClick={onBack} />
     </SideNav>

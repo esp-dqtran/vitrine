@@ -12,7 +12,10 @@ const users = [
 ];
 
 const growth = {
-  stats: { total_users: 2, new_users_7d: 1, active_subscribers: 1, dau: 1, wau: 2, total_free_unlocks: 0 },
+  stats: {
+    total_users: 2, new_users_7d: 1, active_subscribers: 1, dau: 1, wau: 2, total_free_unlocks: 0,
+    active_monthly: 1, active_yearly: 0, canceled_30d: 0,
+  },
   dailySignups: [{ day: "2026-07-19", signups: 1 }],
 };
 
@@ -82,6 +85,7 @@ test("renders one unified, searchable directory with account actions", () => {
   assert.match(html, /Load more/);
   assert.match(html, /Feature usage/);
   assert.match(html, /Growth/);
+  assert.match(html, /Revenue/);
   assert.match(html, /Most used features/);
   assert.doesNotMatch(html, /<h3[^>]*>Administrators/);
   assert.doesNotMatch(html, /admin-users-groups/);

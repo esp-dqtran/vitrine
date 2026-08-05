@@ -24,10 +24,6 @@ import {
   CatalogCursorError,
   encodeUpdatedCatalogCursor,
 } from "../../../src/catalogCursor.ts";
-import {
-  CategoryConflictError,
-  CategoryNotFoundError,
-} from "../../../src/categoryStore.ts";
 import { buildPublishedCatalogPage } from "../../../src/gallery.ts";
 
 const admin = { id: 1, email: "admin@example.com", role: "admin" as const };
@@ -534,149 +530,6 @@ test("maps only transition Flow views and rejects invalid queries before the sto
     assert.equal((await fetch(`${base}/catalog/flows?${query}`)).status, 400);
   }
   assert.equal(calls, 2);
-});
-
-test("manages Categories and App assignments through admin-only endpoints", async (t) => {
-  const calls: unknown[] = [];
-  const category = { id: 7, name: "Productivity", slug: "productivity" };
-  const categoryStore = {
-    list: async () => [{ ...category, appCount: 1 }],
-    create: async (input: unknown) => {
-      calls.push(["create", input]);
-      return category;
-    },
-    update: async (id: number, input: unknown) => {
-      calls.push(["update", id, input]);
-      return { ...category, name: "Work" };
-    },
-    remove: async (id: number) => {
-      calls.push(["remove", id]);
-      return { category, removedAppCount: 1 };
-    },
-    listApps: async (id: number) => {
-      calls.push(["listApps", id]);
-      return [{ id: 42, slug: "linear", name: "Linear" }];
-    },
-    attach: async (app: string, id: number) => {
-      calls.push(["attach", app, id]);
-    },
-    detach: async (app: string, id: number) => {
-      calls.push(["detach", app, id]);
-    },
-  };
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async () => admin,
-    categoryStore,
-  } as never));
-  t.after(() => close(server));
-
-  const jsonHeaders = { ...adminAuth, "content-type": "application/json" };
-  const listed = await fetch(`${base}/admin/categories`, { headers: adminAuth });
-  assert.equal(listed.status, 200);
-  assert.deepEqual(await listed.json(), {
-    categories: [{ ...category, appCount: 1 }],
-  });
-
-  const created = await fetch(`${base}/admin/categories`, {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({ name: "Productivity", slug: "productivity" }),
-  });
-  assert.equal(created.status, 201);
-  assert.deepEqual(await created.json(), category);
-
-  const updated = await fetch(`${base}/admin/categories/7`, {
-    method: "PATCH",
-    headers: jsonHeaders,
-    body: JSON.stringify({ name: "Work", slug: "work" }),
-  });
-  assert.equal(updated.status, 200);
-  assert.equal((await updated.json()).name, "Work");
-
-  const assignedApps = await fetch(`${base}/admin/categories/7/apps`, {
-    headers: adminAuth,
-  });
-  assert.deepEqual(await assignedApps.json(), {
-    apps: [{ id: 42, slug: "linear", name: "Linear" }],
-  });
-
-  const attached = await fetch(`${base}/admin/categories/7/apps`, {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({ app: "linear" }),
-  });
-  assert.equal(attached.status, 200);
-  assert.deepEqual(await attached.json(), { app: "linear", categoryId: 7 });
-
-  const detached = await fetch(`${base}/admin/categories/7/apps/linear`, {
-    method: "DELETE",
-    headers: adminAuth,
-  });
-  assert.equal(detached.status, 204);
-  const detachedAgain = await fetch(`${base}/admin/categories/7/apps/linear`, {
-    method: "DELETE",
-    headers: adminAuth,
-  });
-  assert.equal(detachedAgain.status, 204);
-
-  const removed = await fetch(`${base}/admin/categories/7`, {
-    method: "DELETE",
-    headers: adminAuth,
-  });
-  assert.deepEqual(await removed.json(), { category, removedAppCount: 1 });
-  assert.deepEqual(calls, [
-    ["create", { name: "Productivity", slug: "productivity" }],
-    ["update", 7, { name: "Work", slug: "work" }],
-    ["listApps", 7],
-    ["attach", "linear", 7],
-    ["detach", "linear", 7],
-    ["detach", "linear", 7],
-    ["remove", 7],
-  ]);
-});
-
-test("guards and validates Category management endpoints", async (t) => {
-  let calls = 0;
-  const { base, server } = await serve(createApiApp({
-    verifyAuthToken: async (token: string) => token === "admin" ? admin : user,
-    categoryStore: {
-      list: async () => { calls += 1; return []; },
-      create: async () => { calls += 1; throw new CategoryConflictError("duplicate"); },
-      attach: async () => { calls += 1; throw new CategoryNotFoundError("missing"); },
-    },
-  } as never));
-  t.after(() => close(server));
-
-  assert.equal(
-    (await fetch(`${base}/admin/categories`, {
-      headers: { authorization: "Bearer user" },
-    })).status,
-    403,
-  );
-  assert.equal(calls, 0);
-
-  const headers = { ...adminAuth, "content-type": "application/json" };
-  assert.equal((await fetch(`${base}/admin/categories/not-an-id`, {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify({ name: "Work", slug: "work" }),
-  })).status, 400);
-  assert.equal((await fetch(`${base}/admin/categories`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ name: "Work", slug: "work", extra: true }),
-  })).status, 400);
-
-  assert.equal((await fetch(`${base}/admin/categories`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ name: "Work", slug: "work" }),
-  })).status, 409);
-  assert.equal((await fetch(`${base}/admin/categories/7/apps`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ app: "missing" }),
-  })).status, 404);
 });
 
 test("keeps the progress stream admin-only without opening a subscription", async (t) => {
@@ -3008,6 +2861,9 @@ test("returns a paginated user directory and growth stats for an admin", async (
     dau: 4,
     wau: 8,
     total_free_unlocks: 5,
+    active_monthly: 1,
+    active_yearly: 1,
+    canceled_30d: 1,
   };
   const dailySignups = [{ day: "2026-07-15", signups: 1 }];
   const userRow = { id: 2, email: user.email, role: "user" as const, active: true, created_at: "2026-07-14T00:00:00.000Z", subscription_status: null };
@@ -3023,12 +2879,12 @@ test("returns a paginated user directory and growth stats for an admin", async (
   }));
   t.after(() => close(server));
 
-  const users = await fetch(`${base}/users?limit=30&q=pro&filter=pro`, { headers: adminAuth });
+  const users = await fetch(`${base}/admin/users?limit=30&q=pro&filter=pro`, { headers: adminAuth });
   assert.equal(users.status, 200);
   assert.deepEqual(requested, { limit: 30, cursor: undefined, query: "pro", filter: "pro" });
   assert.deepEqual(await users.json(), { users: [userRow], nextCursor: "next", total: 42 });
 
-  const growth = await fetch(`${base}/users/growth`, { headers: adminAuth });
+  const growth = await fetch(`${base}/admin/users/growth`, { headers: adminAuth });
   assert.equal(growth.status, 200);
   assert.deepEqual(await growth.json(), { stats: growthStats, dailySignups });
 });
@@ -3044,7 +2900,7 @@ test("updates account state and maps safety errors", async (t) => {
   }));
   t.after(() => close(server));
 
-  const response = await fetch(`${base}/users/${admin.id}/active`, {
+  const response = await fetch(`${base}/admin/users/${admin.id}/active`, {
     method: "PATCH",
     headers: { ...adminAuth, "content-type": "application/json" },
     body: JSON.stringify({ active: false }),
@@ -3073,10 +2929,10 @@ test("returns global and per-user usage for supported ranges", async (t) => {
   }));
   t.after(() => close(server));
 
-  const global = await fetch(`${base}/users/usage?range=30d`, { headers: adminAuth });
+  const global = await fetch(`${base}/admin/users/usage?range=30d`, { headers: adminAuth });
   assert.equal(global.status, 200);
   assert.deepEqual(await global.json(), overview);
-  const perUser = await fetch(`${base}/users/2/usage?range=7d`, { headers: adminAuth });
+  const perUser = await fetch(`${base}/admin/users/2/usage?range=7d`, { headers: adminAuth });
   assert.equal(perUser.status, 200);
   assert.deepEqual(await perUser.json(), detail);
   assert.deepEqual(requested, [
@@ -3091,8 +2947,8 @@ test("validates user analytics ranges and missing users", async (t) => {
     getUserFeatureUsage: async () => undefined,
   }));
   t.after(() => close(server));
-  assert.equal((await fetch(`${base}/users/usage?range=365d`, { headers: adminAuth })).status, 400);
-  assert.equal((await fetch(`${base}/users/999/usage?range=30d`, { headers: adminAuth })).status, 404);
+  assert.equal((await fetch(`${base}/admin/users/usage?range=365d`, { headers: adminAuth })).status, 400);
+  assert.equal((await fetch(`${base}/admin/users/999/usage?range=30d`, { headers: adminAuth })).status, 404);
 });
 
 test("logs in with a JWT Bearer token and resolves me", async (t) => {

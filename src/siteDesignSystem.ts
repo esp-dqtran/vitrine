@@ -26,6 +26,15 @@ interface TokenCandidate {
   count: number;
 }
 
+interface ColorCandidate {
+  value: string;
+  customPropertyName?: string;
+  foregroundCount: number;
+  backgroundCount: number;
+  roleCounts: Map<string, number>;
+  evidence: Set<string>;
+}
+
 const TOKEN_LIMIT: Record<TokenKind, number> = {
   color: 24,
   typography: 18,
@@ -110,6 +119,84 @@ function addCandidate(
   });
 }
 
+function addColorObservation(
+  colors: Map<string, ColorCandidate>,
+  value: string,
+  usage: "foreground" | "background",
+  role: string,
+  evidenceId: string,
+  customPropertyName?: string,
+): void {
+  const existing = colors.get(value);
+  const target: ColorCandidate = existing ?? {
+    value,
+    ...(customPropertyName ? { customPropertyName } : {}),
+    foregroundCount: 0,
+    backgroundCount: 0,
+    roleCounts: new Map(),
+    evidence: new Set(),
+  };
+  if (usage === "foreground") target.foregroundCount += 1; else target.backgroundCount += 1;
+  target.roleCounts.set(role, (target.roleCounts.get(role) ?? 0) + 1);
+  target.evidence.add(evidenceId);
+  if (customPropertyName && !target.customPropertyName) target.customPropertyName = customPropertyName;
+  if (!existing) colors.set(value, target);
+}
+
+function roleSummary(roleCounts: Map<string, number>): string {
+  const sorted = [...roleCounts.entries()].sort((left, right) => right[1] - left[1]);
+  const top = sorted.slice(0, 3).map(([role]) => role.toLowerCase());
+  const remaining = sorted.length - top.length;
+  return remaining > 0
+    ? `${top.join(", ")}, and ${remaining} more area${remaining === 1 ? "" : "s"}`
+    : top.join(", ");
+}
+
+function buildColorTokens(colors: Map<string, ColorCandidate>, limit: number): DesignToken<string>[] {
+  const entries = [...colors.values()];
+  const custom = entries.filter((candidate) => candidate.customPropertyName);
+  const generic = entries
+    .filter((candidate) => !candidate.customPropertyName)
+    .sort((left, right) =>
+      (right.foregroundCount + right.backgroundCount) - (left.foregroundCount + left.backgroundCount));
+
+  const tokens: DesignToken<string>[] = [];
+
+  for (const candidate of custom) {
+    const total = candidate.foregroundCount + candidate.backgroundCount;
+    tokens.push({
+      id: stableId("site-color", `${candidate.value}\0${candidate.customPropertyName}`),
+      kind: "color",
+      name: candidate.customPropertyName!,
+      value: candidate.value,
+      role: `CSS custom property ${candidate.customPropertyName}, observed in ${roleSummary(candidate.roleCounts)}`,
+      evidence: [...candidate.evidence].slice(0, 20),
+      confidence: Math.min(0.98, 0.8 + total * 0.03),
+      reviewStatus: "needs_review",
+    });
+  }
+
+  let textOrdinal = 0;
+  let backgroundOrdinal = 0;
+  for (const candidate of generic) {
+    const isText = candidate.foregroundCount >= candidate.backgroundCount;
+    const ordinal = isText ? textOrdinal++ : backgroundOrdinal++;
+    const total = candidate.foregroundCount + candidate.backgroundCount;
+    tokens.push({
+      id: stableId("site-color", `${candidate.value}\0${isText ? "text" : "background"}`),
+      kind: "color",
+      name: `${isText ? "Text color" : "Background color"}${ordinal > 0 ? ` ${ordinal + 1}` : ""}`,
+      value: candidate.value,
+      role: `Observed as ${isText ? "text" : "a background fill"} in ${roleSummary(candidate.roleCounts)}`,
+      evidence: [...candidate.evidence].slice(0, 20),
+      confidence: Math.min(0.98, 0.72 + total * 0.03),
+      reviewStatus: "needs_review",
+    });
+  }
+
+  return tokens.slice(0, limit);
+}
+
 function colorValues(value: unknown): string[] {
   const source = string(value);
   if (!source) return [];
@@ -157,6 +244,7 @@ function extractTokens(
   structureById: Map<string, RecordValue>,
 ): DesignToken<string>[] {
   const candidates = new Map<string, TokenCandidate>();
+  const colors = new Map<string, ColorCandidate>();
   for (const rawStyle of analysis.visualTokens) {
     const style = record(rawStyle);
     const evidenceId = string(style?.structureId);
@@ -167,14 +255,19 @@ function extractTokens(
       for (const [name, rawValue] of Object.entries(customProperties)) {
         const value = string(rawValue);
         const kind = value ? customPropertyKind(name, value) : undefined;
-        if (kind && value) addCandidate(candidates, kind, value, `CSS variable ${name}`, evidenceId);
+        if (!kind || !value) continue;
+        if (kind === "color") {
+          addColorObservation(colors, value, "background", role, evidenceId, name);
+        } else {
+          addCandidate(candidates, kind, value, `CSS variable ${name}`, evidenceId);
+        }
       }
     }
     for (const value of colorValues(style.color)) {
-      addCandidate(candidates, "color", value, `${role} foreground`, evidenceId);
+      addColorObservation(colors, value, "foreground", role, evidenceId);
     }
     for (const value of colorValues(style.background)) {
-      addCandidate(candidates, "color", value, `${role} surface`, evidenceId);
+      addColorObservation(colors, value, "background", role, evidenceId);
     }
     const typography = typographyValue(style);
     if (typography) addCandidate(candidates, "typography", typography, `${role} text`, evidenceId);
@@ -200,8 +293,8 @@ function extractTokens(
   for (const candidate of candidates.values()) {
     byKind.set(candidate.kind, [...(byKind.get(candidate.kind) ?? []), candidate]);
   }
-  const tokens: DesignToken<string>[] = [];
-  for (const kind of ["color", "typography", "spacing", "radius", "border", "effect"] as const) {
+  const tokens: DesignToken<string>[] = buildColorTokens(colors, TOKEN_LIMIT.color);
+  for (const kind of ["typography", "spacing", "radius", "border", "effect"] as const) {
     const selected = (byKind.get(kind) ?? [])
       .sort((left, right) => right.count - left.count || left.value.localeCompare(right.value))
       .slice(0, TOKEN_LIMIT[kind]);
@@ -244,10 +337,18 @@ function componentName(node: RecordValue): string | undefined {
   return undefined;
 }
 
-function variantName(node: RecordValue, fallback: string): string {
+function realLabel(node: RecordValue): string | undefined {
   const label = string(node.accessibleName) ?? string(node.heading) ?? string(node.text);
-  if (!label) return fallback;
-  return label.split(/\s+/).slice(0, 8).join(" ").slice(0, 80);
+  return label ? label.split(/\s+/).slice(0, 8).join(" ").slice(0, 80) : undefined;
+}
+
+function variantName(node: RecordValue, fallback: string): string {
+  return realLabel(node) ?? fallback;
+}
+
+function firstPx(value: string | undefined): number | undefined {
+  const match = value?.match(/-?(?:\d*\.)?\d+(?=px)/);
+  return match ? Number(match[0]) : undefined;
 }
 
 function extractComponents(
@@ -285,12 +386,23 @@ function extractComponents(
           ? ["display", "padding", "gap", "border", "borderRadius", "background", "color", "fontSize"]
             .flatMap((property) => string(style[property]) ? [`${property}: ${string(style[property])}`] : [])
           : [];
+        const reconstruction = style ? {
+          fill: colorValues(style.background)[0],
+          stroke: colorValues(style.border)[0],
+          radius: firstPx(string(style.borderRadius)),
+          padding: firstPx(string(style.padding)),
+          gap: firstPx(string(style.gap)),
+          width: firstPx(string(style.width)),
+          height: firstPx(string(style.height)),
+          visibleText: realLabel(node),
+        } : undefined;
         return {
           id: stableId("site-variant", `${name}\0${evidenceId}`),
           name: variantName(node, index === 0 ? "Default" : `Variant ${index + 1}`),
           description: `Rendered ${name.toLowerCase()} instance.`,
           evidence: [evidenceId],
           observedProperties,
+          ...(reconstruction ? { reconstruction } : {}),
           confidence: 0.9,
           reviewStatus: "needs_review" as const,
         };
@@ -406,8 +518,7 @@ function extractRules(
 }
 
 function detectedTheme(tokens: DesignToken<string>[]): "light" | "dark" | undefined {
-  const surface = tokens.find((token) => token.kind === "color" && /canvas surface/i.test(token.name))
-    ?? tokens.find((token) => token.kind === "color" && /surface/i.test(token.name));
+  const surface = tokens.find((token) => token.kind === "color" && token.name === "Background color");
   const match = surface?.value.match(/rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)/i);
   if (!match) return undefined;
   const luminance = (0.2126 * Number(match[1]) + 0.7152 * Number(match[2]) + 0.0722 * Number(match[3])) / 255;

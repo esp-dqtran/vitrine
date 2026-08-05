@@ -23,7 +23,7 @@ test("encodes paginated directory search and filters", async () => {
   };
 
   await fetchAdminUsersPage({ limit: 30, cursor: "next page", query: "kai+test@example.com", filter: "pro" });
-  assert.equal(requested, "/api/users?limit=30&cursor=next+page&q=kai%2Btest%40example.com&filter=pro");
+  assert.equal(requested, "/api/admin/users?limit=30&cursor=next+page&q=kai%2Btest%40example.com&filter=pro");
 });
 
 test("updates account state with the narrow active contract", async () => {
@@ -48,7 +48,7 @@ test("loads overview and per-user analytics for one supported range", async () =
 
   await fetchFeatureUsage("90d");
   await fetchUserFeatureUsage(7, "90d");
-  assert.deepEqual(requested, ["/api/users/usage?range=90d", "/api/users/7/usage?range=90d"]);
+  assert.deepEqual(requested, ["/api/admin/users/usage?range=90d", "/api/admin/users/7/usage?range=90d"]);
 });
 
 test("surfaces the server error message", async () => {
