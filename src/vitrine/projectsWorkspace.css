@@ -162,6 +162,115 @@
   gap: 1px;
 }
 
+.projects-workspace__desktop-row {
+  min-width: 0;
+}
+
+/* The row and its trailing control sit on one line; the control is a sibling of
+   the row button, never a child — a button cannot nest inside a button. */
+.projects-workspace__desktop-row-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+/*
+ * Named, not positional. As `> button:first-child` this matched whichever button
+ * happened to come first, which became the fold caret once that moved ahead of
+ * the destination — and `flex: 1 1 auto; min-width: 0` on a 20px control next to
+ * a button that cannot shrink below its content squeezed the caret to nothing.
+ * It also outranked the caret's own rule, since a pseudo-class counts as a class.
+ */
+.projects-workspace__desktop-row-line > .projects-workspace__desktop-row-link {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Each level steps in by the row's own text inset, so a child's icon lands
+   under its parent's label. */
+.projects-workspace__desktop-subnav {
+  display: grid;
+  gap: 1px;
+  margin-top: 1px;
+  padding-left: 14px;
+}
+
+/*
+ * The fold control leads the row, file-tree style, and is its own button: it
+ * collapses the branch rather than following the row's destination. Its own
+ * 20px hit target, so it is not a 10px pinpoint.
+ */
+.projects-workspace__desktop-nav .projects-workspace__desktop-row-caret {
+  display: grid;
+  width: 20px;
+  min-height: 20px;
+  flex: 0 0 auto;
+  /* Reset the row's icon+label track, or the chevron sits in a 16px first
+     column and reads 2px left of centre. */
+  grid-template-columns: 1fr;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-inner);
+  color: var(--color-text-secondary);
+}
+
+.projects-workspace__desktop-nav .projects-workspace__desktop-row-caret:hover {
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+}
+
+/* Sized here rather than by the nav's blanket 16px svg rule. */
+.projects-workspace__desktop-nav .projects-workspace__desktop-row-caret svg {
+  width: 10px;
+  height: 10px;
+  transform: rotate(-90deg);
+  transition: transform var(--vitrine-transition-fast);
+}
+
+.projects-workspace__desktop-nav
+  .projects-workspace__desktop-row-caret[aria-expanded="true"]
+  svg {
+  transform: rotate(0deg);
+}
+
+/* A project's own glyph at row size: an initial needs sizing, an svg is already
+   covered by the nav's icon rule. */
+.projects-workspace__desktop-row-glyph {
+  display: grid;
+  width: var(--vitrine-icon-size-inline);
+  height: var(--vitrine-icon-size-inline);
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.projects-workspace__desktop-nav .projects-workspace__desktop-row-action {
+  display: grid;
+  width: 28px;
+  min-height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-element);
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity var(--vitrine-transition-fast);
+}
+
+/* Revealed on hover or keyboard focus; always present for touch, where there is
+   no hover to reveal it. */
+.projects-workspace__desktop-row-line:hover .projects-workspace__desktop-row-action,
+.projects-workspace__desktop-row-action:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .projects-workspace__desktop-nav .projects-workspace__desktop-row-action {
+    opacity: 1;
+  }
+}
+
 /* Carries the gap the group caption used to sit in — but only when a workspace
    row precedes it. Without one the brand's own 24px is already the gap, and both
    would stack into 40px. */
@@ -1727,6 +1836,32 @@
   .projects-workspace__desktop-settings {
     width: auto;
     white-space: nowrap;
+  }
+
+  /*
+   * A tree cannot be a bar. `display: contents` drops the row and subnav
+   * wrappers so every surviving row becomes a column of the bar directly —
+   * an indented vertical block inside a horizontal strip would make the bar
+   * tall instead of wide.
+   */
+  .projects-workspace__desktop-row,
+  .projects-workspace__desktop-subnav {
+    display: contents;
+  }
+
+  /*
+   * Flattened, the bar shows the path you are on: Projects › the open project ›
+   * its areas. Sibling projects are a jump the strip has no room for, and they
+   * stay one tap away on the Projects index.
+   */
+  .projects-workspace__desktop-subnav > .has-children:not(.is-open) {
+    display: none;
+  }
+
+  /* Nothing to fold once it is a strip, so the control goes rather than sitting
+     there doing nothing to the row beside it. */
+  .projects-workspace__desktop-row-caret {
+    display: none;
   }
 
   /* Footer action sits at the far end of the bar; its rule is a rail divider. */

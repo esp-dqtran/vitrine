@@ -4687,21 +4687,13 @@ body {
   width: 100%;
 }
 
-.project-files-page {
-  --color-background-body: var(--vitrine-color-page);
-  --color-background-surface: var(--vitrine-color-surface);
-  --color-background-muted: var(--vitrine-color-surface-muted);
-  --color-text-primary: var(--vitrine-color-text-primary);
-  --color-text-secondary: var(--vitrine-color-text-secondary);
-  --color-border: var(--vitrine-color-border);
-  --color-border-emphasized: var(--vitrine-color-border-emphasized);
-  --color-border-focus: var(--vitrine-color-border-emphasized);
-  display: flex;
-  min-height: 100vh;
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
-  color-scheme: inherit;
-}
+/*
+ * No .project-files-page layout rule. This class sits on the same <main> as
+ * .projects-workspace, which already declares every one of these tokens plus
+ * the background, colour and min-height — but this one also set `display: flex`
+ * for a sidebar layout that no longer renders, which made the content panel a
+ * row flex item and shrink to its content instead of filling the page.
+ */
 
 .project-files__workspace {
   width: 100%;
@@ -4926,9 +4918,6 @@ body {
 }
 
 @media (max-width: 720px) {
-  .project-files-page {
-    display: block;
-  }
   .project-workspace-nav {
     position: static;
     width: 100%;
@@ -12795,9 +12784,10 @@ body {
   background: transparent;
 }
 
-.app-discovery-card[data-preview-platform="ios"] .app-discovery-card__media,
-.app-discovery-card[data-preview-platform="android"]
-  .app-discovery-card__media {
+/* Portrait only when a phone screenshot is actually on the card. Keying this
+   off the app's platform put desktop website captures in a 3/4 box whenever the
+   app happened to be iOS or Android. */
+.app-discovery-card[data-preview-shape="phone"] .app-discovery-card__media {
   aspect-ratio: 3 / 4;
 }
 

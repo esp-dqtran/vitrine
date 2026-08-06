@@ -4,6 +4,8 @@ import {
   Heading,
   Icon,
   IconButton,
+  SegmentedControl,
+  SegmentedControlItem,
   Spinner,
   Text,
   TextInput,
@@ -24,6 +26,7 @@ import {
 import type { DesignerCanvasFileSummary } from "../../designerCanvas.ts";
 import type {
   ResearchProjectIcon,
+  ResearchProjectSummary,
   ResearchProjectWorkspace,
 } from "../../researchProject.ts";
 import {
@@ -38,17 +41,17 @@ import {
 } from "../projectDocumentsApi.ts";
 import {
   getResearchProject,
+  listResearchProjects,
   updateResearchProject,
 } from "../researchProjectsApi.ts";
 import { navigate } from "../router.ts";
 import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
 import { MediaGridCard } from "./MediaGridCard.tsx";
-import {
-  ProjectWorkspaceNav,
-  type ProjectWorkspaceArea,
-} from "./ProjectWorkspaceNav.tsx";
+import { type ProjectWorkspaceArea } from "./ProjectWorkspaceNav.tsx";
+import { projectGlyph, projectRailNav } from "./projectRailNav.tsx";
+import type { WorkspaceRailAction } from "./WorkspaceChrome.tsx";
+import { useSegmentedIndicator } from "./useSegmentedIndicator.ts";
 import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
-import { workspaceNav } from "./workspaceNav.tsx";
 import "../projectFiles.css";
 
 const blankCanvasSnapshot = {
@@ -89,39 +92,49 @@ const projectIconOptions: Array<{
   { value: "sparkle", label: "Sparkle" },
 ];
 
+/* One size now that the hero is gone — the 80px variant had no other caller. */
 function ProjectMark({
   icon,
   title,
-  compact = false,
 }: {
   icon: ResearchProjectIcon;
   title: string;
-  compact?: boolean;
 }) {
-  const glyph =
-    icon === "folder" ? (
-      <FolderIcon aria-hidden="true" />
-    ) : icon === "grid" ? (
-      <GridIcon aria-hidden="true" />
-    ) : icon === "book" ? (
-      <BookIcon aria-hidden="true" />
-    ) : icon === "sparkle" ? (
-      <SparkleIcon aria-hidden="true" />
-    ) : (
-      <span aria-hidden="true">
-        {title.trim().charAt(0).toUpperCase() || "P"}
-      </span>
-    );
-
   return (
-    <span
-      className={`project-files__project-mark${
-        compact ? " project-files__project-mark--compact" : ""
-      }`}
-      aria-hidden="true"
-    >
-      {glyph}
+    <span className="project-files__project-mark" aria-hidden="true">
+      {projectGlyph(icon, title)}
     </span>
+  );
+}
+
+export type CanvasView = "grid" | "list";
+
+/* The list row reuses the document row: same shape, same hit target, canvas
+   icon and meta. Only the media preview is grid-only. */
+function CanvasListRow({
+  canvas,
+  projectId,
+}: {
+  canvas: DesignerCanvasFileSummary;
+  projectId: string;
+}) {
+  return (
+    <button
+      className="project-file-row"
+      type="button"
+      onClick={() =>
+        navigate({ name: "project-canvas", projectId, canvasId: canvas.id })
+      }
+    >
+      <span className="project-file-row__icon project-file-row__icon--canvas">
+        <Icon icon="viewColumns" size="lg" />
+      </span>
+      <span className="project-file-row__meta">
+        <strong>{canvas.title}</strong>
+        <small>Canvas · Updated {updatedLabel(canvas.updatedAt)}</small>
+      </span>
+      <Icon icon="chevronRight" size="sm" />
+    </button>
   );
 }
 
@@ -168,11 +181,16 @@ export function ProjectFilesPage({
   area: ProjectWorkspaceArea;
 }) {
   const [project, setProject] = useState<ResearchProjectWorkspace>();
+  /* Siblings for the rail tree. Failure is silent: the tree falls back to the
+     open project alone rather than taking the page down with it. */
+  const [siblings, setSiblings] = useState<ResearchProjectSummary[]>([]);
   const [canvases, setCanvases] = useState<DesignerCanvasFileSummary[]>([]);
   const [documents, setDocuments] = useState<ProjectDocumentView[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [canvasView, setCanvasView] = useState<CanvasView>("grid");
+  const canvasViewRef = useSegmentedIndicator(canvasView);
   const [title, setTitle] = useState("");
   const [settingsTitle, setSettingsTitle] = useState("");
   const [settingsIcon, setSettingsIcon] =
@@ -183,6 +201,17 @@ export function ProjectFilesPage({
 
   const projectTitle = project?.title ?? "Designer project";
   const projectIcon = project?.icon ?? "initial";
+
+  /* Says what this view is and how much is in it, so the area still identifies
+     itself without a metadata card restating the page it sits on. */
+  const areaSummary =
+    area === "settings"
+      ? "Rename this project and pick the icon it shows across the workspace."
+      : loading
+        ? "Loading…"
+        : area === "canvas"
+          ? `${canvases.length} ${canvases.length === 1 ? "canvas" : "canvases"} · visual exploration for this project.`
+          : `${documents.length} ${documents.length === 1 ? "document" : "documents"} · written knowledge for this project.`;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -211,6 +240,20 @@ export function ProjectFilesPage({
       });
     return () => controller.abort();
   }, [area, projectId]);
+
+  /* Separate from the page load: the tree is chrome, and a slow or failed list
+     must not hold up (or break) the files it sits beside. */
+  useEffect(() => {
+    let cancelled = false;
+    void listResearchProjects()
+      .then((next) => {
+        if (!cancelled) setSiblings(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const files = useMemo(
     () =>
@@ -276,64 +319,81 @@ export function ProjectFilesPage({
     (settingsTitle.trim() !== projectTitle || settingsIcon !== projectIcon);
   const settingsReadOnly = project?.access?.role === "viewer";
 
+  /*
+   * The rail carries the whole hierarchy — Projects › each project › its areas —
+   * so the project screen needs no tab bar of its own. Exactly one project is
+   * expanded: the one you are inside. Opening another navigates to it, which
+   * expands it, so there is no collapse state to keep, restore, or get wrong.
+   */
+  const projectTree: WorkspaceRailAction[] = useMemo(
+    () =>
+      projectRailNav({
+        projects: siblings.length
+          ? siblings
+          : [{ id: projectId, title: projectTitle } as ResearchProjectSummary],
+        openProjectId: projectId,
+        area,
+        onOpenProjects: () => navigate({ name: "projects" }),
+      }),
+    [area, projectId, projectTitle, siblings],
+  );
+
   useWorkspaceChrome(
     () => ({
       className: "project-files-page",
-      workspace: {
-        label: "Back to projects",
-        name: projectTitle,
-        initial: projectTitle.trim().charAt(0).toUpperCase() || "P",
-        onSelect: () => navigate({ name: "projects" }),
+      /* No workspace row: it was an inert chip naming the project directly above
+         the project's own row in the tree, which says the same thing and is the
+         one you can actually click. */
+      nav: {
+        primaryLabel: "Projects",
+        primaryActions: projectTree,
+        settings: {
+          label: "Settings",
+          icon: <CogIcon aria-hidden="true" />,
+          onSelect: () => navigate({ name: "settings-billing" }),
+        },
       },
-      nav: workspaceNav({ active: "projects", label: "Project" }),
       onBrandSelect: () => navigate({ name: "projects" }),
     }),
-    [projectTitle],
+    [projectTitle, projectTree],
   );
 
   return (
     <>
 
-          <header className="project-files__hero">
-            <div className="project-files__hero-inner">
-              <ProjectMark icon={projectIcon} title={projectTitle} />
-              <div className="project-files__hero-heading">
-                <Heading level={1}>{projectTitle}</Heading>
-                <Text color="secondary">
-                  Keep visual exploration and project knowledge together.
-                </Text>
-              </div>
-              <div className="project-files__hero-metadata">
-                <div>
-                  <span>Workspace</span>
-                  <strong>Project</strong>
-                </div>
-                <div>
-                  <span>{area === "settings" ? "Manage" : "Files"}</span>
-                  <strong>
-                    {area === "settings"
-                      ? "Name & icon"
-                      : loading
-                        ? "Loading…"
-                        : `${files.length} ${area === "canvas" ? "canvases" : "documents"}`}
-                  </strong>
-                </div>
-              </div>
+          {/*
+            * The same page header every other surface uses. The rail already
+            * says which project and which area you are in, so this carries the
+            * project name once and the actions for the view — not a mark, a
+            * restated area name, and a "Workspace: Project" metadata cell.
+            */}
+          <header className="projects-workspace__page-header">
+            <div>
+              <Heading level={1}>{projectTitle}</Heading>
+              <Text color="secondary">{areaSummary}</Text>
             </div>
-            <div className="project-area-toolbar">
-              <ProjectWorkspaceNav projectId={projectId} active={area} />
+            <div className="projects-workspace__page-header-actions">
+              {area === "canvas" && canvases.length ? (
+                <SegmentedControl
+                  ref={canvasViewRef}
+                  label="Canvas layout"
+                  size="sm"
+                  value={canvasView}
+                  onChange={(value) => setCanvasView(value as CanvasView)}
+                >
+                  <SegmentedControlItem value="grid" label="Grid" />
+                  <SegmentedControlItem value="list" label="List" />
+                </SegmentedControl>
+              ) : null}
               {area !== "settings" ? (
-                <div className="project-area-toolbar__action">
-                  <Button
-                    label={area === "canvas" ? "New Canvas" : "New Document"}
-                    variant="primary"
-                    size="md"
-                    onClick={() => {
-                      setComposerOpen(true);
-                      setTitle("");
-                    }}
-                  />
-                </div>
+                <Button
+                  label={area === "canvas" ? "New Canvas" : "New Document"}
+                  variant="primary"
+                  onClick={() => {
+                    setComposerOpen(true);
+                    setTitle("");
+                  }}
+                />
               ) : null}
             </div>
           </header>
@@ -366,7 +426,6 @@ export function ProjectFilesPage({
                 >
                   <div className="project-settings__identity">
                     <ProjectMark
-                      compact
                       icon={settingsIcon}
                       title={settingsTitle || projectTitle}
                     />
@@ -408,7 +467,6 @@ export function ProjectFilesPage({
                           }}
                         >
                           <ProjectMark
-                            compact
                             icon={option.value}
                             title={settingsTitle || projectTitle}
                           />
@@ -529,19 +587,27 @@ export function ProjectFilesPage({
               {!loading && files.length ? (
                 <div
                   className={`project-file-index__grid${
-                    area === "canvas"
+                    area === "canvas" && canvasView === "grid"
                       ? " project-file-index__grid--canvas"
                       : " project-file-index__grid--documents"
                   }`}
                 >
                   {area === "canvas"
-                    ? canvases.map((canvas) => (
-                        <CanvasScreenCard
-                          key={canvas.id}
-                          canvas={canvas}
-                          projectId={projectId}
-                        />
-                      ))
+                    ? canvases.map((canvas) =>
+                        canvasView === "grid" ? (
+                          <CanvasScreenCard
+                            key={canvas.id}
+                            canvas={canvas}
+                            projectId={projectId}
+                          />
+                        ) : (
+                          <CanvasListRow
+                            key={canvas.id}
+                            canvas={canvas}
+                            projectId={projectId}
+                          />
+                        ),
+                      )
                     : documents.map((document) => (
                         <button
                           className="project-file-row"

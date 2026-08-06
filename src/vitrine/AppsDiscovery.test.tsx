@@ -607,7 +607,10 @@ test('renders App media directly through the shared discovery frame', async () =
   assert.match(css, /\.discovery-card\s*\{[\s\S]*border:\s*1px solid var\(--color-border\)[\s\S]*border-radius:\s*24px[\s\S]*background:\s*var\(--color-background-surface\)/);
   assert.match(css, /\.discovery-card__media\s*\{[\s\S]*width:\s*min\(calc\(100% - 32px\),\s*384px\)[\s\S]*margin:\s*16px auto 0/);
   assert.match(css, /\.app-discovery-card__media\s*\{[\s\S]*background:\s*transparent/);
-  assert.match(css, /\.app-discovery-card\[data-preview-platform=['"](?:ios|android)['"]\] \.app-discovery-card__media[\s\S]*aspect-ratio:\s*3\s*\/\s*4/);
+  // Portrait follows the rendered image, not the app's platform: an iOS app
+  // showing a crawled website is a desktop page and keeps the standard frame.
+  assert.match(css, /\.app-discovery-card\[data-preview-shape="phone"\] \.app-discovery-card__media[\s\S]*aspect-ratio:\s*3\s*\/\s*4/);
+  assert.doesNotMatch(css, /data-preview-platform=['"](?:ios|android)['"]\] \.app-discovery-card__media/);
   assert.match(css, /\.app-discovery-card__phone-preview\s*\{[\s\S]*aspect-ratio:\s*6\s*\/\s*13[\s\S]*overflow:\s*hidden[\s\S]*border-radius:\s*12\.22%\s*\/\s*5\.65%/);
   assert.match(css, /\.discovery-card:hover \.discovery-card__media,[\s\S]*\.discovery-card:focus-within \.discovery-card__media\s*\{[\s\S]*transform:\s*scale\(1\.012\)/);
   assert.doesNotMatch(css, /\.app-discovery-card__preview/);

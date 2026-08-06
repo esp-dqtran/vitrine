@@ -1,10 +1,18 @@
-import type { ReactNode, Ref } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 
 export interface WorkspaceRailAction {
   label: string;
   icon: ReactNode;
   active?: boolean;
   onSelect?: () => void;
+  /* Nested destinations, indented under the row while `expanded` is true —
+     Projects → a project → its areas. Renders recursively, but the rail is
+     200px wide, so keep real trees shallow. */
+  children?: WorkspaceRailAction[];
+  expanded?: boolean;
+  /* Right-aligned control on the row itself (the project settings cog). Kept
+     outside the row button — a button cannot nest inside a button. */
+  trailing?: ReactNode;
 }
 
 export interface WorkspaceRailProps {
@@ -54,16 +62,78 @@ export function WorkspaceRail({
   footer,
   onBrandSelect,
 }: WorkspaceRailProps) {
+  /*
+   * Open/closed lives here, not in the pages. The config's `expanded` is only
+   * the default — the route says which branch is worth opening — and a reader's
+   * own toggle overrides it. Keeping it in the rail means the folding survives
+   * a page republishing its chrome, and no page has to own navigation-chrome
+   * state it never reads.
+   */
+  const [folds, setFolds] = useState<Record<string, boolean>>({});
+  const isExpanded = (action: WorkspaceRailAction) =>
+    folds[action.label] ?? Boolean(action.expanded);
+
+  const renderRow = (action: WorkspaceRailAction) => {
+    const expanded = isExpanded(action);
+    return (
+      <>
+        {/* A separate control, because it does a different thing to the row —
+            and because a button cannot nest inside a button. */}
+        {action.children?.length ? (
+          <button
+            type="button"
+            className="projects-workspace__desktop-row-caret"
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${action.label}`}
+            aria-expanded={expanded}
+            onClick={() => setFolds((open) => ({ ...open, [action.label]: !expanded }))}
+          >
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path
+                d="M2.5 4.5L6 8l3.5-3.5"
+                stroke="currentColor"
+                strokeWidth="1.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className={[
+            'projects-workspace__desktop-row-link',
+            action.active ? 'is-active' : null,
+          ].filter(Boolean).join(' ')}
+          aria-current={action.active ? 'page' : undefined}
+          onClick={action.onSelect}
+        >
+          {action.icon}<span>{action.label}</span>
+        </button>
+      </>
+    );
+  };
+
   const renderAction = (action: WorkspaceRailAction) => (
-    <button
+    <div
       key={action.label}
-      type="button"
-      className={action.active ? 'is-active' : undefined}
-      aria-current={action.active ? 'page' : undefined}
-      onClick={action.onSelect}
+      /* `has-children` / `is-open` are what the compact bar keys off to flatten
+         the tree down to the path you are on — see projectsWorkspace.css. */
+      className={[
+        'projects-workspace__desktop-row',
+        action.children?.length ? 'has-children' : null,
+        isExpanded(action) ? 'is-open' : null,
+      ].filter(Boolean).join(' ')}
     >
-      {action.icon}<span>{action.label}</span>
-    </button>
+      <div className="projects-workspace__desktop-row-line">
+        {renderRow(action)}
+        {action.trailing}
+      </div>
+      {action.children?.length && isExpanded(action) ? (
+        <div className="projects-workspace__desktop-subnav">
+          {action.children.map(renderAction)}
+        </div>
+      ) : null}
+    </div>
   );
 
   return (

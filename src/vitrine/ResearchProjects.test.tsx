@@ -500,11 +500,11 @@ test("opens every Designer Project on its Canvas file index", () => {
   assert.doesNotMatch(filesSource, /exportToBlob|getDesignerCanvasFile/);
   assert.doesNotMatch(filesSource, /project-file-index__toolbar/);
   assert.match(filesSource, /project-file-index__grid--documents/);
-  assert.match(
-    filesSource,
-    /<ProjectWorkspaceNav projectId=\{projectId\} active=\{area\}/,
-  );
-  assert.match(filesSource, /className="project-area-toolbar__action"/);
+  // Areas moved into the rail tree, so the screen carries neither a tab bar nor
+  // a hero of its own — it wears the same page header as every other surface.
+  assert.doesNotMatch(filesSource, /<ProjectWorkspaceNav/);
+  assert.doesNotMatch(filesSource, /project-files__hero/);
+  assert.match(filesSource, /className="projects-workspace__page-header"/);
   assert.match(filesSource, /area === "settings"/);
   assert.match(filesSource, /label="Save changes"/);
   assert.match(navigationSource, /<ToggleButton/);
@@ -520,4 +520,109 @@ test("opens every Designer Project on its Canvas file index", () => {
     /ProjectWorkspaceNav|SegmentedControl|DecisionCanvas|EvidenceDrawer/,
   );
   assert.doesNotMatch(appSource, /components\/ResearchProjectPage/);
+});
+
+test("renders the Canvas file index as either a grid or a list", () => {
+  const source = readFileSync(
+    new URL("./components/ProjectFilesPage.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = readFileSync(new URL("./projectFiles.css", import.meta.url), "utf8");
+
+  // Both modes exist and the toggle only shows where it applies: Canvas, and
+  // only once there is something to lay out.
+  assert.match(source, /useState<CanvasView>\("grid"\)/);
+  assert.match(source, /area === "canvas" && canvases\.length \?/);
+  assert.match(source, /<SegmentedControlItem value="grid" label="Grid" \/>/);
+  assert.match(source, /<SegmentedControlItem value="list" label="List" \/>/);
+
+  // List reuses the single-column track the document index already uses, so a
+  // canvas row and a document row line up.
+  assert.match(
+    source,
+    /area === "canvas" && canvasView === "grid"[\s\S]*?grid--canvas[\s\S]*?grid--documents/,
+  );
+  assert.match(source, /function CanvasListRow/);
+  assert.match(source, /className="project-file-row"[\s\S]*?Canvas · Updated/);
+  assert.match(css, /\.project-file-index__grid--documents\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+});
+
+test("puts the project hierarchy in the rail instead of a tab bar", () => {
+  const navSource = readFileSync(
+    new URL("./components/projectRailNav.tsx", import.meta.url),
+    "utf8",
+  );
+  const filesSource = readFileSync(
+    new URL("./components/ProjectFilesPage.tsx", import.meta.url),
+    "utf8",
+  );
+  const indexSource = readFileSync(
+    new URL("./components/ProjectsPage.tsx", import.meta.url),
+    "utf8",
+  );
+  const railSource = readFileSync(
+    new URL("./components/WorkspaceChrome.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // Projects › every project › the open one's areas.
+  assert.match(navSource, /label: 'Projects'[\s\S]*?children: projects\.map/);
+  assert.match(navSource, /label: 'Canvas'[\s\S]*?label: 'Documents'/);
+  // Exactly one project is expanded — the one you are inside — so there is no
+  // collapse state to persist or get out of sync with the route.
+  assert.match(navSource, /const isOpen = projectId === openProjectId/);
+  assert.match(navSource, /expanded: isOpen/);
+  // Settings is the cog on the open project's row, not a third area row.
+  assert.match(navSource, /trailing: isOpen \?/);
+  assert.match(navSource, /name: 'project-settings'/);
+
+  // One definition, used by both surfaces, so the rail keeps its shape as you
+  // move between the index and a project.
+  assert.match(filesSource, /projectRailNav\(\{/);
+  assert.match(indexSource, /primaryActions: projectRailNav\(\{/);
+
+  // The rail renders children recursively and keeps the trailing control a
+  // sibling of the row button — a button cannot nest inside a button.
+  assert.match(railSource, /action\.children\.map\(renderAction\)/);
+  assert.match(railSource, /\{renderRow\(action\)\}\s*\n\s*\{action\.trailing\}/);
+});
+
+test("flattens the rail tree into the compact bar instead of stacking it", () => {
+  const css = readFileSync(new URL("./projectsWorkspace.css", import.meta.url), "utf8");
+  const railSource = readFileSync(
+    new URL("./components/WorkspaceChrome.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // An indented vertical block inside a horizontal strip makes the bar tall
+  // rather than wide, so the wrappers drop out below the breakpoint.
+  assert.match(
+    css,
+    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav\s*\{\s*display:\s*contents;/s,
+  );
+  // Only the path you are on survives: sibling projects would overrun the strip.
+  assert.match(
+    css,
+    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-subnav > \.has-children:not\(\.is-open\)\s*\{\s*display:\s*none;/s,
+  );
+  assert.match(railSource, /action\.children\?\.length \? 'has-children' : null/);
+  // `is-open` tracks the effective fold, not the config default, so a branch the
+  // reader collapsed stays collapsed when the bar flattens it.
+  assert.match(railSource, /isExpanded\(action\) \? 'is-open' : null/);
+});
+
+test("lets the project panel fill the page", () => {
+  const styles = readFileSync(new URL("./styles.css", import.meta.url), "utf8");
+  const files = readFileSync(new URL("./projectFiles.css", import.meta.url), "utf8");
+
+  /*
+   * .project-files-page rides on the same <main> as .projects-workspace. A
+   * `display: flex` here made the content panel a row flex item, so it shrank to
+   * its content and left a gutter down the right of the page. It survived only
+   * because a `.projects-workspace.project-files-page { display: block }`
+   * override outranked it; both are gone now rather than one cancelling
+   * the other.
+   */
+  assert.doesNotMatch(styles, /\.project-files-page\s*\{/);
+  assert.doesNotMatch(files, /\.projects-workspace\.project-files-page\s*\{/);
 });

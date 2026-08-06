@@ -50,8 +50,8 @@ import {
   type TeamSummary,
 } from "../organizationsApi.ts";
 import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
+import { projectRailNav } from "./projectRailNav.tsx";
 import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
-import { workspaceNav } from "./workspaceNav.tsx";
 
 export type ProjectSort = "updated" | "name";
 export type TeamSection = "projects" | "people" | "settings";
@@ -796,14 +796,22 @@ export function ResearchProjectsView({
         buttonRef: desktopWorkspaceTriggerRef,
         onSelect: () => setWorkspaceMenuOpen((open) => !open),
       },
-      nav: workspaceNav({
-        active:
-          section === "settings" ? "settings" : section === "projects" ? "projects" : undefined,
-        label: "Workspace",
-        onProjects: () => selectSection("projects"),
-        settingsLabel: selectedTeam ? "Team settings" : "Settings",
-        onSettings: openWorkspaceSettings,
-      }),
+      nav: {
+        primaryLabel: "Workspace",
+        /* Same tree the project workspace publishes, so stepping into a project
+           expands a row rather than swapping the navigation out. */
+        primaryActions: projectRailNav({
+          projects: visibleProjects,
+          projectsActive: section === "projects",
+          onOpenProjects: () => selectSection("projects"),
+        }),
+        settings: {
+          label: selectedTeam ? "Team settings" : "Settings",
+          icon: <CogIcon aria-hidden="true" />,
+          active: section === "settings",
+          onSelect: openWorkspaceSettings,
+        },
+      },
       onBrandSelect: () => selectSection("projects"),
       drawer: (
       <div

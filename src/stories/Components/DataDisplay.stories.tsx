@@ -144,8 +144,6 @@ function AppCardExample({
       <AppCard
         app={item.app}
         platform="web"
-        status={item.status}
-        progressLabel={item.progressLabel}
         onOpen={onSelect}
       />
     </div>

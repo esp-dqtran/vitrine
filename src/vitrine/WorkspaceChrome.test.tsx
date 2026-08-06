@@ -62,3 +62,52 @@ test('renders project and Settings headers through the same component', () => {
   assert.match(settings, /class="settings-workspace__header-actions"/);
   assert.match(settings, /aria-label="Vitrines Projects"/);
 });
+
+test('marks a disclosing row as one and leaves leaves alone', () => {
+  const html = renderToStaticMarkup(
+    <WorkspaceRail
+      primaryLabel="Projects"
+      primaryActions={[
+        {
+          label: 'Projects',
+          icon: <span>F</span>,
+          expanded: true,
+          children: [{ label: 'Hi', icon: <span>H</span>, active: true }],
+        },
+        { label: 'Collections', icon: <span>C</span> },
+      ]}
+      settings={{ label: 'Settings', icon: <span>S</span> }}
+      onBrandSelect={() => undefined}
+    />,
+  );
+
+  // Only rows that disclose something get the caret and aria-expanded; a leaf
+  // with a caret would promise a fold that is not there.
+  assert.equal(html.match(/projects-workspace__desktop-row-caret/g)?.length, 1);
+  assert.equal(html.match(/aria-expanded/g)?.length, 1);
+  assert.match(html, /aria-expanded="true"/);
+  assert.doesNotMatch(html, /projects-workspace__desktop-workspace/);
+
+  // The caret is its own control — it folds the branch, it does not follow the
+  // row's destination — so it must be a sibling of the row button, not inside it.
+  assert.match(
+    html,
+    /<button type="button" class="projects-workspace__desktop-row-caret"[\s\S]*?<\/button><button type="button"/,
+  );
+  assert.match(html, /aria-label="Collapse Projects"/);
+
+  /*
+   * The flex rule that lets a row's label take the leftover width must name the
+   * destination button. Positional (`> button:first-child`) it landed on the
+   * caret once that moved ahead of the row, and `flex: 1 1 auto; min-width: 0`
+   * on a 20px control beside a button that will not shrink below its content
+   * squeezed the caret out of sight.
+   */
+  const css = readFileSync(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
+  assert.match(html, /class="projects-workspace__desktop-row-link/);
+  assert.match(
+    css,
+    /\.projects-workspace__desktop-row-line > \.projects-workspace__desktop-row-link\s*\{[^}]*flex:\s*1 1 auto;/s,
+  );
+  assert.doesNotMatch(css, /\.projects-workspace__desktop-row-line > button:first-child/);
+});

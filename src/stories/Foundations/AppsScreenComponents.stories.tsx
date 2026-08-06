@@ -659,15 +659,11 @@ function AppsScreenComponents() {
           <AppCard
             app={apps[0]}
             platform="web"
-            status="In progress"
-            progressLabel="0/624 analyzed"
             onOpen={() => {}}
           />
           <AppCard
             app={apps[1]}
             platform="web"
-            status="In progress"
-            progressLabel="0/201 analyzed"
             onOpen={() => {}}
           />
           <AppCardSkeleton />

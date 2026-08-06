@@ -1,6 +1,6 @@
-.projects-workspace.project-files-page {
-  display: block;
-}
+/* No `display: block` override here: the base .projects-workspace never sets a
+   display, so it did nothing at desktop width — but it outranked the compact
+   `display: flex` and left this page's panel adding its own 100vh under the bar. */
 
 .project-files-page .projects-workspace__context-bar {
   margin-bottom: 0;
@@ -50,111 +50,25 @@
   display: contents;
 }
 
-.project-files__hero {
-  margin-inline: -16px;
-  background: var(--color-background-body);
-}
-
-.project-files__hero-inner {
-  display: grid;
-  grid-template-columns: 80px minmax(0, 1fr);
-  grid-template-areas:
-    "mark heading"
-    "mark metadata";
-  align-items: start;
-  gap: 18px 24px;
-  padding: 40px 24px 32px;
-}
-
+/* The project mark survives the hero, at the one size the settings area uses. */
 .project-files__project-mark {
-  grid-area: mark;
   display: grid;
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
   place-items: center;
-  border-radius: 20px;
+  border-radius: 14px;
   background: var(--color-accent);
   color: var(--color-text-primary);
-  font-size: 36px;
+  font-size: 24px;
   font-weight: 700;
 }
 
 .project-files__project-mark svg {
-  width: 34px;
-  height: 34px;
-}
-
-.project-files__project-mark--compact {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
-  border-radius: 14px;
-  font-size: 24px;
-}
-
-.project-files__project-mark--compact svg {
   width: 24px;
   height: 24px;
 }
 
-.project-files__hero-heading {
-  grid-area: heading;
-  min-width: 0;
-  max-width: 760px;
-}
-
-.project-files__hero-heading h1,
-.project-files__hero-heading p {
-  margin: 0;
-}
-
-.project-files__hero-heading h1 {
-  color: var(--color-text-primary);
-  font-size: clamp(32px, 3vw, 38px);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.045em;
-}
-
-.project-files__hero-heading p {
-  max-width: 720px;
-  margin-top: 4px;
-  font-size: clamp(18px, 1.7vw, 22px);
-  font-weight: 520;
-  line-height: 1.25;
-  letter-spacing: -0.025em;
-}
-
-.project-files__hero-metadata {
-  grid-area: metadata;
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
-.project-files__hero-metadata > div {
-  display: grid;
-  gap: 4px;
-}
-
-.project-files__hero-metadata span {
-  color: var(--color-text-secondary);
-  font-size: 14px;
-}
-
-.project-files__hero-metadata strong {
-  color: var(--color-text-primary);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.project-area-toolbar {
-  display: flex;
-  min-width: 0;
-  min-height: 64px;
-  align-items: center;
-  gap: 20px;
-}
 
 .project-area-nav {
   position: relative;
@@ -172,10 +86,7 @@
   scroll-snap-type: inline proximity;
 }
 
-.project-area-toolbar__action {
-  flex: 0 0 auto;
-  padding-right: 24px;
-}
+
 
 .project-area-nav::-webkit-scrollbar {
   display: none;
