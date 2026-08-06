@@ -16,7 +16,6 @@ import {
   FolderIcon,
   GlobeIcon,
   GridIcon,
-  MenuIcon,
   QuestionIcon,
   SparkleIcon,
   UserIcon,
@@ -48,7 +47,8 @@ import {
   ProjectWorkspaceNav,
   type ProjectWorkspaceArea,
 } from "./ProjectWorkspaceNav.tsx";
-import { WorkspaceHeader, WorkspaceRail } from "./WorkspaceChrome.tsx";
+import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
+import { workspaceNav } from "./workspaceNav.tsx";
 import "../projectFiles.css";
 
 const blankCanvasSnapshot = {
@@ -276,102 +276,23 @@ export function ProjectFilesPage({
     (settingsTitle.trim() !== projectTitle || settingsIcon !== projectIcon);
   const settingsReadOnly = project?.access?.role === "viewer";
 
-  return (
-    <main className="vitrine-page projects-workspace project-files-page">
-      <WorkspaceRail
-        workspace={{
-          label: "Back to projects",
-          initial: projectTitle.trim().charAt(0).toUpperCase() || "P",
-          onSelect: () => navigate({ name: "projects" }),
-        }}
-        primaryLabel="Project navigation"
-        primaryActions={[
-          {
-            label: "Projects",
-            icon: <FolderIcon aria-hidden="true" />,
-            active: true,
-            onSelect: () => navigate({ name: "projects" }),
-          },
-          {
-            label: "Collections",
-            icon: <BookmarkHollowIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "collections" }),
-          },
-        ]}
-        secondaryLabel="Vitrines libraries"
-        secondaryActions={[
-          {
-            label: "Apps",
-            href: "/apps",
-            icon: <GridIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "apps" }),
-          },
-          {
-            label: "Sites",
-            href: "/sites",
-            icon: <GlobeIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "sites" }),
-          },
-        ]}
-        settings={{
-          label: "Account settings",
-          icon: <CogIcon aria-hidden="true" />,
-          onSelect: () => navigate({ name: "settings-billing" }),
-        }}
-      />
+  useWorkspaceChrome(
+    () => ({
+      className: "project-files-page",
+      workspace: {
+        label: "Back to projects",
+        name: projectTitle,
+        initial: projectTitle.trim().charAt(0).toUpperCase() || "P",
+        onSelect: () => navigate({ name: "projects" }),
+      },
+      nav: workspaceNav({ active: "projects", label: "Project" }),
+      onBrandSelect: () => navigate({ name: "projects" }),
+    }),
+    [projectTitle],
+  );
 
-      <div className="projects-workspace__shell">
-        <section className="projects-workspace__main">
-          <WorkspaceHeader
-            variant="projects"
-            menu={{
-              label: "Back to projects",
-              expanded: false,
-              icon: <MenuIcon aria-hidden="true" />,
-              onSelect: () => navigate({ name: "projects" }),
-            }}
-            onBrandSelect={() => navigate({ name: "projects" })}
-            actions={
-              <>
-                <ProjectAccessButton
-                  project={{ id: projectId, title: projectTitle }}
-                />
-                <span className="project-files__optional-header-actions">
-                  <span
-                    className="projects-workspace__header-divider"
-                    aria-hidden="true"
-                  />
-                  <IconButton
-                    label="Help"
-                    tooltip="Help"
-                    variant="ghost"
-                    icon={<QuestionIcon aria-hidden="true" />}
-                  />
-                  <IconButton
-                    label="Notifications"
-                    tooltip="Notifications"
-                    variant="ghost"
-                    icon={<BellIcon aria-hidden="true" />}
-                  />
-                </span>
-                <IconButton
-                  label="Account settings"
-                  variant="ghost"
-                  icon={<UserIcon aria-hidden="true" />}
-                  onClick={() => navigate({ name: "settings-billing" })}
-                />
-              </>
-            }
-          >
-            <button
-              className="project-files__header-context"
-              type="button"
-              onClick={() => navigate({ name: "projects" })}
-            >
-              <Icon icon="chevronLeft" size="sm" />
-              <span>{projectTitle}</span>
-            </button>
-          </WorkspaceHeader>
+  return (
+    <>
 
           <header className="project-files__hero">
             <div className="project-files__hero-inner">
@@ -651,8 +572,6 @@ export function ProjectFilesPage({
               ) : null}
             </section>
           )}
-        </section>
-      </div>
-    </main>
+    </>
   );
 }

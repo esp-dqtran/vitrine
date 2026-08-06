@@ -24,6 +24,7 @@ import {
   PublicAppPreviewPage,
 } from "./components/PublicAppPreviewPage.tsx";
 import { ApplicationSurface } from "./components/ApplicationSurface.tsx";
+import { WorkspaceChromeProvider } from "./components/WorkspaceChromeContext.tsx";
 import {
   AstryxDropdown,
   AstryxDropdownDivider,
@@ -65,9 +66,9 @@ import { createSearchSession } from "./searchSession.ts";
 import { activeFilterCount } from "../searchScope.ts";
 import { trackAppFunnelEvent } from "./publicAppPreviewApi.ts";
 
-const ResearchProjectsPage = lazy(() =>
-  import("./components/ResearchProjectsPage").then((module) => ({
-    default: module.ResearchProjectsPage,
+const ProjectsPage = lazy(() =>
+  import("./components/ProjectsPage").then((module) => ({
+    default: module.ProjectsPage,
   })),
 );
 const CollectionsWorkspacePage = lazy(() =>
@@ -430,9 +431,18 @@ export function App() {
         menuWidth={220}
         onOpenChange={setAccountMenuOpen}
       >
+        {isAdmin ? (
+          <AstryxDropdownItem
+            label="Admin"
+            onSelect={() => {
+              setAccountMenuOpen(false);
+              navigate({ name: "admin" });
+            }}
+          />
+        ) : null}
         {researchProjectsEnabled ? (
           <AstryxDropdownItem
-            label="Research projects"
+            label="Projects"
             onSelect={() => {
               setAccountMenuOpen(false);
               navigate({ name: "projects" });
@@ -440,31 +450,16 @@ export function App() {
           />
         ) : null}
         <AstryxDropdownItem
-          label={`Collections${collectionsLoaded && collections.length ? ` (${collections.length})` : ""}`}
-          onSelect={() => {
-            setAccountMenuOpen(false);
-            navigate({ name: "collections" });
-          }}
-        />
-        <AstryxDropdownItem
           label="Settings"
           onSelect={() => {
             setAccountMenuOpen(false);
             setSettingsOpen(true);
           }}
         />
-        {isAdmin ? (
-          <AstryxDropdownItem
-            label="Admin dashboard"
-            onSelect={() => {
-              setAccountMenuOpen(false);
-              navigate({ name: "admin" });
-            }}
-          />
-        ) : null}
         <AstryxDropdownDivider />
         <AstryxDropdownItem
           label="Log out"
+          tone="destructive"
           onSelect={() => {
             setAccountMenuOpen(false);
             logout();
@@ -740,7 +735,7 @@ export function App() {
       break;
     case "projects":
       page = researchProjectsEnabled ? (
-        <ResearchProjectsPage />
+        <ProjectsPage />
       ) : (
         <ApplicationStatusPage title="Research projects are unavailable" />
       );
@@ -1037,6 +1032,21 @@ export function App() {
     </>
   );
 
+  // Surfaces that render inside the hoisted workspace shell (rail + panel).
+  const workspaceChromeRoutes = new Set([
+    "projects",
+    "project",
+    "project-documents",
+    "project-document",
+    "project-document-file",
+    "project-settings",
+    "project-playground",
+    "project-canvas",
+    "collections",
+    "settings-billing",
+  ]);
+  const workspaceChromeEnabled = workspaceChromeRoutes.has(route.name);
+
   const hasPersistentDiscoveryHeader =
     discoveryRoute !== null &&
     route.name !== "projects" &&
@@ -1119,9 +1129,11 @@ export function App() {
   return (
     <ApplicationSurface
       page={
-        <Suspense fallback={<ApplicationPageSpinner />}>
-          {pageWithPersistentDiscoveryHeader}
-        </Suspense>
+        <WorkspaceChromeProvider enabled={workspaceChromeEnabled}>
+          <Suspense fallback={<ApplicationPageSpinner />}>
+            {pageWithPersistentDiscoveryHeader}
+          </Suspense>
+        </WorkspaceChromeProvider>
       }
       overlays={discoveryOverlays}
       dialogs={dialogs}

@@ -12,6 +12,7 @@ import { navigate, useRoute } from './router';
 import { ThemeModeProvider, useThemeMode } from './theme';
 import { ApplicationToastProvider } from './components/ApplicationToast.tsx';
 import { decideRootRoute } from './routeDecision.ts';
+import { WorkspaceChromeProvider } from './components/WorkspaceChromeContext.tsx';
 import type { Route } from './router.ts';
 import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
@@ -78,7 +79,13 @@ function Root() {
       return <App />;
     case 'admin-dashboard':
       return user?.role === 'admin'
-        ? <AdminDashboard user={user} onLogout={logout} />
+        ? (
+          // Admin is its own root branch, so it gets its own chrome provider —
+          // never nested with the one App mounts for the workspace routes.
+          <WorkspaceChromeProvider>
+            <AdminDashboard user={user} onLogout={logout} />
+          </WorkspaceChromeProvider>
+        )
         : <RouteStatusPage title="Admin access required" onBack={goApps} />;
     case 'denied':
     case 'unavailable':

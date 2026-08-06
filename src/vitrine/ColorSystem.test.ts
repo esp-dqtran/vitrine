@@ -29,7 +29,7 @@ test('all top-level routes opt into the Apps-led page foundation', async () => {
     read('./SignIn.tsx'),
     read('./components/BillingSuccess.tsx'),
     read('./components/AdvancedSearchPage.tsx'),
-    read('./components/ResearchProjectsPage.tsx'),
+    read('./components/ProjectsPage.tsx'),
     read('./components/ResearchProjectPage.tsx'),
     read('./components/FeatureDocumentSharePage.tsx'),
     read('./components/UsersPage.tsx'),

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Spinner } from '@astryxdesign/core';
 import type { AdminUser, UsageRangeKey, UserFilter } from '../types.ts';
 import { setAdminUserActive } from '../usersApi.ts';
@@ -8,13 +8,19 @@ import { UserUsageDialog } from './UserUsageDialog.tsx';
 
 interface UsersDirectoryContainerProps {
   range: UsageRangeKey;
+  /* Lets the page header show the member count without its own request. */
+  onTotalChange?: (total: number) => void;
 }
 
-export function UsersDirectoryContainer({ range }: UsersDirectoryContainerProps) {
+export function UsersDirectoryContainer({ range, onTotalChange }: UsersDirectoryContainerProps) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<UserFilter>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const directory = useUsersDirectory(query, filter);
+
+  useEffect(() => {
+    onTotalChange?.(directory.total);
+  }, [directory.total, onTotalChange]);
 
   const updateActive = async (user: AdminUser, active: boolean) => {
     const updated = await setAdminUserActive(user.id, active);

@@ -251,3 +251,32 @@ dialog.astryx-modal.astryx-modal--dialog:not(.flow-preview-dialog-shell) {
     transform: none !important;
   }
 }
+
+/*
+ * Switcher panels: changing a segmented control (insight view, usage range)
+ * swaps content, so the incoming panel eases in instead of snapping.
+ */
+@keyframes admin-insight-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.admin-users-insight-panel {
+  display: grid;
+  gap: inherit;
+  animation: admin-insight-panel-enter var(--vitrine-motion-medium)
+    var(--vitrine-motion-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-users-insight-panel {
+    animation: none;
+  }
+}

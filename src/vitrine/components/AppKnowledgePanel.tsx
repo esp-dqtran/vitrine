@@ -25,6 +25,7 @@ import type {
 import type { AppKnowledgeState } from '../appKnowledgeStore.ts';
 import { useAppKnowledge } from '../useAppKnowledge.ts';
 import { AppKnowledgeEvidenceLink } from './AppKnowledgeEvidenceLink.tsx';
+import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
 interface PanelActions {
   start?(): Promise<unknown>;
@@ -143,6 +144,7 @@ export function AppKnowledgePanelView(props: {
   retry(): void | Promise<unknown>;
 }) {
   const [actionError, setActionError] = useState<string | null>(null);
+  const roleRef = useSegmentedIndicator(props.knowledgeRole);
   const [actionPending, setActionPending] = useState(false);
   const run = (operation: (() => Promise<unknown>) | undefined) => {
     if (!operation || actionPending) return;
@@ -266,6 +268,7 @@ export function AppKnowledgePanelView(props: {
       {actionError && <div role="alert" style={{ color: 'var(--color-text-error)' }}>{actionError}</div>}
 
       <SegmentedControl
+        ref={roleRef}
         value={props.knowledgeRole}
         onChange={(value) => props.onRoleChange(value as AppKnowledgeRole)}
         label="Knowledge audience"

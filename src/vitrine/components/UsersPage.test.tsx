@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { UserDirectory } from "./UserDirectory.tsx";
 import { UsersPageView } from "./UsersPage.tsx";
-import { ReferralInsights } from "./UserUsageInsights.tsx";
+import { ReferralInsights, UsageInsights, UserUsageInsights } from "./UserUsageInsights.tsx";
 
 const users = [
   { id: 1, email: "admin@gmail.com", role: "admin" as const, active: true, created_at: "2026-07-13T00:00:00.000Z", subscription_status: null },
@@ -69,11 +69,6 @@ test("renders one unified, searchable directory with account actions", () => {
       onSetActive={async () => undefined}
       onSelectUser={() => undefined}
     />}
-    growth={growth}
-    usage={usage}
-    referrals={referrals}
-    range="30d"
-    onRangeChange={() => undefined}
   />);
 
   assert.match(html, /<h1[^>]*>Users<\/h1>/);
@@ -83,12 +78,95 @@ test("renders one unified, searchable directory with account actions", () => {
   assert.match(html, /pro@example\.com/);
   assert.match(html, /Actions/);
   assert.match(html, /Load more/);
-  assert.match(html, /Feature usage/);
+  // Insights is its own Admin section now — no insight panel on the Users page.
+  assert.doesNotMatch(html, /admin-users-insights/);
+  assert.doesNotMatch(html, />Usage</);
+  assert.doesNotMatch(html, /Most used features/);
+  assert.doesNotMatch(html, /<h3[^>]*>Administrators/);
+  assert.doesNotMatch(html, /admin-users-groups/);
+});
+
+test("renders the insight switchers on the Insights section", () => {
+  const html = renderToStaticMarkup(
+    <UserUsageInsights
+      usage={usage}
+      growth={growth}
+      referrals={referrals}
+      range="30d"
+      onRangeChange={() => undefined}
+    />,
+  );
+
+  assert.match(html, />Usage</);
   assert.match(html, /Growth/);
   assert.match(html, /Revenue/);
   assert.match(html, /Most used features/);
-  assert.doesNotMatch(html, /<h3[^>]*>Administrators/);
-  assert.doesNotMatch(html, /admin-users-groups/);
+  // The page is already titled Insights — the panel must not repeat it.
+  assert.doesNotMatch(html, /<h2[^>]*>Insights<\/h2>/);
+  assert.doesNotMatch(html, /<aside/);
+});
+
+test("keeps the Insights panel mounted while a new range loads", () => {
+  const source = readFileSync(new URL("./InsightsPage.tsx", import.meta.url), "utf8");
+  // Returning the spinner on any `loading` unmounted the whole page per range click.
+  assert.doesNotMatch(source, /if \(insights\.loading\)\s*\{/);
+  assert.match(source, /insights\.loading && !hasInsights/);
+  assert.match(source, /refreshing=\{insights\.loading\}/);
+  // A refetch that fails keeps the last panel too; only an empty load takes the page.
+  assert.match(source, /if \(!insights\.growth \|\| !insights\.usage \|\| !insights\.referrals\)/);
+});
+
+test("charts the metric series instead of listing them as numbers", () => {
+  const referralHtml = renderToStaticMarkup(<ReferralInsights metrics={referrals} />);
+  const usageHtml = renderToStaticMarkup(<UsageInsights usage={usage} range="30d" />);
+
+  // Charts are canvas-only to a screen reader, and ResponsiveContainer renders
+  // nothing without a measured width — the aria-label is the whole text alternative.
+  assert.match(referralHtml, /class="admin-users-chart-figure"/);
+  assert.match(referralHtml, /aria-label="Referral funnel: Links created 4/);
+  assert.match(referralHtml, /aria-label="Referred retention: D7 retention 80%/);
+  assert.match(usageHtml, /aria-label="Feature uses per day over the last 30d/);
+  assert.match(usageHtml, /aria-label="Uses by feature: Search 9 uses/);
+  // The hand-rolled percentage bars the feature list used to draw are gone.
+  assert.doesNotMatch(usageHtml, /admin-users-feature-bar/);
+});
+
+test("dresses the chart hover layer and series in the design system", () => {
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+  const source = readFileSync(new URL("./UserUsageInsights.tsx", import.meta.url), "utf8");
+
+  // Recharts' default tooltip is an inline-styled white box that ignores tokens
+  // and stays white in dark mode. Every chart must pass our own content instead.
+  assert.equal(source.match(/<Tooltip /g)?.length, source.match(/content=\{<ChartTooltip/g)?.length);
+  assert.match(css, /\.admin-users-chart-tooltip \{[^}]*background: var\(--color-background-surface\)/s);
+
+  /*
+   * Chart colors are a domain palette, deliberately outside the 13 product color
+   * roles (UI_FOUNDATION_STANDARD.specializedColorPolicy). These exact steps were
+   * validated in both modes against this product's surfaces — lightness band,
+   * chroma floor, colour-vision separation and contrast. Re-validate before edits.
+   */
+  assert.match(css, /--vitrine-chart-series-1: light-dark\(#2a78d6, #3987e5\)/);
+  assert.match(css, /--vitrine-chart-series-2: light-dark\(#eb6834, #d95926\)/);
+  assert.match(css, /--vitrine-chart-step-5: light-dark\(#104281, #184f95\)/);
+  // No raw hex in the charts themselves — series read from the tokens.
+  assert.doesNotMatch(source, /#[0-9a-f]{6}/i);
+});
+
+test("gives the two-series chart a legend so identity is never colour alone", () => {
+  const html = renderToStaticMarkup(<UsageInsights usage={usage} range="30d" />);
+  assert.match(html, /aria-label="Uses by feature/);
+  const source = readFileSync(new URL("./UserUsageInsights.tsx", import.meta.url), "utf8");
+  assert.match(source, /<Legend[\s\S]*?admin-users-chart-legend/);
+  assert.match(source, /name="Uses"[\s\S]*?name="Unique users"/);
+});
+
+test("drops the sidebar chrome now that Insights owns the full page", () => {
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+  const insights = /\.admin-users-insights\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+  assert.doesNotMatch(insights, /position:\s*sticky|border-left|padding-left/);
+  // Metric tiles size themselves, so the same grid reads in the dialog and on the page.
+  assert.match(css, /\.admin-users-detail-summary\s*\{[^}]*repeat\(auto-fit, minmax\(180px, 1fr\)\)/s);
 });
 
 test("renders honest empty directory copy", () => {
@@ -107,11 +185,6 @@ test("renders honest empty directory copy", () => {
       onSetActive={async () => undefined}
       onSelectUser={() => undefined}
     />}
-    growth={growth}
-    usage={usage}
-    referrals={referrals}
-    range="30d"
-    onRangeChange={() => undefined}
   />);
   assert.match(html, /No members yet/);
 });
@@ -149,9 +222,30 @@ test("keeps existing rows visible while filtered results refresh", () => {
   assert.match(html, /Updating/);
 });
 
-test("defines the split workspace and narrow responsive states", () => {
+test("gives the directory the full page width and stacks its toolbar when narrow", () => {
   const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
-  assert.match(css, /\.admin-users-layout\s*\{[^}]*grid-template-columns:\s*minmax\(0, 3fr\) minmax\(320px, 2fr\);/s);
-  assert.match(css, /@media \(max-width:\s*1100px\)[\s\S]*?\.admin-users-layout\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+  const pageSource = readFileSync(new URL("./UsersPage.tsx", import.meta.url), "utf8");
+  // Insights left the page; the split grid and its sidebar gutter left with it.
+  assert.doesNotMatch(pageSource, /admin-users-layout/);
+  assert.doesNotMatch(css, /\.admin-users-layout\s*\{/);
+  assert.doesNotMatch(css, /\.admin-users-directory\s*\{[^}]*padding-right/s);
   assert.match(css, /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-toolbar\s*\{[^}]*flex-direction:\s*column;/);
+});
+
+test("puts the result count under the controls that produce it", () => {
+  const html = renderToStaticMarkup(<UserDirectory
+    users={users}
+    total={12}
+    hasMore={false}
+    loadingMore={false}
+    query=""
+    filter="all"
+    onQueryChange={() => undefined}
+    onFilterChange={() => undefined}
+    onLoadMore={() => undefined}
+    onSetActive={async () => undefined}
+    onSelectUser={() => undefined}
+  />);
+  assert.ok(html.indexOf('admin-users-toolbar') < html.indexOf('admin-users-directory-count'));
+  assert.ok(html.indexOf('admin-users-directory-count') < html.indexOf('admin-users-list'));
 });

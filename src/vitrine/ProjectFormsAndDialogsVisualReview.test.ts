@@ -7,7 +7,7 @@ const storyPath = new URL(
   import.meta.url,
 );
 const productionPath = new URL(
-  "./components/ResearchProjectsPage.tsx",
+  "./components/ProjectsPage.tsx",
   import.meta.url,
 );
 

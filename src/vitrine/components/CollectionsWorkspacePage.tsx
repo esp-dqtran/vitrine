@@ -2,22 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   EmptyState,
-  IconButton,
   Spinner,
   TextArea,
   TextInput,
 } from "@astryxdesign/core";
 import {
-  BellIcon,
   BookmarkHollowIcon,
   CogIcon,
   FolderIcon,
   GlobeIcon,
   GridIcon,
-  MenuIcon,
-  PlusIcon,
-  QuestionIcon,
-  SearchIcon,
   StackedIcon,
 } from "@storybook/icons";
 import type { CollectionItem, ResearchCollection } from "../../db.ts";
@@ -29,7 +23,8 @@ import {
   updateCollectionItemNotes,
 } from "../researchApi.ts";
 import { navigate } from "../router.ts";
-import { WorkspaceHeader, WorkspaceRail } from "./WorkspaceChrome.tsx";
+import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
+import { workspaceNav } from "./workspaceNav.tsx";
 
 type CollectionFilter = "all" | "screen" | "flow";
 
@@ -98,6 +93,73 @@ function CollectionNotes({
   );
 }
 
+/*
+ * Empty-state illustration: stacked saved screens with a bookmark, drawn from
+ * theme tokens so it reads in both themes. Original artwork, not traced.
+ */
+function CollectionsEmptyIllustration() {
+  return (
+    <svg
+      className="collections-workspace__empty-illustration"
+      width="88"
+      height="88"
+      viewBox="0 0 88 88"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="18.5"
+        y="14.5"
+        width="51"
+        height="34"
+        rx="6"
+        fill="var(--color-background-muted)"
+        stroke="var(--color-border-emphasized)"
+      />
+      <rect
+        x="12.5"
+        y="24.5"
+        width="63"
+        height="40"
+        rx="7"
+        fill="var(--color-background-surface)"
+        stroke="var(--color-border-emphasized)"
+      />
+      <rect
+        x="21"
+        y="34"
+        width="26"
+        height="4"
+        rx="2"
+        fill="var(--color-border-emphasized)"
+      />
+      <rect
+        x="21"
+        y="44"
+        width="40"
+        height="4"
+        rx="2"
+        fill="var(--color-border)"
+      />
+      <rect
+        x="21"
+        y="52"
+        width="17"
+        height="4"
+        rx="2"
+        fill="var(--color-border)"
+      />
+      <path
+        d="M56 58h10a2 2 0 0 1 2 2v14l-7-4.5L54 74V60a2 2 0 0 1 2-2Z"
+        fill="var(--color-background-surface)"
+        stroke="var(--color-accent)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CollectionsWorkspacePage({
   collections,
   loaded,
@@ -115,7 +177,6 @@ export function CollectionsWorkspacePage({
   onChange(collections: ResearchCollection[]): void;
   onUpgrade(): void;
 }) {
-  const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -136,15 +197,7 @@ export function CollectionsWorkspacePage({
   const selected = collectionId
     ? collections.find(({ id }) => id === collectionId)
     : undefined;
-  const visibleCollections = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase();
-    if (!normalized) return collections;
-    return collections.filter((collection) =>
-      `${collection.name} ${collection.description}`
-        .toLocaleLowerCase()
-        .includes(normalized),
-    );
-  }, [collections, query]);
+  const visibleCollections = collections;
   const visibleItems = useMemo(() => {
     if (!selected) return [];
     return filter === "all"
@@ -176,55 +229,18 @@ export function CollectionsWorkspacePage({
     menuTriggerRef.current?.focus();
   };
 
-  return (
-    <main className="vitrine-page projects-workspace collections-workspace">
-      <WorkspaceRail
-        workspace={{
-          label: "Personal workspace",
-          initial: "P",
-          onSelect: () => navigate({ name: "projects" }),
-        }}
-        quickAction={{
-          label: "New collection",
-          icon: <PlusIcon aria-hidden="true" />,
-          onSelect: () => setCreating(true),
-        }}
-        primaryLabel="Personal navigation"
-        primaryActions={[
-          {
-            label: "Projects",
-            icon: <FolderIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "projects" }),
-          },
-          {
-            label: "Collections",
-            icon: <BookmarkHollowIcon aria-hidden="true" />,
-            active: true,
-            onSelect: () => navigate({ name: "collections" }),
-          },
-        ]}
-        secondaryLabel="Vitrines libraries"
-        secondaryActions={[
-          {
-            label: "Apps",
-            href: "/apps",
-            icon: <GridIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "apps" }),
-          },
-          {
-            label: "Sites",
-            href: "/sites",
-            icon: <GlobeIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "sites" }),
-          },
-        ]}
-        settings={{
-          label: "Account settings",
-          icon: <CogIcon aria-hidden="true" />,
-          onSelect: () => navigate({ name: "settings-billing" }),
-        }}
-      />
-
+  useWorkspaceChrome(
+    () => ({
+      className: "collections-workspace",
+      workspace: {
+        label: "Personal workspace",
+        name: "Personal",
+        initial: "P",
+        onSelect: () => navigate({ name: "projects" }),
+      },
+      nav: workspaceNav({ active: "collections" }),
+      onBrandSelect: () => navigate({ name: "projects" }),
+      drawer: (
       <div
         className={`projects-workspace__drawer-layer${menuOpen ? " is-open" : ""}`}
         aria-hidden={!menuOpen}
@@ -261,42 +277,14 @@ export function CollectionsWorkspacePage({
             </button>
           </nav>
         </aside>
-      </div>
+        </div>
+      ),
+    }),
+    [menuOpen, selected?.id],
+  );
 
-      <div className="projects-workspace__shell">
-        <section className="projects-workspace__main">
-          <WorkspaceHeader
-            variant="projects"
-            menu={{
-              label: menuOpen ? "Close Personal menu" : "Open Personal menu",
-              expanded: menuOpen,
-              icon: <MenuIcon aria-hidden="true" />,
-              buttonRef: menuTriggerRef,
-              onSelect: () => setMenuOpen((open) => !open),
-            }}
-            onBrandSelect={() => navigate({ name: "projects" })}
-            actions={
-              <>
-                <IconButton label="Help" tooltip="Help" variant="ghost" icon={<QuestionIcon aria-hidden="true" />} />
-                <IconButton label="Notifications" tooltip="Notifications" variant="ghost" icon={<BellIcon aria-hidden="true" />} />
-              </>
-            }
-          >
-            {!selected ? (
-              <TextInput
-                className="projects-workspace__header-search"
-                label="Search collections"
-                isLabelHidden
-                value={query}
-                placeholder="Search collections"
-                startIcon={<SearchIcon aria-hidden="true" />}
-                hasClear={Boolean(query)}
-                onChange={setQuery}
-                width="min(800px, 100%)"
-              />
-            ) : null}
-          </WorkspaceHeader>
-
+  return (
+    <>
           <header className="projects-workspace__page-header">
             <div>
               {selected ? (
@@ -309,7 +297,7 @@ export function CollectionsWorkspacePage({
                   : "Keep useful screens and flows together in your personal workspace."}
               </p>
             </div>
-            {!selected ? (
+            {!selected && visibleCollections.length > 0 ? (
               <Button
                 variant="primary"
                 label="New collection"
@@ -397,7 +385,7 @@ export function CollectionsWorkspacePage({
           ) : visibleCollections.length ? (
             <section className="projects-workspace__section collections-workspace__section">
               <div className="projects-workspace__section-heading">
-                <h2>{query.trim() ? "Search results" : "Your collections"}</h2>
+                <h2>Your collections</h2>
                 <span>{visibleCollections.length}</span>
               </div>
               <div className="projects-workspace__grid collections-workspace__grid">
@@ -428,18 +416,19 @@ export function CollectionsWorkspacePage({
           ) : (
             <div className="projects-workspace__empty collections-workspace__empty">
               <EmptyState
-                title={query.trim() ? "No collections found" : "Create your first collection"}
-                description={query.trim() ? `No collection matches “${query.trim()}”.` : "Save screens and flows you want to revisit, compare, or use in a project."}
-              />
-              <Button
-                label={query.trim() ? "Clear search" : "New collection"}
-                variant="primary"
-                onClick={query.trim() ? () => setQuery("") : canCreate ? () => setCreating(true) : onUpgrade}
+                icon={<CollectionsEmptyIllustration />}
+                title="Create your first collection"
+                description="Save screens and flows you want to revisit, compare, or use in a project."
+                actions={(
+                  <Button
+                    label="New collection"
+                    variant="primary"
+                    onClick={canCreate ? () => setCreating(true) : onUpgrade}
+                  />
+                )}
               />
             </div>
           )}
-        </section>
-      </div>
-    </main>
+    </>
   );
 }

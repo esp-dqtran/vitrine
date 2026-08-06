@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const main = readFileSync('src/vitrine/main.tsx', 'utf8');
 const css = readFileSync('src/vitrine/productTables.css', 'utf8');
 const settings = readFileSync('src/vitrine/components/SettingsWorkspacePage.tsx', 'utf8');
-const projects = readFileSync('src/vitrine/components/ResearchProjectsPage.tsx', 'utf8');
+const projects = readFileSync('src/vitrine/components/ProjectsPage.tsx', 'utf8');
 const users = readFileSync('src/vitrine/components/UserDirectory.tsx', 'utf8');
 const comparison = readFileSync('src/vitrine/components/InspirationComparison.tsx', 'utf8');
 

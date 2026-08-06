@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   sortProjects,
   ResearchProjectsView,
-} from "./components/ResearchProjectsPage.tsx";
+} from "./components/ProjectsPage.tsx";
 import {
   DecisionCanvas,
   type DecisionCanvasActions,
@@ -64,8 +64,9 @@ test("renders a personal projects workspace without project status", () => {
   assert.match(populated, /Pinned/);
   assert.match(populated, /Rename/);
   assert.match(populated, /data-app-discovery-card="true"/);
-  assert.match(populated, />Sort by</);
-  assert.match(populated, /aria-label="Sort: Last updated"/);
+  // The sort control is gone; projects stay ordered by last updated.
+  assert.doesNotMatch(populated, />Sort by</);
+  assert.doesNotMatch(populated, /aria-label="Sort: Last updated"/);
   assert.match(populated, /data-variant="primary"[\s\S]*New project/);
   assert.doesNotMatch(populated, /Filter projects/);
   assert.doesNotMatch(populated, /Synthesis stale|Draft|Active|Paused/);
@@ -103,10 +104,11 @@ test("organizes Projects around Personal and Team scopes", () => {
     />,
   );
 
-  assert.match(html, /Switch Team/);
+  // The rail and its switcher are published to the hoisted shell (an effect),
+  // so a static page render carries content only.
+  assert.doesNotMatch(html, /projects-workspace__desktop-rail/);
   assert.match(html, /Northstar/);
-  assert.match(html, /3 members/);
-  assert.match(html, /Create Team/);
+  assert.doesNotMatch(html, /3 members/);
   assert.match(html, /Personal projects/);
   assert.doesNotMatch(html, /Team workspace/);
 });
@@ -121,17 +123,17 @@ test("defines Lumin-style Team dropdowns, modals, and member management layout",
     "utf8",
   );
   const source = readFileSync(
-    new URL("./components/ResearchProjectsPage.tsx", import.meta.url),
+    new URL("./components/ProjectsPage.tsx", import.meta.url),
     "utf8",
   );
 
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*width:\s*320px;[^}]*border-radius:\s*16px;[^}]*transition:\s*opacity 0\.15s,\s*transform 0\.15s;/s,
+    /\.projects-team-drawer\s*\{[^}]*width:\s*calc\(var\(--projects-rail-width, 200px\) - 24px\);[^}]*border-radius:\s*var\(--radius-container\);[^}]*transition:\s*opacity 0\.15s,\s*transform 0\.15s;/s,
   );
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*top:\s*calc\(var\(--projects-header-height\) \+ 1px\);[^}]*max-height:\s*calc\(100dvh - var\(--projects-header-height\) - 16px\);/s,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*104px;[^}]*max-height:\s*calc\(100dvh - 120px\);/s,
   );
   assert.match(
     css,
@@ -178,40 +180,30 @@ test("renders a responsive Lumin-style Projects header", () => {
     />,
   );
 
-  assert.match(html, /aria-label="Vitrines Projects"/);
-  assert.match(html, /aria-label="Search projects"/);
-  assert.match(html, /aria-label="Help"/);
-  assert.match(html, /aria-label="Notifications"/);
-  assert.match(html, /aria-label="Account settings"/);
-  assert.match(html, /aria-label="Workspace navigation"/);
-  assert.match(html, /aria-label="Switch Team"/);
+  // No header bar, no project search, and no rail in a static page render —
+  // the rail is published to the hoisted shell.
+  assert.doesNotMatch(html, /projects-workspace__context-bar/);
+  assert.doesNotMatch(html, /aria-label="Search projects"/);
+  assert.doesNotMatch(html, /aria-label="Workspace navigation"/);
+  assert.doesNotMatch(html, /Vitrines libraries/);
+  assert.doesNotMatch(html, /projects-workspace__desktop-destination/);
   assert.match(
-    html,
-    /class="projects-workspace__desktop-quick-action"[^>]*aria-label="Create Team"/,
-  );
-  assert.match(
-    html,
-    /href="\/apps"[^>]*class="projects-workspace__desktop-destination"/,
-  );
-  assert.match(
-    html,
-    /href="\/sites"[^>]*class="projects-workspace__desktop-destination"/,
+    css,
+    /\.projects-workspace__desktop-rail\s*\{[^}]*width:\s*var\(--projects-rail-width\);[^}]*position:\s*fixed;/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__context-bar\s*\{[^}]*min-height:\s*var\(--projects-header-height\);[^}]*background:\s*var\(--color-background-surface\);/s,
+    /\.projects-workspace__desktop-rail\s*\{[^}]*background:\s*transparent;/s,
   );
-  assert.doesNotMatch(
+  // The page reserves the rail gutter plus the panel inset; a margin on the
+  // panel would collapse through the page and offset everything by 8px.
+  assert.match(
     css,
-    /\.projects-workspace__context-bar\s*\{[^}]*border-bottom:/s,
+    /\.projects-workspace\s*\{[^}]*padding:\s*var\(--projects-panel-inset\)/s,
   );
   assert.match(
     css,
-    /\.projects-workspace__desktop-rail\s*\{[^}]*width:\s*80px;[^}]*position:\s*fixed;/s,
-  );
-  assert.match(
-    css,
-    /\.projects-workspace__desktop-rail\s*\{[^}]*border-right:\s*1px solid var\(--color-border\);[^}]*border-bottom:\s*1px solid var\(--color-border\);/s,
+    /\.projects-workspace__shell\s*\{[^}]*border-radius:\s*var\(--radius-container\);[^}]*background:\s*var\(--color-background-surface\);/s,
   );
   assert.match(
     css,
@@ -223,11 +215,11 @@ test("renders a responsive Lumin-style Projects header", () => {
   );
   assert.match(
     css,
-    /\.projects-team-drawer\s*\{[^}]*top:\s*calc\(var\(--projects-header-height\) \+ 1px\);[^}]*left:\s*20px;[^}]*width:\s*320px;[^}]*gap:\s*0;[^}]*background:\s*var\(--color-background-surface\);/s,
+    /\.projects-team-drawer\s*\{[^}]*top:\s*104px;[^}]*left:\s*12px;[^}]*width:\s*calc\(var\(--projects-rail-width, 200px\) - 24px\);[^}]*gap:\s*0;[^}]*background:\s*var\(--color-background-surface\);/s,
   );
   assert.match(
     css,
-    /\.projects-team-switcher__current,[\s\S]*?\.projects-team-switcher__spaces\s*\{[^}]*border-radius:\s*0;[^}]*background:\s*transparent;/s,
+    /\.projects-team-switcher__current,[\s\S]*?\.projects-team-switcher__spaces\s*\{[^}]*border-radius:\s*var\(--radius-none\);[^}]*background:\s*transparent;/s,
   );
   assert.match(
     css,
@@ -493,8 +485,9 @@ test("opens every Designer Project on its Canvas file index", () => {
     appSource,
     /case "project-playground":[\s\S]*?<ProjectPlayground[\s\S]*?projectId=\{route\.projectId\}/,
   );
-  assert.match(filesSource, /<WorkspaceRail/);
-  assert.match(filesSource, /<WorkspaceHeader/);
+  // Chrome is published to the hoisted shell; pages render content only.
+  assert.match(filesSource, /useWorkspaceChrome\(/);
+  assert.doesNotMatch(filesSource, /<WorkspaceShell|<WorkspaceRail|<WorkspaceHeader/);
   assert.match(filesSource, /function CanvasScreenCard/);
   assert.match(filesSource, /<MediaGridCard/);
   assert.match(filesSource, /data-canvas-preview="placeholder"/);

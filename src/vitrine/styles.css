@@ -9521,23 +9521,10 @@ body {
 }
 
 /* Admin users workspace */
-.admin-users-page {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 32px 28px 64px;
-}
-
-.admin-users-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 28px;
-}
-
-.admin-users-header h1,
-.admin-users-header p,
-.admin-users-directory h2,
-.admin-users-directory p,
+/* Admin pages render inside the workspace panel and use the shared
+   .projects-workspace__page-header, same as Projects. */
+/* Not `.admin-users-directory p` — that outranked the count and row-error
+   margins below and flattened both. */
 .admin-users-insights h2,
 .admin-users-insights h3,
 .admin-users-empty h3,
@@ -9545,56 +9532,20 @@ body {
   margin: 0;
 }
 
-.admin-users-header h1 {
-  font-size: clamp(32px, 4vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
-
-.admin-users-header p {
-  margin-top: 9px;
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-.admin-users-header div > span {
-  display: block;
-  margin-top: 8px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.admin-users-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
-  align-items: start;
-  min-width: 0;
-}
-
+/* The directory is the whole Users page now that Insights is its own section —
+   no split grid, no gutter reserved for a column that is not there. */
 .admin-users-directory {
   min-width: 0;
-  padding-right: 36px;
 }
 
-.admin-users-directory-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  min-height: 46px;
-  margin-bottom: 18px;
-}
-
-.admin-users-directory h2,
 .admin-users-insights h2 {
   font-size: 18px;
   line-height: 1.35;
   letter-spacing: -0.015em;
 }
 
-.admin-users-directory-heading p {
-  margin-top: 4px;
+.admin-users-directory-count {
+  margin: 0 0 10px;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
@@ -9603,7 +9554,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .admin-users-search-control {
@@ -9773,28 +9724,136 @@ body {
   gap: 8px;
 }
 
+/*
+ * Data-visualization palette. Deliberately NOT one of the 13 product color roles:
+ * UI_FOUNDATION_STANDARD.specializedColorPolicy scopes chart palettes as domain
+ * implementation details. Series slots are categorical (identity); steps are one
+ * ordinal ramp (funnel stages). Both modes validated against this product's own
+ * surfaces — light #ffffff, dark #1f1f22 — for lightness band, chroma, CVD
+ * separation and contrast. Re-validate before changing a value.
+ */
+:root {
+  --vitrine-chart-series-1: light-dark(#2a78d6, #3987e5);
+  --vitrine-chart-series-2: light-dark(#eb6834, #d95926);
+  --vitrine-chart-step-1: light-dark(#86b6ef, #9ec5f4);
+  --vitrine-chart-step-2: light-dark(#5598e7, #6da7ec);
+  --vitrine-chart-step-3: light-dark(#2a78d6, #3987e5);
+  --vitrine-chart-step-4: light-dark(#1c5cab, #256abf);
+  --vitrine-chart-step-5: light-dark(#104281, #184f95);
+}
+
+/* Insights is its own full-width page now — no sticky sidebar, no left rule,
+   no gutter against a directory column that is not there. */
 .admin-users-insights {
-  position: sticky;
-  top: 24px;
   min-width: 0;
-  padding-left: 36px;
-  border-left: 1px solid var(--color-border);
+}
+
+/*
+ * Chart tooltip. Recharts ships an inline-styled white box that ignores every
+ * token and stays white in dark mode; this is the product surface instead.
+ * Value leads, series name follows — the reader already knows the series.
+ */
+.admin-users-chart-tooltip {
+  min-width: 132px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: var(--radius-element);
+  background: var(--color-background-surface);
+  box-shadow: var(--shadow-low);
+}
+
+.admin-users-chart-tooltip__label {
+  margin: 0 0 6px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.admin-users-chart-tooltip ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-users-chart-tooltip li {
+  display: grid;
+  grid-template-columns: 10px auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* A short stroke of the series color, not a filled swatch: at tooltip density a
+   block of data-weight ink is doing a label's job. */
+.admin-users-chart-tooltip__key {
+  align-self: center;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.admin-users-chart-tooltip strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 18px;
+}
+
+.admin-users-chart-tooltip li > span:last-child {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-chart-legend {
+  padding-left: 4px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
 }
 
 .admin-users-insights-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 46px;
   margin-bottom: 12px;
 }
 
-.admin-users-insight-summary,
+.admin-users-insights-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-users-refreshing {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.admin-users-insights-error {
+  color: var(--color-text-danger);
+  font-size: 13px;
+}
+
+.admin-users-chart-figure {
+  margin: 0 0 32px;
+}
+
+.admin-users-chart-figure .admin-users-insight-section-heading {
+  margin-bottom: 4px;
+}
+
+/* Sized by tile, not by a fixed column count: the same grid reads at dialog
+   width and at full page width on Insights. */
 .admin-users-growth-metrics,
 .admin-users-detail-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1px;
   margin: 22px 0 28px;
   overflow: hidden;
@@ -9803,21 +9862,18 @@ body {
   background: var(--color-border);
 }
 
-.admin-users-insight-summary > div,
 .admin-users-growth-metrics > div,
 .admin-users-detail-summary > div {
   padding: 14px;
   background: var(--color-background-surface);
 }
 
-.admin-users-insight-summary dt,
 .admin-users-growth-metrics dt,
 .admin-users-detail-summary dt {
   color: var(--color-text-secondary);
   font-size: 11px;
 }
 
-.admin-users-insight-summary dd,
 .admin-users-growth-metrics dd,
 .admin-users-detail-summary dd {
   margin: 5px 0 0;
@@ -9847,55 +9903,13 @@ body {
   font-size: 11px;
 }
 
-.admin-users-feature-list,
+/* The feature ranking is a bar chart now — the hand-rolled bar list it used to
+   draw here went with it. */
 .admin-users-detail-features,
 .admin-users-activity-list {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.admin-users-feature-list li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px 16px;
-  padding: 15px 0;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--color-border) 72%, transparent);
-}
-
-.admin-users-feature-list li > div:first-child,
-.admin-users-feature-value {
-  display: grid;
-  gap: 2px;
-}
-
-.admin-users-feature-list strong {
-  font-size: 13px;
-}
-
-.admin-users-feature-list span {
-  color: var(--color-text-secondary);
-  font-size: 11px;
-}
-
-.admin-users-feature-value {
-  text-align: right;
-}
-
-.admin-users-feature-bar {
-  grid-column: 1 / -1;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--color-background-muted);
-}
-
-.admin-users-feature-bar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-accent);
 }
 
 .admin-users-insights-empty {
@@ -9904,14 +9918,10 @@ body {
   font-size: 13px;
 }
 
+/* Height is per-chart (ChartFigure sets it from the series), not global. */
 .admin-users-chart {
   width: 100%;
-  height: 220px;
-  margin: 22px 0;
-}
-
-.admin-users-growth-metrics {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0 0;
 }
 
 .admin-users-empty {
@@ -10042,44 +10052,7 @@ body {
   white-space: nowrap;
 }
 
-@media (max-width: 1100px) {
-  .admin-users-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-users-directory {
-    padding-right: 0;
-  }
-
-  .admin-users-insights {
-    position: static;
-    margin-top: 44px;
-    padding: 36px 0 0;
-    border-top: 1px solid var(--color-border);
-    border-left: 0;
-  }
-
-  .admin-users-chart {
-    height: 210px;
-  }
-}
-
 @media (max-width: 640px) {
-  .admin-users-page {
-    padding: 72px 16px 48px;
-  }
-
-  .admin-users-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-
-  .admin-users-header h1 {
-    font-size: 34px;
-  }
-
   .admin-users-toolbar {
     align-items: stretch;
     flex-direction: column;
@@ -10118,14 +10091,6 @@ body {
   .admin-users-insights-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .admin-users-insight-summary {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-users-chart {
-    height: 190px;
   }
 
   .admin-users-detail-dialog {

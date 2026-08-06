@@ -71,9 +71,16 @@
   letter-spacing: normal !important;
 }
 
+/*
+ * The workspace rail, its compact drawer, and the switcher popover are chrome,
+ * not screen content: they own a 13px/500 row scale that this 14px/600 label
+ * role was silently overriding on every nav row.
+ */
 [data-application-surface="true"]
   :where(button, [role="button"], [role="tab"], [role="menuitem"]):not(
     .reference-discovery__taxonomy *,
+    .projects-workspace__desktop-rail *,
+    .projects-team-drawer *,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -145,6 +152,7 @@
 
 [data-application-surface="true"]
   :where([class*="__brand"] strong):not(
+    .projects-workspace__desktop-rail *,
     .project-document__editor *,
     .project-canvas-document-editor *,
     .document-flow *,
@@ -210,7 +218,12 @@
   font: var(--vitrine-type-body) !important;
 }
 
-:is([data-admin-dashboard="true"], .admin-users-state) :is(button, [role="button"], [role="tab"]) {
+/* Same rail exclusion as the application surface above: Admin renders the very
+   same WorkspaceRail, so it has to keep the same row scale. */
+:is([data-admin-dashboard="true"], .admin-users-state) :is(button, [role="button"], [role="tab"]):not(
+  .projects-workspace__desktop-rail *,
+  .projects-team-drawer *
+) {
   font: var(--vitrine-type-label) !important;
   letter-spacing: .2px !important;
 }

@@ -35,8 +35,9 @@ test('renders the real Vitrines mark everywhere the brand icon appears', async (
   const pricing = await readFile(new URL('./Pricing.tsx', import.meta.url), 'utf8');
   assert.match(pricing, /src="\/favicon\.svg"[^>]*width=\{26\}/);
 
-  const adminSidebar = await readFile(new URL('./components/AdminSidebar.tsx', import.meta.url), 'utf8');
-  assert.match(adminSidebar, /src="\/favicon\.svg"[^>]*width=\{22\}/);
+  // The Admin shell now brands through the shared WorkspaceHeader.
+  const workspaceChrome = await readFile(new URL('./components/WorkspaceChrome.tsx', import.meta.url), 'utf8');
+  assert.match(workspaceChrome, /src="\/favicon\.svg"/);
 
   const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
   assert.equal((home.match(/src="\/favicon\.svg"/g) ?? []).length, 2);

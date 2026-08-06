@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button, SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import type { DesignSystemSnapshot, TokenKind } from '../../designSystem';
+import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
 type Snapshot = DesignSystemSnapshot<unknown>;
 type Format = 'design-md' | 'tailwind' | 'css' | 'tokens';
@@ -79,6 +80,7 @@ function download(name: string, content: string, type: string): void {
 export function DesignSystemReferencePane({ snapshot, markdown }: { snapshot: Snapshot; markdown: string }) {
   const [format, setFormat] = useState<Format>('design-md');
   const [density, setDensity] = useState<'compact' | 'extended'>('extended');
+  const densityRef = useSegmentedIndicator(density);
   const [copied, setCopied] = useState(false);
   const content = useMemo(() => {
     if (format === 'design-md') return density === 'compact' ? compactMarkdown(snapshot) : markdown;
@@ -112,7 +114,7 @@ export function DesignSystemReferencePane({ snapshot, markdown }: { snapshot: Sn
       </div>
       <div className="ds-reference-pane__toolbar">
         {format === 'design-md' ? (
-          <SegmentedControl value={density} onChange={(value) => setDensity(value as 'compact' | 'extended')} label="Reference detail">
+          <SegmentedControl ref={densityRef} value={density} onChange={(value) => setDensity(value as 'compact' | 'extended')} label="Reference detail">
             <SegmentedControlItem value="compact" label="Compact" />
             <SegmentedControlItem value="extended" label="Extended" />
           </SegmentedControl>

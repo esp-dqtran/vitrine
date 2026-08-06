@@ -6,6 +6,7 @@ import type { Platform } from '../../platformFromUrl';
 import { applyReviewAction } from '../researchApi';
 import { loadDesignSystem } from '../useDesignSystem';
 import { AppKnowledgeReviewWorkspace } from './AppKnowledgeReviewPanel';
+import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
 export function CuratorReviewPanel({
   app,
@@ -21,6 +22,7 @@ export function CuratorReviewPanel({
   const [working, setWorking] = useState(snapshot);
   const [message, setMessage] = useState('');
   const [workspace, setWorkspace] = useState<'design-system' | 'app-knowledge'>('design-system');
+  const workspaceRef = useSegmentedIndicator(workspace);
   useEffect(() => setWorking(snapshot), [snapshot]);
   const act = async (action: CuratorAction) => { try { await applyReviewAction(app, platform, action); setWorking(await loadDesignSystem(app, platform)); setMessage('Saved without changing evidence links.'); } catch (error) { setMessage((error as Error).message); } };
   const rename = (kind: 'token' | 'component' | 'variant' | 'rule', id: string, current: string, componentId?: string) => { const name = window.prompt('Reviewed name', current)?.trim(); if (name) void act({ type: 'rename', kind, id, name, componentId }); };
@@ -29,7 +31,7 @@ export function CuratorReviewPanel({
   const split = (id: string) => { const variantIds = window.prompt('Variant ids to move, comma separated')?.split(',').map((value) => value.trim()).filter(Boolean); const newId = window.prompt('New component id')?.trim(); const name = window.prompt('New component name')?.trim(); if (variantIds?.length && newId && name) void act({ type: 'split-component', id, variantIds, newId, name }); };
   return (
     <div style={{ display: 'grid', gap: 22, paddingTop: 28 }}>
-      <SegmentedControl value={workspace} onChange={(value) => setWorkspace(value as typeof workspace)} label="Review workspace" size="sm">
+      <SegmentedControl ref={workspaceRef} value={workspace} onChange={(value) => setWorkspace(value as typeof workspace)} label="Review workspace" size="sm">
         <SegmentedControlItem value="design-system" label="Design System" />
         <SegmentedControlItem value="app-knowledge" label="App Knowledge" />
       </SegmentedControl>

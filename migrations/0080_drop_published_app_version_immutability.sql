@@ -1,0 +1,25 @@
+-- 0037 froze published app_versions at the database level: any INSERT, UPDATE or
+-- DELETE touching a row with status = 'published' raises. That models a human
+-- review gate this product does not have. Publication is automatic —
+-- autonomousGraph.ts calls publishAppVersion() unattended, and publishAppVersion
+-- sets reviewed_by to whoever started the crawl, not to a reviewer. 1,723 of the
+-- published rows are "reviewed by" long-dead test accounts.
+--
+-- The guard also fires on writes nobody asked for. app_versions.reviewed_by is
+-- ON DELETE SET NULL, so deleting a user makes Postgres issue its own
+-- UPDATE app_versions SET reviewed_by = NULL; the trigger cannot tell an FK
+-- cascade from a hand-edit, so routine account deletion fails with
+--
+--   Published App versions are immutable; publish a new App version
+--
+-- Enforcement that stays: publishAppVersion() still refuses anything but an
+-- in_review version, canTransition() in src/versioning.ts still owns the state
+-- machine, and app_versions_publication_markers_consistent still requires
+-- status = 'published' and published_at to agree. What is lost is the database
+-- backstop against rewriting a published row behind the app's back.
+--
+-- The sibling guards from 0037 are deliberately left in place: flows_append_only,
+-- app_flow_versions_published_immutable and app_flow_version_mappings_published_immutable
+-- protect the flow taxonomy, reference no user columns, and block nothing routine.
+DROP TRIGGER IF EXISTS app_versions_published_immutable ON app_versions;
+DROP FUNCTION IF EXISTS guard_published_app_version_immutability();

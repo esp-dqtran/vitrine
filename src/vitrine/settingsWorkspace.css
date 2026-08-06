@@ -1,3 +1,7 @@
+/*
+ * Settings renders through the shared projects shell (rail + content panel), so
+ * this file only styles the settings content — not a page frame of its own.
+ */
 .settings-workspace {
   --settings-header-height: 64px;
   --color-background-body: var(--vitrine-color-page);
@@ -9,9 +13,6 @@
   --color-border-emphasized: var(--vitrine-color-border-emphasized);
   --color-border-focus: var(--vitrine-color-border-emphasized);
   --settings-nav-active: var(--vitrine-color-surface-muted);
-  min-height: 100vh;
-  padding-left: 80px;
-  background: var(--color-background-body);
   color: var(--color-text-primary);
 }
 
@@ -302,13 +303,10 @@
 }
 
 .settings-workspace__body {
+  /* Single column inside the shared panel; the panel owns border and inset. */
   display: grid;
-  min-height: calc(100vh - var(--settings-header-height));
-  grid-template-columns: 224px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
-  padding: 12px 16px 0;
-  border-top: 1px solid var(--color-border);
-  border-left: 1px solid var(--color-border);
 }
 
 .settings-workspace__section-nav {

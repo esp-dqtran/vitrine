@@ -22,8 +22,9 @@ SELECT a.id,
 FROM apps a
 JOIN LATERAL (
   SELECT key, source FROM (
-    -- Preferred: the version's own card preview, when it is an image.
-    SELECT so.object_key AS key, 'preview' AS source, 0 AS rank, sv.created_at
+    -- The version's own card preview, when it is an image: a whole-page capture,
+    -- so only worth using when no derived poster exists.
+    SELECT so.object_key AS key, 'preview' AS source, 1 AS rank, sv.created_at
     FROM sites s
     JOIN site_versions sv ON sv.site_id = s.id
     JOIN stored_objects so ON so.object_key = sv.preview_object_key
@@ -32,10 +33,20 @@ JOIN LATERAL (
       AND regexp_replace(regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
         = regexp_replace(regexp_replace(lower(a.website_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
     UNION ALL
+    -- Preferred: the derived poster. Every ready version has one, image or
+    -- video, and it is a 640x400 crop rather than a multi-megabyte page.
+    SELECT so.object_key AS key, 'poster' AS source, 0 AS rank, sv.created_at
+    FROM sites s
+    JOIN site_versions sv ON sv.site_id = s.id
+    JOIN stored_objects so ON so.object_key = sv.poster_object_key
+    WHERE sv.status = 'ready'
+      AND regexp_replace(regexp_replace(lower(s.source_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+        = regexp_replace(regexp_replace(lower(a.website_url), '^https?://(www\\.)?', ''), '[/?#].*$', '')
+    UNION ALL
     -- Fallback: the full-page screenshot. site_versions.preview_object_key is
     -- often a scroll video, which an <img> cannot render, but the crawl also
     -- stores a real full-page capture and those are always images.
-    SELECT so.object_key AS key, 'full_page' AS source, 1 AS rank, sv.created_at
+    SELECT so.object_key AS key, 'full_page' AS source, 2 AS rank, sv.created_at
     FROM sites s
     JOIN site_versions sv ON sv.site_id = s.id
     JOIN site_pages sp ON sp.version_id = sv.id

@@ -34,13 +34,10 @@ async function main(): Promise<void> {
   const [
     { pool, query, setJobStatus },
     { closeSitesQueue, publishSitesJob },
-    { createSitesStore },
   ] = await Promise.all([
     import("../src/db.ts"),
     import("../src/sitesQueue.ts"),
-    import("../src/sitesStore.ts"),
   ]);
-  const sitesStore = createSitesStore();
   let queued = 0;
   let alreadyReady = 0;
   let publishFailed = 0;
@@ -51,12 +48,26 @@ async function main(): Promise<void> {
        WHERE type = 'import-site' AND status = 'error'
        ORDER BY id DESC`,
     );
-    const candidates = selectLatestFailedSiteJobs(result.rows);
+    // selectLatestFailedSiteJobs already skips anything in this set, and it
+    // canonicalises both sides — one query instead of a lookup per candidate.
+    const readyRows = await query<{ canonical_url: string | null }>(
+      `SELECT DISTINCT canonical_url FROM site_versions
+       WHERE status = 'ready' AND canonical_url IS NOT NULL`,
+    );
+    const readyUrls = new Set(
+      readyRows.rows.flatMap(({ canonical_url }) => {
+        if (!canonical_url) return [];
+        try {
+          return [canonicalMobbinSitesUrl(canonical_url).canonicalUrl];
+        } catch {
+          return [canonical_url];
+        }
+      }),
+    );
+    const before = selectLatestFailedSiteJobs(result.rows).length;
+    const candidates = selectLatestFailedSiteJobs(result.rows, readyUrls);
+    alreadyReady = before - candidates.length;
     for (const candidate of candidates) {
-      if (await sitesStore.readyVersionByCanonicalUrl(candidate.url)) {
-        alreadyReady++;
-        continue;
-      }
       await setJobStatus(candidate.id, "queued", "Queued for Site repair");
       try {
         await publishSitesJob(

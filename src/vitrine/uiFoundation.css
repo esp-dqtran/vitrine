@@ -138,6 +138,9 @@
  * caller so compact controls stay compact and fill controls continue to fill.
  */
 .astryx-segmented-control {
+  /* Positioned unconditionally so the indicator's offsetLeft is measured against
+     the control itself, not whichever ancestor happened to be positioned. */
+  position: relative;
   padding: var(--spacing-1) !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 999px !important;
@@ -146,6 +149,8 @@
 
 .astryx-segmented-control > button.astryx-segmented-control-item {
   border-radius: 999px !important;
+  /* A wrapping label makes one segment taller than its siblings. */
+  white-space: nowrap !important;
   color: color-mix(
     in srgb,
     var(--vitrine-color-action-primary) 72%,
@@ -161,6 +166,41 @@
   background: var(--vitrine-color-action-primary) !important;
   color: var(--vitrine-color-on-action-primary) !important;
   box-shadow: none !important;
+}
+
+/*
+ * Sliding selection indicator. The control recolours segments on its own, which
+ * reads as a jump; once useSegmentedIndicator has measured the checked segment
+ * (data-indicator="ready"), one pill travels between them instead and the
+ * buttons hand their background over to it.
+ */
+.astryx-segmented-control[data-indicator='ready'] {
+  isolation: isolate;
+}
+
+.astryx-segmented-control[data-indicator='ready']::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: var(--spacing-1);
+  bottom: var(--spacing-1);
+  left: 0;
+  width: var(--segmented-indicator-width, 0);
+  border-radius: 999px;
+  background: var(--vitrine-color-action-primary);
+  transform: translateX(var(--segmented-indicator-x, 0));
+  transition:
+    transform var(--vitrine-transition-standard),
+    width var(--vitrine-transition-standard);
+}
+
+.astryx-segmented-control[data-indicator='ready'] > button.astryx-segmented-control-item {
+  position: relative;
+  z-index: 1;
+}
+
+.astryx-segmented-control[data-indicator='ready'] > button[aria-checked='true'] {
+  background: transparent !important;
 }
 
 .astryx-pagination.pages {
@@ -192,6 +232,10 @@
   .astryx-segmented-control > button.astryx-segmented-control-item,
   .astryx-pagination.pages button.astryx-button {
     transition: none !important;
+  }
+
+  .astryx-segmented-control[data-indicator='ready']::before {
+    transition: none;
   }
 }
 

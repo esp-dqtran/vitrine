@@ -43,9 +43,11 @@ const sharedProps = {
   onUpgrade: () => undefined,
 };
 
-test("shows Collections in the Personal workspace rail and summarizes saved evidence", () => {
+test("summarizes saved evidence in the Collections content panel", () => {
   const html = renderToStaticMarkup(<CollectionsWorkspacePage {...sharedProps} />);
-  assert.match(html, /Personal navigation/);
+  // The rail is published to the hoisted shell (an effect), so a static render
+  // of the page contains content only — rail markup is covered by the shell tests.
+  assert.doesNotMatch(html, /projects-workspace__desktop-rail/);
   assert.match(html, />Collections</);
   assert.match(html, /Checkout research/);
   assert.match(html, /1 screen · 1 flow/);

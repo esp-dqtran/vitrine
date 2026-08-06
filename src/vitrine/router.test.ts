@@ -346,3 +346,13 @@ test("treats malformed encoded route segments as not found instead of throwing",
     pathname: "/apps/%E0%A4%A",
   });
 });
+
+test("addresses each Admin section so it can be linked and reloaded", () => {
+  assert.deepEqual(parseRoutePath("/admin"), { name: "admin" });
+  assert.deepEqual(parseRoutePath("/admin/insights"), {
+    name: "admin",
+    section: "insights",
+  });
+  assert.equal(routeToPath({ name: "admin" }), "/admin");
+  assert.equal(routeToPath({ name: "admin", section: "insights" }), "/admin/insights");
+});

@@ -8,7 +8,7 @@ import {
   CreateProjectDialog,
   DeleteProjectDialog,
   RenameProjectDialog,
-} from "../../vitrine/components/ResearchProjectsPage.tsx";
+} from "../../vitrine/components/ProjectsPage.tsx";
 import "../../vitrine/styles.css";
 import "../../vitrine/projectsWorkspace.css";
 import "../../vitrine/components/AstryxModal.css";

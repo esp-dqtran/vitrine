@@ -4,98 +4,126 @@ export interface WorkspaceRailAction {
   label: string;
   icon: ReactNode;
   active?: boolean;
-  href?: string;
   onSelect?: () => void;
 }
 
-export function WorkspaceRail({
-  workspace,
-  quickAction,
-  primaryLabel,
-  primaryActions,
-  secondaryLabel,
-  secondaryActions = [],
-  settings,
-}: {
+export interface WorkspaceRailProps {
   workspace: {
     label: string;
     initial: string;
+    /* Display name for the switcher row; `label` stays the action description. */
+    name?: string;
     expanded?: boolean;
     buttonRef?: Ref<HTMLButtonElement>;
     onSelect: () => void;
   };
-  quickAction?: WorkspaceRailAction;
+  /* The nav group's accessible name only — the rail shows no visible caption. */
   primaryLabel: string;
   primaryActions: WorkspaceRailAction[];
-  secondaryLabel?: string;
-  secondaryActions?: WorkspaceRailAction[];
   settings: WorkspaceRailAction;
-}) {
-  const renderAction = (action: WorkspaceRailAction, destination = false) => {
-    const content = <>{action.icon}<span>{action.label}</span></>;
-    if (action.href) {
-      return (
-        <a
-          key={action.label}
-          href={action.href}
-          className={destination ? 'projects-workspace__desktop-destination' : action.active ? 'is-active' : undefined}
-          aria-current={action.active ? 'page' : undefined}
-          onClick={(event) => {
-            event.preventDefault();
-            action.onSelect?.();
-          }}
-        >
-          {content}
-        </a>
-      );
-    }
-    return (
-      <button
-        key={action.label}
-        type="button"
-        className={action.active ? 'is-active' : undefined}
-        aria-current={action.active ? 'page' : undefined}
-        onClick={action.onSelect}
-      >
-        {content}
-      </button>
-    );
-  };
+  /* Extra rail footer content (the Admin shell puts its account + Log out here). */
+  footer?: ReactNode;
+  /* The Vitrines mark lives at the top of the rail; the header only shows it at
+     compact widths, where the rail is replaced by the drawer. */
+  onBrandSelect?: () => void;
+}
+
+/* What workspaceNav() hands to the rail. */
+export type WorkspaceNavSlots = Pick<
+  WorkspaceRailProps,
+  'primaryLabel' | 'primaryActions' | 'settings'
+>;
+
+export interface WorkspaceHeaderMenu {
+  label: string;
+  expanded: boolean;
+  icon: ReactNode;
+  buttonRef?: Ref<HTMLButtonElement>;
+  onSelect: () => void;
+}
+
+export function WorkspaceRail({
+  workspace,
+  primaryLabel,
+  primaryActions,
+  settings,
+  footer,
+  onBrandSelect,
+}: WorkspaceRailProps) {
+  const renderAction = (action: WorkspaceRailAction) => (
+    <button
+      key={action.label}
+      type="button"
+      className={action.active ? 'is-active' : undefined}
+      aria-current={action.active ? 'page' : undefined}
+      onClick={action.onSelect}
+    >
+      {action.icon}<span>{action.label}</span>
+    </button>
+  );
 
   return (
     <aside className="projects-workspace__desktop-rail" aria-label="Workspace navigation">
-      <button
-        ref={workspace.buttonRef}
-        type="button"
-        className="projects-workspace__desktop-workspace"
-        aria-label={workspace.label}
-        aria-expanded={workspace.expanded}
-        onClick={workspace.onSelect}
-      >
-        <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
-      </button>
-      {quickAction ? (
-        <button
-          type="button"
-          className="projects-workspace__desktop-quick-action"
-          aria-label={quickAction.label}
-          title={quickAction.label}
-          onClick={quickAction.onSelect}
+      {onBrandSelect ? (
+        <a
+          href="/projects"
+          className="projects-workspace__rail-brand"
+          aria-label="Vitrines Projects"
+          onClick={(event) => {
+            event.preventDefault();
+            onBrandSelect();
+          }}
         >
-          {quickAction.icon}
+          <img src="/favicon.svg" alt="" aria-hidden="true" />
+          <strong>Vitrines</strong>
+        </a>
+      ) : null}
+      {/*
+        * Only a surface that owns a menu (it passes `expanded`) gets a button and
+        * a caret. Everywhere else this is a plain identity row: a caret with no
+        * menu behind it read as a dropdown and, on Admin, navigated away instead.
+        */}
+      {workspace.expanded === undefined ? (
+        <div className="projects-workspace__desktop-workspace projects-workspace__desktop-workspace--static">
+          <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
+          {workspace.name ? (
+            <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
+          ) : null}
+        </div>
+      ) : (
+        <button
+          ref={workspace.buttonRef}
+          type="button"
+          className="projects-workspace__desktop-workspace"
+          aria-label={workspace.label}
+          aria-expanded={workspace.expanded}
+          onClick={workspace.onSelect}
+        >
+          <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
+          {workspace.name ? (
+            <span className="projects-workspace__desktop-workspace-name">{workspace.name}</span>
+          ) : null}
+          <svg
+            className="projects-workspace__desktop-workspace-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 12 12"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M2.5 4.5L6 8l3.5-3.5"
+              stroke="currentColor"
+              strokeWidth="1.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
-      ) : null}
+      )}
       <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--primary" aria-label={primaryLabel}>
-        {primaryActions.map((action) => renderAction(action))}
+        {primaryActions.map(renderAction)}
       </nav>
-      {secondaryActions.length > 0 ? (
-        <>
-          <span className="projects-workspace__desktop-divider" aria-hidden="true" />
-          <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--secondary" aria-label={secondaryLabel}>
-            {secondaryActions.map((action) => renderAction(action, true))}
-          </nav>
-        </>
-      ) : null}
       <div className="projects-workspace__desktop-footer">
         <span className="projects-workspace__desktop-divider" aria-hidden="true" />
         <button
@@ -105,8 +133,9 @@ export function WorkspaceRail({
           aria-current={settings.active ? 'page' : undefined}
           onClick={settings.onSelect}
         >
-          {settings.icon}<span>Settings</span>
+          {settings.icon}<span>{settings.label}</span>
         </button>
+        {footer}
       </div>
     </aside>
   );
@@ -122,13 +151,7 @@ export function WorkspaceHeader({
 }: {
   variant: 'projects' | 'settings';
   searching?: boolean;
-  menu: {
-    label: string;
-    expanded: boolean;
-    icon: ReactNode;
-    buttonRef?: Ref<HTMLButtonElement>;
-    onSelect: () => void;
-  };
+  menu: WorkspaceHeaderMenu;
   onBrandSelect: () => void;
   children?: ReactNode;
   actions: ReactNode;
@@ -177,4 +200,91 @@ export function WorkspaceHeader({
   return variant === 'projects'
     ? <div className={headerClassName}>{content}</div>
     : <header className={headerClassName}>{content}</header>;
+}
+
+/*
+ * One page skeleton for every workspace surface: left rail + content panel.
+ * Pages own their content and their rail config; the DOM structure, class names,
+ * and drawer plumbing live here so they stop being copied.
+ */
+export function WorkspaceShell({
+  variant = 'projects',
+  className,
+  workspace,
+  nav,
+  railFooter,
+  onBrandSelect,
+  menu,
+  headerContent,
+  headerActions,
+  searching,
+  drawer,
+  sideNav,
+  dataset,
+  children,
+}: {
+  variant?: 'projects' | 'settings';
+  className?: string;
+  workspace: WorkspaceRailProps['workspace'];
+  nav: WorkspaceNavSlots;
+  railFooter?: ReactNode;
+  onBrandSelect: () => void;
+  /* Settings-variant header only; the projects surfaces have no header bar. */
+  menu?: WorkspaceHeaderMenu;
+  headerContent?: ReactNode;
+  headerActions?: ReactNode;
+  searching?: boolean;
+  /* Compact-width drawer layer, rendered as a sibling of the rail. */
+  drawer?: ReactNode;
+  /* Settings keeps a second, section-level nav beside its content. */
+  sideNav?: ReactNode;
+  /* Surface markers some tests and styles hook onto (e.g. data-admin-dashboard). */
+  dataset?: Record<`data-${string}`, string>;
+  children: ReactNode;
+}) {
+  const rail = (
+    <WorkspaceRail
+      workspace={workspace}
+      {...nav}
+      footer={railFooter}
+      onBrandSelect={onBrandSelect}
+    />
+  );
+
+  if (variant === 'settings') {
+    return (
+      <main className={['settings-workspace', className].filter(Boolean).join(' ')} {...dataset}>
+        {rail}
+        <WorkspaceHeader
+          variant="settings"
+          searching={searching}
+          menu={menu as WorkspaceHeaderMenu}
+          onBrandSelect={onBrandSelect}
+          actions={headerActions}
+        >
+          {headerContent}
+        </WorkspaceHeader>
+        {drawer}
+        <div className="settings-workspace__body">
+          {sideNav}
+          {children}
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main
+      className={['vitrine-page', 'projects-workspace', className].filter(Boolean).join(' ')}
+      {...dataset}
+    >
+      {rail}
+      {drawer}
+      <div className="projects-workspace__shell">
+        <section className="projects-workspace__main">
+          {children}
+        </section>
+      </div>
+    </main>
+  );
 }

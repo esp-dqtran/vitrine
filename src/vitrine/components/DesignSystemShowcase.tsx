@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { Badge, Button, SegmentedControl, SegmentedControlItem, Text, TextInput } from '@astryxdesign/core';
 import type { ComponentVariant, DesignComponent, DesignToken, ReviewStatus, TokenKind } from '../../designSystem.ts';
 import { usagePatternSummary } from '../../usagePatterns.ts';
+import { useSegmentedIndicator } from './useSegmentedIndicator.ts';
 
 export const KIND_LABELS: Record<TokenKind, string> = {
   color: 'Colors',
@@ -350,11 +351,12 @@ export function ThemeCanvas({ title, description, showcase, children }: {
   children: ReactNode;
 }) {
   const [stage, setStage] = useState<'light' | 'dark'>('dark');
+  const stageRef = useSegmentedIndicator(stage);
   return (
     <>
       <div className="ds-toolbar">
         <span className="ds-page__eyebrow">Style preview</span>
-        <SegmentedControl className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
+        <SegmentedControl ref={stageRef} className="ds-toggle" value={stage} onChange={(value) => setStage(value as 'light' | 'dark')} label="Preview theme">
           <SegmentedControlItem value="light" label="Light" />
           <SegmentedControlItem value="dark" label="Dark" />
         </SegmentedControl>

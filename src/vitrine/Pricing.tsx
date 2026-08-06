@@ -4,6 +4,7 @@ import type { AuthUser } from './authApi';
 import { createCheckout, loadSubscription, type SubscriptionView } from './billingApi';
 import { PRO_PRICE_CENTS } from '../pricing.ts';
 import { AstryxMenu } from './components/AstryxDropdown';
+import { useSegmentedIndicator } from './components/useSegmentedIndicator.ts';
 
 const wrap: CSSProperties = { maxWidth: 1080, margin: '0 auto', padding: '0 32px' };
 
@@ -294,6 +295,7 @@ export function PricingView({
   error = '',
 }: PricingViewProps) {
   const isCompactNav = useMediaQuery('(max-width: 640px)', false);
+  const billingPeriodRef = useSegmentedIndicator(yearly ? 'yearly' : 'monthly');
   const proPrice = `$${(PRO_PRICE_CENTS[yearly ? 'year' : 'month'] / 100).toFixed(2)}`;
   const proNote = yearly ? '/year' : '/month';
   const proSub = yearly ? 'billed yearly · save 26% vs monthly' : 'billed monthly';
@@ -345,7 +347,7 @@ export function PricingView({
           </Text>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-          <SegmentedControl label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => onYearlyChange(v === 'yearly')}>
+          <SegmentedControl ref={billingPeriodRef} label="Billing period" value={yearly ? 'yearly' : 'monthly'} onChange={(v) => onYearlyChange(v === 'yearly')}>
             <SegmentedControlItem label="Monthly" value="monthly" />
             <SegmentedControlItem label="Yearly · save 26%" value="yearly" />
           </SegmentedControl>

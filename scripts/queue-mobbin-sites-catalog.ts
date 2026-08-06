@@ -8,14 +8,13 @@ import {
   query,
   setJobStatus,
 } from "../src/db.ts";
+import { canonicalMobbinSitesUrl } from "../src/sites.ts";
 import { canonicalSitesCatalogUrls } from "../src/sitesCatalog.ts";
 import { closeSitesQueue, publishSitesJob } from "../src/sitesQueue.ts";
-import { createSitesStore } from "../src/sitesStore.ts";
 
 const CATALOG_URL = "https://mobbin.com/discover/sites/latest";
 const MAX_SCROLL_ITERATIONS = 800;
 const BOTTOM_STABILITY_ROUNDS = 5;
-const sitesStore = createSitesStore();
 const profileDir = await mkdtemp(join(tmpdir(), "astryx-mobbin-sites-"));
 
 try {
@@ -74,12 +73,28 @@ try {
     const active = new Set(
       activeRows.rows.map(({ url }) => url).filter((url): url is string => Boolean(url)),
     );
+    // One pass over the ready versions instead of a lookup per URL. Both sides
+    // are canonicalised, so a listing URL that differs only in shape still hits.
+    const readyRows = await query<{ canonical_url: string | null }>(
+      `SELECT DISTINCT canonical_url FROM site_versions
+       WHERE status = 'ready' AND canonical_url IS NOT NULL`,
+    );
+    const canonical = (value: string): string => {
+      try {
+        return canonicalMobbinSitesUrl(value).canonicalUrl;
+      } catch {
+        return value;
+      }
+    };
+    const ready = new Set(
+      readyRows.rows.flatMap(({ canonical_url }) => canonical_url ? [canonical(canonical_url)] : []),
+    );
     let queued = 0;
     let alreadyReady = 0;
     let alreadyQueued = 0;
 
     for (const url of urls) {
-      if (await sitesStore.readyVersionByCanonicalUrl(url)) {
+      if (ready.has(canonical(url))) {
         alreadyReady++;
         continue;
       }

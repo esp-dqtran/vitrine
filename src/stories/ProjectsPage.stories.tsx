@@ -5,7 +5,7 @@ import type { ResearchProjectSummary } from "../researchProject.ts";
 import {
   ResearchProjectsView,
   type ProjectActions,
-} from "../vitrine/components/ResearchProjectsPage.tsx";
+} from "../vitrine/components/ProjectsPage.tsx";
 import "@fontsource/figtree/400.css";
 import "@fontsource/figtree/500.css";
 import "@fontsource/figtree/600.css";

@@ -45,32 +45,45 @@ test('renders the Lumin-style full Settings workspace around real Vitrines billi
     </ThemeModeProvider>,
   );
 
-  assert.match(html, /aria-label="Workspace navigation"/);
-  assert.doesNotMatch(html, /aria-label="Vitrine libraries"/);
-  assert.match(html, /aria-label="Settings sections"/);
-  assert.match(html, /Profile/);
-  assert.match(html, /Teams/);
-  assert.match(html, /Billing/);
-  assert.match(html, /Security/);
-  assert.match(html, /Appearance/);
+  assert.doesNotMatch(html, /Vitrines libraries/);
+  // Settings sections live in the workspace rail; there is no second sub-menu.
+  assert.doesNotMatch(html, /aria-label="Settings sections"/);
+  // "Back to App" and the section rows live in the published rail, verified in
+  // the source below rather than in this content-only render.
+  const source = readFileSync(
+    new URL('./components/SettingsWorkspacePage.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(source, /label: 'Back to App'/);
+  // The section names are rail rows (published chrome); the content panel shows
+  // the active section, which defaults to billing.
+  assert.match(source, /SETTINGS_SECTIONS\.map/);
   assert.match(html, /Subscription/);
   assert.match(html, /Free/);
   assert.match(html, /1 of 3 apps unlocked/);
   assert.match(html, /Upgrade/);
   assert.doesNotMatch(html, /Developer settings/);
-  assert.match(html, /aria-haspopup="dialog"/);
-  assert.match(html, /aria-controls="settings-profile-menu"/);
+  // Settings uses the same shell as Projects: rail + content panel, no header
+  // bar, so the header profile popover is gone.
+  assert.doesNotMatch(html, /aria-haspopup="dialog"/);
+  assert.doesNotMatch(html, /settings-profile-menu/);
+  // Settings publishes its chrome to the hoisted shell, so the static render is
+  // the settings content only.
+  assert.doesNotMatch(html, /projects-workspace__desktop-rail/);
+  assert.match(html, /settings-workspace__content/);
 });
 
 test('defines the measured desktop Settings shell and collapsed mobile menu', () => {
   const css = readFileSync(new URL('./settingsWorkspace.css', import.meta.url), 'utf8');
   assert.match(css, /\.settings-workspace \.projects-workspace__desktop-settings\.is-active svg\s*\{[^}]*background:\s*transparent;/s);
-  assert.match(css, /\.settings-workspace__body\s*\{[^}]*grid-template-columns:\s*224px minmax\(0, 1fr\);/s);
-  assert.match(css, /\.settings-workspace__body\s*\{[^}]*border-top:\s*1px solid var\(--color-border\);[^}]*border-left:\s*1px solid var\(--color-border\);/s);
+  assert.match(css, /\.settings-workspace__body\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
+  // The shared content panel owns the border and inset now, not this body.
+  assert.match(
+    css,
+    /\.settings-workspace__body\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*gap:\s*0;\s*\}/s,
+  );
   assert.match(css, /\.settings-workspace__content\s*\{[^}]*border-radius:\s*16px 16px 0 0;/s);
   assert.doesNotMatch(css, /\.settings-workspace__header\s*\{[^}]*border-bottom:/s);
-  assert.match(css, /\.settings-workspace__section-nav nav button\s*\{[^}]*height:\s*40px;[^}]*border-radius:\s*8px;/s);
-  assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*?\.settings-workspace__section-nav\s*\{[^}]*width:\s*min\(280px, calc\(100vw - 32px\)\);[^}]*transform:\s*translateX\(-100%\);/s);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
 });
 

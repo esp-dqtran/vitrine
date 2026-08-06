@@ -55,6 +55,7 @@ function fakeStore(overrides: Partial<SitesStore> = {}): SitesStore {
       pageCount: 16,
       sectionCount: 46,
       previewUrl: detail.previewUrl,
+      isUpdated: false,
       previewMediaKind: detail.previewMediaKind,
       previews: [
         { id: 10, title: "Home", position: 0, url: "/api/sites/1/versions/2/pages/10/media" },

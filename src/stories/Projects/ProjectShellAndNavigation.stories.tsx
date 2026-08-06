@@ -6,8 +6,6 @@ import {
   BookmarkHollowIcon,
   CogIcon,
   FolderIcon,
-  GlobeIcon,
-  GridIcon,
   MenuIcon,
   PlusIcon,
   QuestionIcon,
@@ -149,11 +147,7 @@ function RailSpecimen() {
           expanded: false,
           onSelect: () => undefined,
         }}
-        quickAction={{
-          label: "Create Team",
-          icon: <PlusIcon aria-hidden="true" />,
-        }}
-        primaryLabel="Personal navigation"
+        primaryLabel="Workspace"
         primaryActions={[
           {
             label: "Projects",
@@ -164,11 +158,6 @@ function RailSpecimen() {
             label: "Collections",
             icon: <BookmarkHollowIcon aria-hidden="true" />,
           },
-        ]}
-        secondaryLabel="Vitrines libraries"
-        secondaryActions={[
-          { label: "Apps", icon: <GridIcon aria-hidden="true" /> },
-          { label: "Sites", icon: <GlobeIcon aria-hidden="true" /> },
         ]}
         settings={{
           label: "Account settings",

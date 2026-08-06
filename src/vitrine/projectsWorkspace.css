@@ -8,10 +8,17 @@
   --color-border: var(--vitrine-color-border);
   --color-border-emphasized: var(--vitrine-color-border-emphasized);
   --color-border-focus: var(--vitrine-color-border-emphasized);
+  /* One source of truth for the rail: the rail itself and this page offset. */
+  --projects-rail-width: 200px;
+  /* Inset of the content panel inside the page (Linear-style floating surface). */
+  --projects-panel-inset: 8px;
   width: 100%;
   min-height: 100vh;
   margin: 0;
-  padding: 0 16px 72px 96px;
+  /* The page owns the panel inset; a margin on the panel itself collapses
+     through this element and offsets the whole page. */
+  padding: var(--projects-panel-inset) var(--projects-panel-inset)
+    var(--projects-panel-inset) var(--projects-rail-width);
   background: var(--color-background-body);
   color: var(--color-text-primary);
   color-scheme: inherit;
@@ -19,10 +26,19 @@
 
 .projects-workspace__shell {
   min-width: 0;
+  min-height: calc(100vh - var(--projects-panel-inset) * 2);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+  box-shadow: var(--shadow-low);
 }
 
 .projects-workspace__main {
   min-width: 0;
+  /* Content is flush inside the panel now that the header bar is gone, so the
+     panel itself owns the inset (Linear insets its first row ~16px/20px). */
+  padding: 16px 20px 72px;
 }
 
 .project-discovery-card .discovery-card__logo svg {
@@ -36,19 +52,16 @@
   bottom: 0;
   left: 0;
   display: flex;
-  width: 80px;
+  width: var(--projects-rail-width);
   position: fixed;
   flex-direction: column;
   align-items: center;
   gap: 0;
-  padding: 12px 8px;
-  border-right: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-background-surface);
+  padding: 12px;
+  background: transparent;
 }
 
 .projects-workspace__desktop-workspace,
-.projects-workspace__desktop-quick-action,
 .projects-workspace__desktop-nav button,
 .projects-workspace__desktop-nav a,
 .projects-workspace__desktop-settings {
@@ -61,12 +74,73 @@
   cursor: pointer;
 }
 
+.projects-workspace__rail-brand {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  /* Keep the Vitrines mark clearly separated from the workspace dropdown. */
+  padding: 4px 0 0;
+  margin-bottom: 24px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.projects-workspace__rail-brand img {
+  width: 28px;
+  height: auto;
+  border-radius: var(--radius-element);
+}
+
+.projects-workspace__rail-brand strong {
+  font-size: 18px;
+  line-height: 24px;
+}
+
 .projects-workspace__desktop-workspace {
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
+  width: 100%;
+  min-height: 36px;
+  grid-template-columns: 24px minmax(0, 1fr) 10px;
+  align-items: center;
+  justify-items: stretch;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+}
+
+/* Points down at rest, up while the workspace menu is open. */
+.projects-workspace__desktop-workspace-caret {
+  color: var(--color-text-secondary);
+  transition: transform 0.15s;
+}
+
+.projects-workspace__desktop-workspace[aria-expanded="true"] .projects-workspace__desktop-workspace-caret {
+  transform: rotate(180deg);
+}
+
+.projects-workspace__desktop-workspace-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-workspace__desktop-workspace:hover {
+  border-color: var(--color-border-emphasized);
+}
+
+/* Identity-only variant: nothing to open, so it must not invite a click. */
+.projects-workspace__desktop-workspace--static {
+  grid-template-columns: 24px minmax(0, 1fr);
+  cursor: default;
+}
+
+.projects-workspace__desktop-workspace--static:hover {
+  border-color: var(--color-border);
 }
 
 .projects-workspace__desktop-workspace:hover,
@@ -76,60 +150,63 @@
 }
 
 .projects-workspace__desktop-workspace .projects-team-rail__avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-}
-
-.projects-workspace__desktop-quick-action {
-  width: 40px;
-  height: 40px;
-  margin-top: 7px;
-  padding: 8px;
-  border-radius: 8px;
-}
-
-.projects-workspace__desktop-quick-action:hover,
-.projects-workspace__desktop-quick-action:focus-visible {
-  background: var(--color-background-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-inner);
+  font-size: 11px;
 }
 
 .projects-workspace__desktop-nav {
   display: grid;
   width: 100%;
-  gap: 16px;
+  gap: 1px;
 }
 
+/* Carries the gap the group caption used to sit in; the nav follows the
+   workspace switcher directly now. */
 .projects-workspace__desktop-nav--primary {
-  margin-top: 23px;
+  margin-top: 16px;
 }
 
 .projects-workspace__desktop-nav button,
 .projects-workspace__desktop-nav a,
 .projects-workspace__desktop-settings {
-  width: 64px;
-  min-height: 58px;
-  grid-template-rows: 40px 18px;
-  gap: 0;
-  padding: 0;
-  font-size: 12px;
+  width: 100%;
+  min-height: 28px;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: var(--radius-element);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
   line-height: 18px;
+  text-align: left;
   text-decoration: none;
 }
 
-.projects-workspace__desktop-nav button:hover svg,
-.projects-workspace__desktop-nav button:focus-visible svg,
-.projects-workspace__desktop-nav a:hover svg,
-.projects-workspace__desktop-nav a:focus-visible svg,
-.projects-workspace__desktop-settings:hover svg,
-.projects-workspace__desktop-settings:focus-visible svg,
-.projects-workspace__desktop-nav button.is-active svg,
-.projects-workspace__desktop-settings.is-active svg {
+/* The current destination is the only full-contrast row in the rail. */
+.projects-workspace__desktop-nav button.is-active,
+.projects-workspace__desktop-nav a.is-active,
+.projects-workspace__desktop-settings.is-active {
+  color: var(--color-text-primary);
+}
+
+.projects-workspace__desktop-nav button:hover,
+.projects-workspace__desktop-nav button:focus-visible,
+.projects-workspace__desktop-nav a:hover,
+.projects-workspace__desktop-nav a:focus-visible,
+.projects-workspace__desktop-settings:hover,
+.projects-workspace__desktop-settings:focus-visible,
+.projects-workspace__desktop-nav button.is-active,
+.projects-workspace__desktop-nav a.is-active,
+.projects-workspace__desktop-settings.is-active {
   background: var(--color-background-muted);
 }
 
 .projects-workspace__desktop-workspace:focus-visible,
-.projects-workspace__desktop-quick-action:focus-visible,
 .projects-workspace__desktop-nav button:focus-visible,
 .projects-workspace__desktop-nav a:focus-visible,
 .projects-workspace__desktop-settings:focus-visible {
@@ -139,13 +216,14 @@
 
 .projects-workspace__desktop-nav svg,
 .projects-workspace__desktop-settings svg {
-  width: 40px;
-  height: 40px;
+  width: 14px;
+  height: 14px;
   box-sizing: border-box;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 0;
 }
 
+/* The footer action is a nav row like any other: same 14px icon column, same
+   left edge. Centring it broke the rail's single vertical alignment. */
 .projects-workspace__desktop-settings {
   margin-top: 0;
 }
@@ -174,7 +252,8 @@
   margin-inline: -16px;
   margin-bottom: 24px;
   padding: 12px 16px;
-  background: var(--color-background-surface);
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
 }
 
 .projects-workspace__drawer-trigger {
@@ -185,7 +264,7 @@
   place-items: center;
   padding: 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-element);
   background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;
@@ -210,7 +289,9 @@
 }
 
 .projects-workspace__brand {
-  display: inline-flex;
+  /* The rail carries the Vitrines mark on desktop; the header shows it only
+     below 980px, where the rail is swapped for the drawer. */
+  display: none;
   width: 208px;
   flex: 0 0 208px;
   align-items: center;
@@ -222,7 +303,7 @@
 .projects-workspace__brand img {
   width: 28px;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-element);
 }
 
 .projects-workspace__brand strong {
@@ -238,6 +319,9 @@
 .projects-workspace__header-actions {
   display: flex;
   min-width: 0;
+  /* Icon buttons are fixed width, so this row must not shrink below them — the
+     header search absorbs the deficit instead (it has its own 220px floor). */
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
   margin-left: auto;
@@ -251,7 +335,7 @@
   place-items: center;
   padding: 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-element);
   background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;
@@ -330,7 +414,7 @@
   place-items: center;
   border: 1px solid
     color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: color-mix(
     in srgb,
     var(--color-accent) 8%,
@@ -348,7 +432,8 @@
   gap: 24px;
 }
 
-.projects-workspace__page-header > div {
+/* Title + description block only — the actions group beside it lays out itself. */
+.projects-workspace__page-header > div:first-child {
   display: grid;
   gap: 5px;
 }
@@ -394,18 +479,20 @@
 .projects-team-drawer {
   position: absolute;
   z-index: 1;
-  top: calc(var(--projects-header-height) + 1px);
-  left: 20px;
+  /* Opens just under the rail switcher and matches its column, not a 320px
+     sheet: rail padding 12 + brand 28 + brand margin 24 + switcher 36 + 4 gap. */
+  top: 104px;
+  left: 12px;
   display: grid;
   align-content: start;
   grid-auto-rows: max-content;
-  width: 320px;
-  max-height: calc(100dvh - var(--projects-header-height) - 16px);
+  width: calc(var(--projects-rail-width, 200px) - 24px);
+  max-height: calc(100dvh - 120px);
   gap: 0;
-  padding: 8px;
+  padding: 6px;
   overflow-y: auto;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-container);
   background: var(--color-background-surface);
   color: var(--color-text-primary);
   box-shadow:
@@ -433,15 +520,16 @@
   width: 100%;
   min-width: 0;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
-  padding: 8px 10px;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-element);
   background: transparent;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   transition:
@@ -476,20 +564,22 @@
 .projects-team-drawer__actions {
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(0, 1fr) 40px;
-  gap: 8px;
-  margin-top: 6px;
+  /* One column: at rail width a label + icon row clips "Create Team". */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .projects-team-drawer__actions button {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 28px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-element);
   background: var(--color-background-surface);
   color: var(--color-text-primary);
   font: inherit;
@@ -569,15 +659,33 @@
 .projects-team-switcher__current,
 .projects-team-switcher__spaces {
   display: grid;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 0;
+  gap: 1px;
+  padding: 0;
+  border-radius: var(--radius-none);
   background: transparent;
 }
 
 .projects-team-switcher__current {
-  justify-items: center;
-  text-align: center;
+  justify-items: start;
+  padding: 2px 6px 6px;
+  text-align: left;
+}
+
+.projects-team-switcher__current .projects-team-rail__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-inner);
+  font-size: 11px;
+}
+
+.projects-team-switcher__current strong {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.projects-team-switcher__current small {
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .projects-team-switcher__current strong {
@@ -613,12 +721,14 @@
 }
 
 .projects-workspace__toolbar {
+  /* Sits inside the page-header actions row beside New project, not on a row
+     of its own. */
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-start;
   gap: var(--spacing-2);
   align-items: center;
-  margin: 20px 0 32px;
+  margin: 0;
   white-space: nowrap;
 }
 
@@ -699,7 +809,7 @@
   height: 24px;
   padding: 0 7px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-background-muted);
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -741,7 +851,7 @@
   height: 72%;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 9px;
+  border-radius: var(--radius-element);
   background: rgb(255 255 255 / 7%);
   box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
 }
@@ -781,7 +891,7 @@
   position: absolute;
   display: block;
   border: 1px solid rgb(255 255 255 / 8%);
-  border-radius: 5px;
+  border-radius: var(--radius-inner);
   background: rgb(255 255 255 / 8%);
 }
 
@@ -807,7 +917,7 @@
   align-items: center;
   padding: 2px;
   border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 10px;
+  border-radius: var(--radius-element);
   background: color-mix(in srgb, var(--color-background-body) 76%, transparent);
   color: var(--color-text-primary);
   box-shadow: 0 6px 20px rgb(0 0 0 / 16%);
@@ -885,7 +995,7 @@
   width: 100%;
   padding: 9px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-element);
   background: transparent;
   color: var(--color-text-primary);
   font: inherit;
@@ -909,13 +1019,16 @@
 }
 
 .projects-workspace__empty {
+  /* Sized to its content instead of a 320px well, so the copy is not marooned
+     in a tall empty box. */
   display: grid;
-  min-height: 320px;
   place-items: center;
   align-content: center;
   gap: 12px;
+  /* EmptyState brings its own 32px padding; this only keeps the dashed edge off it. */
+  padding: 8px;
   border: 1px dashed var(--color-border);
-  border-radius: 18px;
+  border-radius: var(--radius-container);
   background: color-mix(
     in srgb,
     var(--color-background-surface) 70%,
@@ -1321,7 +1434,7 @@
     padding: 16px 8px;
     border-block: 0;
     border-left: 0;
-    border-radius: 0 16px 16px 0;
+    border-radius: 0 var(--radius-container) var(--radius-container) 0;
     box-shadow: none;
     opacity: 1;
     transform: translateX(-100%);
@@ -1389,7 +1502,22 @@
 
 @media (max-width: 980px) {
   .projects-workspace {
-    padding: 0 28px 72px;
+    padding: 0;
+  }
+
+  .projects-workspace__shell {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .projects-workspace__main {
+    padding: 16px 28px 72px;
+  }
+
+  .projects-workspace__brand {
+    display: inline-flex;
   }
 
   .projects-workspace__desktop-rail {
@@ -1482,4 +1610,73 @@
     transition-duration: 0.01ms;
     animation-duration: 0.01ms;
   }
+}
+
+/* Admin shell: the rail footer carries the signed-in account and its sign-out. */
+.admin-workspace__account {
+  /* Left-aligned on the same 8px rail edge as the nav rows above it. */
+  display: grid;
+  width: 100%;
+  justify-items: start;
+  gap: 2px;
+  padding: 8px 8px 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.admin-workspace__account > span {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* Workspace switcher dropdown: one row per workspace, create row last. */
+.projects-team-switcher__spaces button > svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.projects-team-switcher__spaces button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-team-switcher__spaces button:hover,
+.projects-team-switcher__spaces button:focus-visible {
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+}
+
+.projects-team-switcher__spaces button.is-active {
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+}
+
+.projects-team-switcher__create {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+/* Page header: title on the left, sort + primary action on the right. */
+.projects-workspace__page-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.projects-workspace__page-header {
+  margin-bottom: 24px;
 }

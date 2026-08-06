@@ -20,6 +20,9 @@ export type SiteVersionRoute =
       sectionId?: number;
     };
 
+/* Admin sections are addressable so a dashboard view can be linked and reloaded. */
+export type AdminRouteSection = "insights";
+
 export type Route =
   | { name: "landing" }
   | { name: "not-found"; pathname: string }
@@ -54,7 +57,7 @@ export type Route =
   | { name: "project-document"; projectId: string }
   | { name: "project-playground"; projectId: string }
   | { name: "feature-document-share"; token: string }
-  | { name: "admin" };
+  | { name: "admin"; section?: AdminRouteSection };
 
 interface LocationTarget {
   location: { pathname: string; search: string };
@@ -228,6 +231,7 @@ export function parseRoutePath(pathname: string): Route {
       : { name: "not-found", pathname: path };
   }
   if (path === "/admin") return { name: "admin" };
+  if (path === "/admin/insights") return { name: "admin", section: "insights" };
   const appMatch = path.match(/^\/apps\/([^/]+)(?:\/([^/]+))?$/);
   if (appMatch) {
     const appId = decodeSegment(appMatch[1]);
@@ -368,7 +372,7 @@ export function routeToPath(route: Route): string {
     case "feature-document-share":
       return `/feature-document-shares/${encodeURIComponent(route.token)}`;
     case "admin":
-      return "/admin";
+      return route.section === "insights" ? "/admin/insights" : "/admin";
     case "app": {
       const path = `/apps/${encodeURIComponent(route.appId)}${route.section ? `/${encodeURIComponent(route.section)}` : ""}`;
       const params = new URLSearchParams();

@@ -149,9 +149,6 @@ export interface SiteVersionDetail {
 }
 
 export interface SitesStore extends Partial<GenericSitesStoreMethods> {
-  readyVersionsByHost(
-    hosts: readonly string[],
-  ): Promise<Array<{ host: string; siteId: number; versionId: number }>>;
   listReadySites(): Promise<SiteSummary[]>;
   listReadySitesPage(input: ReadySitesPageInput): Promise<ReadySitesPage>;
   readyVersionDetail(

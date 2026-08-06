@@ -15,10 +15,15 @@ test('uses the shared Astryx dropdown for authenticated account actions', async 
 
   assert.match(source, /from ['"]\.\/components\/AstryxDropdown\.tsx['"]/);
   assert.match(source, /<AstryxDropdown[\s\S]*ariaLabel=\{`Account menu: \$\{user\.email\}`\}/);
-  assert.match(source, /<AstryxDropdownItem[\s\S]*label="Settings"/);
-  assert.match(source, /isAdmin \? \([\s\S]*label="Admin dashboard"[\s\S]*navigate\(\{ name: ['"]admin['"] \}\)/);
+  // Account menu order: Admin, Projects, Settings, then a destructive Log out.
+  assert.match(source, /isAdmin \? \([\s\S]*label="Admin"[\s\S]*navigate\(\{ name: ['"]admin['"] \}\)/);
+  const menu = source.slice(source.indexOf('<AstryxDropdown'), source.indexOf('</AstryxDropdown>'));
+  assert.deepEqual(
+    [...menu.matchAll(/label="([^"]+)"/g)].map(([, label]) => label),
+    ['Admin', 'Projects', 'Settings', 'Log out'],
+  );
+  assert.match(menu, /label="Log out"\s*\n\s*tone="destructive"/);
   assert.match(source, /<AstryxDropdownDivider/);
-  assert.match(source, /<AstryxDropdownItem[\s\S]*label="Log out"/);
   assert.doesNotMatch(source, /<DropdownMenu/);
 });
 
@@ -57,7 +62,7 @@ test('keeps primary catalogs and detail surfaces ready while lazy-loading second
   assert.match(source, /import \{ SiteVersionPage \} from ['"]\.\/components\/SiteVersionPage['"]/);
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/ScreenDetail['"]\)/);
   assert.doesNotMatch(source, /lazy\(\(\) => import\(['"]\.\/components\/SiteVersionPage['"]\)/);
-  assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ResearchProjectsPage['"]\)/);
+  assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectsPage['"]\)/);
   assert.match(source, /lazy\(\(\) =>\s*import\(['"]\.\/components\/ProjectPlaygroundPage['"]\)/);
   assert.doesNotMatch(source, /components\/ResearchProjectPage/);
   assert.doesNotMatch(source, /ProjectDocument|VITE_PROJECT_DOCUMENTS_ENABLED/);
@@ -305,7 +310,7 @@ test('owns one persistent discovery header above galleries but not Project works
     readFile(new URL('./components/AppsDiscoveryPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/SitesPage.tsx', import.meta.url), 'utf8'),
     readFile(new URL('./components/FlowsPage.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('./components/ResearchProjectsPage.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./components/ProjectsPage.tsx', import.meta.url), 'utf8'),
   ]);
 
   assert.match(source, /data-persistent-discovery-frame="true"/);

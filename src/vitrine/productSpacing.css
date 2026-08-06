@@ -249,9 +249,13 @@
   }
 }
 
-/* Project, Collection, Settings, and document shells share one page rhythm. */
-.projects-workspace {
-  padding-inline-end: var(--spacing-4) !important;
+/*
+ * Project, Collection, Settings, and document shells share one page rhythm.
+ * The rhythm lives inside the content panel — the page itself only reserves the
+ * rail gutter, so padding here would push the panel off the viewport.
+ */
+.projects-workspace__main {
+  padding-inline-end: var(--spacing-5) !important;
   padding-block-end: var(--spacing-12) !important;
 }
 

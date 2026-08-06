@@ -40,7 +40,6 @@ import {
 } from "../researchProjectsApi.ts";
 import { navigate } from "../router.ts";
 import { DiscoveryCard } from "./DiscoveryCard.tsx";
-import { DiscoverySortDropdown } from "./AppsFilterBar.tsx";
 import {
   addTeamMember,
   createTeam,
@@ -51,7 +50,8 @@ import {
   type TeamSummary,
 } from "../organizationsApi.ts";
 import { ProjectAccessDialog } from "./ProjectAccessDialog.tsx";
-import { WorkspaceHeader, WorkspaceRail } from "./WorkspaceChrome.tsx";
+import { useWorkspaceChrome } from "./WorkspaceChromeContext.tsx";
+import { workspaceNav } from "./workspaceNav.tsx";
 
 export type ProjectSort = "updated" | "name";
 export type TeamSection = "projects" | "people" | "settings";
@@ -509,10 +509,6 @@ export function ResearchProjectsView({
   const [teamOptions, setTeamOptions] = useState(teams);
   const [selectedTeamId, setSelectedTeamId] = useState<number>();
   const [section, setSection] = useState<TeamSection>("projects");
-  const [sort, setSort] = useState<ProjectSort>("updated");
-  const [sortOpen, setSortOpen] = useState(false);
-  const [projectQuery, setProjectQuery] = useState("");
-  const [projectSearchOpen, setProjectSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newProjectScope, setNewProjectScope] = useState("personal");
@@ -541,7 +537,6 @@ export function ResearchProjectsView({
   const desktopWorkspaceTriggerRef = useRef<HTMLButtonElement>(null);
   const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const workspaceMenuRef = useRef<HTMLElement>(null);
-  const projectSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTeamOptions(teams);
@@ -571,24 +566,18 @@ export function ResearchProjectsView({
   const switchableTeams = teamOptions.filter(({ id }) => id !== selectedTeamId);
   const canManageTeam =
     selectedTeam?.role === "owner" || selectedTeam?.role === "admin";
-  const hasProjectQuery = projectQuery.trim().length > 0;
-  const visibleProjects = useMemo(() => {
-    const query = projectQuery.trim().toLocaleLowerCase();
-    return sortProjects(
-      projects.filter((project) => {
-        const belongsToScope = selectedTeamId
-          ? project.organization?.id === selectedTeamId
-          : !project.organization;
-        return (
-          belongsToScope &&
-          (!query ||
-            project.title.toLocaleLowerCase().includes(query) ||
-            project.question.toLocaleLowerCase().includes(query))
-        );
-      }),
-      sort,
-    );
-  }, [projectQuery, projects, selectedTeamId, sort]);
+  const visibleProjects = useMemo(
+    () =>
+      sortProjects(
+        projects.filter((project) =>
+          selectedTeamId
+            ? project.organization?.id === selectedTeamId
+            : !project.organization,
+        ),
+        "updated",
+      ),
+    [projects, selectedTeamId],
+  );
   const pinnedProjects = visibleProjects.filter(({ pinned }) => pinned);
   const otherProjects = visibleProjects.filter(({ pinned }) => !pinned);
   const visibleMembers = members.filter(({ email }) =>
@@ -660,14 +649,6 @@ export function ResearchProjectsView({
   const openCreate = () => {
     setNewProjectScope(selectedTeamId ? String(selectedTeamId) : "personal");
     setCreateOpen(true);
-  };
-  const openProjectSearch = () => {
-    setProjectSearchOpen(true);
-    requestAnimationFrame(() => projectSearchInputRef.current?.focus());
-  };
-  const closeProjectSearch = () => {
-    setProjectSearchOpen(false);
-    setProjectQuery("");
   };
   const closeCreate = () => {
     if (creating) return;
@@ -805,62 +786,26 @@ export function ResearchProjectsView({
           ? `Projects shared with everyone in ${selectedTeam.name}.`
           : "Private projects that only you can access until you share them.";
 
-  return (
-    <main className="vitrine-page projects-workspace">
-      <WorkspaceRail
-        workspace={{
-          label: "Switch Team",
-          initial: (selectedTeam?.name ?? "Personal").charAt(0).toUpperCase(),
-          expanded: workspaceMenuOpen,
-          buttonRef: desktopWorkspaceTriggerRef,
-          onSelect: () => setWorkspaceMenuOpen((open) => !open),
-        }}
-        quickAction={{
-          label: workspacePrimaryActionLabel,
-          icon: selectedTeam ? (
-            <UsersIcon aria-hidden="true" />
-          ) : (
-            <PlusIcon aria-hidden="true" />
-          ),
-          onSelect: runWorkspacePrimaryAction,
-        }}
-        primaryLabel={`${selectedTeam?.name ?? "Personal"} navigation`}
-        primaryActions={[
-          {
-            label: "Projects",
-            icon: <FolderIcon aria-hidden="true" />,
-            active: section === "projects",
-            onSelect: () => selectSection("projects"),
-          },
-          {
-            label: "Collections",
-            icon: <BookmarkHollowIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "collections" }),
-          },
-        ]}
-        secondaryLabel="Vitrines libraries"
-        secondaryActions={[
-          {
-            label: "Apps",
-            href: "/apps",
-            icon: <GridIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "apps" }),
-          },
-          {
-            label: "Sites",
-            href: "/sites",
-            icon: <GlobeIcon aria-hidden="true" />,
-            onSelect: () => navigate({ name: "sites" }),
-          },
-        ]}
-        settings={{
-          label: selectedTeam ? "Team settings" : "Account settings",
-          icon: <CogIcon aria-hidden="true" />,
-          active: section === "settings",
-          onSelect: openWorkspaceSettings,
-        }}
-      />
-
+  useWorkspaceChrome(
+    () => ({
+      workspace: {
+        label: "Switch Team",
+        name: selectedTeam?.name ?? "Personal",
+        initial: (selectedTeam?.name ?? "Personal").charAt(0).toUpperCase(),
+        expanded: workspaceMenuOpen,
+        buttonRef: desktopWorkspaceTriggerRef,
+        onSelect: () => setWorkspaceMenuOpen((open) => !open),
+      },
+      nav: workspaceNav({
+        active:
+          section === "settings" ? "settings" : section === "projects" ? "projects" : undefined,
+        label: "Workspace",
+        onProjects: () => selectSection("projects"),
+        settingsLabel: selectedTeam ? "Team settings" : "Settings",
+        onSettings: openWorkspaceSettings,
+      }),
+      onBrandSelect: () => selectSection("projects"),
+      drawer: (
       <div
         className={`projects-workspace__drawer-layer${workspaceMenuOpen ? " is-open" : ""}`}
         aria-hidden={!workspaceMenuOpen}
@@ -878,76 +823,39 @@ export function ResearchProjectsView({
           role="dialog"
           aria-label="Team navigation"
         >
-          <section className="projects-team-switcher__current">
-            <span className="projects-team-rail__avatar" aria-hidden="true">
-              {(selectedTeam?.name ?? "Personal").charAt(0).toUpperCase()}
-            </span>
-            <strong>{selectedTeam?.name ?? "Personal"}</strong>
-            <small>
-              {selectedTeam
-                ? `${selectedTeam.memberCount} ${selectedTeam.memberCount === 1 ? "member" : "members"}`
-                : "Personal workspace"}
-            </small>
-            <div className="projects-team-drawer__actions">
-              <Button
-                label={workspacePrimaryActionLabel}
-                variant="ghost"
-                icon={
-                  selectedTeam ? (
-                    <UsersIcon aria-hidden="true" />
-                  ) : (
-                    <PlusIcon aria-hidden="true" />
-                  )
-                }
-                onClick={runWorkspacePrimaryAction}
-              />
-              <IconButton
-                label={selectedTeam ? "Team settings" : "Account settings"}
-                variant="ghost"
-                icon={<CogIcon aria-hidden="true" />}
-                onClick={openWorkspaceSettings}
-              />
-            </div>
-          </section>
-
           <section
             className="projects-team-switcher__spaces"
             aria-label="Switch workspace"
           >
-            <span className="projects-team-switcher__label">
-              Personal workspace
-            </span>
             <button
               type="button"
               className={!selectedTeamId ? "is-active" : ""}
+              aria-current={!selectedTeamId ? "true" : undefined}
               onClick={selectPersonal}
             >
               <UserIcon aria-hidden="true" />
-              <span>
-                <strong>Personal</strong>
-                <small>Your private projects</small>
-              </span>
+              <span>Personal</span>
             </button>
-            {switchableTeams.length > 0 ? (
-              <span className="projects-team-switcher__label">Teams</span>
-            ) : null}
             {switchableTeams.map((team) => (
               <button
                 key={team.id}
                 type="button"
                 className={selectedTeamId === team.id ? "is-active" : ""}
+                aria-current={selectedTeamId === team.id ? "true" : undefined}
                 onClick={() => selectTeam(team.id)}
               >
                 <UsersIcon aria-hidden="true" />
-                <span>
-                  <strong>{team.name}</strong>
-                  <small>
-                    {team.memberCount}{" "}
-                    {team.memberCount === 1 ? "member" : "members"}
-                  </small>
-                </span>
+                <span>{team.name}</span>
               </button>
             ))}
+            <button
+              type="button"
+              className="projects-team-switcher__create"
+              onClick={runWorkspacePrimaryAction}
+            >
+              <PlusIcon aria-hidden="true" />
+              <span>{workspacePrimaryActionLabel}</span>
+            </button>
           </section>
 
           <div className="projects-team-drawer__divider" />
@@ -988,100 +896,38 @@ export function ResearchProjectsView({
             ) : null}
           </nav>
         </aside>
-      </div>
+        </div>
+      ),
+    }),
+    [selectedTeam?.name, selectedTeamId, section, workspaceMenuOpen, switchableTeams.length],
+  );
 
-      <div className="projects-workspace__shell">
-        <section className="projects-workspace__main">
-          <WorkspaceHeader
-            variant="projects"
-            searching={projectSearchOpen}
-            menu={{
-              label: "Open Team menu — Switch Team",
-              expanded: workspaceMenuOpen,
-              icon: <MenuIcon aria-hidden="true" />,
-              buttonRef: workspaceMenuTriggerRef,
-              onSelect: () => setWorkspaceMenuOpen((open) => !open),
-            }}
-            onBrandSelect={() => navigate({ name: "projects" })}
-            actions={
-              <>
-                <IconButton
-                  className="projects-workspace__search-toggle"
-                  label={
-                    projectSearchOpen
-                      ? "Close project search"
-                      : "Search projects"
-                  }
-                  variant="ghost"
-                  icon={<SearchIcon aria-hidden="true" />}
-                  aria-expanded={projectSearchOpen}
-                  onClick={
-                    projectSearchOpen ? closeProjectSearch : openProjectSearch
-                  }
-                />
-                {selectedTeam && canManageTeam ? (
-                  <Button
-                    className="projects-workspace__invite-action"
-                    label="Invite members"
-                    variant="ghost"
-                    icon={<UserIcon aria-hidden="true" />}
-                    onClick={() => setInviteOpen(true)}
-                  />
-                ) : null}
-                <span
-                  className="projects-workspace__header-divider"
-                  aria-hidden="true"
-                />
-                <IconButton
-                  label="Help"
-                  tooltip="Help"
-                  variant="ghost"
-                  icon={<QuestionIcon aria-hidden="true" />}
-                />
-                <IconButton
-                  label="Notifications"
-                  tooltip="Notifications"
-                  variant="ghost"
-                  icon={<BellIcon aria-hidden="true" />}
-                />
-                <IconButton
-                  label="Account settings"
-                  variant="ghost"
-                  icon={<UserIcon aria-hidden="true" />}
-                  onClick={() => navigate({ name: "settings-billing" })}
-                />
-              </>
-            }
-          >
-            <TextInput
-              ref={projectSearchInputRef}
-              className="projects-workspace__header-search"
-              label="Search projects"
-              isLabelHidden
-              value={projectQuery}
-              placeholder="Search projects"
-              startIcon={<SearchIcon aria-hidden="true" />}
-              hasClear={Boolean(projectQuery)}
-              onChange={setProjectQuery}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") closeProjectSearch();
-              }}
-              width="min(800px, 100%)"
-            />
-          </WorkspaceHeader>
+  return (
+    <>
 
           <header className="projects-workspace__page-header">
             <div>
               <Heading level={1}>{pageTitle}</Heading>
               <Text color="secondary">{pageDescription}</Text>
             </div>
-            {section === "projects" ? (
-              <Button
-                variant="primary"
-                label="New project"
-                clickAction={openCreate}
-              />
-            ) : null}
+            <div className="projects-workspace__page-header-actions">
+              {selectedTeam && canManageTeam ? (
+                <Button
+                  className="projects-workspace__invite-action"
+                  label="Invite members"
+                  variant="ghost"
+                  icon={<UserIcon aria-hidden="true" />}
+                  onClick={() => setInviteOpen(true)}
+                />
+              ) : null}
+              {section === "projects" ? (
+                <Button
+                  variant="primary"
+                  label="New project"
+                  clickAction={openCreate}
+                />
+              ) : null}
+            </div>
           </header>
 
           {error && (
@@ -1097,25 +943,6 @@ export function ResearchProjectsView({
 
           {section === "projects" && (
             <>
-              <div
-                className="projects-workspace__toolbar"
-                aria-label="Project controls"
-              >
-                <span className="projects-workspace__toolbar-label">
-                  Sort by
-                </span>
-                <DiscoverySortDropdown
-                  value={sort}
-                  open={sortOpen}
-                  onOpenChange={setSortOpen}
-                  onChange={(value) => setSort(value as ProjectSort)}
-                  options={[
-                    { value: "updated", label: "Last updated" },
-                    { value: "name", label: "Name" },
-                  ]}
-                />
-              </div>
-
               {loading ? (
                 <div className="projects-workspace__loading">
                   <Spinner size="lg" />
@@ -1124,27 +951,17 @@ export function ResearchProjectsView({
                 <div className="projects-workspace__empty">
                   <EmptyState
                     title={
-                      hasProjectQuery
-                        ? "No projects found"
-                        : selectedTeam
-                          ? `No projects in ${selectedTeam.name} yet`
-                          : "Create your first project"
+                      selectedTeam
+                        ? `No projects in ${selectedTeam.name} yet`
+                        : "Create your first project"
                     }
                     description={
-                      hasProjectQuery
-                        ? `No project matches “${projectQuery.trim()}”. Try a different search.`
-                        : selectedTeam
-                          ? "Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
-                          : "Give your application idea a home. You can shape its modules and flows when you open it."
+                      selectedTeam
+                        ? "Create a shared project so the whole Team can contribute to its flows, Canvas, and Notes."
+                        : "Give your application idea a home. You can shape its modules and flows when you open it."
                     }
                   />
-                  {hasProjectQuery ? (
-                    <Button
-                      variant="secondary"
-                      label="Clear search"
-                      clickAction={closeProjectSearch}
-                    />
-                  ) : (
+                  {(
                     <Button
                       variant="primary"
                       label="New project"
@@ -1342,8 +1159,6 @@ export function ResearchProjectsView({
               </section>
             </div>
           )}
-        </section>
-      </div>
 
       <AstryxModal
         className="projects-workspace__modal"
@@ -1495,11 +1310,11 @@ export function ResearchProjectsView({
         onCancel={() => setDeleteProject(null)}
         onConfirm={() => void confirmDelete()}
       />
-    </main>
+    </>
   );
 }
 
-export function ResearchProjectsPage() {
+export function ProjectsPage() {
   const [projects, setProjects] = useState<ResearchProjectSummary[]>([]);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);

@@ -271,3 +271,11 @@
     transition-duration: .01ms;
   }
 }
+
+/* Empty-state illustration sits above the copy with breathing room. */
+.collections-workspace__empty-illustration {
+  display: block;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 4px;
+}

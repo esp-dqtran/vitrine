@@ -172,7 +172,10 @@
 .project-shell-review__rail-frame .projects-workspace__desktop-rail {
   position: relative;
   z-index: 1;
-  width: 80px;
+  /* Production hides the rail below 980px and hands off to the drawer; the
+     specimen is narrower than that, so keep it visible for review. */
+  display: flex;
+  width: var(--projects-rail-width, 200px);
   height: 452px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-container);
