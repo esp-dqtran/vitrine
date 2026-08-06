@@ -1,6 +1,6 @@
 import type { AdvancedSearchResult, SearchFilters } from "../searchTypes.ts";
 import { apiFetch } from './apiFetch.ts';
-import type { SearchSuggestion } from "../searchStore.ts";
+import type { SearchSuggestion } from "../searchTypes.ts";
 import type { SearchPageState } from "./searchState.ts";
 
 const filterKeys: Array<keyof SearchFilters> = [

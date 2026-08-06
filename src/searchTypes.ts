@@ -1,6 +1,12 @@
 export const SEARCH_SCOPES = ["apps", "sites", "all"] as const;
 export type SearchScope = typeof SEARCH_SCOPES[number];
 
+export interface SearchSuggestion {
+  kind: "app" | "title" | "alias" | "pageType" | "productArea" | "flow" | "component" | "layout";
+  value: string;
+  resultCount: number;
+}
+
 export const SEARCH_ENTITY_TYPES = ["app", "site", "screen", "flow", "component", "pattern"] as const;
 export type SearchEntityType = typeof SEARCH_ENTITY_TYPES[number];
 export type SearchType = SearchEntityType | "all";

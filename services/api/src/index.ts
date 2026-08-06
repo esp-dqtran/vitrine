@@ -14,10 +14,6 @@ import {
   upsertSubscription,
 } from "../../../src/pricingStore.ts";
 import { createObjectStore, objectStoreConfigFromEnvironment } from "../../../src/objectStoreConfig.ts";
-import { advancedSearchConfigFromEnv } from "../../../src/searchConfig.ts";
-import { OpenAICompatibleSearchEmbeddingProvider } from "../../../src/searchEmbedding.ts";
-import { PostgresSearchStore } from "../../../src/searchStore.ts";
-import { createSearchService } from "./search.ts";
 import { publishedFlowCatalogPage } from "../../../src/flowCatalogStore.ts";
 import { createJwtAuth, jwtAuthConfigFromEnv } from "../../../src/jwtAuth.ts";
 
@@ -30,10 +26,6 @@ await startApi({
     const config = billingConfigFromEnv(process.env);
     const auth = createJwtAuth(jwtAuthConfigFromEnv(process.env));
     const referralCampaign = referralCampaignFromEnv(process.env);
-    const searchConfig = advancedSearchConfigFromEnv(process.env);
-    const searchEmbedder = searchConfig.embedding
-      ? new OpenAICompatibleSearchEmbeddingProvider(searchConfig.embedding)
-      : null;
     await seedAdmin(seed.email, seed.password);
     const stripe = new Stripe(config.stripeSecretKey);
     const billing = createBillingService({
@@ -75,16 +67,6 @@ await startApi({
       appTraversalLimit: config.appTraversalLimit,
       appUrl: config.appUrl,
       referralCampaign,
-      advancedSearchEnabled: searchConfig.enabled,
-      adaptiveSearch: createSearchService({
-        store: new PostgresSearchStore(pool),
-        embedder: searchEmbedder,
-        telemetry: {
-          record: (event) => {
-            console.log(JSON.stringify({ event: "adaptive_search", ...event }));
-          },
-        },
-      }),
     });
     app.listen(PORT, () => console.log(`[api] listening on :${PORT}`));
   },
