@@ -29,3 +29,14 @@ test("missing and unknown provider values fail closed", () => {
     APP_KNOWLEDGE_PROVIDER: "api",
   }), /unsupported/i);
 });
+
+test("model lookup stays quiet on a provider the code no longer knows", () => {
+  // The API reads this at import time purely to report the name. A stale
+  // production value must degrade to "" rather than crash the process.
+  assert.equal(appKnowledgeProviderModelFromEnvironment({
+    APP_KNOWLEDGE_PROVIDER: "antigravity-browser",
+  }), "");
+  assert.throws(() => appKnowledgeProviderConfigFromEnvironment({
+    APP_KNOWLEDGE_PROVIDER: "antigravity-browser",
+  }), /unsupported/i);
+});

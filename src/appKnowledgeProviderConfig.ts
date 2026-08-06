@@ -27,8 +27,17 @@ export function appKnowledgeProviderConfigFromEnvironment(
   };
 }
 
+// Reporting only — the API surfaces this name but never runs the provider, so
+// a stale or unrecognized value must not take the API down at import time. An
+// APP_KNOWLEDGE_PROVIDER the code no longer recognizes did exactly that in
+// production. The worker still validates strictly through the config function
+// above, which is where an unusable provider actually matters.
 export function appKnowledgeProviderModelFromEnvironment(
   env: Record<string, string | undefined> = process.env,
 ): string {
-  return appKnowledgeProviderConfigFromEnvironment(env)?.model ?? "";
+  try {
+    return appKnowledgeProviderConfigFromEnvironment(env)?.model ?? "";
+  } catch {
+    return "";
+  }
 }
