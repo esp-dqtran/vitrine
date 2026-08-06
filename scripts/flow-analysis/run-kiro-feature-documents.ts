@@ -435,10 +435,10 @@ async function main(): Promise<void> {
              ORDER BY j.created_at DESC, j.id DESC
              LIMIT 1
            ) latest_job ON true
-           WHERE (d.user_id = $1 OR d.visibility = 'catalog')
-             AND a.name = $2 AND p.name = $3 AND d.source_flow_id = $4
+           WHERE d.visibility = 'catalog'
+             AND a.name = $1 AND p.name = $2 AND d.source_flow_id = $3
            ORDER BY d.updated_at DESC, d.id DESC LIMIT 1`,
-          [userId, app, targetPlatform, item.source.flowId],
+          [app, targetPlatform, item.source.flowId],
         );
         const generationInput = {
           transportJobId,
