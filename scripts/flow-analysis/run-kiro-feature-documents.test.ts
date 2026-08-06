@@ -23,6 +23,10 @@ test("Kiro Feature Document batch runner is exposed as an executable module", as
   assert.match(source, /latest\.job_prompt_version === PROMPT_VERSION/);
   assert.match(source, /d\.visibility = 'catalog'/);
   assert.match(source, /--visibility must be private or catalog/);
-  assert.match(source, /SET user_id = NULL, visibility = 'catalog'/);
+  // feature_documents.user_id is gone from the database, so the catalog promotion
+  // sets visibility alone. Asserting its absence keeps the dropped column from
+  // creeping back into this query.
+  assert.match(source, /SET visibility = 'catalog'/);
+  assert.doesNotMatch(source, /user_id/);
   assert.match(source, /completedCatalogFlowIds/);
 });

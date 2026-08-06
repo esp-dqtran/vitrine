@@ -527,7 +527,7 @@ async function main(): Promise<void> {
         if (targetVisibility === "catalog") {
           await query(
             `UPDATE feature_documents
-             SET user_id = NULL, visibility = 'catalog', updated_at = now()
+             SET visibility = 'catalog', updated_at = now()
              WHERE id = $1 AND current_revision_id = $2`,
             [documentId, document.currentRevision.id],
           );
