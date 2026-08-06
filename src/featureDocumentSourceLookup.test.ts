@@ -5,7 +5,7 @@ import {
   type DatabaseQuery,
 } from "./featureDocumentStore.ts";
 
-test("resolves a Document Flow by exact source and prefers the owned document", async () => {
+test("resolves a Document Flow by exact source, newest first", async () => {
   const calls: Array<{ sql: string; values?: readonly unknown[] }> = [];
   const query: DatabaseQuery = async (sql, values) => {
     calls.push({ sql, values });
@@ -37,10 +37,13 @@ test("resolves a Document Flow by exact source and prefers the owned document", 
   });
 
   assert.equal(document?.id, 12);
+  // Feature documents are system-generated catalog content: no owner column, so
+  // the lookup no longer takes a user or prefers an owned row.
   assert.match(
     calls[0].sql,
-    /COALESCE\(r\.source_version_id, latest_job\.source_version_id\) = \$5/,
+    /COALESCE\(r\.source_version_id, latest_job\.source_version_id\) = \$4/,
   );
-  assert.match(calls[0].sql, /ORDER BY \(d\.user_id = \$1\) DESC/);
-  assert.deepEqual(calls[0].values, [7, "linear", "web", "checkout", 5]);
+  assert.doesNotMatch(calls[0].sql, /d\.user_id/);
+  assert.match(calls[0].sql, /ORDER BY d\.updated_at DESC/);
+  assert.deepEqual(calls[0].values, ["linear", "web", "checkout", 5]);
 });

@@ -426,11 +426,33 @@ export function mountFeatureDocumentRoutes(
     await deps.sendObject(metadata, res);
   }));
 
+  /*
+   * Feature documents are system-generated catalog content, so access is decided
+   * by app entitlement, not by a per-user owner. Mutation routes must call this:
+   * they used to be gated only by `feature_documents.user_id` inside the store.
+   */
+  const entitledDocument = async (
+    res: express.Response,
+    documentId: number,
+  ): Promise<FeatureDocumentView | undefined> => {
+    const document = await deps.store.getDocument(res.locals.user.id, documentId);
+    if (!document?.currentRevision) {
+      res.status(404).json({ error: "Feature Document not found" });
+      return undefined;
+    }
+    if (!(await deps.canAccessApp(res.locals.user, document.currentRevision.source.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" });
+      return undefined;
+    }
+    return document;
+  };
+
   app.patch("/feature-documents/:documentId/revisions", asyncRoute(async (req, res) => {
     const documentId = positiveId(req.params.documentId);
     const body = exactBody(req.body, ["revisionId", "content"]);
     const revisionId = positiveId(body?.revisionId);
     if (!documentId || !revisionId || !record(body?.content)) { res.status(400).json({ error: "Invalid Feature Document revision" }); return; }
+    if (!(await entitledDocument(res, documentId))) return;
     const revision = await deps.store.saveRevision(res.locals.user.id, documentId, revisionId, body!.content as FeatureDocumentContent);
     if (!revision) {
       const document = await deps.store.getDocument(res.locals.user.id, documentId);
@@ -467,6 +489,7 @@ export function mountFeatureDocumentRoutes(
     const documentId = positiveId(req.params.documentId);
     const revisionId = positiveId(req.params.revisionId);
     if (!documentId || !revisionId || !exactBody(req.body ?? {}, [])) { res.status(400).json({ error: "Invalid restore request" }); return; }
+    if (!(await entitledDocument(res, documentId))) return;
     const revision = await deps.store.restoreRevision(res.locals.user.id, documentId, revisionId);
     if (!revision) { res.status(404).json({ error: "Feature Document revision not found" }); return; }
     await event(res, "feature_document_revision_restored", "created");
@@ -479,6 +502,7 @@ export function mountFeatureDocumentRoutes(
     const revisionId = positiveId(body?.revisionId);
     const status = body?.status as FeatureDocumentReviewStatus;
     if (!documentId || !revisionId || !REVIEW_STATUSES.has(status)) { res.status(400).json({ error: "Invalid review transition" }); return; }
+    if (!(await entitledDocument(res, documentId))) return;
     let document;
     try {
       document = await deps.store.setReviewStatus(res.locals.user.id, documentId, revisionId, status);
@@ -496,8 +520,8 @@ export function mountFeatureDocumentRoutes(
   app.post("/feature-documents/:documentId/source-change/acknowledge", asyncRoute(async (req, res) => {
     const documentId = positiveId(req.params.documentId);
     if (!documentId || !exactBody(req.body ?? {}, [])) { res.status(400).json({ error: "Invalid acknowledgement" }); return; }
-    const document = await deps.store.getDocument(res.locals.user.id, documentId);
-    if (!document?.currentRevision) { res.status(404).json({ error: "Feature Document not found" }); return; }
+    const document = await entitledDocument(res, documentId);
+    if (!document?.currentRevision) return;
     const prepared = await prepareFromSource(deps, res.locals.user, document.currentRevision.source, document.currentRevision.focusInstruction);
     if (!prepared || prepared.missing.length) { res.status(409).json({ error: "Source Flow is unavailable", code: "source_unavailable" }); return; }
     const acknowledged = await deps.store.acknowledgeSourceChange(res.locals.user.id, documentId, prepared.evidenceManifestSha256);
@@ -531,6 +555,7 @@ export function mountFeatureDocumentRoutes(
     const body = exactBody(req.body, ["revisionId"]);
     const revisionId = positiveId(body?.revisionId);
     if (!documentId || !revisionId) { res.status(400).json({ error: "Invalid share request" }); return; }
+    if (!(await entitledDocument(res, documentId))) return;
     const token = randomBytes(32).toString("base64url");
     const share = await deps.store.createShare(res.locals.user.id, documentId, revisionId, shareHash(token), new Date());
     if (!share) { res.status(404).json({ error: "Feature Document not found" }); return; }
@@ -542,6 +567,7 @@ export function mountFeatureDocumentRoutes(
     const documentId = positiveId(req.params.documentId);
     const shareId = positiveId(req.params.shareId);
     if (!documentId || !shareId) { res.status(400).json({ error: "Invalid share" }); return; }
+    if (!(await entitledDocument(res, documentId))) return;
     if (!(await deps.store.revokeShare(res.locals.user.id, documentId, shareId))) {
       res.status(404).json({ error: "Feature Document share not found" }); return;
     }
@@ -560,6 +586,10 @@ export function mountFeatureDocumentRoutes(
   app.post("/feature-document-jobs/:jobId/cancel", asyncRoute(async (req, res) => {
     const jobId = positiveId(req.params.jobId);
     if (!jobId || !exactBody(req.body ?? {}, [])) { res.status(400).json({ error: "Invalid cancellation" }); return; }
+    const workerJob = await deps.store.workerJob(jobId);
+    if (!workerJob || !(await deps.canAccessApp(res.locals.user, workerJob.source.app))) {
+      res.status(403).json({ error: "Upgrade required", code: "upgrade_required" }); return;
+    }
     const job = await deps.store.requestCancel(res.locals.user.id, jobId);
     if (!job) { res.status(404).json({ error: "Feature Document job not found" }); return; }
     res.json(job);

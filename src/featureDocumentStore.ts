@@ -28,7 +28,6 @@ type TransactionRunner = <T>(work: (query: DatabaseQuery) => Promise<T>) => Prom
 
 export interface FeatureDocumentWorkerJob extends FeatureDocumentJobView {
   transportJobId: number;
-  requestedBy: number;
   source: FeatureSourceFlow;
   evidenceManifest: FeatureEvidenceManifestItem[];
   evidenceManifestSha256: string;
@@ -238,7 +237,6 @@ function workerJobFromRow(row: Record<string, unknown> | undefined): FeatureDocu
   return {
     ...base,
     transportJobId: positiveInteger(row.transport_job_id, "transport job"),
-    requestedBy: positiveInteger(row.requested_by, "requester"),
     source: sourceFrom(row.source_flow),
     evidenceManifest: manifestFrom(row.evidence_manifest),
     evidenceManifestSha256: checkedSha256(text(row.evidence_manifest_sha256)),
@@ -280,7 +278,7 @@ function objectFromRow(row: Record<string, unknown> | undefined): ObjectMetadata
   return metadata;
 }
 
-const JOB_COLUMNS = `j.id, j.document_id, j.transport_job_id, j.requested_by, j.status, j.stage,
+const JOB_COLUMNS = `j.id, j.document_id, j.transport_job_id, j.status, j.stage,
   j.done_count, j.total_count, j.source_flow, j.evidence_manifest, j.evidence_manifest_sha256,
   j.focus_instruction, j.prompt_version, j.provider_model, j.cancel_requested,
   j.error_code, j.error_message, j.updated_at`;
@@ -302,8 +300,8 @@ async function loadDocument(
              WHERE j.document_id = d.id ORDER BY j.created_at DESC, j.id DESC LIMIT 1) AS current_source_sha256
      FROM feature_documents d
      LEFT JOIN feature_document_revisions current_revision ON current_revision.id = d.current_revision_id
-     WHERE d.id = $1 AND (d.user_id = $2 OR d.visibility = 'catalog')`,
-    [documentId, userId],
+     WHERE d.id = $1`,
+    [documentId],
   );
   const document = documentResult.rows[0];
   if (!document) return undefined;
@@ -357,14 +355,13 @@ async function loadDocument(
 async function insertJob(runQuery: DatabaseQuery, documentId: number, userId: number, input: CreateFeatureGenerationInput): Promise<FeatureDocumentJobView> {
   const result = await runQuery(
     `INSERT INTO feature_document_jobs
-       (document_id, transport_job_id, requested_by, total_count, source_version_id, source_flow,
+       (document_id, transport_job_id, total_count, source_version_id, source_flow,
         evidence_manifest, evidence_manifest_sha256, focus_instruction, prompt_version, provider_model)
-     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10)
      RETURNING id, document_id, status, stage, done_count, total_count, error_code, error_message, updated_at`,
     [
       documentId,
       input.transportJobId,
-      userId,
       input.evidenceManifest.length,
       input.source.versionId ?? null,
       JSON.stringify(input.source),
@@ -391,7 +388,8 @@ async function insertRevision(
     focusInstruction: string;
     promptVersion: number;
     providerModel: string;
-    createdBy: number;
+    /* Null for system-generated revisions; set for a member's own edit. */
+    createdBy: number | null;
   },
 ): Promise<FeatureDocumentRevisionView> {
   const result = await runQuery(
@@ -440,10 +438,10 @@ export function createFeatureDocumentStore(
         const sourceRow = sourceRows.rows[0];
         if (!sourceRow) throw new Error("Feature source was not found");
         const created = await tx(
-          `INSERT INTO feature_documents (user_id, app_id, platform_id, source_flow_id, title)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO feature_documents (app_id, platform_id, source_flow_id, title)
+           VALUES ($1, $2, $3, $4)
            RETURNING id, title`,
-          [userId, sourceRow.app_id, sourceRow.platform_id, input.source.flowId, input.source.title.slice(0, 160)],
+          [sourceRow.app_id, sourceRow.platform_id, input.source.flowId, input.source.title.slice(0, 160)],
         );
         const documentId = positiveInteger(created.rows[0].id);
         const job = await insertJob(tx, documentId, userId, input);
@@ -469,9 +467,9 @@ export function createFeatureDocumentStore(
         const owned = await tx(
           `SELECT d.id FROM feature_documents d
            JOIN apps a ON a.id = d.app_id JOIN platforms p ON p.id = d.platform_id
-           WHERE d.id = $1 AND d.user_id = $2 AND a.name = $3 AND p.name = $4
+           WHERE d.id = $1 AND a.name = $2 AND p.name = $3
            FOR UPDATE OF d`,
-          [documentId, userId, input.source.app, input.source.platform],
+          [documentId, input.source.app, input.source.platform],
         );
         if (!owned.rows[0]) return undefined;
         await tx("UPDATE feature_documents SET updated_at = now() WHERE id = $1", [documentId]);
@@ -510,14 +508,13 @@ export function createFeatureDocumentStore(
            ORDER BY j.created_at DESC, j.id DESC
            LIMIT 1
          ) latest_job ON true
-         WHERE (d.user_id = $1 OR d.visibility = 'catalog')
-           AND a.name = $2
-           AND p.name = $3
-           AND d.source_flow_id = $4
-           AND COALESCE(r.source_version_id, latest_job.source_version_id) = $5
-         ORDER BY (d.user_id = $1) DESC, d.updated_at DESC, d.id DESC
+         WHERE a.name = $1
+           AND p.name = $2
+           AND d.source_flow_id = $3
+           AND COALESCE(r.source_version_id, latest_job.source_version_id) = $4
+         ORDER BY d.updated_at DESC, d.id DESC
          LIMIT 1`,
-        [userId, source.app, source.platform, source.flowId, source.sourceVersionId],
+        [source.app, source.platform, source.flowId, source.sourceVersionId],
       );
       const documentId = result.rows[0]?.source_document_id;
       return documentId == null
@@ -529,8 +526,8 @@ export function createFeatureDocumentStore(
       const result = await runQuery(
         `SELECT ${JOB_COLUMNS}
          FROM feature_document_jobs j JOIN feature_documents d ON d.id = j.document_id
-         WHERE j.id = $1 AND d.user_id = $2`,
-        [jobId, userId],
+         WHERE j.id = $1`,
+        [jobId],
       );
       return jobFromRow(result.rows[0]);
     },
@@ -544,7 +541,7 @@ export function createFeatureDocumentStore(
       const result = await runQuery(
         `UPDATE feature_document_jobs j SET cancel_requested = true, updated_at = now()
          FROM feature_documents d
-         WHERE j.id = $1 AND d.id = j.document_id AND d.user_id = $2
+         WHERE j.id = $1 AND d.id = j.document_id
            AND j.status IN ('queued', 'running')
          RETURNING ${JOB_COLUMNS}`,
         [jobId, userId],
@@ -561,7 +558,7 @@ export function createFeatureDocumentStore(
              cancel_requested = false, error_code = NULL, error_message = NULL,
              updated_at = now(), completed_at = NULL
          FROM feature_documents d
-         WHERE j.id = $1 AND d.id = j.document_id AND d.user_id = $2
+         WHERE j.id = $1 AND d.id = j.document_id
            AND j.status IN ('error', 'cancelled')
          RETURNING ${JOB_COLUMNS}`,
         [jobId, userId, transportJobId],
@@ -650,7 +647,7 @@ export function createFeatureDocumentStore(
       const content = parseFeatureDocumentContent(rawInput.content, new Set(evidenceManifest.map(({ evidenceId }) => evidenceId)));
       return runTransaction(async (tx) => {
         const locked = await tx(
-          `SELECT j.document_id, j.requested_by, j.status, j.evidence_manifest_sha256
+          `SELECT j.document_id, j.status, j.evidence_manifest_sha256
            FROM feature_document_jobs j WHERE j.id = $1 FOR UPDATE`,
           [jobId],
         );
@@ -669,7 +666,8 @@ export function createFeatureDocumentStore(
           focusInstruction: rawInput.focusInstruction.trim(),
           promptVersion: rawInput.promptVersion,
           providerModel: rawInput.providerModel.trim(),
-          createdBy: positiveInteger(job.requested_by),
+          // System-generated: the job has no requester, so the revision has no author.
+          createdBy: null,
         });
         await tx("UPDATE feature_documents SET current_revision_id = $2, updated_at = now() WHERE id = $1", [documentId, revision.id]);
         await tx(
@@ -709,9 +707,9 @@ export function createFeatureDocumentStore(
                   r.focus_instruction, r.prompt_version, r.provider_model
            FROM feature_documents d
            JOIN feature_document_revisions r ON r.id = d.current_revision_id
-           WHERE d.id = $1 AND d.user_id = $2 AND d.current_revision_id = $3
+           WHERE d.id = $1 AND d.current_revision_id = $2
            FOR UPDATE OF d`,
-          [documentId, userId, expectedRevisionId],
+          [documentId, expectedRevisionId],
         );
         const current = locked.rows[0];
         if (!current) return undefined;
@@ -737,8 +735,8 @@ export function createFeatureDocumentStore(
     async restoreRevision(userId, documentId, revisionId) {
       return runTransaction(async (tx) => {
         const owned = await tx(
-          `SELECT d.id FROM feature_documents d WHERE d.id = $1 AND d.user_id = $2 FOR UPDATE`,
-          [documentId, userId],
+          `SELECT d.id FROM feature_documents d WHERE d.id = $1 FOR UPDATE`,
+          [documentId],
         );
         if (!owned.rows[0]) return undefined;
         const selected = await tx(
@@ -774,8 +772,8 @@ export function createFeatureDocumentStore(
         const owned = await tx(
           `SELECT r.review_status FROM feature_documents d
            JOIN feature_document_revisions r ON r.id = d.current_revision_id
-           WHERE d.id = $1 AND d.user_id = $2 AND d.current_revision_id = $3 FOR UPDATE OF d, r`,
-          [documentId, userId, revisionId],
+           WHERE d.id = $1 AND d.current_revision_id = $2 FOR UPDATE OF d, r`,
+          [documentId, revisionId],
         );
         const current = owned.rows[0];
         if (!current) return undefined;
@@ -806,8 +804,8 @@ export function createFeatureDocumentStore(
       return runTransaction(async (tx) => {
         const changed = await tx(
           `SELECT d.id FROM feature_documents d
-           WHERE d.id = $1 AND d.user_id = $2 FOR UPDATE OF d`,
-          [documentId, userId],
+           WHERE d.id = $1 FOR UPDATE OF d`,
+          [documentId],
         );
         if (!changed.rows[0]) return undefined;
         await tx(
@@ -827,7 +825,7 @@ export function createFeatureDocumentStore(
            (document_id, revision_id, token_sha256, created_by, expires_at)
          SELECT d.id, r.id, $4, $2, $5::timestamptz + interval '7 days'
          FROM feature_documents d JOIN feature_document_revisions r ON r.document_id = d.id
-         WHERE d.id = $1 AND (d.user_id = $2 OR d.visibility = 'catalog') AND r.id = $3
+         WHERE d.id = $1 AND r.id = $3
          RETURNING id, document_id, revision_id, expires_at, revoked_at`,
         [documentId, userId, revisionId, checksum, now.toISOString()],
       );
@@ -845,9 +843,9 @@ export function createFeatureDocumentStore(
       const result = await runQuery(
         `UPDATE feature_document_shares s SET revoked_at = now()
          FROM feature_documents d
-         WHERE s.id = $1 AND s.document_id = $2 AND d.id = s.document_id AND d.user_id = $3
+         WHERE s.id = $1 AND s.document_id = $2 AND d.id = s.document_id
            AND s.revoked_at IS NULL`,
-        [shareId, documentId, userId],
+        [shareId, documentId],
       );
       return result.rowCount === 1;
     },
@@ -859,12 +857,12 @@ export function createFeatureDocumentStore(
          JOIN feature_document_revisions r ON r.document_id = d.id
          JOIN images i ON i.id = $4
          JOIN stored_objects so ON so.object_key = i.object_key
-         WHERE d.id = $1 AND d.user_id = $2 AND r.id = $3
+         WHERE d.id = $1 AND r.id = $2
            AND EXISTS (
              SELECT 1 FROM jsonb_array_elements(r.evidence_manifest) evidence
              WHERE (evidence->>'imageId')::integer = i.id
            )`,
-        [documentId, userId, revisionId, imageId],
+        [documentId, revisionId, imageId],
       );
       return objectFromRow(result.rows[0]);
     },

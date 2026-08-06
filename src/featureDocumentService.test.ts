@@ -126,7 +126,6 @@ class FakeStore {
     id: 27,
     documentId: 11,
     transportJobId: 9,
-    requestedBy: 7,
     status: "queued",
     stage: "preparing",
     doneCount: 0,
