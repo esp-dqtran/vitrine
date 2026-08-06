@@ -162,27 +162,34 @@
   gap: 1px;
 }
 
-/* Carries the gap the group caption used to sit in; the nav follows the
-   workspace switcher directly now. */
+/* Carries the gap the group caption used to sit in — but only when a workspace
+   row precedes it. Without one the brand's own 24px is already the gap, and both
+   would stack into 40px. */
 .projects-workspace__desktop-nav--primary {
+  margin-top: 0;
+}
+
+.projects-workspace__desktop-workspace + .projects-workspace__desktop-nav--primary {
   margin-top: 16px;
 }
 
+/* Rail rows sit on the 36px switcher height, the body type size, and the
+   foundation's inline icon size, rather than a compact 28px/13px of their own. */
 .projects-workspace__desktop-nav button,
 .projects-workspace__desktop-nav a,
 .projects-workspace__desktop-settings {
   width: 100%;
-  min-height: 28px;
-  grid-template-columns: 14px minmax(0, 1fr);
+  min-height: 36px;
+  grid-template-columns: var(--vitrine-icon-size-inline) minmax(0, 1fr);
   align-items: center;
   justify-items: start;
-  gap: 8px;
-  padding: 0 8px;
+  gap: 10px;
+  padding: 0 10px;
   border-radius: var(--radius-element);
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 18px;
+  line-height: 20px;
   text-align: left;
   text-decoration: none;
 }
@@ -216,14 +223,14 @@
 
 .projects-workspace__desktop-nav svg,
 .projects-workspace__desktop-settings svg {
-  width: 14px;
-  height: 14px;
+  width: var(--vitrine-icon-size-inline);
+  height: var(--vitrine-icon-size-inline);
   box-sizing: border-box;
   padding: 0;
 }
 
-/* The footer action is a nav row like any other: same 14px icon column, same
-   left edge. Centring it broke the rail's single vertical alignment. */
+/* The footer action is a nav row like any other: same icon column, same left
+   edge. Centring it broke the rail's single vertical alignment. */
 .projects-workspace__desktop-settings {
   margin-top: 0;
 }
@@ -1520,10 +1527,6 @@
     display: inline-flex;
   }
 
-  .projects-workspace__desktop-rail {
-    display: none;
-  }
-
   .projects-team-drawer__divider {
     display: block;
   }
@@ -1612,30 +1615,6 @@
   }
 }
 
-/* Admin shell: the rail footer carries the signed-in account and its sign-out. */
-.admin-workspace__account {
-  /* Left-aligned on the same 8px rail edge as the nav rows above it. */
-  display: grid;
-  width: 100%;
-  justify-items: start;
-  gap: 2px;
-  padding: 8px 8px 0;
-  margin-top: 4px;
-  border-top: 1px solid var(--color-border);
-  text-align: left;
-}
-
-.admin-workspace__account > span {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--color-text-secondary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-
 /* Workspace switcher dropdown: one row per workspace, create row last. */
 .projects-team-switcher__spaces button > svg {
   width: 14px;
@@ -1679,4 +1658,109 @@
 
 .projects-workspace__page-header {
   margin-bottom: 24px;
+}
+
+/*
+ * Compact layout for every rail surface.
+ *
+ * The rail used to be `display: none` here, and the projects-variant shell
+ * renders no header to replace it — so below 980px Projects, Collections, Admin
+ * and Project files all lost their navigation entirely. Rather than build a
+ * compact header and a trigger, the rail itself reflows into a top bar: the
+ * workspace switcher travels with it, and since that button is what opens the
+ * team drawer, the drawer (already fully built and styled) becomes reachable
+ * again with no new markup or state.
+ */
+@media (max-width: 980px) {
+  .projects-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .projects-workspace__desktop-rail {
+    position: static;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    /* Scrolls rather than wraps: a wrapped bar changes the page's height as the
+       nav grows, and the panel below is sized off what is left. */
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .projects-workspace__rail-brand {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  /* Only interactive chrome earns width in a horizontal bar. The static variant
+     opens nothing, so it goes; the switcher stays because it is the drawer's
+     only trigger. */
+  .projects-workspace__desktop-workspace--static {
+    display: none;
+  }
+
+  .projects-workspace__desktop-workspace {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .projects-workspace__desktop-workspace + .projects-workspace__desktop-nav--primary {
+    margin-top: 0;
+  }
+
+  .projects-workspace__desktop-nav {
+    width: auto;
+    flex: 0 0 auto;
+    grid-auto-flow: column;
+    gap: 4px;
+  }
+
+  .projects-workspace__desktop-nav button,
+  .projects-workspace__desktop-nav a,
+  .projects-workspace__desktop-settings {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  /* Footer action sits at the far end of the bar; its rule is a rail divider. */
+  .projects-workspace__desktop-footer {
+    width: auto;
+    flex: 0 0 auto;
+    flex-direction: row;
+    margin-top: 0;
+    margin-left: auto;
+  }
+
+  .projects-workspace__desktop-divider {
+    display: none;
+  }
+
+  /* The bar is a flex item now, so the panel takes the remaining height instead
+     of adding its own 100vh below it. */
+  .projects-workspace__shell {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  /* The drawer's 104px top was measured down the vertical rail (brand + margin +
+     switcher). Against a bar it hangs off the bar's height instead: 10px padding
+     + a 36px row + 10px + the hairline, plus a small gap. */
+  .projects-team-drawer {
+    top: 64px;
+    max-height: calc(100dvh - 80px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Logo alone still routes home; the wordmark is what does not fit. */
+  .projects-workspace__rail-brand strong {
+    display: none;
+  }
 }

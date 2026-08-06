@@ -7,11 +7,9 @@ import { AdminDashboardShell } from './AdminDashboard.tsx';
 test('renders the Users outlet inside the dedicated Admin shell', () => {
   const html = renderToStaticMarkup(
     <AdminDashboardShell
-      email="admin@example.com"
       section="users"
       onSectionChange={() => undefined}
       onBack={() => undefined}
-      onLogout={() => undefined}
       page={<main data-admin-page="users">Users content</main>}
     />,
   );
@@ -32,10 +30,15 @@ test('publishes the Admin rail through the shared chrome provider', async () => 
   assert.match(source, /useWorkspaceChrome\(/);
   assert.doesNotMatch(source, /<WorkspaceShell|<WorkspaceRail|<WorkspaceHeader/);
   assert.match(source, /'data-admin-dashboard': 'true'/);
-  assert.match(source, /label: 'Vitrines Admin'/);
+  // Admin has no workspace to switch to, so the rail publishes no workspace row.
+  assert.doesNotMatch(source, /workspace: \{/);
   assert.match(source, /admin: true/);
-  assert.match(source, /label="Log out"/);
-  assert.match(source, /settingsLabel: 'Back to Vitrines'/);
+  // Rail is nav only now: no footer action and no account block, so the brand
+  // link is the way back and Log out lives in the app's own account menu.
+  assert.match(source, /onSettings: null/);
+  assert.doesNotMatch(source, /railFooter:|admin-workspace__account|label="Log out"/);
+  assert.match(source, /onBrandSelect: onBack/);
+  assert.match(source, /className: 'admin-workspace'/);
 });
 
 test('lazy-loads Users without importing normal application state', async () => {
@@ -52,5 +55,22 @@ test('lazy-loads Users without importing normal application state', async () => 
   assert.doesNotMatch(
     source,
     /useApps|useAppDetail|useCollections|createSearchSession|loadSubscription|ApplicationSurface/,
+  );
+});
+
+test('keeps /admin navigable below the rail breakpoint', async () => {
+  const css = await readFile(new URL('./projectsWorkspace.css', import.meta.url), 'utf8');
+
+  // The projects-variant shell renders no header, so hiding the rail below 980px
+  // left Admin with no way to reach Insights or get back out. It reflows instead.
+  assert.doesNotMatch(css, /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/);
+  assert.match(
+    css,
+    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*flex-direction:\s*row;/s,
+  );
+  // The identity-only row opens nothing, so it does not spend width in the bar.
+  assert.match(
+    css,
+    /@media \(max-width: 980px\)[\s\S]*?\.projects-workspace__desktop-workspace--static\s*\{[^}]*display:\s*none;/s,
   );
 });

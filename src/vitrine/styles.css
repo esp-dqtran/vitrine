@@ -9544,12 +9544,6 @@ body {
   letter-spacing: -0.015em;
 }
 
-.admin-users-directory-count {
-  margin: 0 0 10px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-
 .admin-users-toolbar {
   display: flex;
   align-items: center;
@@ -10082,10 +10076,10 @@ body {
     grid-row: 2;
   }
 
-  .admin-users-member-row > [data-testid],
-  .admin-users-member-row > .astryx-dropdown-menu {
+  .admin-users-member-actions {
     grid-column: 3;
     grid-row: 1 / span 2;
+    align-self: center;
   }
 
   .admin-users-insights-heading {

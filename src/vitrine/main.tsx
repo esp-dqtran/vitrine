@@ -56,7 +56,7 @@ const goPricing = () => navigate({ name: 'pricing' });
 const goSignIn = () => navigate({ name: 'signin' });
 
 function Root() {
-  const { user, loading, authenticate, register, completeLogin, logout } = useAuth();
+  const { user, loading, authenticate, register, completeLogin } = useAuth();
   const route = useRoute();
   const advancedSearchEnabled =
     (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ADVANCED_SEARCH_ENABLED === 'true';
@@ -83,7 +83,7 @@ function Root() {
           // Admin is its own root branch, so it gets its own chrome provider —
           // never nested with the one App mounts for the workspace routes.
           <WorkspaceChromeProvider>
-            <AdminDashboard user={user} onLogout={logout} />
+            <AdminDashboard />
           </WorkspaceChromeProvider>
         )
         : <RouteStatusPage title="Admin access required" onBack={goApps} />;

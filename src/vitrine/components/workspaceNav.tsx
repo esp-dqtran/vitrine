@@ -36,7 +36,8 @@ export function workspaceNav({
   settingsLabel?: string;
   /* Footer action icon; defaults to the cog, which only fits a settings action. */
   settingsIcon?: ReactNode;
-  onSettings?: () => void;
+  /* `null` drops the footer action entirely, leaving the rail to end at the nav. */
+  onSettings?: (() => void) | null;
   admin?: boolean;
   /* Admin section handlers; the dashboard keeps its section in local state. */
   onUsers?: () => void;
@@ -44,7 +45,7 @@ export function workspaceNav({
 } = {}): {
   primaryLabel: string;
   primaryActions: WorkspaceRailAction[];
-  settings: WorkspaceRailAction;
+  settings?: WorkspaceRailAction;
 } {
   return {
     primaryLabel: label,
@@ -77,7 +78,7 @@ export function workspaceNav({
             onSelect: () => navigate({ name: 'collections' }),
           },
         ],
-    settings: {
+    settings: onSettings === null ? undefined : {
       label: settingsLabel,
       icon: settingsIcon ?? <CogIcon aria-hidden="true" />,
       active: active === 'settings',

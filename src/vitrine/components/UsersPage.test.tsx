@@ -55,10 +55,8 @@ test("keeps directory filter state below the Users page render boundary", () => 
 
 test("renders one unified, searchable directory with account actions", () => {
   const html = renderToStaticMarkup(<UsersPageView
-    total={12}
     directory={<UserDirectory
       users={users}
-      total={12}
       hasMore
       loadingMore={false}
       query=""
@@ -171,10 +169,8 @@ test("drops the sidebar chrome now that Insights owns the full page", () => {
 
 test("renders honest empty directory copy", () => {
   const html = renderToStaticMarkup(<UsersPageView
-    total={0}
     directory={<UserDirectory
       users={[]}
-      total={0}
       hasMore={false}
       loadingMore={false}
       query=""
@@ -204,7 +200,6 @@ test("renders the referral funnel without invited-user activity", () => {
 test("keeps existing rows visible while filtered results refresh", () => {
   const html = renderToStaticMarkup(<UserDirectory
     users={users}
-    total={12}
     hasMore={false}
     loadingMore={false}
     refreshing
@@ -232,10 +227,30 @@ test("gives the directory the full page width and stacks its toolbar when narrow
   assert.match(css, /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-toolbar\s*\{[^}]*flex-direction:\s*column;/);
 });
 
-test("puts the result count under the controls that produce it", () => {
+test("carries no member counts — the rows are the count", () => {
+  const html = renderToStaticMarkup(<UsersPageView
+    directory={<UserDirectory
+      users={users}
+      hasMore={false}
+      loadingMore={false}
+      query=""
+      filter="all"
+      onQueryChange={() => undefined}
+      onFilterChange={() => undefined}
+      onLoadMore={() => undefined}
+      onSetActive={async () => undefined}
+      onSelectUser={() => undefined}
+    />}
+  />);
+  assert.doesNotMatch(html, /\d+ of \d+ shown/);
+  assert.doesNotMatch(html, /\d+ members?</);
+  assert.doesNotMatch(html, /admin-users-directory-count/);
+});
+
+test("reflows the member row on a phone against a cell that exists", () => {
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
   const html = renderToStaticMarkup(<UserDirectory
     users={users}
-    total={12}
     hasMore={false}
     loadingMore={false}
     query=""
@@ -246,6 +261,19 @@ test("puts the result count under the controls that produce it", () => {
     onSetActive={async () => undefined}
     onSelectUser={() => undefined}
   />);
-  assert.ok(html.indexOf('admin-users-toolbar') < html.indexOf('admin-users-directory-count'));
-  assert.ok(html.indexOf('admin-users-directory-count') < html.indexOf('admin-users-list'));
+
+  // The narrow reflow used to place `.astryx-dropdown-menu`, a class the design
+  // system never renders, so the actions control was never placed at all.
+  assert.doesNotMatch(css, /\.admin-users-member-row > \.astryx-dropdown-menu/);
+  assert.match(html, /class="admin-users-member-actions"/);
+  assert.match(
+    css,
+    /@media \(max-width:\s*640px\)[\s\S]*?\.admin-users-member-actions\s*\{[^}]*grid-column:\s*3;/,
+  );
+});
+
+test("makes the filter and row actions primary controls", () => {
+  const source = readFileSync(new URL("./UserDirectory.tsx", import.meta.url), "utf8");
+  assert.match(source, /ariaLabel="Filter members"[\s\S]*?triggerVariant="primary"/);
+  assert.match(source, /label: 'Actions',[^}]*variant: 'primary'/);
 });

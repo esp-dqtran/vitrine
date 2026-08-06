@@ -60,7 +60,6 @@ const referrals = {
 const directory = (
   <UserDirectory
     users={users}
-    total={users.length}
     hasMore={false}
     loadingMore={false}
     query=""
@@ -83,11 +82,9 @@ function AdminSectionSpecimen({ section }: { section: "users" | "insights" }) {
   return (
     <WorkspaceChromeProvider>
       <AdminDashboardShell
-        email="admin@vitrines.ai"
         section={section}
         onSectionChange={() => undefined}
         onBack={() => undefined}
-        onLogout={() => undefined}
         page={section === "insights" ? (
           <>
             <header className="projects-workspace__page-header">
@@ -107,7 +104,7 @@ function AdminSectionSpecimen({ section }: { section: "users" | "insights" }) {
             />
           </>
         ) : (
-          <UsersPageView total={users.length} directory={directory} />
+          <UsersPageView directory={directory} />
         )}
       />
     </WorkspaceChromeProvider>

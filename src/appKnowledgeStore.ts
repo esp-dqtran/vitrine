@@ -91,7 +91,8 @@ export interface AppKnowledgeReviewEventView {
   id: number;
   snapshotId: number;
   revisionId?: number;
-  actorId: number;
+  // Absent once the actor's account is deleted: the event survives, the reference does not.
+  actorId?: number;
   action: string;
   fromStatus?: AppKnowledgeReviewStatus;
   toStatus?: AppKnowledgeReviewStatus;
@@ -509,7 +510,7 @@ function reviewEventFromRow(row: Record<string, unknown>): AppKnowledgeReviewEve
     id: positiveInteger(row.id),
     snapshotId: positiveInteger(row.snapshot_id),
     ...(row.revision_id == null ? {} : { revisionId: positiveInteger(row.revision_id) }),
-    actorId: positiveInteger(row.actor_id),
+    ...(row.actor_id == null ? {} : { actorId: positiveInteger(row.actor_id) }),
     action: text(row.action),
     ...(row.from_status == null ? {} : { fromStatus: row.from_status as AppKnowledgeReviewStatus }),
     ...(row.to_status == null ? {} : { toStatus: row.to_status as AppKnowledgeReviewStatus }),

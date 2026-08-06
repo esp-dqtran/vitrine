@@ -329,8 +329,8 @@ function parseMotion(
     evidenceIds: references(input.evidenceIds, evidenceIds),
     confidence: confidence(input.confidence),
   };
-  const durationMs = optionalNonNegative(input.durationMs, "duration");
-  const delayMs = optionalNonNegative(input.delayMs, "delay");
+  const durationMs = droppableNonNegative(input.durationMs);
+  const delayMs = droppableNonNegative(input.delayMs);
   const easing = optionalText(input.easing, 200);
   if (durationMs !== undefined) result.durationMs = durationMs;
   if (delayMs !== undefined) result.delayMs = delayMs;
@@ -546,8 +546,14 @@ function nonNegative(value: unknown, label: string): number {
   return value;
 }
 
-function optionalNonNegative(value: unknown, label: string): number | undefined {
-  return value === undefined ? undefined : nonNegative(value, label);
+// Same, but a bad value drops the field instead of rejecting the analysis.
+// These describe animation timing: a model returning a negative or null delay
+// is not a reason to throw away a whole crawled Site, which is what a hard
+// failure here does — the capture is already complete by this point.
+function droppableNonNegative(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined;
 }
 
 function enumValue<const T extends readonly string[]>(

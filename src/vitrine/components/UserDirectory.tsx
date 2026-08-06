@@ -7,7 +7,6 @@ import { AstryxMenu, AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 
 interface UserDirectoryProps {
   users: AdminUser[];
-  total: number;
   query: string;
   filter: UserFilter;
   hasMore: boolean;
@@ -58,14 +57,21 @@ function MemberRow({ user, onSetActive, onSelectUser }: Pick<UserDirectoryProps,
         <span aria-hidden="true" />{user.active ? 'Active' : 'Disabled'}
       </span>
 
-      <AstryxMenu
-        button={{ label: 'Actions', size: 'sm', variant: 'ghost', isDisabled: busy }}
-        menuWidth={150}
-        items={[{
-          label: user.active ? 'Disable' : 'Enable',
-          onClick: () => user.active ? setPendingDisable(true) : void update(true),
-        }]}
-      />
+      {/*
+        * Wrapped so the row has one grid child for the actions: DropdownMenu
+        * renders its trigger and its anchor as two siblings, which put a stray
+        * cell in the template and left the narrow reflow with nothing to place.
+        */}
+      <div className="admin-users-member-actions">
+        <AstryxMenu
+          button={{ label: 'Actions', size: 'sm', variant: 'primary', isDisabled: busy }}
+          menuWidth={150}
+          items={[{
+            label: user.active ? 'Disable' : 'Enable',
+            onClick: () => user.active ? setPendingDisable(true) : void update(true),
+          }]}
+        />
+      </div>
 
       {error && <p className="admin-users-row-error" role="alert">{error}</p>}
       <AstryxAlertModal
@@ -96,9 +102,9 @@ export function UserDirectory(props: UserDirectoryProps) {
   }, [props.hasMore, props.loadingMore, props.onLoadMore]);
 
   /*
-   * No "Members" heading: the page is already titled Users and carries the member
-   * count, so the section keeps only its filtered count. The name moves to
-   * aria-label so the region stays labelled for screen readers.
+   * No heading and no counts: the page is titled Users and the rows speak for
+   * themselves. The section name lives in aria-label so the region stays
+   * labelled for screen readers.
    */
   return (
     <section className="admin-users-directory" aria-label="Members">
@@ -110,18 +116,15 @@ export function UserDirectory(props: UserDirectoryProps) {
           <AstryxSingleSelectDropdown
             ariaLabel="Filter members"
             value={props.filter}
+            triggerVariant="primary"
             options={Object.entries(USER_FILTER_LABELS).map(([value, label]) => ({ value, label }))}
             onChange={(value) => props.onFilterChange(value as UserFilter)}
           />
         </div>
+        {props.refreshing && (
+          <span className="admin-users-refreshing" role="status">Updating…</span>
+        )}
       </div>
-
-      {/* The count belongs with the results it describes, under the search and
-          filter that produced it. */}
-      <p className="admin-users-directory-count" aria-live="polite">
-        {props.users.length} of {props.total} shown
-        {props.refreshing && <span className="admin-users-refreshing"> · Updating…</span>}
-      </p>
 
       {props.users.length === 0 ? (
         <div className="admin-users-empty">

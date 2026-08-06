@@ -8,7 +8,9 @@ export interface WorkspaceRailAction {
 }
 
 export interface WorkspaceRailProps {
-  workspace: {
+  /* Omit entirely on surfaces that have neither a switcher to open nor a name
+     worth repeating — Admin says "Admin" in the page title already. */
+  workspace?: {
     label: string;
     initial: string;
     /* Display name for the switcher row; `label` stays the action description. */
@@ -20,8 +22,10 @@ export interface WorkspaceRailProps {
   /* The nav group's accessible name only — the rail shows no visible caption. */
   primaryLabel: string;
   primaryActions: WorkspaceRailAction[];
-  settings: WorkspaceRailAction;
-  /* Extra rail footer content (the Admin shell puts its account + Log out here). */
+  /* Footer action. Omit it and the rail ends after the nav — Admin does, and
+     reaches the rest of the app through the brand link instead. */
+  settings?: WorkspaceRailAction;
+  /* Extra rail footer content, rendered under the footer action. */
   footer?: ReactNode;
   /* The Vitrines mark lives at the top of the rail; the header only shows it at
      compact widths, where the rail is replaced by the drawer. */
@@ -83,7 +87,7 @@ export function WorkspaceRail({
         * a caret. Everywhere else this is a plain identity row: a caret with no
         * menu behind it read as a dropdown and, on Admin, navigated away instead.
         */}
-      {workspace.expanded === undefined ? (
+      {!workspace ? null : workspace.expanded === undefined ? (
         <div className="projects-workspace__desktop-workspace projects-workspace__desktop-workspace--static">
           <span className="projects-team-rail__avatar" aria-hidden="true">{workspace.initial}</span>
           {workspace.name ? (
@@ -124,19 +128,23 @@ export function WorkspaceRail({
       <nav className="projects-workspace__desktop-nav projects-workspace__desktop-nav--primary" aria-label={primaryLabel}>
         {primaryActions.map(renderAction)}
       </nav>
-      <div className="projects-workspace__desktop-footer">
-        <span className="projects-workspace__desktop-divider" aria-hidden="true" />
-        <button
-          type="button"
-          className={`projects-workspace__desktop-settings${settings.active ? ' is-active' : ''}`}
-          aria-label={settings.label}
-          aria-current={settings.active ? 'page' : undefined}
-          onClick={settings.onSelect}
-        >
-          {settings.icon}<span>{settings.label}</span>
-        </button>
-        {footer}
-      </div>
+      {settings || footer ? (
+        <div className="projects-workspace__desktop-footer">
+          <span className="projects-workspace__desktop-divider" aria-hidden="true" />
+          {settings ? (
+            <button
+              type="button"
+              className={`projects-workspace__desktop-settings${settings.active ? ' is-active' : ''}`}
+              aria-label={settings.label}
+              aria-current={settings.active ? 'page' : undefined}
+              onClick={settings.onSelect}
+            >
+              {settings.icon}<span>{settings.label}</span>
+            </button>
+          ) : null}
+          {footer}
+        </div>
+      ) : null}
     </aside>
   );
 }
@@ -225,7 +233,7 @@ export function WorkspaceShell({
 }: {
   variant?: 'projects' | 'settings';
   className?: string;
-  workspace: WorkspaceRailProps['workspace'];
+  workspace?: WorkspaceRailProps['workspace'];
   nav: WorkspaceNavSlots;
   railFooter?: ReactNode;
   onBrandSelect: () => void;

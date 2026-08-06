@@ -24,7 +24,7 @@ import {
 export interface WorkspaceChromeConfig {
   variant?: 'projects' | 'settings';
   className?: string;
-  workspace: WorkspaceRailProps['workspace'];
+  workspace?: WorkspaceRailProps['workspace'];
   nav: WorkspaceNavSlots;
   onBrandSelect: () => void;
   railFooter?: ReactNode;

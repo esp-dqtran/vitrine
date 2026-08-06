@@ -1,7 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { Button, Spinner } from '@astryxdesign/core';
-import { ArrowLeftIcon } from '@storybook/icons';
-import type { AuthUser } from './authApi.ts';
+import { Spinner } from '@astryxdesign/core';
 import { navigate, useRoute } from './router.ts';
 import { useWorkspaceChrome } from './components/WorkspaceChromeContext.tsx';
 import { workspaceNav } from './components/workspaceNav.tsx';
@@ -16,51 +14,39 @@ const InsightsPage = lazy(() => import('./components/InsightsPage').then((module
 })));
 
 interface AdminDashboardShellProps {
-  email: string;
   section: AdminSection;
   onSectionChange: (section: AdminSection) => void;
   onBack: () => void;
-  onLogout: () => void | Promise<void>;
   page: ReactNode;
 }
 
 export function AdminDashboardShell({
-  email,
   section,
   onSectionChange,
   onBack,
-  onLogout,
   page,
 }: AdminDashboardShellProps) {
   useWorkspaceChrome(
     () => ({
       className: 'admin-workspace',
       dataset: { 'data-admin-dashboard': 'true' },
-      workspace: {
-        label: 'Vitrines Admin',
-        name: 'Admin',
-        initial: email.trim().charAt(0).toUpperCase() || 'A',
-        onSelect: onBack,
-      },
+      /*
+       * Rail is nav only: no workspace row (Admin has none to switch to) and no
+       * footer (no account block, no back action). The Vitrines brand link at the
+       * top is the way back to the app, and Log out lives in the account menu
+       * there — so leaving Admin is still one click.
+       */
       nav: workspaceNav({
         active: section,
         label: 'Admin',
         admin: true,
         onUsers: () => onSectionChange('users'),
         onInsights: () => onSectionChange('insights'),
-        settingsLabel: 'Back to Vitrines',
-        settingsIcon: <ArrowLeftIcon aria-hidden="true" />,
-        onSettings: onBack,
+        onSettings: null,
       }),
-      railFooter: (
-        <div className="admin-workspace__account">
-          <span title={email}>{email}</span>
-          <Button label="Log out" variant="ghost" size="sm" onClick={onLogout} />
-        </div>
-      ),
       onBrandSelect: onBack,
     }),
-    [email, section, onSectionChange],
+    [section, onSectionChange],
   );
 
   return (
@@ -70,25 +56,17 @@ export function AdminDashboardShell({
   );
 }
 
-export function AdminDashboard({
-  user,
-  onLogout,
-}: {
-  user: AuthUser;
-  onLogout: () => void | Promise<void>;
-}) {
+export function AdminDashboard() {
   const route = useRoute();
   const section: AdminSection =
     route.name === 'admin' && route.section === 'insights' ? 'insights' : 'users';
   return (
     <AdminDashboardShell
-      email={user.email}
       section={section}
       onSectionChange={(next) =>
         navigate(next === 'insights' ? { name: 'admin', section: 'insights' } : { name: 'admin' })
       }
       onBack={() => navigate({ name: 'apps' })}
-      onLogout={onLogout}
       page={(
         <Suspense fallback={<AdminPageSpinner />}>
           {section === 'insights' ? <InsightsPage /> : <UsersPage />}

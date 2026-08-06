@@ -225,7 +225,13 @@ test("renders a responsive Lumin-style Projects header", () => {
     css,
     /\.projects-workspace__header-search\s*\{[^}]*width:\s*min\(800px, 100%\);/s,
   );
+  // The rail reflows into a top bar below 980px rather than vanishing — hiding it
+  // took the team drawer with it, since the switcher is the drawer's only trigger.
   assert.match(
+    css,
+    /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*position:\s*static;[^}]*flex-direction:\s*row;/s,
+  );
+  assert.doesNotMatch(
     css,
     /@media \(max-width:\s*980px\)[\s\S]*?\.projects-workspace__desktop-rail\s*\{[^}]*display:\s*none;/,
   );
