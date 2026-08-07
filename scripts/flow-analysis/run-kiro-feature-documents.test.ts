@@ -28,5 +28,8 @@ test("Kiro Feature Document batch runner is exposed as an executable module", as
   // creeping back into this query.
   assert.match(source, /SET visibility = 'catalog'/);
   assert.doesNotMatch(source, /user_id/);
+  // feature_document_jobs.requested_by was dropped by migration 0081, so the job
+  // insert must not name it. Asserting its absence keeps it from creeping back.
+  assert.doesNotMatch(source, /requested_by/);
   assert.match(source, /completedCatalogFlowIds/);
 });

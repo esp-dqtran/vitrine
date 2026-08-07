@@ -141,6 +141,17 @@ function representativeFlows(
   limit: number,
   maxEvidence = 12,
 ): DesignFlow[] {
+  // An over-cap Flow is dropped from every run, so a whole app can sit one Flow short
+  // of complete with nothing in the log saying why. Name them instead of hiding them.
+  const excluded = flows.filter((flow) => evidenceCount(flow) > maxEvidence);
+  if (excluded.length > 0) {
+    console.log(JSON.stringify({
+      event: "excluded-over-max-evidence",
+      maxEvidence,
+      count: excluded.length,
+      flows: excluded.map((flow) => ({ title: flow.title, evidence: evidenceCount(flow) })),
+    }));
+  }
   const eligible = flows
     .filter((flow) => evidenceCount(flow) > 0 && evidenceCount(flow) <= maxEvidence)
     .sort((left, right) =>
@@ -483,17 +494,16 @@ async function main(): Promise<void> {
               )
               : await query<{ id: number; document_id: number }>(
                 `INSERT INTO feature_document_jobs
-                   (document_id, transport_job_id, requested_by, total_count, source_version_id,
+                   (document_id, transport_job_id, total_count, source_version_id,
                     source_flow, evidence_manifest, evidence_manifest_sha256, focus_instruction,
                     prompt_version, provider_model)
-                 SELECT d.id, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11
+                 SELECT d.id, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10
                  FROM feature_documents d
                  WHERE d.id = $1 AND d.visibility = 'catalog'
                  RETURNING id, document_id`,
                 [
                   existingDocumentId,
                   generationInput.transportJobId,
-                  userId,
                   generationInput.evidenceManifest.length,
                   generationInput.source.versionId ?? null,
                   JSON.stringify(generationInput.source),
