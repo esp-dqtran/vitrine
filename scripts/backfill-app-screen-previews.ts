@@ -23,6 +23,21 @@ if (platform && !["web", "ios", "android"].includes(platform)) {
 // Web screens are desktop captures and read best on a card; a phone screenshot
 // is the fallback of last resort. Ordering the platforms makes the choice
 // deterministic for apps that have several.
+// Per-platform: each app-platform pair gets a capture from that platform, so
+// the Android tab never shows an iOS screenshot.
+// DISTINCT ON rather than a per-row subquery: images holds 1.2M rows and the
+// correlated form times out.
+const PLATFORM_MATCHES = `
+SELECT DISTINCT ON (i.platform_id)
+       i.platform_id AS id, p.name, i.thumbnail_object_key AS screen_key
+FROM images i
+JOIN platforms p ON p.id = i.platform_id
+WHERE i.thumbnail_object_key IS NOT NULL
+  AND p.preview_object_key IS NULL
+  AND ($1::text IS NULL OR p.name = $1)
+ORDER BY i.platform_id, i.id
+`;
+
 const MATCHES = `
 SELECT a.id,
        a.name,
@@ -45,6 +60,13 @@ const { rows } = await query<{ id: number; name: string; screen_key: string | nu
   [platform],
 );
 const matched = rows.filter((row) => row.screen_key);
+const platformRows = (await query<{
+  id: number;
+  name: string;
+  app: string;
+  screen_key: string | null;
+}>(PLATFORM_MATCHES, [platform])).rows;
+const platformMatched = platformRows.filter((row) => row.screen_key);
 
 try {
   if (apply) {
@@ -54,6 +76,12 @@ try {
         row.id,
       ]);
     }
+    for (const row of platformMatched) {
+      await query(
+        `UPDATE platforms SET preview_object_key = $1 WHERE id = $2 AND preview_object_key IS NULL`,
+        [row.screen_key, row.id],
+      );
+    }
   }
 } finally {
   await closePool();
@@ -62,8 +90,11 @@ try {
 console.log(JSON.stringify({
   mode: apply ? "apply" : "dry-run",
   platform: platform ?? "all",
-  examined: rows.length,
-  matched: matched.length,
-  withoutScreens: rows.length - matched.length,
+  apps: { examined: rows.length, matched: matched.length, withoutScreens: rows.length - matched.length },
+  platforms: {
+    examined: platformRows.length,
+    matched: platformMatched.length,
+    withoutScreens: platformRows.length - platformMatched.length,
+  },
   examples: matched.slice(0, 5).map(({ name, screen_key }) => ({ name, screen_key })),
 }, null, 2));

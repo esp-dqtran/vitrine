@@ -93,7 +93,17 @@ WITH latest AS MATERIALIZED (
   LIMIT $6
 )
 SELECT page.id, page.name AS app, page.display_name, page.icon_url,
-       page.accent_color, page.description, page.website_url, page.preview_object_key,
+       page.accent_color, page.description, page.website_url,
+       -- Prefer the capture belonging to the platform being browsed: an app on
+       -- both Android and iOS would otherwise show the same iOS screenshot on
+       -- both tabs. Falls back to the app-level preview when the platform has
+       -- none, and when no platform filter is applied.
+       COALESCE((
+         SELECT pl.preview_object_key FROM platforms pl
+         WHERE pl.app_id = page.id AND pl.name = $2::text
+           AND pl.preview_object_key IS NOT NULL
+         LIMIT 1
+       ), page.preview_object_key) AS preview_object_key,
        page.total_screens, page.updated_at, page.available_platforms,
        totals.total_count,
        -- More than one capture means we have re-crawled this App since it
