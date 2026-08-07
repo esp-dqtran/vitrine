@@ -49,7 +49,7 @@ export function ProjectReferencePanel({
       <header className="project-playground__references-header">
         <div>
           <h2>Project references</h2>
-          <p>Add collected evidence to this moodboard.</p>
+          <p>Add collected evidence to this canvas.</p>
         </div>
         <Button label="Close" variant="ghost" size="sm" onClick={onClose} />
       </header>

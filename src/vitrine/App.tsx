@@ -1032,16 +1032,22 @@ export function App() {
     </>
   );
 
-  // Surfaces that render inside the hoisted workspace shell (rail + panel).
+  /*
+   * Surfaces that render inside the hoisted workspace shell (rail + panel).
+   *
+   * Every full-viewport editor is deliberately absent, not just the canvas
+   * board: each is 100dvh with its own brand mark, its own identity and its
+   * own tool rail, so nesting one in the workspace panel gave it two headers,
+   * a second rail eating 200px, and a 100dvh child inside an inset panel that
+   * could not contain it. That ruled out the document editor too — it shares
+   * the same full-viewport shape as the canvas board, so it stays off this
+   * list for the same reason, keeping every project editor equally chromeless.
+   */
   const workspaceChromeRoutes = new Set([
     "projects",
     "project",
     "project-documents",
-    "project-document",
-    "project-document-file",
     "project-settings",
-    "project-playground",
-    "project-canvas",
     "collections",
     "settings-billing",
   ]);

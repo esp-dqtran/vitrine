@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { apiFetch } from '../apiFetch.ts';
 import { createPortal } from "react-dom";
 import { Button, Icon, IconButton, TextInput, type IconName } from "@astryxdesign/core";
@@ -34,13 +41,6 @@ import {
 import type { Platform } from "../../platformFromUrl.ts";
 import type { AppsDiscoveryScreenResult } from "../appsDiscovery.ts";
 import type { FlowCatalogItem } from "../flowCatalogApi.ts";
-import {
-  analyzeMoodboardPixels,
-  buildMoodboardSmartComposeResult,
-  normalizeMoodboardSmartComposeResult,
-  type ProjectMoodboardImageAnalysis,
-  type ProjectMoodboardSmartComposeResult,
-} from "../projectMoodboardSmartCompose.ts";
 import type { App } from "../types.ts";
 import { getResearchProject } from "../researchProjectsApi.ts";
 import {
@@ -61,23 +61,19 @@ import { uploadProjectCanvasAsset } from "../projectCanvasAssets.ts";
 import { navigate } from "../router.ts";
 import { useResolvedThemeMode } from "../theme.tsx";
 import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
+import { useApplicationToast } from "./ApplicationToast.tsx";
 import {
   ProjectCanvasCommentGlyph,
   ProjectCanvasCommentPanel,
   ProjectCanvasCommentPin,
 } from "./ProjectCanvasComments.tsx";
-import {
-  ProjectMoodboardPanel,
-  ProjectMoodboardReferenceInspector,
-  layoutMoodboardReferenceInSection,
-  projectMoodboardSectionPresets,
-  type ProjectMoodboardDecision,
-  type ProjectMoodboardReference,
-  type ProjectMoodboardSectionId,
-  type ProjectMoodboardSectionPreset,
-} from "./ProjectMoodboardPanel.tsx";
 import { ProjectReferencePanel, type ProjectReferenceState } from "./ProjectReferencePanel.tsx";
-import { ProjectScreenLibrary, projectScreenKey } from "./ProjectScreenLibrary.tsx";
+import {
+  catalogDragMimeType,
+  ProjectScreenLibrary,
+  projectScreenKey,
+  type CatalogDragPayload,
+} from "./ProjectScreenLibrary.tsx";
 import {
   ProjectCanvasDataLibrary,
   projectCanvasDataKey,
@@ -99,6 +95,7 @@ import {
   normalizeProjectStickyNoteCollaboration,
   projectStickyNoteFontFamilies,
   ProjectStickyNoteMetadata,
+  ProjectStickyNoteToolbar,
   type ProjectStickyNoteCollaboration,
   type ProjectStickyNoteFormat,
 } from "./ProjectStickyNoteToolbar.tsx";
@@ -186,7 +183,6 @@ const commentPlacementCursor = `url("data:image/svg+xml,${encodeURIComponent(
 )}") 6 5, crosshair`;
 
 type ProjectCanvasTool =
-  | "moodboard"
   | "research-frames"
   | "screens"
   | "sticky"
@@ -205,16 +201,11 @@ interface ProjectCanvasToolCatalogItem {
 
 const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
   {
-    tool: "moodboard",
-    title: "Moodboard",
-    description: "Collect references, shape directions, and record visual decisions.",
-    pinned: true,
-  },
-  {
     tool: "screens",
-    title: "Screens",
-    description: "Search captured product screens and add them to the canvas.",
-    pinned: false,
+    title: "Catalog",
+    description: "Search apps, screens and flows, then add them to the canvas.",
+    /* Pinned to the rail now, so the catalog lists it as one. */
+    pinned: true,
   },
   {
     tool: "sticky",
@@ -255,7 +246,6 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
 ];
 
 const projectCanvasToolIcons: Record<Exclude<ProjectCanvasTool, "sticky" | "comments">, IconName> = {
-  moodboard: "viewColumns",
   "research-frames": "viewColumns",
   screens: "viewColumns",
   document: "copy",
@@ -539,22 +529,6 @@ export interface ExcalidrawProjectSnapshot {
 
 type CanvasSaveState = "loading" | "saving" | "saved" | "offline" | "unavailable";
 
-interface StoredMoodboardReference {
-  sourceKind: ProjectMoodboardReference["sourceKind"];
-  sourceId: string;
-  sourceLabel: string;
-  sourceUrl?: string;
-  caption: string;
-  decision: ProjectMoodboardDecision;
-  addedAt: string;
-}
-
-interface AstryxMoodboardSectionReference {
-  elementId: string;
-  id: ProjectMoodboardSectionId;
-  title: string;
-}
-
 interface AstryxScreenReference {
   elementId: string;
   appId: string;
@@ -588,6 +562,185 @@ type AstryxCanvasDataPayload =
     };
 
 type AstryxCanvasDataReference = AstryxCanvasDataPayload & { elementId: string };
+
+/*
+ * A catalog card as a group of real Excalidraw elements rather than one
+ * rectangle with a multi-line label. The label approach centred everything and
+ * gave no room for a thumbnail, so an app, a screen and a flow all looked the
+ * same on the board.
+ *
+ * Every part shares a groupId, so the card moves, copies and deletes as one
+ * object while staying editable — and the container keeps the astryxReference
+ * so selection and "open source" keep working.
+ */
+interface CatalogCardImage {
+  fileId: FileId;
+  width: number;
+  height: number;
+}
+
+const catalogCardLayout = {
+  width: 420,
+  padding: 20,
+  mediaHeight: 210,
+  gap: 14,
+} as const;
+
+function truncateCardText(value: string, max: number): string {
+  const clean = value.replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
+}
+
+/*
+ * Fetch a catalog thumbnail into an Excalidraw file. Returns undefined rather
+ * than throwing: a card without its image is still a useful card, and a dead
+ * media URL should not stop one being placed.
+ */
+async function loadCatalogCardImage(
+  url: string | undefined,
+  projectId: string,
+): Promise<{ file: BinaryFileData; image: CatalogCardImage; stored: boolean } | undefined> {
+  if (!url) return undefined;
+  try {
+    const response = await apiFetch(canvasMediaFetchUrl(url), { credentials: "same-origin" });
+    if (!response.ok) return undefined;
+    const blob = await response.blob();
+    if (!canvasMediaMimeTypeSet.has(blob.type)) return undefined;
+    const fileId = `asset:${crypto.randomUUID()}` as FileId;
+    /*
+     * Stored in the project when possible; a card is still worth placing if the
+     * upload fails, so fall back to an inline data URL. Never fall back to the
+     * catalog URL itself — we only reached the bytes through the media proxy,
+     * so handing that URL to an <img> renders a broken image.
+     */
+    let src: string;
+    let stored = true;
+    try {
+      src = await uploadProjectCanvasAsset(projectId, fileId, blob);
+    } catch {
+      stored = false;
+      src = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    }
+    const dimensions = await imageDimensions(blob);
+    return {
+      file: {
+        id: fileId,
+        mimeType: blob.type as BinaryFileData["mimeType"],
+        dataURL: src as DataURL,
+        created: Date.now(),
+      },
+      image: { fileId, width: dimensions.width, height: dimensions.height },
+      stored,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function createCatalogCardElements({
+  x,
+  y,
+  eyebrow,
+  title,
+  meta,
+  accent,
+  image,
+  reference,
+}: {
+  x: number;
+  y: number;
+  eyebrow: string;
+  title: string;
+  meta: string;
+  accent: { stroke: string; fill: string };
+  image?: CatalogCardImage;
+  reference: Record<string, unknown>;
+}): ExcalidrawElement[] {
+  const { width, padding, mediaHeight, gap } = catalogCardLayout;
+  const hasMedia = Boolean(image);
+  const textTop = padding + (hasMedia ? mediaHeight + gap : 0);
+  const height = textTop + 74 + padding;
+  const left = x - width / 2;
+  const top = y - height / 2;
+  const groupId = `astryx-card-${Math.random().toString(36).slice(2, 10)}`;
+
+  const elements: Parameters<typeof convertToExcalidrawElements>[0] = [
+    {
+      type: "rectangle",
+      x: left,
+      y: top,
+      width,
+      height,
+      strokeColor: accent.stroke,
+      backgroundColor: accent.fill,
+      fillStyle: "solid",
+      strokeWidth: 1,
+      roughness: 0,
+      opacity: 100,
+      groupIds: [groupId],
+      customData: { astryxReference: reference },
+    },
+  ];
+
+  if (image) {
+    /* Contain the thumbnail in the media band rather than stretching it — these
+       are screenshots, and squashed screenshots are unreadable. */
+    const scale = Math.min(
+      (width - padding * 2) / image.width,
+      mediaHeight / image.height,
+    );
+    const drawWidth = Math.max(1, Math.round(image.width * scale));
+    const drawHeight = Math.max(1, Math.round(image.height * scale));
+    elements.push({
+      type: "image",
+      x: left + (width - drawWidth) / 2,
+      y: top + padding + (mediaHeight - drawHeight) / 2,
+      width: drawWidth,
+      height: drawHeight,
+      fileId: image.fileId,
+      status: "saved",
+      groupIds: [groupId],
+    });
+  }
+
+  elements.push({
+    type: "text",
+    x: left + padding,
+    y: top + textTop,
+    text: eyebrow.toUpperCase(),
+    fontSize: 12,
+    fontFamily: 2,
+    strokeColor: accent.stroke,
+    groupIds: [groupId],
+  });
+  elements.push({
+    type: "text",
+    x: left + padding,
+    y: top + textTop + 20,
+    text: truncateCardText(title, 34),
+    fontSize: 20,
+    fontFamily: 2,
+    strokeColor: "#1b1b1f",
+    groupIds: [groupId],
+  });
+  elements.push({
+    type: "text",
+    x: left + padding,
+    y: top + textTop + 50,
+    text: truncateCardText(meta, 46),
+    fontSize: 14,
+    fontFamily: 2,
+    strokeColor: "#5b6478",
+    groupIds: [groupId],
+  });
+
+  return convertToExcalidrawElements(elements) as ExcalidrawElement[];
+}
 
 function createCanvasDataCardElements(
   reference: AstryxCanvasDataPayload,
@@ -716,116 +869,12 @@ function screenReferenceForElement(element: ExcalidrawElement): AstryxScreenRefe
   };
 }
 
-function moodboardReferenceForElement(
-  element: ExcalidrawElement,
-  elements: readonly ExcalidrawElement[] = [],
-): ProjectMoodboardReference | undefined {
-  if (element.isDeleted || element.type !== "image") return undefined;
-  const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-  const moodboard = reference?.moodboard as Record<string, unknown> | undefined;
-  if (
-    !moodboard
-    || !["project-reference", "screen", "upload"].includes(String(moodboard.sourceKind))
-    || typeof moodboard.sourceId !== "string"
-    || typeof moodboard.sourceLabel !== "string"
-  ) return undefined;
-  const decision = ["keep", "maybe", "reject"].includes(String(moodboard.decision))
-    ? moodboard.decision as ProjectMoodboardDecision
-    : "maybe";
-  const section = element.frameId
-    ? elements
-      .map(moodboardSectionForElement)
-      .find((candidate) => candidate?.elementId === element.frameId)
-    : undefined;
-  return {
-    elementId: element.id,
-    sourceKind: moodboard.sourceKind as ProjectMoodboardReference["sourceKind"],
-    sourceId: moodboard.sourceId,
-    sourceLabel: moodboard.sourceLabel,
-    sourceUrl: typeof moodboard.sourceUrl === "string" ? moodboard.sourceUrl : undefined,
-    caption: typeof moodboard.caption === "string" ? moodboard.caption : "",
-    decision,
-    sectionId: section?.id,
-    x: element.x,
-    y: element.y,
-    width: element.width,
-    height: element.height,
-  };
-}
 
-function moodboardReferencesEqual(
-  left: readonly ProjectMoodboardReference[],
-  right: readonly ProjectMoodboardReference[],
-): boolean {
-  return left.length === right.length && left.every((reference, index) => {
-    const other = right[index];
-    return reference.elementId === other?.elementId
-      && reference.sourceKind === other.sourceKind
-      && reference.sourceId === other.sourceId
-      && reference.sourceLabel === other.sourceLabel
-      && reference.sourceUrl === other.sourceUrl
-      && reference.caption === other.caption
-      && reference.decision === other.decision
-      && reference.sectionId === other.sectionId
-      && reference.x === other.x
-      && reference.y === other.y
-      && reference.width === other.width
-      && reference.height === other.height;
-  });
-}
 
-function moodboardSectionForElement(
-  element: ExcalidrawElement,
-): AstryxMoodboardSectionReference | undefined {
-  if (element.isDeleted || element.type !== "frame") return undefined;
-  const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-  if (
-    reference?.kind !== "moodboard-section"
-    || !projectMoodboardSectionPresets.some((section) => section.id === reference.sectionId)
-  ) return undefined;
-  return {
-    elementId: element.id,
-    id: reference.sectionId as ProjectMoodboardSectionId,
-    title: element.name?.trim() || "Moodboard section",
-  };
-}
 
-function moodboardSectionsEqual(
-  left: readonly AstryxMoodboardSectionReference[],
-  right: readonly AstryxMoodboardSectionReference[],
-): boolean {
-  return left.length === right.length && left.every((section, index) => (
-    section.elementId === right[index]?.elementId
-    && section.id === right[index]?.id
-    && section.title === right[index]?.title
-  ));
-}
 
-function moodboardSmartComposeForElement(
-  element: ExcalidrawElement,
-): ProjectMoodboardSmartComposeResult | undefined {
-  const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-  if (reference?.kind !== "moodboard-section") return undefined;
-  return normalizeMoodboardSmartComposeResult(reference.smartCompose);
-}
 
-function moodboardSmartComposeResultsEqual(
-  left: ProjectMoodboardSmartComposeResult | undefined,
-  right: ProjectMoodboardSmartComposeResult | undefined,
-): boolean {
-  if (!left && !right) return true;
-  if (!left || !right) return false;
-  return JSON.stringify(left) === JSON.stringify(right);
-}
 
-function moodboardDecisionOpacity(decision: ProjectMoodboardDecision): number {
-  if (decision === "keep") return 100;
-  if (decision === "reject") return 38;
-  return 82;
-}
 
 function withCanvasElementUpdate(
   element: ExcalidrawElement,
@@ -983,52 +1032,6 @@ function imageDimensions(blob: Blob): Promise<{ width: number; height: number }>
     .catch(() => ({ width: 640, height: 400 }));
 }
 
-async function analyzeMoodboardImageFile(
-  referenceId: string,
-  element: ExcalidrawElement,
-  files: BinaryFiles,
-): Promise<ProjectMoodboardImageAnalysis | undefined> {
-  if (element.type !== "image" || !element.fileId) return undefined;
-  const file = files[element.fileId];
-  const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-  const sources = [
-    file?.dataURL,
-    typeof reference?.mediaUrl === "string" ? reference.mediaUrl : undefined,
-  ].filter((source, index, all): source is string => (
-    Boolean(source) && all.indexOf(source) === index
-  ));
-  for (const source of sources) {
-    try {
-      const response = await apiFetch(canvasMediaFetchUrl(source), { credentials: "same-origin" });
-      if (!response.ok) continue;
-      const bitmap = await createImageBitmap(await response.blob());
-      try {
-        const scale = Math.min(1, 48 / Math.max(bitmap.width, bitmap.height));
-        const width = Math.max(1, Math.round(bitmap.width * scale));
-        const height = Math.max(1, Math.round(bitmap.height * scale));
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context) continue;
-        context.drawImage(bitmap, 0, 0, width, height);
-        return analyzeMoodboardPixels(
-          referenceId,
-          context.getImageData(0, 0, width, height).data,
-          width,
-          height,
-        );
-      } finally {
-        bitmap.close();
-      }
-    } catch {
-      // Some historical canvas files point at retired media URLs. Smart Compose
-      // still returns the deterministic layout and source-linked summaries.
-    }
-  }
-  return undefined;
-}
 
 function canvasMediaFetchUrl(source: string): string {
   const url = new URL(source, window.location.origin);
@@ -1056,17 +1059,6 @@ export function ProjectPlayground({
     useState<DesignerCanvasCollaborationStatus>("connecting");
   const [remoteCollaborators, setRemoteCollaborators] =
     useState<readonly DesignerCanvasCollaborator[]>([]);
-  const [moodboardOpen, setMoodboardOpen] = useState(false);
-  const [moodboardMessage, setMoodboardMessage] = useState("");
-  const [moodboardReferences, setMoodboardReferences] =
-    useState<readonly ProjectMoodboardReference[]>([]);
-  const [moodboardSections, setMoodboardSections] =
-    useState<readonly AstryxMoodboardSectionReference[]>([]);
-  const [moodboardSmartCompose, setMoodboardSmartCompose] =
-    useState<ProjectMoodboardSmartComposeResult>();
-  const [moodboardSmartComposeBusy, setMoodboardSmartComposeBusy] = useState(false);
-  const [selectedMoodboardReference, setSelectedMoodboardReference] =
-    useState<ProjectMoodboardReference>();
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
@@ -1099,9 +1091,9 @@ export function ProjectPlayground({
   const [referenceMessage, setReferenceMessage] = useState("");
   const [insertingScreenKey, setInsertingScreenKey] = useState<string>();
   const [screenMessage, setScreenMessage] = useState("");
+  const showToast = useApplicationToast();
   const [selectedScreenReference, setSelectedScreenReference] = useState<AstryxScreenReference>();
   const [insertingDataKey, setInsertingDataKey] = useState<string>();
-  const [dataToolsMessage, setDataToolsMessage] = useState("");
   const [selectedDataReference, setSelectedDataReference] = useState<AstryxCanvasDataReference>();
   const [canvasToolbarHost, setCanvasToolbarHost] = useState<HTMLElement | null>(null);
   const editorRef = useRef<ExcalidrawImperativeAPI | null>(null);
@@ -1145,11 +1137,6 @@ export function ProjectPlayground({
     : collaborationStatus === "connecting"
       ? "Connecting"
       : "Collaboration offline";
-  const moodboardDecisionCounts = useMemo(() => ({
-    keep: moodboardReferences.filter((reference) => reference.decision === "keep").length,
-    maybe: moodboardReferences.filter((reference) => reference.decision === "maybe").length,
-    reject: moodboardReferences.filter((reference) => reference.decision === "reject").length,
-  }), [moodboardReferences]);
   const canvasReadOnly = referencesState !== "ready"
     || references?.access?.role === "viewer";
 
@@ -1444,50 +1431,6 @@ export function ProjectPlayground({
     const selectedScreen = selectedScreens.length === 1 ? selectedScreens[0] : undefined;
     setSelectedScreenReference((current) =>
       current?.elementId === selectedScreen?.elementId ? current : selectedScreen);
-    const nextMoodboardReferences = elements
-      .map((element) => moodboardReferenceForElement(element, elements))
-      .filter((reference): reference is ProjectMoodboardReference => Boolean(reference));
-    setMoodboardReferences((current) => (
-      moodboardReferencesEqual(current, nextMoodboardReferences)
-        ? current
-        : nextMoodboardReferences
-    ));
-    const selectedMoodboardReferences = nextMoodboardReferences.filter((reference) => (
-      appState.selectedElementIds[reference.elementId]
-    ));
-    const selectedMoodboard = selectedMoodboardReferences.length === 1
-      ? selectedMoodboardReferences[0]
-      : undefined;
-    setSelectedMoodboardReference((current) => {
-      if (!current && !selectedMoodboard) return current;
-      if (
-        current?.elementId === selectedMoodboard?.elementId
-        && current?.caption === selectedMoodboard?.caption
-        && current?.decision === selectedMoodboard?.decision
-        && current?.sectionId === selectedMoodboard?.sectionId
-        && current?.x === selectedMoodboard?.x
-        && current?.y === selectedMoodboard?.y
-        && current?.width === selectedMoodboard?.width
-        && current?.height === selectedMoodboard?.height
-      ) return current;
-      return selectedMoodboard;
-    });
-    const nextMoodboardSections = elements
-      .map(moodboardSectionForElement)
-      .filter((section): section is AstryxMoodboardSectionReference => Boolean(section));
-    setMoodboardSections((current) => (
-      moodboardSectionsEqual(current, nextMoodboardSections)
-        ? current
-        : nextMoodboardSections
-    ));
-    const nextMoodboardSmartCompose = elements
-      .map(moodboardSmartComposeForElement)
-      .find((result): result is ProjectMoodboardSmartComposeResult => Boolean(result));
-    setMoodboardSmartCompose((current) => (
-      moodboardSmartComposeResultsEqual(current, nextMoodboardSmartCompose)
-        ? current
-        : nextMoodboardSmartCompose
-    ));
     const selectedDataReferences = elements
       .filter((element) => appState.selectedElementIds[element.id])
       .map(canvasDataReferenceForElement)
@@ -1517,11 +1460,32 @@ export function ProjectPlayground({
       ) return current;
       return selectedDocument;
     });
+    /*
+     * Resolve a selection to its sticky container. Clicking into a note's text
+     * selects the bound text element, which is not a rectangle and carries no
+     * astryxReference — so matching only containers dropped the note and let
+     * Excalidraw's generic shape panel take over mid-edit.
+     */
     const selectedStickyNotes = elements
       .filter((element) => appState.selectedElementIds[element.id])
-      .map(stickyNoteReferenceForElement)
+      .map((element) => {
+        const direct = stickyNoteReferenceForElement(element);
+        if (direct) return direct;
+        const containerId = (element as { containerId?: string | null }).containerId;
+        if (!containerId) return undefined;
+        const container = elements.find((candidate) => candidate.id === containerId);
+        return container ? stickyNoteReferenceForElement(container) : undefined;
+      })
       .filter((reference): reference is AstryxStickyNoteReference => Boolean(reference));
-    const selectedSticky = selectedStickyNotes.length === 1 ? selectedStickyNotes[0] : undefined;
+    /* One note may resolve twice when both its container and its text are in the
+       selection; that is still a single note. */
+    const uniqueSelectedStickyNotes = selectedStickyNotes.filter(
+      (reference, index) => selectedStickyNotes
+        .findIndex((candidate) => candidate.elementId === reference.elementId) === index,
+    );
+    const selectedSticky = uniqueSelectedStickyNotes.length === 1
+      ? uniqueSelectedStickyNotes[0]
+      : undefined;
     setSelectedStickyNote((current) => (
       stickyNoteReferencesEqual(current, selectedSticky) ? current : selectedSticky
     ));
@@ -1604,209 +1568,12 @@ export function ProjectPlayground({
     };
   }, [canvasId, projectId, queueSnapshot, syncCanvasCollaborators]);
 
-  const createMoodboardSections = useCallback((
-    presets: readonly ProjectMoodboardSectionPreset[],
-  ) => {
-    if (canvasReadOnly) return;
-    const editor = editorRef.current;
-    if (!editor) return;
-    const sceneElements = editor.getSceneElements();
-    const existingIds = new Set(sceneElements
-      .map(moodboardSectionForElement)
-      .filter((section): section is AstryxMoodboardSectionReference => Boolean(section))
-      .map((section) => section.id));
-    const missing = presets.filter((preset) => !existingIds.has(preset.id));
-    if (missing.length === 0) {
-      setMoodboardMessage("Those moodboard sections are already on the canvas.");
-      return;
-    }
 
-    const existingFrames = sceneElements.filter((element) => moodboardSectionForElement(element));
-    const appState = editor.getAppState();
-    const zoom = appState.zoom.value;
-    const baseX = existingFrames.length > 0
-      ? Math.max(...existingFrames.map((frame) => frame.x + frame.width)) + 96
-      : -appState.scrollX + appState.width / (2 * zoom) - 360;
-    const baseY = existingFrames.length > 0
-      ? existingFrames[0].y
-      : -appState.scrollY + appState.height / (2 * zoom) - 310;
-    const created = missing.map((preset, index) => {
-      const [frame] = convertToExcalidrawElements([{
-        type: "frame",
-        children: [],
-        x: baseX + index * 816,
-        y: baseY,
-        width: 720,
-        height: 620,
-        name: preset.title,
-        customData: {
-          astryxReference: {
-            kind: "moodboard-section",
-            sectionId: preset.id,
-            createdAt: new Date().toISOString(),
-          },
-        },
-      } as ElementSkeleton]);
-      return frame;
-    });
-    editor.setActiveTool({ type: "selection" });
-    editor.updateScene({ elements: [...sceneElements, ...created] });
-    editor.scrollToContent(created, { animate: true, fitToViewport: true });
-    setMoodboardMessage(
-      missing.length === 1
-        ? `Added ${missing[0].title}.`
-        : "Moodboard structure is ready. New references will land in Unsorted.",
-    );
-  }, [canvasReadOnly]);
 
-  const ensureMoodboardInbox = useCallback(() => {
-    const unsorted = projectMoodboardSectionPresets.find((section) => section.id === "unsorted");
-    if (unsorted) createMoodboardSections([unsorted]);
-  }, [createMoodboardSections]);
 
-  const composeMoodboard = useCallback(async () => {
-    if (canvasReadOnly || moodboardSmartComposeBusy) return;
-    const editor = editorRef.current;
-    if (!editor) return;
-    const sceneElements = editor.getSceneElements();
-    const sectionFrames = sceneElements
-      .map((element) => ({ element, section: moodboardSectionForElement(element) }))
-      .filter((entry): entry is {
-        element: ExcalidrawElement;
-        section: AstryxMoodboardSectionReference;
-      } => Boolean(entry.section));
-    const references = sceneElements
-      .map((element) => moodboardReferenceForElement(element, sceneElements))
-      .filter((reference): reference is ProjectMoodboardReference => Boolean(reference));
-    if (sectionFrames.length === 0 || references.length === 0) {
-      setMoodboardMessage("Add a moodboard section and at least one reference before composing.");
-      return;
-    }
-
-    setMoodboardSmartComposeBusy(true);
-    setMoodboardMessage("Composing the board from your confirmed reference decisions…");
-    try {
-      const files = editor.getFiles();
-      const analyses = (await Promise.all(references
-        .filter((reference) => reference.decision === "keep")
-        .map(async (reference) => {
-          const element = sceneElements.find((candidate) => candidate.id === reference.elementId);
-          if (!element) return undefined;
-          try {
-            return await analyzeMoodboardImageFile(reference.elementId, element, files);
-          } catch {
-            return undefined;
-          }
-        })))
-        .filter((analysis): analysis is ProjectMoodboardImageAnalysis => Boolean(analysis));
-      const result = buildMoodboardSmartComposeResult({
-        references,
-        sections: sectionFrames.map(({ section }) => ({ id: section.id, title: section.title })),
-        analyses,
-      });
-
-      const elementPatches = new Map<string, Partial<ExcalidrawElement>>();
-      const decisionOrder: Record<ProjectMoodboardDecision, number> = {
-        keep: 0,
-        maybe: 1,
-        reject: 2,
-      };
-      for (const { element: sectionFrame } of sectionFrames) {
-        const children = sceneElements
-          .filter((element) => element.type === "image" && element.frameId === sectionFrame.id)
-          .map((element) => ({
-            element,
-            reference: moodboardReferenceForElement(element, sceneElements),
-          }))
-          .filter((entry): entry is {
-            element: ExcalidrawElement;
-            reference: ProjectMoodboardReference;
-          } => Boolean(entry.reference))
-          .sort((left, right) => (
-            decisionOrder[left.reference.decision] - decisionOrder[right.reference.decision]
-          ));
-        let requiredFrameHeight = sectionFrame.height;
-        children.forEach(({ element }, index) => {
-          const placement = layoutMoodboardReferenceInSection({
-            image: { width: element.width, height: element.height },
-            section: {
-              x: sectionFrame.x,
-              y: sectionFrame.y,
-              width: sectionFrame.width,
-              height: requiredFrameHeight,
-            },
-            occupiedCount: index,
-          });
-          requiredFrameHeight = Math.max(requiredFrameHeight, placement.requiredFrameHeight);
-          elementPatches.set(element.id, {
-            x: placement.x,
-            y: placement.y,
-            width: placement.width,
-            height: placement.height,
-          });
-        });
-        if (requiredFrameHeight !== sectionFrame.height) {
-          elementPatches.set(sectionFrame.id, { height: requiredFrameHeight });
-        }
-      }
-
-      const anchor = sectionFrames.find(({ section }) => section.id === "unsorted")
-        ?? sectionFrames[0];
-      const anchorCustomData = anchor.element.customData as Record<string, unknown> | undefined;
-      const anchorReference = anchorCustomData?.astryxReference as Record<string, unknown> | undefined;
-      elementPatches.set(anchor.element.id, {
-        ...elementPatches.get(anchor.element.id),
-        customData: {
-          ...anchorCustomData,
-          astryxReference: {
-            ...anchorReference,
-            smartCompose: result,
-          },
-        },
-      });
-
-      const composedElements = sceneElements.map((element) => {
-        const patch = elementPatches.get(element.id);
-        return patch ? withCanvasElementUpdate(element, patch) : element;
-      });
-      editor.updateScene({ elements: composedElements });
-      setMoodboardSmartCompose(result);
-      setMoodboardMessage(
-        analyses.length > 0
-          ? `Board composed from ${analyses.length} Keep ${analyses.length === 1 ? "reference" : "references"}. Review the automated interpretation.`
-          : references.some((reference) => reference.decision === "keep")
-            ? "Board tidied. The Keep images could not be sampled, so visual signals were withheld."
-            : "Board tidied. Mark at least one reference Keep to generate palette and visual signals.",
-      );
-    } finally {
-      setMoodboardSmartComposeBusy(false);
-    }
-  }, [canvasReadOnly, moodboardSmartComposeBusy]);
-
-  const moodboardImagePlacement = useCallback((width: number, height: number) => {
+  const canvasImagePlacement = useCallback((width: number, height: number) => {
     const editor = editorRef.current;
     if (!editor) return { x: 0, y: 0, width, height, frameId: undefined };
-    const elements = editor.getSceneElements();
-    const unsorted = elements.find((element) => moodboardSectionForElement(element)?.id === "unsorted");
-    if (unsorted) {
-      const children = elements.filter((element) => (
-        !element.isDeleted && element.type === "image" && element.frameId === unsorted.id
-      ));
-      const cellWidth = 304;
-      const maxHeight = 230;
-      const scale = Math.min(1, cellWidth / width, maxHeight / height);
-      const placedWidth = Math.max(80, Math.round(width * scale));
-      const placedHeight = Math.max(80, Math.round(height * scale));
-      const column = children.length % 2;
-      const row = Math.floor(children.length / 2);
-      return {
-        x: unsorted.x + 32 + column * 344,
-        y: unsorted.y + 64 + row * 264,
-        width: placedWidth,
-        height: placedHeight,
-        frameId: unsorted.id,
-      };
-    }
     const appState = editor.getAppState();
     const zoom = appState.zoom.value;
     const maxWidth = 640;
@@ -1837,7 +1604,7 @@ export function ProjectPlayground({
       const fileId = crypto.randomUUID() as FileId;
       const src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
       const dimensions = await imageDimensions(blob);
-      const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
+      const placement = canvasImagePlacement(dimensions.width, dimensions.height);
       const file: BinaryFileData = {
         id: fileId,
         mimeType: blob.type as BinaryFileData["mimeType"],
@@ -1853,19 +1620,9 @@ export function ProjectPlayground({
         fileId,
         status: "saved",
       }]);
-      const moodboard: StoredMoodboardReference = {
-        sourceKind: "project-reference",
-        sourceId: String(item.id),
-        sourceLabel: item.stepLabel || item.snapshot.title,
-        sourceUrl: item.snapshot.sourcePath || item.mediaUrl,
-        caption: item.note,
-        decision: "maybe",
-        addedAt: new Date().toISOString(),
-      };
       const referenceImage = {
         ...image,
         frameId: placement.frameId ?? null,
-        opacity: moodboardDecisionOpacity(moodboard.decision),
         customData: {
           ...image.customData,
           astryxReference: {
@@ -1873,171 +1630,101 @@ export function ProjectPlayground({
             itemId: item.id,
             appId: item.appId ?? null,
             title: item.snapshot.title,
-            moodboard,
           },
         },
       } as ExcalidrawElement;
       editor.addFiles([file]);
       editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
       editor.scrollToContent(referenceImage, { animate: true, fitToViewport: false });
-      setReferenceMessage(`Added ${item.stepLabel || item.snapshot.title} to the moodboard.`);
-      setMoodboardMessage(`Added ${item.stepLabel || item.snapshot.title} to Unsorted.`);
+      setReferenceMessage(`Added ${item.stepLabel || item.snapshot.title} to the canvas.`);
     } catch (error) {
       setReferenceMessage((error as Error).message);
     } finally {
       setInsertingReferenceId(undefined);
     }
-  }, [moodboardImagePlacement, projectId]);
+  }, [canvasImagePlacement, projectId]);
 
-  const insertCatalogScreen = useCallback(async (result: AppsDiscoveryScreenResult) => {
+  const insertCatalogScreen = useCallback(async (
+    result: AppsDiscoveryScreenResult,
+    dropPoint?: { x: number; y: number },
+  ) => {
     const editor = editorRef.current;
     if (!editor) return;
     const { app, screen } = result;
     setInsertingScreenKey(projectScreenKey(result));
     setScreenMessage("");
     try {
-      const response = await apiFetch(canvasMediaFetchUrl(screen.url), { credentials: "same-origin" });
-      if (!response.ok) throw new Error(`Screen image returned ${response.status}`);
-      const blob = await response.blob();
-      if (!canvasMediaMimeTypeSet.has(blob.type)) {
-        throw new Error("This screen is not a supported PNG, JPEG, or WebP image.");
-      }
-      const fileId = crypto.randomUUID() as FileId;
-      let src = screen.url;
-      let storedInProject = true;
-      try {
-        src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
-      } catch {
-        storedInProject = false;
-      }
-      const dimensions = await imageDimensions(blob);
-      const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
-      const file: BinaryFileData = {
-        id: fileId,
-        mimeType: blob.type as BinaryFileData["mimeType"],
-        dataURL: src as DataURL,
-        created: Date.now(),
-      };
-      const [image] = convertToExcalidrawElements([{
-        type: "image",
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-        fileId,
-        status: "saved",
-      }]);
-      const moodboard: StoredMoodboardReference = {
-        sourceKind: "screen",
-        sourceId: `${app.id}:${screen.id}`,
-        sourceLabel: `${app.app} · ${screen.type || "Screen"}`,
-        sourceUrl: screen.sourceUrl ?? screen.url,
-        caption: "",
-        decision: "maybe",
-        addedAt: new Date().toISOString(),
-      };
-      const referenceImage = {
-        ...image,
-        frameId: placement.frameId ?? null,
-        opacity: moodboardDecisionOpacity(moodboard.decision),
-        customData: {
-          ...image.customData,
-          astryxReference: {
-            kind: "screen",
-            appId: app.id,
-            appName: app.app,
-            screenId: screen.id,
-            screenType: screen.type,
-            platform: screen.platform,
-            mediaUrl: screen.url,
-            sourceUrl: screen.sourceUrl ?? null,
-            moodboard,
-          },
+      /* Same loader the App and Flow cards use: it fetches through the media
+         proxy, stores the asset in the project, and keeps the bytes inline when
+         that upload fails — so the card never points an <img> at a URL the page
+         cannot load. */
+      const loaded = await loadCatalogCardImage(screen.url, projectId);
+      if (!loaded) throw new Error("This screen image could not be loaded.");
+      const { file, image, stored: storedInProject } = loaded;
+      /* A drop names its own spot; a click centres it in the viewport. */
+      const auto = canvasImagePlacement(image.width, image.height);
+      const placement = dropPoint
+        ? { ...auto, x: dropPoint.x - auto.width / 2, y: dropPoint.y - auto.height / 2 }
+        : auto;
+      /*
+       * A screen goes onto the board as a card like an app or a flow, so it
+       * carries which app and which screen type it is instead of being an
+       * unlabelled rectangle of pixels.
+       */
+      const created = createCatalogCardElements({
+        x: placement.x + placement.width / 2,
+        y: placement.y + placement.height / 2,
+        eyebrow: "Screen",
+        title: app.app,
+        meta: [screen.type || screen.productArea || "Screen", screen.platform]
+          .filter(Boolean)
+          .join(" · "),
+        accent: { stroke: "#a3c3ae", fill: "#eef7f1" },
+        image,
+        reference: {
+          kind: "screen",
+          appId: app.id,
+          appName: app.app,
+          screenId: screen.id,
+          screenType: screen.type,
+          platform: screen.platform,
+          mediaUrl: screen.url,
+          sourceUrl: screen.sourceUrl ?? null,
         },
-      } as ExcalidrawElement;
+      });
+      /* The container carries the frame, so a card dropped into a frame
+         still belongs to it. */
+      const card = created.map((element) => (
+        element.type === "rectangle"
+          ? { ...element, frameId: placement.frameId ?? null } as ExcalidrawElement
+          : element
+      ));
+      const container = card.find((element) => element.type === "rectangle");
       editor.addFiles([file]);
-      editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
-      editor.scrollToContent(referenceImage, { animate: true, fitToViewport: false });
-      setScreenMessage(
-        storedInProject
-          ? `Added ${app.app} · ${screen.type || "Screen"}.`
-          : `Added ${app.app} · ${screen.type || "Screen"} locally. Sign in to sync it.`,
-      );
-      setMoodboardMessage(`Added ${app.app} · ${screen.type || "Screen"} to Unsorted.`);
+      editor.updateScene({
+        elements: [...editor.getSceneElements(), ...card],
+        appState: { selectedElementIds: container ? { [container.id]: true } : {} },
+      });
+      editor.scrollToContent(card, { animate: true, fitToViewport: false });
+      showToast(storedInProject
+        ? `Added ${app.app} to the canvas.`
+        : `Added ${app.app} to the canvas locally. Sign in to sync it.`);
     } catch (error) {
       setScreenMessage((error as Error).message);
     } finally {
       setInsertingScreenKey(undefined);
     }
-  }, [moodboardImagePlacement, projectId]);
+  }, [canvasImagePlacement, projectId, showToast]);
 
-  const insertMoodboardUploads = useCallback(async (uploads: readonly File[]) => {
-    if (canvasReadOnly) return;
-    const editor = editorRef.current;
-    if (!editor || uploads.length === 0) return;
-    ensureMoodboardInbox();
-    setMoodboardMessage(`Adding ${uploads.length} ${uploads.length === 1 ? "image" : "images"}…`);
-    let inserted = 0;
-    for (const upload of uploads) {
-      if (!canvasMediaMimeTypeSet.has(upload.type)) continue;
-      try {
-        const fileId = crypto.randomUUID() as FileId;
-        const src = await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, upload);
-        const dimensions = await imageDimensions(upload);
-        const placement = moodboardImagePlacement(dimensions.width, dimensions.height);
-        const file: BinaryFileData = {
-          id: fileId,
-          mimeType: upload.type as BinaryFileData["mimeType"],
-          dataURL: src as DataURL,
-          created: Date.now(),
-        };
-        const [image] = convertToExcalidrawElements([{
-          type: "image",
-          x: placement.x,
-          y: placement.y,
-          width: placement.width,
-          height: placement.height,
-          fileId,
-          status: "saved",
-        }]);
-        const moodboard: StoredMoodboardReference = {
-          sourceKind: "upload",
-          sourceId: fileId,
-          sourceLabel: upload.name,
-          caption: "",
-          decision: "maybe",
-          addedAt: new Date().toISOString(),
-        };
-        const referenceImage = {
-          ...image,
-          frameId: placement.frameId ?? null,
-          opacity: moodboardDecisionOpacity(moodboard.decision),
-          customData: {
-            ...image.customData,
-            astryxReference: {
-              kind: "upload",
-              fileName: upload.name,
-              moodboard,
-            },
-          },
-        } as ExcalidrawElement;
-        editor.addFiles([file]);
-        editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
-        inserted += 1;
-      } catch (error) {
-        setMoodboardMessage(error instanceof Error ? error.message : "Image upload failed");
-      }
-    }
-    if (inserted > 0) {
-      setMoodboardMessage(
-        `Added ${inserted} ${inserted === 1 ? "image" : "images"} to Unsorted.`,
-      );
-    }
-  }, [canvasReadOnly, ensureMoodboardInbox, moodboardImagePlacement, projectId]);
 
-  const insertCanvasDataReference = useCallback((
+  const insertCanvasDataReference = useCallback(async (
     reference: AstryxCanvasDataPayload,
     message: string,
+    /* Where the reader dropped it. Without one the card cascades from the last
+       one placed, which is right for a click and wrong for a drag. */
+    placement?: { x: number; y: number },
+    /* Thumbnail for the card's media band. */
+    imageUrl?: string,
   ) => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -2047,30 +1734,51 @@ export function ProjectPlayground({
     const lastDataCard = [...sceneElements]
       .reverse()
       .find((element) => canvasDataReferenceForElement(element));
-    const cardWidth = reference.kind === "app" ? 440 : 560;
-    const cardHeight = reference.kind === "app" ? 250 : 320;
-    const centerX = lastDataCard
+    const cardWidth = catalogCardLayout.width;
+    const cardHeight = 340;
+    const centerX = placement?.x ?? (lastDataCard
       ? lastDataCard.x + lastDataCard.width + 40 + cardWidth / 2
-      : -appState.scrollX + appState.width / (2 * zoom);
-    const centerY = lastDataCard
+      : -appState.scrollX + appState.width / (2 * zoom));
+    const centerY = placement?.y ?? (lastDataCard
       ? lastDataCard.y + cardHeight / 2
-      : -appState.scrollY + appState.height / (2 * zoom);
-    const created = createCanvasDataCardElements(reference, centerX, centerY);
+      : -appState.scrollY + appState.height / (2 * zoom));
+
+    const isApp = reference.kind === "app";
+    const loaded = await loadCatalogCardImage(imageUrl, projectId);
+    const created = createCatalogCardElements({
+      x: centerX,
+      y: centerY,
+      eyebrow: isApp ? "App" : "Flow",
+      title: isApp ? reference.appName : reference.flowTitle,
+      meta: isApp
+        ? `${reference.category || reference.platform} · ${reference.totalScreens} screens`
+        : `${reference.appName} · ${reference.stepCount} ${reference.stepCount === 1 ? "step" : "steps"}`,
+      accent: isApp
+        ? { stroke: "#9cb6df", fill: "#eef4ff" }
+        : { stroke: "#9d94d8", fill: "#f2efff" },
+      image: loaded?.image,
+      reference: reference as unknown as Record<string, unknown>,
+    });
     const container = created.find((element) => element.type === "rectangle");
+    if (loaded) editor.addFiles([loaded.file]);
     editor.updateScene({
-      elements: [...sceneElements, ...created],
+      elements: [...editor.getSceneElements(), ...created],
       appState: { selectedElementIds: container ? { [container.id]: true } : {} },
     });
     editor.scrollToContent(created, { animate: true, fitToViewport: false });
     if (container) setSelectedDataReference(canvasDataReferenceForElement(container));
-    setDataToolsMessage(message);
-  }, []);
+    showToast(message);
+  }, [showToast]);
 
-  const insertCatalogApp = useCallback((app: App, platform: Platform) => {
+  const insertCatalogApp = useCallback((
+    app: App,
+    platform: Platform,
+    placement?: { x: number; y: number },
+  ) => {
     const key = projectCanvasDataKey(app);
     setInsertingDataKey(key);
     try {
-      insertCanvasDataReference({
+      void insertCanvasDataReference({
         kind: "app",
         appId: app.id,
         appName: app.app,
@@ -2078,17 +1786,21 @@ export function ProjectPlayground({
         category: app.categories[0]?.name ?? "Uncategorized",
         platform,
         totalScreens: app.totalScreens,
-      }, `Added ${app.app} to the canvas.`);
+      }, `Added ${app.app} to the canvas.`, placement, app.screens?.[0]?.url);
     } finally {
       setInsertingDataKey(undefined);
     }
   }, [insertCanvasDataReference]);
 
-  const insertCatalogFlow = useCallback((item: FlowCatalogItem, platform: Platform) => {
+  const insertCatalogFlow = useCallback((
+    item: FlowCatalogItem,
+    platform: Platform,
+    placement?: { x: number; y: number },
+  ) => {
     const key = projectCanvasDataKey(item);
     setInsertingDataKey(key);
     try {
-      insertCanvasDataReference({
+      void insertCanvasDataReference({
         kind: "flow",
         appId: item.preview.appId,
         appName: item.preview.appName,
@@ -2099,7 +1811,8 @@ export function ProjectPlayground({
         platform,
         version: item.preview.version,
         stepCount: item.preview.screenCount,
-      }, `Added ${item.title} to the canvas.`);
+      }, `Added ${item.title} to the canvas.`, placement,
+        item.preview.flow.steps.flatMap((step) => step.evidence)[0]?.thumbnailUrl);
     } finally {
       setInsertingDataKey(undefined);
     }
@@ -2194,7 +1907,6 @@ export function ProjectPlayground({
     setStickyDraft(undefined);
     setStickyPlacement(undefined);
     setDocumentPlacement(false);
-    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -2236,7 +1948,6 @@ export function ProjectPlayground({
     setCommentDraft("");
     setSelectedCommentId(undefined);
     setResearchFramesOpen(false);
-    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -2255,7 +1966,6 @@ export function ProjectPlayground({
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
     stopStickyPlacement();
-    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -2312,7 +2022,6 @@ export function ProjectPlayground({
     setResearchFramesOpen(false);
     setStickyDraft(undefined);
     setStickyPlacement({ color, mode });
-    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
@@ -2339,97 +2048,8 @@ export function ProjectPlayground({
     stopStickyPlacement,
   ]);
 
-  const updateSelectedMoodboardReference = useCallback((patch: {
-    caption?: string;
-    decision?: ProjectMoodboardDecision;
-  }) => {
-    if (canvasReadOnly) return;
-    const editor = editorRef.current;
-    const selected = selectedMoodboardReference;
-    if (!editor || !selected) return;
-    const elements = editor.getSceneElements();
-    const nextElements = elements.map((element) => {
-      if (element.id !== selected.elementId) return element;
-      const customData = element.customData as Record<string, unknown> | undefined;
-      const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-      const currentMoodboard = reference?.moodboard as StoredMoodboardReference | undefined;
-      if (!reference || !currentMoodboard) return element;
-      const moodboard: StoredMoodboardReference = {
-        ...currentMoodboard,
-        ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
-        ...(patch.decision !== undefined ? { decision: patch.decision } : {}),
-      };
-      return withCanvasElementUpdate(element, {
-        opacity: moodboardDecisionOpacity(moodboard.decision),
-        customData: {
-          ...customData,
-          astryxReference: { ...reference, moodboard },
-        },
-      });
-    });
-    editor.updateScene({ elements: nextElements });
-    setSelectedMoodboardReference({ ...selected, ...patch });
-  }, [canvasReadOnly, selectedMoodboardReference]);
 
-  const moveSelectedMoodboardReference = useCallback((sectionId: ProjectMoodboardSectionId) => {
-    if (canvasReadOnly) return;
-    const editor = editorRef.current;
-    const selected = selectedMoodboardReference;
-    if (!editor || !selected || selected.sectionId === sectionId) return;
 
-    const elements = editor.getSceneElements();
-    const selectedElement = elements.find((element) => (
-      element.id === selected.elementId && !element.isDeleted && element.type === "image"
-    ));
-    const targetFrame = elements.find((element) => (
-      moodboardSectionForElement(element)?.id === sectionId
-    ));
-    if (!selectedElement || !targetFrame) {
-      setMoodboardMessage("That moodboard section is no longer available.");
-      return;
-    }
-
-    const targetChildren = elements.filter((element) => (
-      element.id !== selected.elementId
-      && !element.isDeleted
-      && element.type === "image"
-      && element.frameId === targetFrame.id
-      && Boolean(moodboardReferenceForElement(element))
-    ));
-    const { x, y, width, height, requiredFrameHeight } = layoutMoodboardReferenceInSection({
-      image: selectedElement,
-      section: targetFrame,
-      occupiedCount: targetChildren.length,
-    });
-    let movedElement: ExcalidrawElement | undefined;
-    const nextElements = elements.map((element) => {
-      if (element.id === targetFrame.id && requiredFrameHeight > targetFrame.height) {
-        return withCanvasElementUpdate(element, { height: requiredFrameHeight });
-      }
-      if (element.id !== selected.elementId) return element;
-      movedElement = withCanvasElementUpdate(element, {
-        x,
-        y,
-        width,
-        height,
-        frameId: targetFrame.id,
-      });
-      return movedElement;
-    });
-    editor.updateScene({
-      elements: nextElements,
-      appState: { selectedElementIds: { [selected.elementId]: true } },
-    });
-    if (movedElement) editor.scrollToContent(movedElement, { animate: true, fitToViewport: false });
-    setSelectedMoodboardReference({ ...selected, sectionId, x, y, width, height });
-    const targetTitle = moodboardSectionForElement(targetFrame)?.title ?? "the selected section";
-    setMoodboardMessage(`Moved ${selected.sourceLabel} to ${targetTitle}.`);
-  }, [canvasReadOnly, selectedMoodboardReference]);
-
-  const dismissMoodboardReference = useCallback(() => {
-    editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
-    setSelectedMoodboardReference(undefined);
-  }, []);
 
   const activateCanvasTool = useCallback((tool: ProjectCanvasTool) => {
     setToolsCatalogQuery("");
@@ -2439,7 +2059,6 @@ export function ProjectPlayground({
       stopStickyPlacement();
       stopDocumentPlacement();
       setResearchFramesOpen(false);
-      setMoodboardOpen(false);
       setScreensOpen(false);
       setTemplatesOpen(false);
       setDataToolsOpen(false);
@@ -2467,17 +2086,12 @@ export function ProjectPlayground({
     stopDocumentPlacement();
     stopCommentPlacement();
     setResearchFramesOpen(false);
-    setMoodboardOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
     setDataToolsOpen(false);
     setReferencesOpen(false);
 
-    if (tool === "moodboard") {
-      editorRef.current?.setActiveTool({ type: "selection" });
-      editorRef.current?.resetCursor();
-      setMoodboardOpen(!moodboardOpen);
-    } else if (tool === "screens") {
+    if (tool === "screens") {
       setScreensOpen(!screensOpen);
     } else if (tool === "research-frames") {
       editorRef.current?.setActiveTool({ type: "selection" });
@@ -2493,7 +2107,6 @@ export function ProjectPlayground({
     armDocumentPlacement,
     dataToolsOpen,
     documentPlacement,
-    moodboardOpen,
     researchFramesOpen,
     screensOpen,
     stopDocumentPlacement,
@@ -2531,7 +2144,17 @@ export function ProjectPlayground({
     return lastContainer?.id;
   }, []);
 
-  const commitStickyDraft = useCallback((value = stickyDraft?.value ?? "") => {
+  const commitStickyDraft = useCallback((
+    value = stickyDraft?.value ?? "",
+    /*
+     * Whether to pull focus back to the board and select the new note. True for
+     * a deliberate finish (⌘↵), false when the draft ended because the reader
+     * clicked somewhere else: they have already said where they want to be, and
+     * running focus() plus a re-select 80ms later dragged them back to the note
+     * they had just left — and re-selected it after their click had deselected.
+     */
+    { selectNote = true }: { selectNote?: boolean } = {},
+  ) => {
     if (!stickyDraft) return;
     const text = value.trim();
     setStickyDraft(undefined);
@@ -2543,7 +2166,7 @@ export function ProjectPlayground({
       stickyDraft.format,
     );
 
-    if (selectedElementId) {
+    if (selectedElementId && selectNote) {
       window.setTimeout(() => {
         const editor = editorRef.current;
         canvasRootRef.current
@@ -2568,6 +2191,110 @@ export function ProjectPlayground({
         ?.focus({ preventScroll: true });
     });
   }, []);
+
+  /*
+   * The dragged catalog record, held in a ref rather than dataTransfer: these
+   * are whole records, and a ref avoids serialising and reparsing them. The
+   * dataTransfer still carries a label so the drag is valid to the OS.
+   */
+  const catalogDragRef = useRef<CatalogDragPayload | undefined>(undefined);
+  /* Whether a catalog drag is currently over the board. Drives the drop
+     affordance — a target that accepts a drop should say so. */
+  const [catalogDropActive, setCatalogDropActive] = useState(false);
+
+
+  /*
+   * Native listeners on document, in the capture phase. React attaches its
+   * synthetic handlers at the app root, and Excalidraw runs its own drag/drop on
+   * the canvas — capturing at document means we see the event before either, and
+   * stopping it there keeps both out of a catalog drag.
+   */
+  useEffect(() => {
+    const readPayload = (transfer: DataTransfer | null): CatalogDragPayload | undefined => {
+      if (!transfer) return catalogDragRef.current;
+      try {
+        const raw = transfer.getData(catalogDragMimeType);
+        if (raw) return JSON.parse(raw) as CatalogDragPayload;
+      } catch {
+        /* getData is unreadable during dragover in some browsers; fall through. */
+      }
+      return catalogDragRef.current;
+    };
+
+    const isOverBoard = (event: DragEvent) => {
+      const root = canvasRootRef.current;
+      const target = event.target as Node | null;
+      return Boolean(root && target && root.contains(target));
+    };
+
+    /* Array.from first: `types` is a DOMStringList in some engines, where
+       `.includes` is not a method and throws — taking the whole listener with
+       it, so nothing claims the drag and the drop silently never happens. */
+    const carriesCatalog = (event: DragEvent) =>
+      Array.from(event.dataTransfer?.types ?? []).includes(catalogDragMimeType)
+      || Boolean(catalogDragRef.current);
+
+    const onDragOver = (event: DragEvent) => {
+      if (!isOverBoard(event) || !carriesCatalog(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      setCatalogDropActive(true);
+    };
+
+    const onDragLeave = (event: DragEvent) => {
+      if (!isOverBoard(event)) setCatalogDropActive(false);
+    };
+
+    const onDrop = (event: DragEvent) => {
+      if (!isOverBoard(event) || !carriesCatalog(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setCatalogDropActive(false);
+
+      const payload = readPayload(event.dataTransfer);
+      const editor = editorRef.current;
+      const root = canvasRootRef.current;
+      catalogDragRef.current = undefined;
+      if (!payload || !editor || !root) return;
+
+      /* Screen point to scene point: the inverse of how every overlay is
+         placed, screen = (scene + scroll) * zoom. */
+      const appState = editor.getAppState();
+      const zoom = appState.zoom.value;
+      const rect = root.getBoundingClientRect();
+      const placement = {
+        x: (event.clientX - rect.left) / zoom - appState.scrollX,
+        y: (event.clientY - rect.top) / zoom - appState.scrollY,
+      };
+
+      if (payload.kind === "app") {
+        insertCatalogApp(payload.app, payload.platform as Platform, placement);
+      } else if (payload.kind === "flow") {
+        insertCatalogFlow(payload.item, payload.platform as Platform, placement);
+      } else {
+        void insertCatalogScreen(payload.result, placement);
+      }
+    };
+
+    const onDragEnd = () => {
+      catalogDragRef.current = undefined;
+      setCatalogDropActive(false);
+    };
+
+    document.addEventListener("dragenter", onDragOver, true);
+    document.addEventListener("dragover", onDragOver, true);
+    document.addEventListener("dragleave", onDragLeave, true);
+    document.addEventListener("drop", onDrop, true);
+    document.addEventListener("dragend", onDragEnd, true);
+    return () => {
+      document.removeEventListener("dragenter", onDragOver, true);
+      document.removeEventListener("dragover", onDragOver, true);
+      document.removeEventListener("dragleave", onDragLeave, true);
+      document.removeEventListener("drop", onDrop, true);
+      document.removeEventListener("dragend", onDragEnd, true);
+    };
+  }, [insertCatalogApp, insertCatalogFlow, insertCatalogScreen]);
 
   const handleCanvasPointerUp = useCallback((
     _activeTool: AppState["activeTool"],
@@ -2637,7 +2364,6 @@ export function ProjectPlayground({
         event.preventDefault();
         setToolsCatalogOpen(false);
         setResearchFramesOpen(false);
-        setMoodboardOpen(false);
         setScreensOpen(false);
         setTemplatesOpen(false);
         setDataToolsOpen(false);
@@ -2654,31 +2380,48 @@ export function ProjectPlayground({
     return () => window.removeEventListener("keydown", handleStickyShortcut, true);
   }, [cancelStickyDraft, stopCommentPlacement, stopDocumentPlacement, stopStickyPlacement, toggleStickyNoteTool]);
 
+  /*
+   * Positioned from the reactive viewport, like every other canvas overlay —
+   * not from a one-off editorRef.getAppState() read. Two bugs came out of that:
+   * a null ref (a remount, or a first render before the editor reports in) made
+   * this return undefined, and the composer renders only when it is defined, so
+   * the draft existed with nothing on screen to type into — and `stickyDraft`
+   * also turns off handleKeyboardGlobally, so the board went unresponsive with
+   * no way back. It also never recomputed on pan or zoom, because refs do not
+   * re-render and the deps only moved when the draft itself changed.
+   */
   const stickyComposerStyle = useMemo(() => {
     if (!stickyDraft) return undefined;
-    const editor = editorRef.current;
     const root = canvasRootRef.current;
-    if (!editor || !root) return undefined;
-    const appState = editor.getAppState();
-    const zoom = appState.zoom.value;
-    const width = stickyNoteSize;
-    const height = stickyNoteSize;
-    const noteLeft = (stickyDraft.x - stickyNoteSize / 2 + appState.scrollX) * zoom;
-    const noteTop = (stickyDraft.y - stickyNoteSize / 2 + appState.scrollY) * zoom;
-    const clampedLeft = Math.min(
-      Math.max(76, noteLeft),
-      Math.max(76, root.clientWidth - width - 16),
-    );
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    /*
+     * The composer is a screen-space stand-in for a canvas element, so it has to
+     * scale with the board. Its position already did; its size did not, so at
+     * 50% zoom it covered twice the note it was standing in for, and at 200%
+     * half of it. Text and padding scale with the box for the same reason.
+     */
+    const width = stickyNoteSize * zoom;
+    const height = stickyNoteSize * zoom;
+    const noteLeft = (stickyDraft.x - stickyNoteSize / 2 + scrollX) * zoom;
+    const noteTop = (stickyDraft.y - stickyNoteSize / 2 + scrollY) * zoom;
+    /* Clamp inside the canvas when it has been measured; before that, place it
+       where asked rather than withholding the composer entirely. */
+    const maxLeft = root ? Math.max(76, root.clientWidth - width - 16) : noteLeft;
+    const maxTop = root ? Math.max(96, root.clientHeight - height - 16) : noteTop;
     return {
-      left: `${clampedLeft}px`,
-      top: `${Math.min(Math.max(96, noteTop), Math.max(96, root.clientHeight - height - 16))}px`,
+      left: `${Math.min(Math.max(76, noteLeft), Math.max(76, maxLeft))}px`,
+      top: `${Math.min(Math.max(96, noteTop), Math.max(96, maxTop))}px`,
+      /* min() keeps the narrow-screen guard the stylesheet used to provide. */
+      width: `min(${width}px, calc(100vw - 24px))`,
+      height: `min(${height}px, calc(100vw - 24px))`,
       "--sticky-fill": stickyDraft.color.fill,
       "--sticky-stroke": stickyDraft.color.stroke,
       "--sticky-text": stickyDraft.color.text,
       "--sticky-font-family": stickyDraft.format.font === "sketch"
         ? '"Virgil", "Comic Sans MS", cursive'
         : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
-      "--sticky-font-size": `${stickyDraft.format.fontSize}px`,
+      "--sticky-font-size": `${stickyDraft.format.fontSize * zoom}px`,
+      "--sticky-padding": `${24 * zoom}px`,
       "--sticky-text-align": stickyDraft.format.textAlign,
       "--sticky-justify-content": stickyDraft.format.textAlign === "left"
         ? "flex-start"
@@ -2692,7 +2435,70 @@ export function ProjectPlayground({
         ? "invert(93%) hue-rotate(180deg)"
         : "none",
     } as CSSProperties;
-  }, [resolvedTheme, stickyDraft]);
+  }, [canvasViewport, resolvedTheme, stickyDraft]);
+
+  /*
+   * Colour, type and collaboration for an existing note. Two elements carry it:
+   * the container holds the fill, stroke, link and the customData mirror, while
+   * the bound text holds font, size, alignment and ink — so a colour change has
+   * to touch both or the label keeps the old contrast.
+   */
+  const updateSelectedStickyNote = useCallback((patch: {
+    color?: ProjectStickyNoteColor;
+    format?: ProjectStickyNoteFormat;
+    collaboration?: ProjectStickyNoteCollaboration;
+  }) => {
+    const editor = editorRef.current;
+    const note = selectedStickyNote;
+    if (!editor || !note) return;
+    const color = patch.color ?? note.color;
+    const format = patch.format ?? note.format;
+    const collaboration = patch.collaboration ?? note.collaboration;
+
+    const elements = editor.getSceneElements().map((element) => {
+      if (element.id === note.elementId) {
+        const customData = element.customData as Record<string, unknown> | undefined;
+        const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+        return withCanvasElementUpdate(element, {
+          strokeColor: color.stroke,
+          backgroundColor: color.fill,
+          link: format.link || null,
+          locked: format.locked,
+          customData: {
+            ...customData,
+            astryxReference: {
+              ...reference,
+              color: color.id,
+              format,
+              collaboration,
+            },
+          },
+        } as Partial<ExcalidrawElement>);
+      }
+      if (note.textElementId && element.id === note.textElementId) {
+        return withCanvasElementUpdate(element, {
+          fontSize: format.fontSize,
+          fontFamily: projectStickyNoteFontFamilies[format.font],
+          textAlign: format.textAlign,
+          strokeColor: color.text,
+        } as Partial<ExcalidrawElement>);
+      }
+      return element;
+    });
+    editor.updateScene({ elements });
+  }, [selectedStickyNote]);
+
+  /* Above the note, in the same screen space as every other canvas overlay. */
+  const stickyToolbarStyle = useMemo(() => {
+    if (!selectedStickyNote) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    const centreX = (selectedStickyNote.x + selectedStickyNote.width / 2 + scrollX) * zoom;
+    const noteTop = (selectedStickyNote.y + scrollY) * zoom;
+    return {
+      left: `${Math.max(96, centreX)}px`,
+      top: `${Math.max(96, noteTop - 60)}px`,
+    } as CSSProperties;
+  }, [canvasViewport, selectedStickyNote]);
 
   const stickyNoteMetadataStyle = useCallback((note: AstryxStickyNoteReference) => ({
     left: `${(note.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
@@ -2890,12 +2696,6 @@ export function ProjectPlayground({
     opacity: canvasViewport.zoom < 0.2 ? 0 : 1,
   } as CSSProperties), [canvasViewport]);
 
-  const moodboardDecisionBadgeStyle = useCallback((reference: ProjectMoodboardReference) => ({
-    left: `${(reference.x + canvasViewport.scrollX) * canvasViewport.zoom + 8}px`,
-    top: `${(reference.y + canvasViewport.scrollY) * canvasViewport.zoom + 8}px`,
-    opacity: canvasViewport.zoom < 0.22 ? 0 : 1,
-  } as CSSProperties), [canvasViewport]);
-
   const saveStatusLabel = saveErrorMessage
     && (saveState === "offline" || saveState === "unavailable")
     ? `${saveLabels[saveState]}: ${saveErrorMessage}`
@@ -2906,7 +2706,6 @@ export function ProjectPlayground({
     || `${item.title} ${item.description}`.toLowerCase().includes(normalizedToolsCatalogQuery)
   ));
   const canvasToolPanelOpen = toolsCatalogOpen
-    || moodboardOpen
     || researchFramesOpen
     || screensOpen
     || templatesOpen
@@ -3010,11 +2809,11 @@ export function ProjectPlayground({
           className={`project-playground__canvas${
             selectedScreenReference ? " project-playground__canvas--screen-selected" : ""
           }${
-            selectedMoodboardReference ? " project-playground__canvas--moodboard-reference-selected" : ""
-          }${
             selectedCanvasDocument ? " project-playground__canvas--document-selected" : ""
           }${
             selectedDataReference ? " project-playground__canvas--data-selected" : ""
+          }${
+            catalogDropActive ? " project-playground__canvas--catalog-drop" : ""
           }${
             selectedStickyNote ? " project-playground__canvas--sticky-selected" : ""
           }${
@@ -3078,16 +2877,6 @@ export function ProjectPlayground({
             <span className="project-playground__astryx-tools-divider" aria-hidden="true" />
             <button
               type="button"
-              className="project-playground__moodboard-trigger"
-              aria-label={moodboardOpen ? "Close moodboard" : "Moodboard"}
-              aria-pressed={moodboardOpen}
-              title="Moodboard"
-              onClick={() => activateCanvasTool("moodboard")}
-            >
-              <ProjectCanvasToolGlyph tool="moodboard" />
-            </button>
-            <button
-              type="button"
               className="project-playground__sticky-trigger"
               aria-label={stickyPickerOpen ? "Close sticky notes" : "Sticky notes"}
               aria-pressed={stickyPickerOpen || Boolean(stickyPlacement)}
@@ -3121,6 +2910,18 @@ export function ProjectPlayground({
             >
               <ProjectCanvasToolGlyph tool="document" />
             </button>
+            {/* Promoted out of the "more tools" catalog: it is the way onto the
+                canvas for apps, screens and flows, not an occasional extra. */}
+            <button
+              type="button"
+              className="project-playground__screens-trigger"
+              aria-label={screensOpen ? "Close Astryx catalog" : "Astryx catalog"}
+              aria-pressed={screensOpen}
+              title="Catalog"
+              onClick={() => activateCanvasTool("screens")}
+            >
+              <ProjectCanvasToolGlyph tool="screens" />
+            </button>
             <button
               type="button"
               className="project-playground__more-tools-trigger"
@@ -3135,17 +2936,6 @@ export function ProjectPlayground({
           </div>,
           canvasToolbarHost,
         )}
-        {moodboardReferences.map((reference) => (
-          <span
-            key={reference.elementId}
-            className="project-moodboard-decision-badge"
-            data-decision={reference.decision}
-            style={moodboardDecisionBadgeStyle(reference)}
-            aria-label={`${reference.sourceLabel}: ${reference.decision}`}
-          >
-            {reference.decision}
-          </span>
-        ))}
         {canvasComments.map((thread, index) => (
           <ProjectCanvasCommentPin
             key={thread.id}
@@ -3181,34 +2971,6 @@ export function ProjectPlayground({
               setCommentDraft("");
               setSelectedCommentId(undefined);
             }}
-          />
-        ) : null}
-        {moodboardOpen ? (
-          <ProjectMoodboardPanel
-            sectionIds={moodboardSections.map((section) => section.id)}
-            referenceCount={moodboardReferences.length}
-            decisionCounts={moodboardDecisionCounts}
-            message={moodboardMessage}
-            onOpenProjectReferences={() => {
-              ensureMoodboardInbox();
-              setMoodboardOpen(false);
-              setReferencesOpen(true);
-            }}
-            onOpenScreens={() => {
-              ensureMoodboardInbox();
-              setMoodboardOpen(false);
-              setScreensOpen(true);
-            }}
-            onUpload={(files) => { void insertMoodboardUploads(files); }}
-            onCreateSection={(section) => createMoodboardSections([section])}
-            onCreateStarter={() => createMoodboardSections(
-              projectMoodboardSectionPresets.filter((section) => section.id !== "direction-c"),
-            )}
-            smartCompose={moodboardSmartCompose}
-            smartComposeBusy={moodboardSmartComposeBusy}
-            onSmartCompose={composeMoodboard}
-            onClose={() => setMoodboardOpen(false)}
-            readOnly={canvasReadOnly}
           />
         ) : null}
         {toolsCatalogOpen && (
@@ -3329,7 +3091,8 @@ export function ProjectPlayground({
                 onBlur={(event) => {
                   const nextTarget = event.relatedTarget as Node | null;
                   if (nextTarget && stickyComposerRef.current?.contains(nextTarget)) return;
-                  commitStickyDraft(event.currentTarget.textContent ?? "");
+                  /* Save the note, but leave focus where the reader put it. */
+                  commitStickyDraft(event.currentTarget.textContent ?? "", { selectNote: false });
                 }}
                 onKeyDown={(event) => {
                   event.stopPropagation();
@@ -3344,6 +3107,17 @@ export function ProjectPlayground({
               />
             </div>
           </div>
+        )}
+        {selectedStickyNote && !canvasReadOnly && (
+          <ProjectStickyNoteToolbar
+            color={selectedStickyNote.color}
+            format={selectedStickyNote.format}
+            collaboration={selectedStickyNote.collaboration}
+            style={stickyToolbarStyle}
+            onColorChange={(color) => updateSelectedStickyNote({ color })}
+            onFormatChange={(format) => updateSelectedStickyNote({ format })}
+            onCollaborationChange={(collaboration) => updateSelectedStickyNote({ collaboration })}
+          />
         )}
         {stickyNotes.map((note) => (
           <ProjectStickyNoteMetadata
@@ -3368,31 +3142,7 @@ export function ProjectPlayground({
             onDismiss={dismissCanvasDocument}
           />
         ))}
-        {selectedMoodboardReference
-          && !moodboardOpen
-          && !screensOpen
-          && !referencesOpen ? (
-          <ProjectMoodboardReferenceInspector
-            reference={selectedMoodboardReference}
-            sections={moodboardSections}
-            onCaptionChange={(caption) => updateSelectedMoodboardReference({ caption })}
-            onDecisionChange={(decision) => {
-              updateSelectedMoodboardReference({ decision });
-              setMoodboardMessage(`Marked ${selectedMoodboardReference.sourceLabel} as ${decision}.`);
-            }}
-            onSectionChange={moveSelectedMoodboardReference}
-            onOpenSource={selectedMoodboardReference.sourceUrl ? () => {
-              const source = new URL(
-                selectedMoodboardReference.sourceUrl!,
-                window.location.origin,
-              );
-              window.open(source.toString(), "_blank", "noopener,noreferrer");
-            } : undefined}
-            onClose={dismissMoodboardReference}
-            readOnly={canvasReadOnly}
-          />
-        ) : null}
-        {selectedScreenReference && !selectedMoodboardReference && !screensOpen && (
+        {selectedScreenReference && !screensOpen && (
           <aside className="project-screen-inspector" aria-label="Selected catalog screen">
             <header className="project-screen-inspector__header">
               <span className="project-screen-inspector__icon" aria-hidden="true">
@@ -3501,7 +3251,6 @@ export function ProjectPlayground({
         {dataToolsOpen && (
           <ProjectCanvasDataLibrary
             insertingKey={insertingDataKey}
-            message={dataToolsMessage}
             onInsertApp={insertCatalogApp}
             onInsertFlow={insertCatalogFlow}
             onClose={() => setDataToolsOpen(false)}
@@ -3509,9 +3258,8 @@ export function ProjectPlayground({
         )}
         {screensOpen && (
           <ProjectScreenLibrary
-            insertingKey={insertingScreenKey}
             message={screenMessage}
-            onInsert={(result) => { void insertCatalogScreen(result); }}
+            onDragItem={(payload) => { catalogDragRef.current = payload; }}
             onClose={() => setScreensOpen(false)}
           />
         )}

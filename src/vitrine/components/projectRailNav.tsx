@@ -7,8 +7,10 @@ import {
   SparkleIcon,
 } from '@storybook/icons';
 
+import type { DesignerCanvasFileSummary } from '../../designerCanvas.ts';
 import type { ResearchProjectIcon, ResearchProjectSummary } from '../../researchProject.ts';
 import { navigate } from '../router.ts';
+import type { ProjectDocumentView } from '../projectDocumentsApi.ts';
 import type { WorkspaceRailAction } from './WorkspaceChrome.tsx';
 import type { ProjectWorkspaceArea } from './ProjectWorkspaceNav.tsx';
 
@@ -36,6 +38,12 @@ export interface ProjectRailNavInput {
      to persist or to fall out of sync with the route. */
   openProjectId?: string;
   area?: ProjectWorkspaceArea;
+  /* The open project's own canvases/documents, so Canvas and Documents expand
+     to the files themselves instead of just linking to their listing page.
+     Omitted (rather than defaulted to []) whenever the caller has not loaded
+     them — e.g. the Projects index, which never has an open project. */
+  canvases?: DesignerCanvasFileSummary[];
+  documents?: ProjectDocumentView[];
   /* True on the Projects index, where the header row is the destination. */
   projectsActive?: boolean;
   onOpenProjects: () => void;
@@ -45,6 +53,8 @@ export function projectRailNav({
   projects,
   openProjectId,
   area,
+  canvases,
+  documents,
   projectsActive = false,
   onOpenProjects,
 }: ProjectRailNavInput): WorkspaceRailAction[] {
@@ -86,13 +96,31 @@ export function projectRailNav({
                   label: 'Canvas',
                   icon: <GridIcon aria-hidden="true" />,
                   active: area === 'canvas',
+                  expanded: area === 'canvas',
                   onSelect: () => navigate({ name: 'project', projectId }),
+                  children: canvases?.map((canvas) => ({
+                    label: canvas.title,
+                    icon: <GridIcon aria-hidden="true" />,
+                    onSelect: () =>
+                      navigate({ name: 'project-canvas', projectId, canvasId: canvas.id }),
+                  })),
                 },
                 {
                   label: 'Documents',
                   icon: <BookIcon aria-hidden="true" />,
                   active: area === 'documents',
+                  expanded: area === 'documents',
                   onSelect: () => navigate({ name: 'project-documents', projectId }),
+                  children: documents?.map((document) => ({
+                    label: document.title,
+                    icon: <BookIcon aria-hidden="true" />,
+                    onSelect: () =>
+                      navigate({
+                        name: 'project-document-file',
+                        projectId,
+                        documentId: document.id,
+                      }),
+                  })),
                 },
               ]
             : undefined,

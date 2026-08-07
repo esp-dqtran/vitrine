@@ -1494,7 +1494,6 @@ body {
   font-size: 13px;
 }
 
-
 .site-detail {
   min-height: 100vh;
   background: var(--color-background-body);
@@ -2263,7 +2262,6 @@ body {
   border-color: transparent;
   box-shadow: none;
 }
-
 
 .discovery-card__identity {
   display: grid;
@@ -5249,6 +5247,23 @@ body {
 }
 
 .project-playground__canvas .excalidraw {
+  /*
+   * The left rail's geometry and states, in one place. Excalidraw's own tools
+   * and the Astryx tools portaled in beside them read the same values, so the
+   * two halves of one toolbar cannot drift apart in size, radius or hover —
+   * which is exactly what they had been doing.
+   */
+  --project-canvas-tool-size: 36px;
+  /* Where the rail starts, and how much vertical room the header above and the
+     zoom/undo cluster below need. Both have a phone value further down. */
+  --project-canvas-rail-top: 120px;
+  --project-canvas-rail-reserved: 222px;
+  --project-canvas-tool-gap: 2px;
+  --project-canvas-tool-radius: 8px;
+  --project-canvas-tool-hover: var(
+    --button-hover-bg,
+    var(--project-canvas-muted-surface, #f1f2f5)
+  );
   --color-primary: var(--color-accent);
   --color-primary-darker: var(--color-accent-strong, var(--color-accent));
   --color-primary-light: color-mix(
@@ -5355,15 +5370,15 @@ body {
 
 .project-playground__canvas .excalidraw .shapes-section {
   position: absolute;
-  top: 120px;
+  top: var(--project-canvas-rail-top, 120px);
   left: -8px;
-  width: 48px;
+  width: calc(var(--project-canvas-tool-size, 36px) + 8px);
   height: auto;
 }
 
 .project-playground__canvas .excalidraw .App-toolbar-container,
 .project-playground__canvas .excalidraw .App-toolbar {
-  width: 48px;
+  width: calc(var(--project-canvas-tool-size, 36px) + 8px);
   height: auto;
 }
 
@@ -5377,16 +5392,17 @@ body {
 
 .project-playground__canvas .excalidraw .App-toolbar .ToolIcon__icon,
 .project-playground__canvas .excalidraw .App-toolbar__extra-tools-trigger {
-  width: 40px;
-  height: 40px;
+  width: var(--project-canvas-tool-size, 40px);
+  height: var(--project-canvas-tool-size, 40px);
 }
 
 .project-playground__canvas .excalidraw .App-toolbar > .Stack_horizontal {
   display: flex;
-  width: 40px;
+  width: var(--project-canvas-tool-size, 36px);
   height: auto;
-  max-height: calc(100dvh - 222px);
+  max-height: calc(100dvh - var(--project-canvas-rail-reserved, 222px));
   flex-direction: column;
+  gap: var(--project-canvas-tool-gap, 2px);
   align-items: center;
   overflow-y: auto;
   scrollbar-width: none;
@@ -5441,51 +5457,56 @@ body {
   .excalidraw
   .ToolIcon_type_checkbox:checked
   + .ToolIcon__icon {
-  color: #1f2a7c;
-  background: #e6e7ff;
+  color: var(--color-on-primary-container, #1f2a7c);
+  background: var(--color-surface-primary-container, #e6e7ff);
 }
 
 .project-playground__canvas .excalidraw .App-toolbar .ToolIcon__icon:hover,
 .project-playground__canvas
   .excalidraw
   .App-toolbar__extra-tools-trigger:hover {
-  background: var(--project-canvas-muted-surface, #f1f2f5);
+  background: var(--project-canvas-tool-hover);
 }
 
 .project-playground__astryx-tools {
   order: -1;
-  width: 40px;
+  width: var(--project-canvas-tool-size, 36px);
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--project-canvas-tool-gap, 2px);
   align-items: center;
   padding-top: 2px;
   box-sizing: border-box;
 }
 
 .project-playground__astryx-tools-divider {
-  width: 24px;
+  width: 1.5rem;
   height: 1px;
-  margin: 2px 0 4px;
-  background: var(--project-canvas-border, rgb(17 24 39 / 10%));
+  align-self: center;
+  margin: calc(var(--project-canvas-tool-gap, 2px) * 3) 0;
+  background: var(--default-border-color, var(--project-canvas-border, rgb(17 24 39 / 10%)));
 }
 
-.project-playground__moodboard-trigger,
+.project-playground__astryx-tools button > svg {
+  width: 20px;
+  height: 20px;
+}
+
 .project-playground__screens-trigger,
 .project-playground__sticky-trigger,
 .project-playground__comments-trigger,
 .project-playground__document-trigger,
 .project-playground__more-tools-trigger {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: var(--project-canvas-tool-size, 40px);
+  height: var(--project-canvas-tool-size, 40px);
+  flex: 0 0 var(--project-canvas-tool-size, 40px);
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 8px;
-  color: var(--project-canvas-text, #202124);
+  border-radius: var(--project-canvas-tool-radius, 8px);
+  color: var(--color-on-surface, var(--project-canvas-text, #202124));
   background: transparent;
   cursor: pointer;
   transition:
@@ -5494,43 +5515,35 @@ body {
     transform 120ms ease;
 }
 
-.project-playground__moodboard-trigger[aria-pressed="true"],
+/*
+ * The same pair Excalidraw uses for a checked ToolIcon. The triggers are
+ * portaled into its toolbar Island, so a hardcoded light pair read as wrong
+ * next to a native tool on a dark canvas.
+ */
 .project-playground__screens-trigger[aria-pressed="true"],
 .project-playground__sticky-trigger[aria-pressed="true"],
 .project-playground__comments-trigger[aria-pressed="true"],
 .project-playground__document-trigger[aria-pressed="true"],
 .project-playground__more-tools-trigger[aria-pressed="true"] {
-  color: #1f2a7c;
-  background: #e6e7ff;
+  color: var(--color-on-primary-container);
+  background: var(--color-surface-primary-container);
 }
 
-.project-playground__moodboard-trigger:hover,
 .project-playground__screens-trigger:hover,
 .project-playground__sticky-trigger:hover,
 .project-playground__comments-trigger:hover,
 .project-playground__document-trigger:hover,
 .project-playground__more-tools-trigger:hover {
-  background: var(--project-canvas-muted-surface, #f1f2f5);
+  background: var(--project-canvas-tool-hover);
 }
 
-.project-playground__moodboard-trigger:focus-visible,
 .project-playground__screens-trigger:focus-visible,
 .project-playground__sticky-trigger:focus-visible,
 .project-playground__comments-trigger:focus-visible,
 .project-playground__document-trigger:focus-visible,
 .project-playground__more-tools-trigger:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-primary, #2563eb);
   outline-offset: 1px;
-}
-
-.project-playground__astryx-tools button > svg {
-  width: 20px;
-  height: 20px;
-}
-
-.project-playground__sticky-trigger {
-  width: 40px;
-  height: 40px;
 }
 
 .project-playground__comments-trigger {
@@ -5548,21 +5561,11 @@ body {
   padding: 0 3px;
   border: 1px solid var(--project-canvas-surface, #fff);
   border-radius: 999px;
-  color: #fff;
-  background: #2563eb;
+  color: var(--color-on-primary, #fff);
+  background: var(--color-primary, #2563eb);
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
-}
-
-.project-playground__document-trigger {
-  width: 40px;
-  height: 40px;
-}
-
-.project-playground__more-tools-trigger {
-  width: 40px;
-  height: 40px;
 }
 
 .project-canvas-tools-catalog {
@@ -5576,7 +5579,7 @@ body {
   gap: 14px;
   padding: 16px;
   overflow: auto;
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
   border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
   border-radius: 16px;
   background: var(
@@ -5599,7 +5602,7 @@ body {
 .project-canvas-tools-catalog__header span,
 .project-canvas-tools-catalog__section h3 {
   margin: 0;
-  color: #687386;
+  color: var(--project-canvas-muted-text, #687386);
   font: 700 11px/1.2
     var(--reference-font-family, var(--font-family-body));
   letter-spacing: 0.08em;
@@ -5608,7 +5611,7 @@ body {
 
 .project-canvas-tools-catalog__header h2 {
   margin: 5px 0 0;
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
   font: 700 22px/1.15
     var(--reference-font-family, var(--font-family-body));
   letter-spacing: -0.025em;
@@ -5616,18 +5619,18 @@ body {
 
 .project-canvas-tools-catalog .astryx-text-input {
   width: 100%;
-  color: #172033;
-  border-color: #dde2e9;
+  color: var(--project-canvas-text, #172033);
+  border-color: var(--project-canvas-border, #dde2e9);
   background: var(--project-canvas-bg, #f7f8fa);
 }
 
 .project-canvas-tools-catalog input {
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
   background: transparent;
 }
 
 .project-canvas-tools-catalog input::placeholder {
-  color: #8790a0;
+  color: var(--project-canvas-muted-text, #8790a0);
 }
 
 .project-canvas-tools-catalog__section {
@@ -5649,7 +5652,7 @@ body {
   padding: 8px;
   border: 0;
   border-radius: 11px;
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -5659,7 +5662,7 @@ body {
 }
 
 .project-canvas-tools-catalog__item:hover {
-  background: #f2f4f7;
+  background: var(--project-canvas-muted-surface, #f2f4f7);
   transform: translateY(-1px);
 }
 
@@ -5673,9 +5676,9 @@ body {
   height: 40px;
   display: grid;
   place-items: center;
-  border: 1px solid #e1e5eb;
+  border: 1px solid var(--project-canvas-border, #e1e5eb);
   border-radius: 10px;
-  color: #273247;
+  color: var(--project-canvas-text, #273247);
   background: var(--project-canvas-surface, #fff);
 }
 
@@ -5697,7 +5700,7 @@ body {
 
 .project-canvas-tools-catalog__copy small,
 .project-canvas-tools-catalog__empty {
-  color: #717b8d;
+  color: var(--project-canvas-muted-text, #717b8d);
   font: 450 12px/1.4
     var(--reference-font-family, var(--font-family-body));
 }
@@ -5705,8 +5708,8 @@ body {
 .project-canvas-tools-catalog__badge {
   padding: 3px 7px;
   border-radius: 999px;
-  color: #41506a;
-  background: #e9edf4;
+  color: var(--project-canvas-muted-text, #41506a);
+  background: var(--project-canvas-muted-surface, #e9edf4);
   font: 650 10px/1.3
     var(--reference-font-family, var(--font-family-body));
 }
@@ -5715,427 +5718,6 @@ body {
   margin: 0;
   padding: 22px 10px;
   text-align: center;
-}
-
-.project-moodboard-panel {
-  position: absolute;
-  z-index: 412;
-  top: 136px;
-  bottom: 12px;
-  left: 64px;
-  width: min(408px, calc(100% - 76px));
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  overflow-y: auto;
-  color: var(--project-canvas-text, #202124);
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 16px;
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 98%)
-  );
-  box-shadow:
-    0 18px 48px rgb(15 23 42 / 16%),
-    0 2px 7px rgb(15 23 42 / 8%);
-  backdrop-filter: blur(18px);
-}
-
-.project-moodboard-panel__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.project-moodboard-panel__header > div {
-  display: grid;
-  gap: 3px;
-}
-
-.project-moodboard-panel__header span,
-.project-moodboard-panel__section-heading > div > span {
-  color: #667085;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.project-moodboard-panel__header h2,
-.project-moodboard-panel__header p,
-.project-moodboard-panel__section > p,
-.project-moodboard-panel__message {
-  margin: 0;
-}
-
-.project-moodboard-panel__header h2 {
-  color: #172033;
-  font-size: 22px;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-}
-
-.project-moodboard-panel__header p,
-.project-moodboard-panel__section > p {
-  color: #667085;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.project-moodboard-panel__section {
-  display: grid;
-  gap: 10px;
-  padding: 13px;
-  border: 1px solid #e5e9ef;
-  border-radius: 13px;
-  background: rgb(248 250 252 / 86%);
-}
-
-.project-moodboard-panel__section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.project-moodboard-panel__section-heading > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.project-moodboard-panel__section-heading strong {
-  color: #283347;
-  font-size: 13px;
-}
-
-.project-moodboard-panel__section-heading small {
-  color: #7b8493;
-  font-size: 11px;
-}
-
-.project-moodboard-panel__source-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.project-moodboard-panel__source-actions .astryx-button,
-.project-moodboard-panel__section-heading .astryx-button {
-  width: 100%;
-  justify-content: center;
-}
-
-.project-moodboard-panel__source-actions .astryx-button:last-of-type {
-  grid-column: 1 / -1;
-}
-
-.project-moodboard-panel__sections {
-  display: grid;
-  gap: 6px;
-}
-
-.project-moodboard-panel__sections > button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  align-items: center;
-  gap: 9px;
-  padding: 8px;
-  border: 0;
-  border-radius: 10px;
-  color: #273247;
-  background: #fff;
-  text-align: left;
-  cursor: pointer;
-}
-
-.project-moodboard-panel__sections > button:hover:not(:disabled) {
-  background: #eef2ff;
-}
-
-.project-moodboard-panel__sections > button:disabled {
-  color: #667085;
-  background: #f1f4f7;
-  cursor: default;
-}
-
-.project-moodboard-panel__sections > button > span:first-child {
-  display: grid;
-  min-height: 28px;
-  place-items: center;
-  border-radius: 8px;
-  color: #4351c7;
-  background: #e8ebff;
-  font-size: 10px;
-  font-weight: 750;
-  text-transform: uppercase;
-}
-
-.project-moodboard-panel__sections > button > span:last-child {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.project-moodboard-panel__sections strong {
-  font-size: 12px;
-}
-
-.project-moodboard-panel__readonly,
-.project-moodboard-reference__readonly {
-  margin: 0;
-  padding: 9px 11px;
-  border: 1px solid #d8dee8;
-  border-radius: 9px;
-  color: #596579;
-  background: #f4f6f8;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.project-moodboard-decision-badge {
-  position: absolute;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 3px 8px;
-  border: 1px solid rgb(255 255 255 / 82%);
-  border-radius: 999px;
-  color: #fff;
-  box-shadow: 0 2px 7px rgb(15 23 42 / 20%);
-  font-size: 10px;
-  font-weight: 780;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  text-transform: uppercase;
-  pointer-events: none;
-  transition: opacity 120ms ease;
-}
-
-.project-moodboard-decision-badge[data-decision="keep"] {
-  background: #16845b;
-}
-
-.project-moodboard-decision-badge[data-decision="maybe"] {
-  background: #b97706;
-}
-
-.project-moodboard-decision-badge[data-decision="reject"] {
-  background: #bf3636;
-}
-
-.project-moodboard-panel__sections small {
-  color: #778195;
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-.project-moodboard-panel__decision-counts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.project-moodboard-panel__decision-counts > span {
-  display: grid;
-  gap: 2px;
-  padding: 9px;
-  border-radius: 9px;
-  color: #556174;
-  background: #fff;
-  font-size: 10px;
-}
-
-.project-moodboard-panel__decision-counts strong {
-  color: #1f2937;
-  font-size: 16px;
-}
-
-.project-moodboard-panel__decision-counts [data-decision="keep"] {
-  box-shadow: inset 0 2px #22a06b;
-}
-
-.project-moodboard-panel__decision-counts [data-decision="maybe"] {
-  box-shadow: inset 0 2px #d99a12;
-}
-
-.project-moodboard-panel__decision-counts [data-decision="reject"] {
-  box-shadow: inset 0 2px #d14343;
-}
-
-.project-moodboard-panel__message {
-  padding: 9px 11px;
-  border-radius: 9px;
-  color: #23447a;
-  background: #eef4ff;
-  font-size: 12px;
-}
-
-.project-moodboard-panel__smart-compose > .astryx-button {
-  width: 100%;
-  justify-content: center;
-}
-
-.project-moodboard-panel__compose-review {
-  display: grid;
-  gap: 8px;
-  padding: 11px;
-  border: 1px solid #cbd2ff;
-  border-radius: 10px;
-  background: #f3f4ff;
-}
-
-.project-moodboard-panel__compose-review > strong,
-.project-moodboard-panel__compose-label > strong,
-.project-moodboard-panel__direction-reads > strong {
-  color: #283347;
-  font-size: 12px;
-}
-
-.project-moodboard-panel__compose-review > p,
-.project-moodboard-panel__compose-empty,
-.project-moodboard-panel__direction-reads article p {
-  margin: 0;
-  color: #667085;
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.project-moodboard-panel__compose-review > div {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.project-moodboard-panel__compose-review .astryx-button {
-  width: 100%;
-  justify-content: center;
-}
-
-.project-moodboard-panel__compose-result {
-  display: grid;
-  gap: 11px;
-  padding-top: 2px;
-}
-
-.project-moodboard-panel__compose-label {
-  display: grid;
-  gap: 2px;
-}
-
-.project-moodboard-panel__compose-label small {
-  color: #7b8493;
-  font-size: 10px;
-}
-
-.project-moodboard-panel__palette {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.project-moodboard-panel__palette > span {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.project-moodboard-panel__palette i {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  border: 1px solid rgb(17 24 39 / 12%);
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 28%);
-}
-
-.project-moodboard-panel__palette small {
-  overflow: hidden;
-  color: #667085;
-  font-size: 8px;
-  text-align: center;
-  text-overflow: ellipsis;
-}
-
-.project-moodboard-panel__signals {
-  display: grid;
-  gap: 1px;
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid #e2e6ec;
-  border-radius: 10px;
-  background: #e2e6ec;
-}
-
-.project-moodboard-panel__signals > div {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px;
-  background: #fff;
-}
-
-.project-moodboard-panel__signals dt {
-  color: #667085;
-  font-size: 10px;
-}
-
-.project-moodboard-panel__signals dd {
-  display: grid;
-  gap: 2px;
-  margin: 0;
-}
-
-.project-moodboard-panel__signals dd strong {
-  color: #283347;
-  font-size: 10px;
-}
-
-.project-moodboard-panel__signals dd small {
-  color: #7b8493;
-  font-size: 9px;
-  line-height: 1.35;
-}
-
-.project-moodboard-panel__direction-reads {
-  display: grid;
-  gap: 6px;
-}
-
-.project-moodboard-panel__direction-reads article {
-  display: grid;
-  gap: 4px;
-  padding: 8px;
-  border-radius: 9px;
-  background: #fff;
-}
-
-.project-moodboard-panel__direction-reads article > strong {
-  color: #344054;
-  font-size: 11px;
-}
-
-.project-moodboard-panel__direction-reads article > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.project-moodboard-panel__direction-reads a {
-  max-width: 100%;
-  overflow: hidden;
-  padding: 3px 6px;
-  border-radius: 999px;
-  color: #4351c7;
-  background: #eef0ff;
-  font-size: 9px;
-  text-decoration: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .project-playground__canvas--tool-panel-open
@@ -6345,6 +5927,22 @@ body {
   cursor: crosshair;
 }
 
+/*
+ * Drop affordance. A target that accepts a drop has to say so — without it the
+ * only feedback is the item appearing, which is no feedback at all when it does
+ * not.
+ */
+.project-playground__canvas--catalog-drop::after {
+  position: absolute;
+  z-index: 6;
+  inset: 8px;
+  border: 2px dashed var(--color-primary, #4262ff);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary, #4262ff) 8%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
 .project-sticky-note-picker {
   position: absolute;
   z-index: 7;
@@ -6373,7 +5971,7 @@ body {
   display: grid;
   gap: 2px;
   padding-bottom: 3px;
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
 }
 
 .project-sticky-note-picker__header strong {
@@ -6427,7 +6025,7 @@ body {
 }
 
 .project-sticky-note-picker__swatch:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-primary, #2563eb);
   outline-offset: 2px;
 }
 
@@ -6667,7 +6265,7 @@ body {
   box-shadow:
     0 12px 34px rgb(15 23 42 / 15%),
     0 2px 7px rgb(15 23 42 / 8%);
-  color: #172033;
+  color: var(--project-canvas-text, #172033);
   font-family: var(--reference-font-family, var(--font-family-body));
   transform: translateX(-50%);
   white-space: nowrap;
@@ -6691,7 +6289,7 @@ body {
   align-items: center;
   gap: 7px;
   padding: 0 9px;
-  color: #30394a;
+  color: var(--project-canvas-text, #30394a);
   font-size: 13px;
   font-weight: 650;
 }
@@ -6720,7 +6318,7 @@ body {
   min-width: 0;
   border-color: transparent !important;
   background: transparent !important;
-  color: #30394a !important;
+  color: var(--project-canvas-text, #30394a) !important;
 }
 
 .project-sticky-note-toolbar__dropdown-trigger {
@@ -6736,13 +6334,13 @@ body {
   gap: 2px;
   padding: 2px;
   border-radius: 9px;
-  background: #f3f5f8;
+  background: var(--project-canvas-muted-surface, #f3f5f8);
 }
 
 .project-sticky-note-toolbar__align-button {
   min-width: 48px !important;
   padding: 0 8px !important;
-  color: #30394a !important;
+  color: var(--project-canvas-text, #30394a) !important;
   opacity: 1 !important;
 }
 
@@ -6750,14 +6348,14 @@ body {
 .project-sticky-note-toolbar__lock-trigger[aria-pressed="true"],
 .project-sticky-note-toolbar__icon-trigger[aria-pressed="true"],
 .project-sticky-note-toolbar__icon-trigger.primary {
-  background: #e8edff !important;
-  color: #2448b8 !important;
+  background: var(--color-surface-primary-container, #e8edff) !important;
+  color: var(--color-on-primary-container, #2448b8) !important;
 }
 
 .project-sticky-note-toolbar__link-trigger,
 .project-sticky-note-toolbar__lock-trigger {
   min-width: 54px !important;
-  color: #30394a !important;
+  color: var(--project-canvas-text, #30394a) !important;
   opacity: 1 !important;
 }
 
@@ -6828,12 +6426,12 @@ body {
 }
 
 .project-sticky-note-toolbar__color-swatch[aria-pressed="true"] {
-  outline: 2px solid #4262ff;
+  outline: 2px solid var(--color-primary, #4262ff);
   outline-offset: 2px;
 }
 
 .project-sticky-note-toolbar__color-swatch:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-primary, #2563eb);
   outline-offset: 2px;
 }
 
@@ -6841,7 +6439,7 @@ body {
   width: 34px;
   min-width: 34px !important;
   padding: 0 !important;
-  color: #30394a !important;
+  color: var(--project-canvas-text, #30394a) !important;
 }
 
 .project-sticky-note-toolbar__icon-trigger svg {
@@ -6863,10 +6461,10 @@ body {
   display: grid;
   place-items: center;
   padding: 0 3px;
-  border: 2px solid #fff;
+  border: 2px solid var(--project-canvas-surface, #fff);
   border-radius: 999px;
-  color: #fff;
-  background: #4262ff;
+  color: var(--color-on-primary, #fff);
+  background: var(--color-primary, #4262ff);
   font-size: 9px;
   font-weight: 750;
   line-height: 1;
@@ -6888,7 +6486,7 @@ body {
   box-shadow:
     0 14px 38px rgb(15 23 42 / 16%),
     0 2px 7px rgb(15 23 42 / 8%);
-  color: #27364d;
+  color: var(--project-canvas-text, #27364d);
   white-space: normal;
 }
 
@@ -6899,7 +6497,7 @@ body {
 
 .project-sticky-note-toolbar__panel > p {
   margin: 0;
-  color: #737d8e;
+  color: var(--project-canvas-muted-text, #737d8e);
   font-size: 12px;
   line-height: 1.45;
 }
@@ -6929,8 +6527,8 @@ body {
   padding: 3px 8px;
   border: 0;
   border-radius: 999px;
-  color: #2448b8;
-  background: #e8edff;
+  color: var(--color-on-primary-container, #2448b8);
+  background: var(--color-surface-primary-container, #e8edff);
   font: inherit;
   font-size: 11px;
   font-weight: 650;
@@ -6938,7 +6536,7 @@ body {
 }
 
 .project-sticky-note-toolbar__tag:hover {
-  background: #dbe3ff;
+  background: var(--color-surface-primary-container, #dbe3ff);
 }
 
 .project-sticky-note-toolbar__reactions {
@@ -6950,12 +6548,12 @@ body {
 .project-sticky-note-toolbar__reactions .astryx-button {
   width: 100%;
   justify-content: flex-start;
-  color: #30394a !important;
+  color: var(--project-canvas-text, #30394a) !important;
 }
 
 .project-sticky-note-toolbar__reactions .astryx-button.primary {
-  color: #2448b8 !important;
-  background: #e8edff !important;
+  color: var(--color-on-primary-container, #2448b8) !important;
+  background: var(--color-surface-primary-container, #e8edff) !important;
 }
 
 .project-sticky-note-toolbar__comments {
@@ -6970,19 +6568,19 @@ body {
   gap: 4px;
   padding: 9px 10px;
   border-radius: 9px;
-  background: #f5f6f8;
+  background: var(--project-canvas-muted-surface, #f5f6f8);
 }
 
 .project-sticky-note-toolbar__comments header {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  color: #596579;
+  color: var(--project-canvas-muted-text, #596579);
   font-size: 10px;
 }
 
 .project-sticky-note-toolbar__comments header strong {
-  color: #27364d;
+  color: var(--project-canvas-text, #27364d);
   font-size: 11px;
 }
 
@@ -7059,7 +6657,7 @@ body {
   width: 100%;
   min-height: 1.3em;
   max-height: calc(100% - 48px);
-  padding: 0 24px;
+  padding: 0 var(--sticky-padding, 24px);
   overflow-y: auto;
   outline: 0;
   color: inherit;
@@ -7420,27 +7018,6 @@ body {
   width: 280px;
 }
 
-.project-screen-inspector,
-.project-canvas-data-inspector,
-.project-moodboard-reference {
-  position: absolute;
-  z-index: 6;
-  top: 156px;
-  right: 16px;
-  display: grid;
-  width: 280px;
-  gap: 16px;
-  padding: 14px;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 16px;
-  background: rgb(255 255 255 / 97%);
-  box-shadow:
-    0 14px 36px rgb(15 23 42 / 14%),
-    0 2px 6px rgb(15 23 42 / 8%);
-  color: var(--project-canvas-text, #202124);
-  backdrop-filter: blur(16px);
-}
-
 .project-screen-inspector__header {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) 32px;
@@ -7504,50 +7081,6 @@ body {
   text-overflow: ellipsis;
   text-transform: capitalize;
   white-space: nowrap;
-}
-
-.project-screen-inspector > .astryx-button,
-.project-canvas-data-inspector > .astryx-button,
-.project-moodboard-reference > .astryx-button {
-  width: 100%;
-  justify-content: center;
-}
-
-.project-moodboard-reference {
-  width: 310px;
-}
-
-.project-moodboard-reference .astryx-text-input {
-  width: 100%;
-  color: var(--project-canvas-text, #202124);
-  border-color: var(--project-canvas-border, rgb(17 24 39 / 10%));
-  background: var(--project-canvas-bg, #f7f8fa);
-}
-
-.project-moodboard-reference input {
-  color: var(--project-canvas-text, #202124);
-  background: transparent;
-}
-
-.project-moodboard-reference__decisions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.project-moodboard-reference__decisions .astryx-button {
-  min-width: 0;
-  justify-content: center;
-  padding-inline: 8px;
-}
-
-.project-moodboard-reference__section-field {
-  display: grid;
-  gap: 6px;
-}
-
-.project-moodboard-reference__section-field .astryx-selector {
-  width: 100%;
 }
 
 .project-playground__templates-trigger > span {
@@ -8153,7 +7686,6 @@ body {
   gap: 12px;
 }
 
-.project-screen-library__header span,
 .project-screen-library__header h2,
 .project-screen-library__header p,
 .project-screen-library__message,
@@ -8161,17 +7693,10 @@ body {
   margin: 0;
 }
 
-.project-screen-library__header span {
-  color: #737985;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .project-screen-library__header h2 {
-  margin-top: 2px;
-  color: #17191d;
+  /* No eyebrow above it any more, so no offset from one. */
+  margin-top: 0;
+  color: var(--project-canvas-text, #17191d);
   font-size: 20px;
   line-height: 1.2;
 }
@@ -8216,29 +7741,16 @@ body {
 }
 
 .project-screen-library__platforms {
+  /* No track here: SegmentedControl draws its own, and the wrapper's made a
+     second pill around the first. This is now only a row to sit in. */
   display: flex;
   width: fit-content;
-  gap: 2px;
-  padding: 3px;
-  background: var(--project-canvas-muted-surface, #f1f3f5);
-  border-radius: 10px;
-}
-
-.project-screen-library__platforms [role="tab"] {
-  min-width: 64px;
-  border-radius: 7px !important;
-}
-
-.project-screen-library__platforms [aria-selected="true"] {
-  color: #17191d !important;
-  background: var(--project-canvas-surface, #fff) !important;
-  box-shadow: 0 1px 3px var(--project-canvas-border, rgb(17 24 39 / 10%));
 }
 
 .project-screen-library__message {
   padding: 8px 10px;
-  color: #23447a;
-  background: #eef4ff;
+  color: var(--color-on-primary-container, #23447a);
+  background: var(--color-surface-primary-container, #eef4ff);
   border-radius: 8px;
 }
 
@@ -8261,7 +7773,32 @@ body {
   border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%)) !important;
   border-radius: 11px !important;
   box-shadow: none !important;
+  /* The card is the drag handle now that the button is gone. */
+  cursor: grab;
 }
+
+.project-screen-library__card:active {
+  cursor: grabbing;
+}
+
+/*
+ * The preview image must not be its own drag source. An <img> is natively
+ * draggable, so pressing on one starts a browser image-drag with the image's
+ * URL as the payload — the card's own dragstart never owns the gesture.
+ */
+.project-screen-library__card img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* The card the reader is carrying: dimmed in place while its ghost follows the
+   cursor, so the source and the thing being dropped are not the same weight. */
+.project-screen-library__card[data-dragging="true"] {
+  opacity: 0.4;
+  transition: opacity var(--vitrine-transition-fast);
+}
+
 
 .project-screen-library__preview {
   position: relative;
@@ -8269,7 +7806,7 @@ body {
   overflow: hidden;
   display: grid;
   place-items: center;
-  background: #f5f6f8;
+  background: var(--project-canvas-muted-surface, #f5f6f8);
   border-radius: 8px;
 }
 
@@ -8293,7 +7830,7 @@ body {
   overflow: hidden;
   display: grid;
   place-items: center;
-  color: #4b5563;
+  color: var(--project-canvas-muted-text, #4b5563);
   background: var(--project-canvas-muted-surface, #f1f3f5);
   border-radius: 7px;
   font-size: 11px;
@@ -8324,7 +7861,7 @@ body {
 }
 
 .project-screen-library__identity small {
-  color: #737985;
+  color: var(--project-canvas-muted-text, #737985);
   font-size: 10px;
 }
 
@@ -8436,34 +7973,15 @@ body {
 
 .project-canvas-data-library__tabs,
 .project-canvas-data-library__platforms {
+  /* No track here: SegmentedControl draws its own, and the wrapper's made a
+     second pill around the first. This is now only a row to sit in. */
   display: flex;
   width: fit-content;
-  gap: 2px;
-  padding: 3px;
-  background: var(--project-canvas-muted-surface, #f1f3f5);
-  border-radius: 10px;
 }
 
 .project-canvas-data-library__tabs {
   display: flex;
   width: 100%;
-}
-
-.project-canvas-data-library__tabs [role="tab"] {
-  flex: 1;
-}
-
-.project-canvas-data-library__tabs [role="tab"],
-.project-canvas-data-library__platforms [role="tab"] {
-  min-width: 64px;
-  border-radius: 7px !important;
-}
-
-.project-canvas-data-library__tabs [aria-selected="true"],
-.project-canvas-data-library__platforms [aria-selected="true"] {
-  color: #17191d !important;
-  background: var(--project-canvas-surface, #fff) !important;
-  box-shadow: 0 1px 3px var(--project-canvas-border, rgb(17 24 39 / 10%));
 }
 
 .project-canvas-data-library__message {
@@ -9111,12 +8629,13 @@ body {
     top: 52px;
   }
 
-  .project-playground__canvas .excalidraw .shapes-section {
-    left: 0;
+  .project-playground__canvas .excalidraw {
+    --project-canvas-rail-top: 104px;
+    --project-canvas-rail-reserved: 310px;
   }
 
   .project-playground__canvas .excalidraw .shapes-section {
-    top: 104px;
+    left: 0;
   }
 
   .project-playground__canvas
@@ -9127,20 +8646,6 @@ body {
     left: 60px !important;
     max-width: calc(100vw - 68px);
     max-height: calc(100dvh - 112px);
-  }
-
-  .project-playground__canvas .excalidraw .App-toolbar > .Stack_horizontal {
-    max-height: calc(100dvh - 310px);
-  }
-
-  .project-canvas-tools-catalog,
-  .project-moodboard-panel {
-    top: 104px;
-    right: 8px;
-    bottom: 8px;
-    left: 60px;
-    width: auto;
-    max-height: none;
   }
 
   .project-playground__canvas
@@ -9402,14 +8907,6 @@ body {
     width: auto;
   }
 
-  .project-moodboard-panel {
-    top: 68px;
-    right: 8px;
-    bottom: 8px;
-    left: 68px;
-    width: auto;
-  }
-
   .project-canvas-data-library {
     top: 68px;
     right: 8px;
@@ -9424,14 +8921,6 @@ body {
 
   .project-screen-library__grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .project-screen-inspector,
-  .project-canvas-data-inspector,
-  .project-moodboard-reference {
-    top: 156px;
-    right: 8px;
-    width: min(280px, calc(100% - 76px));
   }
 
   .project-sticky-note-picker {
@@ -13551,436 +13040,5 @@ body {
   }
 }
 
-/* Designer Canvas: keep Excalidraw's native control system as the visual foundation. */
-.project-playground__canvas--native-ui .excalidraw {
-  --color-primary: #6965db;
-  --color-primary-darker: #5b57d1;
-  --color-primary-darkest: #4a47b1;
-  --color-primary-light: #e3e2fe;
-  --color-primary-light-darker: #d7d5ff;
-  --color-primary-hover: #5753d0;
-  color: var(--text-primary-color);
-  background: var(--default-bg-color, #fff);
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .FixedSideContainer_side_top {
-  top: 72px;
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-menu_top {
-  position: static;
-  width: auto;
-  height: auto;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  grid-gap: 2rem;
-  align-items: flex-start;
-  transform: none;
-}
-
-.project-playground__canvas--native-ui .excalidraw .shapes-section {
-  position: static;
-  width: auto;
-  height: auto;
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-toolbar-container,
-.project-playground__canvas--native-ui .excalidraw .App-toolbar {
-  width: auto;
-  height: auto;
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-toolbar {
-  padding: 4px;
-  border: 0;
-  border-radius: var(--border-radius-lg, 8px);
-  background: var(--island-bg-color, #fff);
-  box-shadow: 0 0 0 1px var(--color-surface-lowest, rgb(0 0 0 / 8%));
-  backdrop-filter: none;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar
-  > .Stack_horizontal {
-  width: auto;
-  height: auto;
-  max-height: none;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  overflow: visible;
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-toolbar .ToolIcon__icon,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar__extra-tools-trigger {
-  width: var(--lg-button-size, 36px);
-  height: var(--lg-button-size, 36px);
-  border-radius: var(--border-radius-lg, 8px);
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-toolbar__divider {
-  width: 1px;
-  height: 1.5rem;
-  margin: 0 0.25rem;
-}
-
-.project-playground__canvas--native-ui .excalidraw .HintViewer {
-  display: flex;
-}
-
-.project-playground__canvas--native-ui .excalidraw .ToolIcon__keybinding {
-  display: block;
-}
-
-.project-playground__canvas--native-ui .excalidraw .App-toolbar .ToolIcon__lock,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar
-  .ToolIcon__lock
-  + .App-toolbar__divider {
-  display: block;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .ToolIcon_type_radio:checked
-  + .ToolIcon__icon,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .ToolIcon_type_checkbox:checked
-  + .ToolIcon__icon {
-  color: var(--color-on-primary-container);
-  background: var(--color-surface-primary-container);
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar
-  .ToolIcon__icon:hover,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar__extra-tools-trigger:hover {
-  background: var(--button-hover-bg, var(--color-surface-high));
-}
-
-.project-playground__canvas--native-ui .project-playground__astryx-tools {
-  order: 0;
-  width: auto;
-  height: 36px;
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: row;
-  gap: 0;
-  align-items: center;
-  padding: 0;
-}
-
-.project-playground__canvas--native-ui
-  .project-playground__astryx-tools-divider {
-  width: 1px;
-  height: 1.5rem;
-  margin: 0 0.25rem;
-  background: var(--default-border-color, rgb(0 0 0 / 12%));
-}
-
-.project-playground__canvas--native-ui .project-playground__screens-trigger,
-.project-playground__canvas--native-ui .project-playground__sticky-trigger,
-.project-playground__canvas--native-ui .project-playground__document-trigger,
-.project-playground__canvas--native-ui .project-playground__more-tools-trigger {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  border-radius: var(--border-radius-lg, 8px);
-  color: var(--color-on-surface, #1b1b1f);
-}
-
-.project-playground__canvas--native-ui
-  .project-playground__screens-trigger[aria-pressed="true"],
-.project-playground__canvas--native-ui
-  .project-playground__sticky-trigger[aria-pressed="true"],
-.project-playground__canvas--native-ui
-  .project-playground__document-trigger[aria-pressed="true"],
-.project-playground__canvas--native-ui
-  .project-playground__more-tools-trigger[aria-pressed="true"] {
-  color: var(--color-on-primary-container);
-  background: var(--color-surface-primary-container);
-}
-
-.project-playground__canvas--native-ui
-  .project-playground__screens-trigger:hover,
-.project-playground__canvas--native-ui
-  .project-playground__sticky-trigger:hover,
-.project-playground__canvas--native-ui
-  .project-playground__document-trigger:hover,
-.project-playground__canvas--native-ui
-  .project-playground__more-tools-trigger:hover {
-  background: var(--button-hover-bg, var(--color-surface-high));
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .selected-shape-actions
-  > .App-menu__left {
-  position: absolute !important;
-  top: auto !important;
-  left: auto !important;
-  max-height: calc(100dvh - 148px);
-  border: 0;
-  border-radius: var(--border-radius-lg, 8px);
-  box-shadow: 0 0 0 1px var(--color-surface-lowest, rgb(0 0 0 / 8%));
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar__extra-tools-dropdown {
-  top: calc(100% + 8px) !important;
-  right: 0 !important;
-  bottom: auto !important;
-  left: auto !important;
-  width: auto !important;
-  transform: none !important;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .App-toolbar__extra-tools-dropdown
-  .dropdown-menu-container {
-  width: max-content;
-  min-width: 220px;
-  max-width: min(320px, calc(100vw - 32px));
-  max-height: calc(100dvh - 152px);
-  padding: 0.25rem;
-  border: 0;
-  border-radius: var(--border-radius-lg, 8px);
-  background: var(--popup-bg-color, #fff);
-  box-shadow: 0 0 0 1px var(--color-surface-lowest, rgb(0 0 0 / 8%));
-  backdrop-filter: none;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .layer-ui__wrapper__footer-left {
-  display: flex;
-}
-
-.project-playground__canvas--native-ui .excalidraw .zoom-actions,
-.project-playground__canvas--native-ui .excalidraw .undo-redo-buttons,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .layer-ui__wrapper__footer-right {
-  position: static;
-  width: auto;
-  height: 36px;
-  min-height: 36px;
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 0;
-  border: 0;
-  border-radius: var(--border-radius-lg, 8px);
-  background: var(--island-bg-color, #fff);
-  box-shadow: 0 0 0 1px var(--color-surface-lowest, rgb(0 0 0 / 8%));
-  backdrop-filter: none;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .zoom-actions
-  > .Stack_horizontal {
-  width: auto;
-  height: 36px;
-  display: flex;
-  grid-template-columns: none;
-  align-items: center !important;
-}
-
-.project-playground__canvas--native-ui .excalidraw .zoom-actions .zoom-button,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .zoom-actions
-  .ToolIcon__icon,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .zoom-actions
-  .excalidraw-tooltip-wrapper,
-.project-playground__canvas--native-ui .excalidraw .undo-redo-buttons > div,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  .excalidraw-tooltip-wrapper,
-.project-playground__canvas--native-ui .excalidraw .undo-redo-buttons button,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  .ToolIcon__icon {
-  width: 36px;
-  height: 36px !important;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .zoom-actions
-  .reset-zoom-button {
-  width: 60px !important;
-}
-
-.project-playground__canvas--native-ui .excalidraw .undo-redo-buttons {
-  width: 72px;
-  grid-template-columns: repeat(2, 36px);
-  grid-template-rows: 36px;
-  margin-inline-start: 0.6em;
-  overflow: hidden;
-}
-
-.project-playground__canvas--native-ui .excalidraw .undo-redo-buttons button,
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  button:disabled {
-  color: var(--color-on-surface) !important;
-  background: var(--color-surface-low) !important;
-  opacity: 1;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  button:disabled {
-  color: var(--color-on-surface, #1b1b1f) !important;
-  cursor: default;
-  opacity: 0.38;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  button:hover:not(:disabled) {
-  color: var(--color-on-surface) !important;
-  background: var(--button-hover-bg, var(--color-surface-high)) !important;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .undo-redo-buttons
-  .redo-button-container {
-  border-left: 0;
-}
-
-.project-playground__canvas--native-ui
-  .excalidraw
-  .layer-ui__wrapper__footer-right
-  .help-icon {
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: var(--border-radius-lg, 8px);
-  background: var(--color-surface-low);
-  color: var(--color-on-surface);
-}
-
 @media (max-width: 640px) {
-  .project-playground__canvas--native-ui
-    .excalidraw
-    .FixedSideContainer_side_top {
-    top: 64px;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .FixedSideContainer_side_top.App-top-bar {
-    display: flex;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-toolbar--mobile {
-    position: static;
-    top: auto;
-    left: auto;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .mobile-misc-tools-container {
-    display: flex;
-  }
-
-  .project-playground__canvas--native-ui .excalidraw--mobile .App-bottom-bar {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
-    display: flex;
-    margin: 0 !important;
-    padding: 16px 0 0 !important;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    > .Island,
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    .App-toolbar,
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    .App-toolbar-content {
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    padding: 8px;
-    overflow: visible;
-    border-radius: var(--border-radius-lg, 8px);
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    .App-toolbar-content {
-    display: flex;
-    grid-template: none;
-    gap: 0;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    button,
-  .project-playground__canvas--native-ui
-    .excalidraw--mobile
-    .App-bottom-bar
-    .App-toolbar-content
-    > * {
-    display: flex !important;
-  }
-
-  .project-playground__canvas--native-ui .excalidraw .shapes-section,
-  .project-playground__canvas--native-ui .excalidraw .App-toolbar {
-    max-width: calc(100vw - 32px);
-  }
-
-  .project-playground__canvas--native-ui .excalidraw .App-toolbar {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw
-    .App-toolbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .project-playground__canvas--native-ui
-    .excalidraw
-    .App-toolbar
-    > .Stack_horizontal {
-    width: max-content;
-  }
 }

@@ -2,24 +2,24 @@ const AUTH_TOKEN_KEY = "vitrine:auth-token";
 
 let memoryToken: string | null = null;
 
-function browserSessionStorage(): Storage | undefined {
-  return typeof window === "undefined" ? undefined : window.sessionStorage;
+function browserLocalStorage(): Storage | undefined {
+  return typeof window === "undefined" ? undefined : window.localStorage;
 }
 
 export function getAuthToken(): string | null {
   if (memoryToken) return memoryToken;
-  memoryToken = browserSessionStorage()?.getItem(AUTH_TOKEN_KEY) ?? null;
+  memoryToken = browserLocalStorage()?.getItem(AUTH_TOKEN_KEY) ?? null;
   return memoryToken;
 }
 
 export function setAuthToken(token: string): void {
   memoryToken = token;
-  browserSessionStorage()?.setItem(AUTH_TOKEN_KEY, token);
+  browserLocalStorage()?.setItem(AUTH_TOKEN_KEY, token);
 }
 
 export function clearAuthToken(): void {
   memoryToken = null;
-  browserSessionStorage()?.removeItem(AUTH_TOKEN_KEY);
+  browserLocalStorage()?.removeItem(AUTH_TOKEN_KEY);
 }
 
 function isSameOriginApiRequest(input: string | URL | Request): boolean {

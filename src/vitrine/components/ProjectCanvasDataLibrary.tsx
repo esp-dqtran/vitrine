@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, TextInput } from "@astryxdesign/core";
+import {
+  Button,
+  Card,
+  SegmentedControl,
+  SegmentedControlItem,
+  TextInput,
+} from "@astryxdesign/core";
 
 import type { Platform } from "../../platformFromUrl.ts";
 import { flowCatalogItemKey, loadFlowCatalogPage, type FlowCatalogItem } from "../flowCatalogApi.ts";
 import type { App } from "../types.ts";
 import { fetchCatalogPage } from "../useApps.ts";
 import { AppIcon } from "./AppIcon.tsx";
+import { useSegmentedIndicator } from "./useSegmentedIndicator.ts";
 import { PlaceholderImage } from "./PlaceholderImage.tsx";
 
 export type ProjectCanvasDataMode = "apps" | "flows";
@@ -32,14 +39,12 @@ export function projectCanvasDataKey(item: App | FlowCatalogItem): string {
 export function ProjectCanvasDataLibrary({
   initialMode = "apps",
   insertingKey,
-  message,
   onClose,
   onInsertApp,
   onInsertFlow,
 }: {
   initialMode?: ProjectCanvasDataMode;
   insertingKey?: string;
-  message: string;
   onClose(): void;
   onInsertApp(app: App, platform: Platform): void;
   onInsertFlow(item: FlowCatalogItem, platform: Platform): void;
@@ -48,6 +53,8 @@ export function ProjectCanvasDataLibrary({
   const [query, setQuery] = useState("");
   const [platform, setPlatform] = useState<Platform>("web");
   const [state, setState] = useState<LibraryState>("loading");
+  const modeSwitcherRef = useSegmentedIndicator(mode);
+  const platformSwitcherRef = useSegmentedIndicator(platform);
   const [apps, setApps] = useState<App[]>([]);
   const [flows, setFlows] = useState<FlowCatalogItem[]>([]);
 
@@ -103,18 +110,20 @@ export function ProjectCanvasDataLibrary({
         <Button label="Close" variant="ghost" size="sm" onClick={onClose} />
       </header>
 
-      <div className="project-canvas-data-library__tabs" role="tablist" aria-label="Data type">
-        {modes.map((option) => (
-          <Button
-            key={option.value}
-            label={option.label}
-            variant="ghost"
-            size="sm"
-            role="tab"
-            aria-selected={mode === option.value}
-            onClick={() => setMode(option.value)}
-          />
-        ))}
+      {/* The product's own switcher, not a hand-rolled row of ghost buttons
+          carrying tab semantics — the control Insights and the canvas use. */}
+      <div className="project-canvas-data-library__tabs">
+        <SegmentedControl
+          ref={modeSwitcherRef}
+          label="Data type"
+          size="sm"
+          value={mode}
+          onChange={(value) => setMode(value as ProjectCanvasDataMode)}
+        >
+          {modes.map((option) => (
+            <SegmentedControlItem key={option.value} value={option.value} label={option.label} />
+          ))}
+        </SegmentedControl>
       </div>
 
       <TextInput
@@ -126,21 +135,20 @@ export function ProjectCanvasDataLibrary({
         width="100%"
       />
 
-      <div className="project-canvas-data-library__platforms" role="tablist" aria-label="Data platform">
-        {platforms.map((option) => (
-          <Button
-            key={option.value}
-            label={option.label}
-            variant="ghost"
-            size="sm"
-            role="tab"
-            aria-selected={platform === option.value}
-            onClick={() => setPlatform(option.value)}
-          />
-        ))}
+      <div className="project-canvas-data-library__platforms">
+        <SegmentedControl
+          ref={platformSwitcherRef}
+          label="Data platform"
+          size="sm"
+          value={platform}
+          onChange={(value) => setPlatform(value as Platform)}
+        >
+          {platforms.map((option) => (
+            <SegmentedControlItem key={option.value} value={option.value} label={option.label} />
+          ))}
+        </SegmentedControl>
       </div>
 
-      {message && <p className="project-canvas-data-library__message" role="status">{message}</p>}
       {state === "loading" && (
         <p className="project-canvas-data-library__empty" role="status">
           Loading {mode}…

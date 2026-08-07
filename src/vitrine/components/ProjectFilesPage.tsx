@@ -217,14 +217,13 @@ export function ProjectFilesPage({
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    const fileRequest =
-      area === "canvas"
-        ? listDesignerCanvases(projectId, controller.signal).then(setCanvases)
-        : area === "documents"
-          ? listProjectDocuments(projectId, controller.signal).then(
-              setDocuments,
-            )
-          : Promise.resolve();
+    /* Both lists load regardless of `area` — the rail tree shows Canvas and
+       Documents side by side, so it needs both even while the main panel
+       renders only one. */
+    const fileRequest = Promise.all([
+      listDesignerCanvases(projectId, controller.signal).then(setCanvases),
+      listProjectDocuments(projectId, controller.signal).then(setDocuments),
+    ]);
     void Promise.all([getResearchProject(projectId), fileRequest])
       .then(([nextProject]) => {
         setProject(nextProject);
@@ -333,9 +332,11 @@ export function ProjectFilesPage({
           : [{ id: projectId, title: projectTitle } as ResearchProjectSummary],
         openProjectId: projectId,
         area,
+        canvases,
+        documents,
         onOpenProjects: () => navigate({ name: "projects" }),
       }),
-    [area, projectId, projectTitle, siblings],
+    [area, canvases, documents, projectId, projectTitle, siblings],
   );
 
   useWorkspaceChrome(
