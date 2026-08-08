@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Button, ClickableCard, Icon, IconButton, Spinner, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
+import { Button, ClickableCard, Icon, IconButton, TextInput, ToggleButton, type IconName } from '@astryxdesign/core';
 import type { CatalogComparison, CatalogSearchResult, CatalogSearchResultItem } from '../../catalogResearch';
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';

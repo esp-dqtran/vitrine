@@ -42,7 +42,7 @@ test('renders the real Vitrines mark everywhere the brand icon appears', async (
   const home = await readFile(new URL('./Home.tsx', import.meta.url), 'utf8');
   assert.equal((home.match(/src="\/favicon\.svg"/g) ?? []).length, 2);
   const discoveryNavigation = await readFile(
-    new URL('./components/ReferenceDiscoveryTopNav.tsx', import.meta.url),
+    new URL('./components/ApplicationHeader.tsx', import.meta.url),
     'utf8',
   );
   assert.match(discoveryNavigation, /src="\/favicon\.svg"/);

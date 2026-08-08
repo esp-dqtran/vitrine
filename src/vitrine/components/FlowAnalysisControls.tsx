@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Spinner } from '@astryxdesign/core';
+import { Button } from '@astryxdesign/core';
 import type { AppKnowledgeJobView } from '../../appKnowledgeStore.ts';
 import type { Platform } from '../../platformFromUrl.ts';
 import type { AppKnowledgeState } from '../appKnowledgeStore.ts';

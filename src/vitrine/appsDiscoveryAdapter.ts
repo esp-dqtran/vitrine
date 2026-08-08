@@ -77,7 +77,10 @@ export function appsCatalogRequestPath(
     params.append('filter', `${filter.group}.${filter.value}`);
   }
   if (cursor) params.set('cursor', cursor);
-  return `/api/apps?${params.toString()}`;
+  // App cards now render up to three phone screenshots, which are supplied by
+  // the catalog's bounded preview pass. `facets=summary` keeps this list route
+  // free of the expensive full facet aggregation.
+  return `/api/catalog?${params.toString()}`;
 }
 
 export function loadAppsDiscoveryFacets(
@@ -149,8 +152,7 @@ export function createAppsDiscoveryAdapter(
       return params.toString();
     },
     async request(state, cursor, signal) {
-      // No admin branch: /api/apps is the public Apps grid now, and the admin
-      // list it used to serve is gone. Admins read the same endpoint.
+      // No admin branch: both roles use the published catalog summary.
       const page = await fetchCatalogPage(
         appsCatalogRequestPath(state, cursor),
         signal,

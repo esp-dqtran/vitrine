@@ -303,6 +303,8 @@ test("keeps popular pagination and catalog metadata stable after the mutable Sit
   assert.equal(second.items[0]?.popularity, 90);
   assert.ok(identitySql.every((sql) => /rv\.catalog_snapshot/.test(sql)));
   assert.ok(summarySql.every((sql) => /catalog_snapshot/.test(sql)));
+  assert.ok(summarySql.every((sql) => /JOIN sites site/.test(sql) && /site\.icon_object_key/.test(sql)));
+  assert.ok(summarySql.every((sql) => !/catalog_snapshot->>'logoUrl'/.test(sql)));
 });
 
 test("builds indexed case-insensitive filters without selecting an older matching version", async () => {
@@ -446,6 +448,26 @@ test("loads only ready versions", async () => {
   // still holds if a reader stops issuing one of these queries.
   assert.ok(capturedSql.length > 0);
   for (const sql of capturedSql) assert.match(sql, /sv\.status = 'ready'/);
+});
+
+test("uses the stored Site icon asset when one is available", async () => {
+  const capturedSql: string[] = [];
+  const store = createSitesStore(async (sql) => {
+    capturedSql.push(sql);
+    return result();
+  });
+
+  await store.listReadySites();
+  await store.readyVersionDetail(1, 2);
+
+  const logoQueries = capturedSql.filter((sql) =>
+    sql.includes("FROM sites s") && sql.includes("AS logo_url")
+  );
+  assert.equal(logoQueries.length, 2);
+  for (const sql of logoQueries) {
+    assert.match(sql, /CASE WHEN s\.icon_object_key IS NOT NULL/);
+    assert.match(sql, /THEN '\/assets\/' \|\| s\.icon_object_key/);
+  }
 });
 
 test("maps PostgreSQL timestamptz Date values in ready Site summaries", async () => {

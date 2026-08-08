@@ -1,10 +1,11 @@
+import { Spinner } from './Spinner.tsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { withCollaboration } from "@blocknote/core/yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
-import { Button, Icon, IconButton, Spinner } from "@astryxdesign/core";
+import { Button, Icon, IconButton } from "@astryxdesign/core";
 import { getAuthToken } from '../apiFetch.ts';
 
 import "@blocknote/mantine/style.css";

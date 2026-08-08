@@ -18,6 +18,11 @@ const SCROLL_DELAY_MS = 400;
 const MAX_SCROLL_ITERATIONS = 500; // ponytail: hard cap so a page with truly infinite scroll can't hang forever
 const STABLE_AT_BOTTOM_STREAK = 6;
 const DOWNLOAD_WAIT_MS = 5 * 60_000;
+// A Mobbin export can take several minutes after the first file is emitted, but a
+// trigger that emits no download at all is a failed control path. Keep that case
+// short so Screens can reach the multi-select fallback instead of idling for the
+// full export deadline (observed on Qonto's More-actions menu).
+const DOWNLOAD_START_WAIT_MS = 30_000;
 const DOWNLOAD_QUIET_MS = 500; // settle time after the first download to catch multi-file exports
 
 export type BulkTab = "screens" | "ui-elements";
@@ -192,11 +197,14 @@ export async function retryTransientFlowIngestion<T>(
 //
 // Works for both the Screens and UI Elements tabs — same grid markup, same hidden
 // aria-pressed checkbox per card, and element cards still link to /screens/. Cards are
-// matched by alt-text *prefix* (the app's display name) because screens are titled
-// "<App> screen" while element crops vary — the prefix still excludes the "More like
-// <other app>" recommendation carousel.
-export function shouldSelectCard(tab: BulkTab, cardAlt: string, appAltPrefix: string): boolean {
-  return tab === "ui-elements" || cardAlt.toLowerCase().startsWith(appAltPrefix.toLowerCase());
+// matched by the app-owned label (normally the image alt-text, with the anchor's accessible
+// label as a fallback). A few Mobbin screens use generic image alts such as "Animation
+// keyframe" while their anchor still says "<App> screen"; relying on the image alone drops
+// those cards from an otherwise complete export.
+export function shouldSelectCard(tab: BulkTab, cardAlt: string, appAltPrefix: string, cardLabel = ""): boolean {
+  if (tab === "ui-elements") return true;
+  const prefix = appAltPrefix.toLowerCase();
+  return [cardAlt, cardLabel].some((value) => value.toLowerCase().startsWith(prefix));
 }
 
 export function nextSelectionSweep(
@@ -219,6 +227,7 @@ async function selectAllOwnCards(
   appAltPrefix: string,
   tab: BulkTab,
   resetToTop = true,
+  targetHrefs: readonly string[] = [],
 ): Promise<{ clicked: number; skipped: number }> {
   if (resetToTop) {
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -228,7 +237,7 @@ async function selectAllOwnCards(
   let totalClicked = 0;
   let totalSkipped = 0;
   let stableAtBottom = 0;
-  const selectVisibleCards = () => page.evaluate(({ prefix, includeEveryCard }) => {
+  const selectVisibleCards = () => page.evaluate(({ prefix, includeEveryCard, targetHrefs }) => {
     // Only grids that actually hold screen links — excludes the unrelated "similar apps"
     // icon carousel, which uses the same "content-start" class but no /screens/ hrefs.
     const grids = Array.from(document.querySelectorAll("div.grid")).filter(
@@ -238,10 +247,13 @@ async function selectAllOwnCards(
     let skipped = 0;
     for (const g of grids) {
       for (const a of Array.from(g.querySelectorAll('a[href*="/screens/"]'))) {
-        const cardAlt = (a.querySelector("img")?.getAttribute("alt") || "").toLowerCase();
+        if (targetHrefs.length > 0 && !targetHrefs.includes(a.getAttribute("href") || "")) continue;
+        const cardAlt = a.querySelector("img")?.getAttribute("alt") || "";
+        const cardLabel = a.getAttribute("aria-label") || "";
         const checkbox = a.parentElement?.querySelector('button[aria-pressed="false"]') as HTMLButtonElement | null;
         if (!checkbox) continue;
-        if (!includeEveryCard && !cardAlt.startsWith(prefix)) {
+        const ownedByApp = cardAlt.toLowerCase().startsWith(prefix) || cardLabel.toLowerCase().startsWith(prefix);
+        if (!includeEveryCard && !ownedByApp) {
           skipped++;
           continue;
         }
@@ -250,7 +262,7 @@ async function selectAllOwnCards(
       }
     }
     return { clicked, skipped };
-  }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements" });
+  }, { prefix: appAltPrefix, includeEveryCard: tab === "ui-elements", targetHrefs });
 
   for (let i = 0; i < MAX_SCROLL_ITERATIONS && stableAtBottom < STABLE_AT_BOTTOM_STREAK; i++) {
     const first = await selectVisibleCards();
@@ -384,9 +396,11 @@ async function triggerAndSaveDownloads(page: Page, dir: string, trigger: (p: Pag
     // which would miss it and wrongly report "no download started". The `downloads` array
     // is race-free since the listener above was attached before trigger() ran.
     let lastCount = -1;
+    const startDeadline = Date.now() + DOWNLOAD_START_WAIT_MS;
     const deadline = Date.now() + DOWNLOAD_WAIT_MS;
     while (Date.now() < deadline) {
       await page.waitForTimeout(DOWNLOAD_QUIET_MS);
+      if (downloads.length === 0 && Date.now() >= startDeadline) break;
       if (downloads.length > 0 && downloads.length === lastCount) break;
       lastCount = downloads.length;
     }
@@ -599,7 +613,10 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
       : `[${appName}] Selecting every ${label} card (filtering to alt prefix "${appAltPrefix}")...`);
     writeProgress({ stage: "crawl", app: appName, done: 0, total: 0, status: "running", message: `Selecting ${label}` });
 
-    const { skipped } = await selectAllOwnCards(page, appAltPrefix, tab);
+    const targetHrefs = tab === "screens"
+      ? (process.env.MOBBIN_SCREEN_TARGET_HREFS ?? "").split(",").map((href) => href.trim()).filter(Boolean)
+      : [];
+    const { skipped } = await selectAllOwnCards(page, appAltPrefix, tab, true, targetHrefs);
     const shown = await shownTotalCount(page);
     let selected = (await toolbarSelectedCount(page)) ?? 0;
     console.log(`[${appName}] Pass 1: selected ${selected} of ${shown ?? "?"} ${label} (${skipped} filtered as other-app).`);
@@ -617,7 +634,7 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
       // missing tail cards, turning each no-progress check into a 10+ minute full recrawl.
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await page.waitForTimeout(1_500);
-      await selectAllOwnCards(page, appAltPrefix, tab, false);
+      await selectAllOwnCards(page, appAltPrefix, tab, false, targetHrefs);
       const reselected = (await toolbarSelectedCount(page)) ?? selected;
       const madeProgress = reselected > selected;
       const sweep = nextSelectionSweep(selected, reselected, shown, stagnantPasses);
@@ -639,7 +656,8 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
 
   let savedPaths: string[];
 
-  if (tab === "screens") {
+  const forceSelectionFallback = process.env.MOBBIN_SCREEN_DOWNLOAD_FALLBACK_ONLY === "1";
+  if (tab === "screens" && !forceSelectionFallback) {
     // Screens: try the app-level "Download all screens" menu first — fast, no selection needed.
     if (isCancelRequested()) return cancelledOutcome();
     console.log(`[${appName}] Downloading all screens via the More actions menu...`);
@@ -652,6 +670,9 @@ export async function crawlBulkDownload(appUrl: string, appName: string, tab: Bu
       savedPaths = await selectAndDownloadAll();
     }
   } else {
+    if (tab === "screens" && forceSelectionFallback) {
+      console.log(`[${appName}] Using the multi-select screen download fallback.`);
+    }
     savedPaths = await selectAndDownloadAll();
   }
 

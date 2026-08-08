@@ -388,6 +388,9 @@ test("selects one extra Updated At identity before reading bounded catalog metad
   assert.match(calls[1]?.sql ?? "", /ANY\(\$1::integer\[\]\)/);
   assert.match(calls[2]?.sql ?? "", /preview_rank <= 3/);
   assert.match(calls[2]?.sql ?? "", /JOIN LATERAL/);
+  assert.match(calls[2]?.sql ?? "", /preview_category AS MATERIALIZED/);
+  assert.match(calls[2]?.sql ?? "", /lower\(pfp\.facet_value\) = 'preview'/);
+  assert.match(calls[2]?.sql ?? "", /-2 AS source_priority/);
   assert.match(calls[2]?.sql ?? "", /curated AS MATERIALIZED/);
   assert.match(calls[2]?.sql ?? "", /fast_fallback AS MATERIALIZED/);
   assert.match(calls[2]?.sql ?? "", /UNION ALL/);
@@ -398,7 +401,7 @@ test("selects one extra Updated At identity before reading bounded catalog metad
     calls[2]?.sql ?? "",
     /ORDER BY heft\.byte_size DESC NULLS LAST,\s+candidate\.created_at DESC, candidate\.id DESC\s+LIMIT 3/,
   );
-  assert.match(calls[2]?.sql ?? "", /\(SELECT COUNT\(\*\) FROM curated\)[\s\S]*\(SELECT COUNT\(\*\) FROM fast_fallback\)[\s\S]*< 3/);
+  assert.match(calls[2]?.sql ?? "", /\(SELECT COUNT\(\*\) FROM preview_category\)[\s\S]*\(SELECT COUNT\(\*\) FROM curated\)[\s\S]*\(SELECT COUNT\(\*\) FROM fast_fallback\)[\s\S]*< 3/);
   assert.doesNotMatch(calls[2]?.sql ?? "", /DISTINCT ON \(a\.id, latest\.platform, i\.id\)/);
   assert.match(calls[2]?.sql ?? "", /PARTITION BY app, platform/);
   assert.match(calls[2]?.sql ?? "", /ORDER BY platform_rank, platform/);

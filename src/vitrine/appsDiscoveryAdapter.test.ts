@@ -187,35 +187,23 @@ test('drives one initial request and one reset filter request through the generi
   }
 });
 
-test('uses the admin Apps discovery envelope and preserves progress fields', async () => {
+test('uses the shared published Apps envelope for admin viewers and preserves progress fields', async () => {
   const originalFetch = globalThis.fetch;
   const calls: string[] = [];
   globalThis.fetch = (async (input: string | URL | Request) => {
     calls.push(String(input));
     return new Response(JSON.stringify({
-      apps: [{
+      items: [{
+        ...apiItem,
         id: 'draft',
         app: 'Draft',
         categories: [],
         accent: '#123456',
         totalScreens: 5,
         analyzedScreens: 2,
-        platforms: ['web'],
-        lastCapturedAt: '2026-07-20T00:00:00.000Z',
-        iconUrl: null,
-        screens: [{
-          id: 1,
-          type: 'Dashboard',
-          productArea: 'Workspace',
-          theme: 'dark',
-          visibleStates: [],
-          platform: 'web',
-          description: null,
-          url: '/draft.png',
-        }],
       }],
       nextCursor: null,
-      total: 1,
+      totalCount: 1,
       facets: [{ group: 'screens', value: 'Dashboard', count: 1 }],
     }), { status: 200 });
   }) as typeof fetch;
@@ -227,7 +215,7 @@ test('uses the admin Apps discovery envelope and preserves progress fields', asy
     }, null, new AbortController().signal);
 
     assert.deepEqual(calls, [
-      '/api/apps?platform=web&facets=summary&sort=latest&filter=screens.Dashboard',
+      '/api/catalog?platform=web&facets=summary&sort=latest&filter=screens.Dashboard',
     ]);
     assert.equal(page.items[0]?.analyzedScreens, 2);
     assert.deepEqual(page.facets, [

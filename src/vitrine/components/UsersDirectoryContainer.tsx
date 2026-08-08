@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useState } from 'react';
-import { Button, Spinner } from '@astryxdesign/core';
+import { Button } from '@astryxdesign/core';
 import type { AdminUser, UsageRangeKey, UserFilter } from '../types.ts';
 import { setAdminUserActive } from '../usersApi.ts';
 import { useUsersDirectory } from '../useUsersDirectory.ts';

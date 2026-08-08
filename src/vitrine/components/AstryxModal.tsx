@@ -40,14 +40,50 @@ export function AstryxModal({
   presentation,
   variant,
   purpose,
+  ref,
+  isOpen,
+  onOpenChange,
   ...props
 }: AstryxModalProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
+    dialogRef.current = node;
+    assignRef(ref, node);
+  }, [ref]);
   const resolvedPresentation = presentation
     ?? (variant === 'fullscreen' ? 'fullscreen' : 'dialog');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    // The design-system Dialog already dismisses informational modals. Forms
+    // deliberately opt out there, but Vitrines modals should always allow a
+    // user to leave with the backdrop as well as their visible close control.
+    if (!dialog || !isOpen || purpose === 'info' || purpose === undefined) return;
+    const closeFromBackdrop = (event: MouseEvent) => {
+      if (event.target === dialog) onOpenChange(false);
+    };
+    dialog.addEventListener('click', closeFromBackdrop);
+    return () => dialog.removeEventListener('click', closeFromBackdrop);
+  }, [isOpen, onOpenChange, purpose]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || !isOpen || purpose !== 'required') return;
+    const closeFromEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onOpenChange(false);
+    };
+    dialog.addEventListener('keydown', closeFromEscape);
+    return () => dialog.removeEventListener('keydown', closeFromEscape);
+  }, [isOpen, onOpenChange, purpose]);
 
   return (
     <Dialog
       {...props}
+      ref={setDialogRef}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
       variant={variant}
       purpose={purpose}
       className={classNames(

@@ -3,7 +3,7 @@ import {
   ReferenceDetailShell,
   type ReferenceDetailShellProps,
 } from './ReferenceDetailShell.tsx';
-import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
+import { ApplicationHeader } from './ApplicationHeader.tsx';
 import { SearchTrigger } from './SearchTrigger.tsx';
 
 export type ReferenceDetailKind = 'app' | 'site';
@@ -17,6 +17,7 @@ export interface ReferenceDetailNavigationProps {
   searchMode?: 'legacy' | 'advanced';
   activeFilterCount?: number;
   accountControls?: ReactNode;
+  contextIconUrl?: string | null;
 }
 
 export type ReferenceDetailPageProps<T extends string> =
@@ -34,12 +35,13 @@ export function ReferenceDetailNavigation({
   searchMode = 'legacy',
   activeFilterCount,
   accountControls,
+  contextIconUrl,
 }: ReferenceDetailNavigationProps) {
   const active = kind === 'app' ? 'apps' : 'sites';
-  const className = `${active}-top-nav`;
+  const className = 'reference-detail-top-nav';
 
   return (
-    <ReferenceDiscoveryTopNav
+    <ApplicationHeader
       active={active}
       className={className}
       search={(
@@ -52,6 +54,7 @@ export function ReferenceDetailNavigation({
           activeFilterCount={activeFilterCount}
         />
       )}
+      contextIconUrl={contextIconUrl}
       accountControls={accountControls}
     />
   );
@@ -79,6 +82,7 @@ export function ReferenceDetailPage<T extends string>({
         searchMode={searchMode}
         activeFilterCount={activeFilterCount}
         accountControls={accountControls}
+        contextIconUrl={detailProps.identityImageUrl}
       />
       <ReferenceDetailShell
         {...detailProps}

@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useState } from 'react';
-import { Button, Heading, Spinner, Text } from '@astryxdesign/core';
+import { Button, Heading, Text } from '@astryxdesign/core';
 import type { UsageRangeKey } from '../types.ts';
 import { useUsersInsights } from '../useUsersInsights.ts';
 import { UserUsageInsights } from './UserUsageInsights.tsx';

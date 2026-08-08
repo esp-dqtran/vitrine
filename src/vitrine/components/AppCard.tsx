@@ -22,9 +22,9 @@ export function AppCard({
   const resolvedPreviewUrl = app.previewUrl;
   const [sitePreviewFailed, setSitePreviewFailed] = useState(false);
   useEffect(() => { setSitePreviewFailed(false); }, [resolvedPreviewUrl]);
-  // /api/apps ships previewScreens empty — the grid renders from previewUrl —
-  // so the screen list cannot be trusted to reveal the platform. The payload
-  // states it directly; fall back to the filtered platform, then the app's own.
+  // The catalog supplies up to three published preview screens. Fall back to
+  // the filtered platform, then the app's declared platforms if a card has no
+  // servable preview image yet.
   const activePlatform = active?.platform
     ?? (platform && app.platforms?.includes(platform) ? platform : app.platforms?.[0]);
   const isMobile = activePlatform === 'ios' || activePlatform === 'android';
@@ -39,6 +39,10 @@ export function AppCard({
   // A site capture is always a desktop page, so it must not get the phone frame
   // even when the app itself is iOS/Android.
   const isMobilePreview = showsPhoneScreenshot;
+  const mobilePreviewScreens = isMobilePreview
+    ? app.screens.filter((screen) => screen.platform === activePlatform).slice(0, 3)
+    : [];
+  const hasMobilePreviewRow = mobilePreviewScreens.length > 1;
   const previewSrc = active?.thumbnailUrl ?? active?.url;
   const previewSrcSet = active?.thumbnailUrl && active.url && active.thumbnailUrl !== active.url
     ? `${active.thumbnailUrl} 1x,${active.url} 2x`
@@ -91,10 +95,32 @@ export function AppCard({
         // showing a crawled website is a desktop page and belongs in the
         // standard frame, same signal that decides the phone mask.
         'data-preview-shape': isMobilePreview ? 'phone' : undefined,
+        'data-preview-layout': hasMobilePreviewRow ? 'triptych' : undefined,
       }}
       media={(
         <>
-          {isMobilePreview
+          {hasMobilePreviewRow
+            ? (
+              <span className="app-discovery-card__phone-preview-row" aria-hidden="true">
+                {mobilePreviewScreens.map((screen) => {
+                  const src = screen.thumbnailUrl ?? screen.url;
+                  const srcSet = screen.thumbnailUrl && screen.url && screen.thumbnailUrl !== screen.url
+                    ? `${screen.thumbnailUrl} 1x,${screen.url} 2x`
+                    : undefined;
+                  return (
+                    <span key={screen.id} className="app-discovery-card__phone-preview">
+                      <PlaceholderImage
+                        src={src}
+                        srcSet={srcSet}
+                        accent={app.accent}
+                        style={{ background: 'transparent', objectFit: 'contain' }}
+                      />
+                    </span>
+                  );
+                })}
+              </span>
+            )
+            : isMobilePreview
             ? <span className="app-discovery-card__phone-preview">{preview}</span>
             : preview}
           <span className="discovery-card__badge">{app.isUpdated ? 'Updated' : 'New'}</span>

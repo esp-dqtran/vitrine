@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, EmptyState, Icon, IconButton } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import { navigate, routeToPath, updateLocation } from '../router.ts';
 import { hasDesignSystemContent } from '../designSystemAvailability.ts';
 import { getSiteVersion, getSiteVersionBySlug, listSitesPage } from '../sitesApi.ts';
@@ -13,17 +13,17 @@ import type {
 } from '../types.ts';
 import { HeroButton } from './HeroButton.tsx';
 import { MediaGridCard } from './MediaGridCard.tsx';
+import { AstryxSingleSelectDropdown } from './AstryxDropdown.tsx';
 import {
-  AstryxDropdown,
-  AstryxDropdownItem,
-  AstryxSingleSelectDropdown,
-} from './AstryxDropdown.tsx';
+  DiscoveryFilterMenu,
+  isOutsideAppsFilterMenu,
+  type DiscoveryFilterOption,
+} from './AppsFilterBar.tsx';
 import {
   ReferenceDetailNavigation,
   ReferenceDetailPage,
 } from './ReferenceDetailPage.tsx';
 import { ReferenceDetailLoading } from './ReferenceDetailLoading.tsx';
-import { SearchInput } from './SearchInput.tsx';
 import { SiteAnalysisPanel } from './SiteAnalysisPanel.tsx';
 import { SiteDesignSystemPanel, siteDesignSystemForDetail } from './SiteDesignSystemPanel.tsx';
 import { SiteCard } from './SiteCard.tsx';
@@ -183,6 +183,49 @@ export function SiteVersionView({
     }))),
     [pages],
   );
+  const sectionTypes = useMemo(
+    () => [...new Set(sectionItems.map(sectionType))],
+    [sectionItems],
+  );
+  const [selectedSectionType, setSelectedSectionType] = useState('all');
+  const [sectionTypeMenuOpen, setSectionTypeMenuOpen] = useState(false);
+  const [sectionFilterQuery, setSectionFilterQuery] = useState('');
+  const [sectionFilterPreview, setSectionFilterPreview] = useState<DiscoveryFilterOption | null>(null);
+  const sectionFilterRef = useRef<HTMLDivElement>(null);
+  const sectionFilterGroup = useMemo(() => ({
+    id: 'site-sections',
+    label: 'Sections',
+    selected: selectedSectionType === 'all' ? [] : [selectedSectionType],
+    options: sectionTypes.map((type) => ({
+      value: type,
+      section: 'Section types',
+    })),
+  }), [sectionTypes, selectedSectionType]);
+  useEffect(() => {
+    setSelectedSectionType((value) => (
+      value === 'all' || sectionTypes.includes(value) ? value : 'all'
+    ));
+  }, [sectionTypes]);
+  useEffect(() => {
+    if (!sectionTypeMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setSectionTypeMenuOpen(false);
+      }
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (isOutsideAppsFilterMenu(sectionFilterRef.current, event.target)) {
+        setSectionTypeMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [sectionTypeMenuOpen]);
   const inspectorItems: SiteInspectorItem[] = useMemo(
     () => sectionItems.map(({ page, item, index, patterns }) => ({
       id: item.id,
@@ -253,12 +296,13 @@ export function SiteVersionView({
   const body = activeSection === 'preview'
     ? <SitePreview detail={detail} sectionCount={sectionCount} />
     : activeSection === 'design-system'
-    ? <SiteDesignSystemPanel detail={detail} />
+    ? <SiteDesignSystemPanel detail={detail} isAdmin={isAdmin} />
     : activeSection === 'technology'
     ? <SiteAnalysisPanel detail={detail} />
     : (
       <SectionsPanel
         sections={sectionItems}
+        selectedType={selectedSectionType}
         onOpen={openInspector}
       />
     );
@@ -293,7 +337,7 @@ export function SiteVersionView({
     : activeSection === 'sections'
       ? `${sectionCount} ${sectionCount === 1 ? 'section' : 'sections'}`
       : activeSection === 'design-system'
-        ? `${siteDesignSystem?.tokens.length ?? 0} tokens · ${siteDesignSystem?.components.length ?? 0} components`
+      ? `${siteDesignSystem?.tokens.length ?? 0} tokens`
       : `${detail.analysis?.technology?.length ?? 0} technologies`;
   return (
     <>
@@ -321,7 +365,29 @@ export function SiteVersionView({
             onChange={onVersionChange}
           />
         ) : undefined}
-        tabTrailing={activeSection === 'sections' ? undefined : (
+        tabControls={activeSection === 'sections' ? (
+          <div className="app-detail__navigation-tools">
+            <DiscoveryFilterMenu
+              group={sectionFilterGroup}
+              open={sectionTypeMenuOpen}
+              query={sectionFilterQuery}
+              preview={sectionFilterPreview}
+              containerRef={sectionFilterRef}
+              onToggleOpen={() => {
+                setSectionFilterQuery('');
+                setSectionFilterPreview(null);
+                setSectionTypeMenuOpen((open) => !open);
+              }}
+              onQueryChange={setSectionFilterQuery}
+              onPreview={setSectionFilterPreview}
+              onToggleOption={(option) => {
+                setSelectedSectionType((value) => value === option.value ? 'all' : option.value);
+              }}
+              onClear={() => setSelectedSectionType('all')}
+            />
+          </div>
+        ) : undefined}
+        tabTrailing={(
           <span className="reference-detail__section-total">
             <span>Showing</span>
             <strong>{sectionTotal}</strong>
@@ -396,10 +462,6 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
       >
         <article className={`site-preview-player site-preview-player--${activeMode}`}>
           <header className="flow-preview-dialog__header site-preview-player__header">
-            <div className="flow-preview-dialog__identity">
-              <h2>{detail.site.name}</h2>
-            </div>
-
             <div
               className="flow-preview-dialog__modes"
               role="tablist"
@@ -435,11 +497,6 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
                 }}
               />
             </div>
-
-            <span
-              className="flow-preview-dialog__header-actions site-preview-player__header-spacer"
-              aria-hidden="true"
-            />
           </header>
 
           <div
@@ -488,19 +545,13 @@ function SitePreview({ detail, sectionCount }: { detail: SiteVersionDetail; sect
 
 function SectionsPanel({
   sections,
+  selectedType,
   onOpen,
 }: {
   sections: SectionItem[];
+  selectedType: string;
   onOpen: (index: number) => void;
 }) {
-  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState('all');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const sectionTypes = useMemo(
-    () => [...new Set(sections.map(sectionType))],
-    [sections],
-  );
   const indexedSections = useMemo(
     () => sections
       .map((section, inspectorIndex) => ({ section, inspectorIndex }))
@@ -510,79 +561,12 @@ function SectionsPanel({
       )),
     [sections],
   );
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  const visibleSections = indexedSections.filter(({ section }) => {
-    if (selectedType !== 'all' && sectionType(section) !== selectedType) return false;
-    if (!normalizedQuery) return true;
-    const heading = typeof section.item.sourceMetadata.heading === 'string'
-      ? section.item.sourceMetadata.heading
-      : '';
-    return [
-      section.page.title,
-      heading,
-      ...section.patterns,
-    ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
-  });
-  const countLabel = selectedType === 'all' && !normalizedQuery
-    ? `${sections.length} ${sections.length === 1 ? 'section' : 'sections'}`
-    : `${visibleSections.length} of ${sections.length} sections`;
+  const visibleSections = indexedSections.filter(({ section }) => (
+    selectedType === 'all' || sectionType(section) === selectedType
+  ));
 
   return (
     <section className="site-sections">
-      <header className="site-sections__toolbar">
-        <div className="site-sections__controls">
-          <AstryxDropdown
-            label={selectedType === 'all' ? 'Sections' : sectionTypeLabel(selectedType)}
-            ariaLabel="Filter sections by type"
-            open={typeMenuOpen}
-            triggerClassName="site-sections__type-trigger"
-            menuWidth={220}
-            onOpenChange={setTypeMenuOpen}
-          >
-            <AstryxDropdownItem
-              label="All sections"
-              selected={selectedType === 'all'}
-              onSelect={() => {
-                setSelectedType('all');
-                setTypeMenuOpen(false);
-              }}
-            />
-            {sectionTypes.map((type) => (
-              <AstryxDropdownItem
-                key={type}
-                label={sectionTypeLabel(type)}
-                selected={selectedType === type}
-                onSelect={() => {
-                  setSelectedType(type);
-                  setTypeMenuOpen(false);
-                }}
-              />
-            ))}
-          </AstryxDropdown>
-          <IconButton
-            label="Search sections"
-            icon={<Icon icon="search" size="sm" />}
-            variant="ghost"
-            size="sm"
-            className="site-sections__search-toggle"
-            aria-pressed={searchOpen}
-            onClick={() => {
-              setSearchOpen((open) => !open);
-              if (searchOpen) setQuery('');
-            }}
-          />
-        </div>
-        <span className="site-sections__count" aria-live="polite">{countLabel}</span>
-      </header>
-      {searchOpen ? (
-        <div className="site-sections__search">
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder="Search sections..."
-          />
-        </div>
-      ) : null}
       {visibleSections.length ? (
         <ol data-site-sections-grid="true" className="site-sections__grid">
           {visibleSections.map(({ section: { page, item, patterns }, inspectorIndex }, visibleIndex) => {
@@ -630,7 +614,7 @@ function SectionsPanel({
         <EmptyState
           title={sections.length ? 'No matching sections' : 'No sections available'}
           description={sections.length
-            ? 'Try another section type or search.'
+            ? 'Try another section type.'
             : 'This Site capture does not contain any sections.'}
           isCompact
         />

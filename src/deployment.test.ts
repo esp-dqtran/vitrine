@@ -43,6 +43,43 @@ test("Cloudflare deploys preserve dashboard-managed production bindings", async 
   const source = await readDeploymentFile("package.json");
   const scripts = (JSON.parse(source) as { scripts?: Record<string, string> }).scripts;
   assert.match(scripts?.["deploy:cloudflare"] ?? "", /wrangler deploy --keep-vars/);
+  assert.match(scripts?.["deploy:cloudflare:dry-run"] ?? "", /wrangler deploy --dry-run --keep-vars/);
+});
+
+test("production deploy commands use the guarded release script", async () => {
+  const packageSource = await readDeploymentFile("package.json");
+  const scripts = (JSON.parse(packageSource) as { scripts?: Record<string, string> }).scripts;
+  assert.equal(scripts?.deploy, "bash scripts/deploy.sh all");
+  assert.equal(scripts?.["deploy:api"], "bash scripts/deploy.sh api");
+  assert.equal(scripts?.["deploy:web"], "bash scripts/deploy.sh web");
+  assert.equal(scripts?.["deploy:production:dry-run"], "bash scripts/deploy.sh all --dry-run");
+
+  const deployScript = await readDeploymentFile("scripts/deploy.sh");
+  assert.match(deployScript, /git diff --quiet HEAD --/);
+  assert.match(deployScript, /wrangler deploy --keep-vars/);
+  assert.match(deployScript, /wrangler deploy --dry-run --keep-vars/);
+  assert.match(deployScript, /preflight_migrations/);
+});
+
+test("GitHub Actions gates and serializes production releases", async () => {
+  const workflow = await readDeploymentFile(".github/workflows/deploy-production.yml");
+  assert.notEqual(workflow, "", "production deployment workflow must exist");
+  assert.match(workflow, /branches: \[main\]/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /npm ci/);
+  assert.match(workflow, /npm test/);
+  assert.match(workflow, /npm run build/);
+  assert.match(workflow, /needs: verify/);
+  assert.match(workflow, /group: vitrines-production/);
+  assert.match(workflow, /name: production/);
+  assert.match(workflow, /VITRINES_SSH_PRIVATE_KEY/);
+  assert.match(workflow, /VITRINES_SSH_KNOWN_HOSTS/);
+  assert.match(workflow, /VITRINES_DATABASE_URL/);
+  assert.match(workflow, /CLOUDFLARE_API_TOKEN/);
+  assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(workflow, /deploy:production\$suffix/);
+  assert.match(workflow, /deploy:api\$suffix/);
+  assert.match(workflow, /deploy:web\$suffix/);
 });
 
 test("Cloudflare proxies API requests without changing the frontend API contract", async () => {

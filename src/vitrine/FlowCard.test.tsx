@@ -29,7 +29,7 @@ test('renders a flow strip with responsive observed screen media', () => {
   assert.match(html, /flow-strip-card__stage" data-platform="web"/);
   assert.match(html, /aria-label="Preview Login flow screens"/);
   assert.match(html, /data-flow-preview-index="0"/);
-  assert.match(html, /src="\/flow.png"/);
+  assert.match(html, /src="\/flow-thumb.webp"/);
   assert.match(html, /object-fit:contain/);
   assert.doesNotMatch(html, /srcSet=/);
   assert.doesNotMatch(html, /background:#fff/);
@@ -133,6 +133,7 @@ test('hides the previous arrow at the initial left edge', () => {
 
   assert.doesNotMatch(html, /aria-label="Previous flow screens"/);
   assert.match(html, /aria-label="Next flow screens"/);
+  assert.match(html, /src="\/confirm.png"/);
 });
 
 test('restores a valid Flow preview index from shareable URL state', () => {

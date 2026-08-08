@@ -1,3 +1,4 @@
+import { Spinner } from './components/Spinner.tsx';
 import {
   lazy,
   Suspense,
@@ -8,7 +9,7 @@ import {
 } from "react";
 import { apiFetch } from './apiFetch.ts';
 import { AnimatePresence } from "framer-motion";
-import { Button, EmptyState, Spinner } from "@astryxdesign/core";
+import { Button, EmptyState } from "@astryxdesign/core";
 import { useAuth } from "./AuthProvider";
 import { ProgressBanner } from "./components/ProgressBanner";
 import { CommandPalette } from "./components/CommandPalette";
@@ -32,7 +33,7 @@ import {
 } from "./components/AstryxDropdown.tsx";
 import { AppsDiscoveryPage } from "./components/AppsDiscoveryPage.tsx";
 import { FlowsPage } from "./components/FlowsPage.tsx";
-import { ReferenceDiscoveryTopNav } from "./components/ReferenceDiscoveryTopNav.tsx";
+import { ApplicationHeader } from "./components/ApplicationHeader.tsx";
 import { SearchTrigger } from "./components/SearchTrigger.tsx";
 import { ScreenDetail } from "./components/ScreenDetail";
 import { SitesPage } from "./components/SitesPage.tsx";
@@ -1076,7 +1077,7 @@ export function App() {
       }
       style={{ display: "contents" }}
     >
-      <ReferenceDiscoveryTopNav
+      <ApplicationHeader
         active={discoveryRoute ?? "apps"}
         className="apps-top-nav"
         search={

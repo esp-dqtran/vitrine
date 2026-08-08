@@ -18,7 +18,7 @@ import {
 import { QuickSearch } from '../../vitrine/components/QuickSearch';
 import { ReferenceDiscoveryFacetGroup } from '../../vitrine/components/ReferenceDiscoveryFacetGroup';
 import { ReferenceDiscoveryPageShell } from '../../vitrine/components/ReferenceDiscoveryPageShell';
-import { ReferenceDiscoveryTopNav } from '../../vitrine/components/ReferenceDiscoveryTopNav';
+import { ApplicationHeader } from '../../vitrine/components/ApplicationHeader';
 import { SearchTrigger } from '../../vitrine/components/SearchTrigger';
 import { defaultSearchState, type SearchPageState } from '../../vitrine/searchState';
 import '../../vitrine/styles.css';
@@ -317,7 +317,7 @@ function SearchFilteringReview() {
         description="The production header opens the real advanced Quick Search modal. Query, scope, filters, keyboard focus, and View all remain one URL-backed search state."
       >
         <div className="search-review__production-frame search-review__header-frame">
-          <ReferenceDiscoveryTopNav
+          <ApplicationHeader
             active="apps"
             className="apps-top-nav"
             search={(

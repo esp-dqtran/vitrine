@@ -128,7 +128,7 @@ test('renders observed components from their reconstruction spec, and rules grou
     }],
     flows: [],
     rules: [{ id: 'rule-1', kind: 'layout', name: 'Full-bleed cards', description: 'Signature cards run edge to edge', evidence: [{ imageId: 7, imageUrl: '/api/media/linear/a', description: 'Hero' }] }],
-  }} status="ready" />);
+  }} status="ready" showReviewMetadata />);
   assert.match(html, /Button/);
   assert.match(html, /Continue/);
   assert.match(html, /Reviewed/);

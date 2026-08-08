@@ -1,20 +1,33 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { navigate } from '../router.ts';
 import { ReferenceTypeTabs, type ReferenceType } from './ReferenceTypeTabs.tsx';
 
-interface ReferenceDiscoveryTopNavProps {
+interface ApplicationHeaderProps {
   active: ReferenceType;
   className: string;
   search: ReactNode;
   accountControls?: ReactNode;
+  contextIconUrl?: string | null;
 }
 
-export function ReferenceDiscoveryTopNav({
+export function ApplicationHeader({
   active,
   className,
   search,
   accountControls,
-}: ReferenceDiscoveryTopNavProps) {
+  contextIconUrl,
+}: ApplicationHeaderProps) {
+  const [showContextIcon, setShowContextIcon] = useState(false);
+  useEffect(() => {
+    if (!contextIconUrl) {
+      setShowContextIcon(false);
+      return;
+    }
+    const updateContextIcon = () => setShowContextIcon(window.scrollY > 16);
+    updateContextIcon();
+    window.addEventListener('scroll', updateContextIcon, { passive: true });
+    return () => window.removeEventListener('scroll', updateContextIcon);
+  }, [contextIconUrl]);
   const activeRoute = active === 'apps'
     ? { name: 'apps' } as const
     : active === 'sites'
@@ -43,7 +56,27 @@ export function ReferenceDiscoveryTopNav({
             navigate(activeRoute);
           }}
         >
-          <img src="/favicon.svg" alt="" aria-hidden="true" width="32" />
+          <span
+            className={`reference-discovery-nav__identity${showContextIcon ? ' is-context-visible' : ''}`}
+          >
+            <img
+              src="/favicon.svg"
+              alt=""
+              aria-hidden="true"
+              width="32"
+              className="reference-discovery-nav__brand-icon"
+            />
+            {contextIconUrl ? (
+              <img
+                src={contextIconUrl}
+                alt=""
+                aria-hidden="true"
+                width="32"
+                className="reference-discovery-nav__context-icon"
+                onError={(event) => { event.currentTarget.classList.add('is-unavailable'); }}
+              />
+            ) : null}
+          </span>
         </a>
         <ReferenceTypeTabs
           active={active}

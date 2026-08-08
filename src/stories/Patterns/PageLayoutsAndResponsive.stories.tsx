@@ -15,7 +15,7 @@ import {
 } from '../../vitrine/components/AstryxDropdown';
 import { ReferenceDiscoveryFacetGroup } from '../../vitrine/components/ReferenceDiscoveryFacetGroup';
 import { ReferenceDiscoveryPageShell } from '../../vitrine/components/ReferenceDiscoveryPageShell';
-import { ReferenceDiscoveryTopNav } from '../../vitrine/components/ReferenceDiscoveryTopNav';
+import { ApplicationHeader } from '../../vitrine/components/ApplicationHeader';
 import { SearchTrigger } from '../../vitrine/components/SearchTrigger';
 import '../../vitrine/styles.css';
 import '../../vitrine/referenceDiscovery.css';
@@ -221,7 +221,7 @@ function DiscoveryPilot() {
       role="region"
       aria-label="Apps Discovery scroll behavior preview"
     >
-      <ReferenceDiscoveryTopNav
+      <ApplicationHeader
         active="apps"
         className="apps-top-nav"
         search={<SearchTrigger label="Search Apps…" activeCategory={null} mode="advanced" onOpen={() => {}} onClearCategory={() => {}} />}

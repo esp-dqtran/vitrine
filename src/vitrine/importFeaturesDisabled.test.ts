@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 test('removes every product import and recapture entry point', () => {
   const productSources = [
     './App.tsx',
-    './components/ReferenceDiscoveryTopNav.tsx',
+    './components/ApplicationHeader.tsx',
     './components/AppsDiscoveryPage.tsx',
     './components/AppDetailLoadingPage.tsx',
     './components/ScreenDetail.tsx',

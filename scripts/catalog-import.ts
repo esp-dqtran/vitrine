@@ -8,11 +8,9 @@
 // workers' state files before starting them (no shared file, no write-conflict risk). Each
 // worker profile is a full copy of the authenticated session; cloning it requires explicit
 // user authorization (duplicates live session cookies) — do this once, not per run.
-process.env.OBJECT_STORE_BACKEND = "s3";
-process.env.OBJECT_STORE_S3_BUCKET = "vitrine-ai-prod";
-process.env.OBJECT_STORE_S3_REGION = "ap-southeast-1";
-process.env.OBJECT_STORE_S3_PREFIX = "prod";
-process.env.AWS_PROFILE = "vitrine-ai-prod";
+//
+// Object storage is configured by the environment. Do not override it here: local runs use
+// the same R2 endpoint and credentials as the application instead of a retired S3 profile.
 // Confirmed working against the real authenticated profile: bot detection blocks headless
 // LOGIN attempts, not headless browsing/downloads once a session already has valid cookies.
 process.env.HEADLESS = "true";

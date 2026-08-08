@@ -5,22 +5,31 @@ import type { SiteVersionDetail } from '../types.ts';
 
 const ICON_BASE_URL = 'https://www.wappalyzer.com/images/icons/';
 const HIDDEN_TECHNOLOGIES = new Set(['css keyframes']);
+const GSAP_PLUGIN_NAMES = new Set(['scrolltrigger', 'splittext']);
 const NATIVE_TECHNOLOGY_ICON_URLS: Record<string, string> = {
   'custom javascript motion': 'https://cdn.simpleicons.org/javascript',
+  gsap: 'https://gsap.com/favicon-32x32.png',
+  scrolltrigger: 'https://cdn.simpleicons.org/greensock',
+  lenis: 'https://lenis.dev/favicon-32x32.png',
+  lottie: 'https://cdn.simpleicons.org/lottiefiles',
   'next.js': 'https://cdn.simpleicons.org/nextdotjs',
   turbopack: 'https://cdn.simpleicons.org/turborepo',
   'web animations api': 'https://cdn.simpleicons.org/javascript',
+  webflow: 'https://cdn.simpleicons.org/webflow',
+  'webflow ix2': 'https://cdn.simpleicons.org/webflow',
 };
 
 export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
-  const detected = (detail.analysis?.technology ?? [])
-    .filter((finding) =>
-      finding.state !== 'not-detected'
-      && !HIDDEN_TECHNOLOGIES.has(finding.name.toLowerCase())
-    )
-    .sort((left, right) =>
-      right.confidence - left.confidence || left.name.localeCompare(right.name)
-    );
+  const detected = collapseGsapPlugins(
+    (detail.analysis?.technology ?? [])
+      .filter((finding) =>
+        finding.state !== 'not-detected'
+        && !HIDDEN_TECHNOLOGIES.has(finding.name.toLowerCase())
+      )
+      .sort((left, right) =>
+        right.confidence - left.confidence || left.name.localeCompare(right.name)
+      ),
+  );
   const groups = groupTechnology(detected);
   const hasWappalyzer = detected.some((finding) =>
     finding.source === 'wappalyzer'
@@ -67,6 +76,13 @@ export function SiteAnalysisPanel({ detail }: { detail: SiteVersionDetail }) {
       )}
     </section>
   );
+}
+
+export function collapseGsapPlugins(
+  findings: SiteTechnologyFinding[],
+): SiteTechnologyFinding[] {
+  if (!findings.some(({ name }) => name.toLowerCase() === 'gsap')) return findings;
+  return findings.filter(({ name }) => !GSAP_PLUGIN_NAMES.has(name.toLowerCase()));
 }
 
 function TechnologyCard({ finding }: { finding: SiteTechnologyFinding }) {

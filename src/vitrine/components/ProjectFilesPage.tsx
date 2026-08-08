@@ -1,3 +1,4 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useState } from "react";
 import {
   Button,
@@ -6,7 +7,6 @@ import {
   IconButton,
   SegmentedControl,
   SegmentedControlItem,
-  Spinner,
   Text,
   TextInput,
 } from "@astryxdesign/core";

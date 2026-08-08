@@ -1,7 +1,7 @@
 export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
 .ds-refero-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr);
   gap: 24px;
   align-items: start;
 }
@@ -13,13 +13,14 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
 }
 
 .ds-refero-hero {
+  margin: 0 0 24px;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 18px;
   background: #0d0f12;
 }
 
-.ds-refero-hero img {
+.ds-refero-hero :is(img, video) {
   display: block;
   width: 100%;
   max-height: 540px;
@@ -45,23 +46,30 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
 
 .ds-reference-pane {
   position: sticky;
-  top: 20px;
+  top: calc(var(--reference-nav-height, 72px) + 88px);
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto auto minmax(360px, 1fr) auto;
-  max-height: calc(100vh - 140px);
+  grid-template-rows: auto auto auto minmax(360px, 1fr) auto;
+  max-height: calc(100vh - var(--reference-nav-height, 72px) - 104px);
   min-height: 680px;
   border: 1px solid var(--color-border);
   border-radius: 18px;
-  background: #17191f;
+  background: #1f1f22;
   color: #e7e9ee;
   box-shadow: 0 24px 64px rgb(0 0 0 / 18%);
+}
+
+.ds-reference-pane__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
 }
 
 .ds-reference-pane__tabs {
   display: flex;
   overflow-x: auto;
-  border-bottom: 1px solid rgb(255 255 255 / 10%);
 }
 
 .ds-reference-pane__tabs button {
@@ -74,6 +82,7 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
   font: inherit;
   font-size: 12px;
   cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
 .ds-reference-pane__tabs button.is-active {
@@ -81,9 +90,14 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
   color: #f2f3f5;
 }
 
+.ds-reference-pane__density {
+  flex: 0 0 auto;
+  margin-right: 14px;
+}
+
 .ds-reference-pane__toolbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   align-items: center;
   min-height: 58px;
@@ -96,6 +110,24 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
   gap: 8px;
 }
 
+.ds-reference-pane__context {
+  padding: 8px 16px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  color: #9298a7;
+  font-size: 12px;
+}
+
+.ds-reference-pane__copy.astryx-button {
+  border-color: #fff !important;
+  background: #fff !important;
+  color: #1f1f22 !important;
+}
+
+.ds-reference-pane__copy.astryx-button:hover {
+  border-color: #f2f2f3 !important;
+  background: #f2f2f3 !important;
+}
+
 .ds-reference-pane__code {
   overflow: auto;
   min-width: 0;
@@ -106,6 +138,16 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
   font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  animation: ds-reference-content-enter 180ms ease-out both;
+}
+
+.ds-reference-pane__code [data-design-system-reference-section] {
+  display: block;
+  scroll-margin-top: 12px;
+}
+
+.ds-reference-pane__code [data-design-system-reference-section][data-active="true"] {
+  background: rgb(255 255 255 / 5%);
 }
 
 .ds-reference-pane footer {
@@ -122,7 +164,20 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
   color: #e7e9ee;
 }
 
-@media (max-width: 1120px) {
+@keyframes ds-reference-content-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-reference-pane__tabs button,
+  .ds-reference-pane__code {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 760px) {
   .ds-refero-layout {
     grid-template-columns: 1fr;
   }
@@ -136,6 +191,17 @@ export const DESIGN_SYSTEM_REFERENCE_STYLES = String.raw`
 }
 
 @media (max-width: 640px) {
+  .ds-reference-pane__header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .ds-reference-pane__density {
+    align-self: flex-end;
+    margin: 0 12px 10px;
+  }
+
   .ds-reference-pane {
     min-height: 560px;
     border-radius: 14px;

@@ -65,11 +65,171 @@
   text-decoration: none;
 }
 
-.reference-discovery-nav__brand > img {
+.reference-discovery-nav__identity {
+  position: relative;
   width: 32px;
-  height: auto;
+  height: 32px;
   display: block;
+}
+
+.reference-discovery-nav__identity > img {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reference-discovery-nav__brand-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.reference-discovery-nav__context-icon {
+  object-fit: contain;
+  background: var(--color-background-muted);
+  opacity: 0;
+  transform: scale(0.82);
+}
+
+.reference-discovery-nav__identity.is-context-visible .reference-discovery-nav__brand-icon {
+  opacity: 0;
+  transform: scale(0.82);
+}
+
+.reference-discovery-nav__identity.is-context-visible .reference-discovery-nav__context-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.reference-discovery-nav__context-icon.is-unavailable {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reference-discovery-nav__identity > img {
+    transition: none;
+  }
+}
+
+/* Apps and Sites detail pages intentionally share this compact sticky header. */
+.reference-discovery-nav.reference-detail-top-nav {
+  height: 72px;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 512px) minmax(300px, 1fr);
+  gap: 32px;
+  padding: 0 32px;
+  border-bottom-color: var(--color-border);
+  background: var(--color-background-body);
+}
+
+.reference-detail-top-nav__left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.reference-detail-top-nav__brand {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.reference-detail-top-nav__brand .reference-discovery-nav__identity > img {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+.reference-detail-top-nav__types {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reference-detail-top-nav__types button {
+  min-width: auto !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+}
+
+.reference-detail-top-nav__search,
+.reference-detail-top-nav__search > div {
+  width: 100%;
+  max-width: none !important;
+}
+
+.reference-detail-top-nav__search > div > button:first-child {
+  height: 40px !important;
+  padding-inline: 16px !important;
+  border-radius: 999px !important;
+}
+
+.reference-detail-top-nav__actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reference-detail-top-nav__actions > div {
+  margin-left: 0 !important;
+}
+
+@media (max-width: 1080px) {
+  .reference-discovery-nav.reference-detail-top-nav {
+    grid-template-columns: auto minmax(220px, 1fr) auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .reference-discovery-nav.reference-detail-top-nav {
+    height: 96px;
+    min-height: 96px;
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, 72px);
+    grid-template-rows: 58px 38px;
+    gap: 0 12px;
+    padding: 0 20px;
+  }
+
+  .reference-detail-top-nav .reference-discovery-nav__left {
+    display: contents;
+  }
+
+  .reference-detail-top-nav .reference-discovery-nav__brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .reference-detail-top-nav .reference-discovery-nav__types {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .reference-detail-top-nav .reference-discovery-nav__types button {
+    height: 32px !important;
+    padding-inline: 0 20px !important;
+  }
+
+  .reference-detail-top-nav__search {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .reference-detail-top-nav__actions {
+    grid-column: 3;
+    grid-row: 1;
+    max-width: 112px;
+  }
+
+  .reference-detail-top-nav__actions > button {
+    display: none;
+  }
 }
 
 .reference-discovery-nav__types {
@@ -124,6 +284,7 @@
 
 .guest-catalog-controls__login {
   min-width: 88px !important;
+  border-radius: var(--radius-full) !important;
 }
 
 .reference-search-trigger {
@@ -1201,11 +1362,10 @@
   }
 }
 
-/* Production Apps scroll behavior. Once the taxonomy scrolls away, the full
- * product header remains visible and the existing toolbar becomes a second
- * sticky row without adding a divider between the two chrome regions. */
+/* Keep the shared ApplicationHeader visually separated from the sticky
+ * catalog toolbar as the page scrolls. */
 [data-sticky-chrome] .reference-discovery-nav.apps-top-nav {
-  border-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 [data-sticky-chrome] .reference-discovery-nav.apps-top-nav {

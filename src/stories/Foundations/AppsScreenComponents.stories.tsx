@@ -27,7 +27,7 @@ import {
 import { HeroButton } from '../../vitrine/components/HeroButton';
 import { ProgressBannerView } from '../../vitrine/components/ProgressBanner';
 import { ReferenceDiscoveryFacetGroup } from '../../vitrine/components/ReferenceDiscoveryFacetGroup';
-import { ReferenceDiscoveryTopNav } from '../../vitrine/components/ReferenceDiscoveryTopNav';
+import { ApplicationHeader } from '../../vitrine/components/ApplicationHeader';
 import {
   AstryxInputText,
   SearchTrigger,
@@ -319,7 +319,7 @@ function AppsHeader() {
   const [searchOpened, setSearchOpened] = useState(false);
   return (
     <>
-      <ReferenceDiscoveryTopNav
+      <ApplicationHeader
         active="apps"
         className="apps-top-nav"
         search={

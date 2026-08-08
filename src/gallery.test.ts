@@ -51,6 +51,7 @@ test("builds an evidence page without re-paginating it", () => {
       description: "Composer",
       source_screen_id: 41,
       source_screen_image_url: "mobbin-bulk:0000000000000041",
+      matched_facets: [{ group: "screens", value: "Preview" }],
     }],
     nextCursor: "Mg",
   });
@@ -61,6 +62,7 @@ test("builds an evidence page without re-paginating it", () => {
     url: "/api/media/claude/0000000000000041",
     thumbnailUrl: "/api/media/claude/0000000000000041?variant=thumb",
   });
+  assert.deepEqual(page.screens[0].matchedFacets, [{ group: "screens", value: "Preview" }]);
   assert.equal(page.nextCursor, "Mg");
 });
 

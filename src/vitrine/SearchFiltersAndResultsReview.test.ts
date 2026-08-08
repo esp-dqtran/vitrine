@@ -13,7 +13,7 @@ test('publishes a production-grounded Search, Filters and Results review', async
   assert.match(story, /DiscoveryFilterBar/);
   assert.match(story, /AppCard/);
   assert.match(story, /AppCardSkeleton/);
-  assert.match(story, /ReferenceDiscoveryTopNav/);
+  assert.match(story, /ApplicationHeader/);
   assert.match(story, /mode="advanced"/);
   assert.match(story, /client=\{async \(\) => searchResult\}/);
 });

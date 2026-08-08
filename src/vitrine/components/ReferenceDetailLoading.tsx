@@ -1,4 +1,4 @@
-import { Spinner } from '@astryxdesign/core';
+import { Spinner } from './Spinner.tsx';
 
 interface ReferenceDetailLoadingProps {
   kind: 'app' | 'site';

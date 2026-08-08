@@ -185,10 +185,11 @@ test("flow ingestion rejects after transient retry exhaustion", async () => {
 test("UI element selection keeps every Mobbin card regardless of alt text", async () => {
   const bulk = await import("./bulkDownload.ts") as Record<string, unknown>;
   assert.equal(typeof bulk.shouldSelectCard, "function");
-  const shouldSelect = bulk.shouldSelectCard as (tab: string, cardAlt: string, appPrefix: string) => boolean;
+  const shouldSelect = bulk.shouldSelectCard as (tab: string, cardAlt: string, appPrefix: string, cardLabel?: string) => boolean;
   assert.equal(shouldSelect("ui-elements", "Button / Primary", "linear"), true);
   assert.equal(shouldSelect("screens", "Not Linear screen", "linear"), false);
   assert.equal(shouldSelect("screens", "Linear screen", "linear"), true);
+  assert.equal(shouldSelect("screens", "Animation keyframe", "qonto", "Qonto screen"), true);
 });
 
 test("UI selection tolerates transient no-progress sweeps while lazy cards settle", async () => {

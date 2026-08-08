@@ -21,7 +21,7 @@ const responsiveStyles = readFileSync(
 
 test('grounds discovery in production components and App Detail in the live production route', () => {
   assert.match(story, /ReferenceDiscoveryPageShell/);
-  assert.match(story, /ReferenceDiscoveryTopNav/);
+  assert.match(story, /ApplicationHeader/);
   assert.match(story, /DiscoveryFilterBar/);
   assert.match(story, /AppCard/);
   assert.match(story, /APP_DETAIL_URL/);
@@ -33,7 +33,7 @@ test('grounds discovery in production components and App Detail in the live prod
 test('mirrors the production Apps header ownership and account dropdown', () => {
   assert.match(story, /AstryxDropdown/);
   assert.match(story, /ariaLabel="Account menu: admin@gmail\.com"/);
-  assert.match(story, /<ReferenceDiscoveryTopNav[\s\S]*?<ReferenceDiscoveryPageShell/);
+  assert.match(story, /<ApplicationHeader[\s\S]*?<ReferenceDiscoveryPageShell/);
   assert.match(story, /<ReferenceDiscoveryPageShell[\s\S]*?header=\{null\}/);
   assert.doesNotMatch(story, /accountControls=\{<Button label="admin@gmail\.com"/);
 });

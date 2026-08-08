@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import type { Platform } from '../../platformFromUrl.ts';
 import {
   effectiveExpandedFlowGroupIds,

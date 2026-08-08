@@ -82,6 +82,7 @@ export function SiteCard({
           name={site.name}
           iconUrl={site.logoUrl}
           size={44}
+          fit="contain"
           fallbackTextColor="var(--color-text-primary)"
         />
       )}

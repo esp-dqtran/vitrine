@@ -1,4 +1,5 @@
-import { Button, EmptyState, Spinner, Text } from '@astryxdesign/core';
+import { Spinner } from './Spinner.tsx';
+import { Button, EmptyState, Text } from '@astryxdesign/core';
 import type { DesignSystemSnapshot, EvidenceView, TokenKind } from '../../designSystem';
 import { isActionableUsageRule } from '../../usagePatterns';
 import type { UiElementSummaryItem } from '../appsApi.ts';
@@ -126,6 +127,7 @@ function ComponentCropOverview(props: {
 interface DesignSystemPanelProps {
   snapshot: Snapshot | null;
   status: 'loading' | 'ready' | 'missing' | 'error';
+  showReviewMetadata?: boolean;
   generation?: DesignSystemGenerationView | null;
   onRetryGeneration?: () => void;
   appName?: string;
@@ -176,6 +178,7 @@ function GenerationBanner(props: {
 export function DesignSystemPanel({
   snapshot,
   status,
+  showReviewMetadata = false,
   generation,
   onRetryGeneration,
   appName,
@@ -258,12 +261,12 @@ export function DesignSystemPanel({
           >
             {tokenGroups.map(([kind, tokens]) => {
               sectionIndex += 1;
-              if (kind === 'color') return <ColorSection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} />;
-              if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} />;
-              return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} renderEvidence={renderEvidence} />;
+              if (kind === 'color') return <ColorSection key={kind} index={sectionIndex} tokens={tokens} renderEvidence={renderEvidence} showReviewMetadata={showReviewMetadata} />;
+              if (kind === 'typography') return <TypographySection key={kind} index={sectionIndex} tokens={tokens} showReviewMetadata={showReviewMetadata} />;
+              return <FoundationSection key={kind} index={sectionIndex} kind={kind} tokens={tokens} renderEvidence={renderEvidence} showReviewMetadata={showReviewMetadata} />;
             })}
-            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} renderEvidence={renderEvidence} resolveCropUrl={resolveCropUrl} /> : null}
-            {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} renderEvidence={renderEvidence} /> : null}
+            {hasComponents ? <ComponentsSection index={(sectionIndex += 1)} components={snapshot.components} renderEvidence={renderEvidence} resolveCropUrl={resolveCropUrl} showReviewMetadata={showReviewMetadata} /> : null}
+            {hasRules ? <PatternsSection index={(sectionIndex += 1)} rules={usageRules} renderEvidence={renderEvidence} showReviewMetadata={showReviewMetadata} /> : null}
           </ThemeCanvas>
         </div>
         <DesignSystemReferencePane snapshot={snapshot} markdown={designSystemMarkdown(snapshot)} />

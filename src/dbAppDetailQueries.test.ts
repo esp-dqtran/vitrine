@@ -15,6 +15,8 @@ test("app detail queries are explicit and evidence pagination stays in SQL", () 
   const evidenceBody = source.slice(evidenceStart, evidenceEnd);
   assert.match(evidenceBody, /requestedLimit \+ 1/);
   assert.match(evidenceBody, /LIMIT \$\d/);
+  assert.match(evidenceBody, /WHERE \(\$6::integer IS NULL OR id < \$6\)/);
+  assert.match(evidenceBody, /ORDER BY id DESC/);
   assert.match(evidenceBody, /FROM screen_ui_elements occurrence/);
   assert.match(evidenceBody, /occurrence\.review_status IN \('accepted', 'pending'\)/);
   assert.match(evidenceBody, /occurrence\.version_id = sv\.id/);

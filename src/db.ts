@@ -730,6 +730,13 @@ export async function appEvidencePage(input: {
          ), '[]'::jsonb) AS categories,
          i.image_url AS capture_url, i.created_at AS captured_at,
          NULL::integer AS viewport_width, NULL::integer AS viewport_height, NULL::text AS state_context,
+         COALESCE((
+           SELECT jsonb_agg(jsonb_build_object('group', 'screens', 'value', pattern.name)
+             ORDER BY pattern.position, pattern.id)
+           FROM screen_pattern_assignments assignment
+           JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
+           WHERE assignment.image_id = i.id
+         ), '[]'::jsonb) AS matched_facets,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
        FROM apps a JOIN platforms p ON p.app_id = a.id JOIN images i ON i.platform_id = p.id
@@ -780,6 +787,13 @@ export async function appEvidencePage(input: {
          ), '[]'::jsonb) AS categories,
          COALESCE(vi.source_url, i.image_url) AS capture_url, vi.captured_at,
          vi.viewport_width, vi.viewport_height, vi.state_context,
+         COALESCE((
+           SELECT jsonb_agg(jsonb_build_object('group', 'screens', 'value', pattern.name)
+             ORDER BY pattern.position, pattern.id)
+           FROM screen_pattern_assignments assignment
+           JOIN screen_patterns pattern ON pattern.id = assignment.screen_pattern_id
+           WHERE assignment.image_id = i.id
+         ), '[]'::jsonb) AS matched_facets,
          reference.screen_image_id AS source_screen_id,
          reference.screen_image_url AS source_screen_image_url
        FROM selected_version sv JOIN version_images vi ON vi.version_id = sv.id
@@ -809,8 +823,8 @@ export async function appEvidencePage(input: {
            ))
      )
      SELECT * FROM eligible
-     WHERE ($6::integer IS NULL OR id > $6)
-     ORDER BY id
+     WHERE ($6::integer IS NULL OR id < $6)
+     ORDER BY id DESC
      LIMIT $7`,
     [
       input.app,

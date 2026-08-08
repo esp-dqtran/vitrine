@@ -485,7 +485,10 @@ export function createSitesStore(
         `SELECT DISTINCT ON (s.id)
                 s.id AS site_id, sv.id AS version_id, s.name, s.slug, s.source_url,
                 to_jsonb(s)->>'description' AS description,
-                to_jsonb(s)->>'logo_url' AS logo_url,
+                CASE WHEN s.icon_object_key IS NOT NULL
+                  THEN '/assets/' || s.icon_object_key
+                  ELSE s.logo_url
+                END AS logo_url,
                 to_jsonb(s)->'categories' AS categories,
                 to_jsonb(s)->'styles' AS styles,
                 (to_jsonb(s)->>'popularity')::integer AS popularity,
@@ -639,13 +642,15 @@ export function createSitesStore(
              FROM UNNEST($1::bigint[], $2::bigint[])
                AS selected(site_id, version_id)
            ), catalog_rows AS (
-             SELECT selected.site_id, selected.version_id, sv.label, sv.is_latest,
+           SELECT selected.site_id, selected.version_id, sv.label, sv.is_latest,
                sv.updated_at, sv.preview_object_key, sv.poster_object_key,
-               sv.catalog_snapshot
+               sv.catalog_snapshot, site.logo_url, site.icon_object_key
              FROM selected
              JOIN site_versions sv
                ON sv.id = selected.version_id
               AND sv.site_id = selected.site_id
+             JOIN sites site
+               ON site.id = selected.site_id
              WHERE sv.status = 'ready'
            )
            SELECT catalog.site_id, catalog.version_id,
@@ -653,7 +658,10 @@ export function createSitesStore(
                   catalog.catalog_snapshot->>'slug' AS slug,
                   catalog.catalog_snapshot->>'sourceUrl' AS source_url,
                   catalog.catalog_snapshot->>'description' AS description,
-                  catalog.catalog_snapshot->>'logoUrl' AS logo_url,
+                  CASE WHEN catalog.icon_object_key IS NOT NULL
+                    THEN '/assets/' || catalog.icon_object_key
+                    ELSE catalog.logo_url
+                  END AS logo_url,
                   catalog.catalog_snapshot->'categories' AS categories,
                   catalog.catalog_snapshot->'styles' AS styles,
                   COALESCE((catalog.catalog_snapshot->>'popularity')::integer, 0)
@@ -733,7 +741,10 @@ export function createSitesStore(
       const header = await runQuery(
         `SELECT s.id AS site_id, sv.id AS version_id, s.name, s.slug, s.source_url,
                 to_jsonb(s)->>'description' AS description,
-                to_jsonb(s)->>'logo_url' AS logo_url,
+                CASE WHEN s.icon_object_key IS NOT NULL
+                  THEN '/assets/' || s.icon_object_key
+                  ELSE s.logo_url
+                END AS logo_url,
                 to_jsonb(s)->'categories' AS categories,
                 to_jsonb(s)->'styles' AS styles,
                 (to_jsonb(s)->>'popularity')::integer AS popularity,

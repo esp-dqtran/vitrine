@@ -611,6 +611,31 @@ async function catalogPage(
              FROM UNNEST($4::text[], $5::text[])
                AS requested(facet_group, facet_value)
            ),
+           preview_category AS MATERIALIZED (
+             SELECT i.id, i.image_url, i.kind, i.description, i.analysis,
+               vi.source_url AS capture_url, vi.viewport_width,
+               vi.viewport_height, vi.state_context, vi.captured_at,
+               MIN(pfp.rank)::int AS curated_rank, -2 AS source_priority,
+               NULL::bigint AS heft_bytes,
+               to_jsonb(ARRAY_AGG(DISTINCT jsonb_build_object(
+                 'group', pfp.facet_group,
+                 'value', pfp.facet_value
+               ))) AS matched_facets
+             FROM public_facet_previews pfp
+             JOIN version_images vi
+               ON vi.version_id = pfp.version_id
+              AND vi.image_id = pfp.image_id
+             JOIN images i
+               ON i.id = pfp.image_id
+              AND i.kind = 'screen'
+             WHERE pfp.version_id = latest.version_id
+               AND pfp.facet_group = 'screens'
+               AND lower(pfp.facet_value) = 'preview'
+               AND vi.captured_at <= $2::timestamptz
+             GROUP BY i.id, i.image_url, i.kind, i.description, i.analysis,
+               vi.source_url, vi.viewport_width, vi.viewport_height,
+               vi.state_context, vi.captured_at
+           ),
            exact AS MATERIALIZED (
              SELECT i.id, i.image_url, i.kind, i.description, i.analysis,
                vi.source_url AS capture_url, vi.viewport_width,
@@ -633,6 +658,10 @@ async function catalogPage(
                ON i.id = pfp.image_id
               AND i.kind IN ('screen', 'ui_element')
              WHERE vi.captured_at <= $2::timestamptz
+               AND NOT EXISTS (
+                 SELECT 1 FROM preview_category
+                 WHERE preview_category.id = i.id
+               )
              GROUP BY i.id, i.image_url, i.kind, i.description, i.analysis,
                vi.source_url, vi.viewport_width, vi.viewport_height,
                vi.state_context, vi.captured_at
@@ -651,6 +680,10 @@ async function catalogPage(
              JOIN images i ON i.id = api.image_id AND i.kind = 'screen'
              WHERE api.version_id = latest.version_id
                AND vi.captured_at <= $2::timestamptz
+               AND NOT EXISTS (
+                 SELECT 1 FROM preview_category
+                 WHERE preview_category.id = api.image_id
+               )
                AND NOT EXISTS (
                  SELECT 1 FROM exact WHERE exact.id = api.image_id
                )
@@ -693,6 +726,10 @@ async function catalogPage(
                AND p.name = latest.platform
                AND vi.captured_at <= $2::timestamptz
                AND NOT EXISTS (
+                 SELECT 1 FROM preview_category
+                 WHERE preview_category.id = vi.image_id
+               )
+               AND NOT EXISTS (
                  SELECT 1 FROM exact WHERE exact.id = vi.image_id
                )
                AND NOT EXISTS (
@@ -701,6 +738,8 @@ async function catalogPage(
            )
            SELECT pool.*
            FROM (
+             SELECT * FROM preview_category
+             UNION ALL
              SELECT * FROM exact
              UNION ALL
              SELECT * FROM curated
@@ -722,11 +761,16 @@ async function catalogPage(
                WHERE vi.version_id = latest.version_id
                  AND vi.captured_at <= $2::timestamptz
                  AND (
-                   (SELECT COUNT(*) FROM exact)
+                   (SELECT COUNT(*) FROM preview_category)
+                   + (SELECT COUNT(*) FROM exact)
                    +
                    (SELECT COUNT(*) FROM curated)
                    + (SELECT COUNT(*) FROM fast_fallback)
                  ) < 3
+                 AND NOT EXISTS (
+                   SELECT 1 FROM preview_category
+                   WHERE preview_category.id = vi.image_id
+                 )
                  AND NOT EXISTS (
                    SELECT 1 FROM exact WHERE exact.id = vi.image_id
                  )

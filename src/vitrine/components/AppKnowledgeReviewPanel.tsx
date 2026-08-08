@@ -1,10 +1,10 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Badge,
   Button,
   Card,
   EmptyState,
-  Spinner,
   TextArea,
 } from '@astryxdesign/core';
 import type {

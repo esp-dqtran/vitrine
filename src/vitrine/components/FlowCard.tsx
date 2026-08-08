@@ -257,7 +257,7 @@ export function FlowCard({
                 key={`${flow.id}-${stepNumber}-${evidence?.imageId ?? label}`}
               >
                 <PlaceholderImage
-                  src={evidence?.imageUrl ?? evidence?.thumbnailUrl}
+                  src={evidence?.thumbnailUrl ?? evidence?.imageUrl}
                   accent="#111"
                   style={{ objectFit: 'contain' }}
                 />

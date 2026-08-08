@@ -1,4 +1,5 @@
-import { Button, Spinner } from "@astryxdesign/core";
+import { Spinner } from './Spinner.tsx';
+import { Button } from "@astryxdesign/core";
 import type { CatalogSearchResultItem } from "../../catalogResearch";
 import type { ResearchCollection } from "../../db";
 import { CollectionPicker } from "./CollectionPicker";

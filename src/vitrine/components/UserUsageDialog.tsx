@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useState } from 'react';
-import { Badge, Button, Heading, Spinner, Text } from '@astryxdesign/core';
+import { Badge, Button, Heading, Text } from '@astryxdesign/core';
 import type { AdminUser, UsageRangeKey, UserFeatureUsage } from '../types.ts';
 import { fetchUserFeatureUsage } from '../usersApi.ts';
 import { formatJoinedDate, userPlanLabel } from '../usersPageModel.ts';

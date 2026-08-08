@@ -69,6 +69,12 @@ export function ScreenGridCard({
   onActionStatus,
 }: ScreenGridCardProps) {
   const screenLabel = screenAccessibleLabel(screen, appName, flowNames);
+  const screenPatterns = [...new Set(
+    (screen.matchedFacets ?? [])
+      .filter(({ group }) => group === 'screens')
+      .map(({ value }) => cleanLabel(value))
+      .filter((value): value is string => Boolean(value)),
+  )];
   const actions = (
     <div
       className="screen-grid-card__actions"
@@ -128,6 +134,11 @@ export function ScreenGridCard({
           delay={delay}
           onOpen={onOpen}
         />
+        {screenPatterns.length ? (
+          <div className="screen-grid-card__patterns" aria-label={`Screen patterns: ${screenPatterns.join(', ')}`}>
+            {screenPatterns.map((pattern) => <span key={pattern}>{pattern}</span>)}
+          </div>
+        ) : null}
         {actions}
         {onSelectedChange ? (
           <IconButton

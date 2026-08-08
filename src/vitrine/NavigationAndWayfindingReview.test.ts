@@ -29,7 +29,7 @@ test('navigation review covers the approved component-system scope', () => {
 });
 
 test('product navigation uses the current Apps header rather than a review-only mock', () => {
-  assert.match(story, /<ReferenceDiscoveryTopNav/);
+  assert.match(story, /<ApplicationHeader/);
   assert.match(story, /active="apps"/);
   assert.match(story, /className="apps-top-nav"/);
   assert.match(story, /<SearchTrigger/);

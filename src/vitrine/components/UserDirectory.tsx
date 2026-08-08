@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, ClickableCard, Icon, Spinner, TextInput } from '@astryxdesign/core';
+import { Badge, Button, ClickableCard, Icon, TextInput } from '@astryxdesign/core';
 import type { AdminUser, UserFilter } from '../types.ts';
 import { formatJoinedDate, USER_FILTER_LABELS, userInitial, userPlanLabel } from '../usersPageModel.ts';
 import { AstryxAlertModal } from './AstryxModal.tsx';

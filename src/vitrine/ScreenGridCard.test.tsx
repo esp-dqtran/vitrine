@@ -74,6 +74,29 @@ test("renders hover collection and copy actions inside the card without a source
   assert.doesNotMatch(html, /Open source screen/);
 });
 
+test("shows screen-pattern badges on App detail screenshots", () => {
+  const html = renderToStaticMarkup(
+    <ScreenGridCard
+      screen={{
+        ...screen,
+        matchedFacets: [
+          { group: "screens", value: "Preview" },
+          { group: "screens", value: "Wallpaper" },
+          { group: "elements", value: "Button" },
+        ],
+      }}
+      accent="#3399ff"
+      delay={0}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /screen-grid-card__patterns/);
+  assert.match(html, />Preview</);
+  assert.match(html, />Wallpaper</);
+  assert.doesNotMatch(html, />Button</);
+});
+
 test("can hand the production Save action to an owning workflow", () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard

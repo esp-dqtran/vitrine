@@ -144,7 +144,7 @@ test('renders Apps through the generic reference detail page', () => {
   assert.match(source, /import \{ ReferenceDetailPage \} from '.\/ReferenceDetailPage'/);
   assert.match(source, /<ReferenceDetailPage/);
   assert.doesNotMatch(source, /<ReferenceDetailShell/);
-  assert.doesNotMatch(source, /<ReferenceDiscoveryTopNav/);
+  assert.doesNotMatch(source, /<ApplicationHeader/);
 });
 
 test('renders Export to Figma as the primary App detail action', () => {
@@ -202,6 +202,13 @@ test('does not render a Back to all apps button in App detail', () => {
 
   assert.doesNotMatch(html, /Back to all apps/);
   assert.doesNotMatch(html, /reference-detail__back/);
+});
+
+test('does not use Escape to leave an App detail page', () => {
+  const source = readFileSync(new URL('./components/ScreenDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /if \(!lightbox\) return;/);
+  assert.doesNotMatch(source, /else if \(event\.key === 'Escape'\) onBack\(\)/);
 });
 
 test('renders the App identity and interactive platform inside the reference metadata rhythm', () => {
@@ -278,7 +285,7 @@ test('reuses the Apps header on admin App detail', () => {
   );
 
   assert.match(html, /data-reference-component="top-nav"/);
-  assert.match(html, /class="reference-discovery-nav apps-top-nav"/);
+  assert.match(html, /class="reference-discovery-nav reference-detail-top-nav"/);
   assert.match(html, /Apps/);
   assert.match(html, /Sites/);
   assert.match(html, /Search on Web\.\.\./);

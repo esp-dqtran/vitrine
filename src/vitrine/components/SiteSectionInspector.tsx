@@ -44,6 +44,7 @@ export function SiteSectionInspector({
   onNavigate,
 }: SiteSectionInspectorProps) {
   const [saved, setSaved] = useState(false);
+  const [siteLogoFailed, setSiteLogoFailed] = useState(false);
   const selectedView = view === 'section' ? 'Section' : 'Full page';
   const fullPage = view === 'full-page';
   const mediaUrl = fullPage ? item.fullPageUrl : item.sectionUrl;
@@ -56,6 +57,7 @@ export function SiteSectionInspector({
     numberText(bounds.height),
   ].filter(Boolean).join(' × ');
   const siteName = item.siteName || safeHostname(item.pageUrl);
+  const showSiteLogo = Boolean(item.siteLogoUrl) && !siteLogoFailed;
   const copySectionLink = async () => {
     await copyShareLink(
       typeof window === 'undefined' ? item.sectionUrl : window.location.href,
@@ -76,7 +78,9 @@ export function SiteSectionInspector({
         <header className="site-section-inspector__header">
           <div className="site-section-inspector__identity">
             <span className="site-section-inspector__logo" aria-hidden="true">
-              {item.siteLogoUrl ? <img src={item.siteLogoUrl} alt="" /> : siteName.slice(0, 1).toUpperCase()}
+              {showSiteLogo
+                ? <img src={item.siteLogoUrl ?? undefined} alt="" onError={() => setSiteLogoFailed(true)} />
+                : siteName.slice(0, 1).toUpperCase()}
             </span>
             <span>
               <strong>{siteName}</strong>

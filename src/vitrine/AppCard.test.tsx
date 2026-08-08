@@ -103,6 +103,28 @@ test('contains complete iOS and Android previews instead of cropping them', () =
   }
 });
 
+test('renders the first three phone previews as one AppCard row', () => {
+  const html = renderToStaticMarkup(
+    <AppCard
+      app={app([
+        screen(1, '/ios-one.png', 'ios'),
+        screen(2, '/ios-two.png', 'ios'),
+        screen(3, '/ios-three.png', 'ios'),
+        screen(4, '/web.png', 'web'),
+      ])}
+      platform="ios"
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /data-preview-layout="triptych"/);
+  assert.equal((html.match(/class="app-discovery-card__phone-preview"/g) ?? []).length, 3);
+  assert.match(html, /src="\/ios-one\.png"/);
+  assert.match(html, /src="\/ios-two\.png"/);
+  assert.match(html, /src="\/ios-three\.png"/);
+  assert.doesNotMatch(html, /src="\/web\.png"/);
+});
+
 test('keeps a single-screen App card free from an empty next layer', () => {
   const html = renderToStaticMarkup(
     <AppCard app={app([screen(1, '/only.png')])} onOpen={() => undefined} />,
@@ -113,4 +135,3 @@ test('keeps a single-screen App card free from an empty next layer', () => {
   assert.doesNotMatch(html, /app-discovery-card__overlay/);
   assert.doesNotMatch(html, /Jul 25, 2026/);
 });
-

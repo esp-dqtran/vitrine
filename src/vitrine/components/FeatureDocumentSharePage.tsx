@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useState } from 'react';
-import { Badge, Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { Badge, Button, EmptyState } from '@astryxdesign/core';
 import type { PublicFeatureDocumentShare } from '../../featureDocumentStore.ts';
 import { getPublicFeatureDocumentShare } from '../featureDocumentsApi.ts';
 import { FeatureDocumentEditor } from './FeatureDocumentEditor.tsx';

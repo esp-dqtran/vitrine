@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Spinner } from '@astryxdesign/core';
+import { Button } from '@astryxdesign/core';
 import type { ResearchProjectWorkspace } from '../../researchProject.ts';
 import {
   ResearchProjectApiError,

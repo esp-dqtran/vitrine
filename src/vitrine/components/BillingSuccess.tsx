@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useState } from 'react';
-import { Button, Heading, Spinner, Text } from '@astryxdesign/core';
+import { Button, Heading, Text } from '@astryxdesign/core';
 import { loadSubscription, type SubscriptionView } from '../billingApi';
 
 type BillingSuccessState = 'checking' | 'ready' | 'pending' | 'error';

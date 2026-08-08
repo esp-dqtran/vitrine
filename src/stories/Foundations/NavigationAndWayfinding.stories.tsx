@@ -21,7 +21,7 @@ import {
 } from '../../vitrine/components/AppsFilterBar';
 import { AppsPlatformSwitcher } from '../../vitrine/components/AppsPlatformSwitcher';
 import { HeroButton } from '../../vitrine/components/HeroButton';
-import { ReferenceDiscoveryTopNav } from '../../vitrine/components/ReferenceDiscoveryTopNav';
+import { ApplicationHeader } from '../../vitrine/components/ApplicationHeader';
 import { ReferenceDetailShell } from '../../vitrine/components/ReferenceDetailShell';
 import { SearchTrigger } from '../../vitrine/components/SearchTrigger';
 import '../../vitrine/styles.css';
@@ -137,7 +137,7 @@ function ProductNavigation() {
         <span>One current destination, predictable search placement, and stable account access.</span>
       </div>
       <div className="reference-discovery navigation-review__production-nav">
-        <ReferenceDiscoveryTopNav
+        <ApplicationHeader
           active="apps"
           className="apps-top-nav"
           search={(

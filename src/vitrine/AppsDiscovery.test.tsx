@@ -7,9 +7,13 @@ import {
   appsDiscoveryFacetOptions,
   AppsDiscoveryPageView,
 } from './components/AppsDiscoveryPage.tsx';
-import { ReferenceDiscoveryTopNav } from './components/ReferenceDiscoveryTopNav.tsx';
+import { ApplicationHeader } from './components/ApplicationHeader.tsx';
 import type { App } from './types.ts';
-import { filterAndSortApps, filterAppsDiscoveryScreens } from './appsDiscovery.ts';
+import {
+  ALL_APPS_SCREENS,
+  filterAndSortApps,
+  filterAppsDiscoveryScreens,
+} from './appsDiscovery.ts';
 import type { AppsDiscoveryControllerState } from './appsDiscoveryAdapter.ts';
 import type { DiscoveryController } from './useDiscoveryController.ts';
 
@@ -109,15 +113,14 @@ test('renders the full Apps taxonomy alongside the compact filter bar', () => {
   const html = renderAppsPage();
   assert.match(html, /data-apps-filterbar="true"/);
   assert.match(html, /aria-label="Open Categories filters"/);
-  assert.doesNotMatch(html, /aria-label="Open Screens filters"/);
+  assert.match(html, /aria-label="Open Screens filters"/);
   assert.doesNotMatch(html, /aria-label="Open UI Elements filters"/);
   assert.doesNotMatch(html, /aria-label="Open Flows filters"/);
   assert.doesNotMatch(html, /aria-label="More filters"/);
   assert.match(html, /aria-label="App discovery filters"/);
   assert.match(html, />Categories</);
   assert.match(html, />AI</);
-  assert.doesNotMatch(html, />Screens</);
-  assert.doesNotMatch(html, />My Account &amp; Profile</);
+  assert.match(html, />Screens</);
   assert.doesNotMatch(html, />UI Elements</);
   assert.doesNotMatch(html, />Navigation Menu</);
   assert.doesNotMatch(html, />Flows</);
@@ -211,6 +214,11 @@ test('shows only Apps that contain the active platform', () => {
       [platform],
     );
   }
+});
+
+test('seeds Preview and Wallpaper as screen-level filters, not app categories', () => {
+  assert.ok(ALL_APPS_SCREENS.includes('Preview'));
+  assert.ok(ALL_APPS_SCREENS.includes('Wallpaper'));
 });
 
 test('maps the Mobbin My Account & Profile filter to Astryx account settings screens', () => {
@@ -343,7 +351,7 @@ test('preserves server order for Latest and orders Most popular by coverage', ()
 
 test('renders the shared full-width discovery navigation for Apps', () => {
   const html = renderToStaticMarkup(
-    <ReferenceDiscoveryTopNav
+    <ApplicationHeader
       active="apps"
       className="apps-top-nav"
       search={<button>Search on Web...</button>}
@@ -402,7 +410,7 @@ test('renders the Mobbin-style Apps filter bar, grid, and media-first card', () 
   assert.doesNotMatch(html, /reference-discovery-nav/);
   assert.doesNotMatch(html, /Import App/);
   assert.match(html, /Categories/);
-  assert.doesNotMatch(html, /Screens/);
+  assert.match(html, /Screens/);
   assert.doesNotMatch(html, /UI Elements/);
   assert.doesNotMatch(html, /Flows/);
   assert.match(html, /data-facet-preview="categories"/);

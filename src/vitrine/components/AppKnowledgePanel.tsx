@@ -1,3 +1,4 @@
+import { Spinner } from './Spinner.tsx';
 import { useState } from 'react';
 import {
   Badge,
@@ -6,7 +7,6 @@ import {
   EmptyState,
   SegmentedControl,
   SegmentedControlItem,
-  Spinner,
 } from '@astryxdesign/core';
 import {
   projectAppKnowledge,

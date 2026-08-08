@@ -1,8 +1,8 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   EmptyState,
-  Spinner,
   TextArea,
   TextInput,
 } from "@astryxdesign/core";

@@ -1,5 +1,5 @@
+import { Spinner } from './components/Spinner.tsx';
 import { lazy, Suspense, type ReactNode } from 'react';
-import { Spinner } from '@astryxdesign/core';
 import { navigate, useRoute } from './router.ts';
 import { useWorkspaceChrome } from './components/WorkspaceChromeContext.tsx';
 import { workspaceNav } from './components/workspaceNav.tsx';

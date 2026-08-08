@@ -4,9 +4,10 @@
 #   api  -> Docker container vitrines-api on the DigitalOcean droplet
 #
 # Usage:
-#   scripts/deploy.sh web
-#   scripts/deploy.sh api [--dry-run]
-#   scripts/deploy.sh all
+#   scripts/deploy.sh [web|api|all] [--dry-run]
+#
+# `all` is the default release target. Releases are built from the current
+# committed HEAD only; untracked files are deliberately excluded.
 #
 # The api path refuses to swap containers unless the release satisfies two
 # preflights. Both correspond to outages that actually happened:
@@ -37,9 +38,19 @@ cd "$(dirname "$0")/.."
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 die() { printf '\n\033[31mFAILED: %s\033[0m\n' "$*" >&2; exit 1; }
 
+require_clean_head() {
+  git diff --quiet HEAD -- \
+    || die "tracked changes are present. Commit or stash them before deploying so the release matches HEAD."
+}
+
 deploy_web() {
+  local dry_run="${1:-}"
   say "Cloudflare: build + deploy astryx-web"
   npm run build
+  if [ "$dry_run" = "--dry-run" ]; then
+    npx wrangler deploy --dry-run --keep-vars
+    return 0
+  fi
   npx wrangler deploy --keep-vars
   # API_ORIGIN lives in the Cloudflare dashboard, not wrangler.jsonc.
   # --keep-vars is what stops a deploy from wiping it.
@@ -87,6 +98,7 @@ preflight_env() {
 deploy_api() {
   local dry_run="${1:-}"
   local sha release stamp
+  require_clean_head
   sha="$(git rev-parse --short=8 HEAD)"
   release="$REMOTE_ROOT/releases/$sha"
   say "API: deploying $sha to $DROPLET"
@@ -148,8 +160,27 @@ deploy_api() {
 }
 
 case "${1:-}" in
-  web) deploy_web ;;
+  "") require_clean_head; deploy_web; deploy_api ;;
+  web) require_clean_head; deploy_web "${2:-}" ;;
   api) deploy_api "${2:-}" ;;
-  all) deploy_web; deploy_api "${2:-}" ;;
-  *) die "usage: scripts/deploy.sh {web|api|all} [--dry-run]" ;;
+  all) require_clean_head; deploy_web "${2:-}"; deploy_api "${2:-}" ;;
+  --help|-h) cat <<'USAGE'
+Usage: scripts/deploy.sh [web|api|all] [--dry-run]
+
+Targets:
+  web  Build and deploy the Cloudflare Worker (astryx-web).
+  api  Build and roll out the API container to the DigitalOcean droplet.
+  all  Deploy web, then API. This is the default target.
+
+Options:
+  --dry-run  Validate the Worker deploy and API preflights without swapping
+             the live API container. The API release archive is still sent to
+             the droplet so migration parity can be checked.
+
+Environment overrides:
+  DROPLET, REMOTE_ROOT, ENV_FILE, CONTAINER, IMAGE, PORT_BIND, HEALTH_URL,
+  and PUBLIC_HEALTH.
+USAGE
+  ;;
+  *) die "usage: scripts/deploy.sh [web|api|all] [--dry-run]" ;;
 esac

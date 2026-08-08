@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SiteSectionInspector, type SiteInspectorItem } from './components/SiteSectionInspector.tsx';
@@ -73,6 +74,24 @@ test('renders parent full-page media when Full page is selected', () => {
   );
   assert.match(html, /pages\/10\/media/);
   assert.doesNotMatch(html, /<video/);
+});
+
+test('contains the Site logo in the inspector header', () => {
+  const html = renderToStaticMarkup(
+    <SiteSectionInspector
+      item={{ ...item, siteName: 'V7', siteLogoUrl: '/site-logo.svg' }}
+      index={0}
+      total={1}
+      view="section"
+      onViewChange={() => undefined}
+      onClose={() => undefined}
+      onNavigate={() => undefined}
+    />,
+  );
+  const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+
+  assert.match(html, /src="\/site-logo\.svg"/);
+  assert.match(styles, /\.site-section-inspector__logo img\s*\{[^}]*object-fit:\s*contain/);
 });
 
 test('renders section video controls but keeps Full page as an image', () => {

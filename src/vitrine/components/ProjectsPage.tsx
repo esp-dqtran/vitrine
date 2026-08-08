@@ -1,3 +1,4 @@
+import { Spinner } from './Spinner.tsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -6,7 +7,6 @@ import {
   Icon,
   IconButton,
   Selector,
-  Spinner,
   Text,
   TextInput,
 } from "@astryxdesign/core";

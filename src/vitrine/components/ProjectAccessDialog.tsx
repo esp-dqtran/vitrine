@@ -1,9 +1,9 @@
+import { Spinner } from './Spinner.tsx';
 import { useEffect, useState } from "react";
 import {
   Button,
   Heading,
   Selector,
-  Spinner,
   Text,
   TextInput,
 } from "@astryxdesign/core";

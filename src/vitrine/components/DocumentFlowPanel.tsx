@@ -1,5 +1,6 @@
+import { Spinner } from './Spinner.tsx';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import type { DesignFlow, EvidenceView } from '../../designSystem.ts';
 import type {
   FeatureDocumentRevisionView,

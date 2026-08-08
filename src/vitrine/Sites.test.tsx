@@ -11,6 +11,7 @@ import { Lightbox } from './components/Lightbox.tsx';
 import { MediaGridCard } from './components/MediaGridCard.tsx';
 import * as MediaGridCardModule from './components/MediaGridCard.tsx';
 import {
+  collapseGsapPlugins,
   SiteAnalysisPanel,
   technologyIconUrl,
   wappalyzerIconUrl,
@@ -393,6 +394,15 @@ test('renders image-only Mobbin Site previews without a broken video element', (
   assert.doesNotMatch(version, /<video/);
 });
 
+test('contains Site logos so wordmarks are never cropped in discovery cards', () => {
+  const html = renderToStaticMarkup(
+    <SiteCardModule.SiteCard site={site} onOpen={() => undefined} />,
+  );
+
+  assert.match(html, /src="\/site-logo\.png"/);
+  assert.match(html, /object-fit:contain/);
+});
+
 test('shows only the derived thumbnail until the card is hovered', () => {
   const postered: SiteSummary = { ...site, posterUrl: '/assets/thumbnails/site-previews/2/abc.webp' };
   const html = renderToStaticMarkup(
@@ -610,7 +620,7 @@ test('builds only safe Wappalyzer technology icon URLs', () => {
   assert.equal(wappalyzerIconUrl('https://example.com/React.svg'), undefined);
 });
 
-test('hides CSS Keyframes and gives native Technology results app icons', () => {
+test('hides CSS Keyframes and gives native Technology results real package icons', () => {
   const nativeDetail: SiteVersionDetail = {
     ...detail,
     analysis: {
@@ -650,6 +660,43 @@ test('hides CSS Keyframes and gives native Technology results app icons', () => 
     technologyIconUrl({ name: 'Turbopack' }),
     'https://cdn.simpleicons.org/turborepo',
   );
+  assert.deepEqual(
+    [
+      'GSAP',
+      'ScrollTrigger',
+      'Lenis',
+      'Lottie',
+      'Webflow',
+      'Webflow IX2',
+    ].map((name) => technologyIconUrl({ name })),
+    [
+      'https://gsap.com/favicon-32x32.png',
+      'https://cdn.simpleicons.org/greensock',
+      'https://lenis.dev/favicon-32x32.png',
+      'https://cdn.simpleicons.org/lottiefiles',
+      'https://cdn.simpleicons.org/webflow',
+      'https://cdn.simpleicons.org/webflow',
+    ],
+  );
+});
+
+test('does not show ScrollTrigger as a separate technology when GSAP is detected', () => {
+  const gsap = { id: 'gsap', name: 'GSAP', category: 'animation' as const, state: 'observed-in-use' as const, evidenceIds: [], confidence: 0.99 };
+  const scrollTrigger = { id: 'scroll-trigger', name: 'ScrollTrigger', category: 'animation' as const, state: 'observed-in-use' as const, evidenceIds: [], confidence: 0.99 };
+  const lenis = { id: 'lenis', name: 'Lenis', category: 'animation' as const, state: 'confirmed' as const, evidenceIds: [], confidence: 0.98 };
+  const html = renderToStaticMarkup(
+    <SiteAnalysisPanel
+      detail={{
+        ...detail,
+        analysis: { ...detail.analysis!, technology: [gsap, scrollTrigger, lenis] },
+      }}
+    />,
+  );
+
+  assert.deepEqual(collapseGsapPlugins([gsap, scrollTrigger, lenis]).map(({ name }) => name), ['GSAP', 'Lenis']);
+  assert.match(html, />2 detected</);
+  assert.match(html, /GSAP/);
+  assert.doesNotMatch(html, /ScrollTrigger/);
 });
 
 test('lays out Technology icons in a responsive card grid', () => {
@@ -923,6 +970,10 @@ test('renders the inline Site preview with the Flow modal UI and two smooth mode
   const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
   assert.match(source, /site-preview-player site-preview-player--\$\{activeMode\}/);
   assert.match(source, /className="flow-preview-dialog__header site-preview-player__header"/);
+  assert.doesNotMatch(
+    source,
+    /<div className="flow-preview-dialog__identity">[\s\S]*?<h2>\{detail\.site\.name\}<\/h2>[\s\S]*?<\/div>/,
+  );
   assert.match(source, /aria-label="Site preview mode"/);
   assert.match(source, /ref=\{registerMode\('video'\)\}/);
   assert.match(source, /ref=\{registerMode\('full-screen'\)\}/);
@@ -933,14 +984,39 @@ test('renders the inline Site preview with the Flow modal UI and two smooth mode
   assert.match(styles, /max-width:\s*1440px/);
   assert.match(styles, /aspect-ratio:\s*8\s*\/\s*5/);
   assert.match(styles, /object-fit:\s*contain/);
+  assert.match(
+    styles,
+    /\.site-preview-player\s*\{[^}]*height:\s*min\(78vh,\s*820px\);[^}]*grid-template-rows:\s*72px minmax\(0,\s*1fr\)/,
+  );
+  assert.match(
+    styles,
+    /\.site-preview-player__body--video\s*\{[^}]*padding:\s*24px max\(24px,\s*calc\(\(100% - 1440px\) \/ 2\)\)/,
+  );
+  assert.match(
+    styles,
+    /\.site-preview-player__body--full-screen\s*\{[^}]*padding:\s*24px max\(24px,\s*calc\(\(100% - 1440px\) \/ 2\)\)/,
+  );
+  assert.match(
+    styles,
+    /\.site-preview-player__header\s+\.flow-preview-dialog__modes\s*\{[^}]*grid-column:\s*2/,
+  );
+  assert.match(
+    styles,
+    /@media \(max-width:\s*1080px\)\s*\{[\s\S]*?\.site-preview__stage\s*\{[^}]*padding:\s*24px/,
+  );
+  assert.match(
+    styles,
+    /@media \(max-width:\s*1080px\)\s*\{[\s\S]*?\.site-preview-player\s*\{[^}]*grid-template-rows:\s*72px minmax\(0,\s*1fr\)/,
+  );
 });
 
-test('renders Sections with a compact filter toolbar and does not dump OCR text', () => {
+test('moves the Sections filter into the shared detail toolbar and does not dump OCR text', () => {
   const html = renderToStaticMarkup(<SiteVersionView detail={detail} isAdmin section="sections" onSectionChange={() => undefined} onVersionChange={() => undefined} onBack={() => undefined} />);
-  assert.match(html, /class="site-sections__toolbar"/);
-  assert.match(html, /aria-label="Filter sections by type"/);
-  assert.match(html, /aria-label="Search sections"/);
-  assert.match(html, /class="site-sections__count"[^>]*>2 sections<\/span>/);
+  assert.match(html, /class="reference-detail__tab-controls"/);
+  assert.match(html, /class="app-detail__navigation-tools"/);
+  assert.match(html, /aria-label="Open Sections filters"/);
+  assert.doesNotMatch(html, /aria-label="Search sections"/);
+  assert.match(html, /class="reference-detail__section-total"[\s\S]*?<strong>2 sections<\/strong>/);
   assert.doesNotMatch(html, /Open a capture to inspect/);
   assert.match(html, /<strong>Hero<\/strong>/);
   assert.match(html, /<strong>Navigation<\/strong>/);

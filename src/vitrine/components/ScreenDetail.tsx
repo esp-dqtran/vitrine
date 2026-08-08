@@ -1,8 +1,9 @@
+import { Spinner } from './Spinner.tsx';
 import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { Button, EmptyState, Spinner } from '@astryxdesign/core';
+import { Button, EmptyState } from '@astryxdesign/core';
 import type { ResearchCollection } from '../../db';
 import type { Platform } from '../../platformFromUrl';
 import { PLATFORM_LABEL } from '../../platformFromUrl';
@@ -110,9 +111,7 @@ function MetadataFilterControl({
         setOpen(false);
       }
     };
-    // capture: true so this fires before ScreenDetail's page-level Escape
-    // listener regardless of mount order, and stopPropagation keeps that
-    // listener from also firing onBack().
+    // Capture so Escape closes this menu before its descendants handle it.
     window.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', onPointerDown);
     return () => {
@@ -515,16 +514,15 @@ export function ScreenDetail({
   };
 
   useEffect(() => {
+    if (!lightbox) return;
     const onKey = (event: KeyboardEvent) => {
-      if (lightbox) {
-        if (event.key === 'Escape') setLightbox(null);
-        else if (event.key === 'ArrowLeft') void goLightbox(lightbox.index - 1);
-        else if (event.key === 'ArrowRight') void goLightbox(lightbox.index + 1);
-      } else if (event.key === 'Escape') onBack();
+      if (event.key === 'Escape') setLightbox(null);
+      else if (event.key === 'ArrowLeft') void goLightbox(lightbox.index - 1);
+      else if (event.key === 'ArrowRight') void goLightbox(lightbox.index + 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox, screens.length, nextCursor, loadingMore, onBack]);
+  }, [lightbox, screens.length, nextCursor, loadingMore]);
 
   const setScreenSelected = (screenId: number, selected: boolean) => {
     setSelectedScreenIds((current) => {
@@ -856,6 +854,7 @@ export function ScreenDetail({
                 : section === 'design-system' ? <Suspense fallback={<Spinner size="lg" />}><DesignSystemPanel
                     snapshot={snapshot}
                     status={designSystemStatus}
+                    showReviewMetadata={role === 'admin'}
                     generation={designSystemGeneration}
                     appName={app.app}
                     componentCrops={componentCropSummary?.items}

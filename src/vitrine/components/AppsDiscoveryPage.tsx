@@ -457,7 +457,7 @@ export function AppsDiscoveryPageView({
             onChange: (platform) => changeState({ ...state, platform }),
           }}
           filters={(Object.keys(FILTER_LABELS) as AppsFacet['group'][])
-            .filter((group) => group === 'categories')
+            .filter((group) => group === 'categories' || group === 'screens')
             .map((group) => ({
               id: group,
               label: FILTER_LABELS[group],

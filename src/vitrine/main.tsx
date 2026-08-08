@@ -1,8 +1,8 @@
+import { Spinner } from './components/Spinner.tsx';
 import { createRoot } from 'react-dom/client';
 import {
   Button,
   EmptyState,
-  Spinner,
   Theme,
   defineTheme,
 } from '@astryxdesign/core';

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 
@@ -18,4 +19,13 @@ test('renders labelled public catalog authentication actions', async () => {
   assert.match(html, /guest-catalog-controls__login/);
   assert.doesNotMatch(html, /Log in|Get started/);
   assert.doesNotMatch(html, /Account|Collections|Settings|Log out/);
+});
+
+test('uses the same pill shape as the Login dialog submit button', async () => {
+  const styles = await readFile(new URL('./referenceDiscovery.css', import.meta.url), 'utf8');
+
+  assert.match(
+    styles,
+    /\.guest-catalog-controls__login\s*\{[^}]*border-radius:\s*var\(--radius-full\)\s*!important;/s,
+  );
 });

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Spinner } from '@astryxdesign/core';
+import { Spinner } from '../../vitrine/components/Spinner.tsx';
 
 const meta = {
   title: 'Components/Overlays/Spinner',

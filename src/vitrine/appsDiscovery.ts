@@ -57,14 +57,14 @@ export const ALL_APPS_SCREENS = [
   'Loading', 'Login', 'Map', 'Media Editor', 'Misc', 'Move', 'Multi-Column Layout',
   'My Account & Profile', 'News Feed', 'Note Detail', 'Notifications', 'Order Confirmation',
   'Order Detail', 'Order History', 'Other Action', 'Other Content', 'Payment Method',
-  'Permission', 'Playlists', 'Post Detail', 'Pricing', 'Product Detail', 'Progress',
+  'Permission', 'Playlists', 'Post Detail', 'Pricing', 'Preview', 'Product Detail', 'Progress',
   'Promotions & Rewards', 'Publish', 'QR Code', 'Quiz', 'Recipe Detail', 'Reorder',
   'Reviews & Ratings', 'Save', 'Schedule', 'Search', 'Select', 'Set', 'Settings & Preferences',
   'Share', 'Shop & Storefront', 'Signup', 'Social Feed', 'Song & Podcast Detail', 'Stories',
   'Subscription & Paywall', 'Suggestions & Similar Items', 'TV Show & Movie Detail',
   'Timeline & History', 'Timer & Clock', 'Transfer & Send Money', 'Trash & Archive',
   'Upload & Download', 'User / Group Profile', 'Verification', 'Video Player',
-  'Wallet & Balance',
+  'Wallet & Balance', 'Wallpaper',
 ];
 
 const searchableText = (values: Array<string | null | undefined>) =>

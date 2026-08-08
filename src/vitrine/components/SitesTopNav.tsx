@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ReferenceDiscoveryTopNav } from './ReferenceDiscoveryTopNav.tsx';
+import { ApplicationHeader } from './ApplicationHeader.tsx';
 import { SearchTrigger } from './SearchTrigger.tsx';
 
 interface SitesTopNavProps {
@@ -22,7 +22,7 @@ export function SitesTopNav({
   accountControls,
 }: SitesTopNavProps) {
   return (
-    <ReferenceDiscoveryTopNav
+    <ApplicationHeader
       active="sites"
       className="sites-top-nav"
       search={(

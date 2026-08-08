@@ -315,7 +315,7 @@ test('owns one persistent discovery header above galleries but not Project works
 
   assert.match(source, /data-persistent-discovery-frame="true"/);
   assert.doesNotMatch(source, /data-project-document-frame/);
-  assert.equal((source.match(/<ReferenceDiscoveryTopNav/g) ?? []).length, 1);
+  assert.equal((source.match(/<ApplicationHeader/g) ?? []).length, 1);
   assert.match(source, /const hasPersistentDiscoveryHeader =/);
   assert.match(source, /route\.name !== ["']projects["']/);
   assert.match(source, /route\.name !== ["']project["']/);
@@ -329,7 +329,7 @@ test('owns one persistent discovery header above galleries but not Project works
   assert.match(source, /route\.name === ["']apps["'][\s\S]*route\.name === ["']sites["'][\s\S]*route\.name === ["']flows["'][\s\S]*route\.name === ["']projects["']/);
   assert.match(source, /className="apps-top-nav"/);
   assert.match(source, /activeCategory=\{\s*discoveryRoute === ["']flows["']/);
-  assert.doesNotMatch(`${appsSource}\n${sitesSource}\n${flowsSource}\n${projectsSource}`, /<ReferenceDiscoveryTopNav|<SitesTopNav/);
+  assert.doesNotMatch(`${appsSource}\n${sitesSource}\n${flowsSource}\n${projectsSource}`, /<ApplicationHeader|<SitesTopNav/);
 });
 
 test('opens account settings when returning from the Stripe billing portal', async () => {
