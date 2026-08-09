@@ -1,16 +1,16 @@
 <svg width="52" height="52" viewBox="-20 -20 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <path d="M.46.68 104.46.680243v104H.46V2.095V.68Z" fill="rgb(168 218 255)" clip-path="url(#sticky-mask)"/>
+    <path d="M.46.68 104.46.680243v104H.46V2.095V.68Z" fill="rgb(255 175 163)" clip-path="url(#sticky-mask)"/>
     <g>
       <mask id="sticky-curl-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="84" height="84" style="mask-type:alpha">
         <path d="M31.982 3.877C34.74 1.382 38.326 0 42.045 0L104 .000025V104H0L0 39.468c0-4.239 1.793-8.28 4.937-11.124l27.045-24.467Z" fill="#fff"/>
       </mask>
       <g mask="url(#sticky-curl-mask)">
-        <path d="M104 0 54.893 48.549 0 104V0L104 0Z" fill="rgb(168 218 255)"/>
+        <path d="M104 0 54.893 48.549 0 104V0L104 0Z" fill="rgb(255 175 163)"/>
         <g filter="url(#sticky-curl-blur)">
           <rect x="-26" y="50.683" width="96.831" height="16.78" transform="rotate(-41.913 -26 50.683)" fill="#000" fill-opacity=".3"/>
         </g>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M31.526 4.27 3.258 29.851c7.11-6.435 23.12-5.228 23.12-5.228S25.059 10.122 31.526 4.27Z" fill="rgb(168 218 255)"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M31.526 4.27 3.258 29.851c7.11-6.435 23.12-5.228 23.12-5.228S25.059 10.122 31.526 4.27Z" fill="rgb(255 175 163)"/>
         <path fill-rule="evenodd" clip-rule="evenodd" d="M31.526 4.27 3.259 29.851c7.11-6.435 23.12-5.228 23.12-5.228S25.059 10.122 31.526 4.27Z" fill="url(#sticky-curl-highlight)"/>
       </g>
     </g>

@@ -15,8 +15,16 @@
   --project-canvas-surface: var(--vitrine-color-surface);
   --project-canvas-muted-surface: var(--vitrine-color-surface-muted);
   --project-canvas-border: var(--vitrine-color-border);
-  --project-canvas-surface-translucent: color-mix(in srgb, var(--vitrine-color-surface) 96%, transparent);
-  --project-canvas-surface-translucent-strong: color-mix(in srgb, var(--vitrine-color-surface) 98%, transparent);
+  --project-canvas-surface-translucent: color-mix(
+    in srgb,
+    var(--vitrine-color-surface) 96%,
+    transparent
+  );
+  --project-canvas-surface-translucent-strong: color-mix(
+    in srgb,
+    var(--vitrine-color-surface) 98%,
+    transparent
+  );
 }
 
 .vitrine-page {
@@ -36,13 +44,29 @@ button[data-variant="primary"] {
 }
 
 button[data-variant="primary"]:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--vitrine-color-action-primary) 94%, var(--vitrine-color-on-action-primary)) !important;
-  background: color-mix(in srgb, var(--vitrine-color-action-primary) 94%, var(--vitrine-color-on-action-primary)) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--vitrine-color-action-primary) 94%,
+    var(--vitrine-color-on-action-primary)
+  ) !important;
+  background: color-mix(
+    in srgb,
+    var(--vitrine-color-action-primary) 94%,
+    var(--vitrine-color-on-action-primary)
+  ) !important;
 }
 
 button[data-variant="primary"]:active:not(:disabled) {
-  border-color: color-mix(in srgb, var(--vitrine-color-action-primary) 90%, var(--vitrine-color-on-action-primary)) !important;
-  background: color-mix(in srgb, var(--vitrine-color-action-primary) 90%, var(--vitrine-color-on-action-primary)) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--vitrine-color-action-primary) 90%,
+    var(--vitrine-color-on-action-primary)
+  ) !important;
+  background: color-mix(
+    in srgb,
+    var(--vitrine-color-action-primary) 90%,
+    var(--vitrine-color-on-action-primary)
+  ) !important;
 }
 
 .ds-page {
@@ -560,7 +584,7 @@ button[data-variant="primary"]:active:not(:disabled) {
 }
 
 .ds-crop-card > footer {
-  min-height: 40px;
+  min-height: 32px;
   border-top: 1px solid #2c2c32;
 }
 
@@ -832,7 +856,7 @@ button[data-variant="primary"]:active:not(:disabled) {
 
 .ds-section__heading > span {
   color: var(--ds-secondary);
-  font: 400 clamp(56px, 7vw, 96px) / .76 var(--font-family-heading);
+  font: 400 clamp(56px, 7vw, 96px) / 0.76 var(--font-family-heading);
   letter-spacing: -0.09em;
 }
 
@@ -873,7 +897,7 @@ button[data-variant="primary"]:active:not(:disabled) {
   flex-direction: column;
   justify-content: space-between;
   min-height: 164px;
-  aspect-ratio: 1 / .9;
+  aspect-ratio: 1 / 0.9;
   padding: 14px;
   color: #fff;
 }
@@ -1094,7 +1118,7 @@ button[data-variant="primary"]:active:not(:disabled) {
 
 .ds-layout-token__spacing-preview::before,
 .ds-layout-token__spacing-preview::after {
-  content: '';
+  content: "";
   width: 1px;
   height: 32px;
   background: var(--ds-border);
@@ -1748,7 +1772,7 @@ body {
 
 .vitrine-spinner__graphic {
   display: block;
-  animation: vitrine-spinner-comet 760ms cubic-bezier(.42, 0, .58, 1) infinite;
+  animation: vitrine-spinner-comet 760ms cubic-bezier(0.42, 0, 0.58, 1) infinite;
   transform-origin: 50% 50%;
 }
 
@@ -1761,12 +1785,20 @@ body {
 
 .vitrine-spinner__track {
   stroke-width: 4;
-  opacity: .16;
+  opacity: 0.16;
 }
 
-.vitrine-spinner__arc--head { stroke-width: 5; }
-.vitrine-spinner__arc--body { stroke-width: 4; opacity: .72; }
-.vitrine-spinner__arc--tail { stroke-width: 3; opacity: .3; }
+.vitrine-spinner__arc--head {
+  stroke-width: 5;
+}
+.vitrine-spinner__arc--body {
+  stroke-width: 4;
+  opacity: 0.72;
+}
+.vitrine-spinner__arc--tail {
+  stroke-width: 3;
+  opacity: 0.3;
+}
 
 .vitrine-spinner__label {
   color: var(--color-text-secondary);
@@ -1774,11 +1806,15 @@ body {
 }
 
 @keyframes vitrine-spinner-comet {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vitrine-spinner__graphic { animation-duration: 3s; }
+  .vitrine-spinner__graphic {
+    animation-duration: 3s;
+  }
 }
 
 .reference-detail-loading {
@@ -2420,8 +2456,8 @@ body {
 }
 
 .sites-top-nav__brand > img {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: block;
   border-radius: 9px;
 }
@@ -2936,7 +2972,9 @@ body {
   gap: 24px;
   overflow: visible;
   flex: 0 0 auto;
-  padding-block: calc((var(--reference-nav-height) - var(--vitrine-control-height)) / 2);
+  padding-block: calc(
+    (var(--reference-nav-height) - var(--vitrine-control-height)) / 2
+  );
   background: var(--color-background-body);
 }
 
@@ -3328,7 +3366,11 @@ body {
 }
 
 .screen-grid-card__copy {
-  background: color-mix(in srgb, var(--vitrine-color-surface-muted) 88%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--vitrine-color-surface-muted) 88%,
+    transparent
+  ) !important;
   color: var(--vitrine-color-text-primary) !important;
   backdrop-filter: blur(8px);
 }
@@ -3866,7 +3908,9 @@ body {
     padding: 10px 16px;
   }
 
-  .site-preview-player .site-preview-player__header .flow-preview-dialog__modes {
+  .site-preview-player
+    .site-preview-player__header
+    .flow-preview-dialog__modes {
     grid-column: 1;
     grid-row: 1;
   }
@@ -5316,9 +5360,9 @@ body {
 .project-canvas-header {
   position: absolute;
   z-index: 650;
-  top: 8px;
-  right: 8px;
-  left: 8px;
+  top: 12px;
+  right: 12px;
+  left: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5344,7 +5388,16 @@ body {
 }
 
 .project-canvas-header__group--left {
-  max-width: min(62%, 620px);
+  height: 48px;
+  max-width: min(68%, 620px);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  color: #1e1e1e;
+  background: rgb(255 255 255 / 98%);
+  border-color: rgb(17 24 39 / 12%);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(17 24 39 / 14%);
 }
 
 .project-canvas-header .astryx-button {
@@ -5356,38 +5409,44 @@ body {
   font-size: 14px;
 }
 
-.project-canvas-header__group--left > button:first-child {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
-  flex: 0 0 40px;
-  padding: 4px;
-  border-radius: 4px;
+.project-canvas-header__workspace-button,
+.project-canvas-header__identity {
+  appearance: none;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
 }
 
-.project-canvas-header__group--left > button:first-child > span:first-child,
-.project-canvas-header__group--left
-  > button:first-child
-  > span:first-child
-  > span {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+.project-canvas-header__workspace-button {
+  width: 52px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 52px;
+  padding: 0;
 }
 
 .project-canvas-header__group--left .project-canvas-header__brand-mark {
-  width: 32px;
-  height: auto;
-  min-width: 32px;
-  max-width: none;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  max-width: 24px;
   display: block;
-  flex: 0 0 32px;
-  border-radius: 10px;
+  position: static;
+  border-radius: 7px;
+  filter: brightness(0) saturate(100%);
 }
 
-.project-canvas-header__group--left > .astryx-button {
-  padding-inline: 12px;
-  font-weight: 600;
+.project-canvas-header__workspace-button:hover,
+.project-canvas-header__identity:hover,
+.project-canvas-header__menu button:hover {
+  background: #f5f5f5;
 }
 
 .project-canvas-header .astryx-button.ghost:hover,
@@ -5396,18 +5455,25 @@ body {
 }
 
 .project-canvas-header__divider {
-  display: none;
+  width: 1px;
+  height: 32px;
+  flex: 0 0 1px;
+  display: block;
+  background: rgb(17 24 39 / 12%);
 }
 
 .project-canvas-header__identity {
+  height: 48px;
+  width: 200px;
   min-width: 0;
-  height: 40px;
+  flex: 0 1 200px;
   display: flex;
   align-items: center;
-  padding-inline: 8px 2px;
+  padding: 0 12px;
+  text-align: left;
 }
 
-.project-canvas-header__identity > span {
+.project-canvas-header__identity > span:first-child {
   display: none;
 }
 
@@ -5415,10 +5481,10 @@ body {
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  color: var(--project-canvas-text, #202124);
+  color: #1e1e1e;
   font-size: 14px;
-  font-weight: 500;
-  line-height: 21px;
+  font-weight: 600;
+  line-height: 20px;
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5428,7 +5494,7 @@ body {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .project-canvas-header__identity-title h1 {
@@ -5436,13 +5502,29 @@ body {
 }
 
 .project-playground__identity-status {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
   display: grid;
   place-items: center;
-  border-radius: 4px;
+  border-radius: 50%;
   color: var(--project-canvas-muted-text, #6b7280);
+}
+
+.project-playground__identity-status .astryx-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.project-canvas-header__file-kind {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: #7c3aed;
+  background: #f3e8ff;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 16px;
 }
 
 .project-playground__identity-status[data-state="loading"],
@@ -5455,7 +5537,14 @@ body {
 }
 
 .project-playground__identity-status[data-state="saved"] {
-  color: var(--vitrine-color-status-success);
+  color: #fff;
+  background: #18a957;
+  box-shadow: inset 0 0 0 1px rgb(8 116 84 / 26%);
+}
+
+.project-playground__identity-status[data-state="saved"] .astryx-icon {
+  width: 10px;
+  height: 10px;
 }
 
 .project-playground__identity-status[data-state="offline"] {
@@ -5490,53 +5579,103 @@ body {
 }
 
 .project-canvas-header__menu button {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
-  border-radius: 4px;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  border-radius: 0;
+  color: #1e1e1e;
+}
+
+.project-canvas-header__menu button .astryx-icon,
+.project-canvas-header__workspace-button .astryx-icon {
+  color: #1e1e1e;
+}
+
+.project-canvas-header__page-menu {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  width: 220px;
+  gap: 4px;
+  padding: 6px;
+  pointer-events: all;
+  background: #fff;
+  border: 1px solid rgb(17 24 39 / 12%);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(17 24 39 / 16%);
+}
+
+.project-canvas-header__page-menu button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #1e1e1e;
+  background: transparent;
+  font: 500 14px/20px var(--font-family-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-canvas-header__page-menu button:hover,
+.project-canvas-header__page-menu button[aria-current="page"] {
+  background: #f3e8ff;
+  color: #6d28d9;
 }
 
 .project-canvas-header__actions {
   min-width: 0;
+  height: 48px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
+  padding: 0 6px 0 0;
   justify-content: flex-end;
+  overflow: hidden;
+  color: #1e1e1e;
+  background: rgb(255 255 255 / 98%);
+  border-color: rgb(17 24 39 / 12%);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(17 24 39 / 14%);
 }
 
 .project-canvas-collaborators {
   min-width: 0;
-  height: 40px;
+  height: 48px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding-inline: 4px 6px;
-  color: var(--project-canvas-muted-text, #6b7280);
-  font-size: 12px;
-  font-weight: 600;
+  gap: 5px;
+  padding: 0 8px;
+  border: 0;
+  color: #1e1e1e;
+  background: transparent;
+  cursor: pointer;
   white-space: nowrap;
 }
 
-.project-canvas-collaborators[data-state="live"] {
-  color: var(--project-canvas-text, #202124);
+.project-canvas-collaborators:hover,
+.project-canvas-collaborators:focus-visible {
+  background: #f5f5f5;
 }
 
 .project-canvas-collaborators__avatars {
   display: flex;
   align-items: center;
-  padding-left: 6px;
+  padding: 0;
 }
 
 .project-canvas-collaborators__avatars > span {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  margin-left: -6px;
-  border: 2px solid var(--project-canvas-surface, #fff);
+  margin: 0;
+  border: 0;
   border-radius: 50%;
   color: #fff;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.02em;
   box-sizing: border-box;
@@ -5546,20 +5685,25 @@ body {
   .project-canvas-collaborators__avatars,
 .project-canvas-collaborators[data-state="offline"]
   .project-canvas-collaborators__avatars {
-  opacity: 0.58;
+  opacity: 0.62;
 }
 
 .project-canvas-header__actions .astryx-button.primary {
-  min-width: 76px;
+  width: 72px;
+  min-width: 72px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
   color: #fff !important;
-  background: #4262ff !important;
-  border-color: #4262ff !important;
-  box-shadow: 0 2px 6px rgb(66 98 255 / 24%);
+  background: #9747ff !important;
+  border-color: #9747ff !important;
+  border-radius: 5px;
+  box-shadow: none;
 }
 
 .project-canvas-header__actions .astryx-button.primary:hover {
-  background: #3451d1 !important;
-  border-color: #3451d1 !important;
+  background: #7f22e7 !important;
+  border-color: #7f22e7 !important;
 }
 
 .project-playground {
@@ -5788,11 +5932,26 @@ body {
 
 /* Keep Excalidraw's shortcuts, but merge the visible geometry tools into the
    persistent Shapes and connectors library beside the canvas. */
-.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-rectangle"]),
-.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-diamond"]),
-.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-ellipse"]),
-.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-arrow"]),
-.project-playground__canvas .excalidraw .App-toolbar label:has(input[data-testid="toolbar-line"]) {
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-rectangle"]),
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-diamond"]),
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-ellipse"]),
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-arrow"]),
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-line"]) {
   display: none;
 }
 
@@ -5820,6 +5979,81 @@ body {
   background: #e5e7eb;
 }
 
+/* Shapes live in the FigJam-style custom group. Keep the native Text tool
+   visually separate when the two groups meet, so the next creation mode is
+   easy to scan rather than reading as another shape. */
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"]) {
+  position: relative;
+  margin-left: 10px;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px;
+  width: 1px;
+  height: 40px;
+  margin: auto;
+  content: "";
+  background: var(
+    --default-border-color,
+    var(--project-canvas-border, rgb(17 24 39 / 10%))
+  );
+}
+
+/* Use the supplied FigJam Text mark instead of Excalidraw's generic “A”. */
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon__icon {
+  position: relative;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon__icon
+  svg {
+  opacity: 0;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon__icon::after {
+  width: 24px;
+  height: 24px;
+  content: "";
+  background: url("./assets/figjam-text-tool.svg") center / 20px 20px no-repeat;
+  transition:
+    filter 140ms ease,
+    transform 140ms ease;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon_type_radio:checked
+  + .ToolIcon__icon::after,
+.project-playground__canvas--text-tool
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon__icon::after {
+  filter: invert(1);
+}
+
 .project-playground__canvas
   .excalidraw
   .ToolIcon_type_radio:checked
@@ -5832,6 +6066,27 @@ body {
   background: #9747ff;
 }
 
+/* Text remains visually active while its inline editor is open, even though
+   Excalidraw internally returns to Select to support editing. */
+.project-playground__canvas--text-tool
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-text"])
+  .ToolIcon__icon {
+  color: #fff;
+  background: #9747ff;
+}
+
+.project-playground__canvas--text-tool
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-selection"])
+  .ToolIcon_type_radio:checked
+  + .ToolIcon__icon {
+  color: var(--icon-fill-color) !important;
+  background: transparent !important;
+}
+
 .project-playground__canvas .excalidraw .App-toolbar .ToolIcon__icon:hover,
 .project-playground__canvas
   .excalidraw
@@ -5840,6 +6095,7 @@ body {
 }
 
 .project-playground__sticky-tools,
+.project-playground__section-tool,
 .project-playground__astryx-tools {
   width: auto;
   flex: 0 0 auto;
@@ -5853,18 +6109,50 @@ body {
 
 .project-playground__sticky-tools {
   order: -1;
+  overflow: visible;
+}
+
+/* Excalidraw makes this horizontal row vertically clipped for its own overflow
+   controls. The FigJam collage intentionally peeks above and below its 40px
+   trigger, so allow only the row containing it to render the full 64×80 layer. */
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  > .Stack.Stack_horizontal:has(.project-canvas-shapes-collage) {
+  overflow: visible;
 }
 
 .project-playground__astryx-tools {
-  order: 1;
+  order: 5;
 }
 
-.project-playground__astryx-tools-divider {
+.project-playground__section-tool {
+  order: 1;
+  gap: 0;
+}
+
+.project-playground__section-tool-divider {
   width: 1px;
   height: 40px;
   align-self: center;
   margin: 0 6px;
-  background: var(--default-border-color, var(--project-canvas-border, rgb(17 24 39 / 10%)));
+  background: var(
+    --default-border-color,
+    var(--project-canvas-border, rgb(17 24 39 / 10%))
+  );
+}
+
+/* FigJam keeps Section directly after Text. Move lower-priority native actions
+   behind the dedicated Section group without changing their shortcuts. */
+.project-playground__canvas
+  .excalidraw
+  .App-toolbar
+  label:has(input[data-testid="toolbar-image"]) {
+  order: 3;
+}
+
+.project-playground__canvas .excalidraw .App-toolbar__extra-tools-trigger {
+  order: 4;
 }
 
 .project-playground__astryx-tools button > svg {
@@ -5874,7 +6162,6 @@ body {
 
 .project-playground__screens-trigger,
 .project-playground__sticky-trigger,
-.project-playground__shapes-trigger,
 .project-playground__comments-trigger,
 .project-playground__document-trigger,
 .project-playground__more-tools-trigger {
@@ -5895,6 +6182,146 @@ body {
     transform 120ms ease;
 }
 
+/* The FigJam Section control is a 32px active tile inside the shared 40px
+   toolbar rail — visibly smaller than Vitrines' regular app actions. */
+.project-playground__section-trigger {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-on-surface, var(--project-canvas-text, #202124));
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.project-playground__shapes-trigger {
+  position: relative;
+  width: 64px;
+  height: var(--project-canvas-tool-size, 40px);
+  flex: 0 0 64px;
+  display: grid;
+  padding: 0;
+  place-items: center;
+  overflow: visible;
+  color: var(--color-on-surface, var(--project-canvas-text, #202124));
+  border: 0;
+  border-radius: var(--project-canvas-tool-radius, 8px);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-radius 120ms ease,
+    transform 120ms ease;
+}
+
+.project-canvas-shapes-collage {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 64px;
+  height: 80px;
+  display: block;
+  color: currentColor;
+  pointer-events: none;
+  transition: 0.07s ease-in-out;
+  will-change: transform;
+}
+
+.project-canvas-shapes-collage > .project-canvas-shape-glyph,
+.project-canvas-shapes-collage > img {
+  position: absolute;
+  display: block;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  transform-origin: 50% 50%;
+  will-change: opacity, transform;
+}
+
+.project-canvas-shapes-collage__rectangle {
+  transform: translate(6px, 26px);
+}
+
+.project-canvas-shapes-collage__connector {
+  transform: translate(40px, 18px);
+}
+
+.project-canvas-shapes-collage__ellipse {
+  transform: translate(36px, 40px);
+}
+
+.project-playground__shapes-trigger[aria-pressed="true"]
+  .project-canvas-shapes-collage__rectangle {
+  animation: project-canvas-shapes-collage-rectangle-in 160ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-playground__shapes-trigger[aria-pressed="true"]
+  .project-canvas-shapes-collage__connector {
+  animation: project-canvas-shapes-collage-connector-in 160ms 24ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-playground__shapes-trigger[aria-pressed="true"]
+  .project-canvas-shapes-collage__ellipse {
+  animation: project-canvas-shapes-collage-ellipse-in 160ms 48ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes project-canvas-shapes-collage-rectangle-in {
+  from {
+    opacity: 0;
+    transform: translate(6px, 28px) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translate(6px, 26px) scale(1);
+  }
+}
+
+@keyframes project-canvas-shapes-collage-connector-in {
+  from {
+    opacity: 0;
+    transform: translate(40px, 20px) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translate(40px, 18px) scale(1);
+  }
+}
+
+@keyframes project-canvas-shapes-collage-ellipse-in {
+  from {
+    opacity: 0;
+    transform: translate(36px, 42px) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translate(36px, 40px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-playground__shapes-trigger[aria-pressed="true"]
+    .project-canvas-shapes-collage
+    > img {
+    animation: none;
+  }
+}
+
+.project-canvas-shapes-collage img {
+  object-fit: contain;
+}
+
 .project-playground__sticky-trigger img {
   width: 30px;
   height: 30px;
@@ -5908,35 +6335,63 @@ body {
  */
 .project-playground__screens-trigger[aria-pressed="true"],
 .project-playground__sticky-trigger[aria-pressed="true"],
-.project-playground__shapes-trigger[aria-pressed="true"],
 .project-playground__comments-trigger[aria-pressed="true"],
 .project-playground__document-trigger[aria-pressed="true"],
-.project-playground__more-tools-trigger[aria-pressed="true"] {
+.project-playground__more-tools-trigger[aria-pressed="true"],
+.project-playground__section-trigger[aria-pressed="true"] {
   color: #fff;
   background: #9747ff;
 }
 
+.project-playground__shapes-trigger[aria-pressed="true"] {
+  color: var(--color-on-surface, var(--project-canvas-text, #202124));
+  border-radius: 8px 8px 0 0;
+  background: #f5f5f5;
+}
+
 .project-playground__screens-trigger:hover,
 .project-playground__sticky-trigger:hover,
-.project-playground__shapes-trigger:hover,
 .project-playground__comments-trigger:hover,
 .project-playground__document-trigger:hover,
-.project-playground__more-tools-trigger:hover {
+.project-playground__more-tools-trigger:hover,
+.project-playground__section-trigger:hover {
+  background: #f2f4f7;
+}
+
+.project-playground__shapes-trigger:hover {
   background: #f2f4f7;
 }
 
 .project-playground__screens-trigger:focus-visible,
 .project-playground__sticky-trigger:focus-visible,
-.project-playground__shapes-trigger:focus-visible,
 .project-playground__comments-trigger:focus-visible,
 .project-playground__document-trigger:focus-visible,
-.project-playground__more-tools-trigger:focus-visible {
+.project-playground__more-tools-trigger:focus-visible,
+.project-playground__section-trigger:focus-visible {
+  outline: 2px solid #0d99ff;
+  outline-offset: 1px;
+}
+
+.project-playground__shapes-trigger:focus-visible {
   outline: 2px solid #0d99ff;
   outline-offset: 1px;
 }
 
 .project-playground__comments-trigger {
   position: relative;
+}
+
+.project-playground__section-trigger img {
+  width: 24px;
+  height: 24px;
+  display: block;
+  transition:
+    filter 140ms ease,
+    transform 140ms ease;
+}
+
+.project-playground__section-trigger[aria-pressed="true"] img {
+  filter: invert(1);
 }
 
 .project-playground__comments-count {
@@ -5960,95 +6415,251 @@ body {
 .project-canvas-shape-library {
   position: fixed;
   z-index: 652;
-  top: 82px;
-  left: 72px;
-  width: min(248px, calc(100vw - 96px));
-  max-height: calc(100dvh - 106px);
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-  overflow: auto;
-  color: var(--project-canvas-text, #172033);
-  border: 1px solid #d0d5dd;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 98%);
-  box-shadow: 0 10px 28px rgb(15 23 42 / 16%);
-  backdrop-filter: blur(20px);
-}
-
-.project-canvas-shape-library__header {
+  /* Clear the 52px main toolbelt instead of overlapping it. */
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
+  left: 50%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.project-canvas-shape-library__header h2,
-.project-canvas-shape-library__section h3,
-.project-canvas-shape-library__empty {
-  margin: 0;
-}
-
-.project-canvas-shape-library__header h2 {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.project-canvas-shape-library .astryx-text-input {
-  width: 100%;
-  color: inherit;
-  border-color: #d0d5dd;
-  background: #f8fafc;
-}
-
-.project-canvas-shape-library input {
-  color: inherit;
-  background: transparent;
+  gap: 0;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  min-height: 40px;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: visible;
+  color: var(--color-on-surface, #202124);
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 3px 8px rgb(0 0 0 / 10%),
+    0 1px 3px rgb(0 0 0 / 10%);
+  transform: translateX(-50%);
 }
 
 .project-canvas-shape-library__section {
+  display: flex;
+  align-items: center;
+}
+
+.project-canvas-shape-library__divider {
+  width: 1px;
+  height: 40px;
+  margin: -8px 6px;
+  background: rgb(0 0 0 / 10%);
+}
+
+.project-canvas-shape-library__grid {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.project-canvas-shape-library__more {
+  height: 24px;
+  margin-left: 6px;
+  padding: 0 9px;
+  color: inherit;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.project-canvas-shape-library__more:hover,
+.project-canvas-shape-library__more[aria-expanded="true"] {
+  background: #f5f5f5;
+}
+
+.project-canvas-more-shapes {
+  position: fixed;
+  z-index: 653;
+  top: 72px;
+  bottom: 12px;
+  left: 12px;
+  width: 240px;
+  max-height: none;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  overflow: auto;
+  box-sizing: border-box;
+  color: var(--color-on-surface, #202124);
+  border: 1px solid rgb(0 0 0 / 12%);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 8px 24px rgb(0 0 0 / 12%),
+    0 2px 6px rgb(0 0 0 / 10%);
+}
+
+.project-canvas-more-shapes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.project-canvas-more-shapes__header strong {
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.project-canvas-more-shapes__header button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  padding: 0;
+  place-items: center;
+  color: inherit;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.project-canvas-more-shapes__header button:hover {
+  background: #f5f5f5;
+}
+
+.project-canvas-more-shapes__search {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  color: inherit;
+  border: 1px solid #9747ff;
+  border-radius: 6px;
+  outline: 0;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.project-canvas-more-shapes__section {
   display: grid;
   gap: 8px;
 }
 
-.project-canvas-shape-library__section h3 {
-  color: #667085;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.project-canvas-shape-library__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.project-canvas-shape-library__tile {
-  min-height: 42px;
-  padding: 8px;
-  color: #344054;
-  border: 1px solid #e4e7ec;
-  border-radius: 8px;
-  background: #fff;
-  font: inherit;
+.project-canvas-more-shapes__section h3 {
+  margin: 0;
   font-size: 12px;
   font-weight: 600;
-  text-align: left;
+}
+
+.project-canvas-more-shapes__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.project-canvas-more-shapes__grid button {
+  width: 42px;
+  height: 38px;
+  display: grid;
+  padding: 0;
+  place-items: center;
+  color: inherit;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   cursor: pointer;
 }
 
-.project-canvas-shape-library__tile:hover {
-  border-color: #b2b8c4;
-  background: #f8fafc;
+.project-canvas-more-shapes__grid button:hover,
+.project-canvas-more-shapes__grid button[aria-current="true"] {
+  background: #f5f5f5;
 }
 
-.project-canvas-shape-library__tile[aria-pressed="true"] {
-  color: #fff;
-  border-color: #9747ff;
-  background: #9747ff;
+.project-canvas-more-shapes__grid button .project-canvas-shape-glyph {
+  width: 20px;
+  height: 20px;
+}
+
+.project-canvas-more-shapes__empty {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.project-canvas-shape-library__tile {
+  width: 32px;
+  height: 24px;
+  display: grid;
+  flex: 0 0 32px;
+  padding: 0;
+  place-items: center;
+  color: inherit;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.project-canvas-shape-glyph {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  isolation: isolate;
+}
+
+.project-canvas-shape-source-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.project-canvas-shape-glyph::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 2px;
+  opacity: 0;
+  background: var(--project-canvas-shape-icon-color, #1e1e1e);
+  transition:
+    opacity 160ms ease,
+    background-color 160ms ease;
+}
+
+.project-canvas-shape-glyph--filled::before {
+  opacity: 1;
+}
+
+.project-canvas-shape-glyph--fill-rectangle::before {
+  border-radius: 2px;
+}
+
+.project-canvas-shape-glyph--fill-rounded-rectangle::before {
+  border-radius: 40%;
+}
+
+.project-canvas-shape-glyph--fill-ellipse::before {
+  border-radius: 50%;
+}
+
+.project-canvas-shape-glyph::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-color: var(--project-canvas-shape-icon-color, #1e1e1e);
+  mask: var(--project-canvas-shape-icon) center / contain no-repeat;
+  -webkit-mask: var(--project-canvas-shape-icon) center / contain no-repeat;
+  transition: background-color 160ms ease;
+}
+
+.project-canvas-shape-library__tile:hover {
+  background: #f5f5f5;
+}
+
+.project-canvas-shape-library__tile[aria-current="true"] {
+  background: #f7f2ff;
+  box-shadow: inset 0 0 0 2px #9747ff;
 }
 
 .project-canvas-shape-library__tile:focus-visible {
@@ -6056,9 +6667,88 @@ body {
   outline-offset: 1px;
 }
 
+.project-canvas-shape-library__color-control {
+  position: relative;
+}
+
+.project-canvas-shape-library__color-trigger,
+.project-canvas-shape-library__color-swatch {
+  width: 40px;
+  height: 24px;
+  display: flex;
+  gap: 4px;
+  padding: 0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.project-canvas-shape-library__color-trigger > span,
+.project-canvas-shape-library__color-swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgb(17 24 39 / 25%);
+  border-radius: 999px;
+  background: var(--shape-color);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);
+}
+
+.project-canvas-shape-library__color-trigger > svg {
+  width: 8px;
+  height: 8px;
+}
+
+.project-canvas-shape-library__color-trigger:hover {
+  background: #f5f5f5;
+}
+
+.project-canvas-shape-library__color-menu {
+  position: absolute;
+  z-index: 653;
+  bottom: 32px;
+  left: -8px;
+  width: max-content;
+  display: grid;
+  grid-template-columns: repeat(8, 24px);
+  gap: 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow:
+    0 0 0.5px rgb(0 0 0 / 18%),
+    0 3px 8px rgb(0 0 0 / 10%),
+    0 1px 3px rgb(0 0 0 / 10%);
+}
+
+.project-canvas-shape-library__color-swatch {
+  width: 24px;
+  height: 24px;
+  transition:
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.project-canvas-shape-library__color-swatch:hover {
+  transform: scale(1.08);
+}
+
+.project-canvas-shape-library__color-swatch[aria-pressed="true"] {
+  outline: 0;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 42%),
+    0 0 0 2px #fff,
+    0 0 0 3px #1e1e1e;
+}
+
 .project-canvas-shape-library__empty {
-  color: #667085;
-  font-size: 13px;
+  margin: 0;
+  padding: 0 10px;
+  color: var(--project-canvas-muted-text, #667085);
+  font-size: 12px;
 }
 
 .project-canvas-tools-catalog {
@@ -6096,8 +6786,7 @@ body {
 .project-canvas-tools-catalog__section h3 {
   margin: 0;
   color: var(--project-canvas-muted-text, #687386);
-  font: 700 11px/1.2
-    var(--reference-font-family, var(--font-family-body));
+  font: 700 11px/1.2 var(--reference-font-family, var(--font-family-body));
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -6105,8 +6794,7 @@ body {
 .project-canvas-tools-catalog__header h2 {
   margin: 5px 0 0;
   color: var(--project-canvas-text, #172033);
-  font: 700 22px/1.15
-    var(--reference-font-family, var(--font-family-body));
+  font: 700 22px/1.15 var(--reference-font-family, var(--font-family-body));
   letter-spacing: -0.025em;
 }
 
@@ -6187,15 +6875,13 @@ body {
 }
 
 .project-canvas-tools-catalog__copy strong {
-  font: 650 14px/1.3
-    var(--reference-font-family, var(--font-family-body));
+  font: 650 14px/1.3 var(--reference-font-family, var(--font-family-body));
 }
 
 .project-canvas-tools-catalog__copy small,
 .project-canvas-tools-catalog__empty {
   color: var(--project-canvas-muted-text, #717b8d);
-  font: 450 12px/1.4
-    var(--reference-font-family, var(--font-family-body));
+  font: 450 12px/1.4 var(--reference-font-family, var(--font-family-body));
 }
 
 .project-canvas-tools-catalog__badge {
@@ -6203,8 +6889,7 @@ body {
   border-radius: 999px;
   color: var(--project-canvas-muted-text, #41506a);
   background: var(--project-canvas-muted-surface, #e9edf4);
-  font: 650 10px/1.3
-    var(--reference-font-family, var(--font-family-body));
+  font: 650 10px/1.3 var(--reference-font-family, var(--font-family-body));
 }
 
 .project-canvas-tools-catalog__empty {
@@ -6217,6 +6902,203 @@ body {
   .excalidraw
   .selected-shape-actions {
   display: none !important;
+}
+
+/* The FigJam Marker strip owns free-draw styling. It should not compete with
+   Excalidraw's selected-object panel; returning to Select restores it. */
+.project-playground__canvas--marker-drawing
+  .excalidraw
+  .selected-shape-actions {
+  display: none !important;
+}
+
+/* Text uses the same compact object toolbar as Sticky notes. Keep
+   Excalidraw's large inspector out of the FigJam-style canvas. */
+.project-playground__canvas--text-tool .excalidraw .selected-shape-actions,
+.project-playground__canvas--text-selection
+  .excalidraw
+  .selected-shape-actions {
+  display: none !important;
+}
+
+.project-canvas-marker-controls {
+  position: fixed;
+  z-index: 654;
+  left: 50%;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px;
+  transform: translateX(-50%);
+  color: #1d1d1f;
+  background: rgb(255 255 255 / 98%);
+  border: 1px solid rgb(17 24 39 / 10%);
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 14%);
+  backdrop-filter: blur(16px);
+}
+
+.project-canvas-marker-controls__tools,
+.project-canvas-marker-controls__weight,
+.project-canvas-marker-controls__swatches {
+  display: flex;
+  align-items: center;
+}
+
+.project-canvas-marker-controls__tool {
+  position: relative;
+  width: 48px;
+  height: 40px;
+  display: flex;
+  padding: 0;
+  overflow: visible;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.project-canvas-marker-controls__tool[aria-pressed="true"],
+.project-canvas-marker-controls__weight-button[aria-pressed="true"] {
+  color: #fff;
+  background: #9747ff;
+}
+
+.project-canvas-marker-controls__tool img {
+  position: absolute;
+  bottom: 0;
+  width: 18px;
+  height: 40px;
+  margin: 0;
+  flex: none;
+  object-fit: contain;
+}
+
+.project-canvas-marker-controls__divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 5px;
+  background: rgb(17 24 39 / 14%);
+}
+
+.project-canvas-marker-controls__weight {
+  gap: 2px;
+}
+
+.project-canvas-marker-controls__weight-button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  padding: 0;
+  cursor: pointer;
+  place-items: center;
+  color: #34353a;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+
+.project-canvas-marker-controls__weight-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.project-canvas-marker-controls__weight-button:disabled,
+.project-canvas-marker-controls__swatch:disabled,
+.project-canvas-marker-controls__custom-color[data-disabled] {
+  cursor: default;
+  opacity: 0.24;
+}
+
+.project-canvas-marker-controls__weight-button:disabled img {
+  filter: grayscale(1);
+}
+
+.project-canvas-marker-controls__weight-button[aria-pressed="true"] img {
+  filter: brightness(0) invert(1);
+}
+
+.project-canvas-marker-controls__swatches {
+  gap: 7px;
+  padding: 0 4px;
+}
+
+.project-canvas-marker-controls__swatch {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  cursor: pointer;
+  background: var(--marker-color);
+  border: 1px solid rgb(17 24 39 / 20%);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%);
+}
+
+.project-canvas-marker-controls__swatch[aria-pressed="true"] {
+  outline: 2px solid #1d1d1f;
+  outline-offset: 3px;
+}
+
+.project-canvas-marker-controls__swatch:disabled[aria-pressed="true"] {
+  outline: 0;
+}
+
+.project-canvas-marker-controls__swatch:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.project-canvas-marker-controls__custom-color {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  cursor: pointer;
+  place-items: center;
+  border: 1px solid rgb(17 24 39 / 24%);
+  border-radius: 999px;
+  background:
+    radial-gradient(50% 50%, #fff 0%, transparent 100%),
+    conic-gradient(
+      #f00,
+      #ffa800 47.73deg,
+      #ff0 79.56deg,
+      #0f0 121.33deg,
+      #0ff 180.99deg,
+      #00f 238.67deg,
+      #f0f 294.36deg,
+      #f00 360deg
+    ),
+    #c4c4c4;
+}
+
+.project-canvas-marker-controls__custom-color input {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px;
+  opacity: 0;
+}
+
+.project-canvas-marker-controls__custom-color
+  input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.project-canvas-marker-controls__custom-color input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 999px;
+}
+
+.project-canvas-marker-controls__tool:focus-visible,
+.project-canvas-marker-controls__weight-button:focus-visible,
+.project-canvas-marker-controls__custom-color:focus-within {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .project-research-frames {
@@ -6257,8 +7139,7 @@ body {
 .project-research-frames__header span,
 .project-research-frames__navigator-heading span {
   color: #687386;
-  font: 700 11px/1.2
-    var(--reference-font-family, var(--font-family-body));
+  font: 700 11px/1.2 var(--reference-font-family, var(--font-family-body));
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -6266,8 +7147,7 @@ body {
 .project-research-frames__header h2 {
   margin: 5px 0 4px;
   color: #172033;
-  font: 700 22px/1.15
-    var(--reference-font-family, var(--font-family-body));
+  font: 700 22px/1.15 var(--reference-font-family, var(--font-family-body));
   letter-spacing: -0.025em;
 }
 
@@ -6275,8 +7155,7 @@ body {
 .project-research-frames__empty {
   margin: 0;
   color: #687386;
-  font: 450 13px/1.45
-    var(--reference-font-family, var(--font-family-body));
+  font: 450 13px/1.45 var(--reference-font-family, var(--font-family-body));
 }
 
 .project-research-frames__presets {
@@ -6328,8 +7207,7 @@ body {
 .project-research-frames__preset strong,
 .project-research-frames__active-frame strong {
   overflow: hidden;
-  font: 650 13px/1.25
-    var(--reference-font-family, var(--font-family-body));
+  font: 650 13px/1.25 var(--reference-font-family, var(--font-family-body));
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6338,8 +7216,7 @@ body {
 .project-research-frames__active-frame small,
 .project-research-frames__navigator-heading small {
   color: #778195;
-  font: 450 11px/1.35
-    var(--reference-font-family, var(--font-family-body));
+  font: 450 11px/1.35 var(--reference-font-family, var(--font-family-body));
 }
 
 .project-research-frames__preset-mark {
@@ -6420,6 +7297,12 @@ body {
   cursor: crosshair;
 }
 
+/* A Section is the native frame creation mode. Keep the board clear while the
+   user draws its bounds; frame details belong to the context that follows. */
+.project-playground__canvas--frame-drawing .excalidraw .selected-shape-actions {
+  display: none !important;
+}
+
 /*
  * Drop affordance. A target that accepts a drop has to say so — without it the
  * only feedback is the item appearing, which is no feedback at all when it does
@@ -6437,96 +7320,64 @@ body {
 }
 
 .project-sticky-note-picker {
-  position: absolute;
-  z-index: 7;
-  top: 136px;
-  right: auto;
-  left: 64px;
-  display: grid;
-  width: 208px;
-  grid-template-columns: repeat(4, 38px);
-  gap: 9px;
-  padding: 12px;
-  border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 14px;
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 98%)
-  );
-  box-shadow:
-    0 14px 36px rgb(15 23 42 / 14%),
-    0 2px 6px rgb(15 23 42 / 8%);
+  position: fixed;
+  z-index: 654;
+  bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid rgb(17 24 39 / 12%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 14%);
   backdrop-filter: blur(16px);
-}
-
-.project-sticky-note-picker__header {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: 2px;
-  padding-bottom: 3px;
-  color: var(--project-canvas-text, #172033);
-}
-
-.project-sticky-note-picker__header strong {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.project-sticky-note-picker__header span {
-  color: var(--project-canvas-muted-text, #6b7280);
-  font-size: 11px;
-  line-height: 1.35;
+  transform: translateX(-50%);
 }
 
 .project-sticky-note-picker__colors {
-  display: contents;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .project-sticky-note-picker__swatch {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--sticky-stroke);
-  border-radius: 2px;
-  background: var(--sticky-fill);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.project-sticky-note-picker__swatch::after {
+.project-sticky-note-picker__swatch::before {
   position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 12px;
-  height: 12px;
-  border-top: 1px solid var(--sticky-stroke);
-  border-left: 1px solid var(--sticky-stroke);
-  background: rgb(255 255 255 / 32%);
+  inset: 5px;
+  border: 1px solid var(--sticky-stroke);
+  border-radius: 999px;
+  background: var(--sticky-fill);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 25%);
   content: "";
-  clip-path: polygon(100% 0, 0 100%, 100% 100%);
 }
 
 .project-sticky-note-picker__swatch:hover {
-  z-index: 1;
-  box-shadow: 0 5px 12px rgb(15 23 42 / 17%);
-  transform: translateY(-2px);
+  transform: scale(1.08);
+}
+
+.project-sticky-note-picker__swatch[aria-checked="true"] {
+  box-shadow: 0 0 0 2px #9747ff;
 }
 
 .project-sticky-note-picker__swatch:focus-visible {
   outline: 2px solid var(--color-primary, #2563eb);
   outline-offset: 2px;
-}
-
-.project-sticky-note-picker__actions {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: 6px;
-  padding-top: 4px;
 }
 
 .project-sticky-note-placement-hint {
@@ -6711,11 +7562,6 @@ body {
   font-size: 10px;
 }
 
-.project-sticky-note-picker__actions .astryx-button {
-  width: 100%;
-  justify-content: center;
-}
-
 .project-sticky-note-composer {
   position: absolute;
   z-index: 11;
@@ -6742,13 +7588,13 @@ body {
 .project-sticky-note-toolbar {
   position: absolute;
   z-index: 12;
-  top: -60px;
+  top: -56px;
   left: 50%;
-  min-height: 48px;
+  min-height: 42px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px;
+  gap: 2px;
+  padding: 4px 6px;
   border: 1px solid rgb(15 23 42 / 10%);
   border-radius: 12px;
   background: var(
@@ -6773,23 +7619,14 @@ body {
 
 .project-playground > .project-sticky-note-toolbar {
   position: absolute;
-  transform: none;
-}
-
-.project-sticky-note-toolbar__identity {
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 9px;
-  color: var(--project-canvas-text, #30394a);
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.project-sticky-note-toolbar__identity svg {
-  width: 17px;
-  height: 17px;
+  top: var(--project-object-toolbar-top);
+  left: clamp(
+    184px,
+    var(--project-object-toolbar-anchor-x),
+    calc(100vw - 184px)
+  );
+  max-width: calc(100vw - 24px);
+  transform: translateX(-50%);
 }
 
 .project-sticky-note-toolbar__divider {
@@ -6802,7 +7639,7 @@ body {
 .project-sticky-note-toolbar .astryx-button {
   min-width: 34px;
   height: 34px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: 8px !important;
   font-size: 13px;
 }
@@ -6815,29 +7652,17 @@ body {
 }
 
 .project-sticky-note-toolbar__dropdown-trigger {
-  width: 82px;
+  width: 64px;
 }
 
 .project-sticky-note-toolbar__size-trigger {
-  width: 66px;
+  width: 52px;
 }
 
-.project-sticky-note-toolbar__alignment {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 9px;
-  background: var(--project-canvas-muted-surface, #f3f5f8);
+.project-sticky-note-toolbar__align-trigger {
+  width: 64px;
 }
 
-.project-sticky-note-toolbar__align-button {
-  min-width: 48px !important;
-  padding: 0 8px !important;
-  color: var(--project-canvas-text, #30394a) !important;
-  opacity: 1 !important;
-}
-
-.project-sticky-note-toolbar__alignment .astryx-button.primary,
 .project-sticky-note-toolbar__lock-trigger[aria-pressed="true"],
 .project-sticky-note-toolbar__icon-trigger[aria-pressed="true"],
 .project-sticky-note-toolbar__icon-trigger.primary {
@@ -6847,7 +7672,7 @@ body {
 
 .project-sticky-note-toolbar__link-trigger,
 .project-sticky-note-toolbar__lock-trigger {
-  min-width: 54px !important;
+  min-width: 48px !important;
   color: var(--project-canvas-text, #30394a) !important;
   opacity: 1 !important;
 }
@@ -6943,6 +7768,28 @@ body {
 .project-sticky-note-toolbar__panel-control {
   position: relative;
   display: inline-flex;
+}
+
+.project-sticky-note-toolbar__more-control {
+  position: relative;
+  display: inline-flex;
+}
+
+.project-sticky-note-toolbar__more-panel {
+  position: absolute;
+  z-index: 14;
+  top: 42px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid rgb(15 23 42 / 10%);
+  border-radius: 10px;
+  background: var(--project-canvas-surface, #fff);
+  box-shadow:
+    0 14px 38px rgb(15 23 42 / 16%),
+    0 2px 7px rgb(15 23 42 / 8%);
 }
 
 .project-sticky-note-toolbar__count {
@@ -7961,6 +8808,27 @@ body {
   mask: url("./assets/figjam-select-tool.svg") center / contain no-repeat;
 }
 
+/* The hand tool uses the exact FigJam pan glyph while Excalidraw retains H. */
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-hand"])
+  .ToolIcon__icon
+  > svg {
+  display: none;
+}
+
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-hand"])
+  .ToolIcon__icon::before {
+  width: 20px;
+  height: 20px;
+  display: block;
+  content: "";
+  background: currentColor;
+  mask: url("./assets/figjam-hand-tool.svg") center / contain no-repeat;
+}
+
 /* The free-draw tool uses AFFiNE's physical Pen asset while retaining Excalidraw's draw action. */
 .project-playground__canvas
   .excalidraw
@@ -7978,16 +8846,181 @@ body {
   height: 34px;
   display: block;
   content: "";
-  background: url("./assets/figjam-marker-tool.svg") center / contain no-repeat;
+  background: var(
+      --canvas-marker-tool-icon,
+      url("./assets/figjam-marker-tool.svg")
+    )
+    center / contain no-repeat;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 18%));
+  transform-origin: 50% 72%;
+  transition:
+    filter 140ms ease-out,
+    transform 140ms ease-out;
+}
+
+/* The primary Draw slot is a live preview of the active FigJam-style tool,
+   rather than a permanent marker glyph. */
+.project-playground__canvas--highlighter-drawing
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  width: 16px;
+  height: 32px;
+  background-image: var(
+    --canvas-highlighter-tool-icon,
+    url("./assets/figjam-highlighter-tool.svg")
+  );
+}
+
+.project-playground__canvas--eraser-drawing
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon {
+  --icon-fill-color: #fff;
+  color: #fff !important;
+  background: #9747ff !important;
+}
+
+.project-playground__canvas--eraser-drawing
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  width: 16px;
+  height: 32px;
+  display: block;
+  content: "";
+  background: url("./assets/figjam-eraser-tool.svg") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 18%));
+}
+
+/* Changing drawing modes swaps a real source asset. Give that swap one short
+   settle animation so the shared slot reads as one continuous control. */
+.project-playground__canvas[data-marker-mode="marker"]
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  animation: project-canvas-marker-preview-in 140ms ease-out both;
+}
+
+.project-playground__canvas[data-marker-mode="highlighter"]
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  animation: project-canvas-highlighter-preview-in 140ms ease-out both;
+}
+
+.project-playground__canvas[data-marker-mode="eraser"]
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before {
+  animation: project-canvas-eraser-preview-in 140ms ease-out both;
+}
+
+.project-playground__canvas[data-marker-color-transition="a"]
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before,
+.project-canvas-marker-controls[data-marker-color-transition="a"]
+  .project-canvas-marker-controls__tool[aria-pressed="true"]
+  img {
+  animation: project-canvas-tool-color-preview-in-a 180ms ease-out both;
+}
+
+.project-playground__canvas[data-marker-color-transition="b"]
+  .excalidraw
+  label:has(input[data-testid="toolbar-freedraw"])
+  .ToolIcon__icon::before,
+.project-canvas-marker-controls[data-marker-color-transition="b"]
+  .project-canvas-marker-controls__tool[aria-pressed="true"]
+  img {
+  animation: project-canvas-tool-color-preview-in-b 180ms ease-out both;
+}
+
+@keyframes project-canvas-tool-color-preview-in-a {
+  from {
+    opacity: 0.48;
+    transform: scale(0.84) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes project-canvas-tool-color-preview-in-b {
+  from {
+    opacity: 0.48;
+    transform: scale(0.84) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes project-canvas-marker-preview-in {
+  from {
+    opacity: 0.55;
+    transform: scale(0.88) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes project-canvas-highlighter-preview-in {
+  from {
+    opacity: 0.55;
+    transform: scale(0.88) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes project-canvas-eraser-preview-in {
+  from {
+    opacity: 0.55;
+    transform: scale(0.88) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-playground__canvas
+    .excalidraw
+    label:has(input[data-testid="toolbar-freedraw"])
+    .ToolIcon__icon::before {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Eraser remains available in the shared Draw controls. The native button
+   would duplicate it and make the toolbar's active-tool preview ambiguous. */
+.project-playground__canvas
+  .excalidraw
+  label:has(input[data-testid="toolbar-eraser"]) {
+  display: none;
 }
 
 .project-playground__astryx-tools button {
   color: #1d1d1f !important;
 }
 
-.project-playground__canvas .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon,
-.project-playground__canvas .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon {
+.project-playground__canvas
+  .excalidraw
+  .ToolIcon_type_radio:checked
+  + .ToolIcon__icon,
+.project-playground__canvas
+  .excalidraw
+  .ToolIcon_type_checkbox:checked
+  + .ToolIcon__icon {
   --icon-fill-color: #fff;
   color: #fff !important;
   background: #9747ff !important;
@@ -7997,7 +9030,8 @@ body {
 .project-playground__sticky-trigger[aria-pressed="true"],
 .project-playground__comments-trigger[aria-pressed="true"],
 .project-playground__document-trigger[aria-pressed="true"],
-.project-playground__more-tools-trigger[aria-pressed="true"] {
+.project-playground__more-tools-trigger[aria-pressed="true"],
+.project-playground__section-trigger[aria-pressed="true"] {
   color: #fff !important;
   background: #9747ff !important;
 }
@@ -8007,34 +9041,33 @@ body {
   background: #e5e7eb;
 }
 
-
 .project-playground__canvas .excalidraw .layer-ui__wrapper__footer-left {
   display: contents;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions {
   position: fixed;
-  right: 56px;
-  bottom: 8px;
-  width: 180px;
-  height: 48px;
-  min-height: 48px;
+  right: 52px;
+  bottom: var(--project-canvas-toolbelt-bottom, 64px);
+  width: 80px;
+  height: 40px;
+  min-height: 40px;
   padding: 0;
   gap: 0 !important;
+  overflow: hidden;
   border-right: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 98%)
-  );
+  border-radius: 11px 0 0 11px;
+  box-shadow:
+    -3px 2px 6px var(--project-canvas-border, rgb(17 24 39 / 10%)),
+    -6px 8px 22px var(--project-canvas-border, rgb(17 24 39 / 10%));
+  background: #fff;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions > .Stack_horizontal {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 44px minmax(92px, 1fr) 44px;
+  grid-template-columns: repeat(2, 40px);
   gap: 0;
   align-items: stretch !important;
 }
@@ -8042,7 +9075,9 @@ body {
 .project-playground__canvas .excalidraw .zoom-actions .zoom-button,
 .project-playground__canvas .excalidraw .zoom-actions .ToolIcon__icon {
   width: 100%;
-  height: 48px;
+  height: 40px;
+  color: #1d1d1f !important;
+  background: #fff !important;
 }
 
 .project-playground__canvas
@@ -8054,11 +9089,22 @@ body {
 }
 
 .project-playground__canvas .excalidraw .zoom-actions .zoom-button {
-  background: transparent !important;
+  background: #fff !important;
+}
+
+.project-playground__canvas .excalidraw .zoom-actions .zoom-in-button {
+  border-left: 1px solid #e5e7eb !important;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions .reset-zoom-button {
-  width: 100% !important;
+  display: none !important;
+}
+
+.project-playground__canvas
+  .excalidraw
+  .zoom-actions
+  .excalidraw-tooltip-wrapper:has(.reset-zoom-button) {
+  display: none !important;
 }
 
 .project-playground__canvas .excalidraw .zoom-actions .zoom-button:hover,
@@ -8080,7 +9126,7 @@ body {
   left: auto;
   width: 96px;
   height: 48px;
-  display: grid;
+  display: none !important;
   grid-auto-flow: column;
   grid-template-columns: repeat(2, 48px);
   grid-template-rows: 48px;
@@ -8171,16 +9217,13 @@ body {
 
 .project-playground__canvas .excalidraw .layer-ui__wrapper__footer-right {
   position: fixed;
-  right: 8px;
-  bottom: 8px;
-  width: 48px;
-  height: 48px;
-  background: var(
-    --project-canvas-surface-translucent-strong,
-    rgb(255 255 255 / 97%)
-  );
+  right: 12px;
+  bottom: var(--project-canvas-toolbelt-bottom, 64px);
+  width: 40px;
+  height: 40px;
+  background: #fff;
   border: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 0 11px 11px 0;
+  border-radius: 0 10px 10px 0;
   box-shadow:
     6px 8px 22px var(--project-canvas-border, rgb(17 24 39 / 10%)),
     3px 2px 6px var(--project-canvas-border, rgb(17 24 39 / 10%));
@@ -8190,13 +9233,13 @@ body {
   .excalidraw
   .layer-ui__wrapper__footer-right
   .help-icon {
-  width: 47px;
-  height: 46px;
+  width: 39px;
+  height: 38px;
   border: 0;
   border-left: 1px solid var(--project-canvas-border, rgb(17 24 39 / 10%));
-  border-radius: 0 10px 10px 0;
-  background: transparent;
-  color: var(--project-canvas-text, #202124);
+  border-radius: 0 9px 9px 0;
+  background: #fff;
+  color: #1d1d1f;
 }
 
 .project-playground__mobile-viewport-controls {
@@ -8460,7 +9503,6 @@ body {
   transition: opacity var(--vitrine-transition-fast);
 }
 
-
 .project-screen-library__preview {
   position: relative;
   height: 122px;
@@ -8527,8 +9569,13 @@ body {
   max-width: calc(100% - 88px);
   overflow: hidden;
   color: var(--project-canvas-overlay-text, #fff);
-  background: color-mix(in srgb, var(--project-canvas-ink, #101216) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--project-canvas-surface, #fff) 18%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--project-canvas-ink, #101216) 72%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--project-canvas-surface, #fff) 18%, transparent);
   border-radius: 999px;
   box-shadow: 0 2px 10px rgb(0 0 0 / 20%);
   line-height: 1.2;
@@ -8551,7 +9598,8 @@ body {
 }
 
 .project-screen-library__card--screen:hover .project-screen-library__place-hint,
-.project-screen-library__card--screen:focus-visible .project-screen-library__place-hint {
+.project-screen-library__card--screen:focus-visible
+  .project-screen-library__place-hint {
   opacity: 1;
   transform: translateY(0);
 }
@@ -9104,7 +10152,7 @@ body {
     max-width: calc(100% - 80px);
   }
 
-  .project-canvas-header__identity > span {
+  .project-canvas-header__identity > span:first-child {
     display: none;
   }
 
@@ -9415,8 +10463,8 @@ body {
   }
 
   .project-sticky-note-picker {
-    top: 148px;
-    right: 8px;
+    bottom: calc(var(--project-canvas-toolbelt-bottom, 64px) + 60px);
+    left: 50%;
   }
 
   .project-sticky-note-placement-hint {
@@ -9429,7 +10477,7 @@ body {
   }
 
   .project-playground__canvas .excalidraw .zoom-actions {
-    width: 180px;
+    width: 96px;
   }
 
   .project-sticky-note-composer {
@@ -12170,7 +13218,9 @@ body {
   gap: 8px;
   flex: 0 0 auto;
   margin-left: auto;
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
 @media (hover: hover) and (pointer: fine) {

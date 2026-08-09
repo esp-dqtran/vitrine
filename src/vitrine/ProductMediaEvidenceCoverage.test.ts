@@ -20,21 +20,20 @@ test('screen evidence consumers request the best available source', () => {
   const publicPreview = read('./components/PublicAppPreviewPage.tsx');
 
   assert.match(screenCard, /preferFullImage/);
-  assert.match(screenCard, /preserveNaturalAspectRatio/);
+  assert.match(screenCard, /preserveNaturalAspectRatio=\{screen\.platform !== 'web'\}/);
   assert.match(appsDiscovery, /src=\{screen\.url\}/);
-  assert.match(projectLibrary, /src=\{screen\.url\}/);
+  assert.match(projectLibrary, /src=\{screen\.thumbnailUrl \?\? screen\.url\}/);
   assert.match(publicPreview, /src=\{screen\.url\}/);
 });
 
-test('flow and dialog evidence use contain fit on every platform', () => {
+test('web flow evidence fills its frame while non-web evidence stays contained', () => {
   const flowCard = read('./components/FlowCard.tsx');
   const flowDialog = read('./components/FlowPreviewDialog.tsx');
   const screenDialog = read('./components/ScreenPreviewDialog.tsx');
   const dialogCss = read('./flowPreviewDialog.css');
 
-  assert.doesNotMatch(flowCard, /objectFit: platform === 'web' \? 'contain' : 'cover'/);
+  assert.match(flowCard, /objectFit: platform === 'web' \? 'cover' : 'contain'/);
   assert.doesNotMatch(flowDialog, /objectFit: platform === 'web' \? 'contain' : 'cover'/);
   assert.doesNotMatch(screenDialog, /objectFit: 'cover'/);
-  assert.match(dialogCss, /\.flow-preview-dialog__screen > img[\s\S]*object-fit: contain/);
-  assert.doesNotMatch(dialogCss, /\.flow-preview-dialog__screen > img[\s\S]{0,160}object-fit: cover/);
+  assert.match(dialogCss, /\.flow-preview-dialog--web \.flow-preview-dialog__screen > img[\s\S]*object-fit: cover/);
 });

@@ -6,9 +6,16 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { apiFetch } from '../apiFetch.ts';
+import { apiFetch } from "../apiFetch.ts";
 import { createPortal } from "react-dom";
-import { Button, Icon, IconButton, TextInput, type IconName } from "@astryxdesign/core";
+import {
+  Button,
+  Icon,
+  IconButton,
+  TextInput,
+  type IconName,
+} from "@astryxdesign/core";
+import { ChevronSmallDownIcon } from "@storybook/icons";
 import {
   convertToExcalidrawElements,
   Excalidraw,
@@ -34,7 +41,10 @@ import type {
 } from "@excalidraw/excalidraw/element/types";
 import "@excalidraw/excalidraw/index.css";
 
-import type { ResearchProjectItem, ResearchProjectWorkspace } from "../../researchProject.ts";
+import type {
+  ResearchProjectItem,
+  ResearchProjectWorkspace,
+} from "../../researchProject.ts";
 import {
   normalizeDesignerCanvasComments,
   type DesignerCanvasCommentThread,
@@ -59,7 +69,6 @@ import {
 } from "../designerCanvasCollaboration.ts";
 import { uploadProjectCanvasAsset } from "../projectCanvasAssets.ts";
 import { navigate } from "../router.ts";
-import { useResolvedThemeMode } from "../theme.tsx";
 import { ProjectAccessButton } from "./ProjectAccessDialog.tsx";
 import { useApplicationToast } from "./ApplicationToast.tsx";
 import {
@@ -67,7 +76,10 @@ import {
   ProjectCanvasCommentPanel,
   ProjectCanvasCommentPin,
 } from "./ProjectCanvasComments.tsx";
-import { ProjectReferencePanel, type ProjectReferenceState } from "./ProjectReferencePanel.tsx";
+import {
+  ProjectReferencePanel,
+  type ProjectReferenceState,
+} from "./ProjectReferencePanel.tsx";
 import {
   catalogDragMimeType,
   ProjectScreenLibrary,
@@ -80,6 +92,7 @@ import {
   type ProjectCanvasDocumentTemplateId,
 } from "./ProjectCanvasDocumentEditor.tsx";
 import {
+  defaultProjectStickyNoteColor,
   projectStickyNoteColors,
   ProjectStickyNotePicker,
   StickyNoteGlyph,
@@ -91,7 +104,7 @@ import {
   normalizeProjectStickyNoteCollaboration,
   projectStickyNoteFontFamilies,
   ProjectStickyNoteMetadata,
-  ProjectStickyNoteToolbar,
+  ProjectObjectToolbar,
   type ProjectStickyNoteCollaboration,
   type ProjectStickyNoteFormat,
 } from "./ProjectStickyNoteToolbar.tsx";
@@ -105,13 +118,34 @@ import {
   type ProjectResearchFramePreset,
   type ProjectResearchFrameType,
 } from "./ProjectResearchFramePicker.tsx";
+import eraserToolIcon from "../assets/figjam-eraser-tool.svg";
+import highlighterToolIconSource from "../assets/figjam-highlighter-tool.svg?raw";
+import markerToolIconSource from "../assets/figjam-marker-tool.svg?raw";
+import thickStrokeIcon from "../assets/figjam-thick-stroke.svg";
+import thinStrokeIcon from "../assets/figjam-thin-stroke.svg";
+import figjamBentConnectorIcon from "../assets/figjam-bent-connector.svg";
+import figjamCurvedConnectorIcon from "../assets/figjam-curved-connector.svg";
+import figjamConnectorIcon from "../assets/figjam-connector.svg";
+import figjamConnectorNoEndpointsIcon from "../assets/figjam-connector-no-endpoints.svg";
+import figjamSquareIcon from "../assets/figjam-square.svg";
+import figjamEllipseIcon from "../assets/figjam-ellipse.svg";
+import figjamDiamondIcon from "../assets/figjam-diamond.svg";
+import figjamRoundedRectangleIcon from "../assets/figjam-rounded-rectangle.svg";
+import figjamTriangleIcon from "../assets/figjam-triangle.svg";
+import figjamDownTriangleIcon from "../assets/figjam-down-triangle.svg";
+import figjamCylinderIcon from "../assets/figjam-cylinder.svg";
+import figjamMindMapIcon from "../assets/figjam-mind-map.svg";
+import figjamSectionToolIcon from "../assets/figjam-section-tool.svg";
 
-const canvasMediaMimeTypeSet = new Set(["image/png", "image/jpeg", "image/webp"]);
+const canvasMediaMimeTypeSet = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+]);
 const canvasSource = "https://astryx.design";
-// Excalidraw applies its own dark-mode filter to the drawing layers. Keeping the
-// stored scene neutral lets that filter render the correct dark canvas without
-// changing a shared document when one collaborator changes their UI theme.
+// Keep the rendered board opaque so Excalidraw can composite every scene element.
 const canvasSceneBackground = "#f7f8fa";
+const canvasTheme: "light" = "light";
 const stickyNoteSize = 240;
 const canvasDocumentWidth = 760;
 const canvasDocumentHeight = 1_080;
@@ -129,25 +163,33 @@ const canvasCollaborationColors = [
   { background: "#0284c7", stroke: "#03699c" },
 ] as const;
 
-type ElementSkeleton = NonNullable<Parameters<typeof convertToExcalidrawElements>[0]>[number];
+type ElementSkeleton = NonNullable<
+  Parameters<typeof convertToExcalidrawElements>[0]
+>[number];
 type StickyPlacementMode = "single" | "stack";
-type CanvasPointerUpdate = Parameters<NonNullable<ExcalidrawProps["onPointerUpdate"]>>[0];
+type CanvasPointerUpdate = Parameters<
+  NonNullable<ExcalidrawProps["onPointerUpdate"]>
+>[0];
 
 function canvasCollaboratorColor(identity: string) {
   let hash = 0;
   for (const character of identity) {
     hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
   }
-  return canvasCollaborationColors[Math.abs(hash) % canvasCollaborationColors.length];
+  return canvasCollaborationColors[
+    Math.abs(hash) % canvasCollaborationColors.length
+  ];
 }
 
 function canvasCollaboratorInitials(name: string): string {
-  return name
-    .split(/[@\s._-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "?";
+  return (
+    name
+      .split(/[@\s._-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "?"
+  );
 }
 
 interface StickyPlacement {
@@ -167,9 +209,10 @@ function stickyNotePlacementCursor(
   color: ProjectStickyNoteColor,
   mode: StickyPlacementMode,
 ): string {
-  const stack = mode === "stack"
-    ? `<path d="M8 5h17v17H8z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" opacity=".55"/>`
-    : "";
+  const stack =
+    mode === "stack"
+      ? `<path d="M8 5h17v17H8z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" opacity=".55"/>`
+      : "";
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">${stack}<path d="M5 8h19v13l-6 6H5z" fill="${color.fill}" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 27v-6h6" fill="none" stroke="${color.stroke}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="5" cy="8" r="2.5" fill="#2563eb" stroke="#fff" stroke-width="1.5"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 5 8, crosshair`;
 }
@@ -191,20 +234,225 @@ type CanvasShapeTool = Extract<
   ToolType,
   "rectangle" | "ellipse" | "diamond" | "line" | "arrow"
 >;
+type CanvasShapeOptionId =
+  | "bent-connector"
+  | "curved-connector"
+  | "connector"
+  | "line"
+  | "rectangle"
+  | "ellipse"
+  | "diamond"
+  | "rounded-rectangle"
+  | "triangle"
+  | "down-triangle"
+  | "cylinder"
+  | "mind-map";
+
+type CanvasCustomShapeId = Extract<
+  CanvasShapeOptionId,
+  "triangle" | "down-triangle" | "cylinder" | "mind-map"
+>;
 
 interface CanvasShapeOption {
-  tool: CanvasShapeTool;
+  id: CanvasShapeOptionId;
+  tool?: CanvasShapeTool;
+  customShape?: CanvasCustomShapeId;
   label: string;
-  group: "Connections" | "Basic";
+  group: "Connectors" | "Basic";
+  icon: string;
+  glyphFill?: "rectangle" | "rounded-rectangle" | "ellipse";
+  arrowType?: "round" | "sharp" | "elbow";
+  roundness?: "round" | "sharp";
 }
 
+interface CanvasMarkerColor {
+  label: string;
+  value: string;
+}
+
+type CanvasMarkerMode = "marker" | "highlighter" | "washi" | "eraser";
+type CanvasMarkerStrokeWeight = "thin" | "thick";
+
 const canvasShapeOptions: readonly CanvasShapeOption[] = [
-  { tool: "arrow", label: "Arrow", group: "Connections" },
-  { tool: "line", label: "Line", group: "Connections" },
-  { tool: "rectangle", label: "Rectangle", group: "Basic" },
-  { tool: "ellipse", label: "Ellipse", group: "Basic" },
-  { tool: "diamond", label: "Diamond", group: "Basic" },
+  {
+    id: "bent-connector",
+    tool: "arrow",
+    label: "Bent connector",
+    group: "Connectors",
+    icon: figjamBentConnectorIcon,
+    arrowType: "elbow",
+    roundness: "sharp",
+  },
+  {
+    id: "curved-connector",
+    tool: "arrow",
+    label: "Curved connector",
+    group: "Connectors",
+    icon: figjamCurvedConnectorIcon,
+    arrowType: "round",
+    roundness: "round",
+  },
+  {
+    id: "connector",
+    tool: "arrow",
+    label: "Arrow",
+    group: "Connectors",
+    icon: figjamConnectorIcon,
+    arrowType: "sharp",
+    roundness: "sharp",
+  },
+  {
+    id: "line",
+    tool: "line",
+    label: "Connector, no endpoints",
+    group: "Connectors",
+    icon: figjamConnectorNoEndpointsIcon,
+    roundness: "sharp",
+  },
+  {
+    id: "rectangle",
+    tool: "rectangle",
+    label: "Rectangle",
+    group: "Basic",
+    icon: figjamSquareIcon,
+    glyphFill: "rectangle",
+    roundness: "sharp",
+  },
+  {
+    id: "ellipse",
+    tool: "ellipse",
+    label: "Circle",
+    group: "Basic",
+    icon: figjamEllipseIcon,
+    glyphFill: "ellipse",
+    roundness: "round",
+  },
+  {
+    id: "diamond",
+    tool: "diamond",
+    label: "Diamond",
+    group: "Basic",
+    icon: figjamDiamondIcon,
+    roundness: "sharp",
+  },
+  {
+    id: "rounded-rectangle",
+    tool: "rectangle",
+    label: "Rounded rectangle",
+    group: "Basic",
+    icon: figjamRoundedRectangleIcon,
+    glyphFill: "rounded-rectangle",
+    roundness: "round",
+  },
+  {
+    id: "triangle",
+    customShape: "triangle",
+    label: "Triangle",
+    group: "Basic",
+    icon: figjamTriangleIcon,
+  },
+  {
+    id: "down-triangle",
+    customShape: "down-triangle",
+    label: "Down triangle",
+    group: "Basic",
+    icon: figjamDownTriangleIcon,
+  },
+  {
+    id: "cylinder",
+    customShape: "cylinder",
+    label: "Cylinder",
+    group: "Basic",
+    icon: figjamCylinderIcon,
+  },
+  {
+    id: "mind-map",
+    customShape: "mind-map",
+    label: "Mind map",
+    group: "Connectors",
+    icon: figjamMindMapIcon,
+  },
 ];
+
+const canvasShapePreviewOptions = {
+  rectangle: canvasShapeOptions[4],
+  connector: canvasShapeOptions[2],
+  ellipse: canvasShapeOptions[5],
+} as const;
+
+/* FigJam's Marker palette, kept as named source colours so the custom strip
+   remains a direct control for Excalidraw's free-draw tool. */
+const canvasFigJamYellow = "#ffee00";
+
+const canvasMarkerColors: readonly CanvasMarkerColor[] = [
+  { label: "Black", value: "#1e1e1e" },
+  { label: "Red", value: "#f24822" },
+  { label: "Orange", value: "#ff9e0d" },
+  { label: "Yellow", value: canvasFigJamYellow },
+  { label: "Green", value: "#14ae5c" },
+  { label: "Blue", value: "#0d99ff" },
+  { label: "Violet", value: "#9747ff" },
+  { label: "White", value: "#ffffff" },
+];
+
+const canvasShapeColors = canvasMarkerColors;
+
+/* The object toolbar uses the same exact source colours as the Canvas tools,
+   so a text object's swatch and its rendered ink never drift apart. */
+const canvasTextColors: readonly ProjectStickyNoteColor[] =
+  canvasMarkerColors.map(({ label, value }) => ({
+    id: `text-${label.toLowerCase()}`,
+    name: label.toLowerCase(),
+    fill: value,
+    stroke: value,
+    text: value,
+  }));
+
+const canvasHighlighterColors: readonly CanvasMarkerColor[] = [
+  { label: "Gray", value: "#979797" },
+  { label: "Pink", value: "#ff99f8" },
+  { label: "Peach", value: "#ffae4f" },
+  { label: "Yellow", value: canvasFigJamYellow },
+  { label: "Lime", value: "#86fa16" },
+  { label: "Aqua", value: "#6ffff6" },
+  { label: "Lavender", value: "#b38fff" },
+  { label: "White", value: "#ffffff" },
+];
+
+function canvasMarkerStrokeWidth(
+  mode: CanvasMarkerMode,
+  weight: CanvasMarkerStrokeWeight,
+): number {
+  if (mode === "highlighter") return weight === "thin" ? 8 : 16;
+  if (mode === "washi") return weight === "thin" ? 12 : 20;
+  return weight === "thin" ? 2 : 4;
+}
+
+function canvasMarkerOpacity(mode: CanvasMarkerMode): number {
+  // The toolbar previews show the selected swatch at full strength. Keep the
+  // rendered stroke fully opaque too, so a chosen color is identical in the
+  // tool, swatch, and on-canvas mark.
+  if (mode === "highlighter") return 100;
+  if (mode === "washi") return 70;
+  return 100;
+}
+
+function coloredFigJamFreehandToolIcon(
+  mode: CanvasMarkerMode,
+  color: string,
+): string {
+  if (mode === "eraser") return eraserToolIcon;
+  const source =
+    mode === "highlighter"
+      ? highlighterToolIconSource.replaceAll("rgba(255, 238, 0, 1)", color)
+      : markerToolIconSource.replace("rgba(30, 30, 30, 1)", color);
+  // Figma's copied highlighter omits the namespace because it lives inside an
+  // HTML document. Add it before using the fragment as a standalone SVG image.
+  const standaloneSource = source.includes('xmlns="http://www.w3.org/2000/svg"')
+    ? source
+    : source.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+  return `data:image/svg+xml,${encodeURIComponent(standaloneSource)}`;
+}
 
 interface ProjectCanvasToolCatalogItem {
   tool: Exclude<ProjectCanvasTool, "more">;
@@ -253,7 +501,10 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
   },
 ];
 
-const projectCanvasToolIcons: Record<Exclude<ProjectCanvasTool, "sticky" | "comments">, IconName> = {
+const projectCanvasToolIcons: Record<
+  Exclude<ProjectCanvasTool, "sticky" | "comments">,
+  IconName
+> = {
   "research-frames": "viewColumns",
   screens: "viewColumns",
   document: "copy",
@@ -261,10 +512,203 @@ const projectCanvasToolIcons: Record<Exclude<ProjectCanvasTool, "sticky" | "comm
   more: "moreHorizontal",
 };
 
-function ProjectCanvasToolGlyph({ tool }: { tool: ProjectCanvasTool }) {
-  if (tool === "sticky") return <StickyNoteGlyph />;
+function ProjectCanvasToolGlyph({
+  tool,
+  stickyColor,
+}: {
+  tool: ProjectCanvasTool;
+  stickyColor?: ProjectStickyNoteColor;
+}) {
+  if (tool === "sticky") return <StickyNoteGlyph color={stickyColor} />;
   if (tool === "comments") return <ProjectCanvasCommentGlyph />;
   return <Icon icon={projectCanvasToolIcons[tool]} size="sm" />;
+}
+
+function CanvasShapeGlyph({
+  icon,
+  color,
+  className,
+  fill,
+}: {
+  icon: string;
+  color?: string;
+  className?: string;
+  fill?: CanvasShapeOption["glyphFill"];
+}) {
+  return (
+    <span
+      className={`project-canvas-shape-glyph${fill ? ` project-canvas-shape-glyph--filled project-canvas-shape-glyph--fill-${fill}` : ""}${className ? ` ${className}` : ""}`}
+      style={
+        {
+          "--project-canvas-shape-icon": `url("${icon}")`,
+          "--project-canvas-shape-icon-color": color ?? "#1e1e1e",
+        } as CSSProperties
+      }
+      aria-hidden="true"
+    />
+  );
+}
+
+function CanvasShapesCollageGlyph({ color }: { color: string }) {
+  return (
+    <span className="project-canvas-shapes-collage" aria-hidden="true">
+      <img
+        src={canvasShapePreviewOptions.rectangle.icon}
+        alt=""
+        className="project-canvas-shapes-collage__rectangle"
+      />
+      <CanvasShapeGlyph
+        icon={canvasShapePreviewOptions.connector.icon}
+        color={color}
+        className="project-canvas-shapes-collage__connector"
+      />
+      <img
+        src={canvasShapePreviewOptions.ellipse.icon}
+        alt=""
+        className="project-canvas-shapes-collage__ellipse"
+      />
+    </span>
+  );
+}
+
+function ShapeLibraryGlyph({ shape }: { shape: CanvasShapeOption }) {
+  return (
+    <img
+      src={shape.icon}
+      alt=""
+      className="project-canvas-shape-source-icon"
+      aria-hidden="true"
+    />
+  );
+}
+
+function createCanvasCustomShapeElements({
+  shape,
+  x,
+  y,
+  color,
+}: {
+  shape: CanvasShapeOption;
+  x: number;
+  y: number;
+  color: string;
+}): ExcalidrawElement[] {
+  const common = {
+    strokeColor: color,
+    strokeWidth: 2,
+    roughness: 0,
+  } as const;
+
+  switch (shape.customShape) {
+    case "triangle":
+      return convertToExcalidrawElements([
+        {
+          type: "line",
+          x: x - 80,
+          y: y - 60,
+          points: [
+            [0, 120],
+            [80, 0],
+            [160, 120],
+            [0, 120],
+          ],
+          ...common,
+        } as ElementSkeleton,
+      ]) as ExcalidrawElement[];
+    case "down-triangle":
+      return convertToExcalidrawElements([
+        {
+          type: "line",
+          x: x - 80,
+          y: y - 60,
+          points: [
+            [0, 0],
+            [160, 0],
+            [80, 120],
+            [0, 0],
+          ],
+          ...common,
+        } as ElementSkeleton,
+      ]) as ExcalidrawElement[];
+    case "cylinder":
+      return convertToExcalidrawElements([
+        {
+          type: "rectangle",
+          x: x - 72,
+          y: y - 44,
+          width: 144,
+          height: 88,
+          backgroundColor: "transparent",
+          fillStyle: "solid",
+          ...common,
+        } as ElementSkeleton,
+        {
+          type: "ellipse",
+          x: x - 72,
+          y: y - 60,
+          width: 144,
+          height: 32,
+          backgroundColor: "#ffffff",
+          fillStyle: "solid",
+          ...common,
+        } as ElementSkeleton,
+        {
+          type: "ellipse",
+          x: x - 72,
+          y: y + 28,
+          width: 144,
+          height: 32,
+          backgroundColor: "transparent",
+          fillStyle: "solid",
+          ...common,
+        } as ElementSkeleton,
+      ]) as ExcalidrawElement[];
+    case "mind-map":
+      return convertToExcalidrawElements([
+        {
+          type: "ellipse",
+          x: x - 48,
+          y: y - 32,
+          width: 96,
+          height: 64,
+          backgroundColor: "transparent",
+          fillStyle: "solid",
+          ...common,
+        } as ElementSkeleton,
+        {
+          type: "arrow",
+          x,
+          y,
+          points: [
+            [44, -16],
+            [144, -72],
+          ],
+          ...common,
+        } as ElementSkeleton,
+        {
+          type: "arrow",
+          x,
+          y,
+          points: [
+            [48, 0],
+            [156, 0],
+          ],
+          ...common,
+        } as ElementSkeleton,
+        {
+          type: "arrow",
+          x,
+          y,
+          points: [
+            [44, 16],
+            [144, 72],
+          ],
+          ...common,
+        } as ElementSkeleton,
+      ]) as ExcalidrawElement[];
+    default:
+      return [];
+  }
 }
 
 function createStickyNoteElements({
@@ -283,39 +727,41 @@ function createStickyNoteElements({
   collaboration?: ProjectStickyNoteCollaboration;
 }): ExcalidrawElement[] {
   const noteId = crypto.randomUUID();
-  return convertToExcalidrawElements([{
-    type: "rectangle",
-    x: x - stickyNoteSize / 2,
-    y: y - stickyNoteSize / 2,
-    width: stickyNoteSize,
-    height: stickyNoteSize,
-    strokeColor: color.stroke,
-    backgroundColor: color.fill,
-    fillStyle: "solid",
-    strokeWidth: 1,
-    roughness: 0,
-    opacity: 100,
-    link: format.link || null,
-    locked: format.locked,
-    label: {
-      text,
-      fontSize: format.fontSize,
-      fontFamily: projectStickyNoteFontFamilies[format.font],
-      textAlign: format.textAlign,
-      verticalAlign: "middle",
-      strokeColor: color.text,
-    },
-    customData: {
-      astryxReference: {
-        kind: "sticky-note",
-        noteId,
-        color: color.id,
-        format,
-        collaboration,
-        createdAt: new Date().toISOString(),
+  return convertToExcalidrawElements([
+    {
+      type: "rectangle",
+      x: x - stickyNoteSize / 2,
+      y: y - stickyNoteSize / 2,
+      width: stickyNoteSize,
+      height: stickyNoteSize,
+      strokeColor: color.stroke,
+      backgroundColor: color.fill,
+      fillStyle: "solid",
+      strokeWidth: 1,
+      roughness: 0,
+      opacity: 100,
+      link: format.link || null,
+      locked: format.locked,
+      label: {
+        text,
+        fontSize: format.fontSize,
+        fontFamily: projectStickyNoteFontFamilies[format.font],
+        textAlign: format.textAlign,
+        verticalAlign: "middle",
+        strokeColor: color.text,
       },
-    },
-  } as ElementSkeleton]) as ExcalidrawElement[];
+      customData: {
+        astryxReference: {
+          kind: "sticky-note",
+          noteId,
+          color: color.id,
+          format,
+          collaboration,
+          createdAt: new Date().toISOString(),
+        },
+      },
+    } as ElementSkeleton,
+  ]) as ExcalidrawElement[];
 }
 
 interface AstryxStickyNoteReference {
@@ -331,23 +777,105 @@ interface AstryxStickyNoteReference {
   collaboration: ProjectStickyNoteCollaboration;
 }
 
+interface CanvasTextReference {
+  elementId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: ProjectStickyNoteColor;
+  format: ProjectStickyNoteFormat;
+}
+
+function canvasTextReferenceForElement(
+  element: ExcalidrawElement,
+): CanvasTextReference | undefined {
+  if (element.isDeleted || element.type !== "text") return undefined;
+  const color = canvasTextColors.find(
+    (option) => option.text === element.strokeColor,
+  ) ?? {
+    ...canvasTextColors[0],
+    fill: element.strokeColor,
+    stroke: element.strokeColor,
+    text: element.strokeColor,
+  };
+  const fontSize = ([16, 20, 28] as const).reduce((closest, candidate) =>
+    Math.abs(candidate - element.fontSize) <
+    Math.abs(closest - element.fontSize)
+      ? candidate
+      : closest,
+  );
+  return {
+    elementId: element.id,
+    x: element.x,
+    y: element.y,
+    width: element.width,
+    height: element.height,
+    color,
+    format: {
+      font:
+        element.fontFamily === projectStickyNoteFontFamilies.sketch
+          ? "sketch"
+          : "sans",
+      fontSize,
+      textAlign:
+        element.textAlign === "center" || element.textAlign === "right"
+          ? element.textAlign
+          : "left",
+      link: element.link ?? "",
+      locked: element.locked,
+    },
+  };
+}
+
+function canvasTextReferencesEqual(
+  left?: CanvasTextReference,
+  right?: CanvasTextReference,
+): boolean {
+  return (
+    left?.elementId === right?.elementId &&
+    left?.x === right?.x &&
+    left?.y === right?.y &&
+    left?.width === right?.width &&
+    left?.height === right?.height &&
+    left?.color.text === right?.color.text &&
+    left?.format.font === right?.format.font &&
+    left?.format.fontSize === right?.format.fontSize &&
+    left?.format.textAlign === right?.format.textAlign &&
+    left?.format.link === right?.format.link &&
+    left?.format.locked === right?.format.locked
+  );
+}
+
 function stickyNoteReferenceForElement(
   element: ExcalidrawElement,
 ): AstryxStickyNoteReference | undefined {
   if (element.isDeleted || element.type !== "rectangle") return undefined;
-  const reference = element.customData?.astryxReference as {
-    kind?: string;
-    noteId?: string;
-    color?: string;
-    format?: Partial<ProjectStickyNoteFormat>;
-    collaboration?: Partial<ProjectStickyNoteCollaboration>;
-  } | undefined;
+  const reference = element.customData?.astryxReference as
+    | {
+        kind?: string;
+        noteId?: string;
+        color?: string;
+        format?: Partial<ProjectStickyNoteFormat>;
+        collaboration?: Partial<ProjectStickyNoteCollaboration>;
+      }
+    | undefined;
   if (reference?.kind !== "sticky-note" || !reference.noteId) return undefined;
-  const color = projectStickyNoteColors.find((option) => option.id === reference.color)
-    ?? projectStickyNoteColors[0];
+  const paletteColor =
+    projectStickyNoteColors.find((option) => option.id === reference.color) ??
+    defaultProjectStickyNoteColor;
+  // The element is the source of truth for a saved note. Palette IDs evolved
+  // with the FigJam-style picker, but an existing note must keep the exact
+  // fill and border the person chose when it was inserted.
+  const color = {
+    ...paletteColor,
+    fill: element.backgroundColor || paletteColor.fill,
+    stroke: element.strokeColor || paletteColor.stroke,
+  };
   return {
     elementId: element.id,
-    textElementId: element.boundElements?.find((bound) => bound.type === "text")?.id,
+    textElementId: element.boundElements?.find((bound) => bound.type === "text")
+      ?.id,
     noteId: reference.noteId,
     x: element.x,
     y: element.y,
@@ -355,7 +883,9 @@ function stickyNoteReferenceForElement(
     height: element.height,
     color,
     format: { ...defaultProjectStickyNoteFormat, ...reference.format },
-    collaboration: normalizeProjectStickyNoteCollaboration(reference.collaboration),
+    collaboration: normalizeProjectStickyNoteCollaboration(
+      reference.collaboration,
+    ),
   };
 }
 
@@ -363,27 +893,33 @@ function stickyNoteReferencesEqual(
   left?: AstryxStickyNoteReference,
   right?: AstryxStickyNoteReference,
 ): boolean {
-  return left?.elementId === right?.elementId
-    && left?.textElementId === right?.textElementId
-    && left?.x === right?.x
-    && left?.y === right?.y
-    && left?.width === right?.width
-    && left?.height === right?.height
-    && left?.color.id === right?.color.id
-    && left?.format.font === right?.format.font
-    && left?.format.fontSize === right?.format.fontSize
-    && left?.format.textAlign === right?.format.textAlign
-    && left?.format.link === right?.format.link
-    && left?.format.locked === right?.format.locked
-    && JSON.stringify(left?.collaboration) === JSON.stringify(right?.collaboration);
+  return (
+    left?.elementId === right?.elementId &&
+    left?.textElementId === right?.textElementId &&
+    left?.x === right?.x &&
+    left?.y === right?.y &&
+    left?.width === right?.width &&
+    left?.height === right?.height &&
+    left?.color.id === right?.color.id &&
+    left?.format.font === right?.format.font &&
+    left?.format.fontSize === right?.format.fontSize &&
+    left?.format.textAlign === right?.format.textAlign &&
+    left?.format.link === right?.format.link &&
+    left?.format.locked === right?.format.locked &&
+    JSON.stringify(left?.collaboration) === JSON.stringify(right?.collaboration)
+  );
 }
 
 function stickyNoteReferenceListsEqual(
   left: readonly AstryxStickyNoteReference[],
   right: readonly AstryxStickyNoteReference[],
 ): boolean {
-  return left.length === right.length
-    && left.every((reference, index) => stickyNoteReferencesEqual(reference, right[index]));
+  return (
+    left.length === right.length &&
+    left.every((reference, index) =>
+      stickyNoteReferencesEqual(reference, right[index]),
+    )
+  );
 }
 
 interface AstryxCanvasDocumentReference extends ProjectCanvasDocumentData {
@@ -406,22 +942,26 @@ function researchFrameReferenceForElement(
   allElements: readonly ExcalidrawElement[],
 ): AstryxResearchFrameReference | undefined {
   if (element.isDeleted || element.type !== "frame") return undefined;
-  const reference = element.customData?.astryxReference as {
-    kind?: string;
-    frameType?: ProjectResearchFrameType;
-  } | undefined;
-  const type = reference?.kind === "research-frame" && reference.frameType
-    ? reference.frameType
-    : "custom";
+  const reference = element.customData?.astryxReference as
+    | {
+        kind?: string;
+        frameType?: ProjectResearchFrameType;
+      }
+    | undefined;
+  const type =
+    reference?.kind === "research-frame" && reference.frameType
+      ? reference.frameType
+      : "custom";
   return {
     elementId: element.id,
     type,
     title: element.name?.trim() || "Untitled frame",
-    itemCount: allElements.filter((candidate) => (
-      !candidate.isDeleted
-      && candidate.frameId === element.id
-      && candidate.type !== "text"
-    )).length,
+    itemCount: allElements.filter(
+      (candidate) =>
+        !candidate.isDeleted &&
+        candidate.frameId === element.id &&
+        candidate.type !== "text",
+    ).length,
     x: element.x,
     y: element.y,
     width: element.width,
@@ -433,17 +973,22 @@ function researchFrameReferencesEqual(
   left: readonly AstryxResearchFrameReference[],
   right: readonly AstryxResearchFrameReference[],
 ): boolean {
-  return left.length === right.length && left.every((frame, index) => {
-    const other = right[index];
-    return frame.elementId === other?.elementId
-      && frame.type === other.type
-      && frame.title === other.title
-      && frame.itemCount === other.itemCount
-      && frame.x === other.x
-      && frame.y === other.y
-      && frame.width === other.width
-      && frame.height === other.height;
-  });
+  return (
+    left.length === right.length &&
+    left.every((frame, index) => {
+      const other = right[index];
+      return (
+        frame.elementId === other?.elementId &&
+        frame.type === other.type &&
+        frame.title === other.title &&
+        frame.itemCount === other.itemCount &&
+        frame.x === other.x &&
+        frame.y === other.y &&
+        frame.width === other.width &&
+        frame.height === other.height
+      );
+    })
+  );
 }
 
 function canvasDocumentReferencesEqual(
@@ -453,16 +998,18 @@ function canvasDocumentReferencesEqual(
   if (left.length !== right.length) return false;
   return left.every((document, index) => {
     const other = right[index];
-    return document.elementId === other?.elementId
-      && document.documentId === other.documentId
-      && document.title === other.title
-      && document.body === other.body
-      && document.templateId === other.templateId
-      && document.expanded === other.expanded
-      && document.x === other.x
-      && document.y === other.y
-      && document.width === other.width
-      && document.height === other.height;
+    return (
+      document.elementId === other?.elementId &&
+      document.documentId === other.documentId &&
+      document.title === other.title &&
+      document.body === other.body &&
+      document.templateId === other.templateId &&
+      document.expanded === other.expanded &&
+      document.x === other.x &&
+      document.y === other.y &&
+      document.width === other.width &&
+      document.height === other.height
+    );
   });
 }
 
@@ -493,35 +1040,41 @@ function createCanvasDocumentElements({
   y: number;
   document: ProjectCanvasDocumentData;
 }): ExcalidrawElement[] {
-  const width = document.expanded ? expandedCanvasDocumentWidth : canvasDocumentWidth;
-  const height = document.expanded ? expandedCanvasDocumentHeight : canvasDocumentHeight;
-  return convertToExcalidrawElements([{
-    type: "rectangle",
-    x: x - width / 2,
-    y: y - height / 2,
-    width,
-    height,
-    strokeColor: "#d7dce3",
-    backgroundColor: "#ffffff",
-    fillStyle: "solid",
-    strokeWidth: 1,
-    roughness: 0,
-    opacity: 100,
-    label: {
-      text: canvasDocumentPreview(document),
-      fontSize: 16,
-      fontFamily: 2,
-      textAlign: "left",
-      verticalAlign: "top",
-      strokeColor: "#27364d",
-    },
-    customData: {
-      astryxReference: {
-        kind: "document",
-        ...document,
+  const width = document.expanded
+    ? expandedCanvasDocumentWidth
+    : canvasDocumentWidth;
+  const height = document.expanded
+    ? expandedCanvasDocumentHeight
+    : canvasDocumentHeight;
+  return convertToExcalidrawElements([
+    {
+      type: "rectangle",
+      x: x - width / 2,
+      y: y - height / 2,
+      width,
+      height,
+      strokeColor: "#d7dce3",
+      backgroundColor: "#ffffff",
+      fillStyle: "solid",
+      strokeWidth: 1,
+      roughness: 0,
+      opacity: 100,
+      label: {
+        text: canvasDocumentPreview(document),
+        fontSize: 16,
+        fontFamily: 2,
+        textAlign: "left",
+        verticalAlign: "top",
+        strokeColor: "#27364d",
       },
-    },
-  } as ElementSkeleton]) as ExcalidrawElement[];
+      customData: {
+        astryxReference: {
+          kind: "document",
+          ...document,
+        },
+      },
+    } as ElementSkeleton,
+  ]) as ExcalidrawElement[];
 }
 
 export interface ExcalidrawProjectSnapshot {
@@ -534,7 +1087,12 @@ export interface ExcalidrawProjectSnapshot {
   comments: readonly DesignerCanvasCommentThread[];
 }
 
-type CanvasSaveState = "loading" | "saving" | "saved" | "offline" | "unavailable";
+type CanvasSaveState =
+  | "loading"
+  | "saving"
+  | "saved"
+  | "offline"
+  | "unavailable";
 
 interface AstryxScreenReference {
   elementId: string;
@@ -568,7 +1126,9 @@ type AstryxCanvasDataPayload =
       stepCount: number;
     };
 
-type AstryxCanvasDataReference = AstryxCanvasDataPayload & { elementId: string };
+type AstryxCanvasDataReference = AstryxCanvasDataPayload & {
+  elementId: string;
+};
 
 /*
  * A catalog card as a group of real Excalidraw elements rather than one
@@ -609,13 +1169,17 @@ function blobDataUrl(blob: Blob): Promise<DataURL> {
 
 const canvasAssetResolveTimeoutMs = 1_500;
 
-async function resolvedCanvasImageBlob(source: string): Promise<Blob | undefined> {
+async function resolvedCanvasImageBlob(
+  source: string,
+): Promise<Blob | undefined> {
   const response = await apiFetch(source, {
     credentials: "same-origin",
     signal: AbortSignal.timeout(canvasAssetResolveTimeoutMs),
   });
   const blob = await response.blob();
-  return response.ok && canvasMediaMimeTypeSet.has(blob.type) ? blob : undefined;
+  return response.ok && canvasMediaMimeTypeSet.has(blob.type)
+    ? blob
+    : undefined;
 }
 
 /*
@@ -623,24 +1187,31 @@ async function resolvedCanvasImageBlob(source: string): Promise<Blob | undefined
  * path. Resolve older persisted asset paths as well so pre-existing cards stop
  * showing its broken-image glyph after a reload.
  */
-function screenMediaUrlsByFileId(elements: readonly ExcalidrawElement[]): Map<string, string> {
+function screenMediaUrlsByFileId(
+  elements: readonly ExcalidrawElement[],
+): Map<string, string> {
   const mediaUrlByGroupId = new Map<string, string>();
   const mediaUrlByFileId = new Map<string, string>();
   for (const element of elements) {
-    const reference = (element.customData as { astryxReference?: { mediaUrl?: unknown } } | undefined)
-      ?.astryxReference;
+    const reference = (
+      element.customData as
+        | { astryxReference?: { mediaUrl?: unknown } }
+        | undefined
+    )?.astryxReference;
     if (typeof reference?.mediaUrl !== "string") continue;
     if (element.type === "image" && element.fileId) {
       mediaUrlByFileId.set(element.fileId, reference.mediaUrl);
     }
-    for (const groupId of element.groupIds ?? []) mediaUrlByGroupId.set(groupId, reference.mediaUrl);
+    for (const groupId of element.groupIds ?? [])
+      mediaUrlByGroupId.set(groupId, reference.mediaUrl);
   }
   for (const element of elements) {
     if (element.type !== "image" || !element.fileId) continue;
     const mediaUrl = (element.groupIds ?? [])
       .map((groupId) => mediaUrlByGroupId.get(groupId))
       .find((value): value is string => Boolean(value));
-    if (mediaUrl && !mediaUrlByFileId.has(element.fileId)) mediaUrlByFileId.set(element.fileId, mediaUrl);
+    if (mediaUrl && !mediaUrlByFileId.has(element.fileId))
+      mediaUrlByFileId.set(element.fileId, mediaUrl);
   }
   return mediaUrlByFileId;
 }
@@ -650,27 +1221,31 @@ async function resolveCanvasAssetDataUrls(
   elements: readonly ExcalidrawElement[],
 ): Promise<BinaryFiles> {
   const screenMediaUrls = screenMediaUrlsByFileId(elements);
-  const entries = await Promise.all(Object.entries(files).map(async ([id, file]) => {
-    if (file.dataURL.startsWith("data:")) return [id, file] as const;
-    try {
-      const blob = await resolvedCanvasImageBlob(file.dataURL);
-      if (blob) {
-        return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
+  const entries = await Promise.all(
+    Object.entries(files).map(async ([id, file]) => {
+      if (file.dataURL.startsWith("data:")) return [id, file] as const;
+      try {
+        const blob = await resolvedCanvasImageBlob(file.dataURL);
+        if (blob) {
+          return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
+        }
+      } catch {
+        // The asset might predate asset storage. Try the catalog media recorded
+        // on its screen card before leaving the historical card unresolved.
       }
-    } catch {
-      // The asset might predate asset storage. Try the catalog media recorded
-      // on its screen card before leaving the historical card unresolved.
-    }
-    const mediaUrl = screenMediaUrls.get(id);
-    if (!mediaUrl) return [id, file] as const;
-    try {
-      const blob = await resolvedCanvasImageBlob(canvasMediaFetchUrl(mediaUrl));
-      if (!blob) return [id, file] as const;
-      return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
-    } catch {
-      return [id, file] as const;
-    }
-  }));
+      const mediaUrl = screenMediaUrls.get(id);
+      if (!mediaUrl) return [id, file] as const;
+      try {
+        const blob = await resolvedCanvasImageBlob(
+          canvasMediaFetchUrl(mediaUrl),
+        );
+        if (!blob) return [id, file] as const;
+        return [id, { ...file, dataURL: await blobDataUrl(blob) }] as const;
+      } catch {
+        return [id, file] as const;
+      }
+    }),
+  );
   return Object.fromEntries(entries) as BinaryFiles;
 }
 
@@ -682,10 +1257,14 @@ async function resolveCanvasAssetDataUrls(
 async function loadCatalogCardImage(
   url: string | undefined,
   projectId: string,
-): Promise<{ file: BinaryFileData; image: CatalogCardImage; stored: boolean } | undefined> {
+): Promise<
+  { file: BinaryFileData; image: CatalogCardImage; stored: boolean } | undefined
+> {
   if (!url) return undefined;
   try {
-    const response = await apiFetch(canvasMediaFetchUrl(url), { credentials: "same-origin" });
+    const response = await apiFetch(canvasMediaFetchUrl(url), {
+      credentials: "same-origin",
+    });
     if (!response.ok) return undefined;
     const blob = await response.blob();
     if (!canvasMediaMimeTypeSet.has(blob.type)) return undefined;
@@ -826,61 +1405,66 @@ function createCanvasDataCardElements(
   const height = isApp ? 250 : 320;
   const label = isApp
     ? [
-      "ASTRYX APP",
-      "",
-      reference.appName,
-      `${reference.category || reference.platform} · ${reference.totalScreens} screens`,
-      "",
-      reference.description || "Open the source app to continue research.",
-    ].join("\n")
+        "ASTRYX APP",
+        "",
+        reference.appName,
+        `${reference.category || reference.platform} · ${reference.totalScreens} screens`,
+        "",
+        reference.description || "Open the source app to continue research.",
+      ].join("\n")
     : [
-      "ASTRYX FLOW",
-      "",
-      reference.flowTitle,
-      `${reference.appName} · ${reference.category}`,
-      "",
-      `${reference.stepCount} ${reference.stepCount === 1 ? "step" : "steps"}`,
-      reference.description || "Open the source flow to inspect the full journey.",
-    ].join("\n");
-  return convertToExcalidrawElements([{
-    type: "rectangle",
-    x: x - width / 2,
-    y: y - height / 2,
-    width,
-    height,
-    strokeColor: isApp ? "#9cb6df" : "#9d94d8",
-    backgroundColor: isApp ? "#eef4ff" : "#f2efff",
-    fillStyle: "solid",
-    strokeWidth: 1,
-    roughness: 0,
-    opacity: 100,
-    label: {
-      text: label,
-      fontSize: 18,
-      fontFamily: 2,
-      textAlign: "left",
-      verticalAlign: "top",
-      strokeColor: "#22304a",
-    },
-    customData: {
-      astryxReference: reference,
-    },
-  } as ElementSkeleton]) as ExcalidrawElement[];
+        "ASTRYX FLOW",
+        "",
+        reference.flowTitle,
+        `${reference.appName} · ${reference.category}`,
+        "",
+        `${reference.stepCount} ${reference.stepCount === 1 ? "step" : "steps"}`,
+        reference.description ||
+          "Open the source flow to inspect the full journey.",
+      ].join("\n");
+  return convertToExcalidrawElements([
+    {
+      type: "rectangle",
+      x: x - width / 2,
+      y: y - height / 2,
+      width,
+      height,
+      strokeColor: isApp ? "#9cb6df" : "#9d94d8",
+      backgroundColor: isApp ? "#eef4ff" : "#f2efff",
+      fillStyle: "solid",
+      strokeWidth: 1,
+      roughness: 0,
+      opacity: 100,
+      label: {
+        text: label,
+        fontSize: 18,
+        fontFamily: 2,
+        textAlign: "left",
+        verticalAlign: "top",
+        strokeColor: "#22304a",
+      },
+      customData: {
+        astryxReference: reference,
+      },
+    } as ElementSkeleton,
+  ]) as ExcalidrawElement[];
 }
 
 function canvasDataReferenceForElement(
   element: ExcalidrawElement,
 ): AstryxCanvasDataReference | undefined {
   const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as
+    | Record<string, unknown>
+    | undefined;
   if (
-    reference?.kind === "app"
-    && typeof reference.appId === "string"
-    && typeof reference.appName === "string"
-    && typeof reference.description === "string"
-    && typeof reference.category === "string"
-    && typeof reference.platform === "string"
-    && Number.isSafeInteger(reference.totalScreens)
+    reference?.kind === "app" &&
+    typeof reference.appId === "string" &&
+    typeof reference.appName === "string" &&
+    typeof reference.description === "string" &&
+    typeof reference.category === "string" &&
+    typeof reference.platform === "string" &&
+    Number.isSafeInteger(reference.totalScreens)
   ) {
     return {
       kind: "app",
@@ -894,16 +1478,16 @@ function canvasDataReferenceForElement(
     };
   }
   if (
-    reference?.kind === "flow"
-    && typeof reference.appId === "string"
-    && typeof reference.appName === "string"
-    && typeof reference.flowId === "string"
-    && typeof reference.flowTitle === "string"
-    && typeof reference.category === "string"
-    && typeof reference.description === "string"
-    && typeof reference.platform === "string"
-    && Number.isSafeInteger(reference.version)
-    && Number.isSafeInteger(reference.stepCount)
+    reference?.kind === "flow" &&
+    typeof reference.appId === "string" &&
+    typeof reference.appName === "string" &&
+    typeof reference.flowId === "string" &&
+    typeof reference.flowTitle === "string" &&
+    typeof reference.category === "string" &&
+    typeof reference.description === "string" &&
+    typeof reference.platform === "string" &&
+    Number.isSafeInteger(reference.version) &&
+    Number.isSafeInteger(reference.stepCount)
   ) {
     return {
       kind: "flow",
@@ -922,17 +1506,22 @@ function canvasDataReferenceForElement(
   return undefined;
 }
 
-function screenReferenceForElement(element: ExcalidrawElement): AstryxScreenReference | undefined {
+function screenReferenceForElement(
+  element: ExcalidrawElement,
+): AstryxScreenReference | undefined {
   const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as
+    | Record<string, unknown>
+    | undefined;
   if (
-    reference?.kind !== "screen"
-    || typeof reference.appId !== "string"
-    || typeof reference.appName !== "string"
-    || !Number.isSafeInteger(reference.screenId)
-    || typeof reference.screenType !== "string"
-    || typeof reference.platform !== "string"
-  ) return undefined;
+    reference?.kind !== "screen" ||
+    typeof reference.appId !== "string" ||
+    typeof reference.appName !== "string" ||
+    !Number.isSafeInteger(reference.screenId) ||
+    typeof reference.screenType !== "string" ||
+    typeof reference.platform !== "string"
+  )
+    return undefined;
   return {
     elementId: element.id,
     appId: reference.appId,
@@ -942,13 +1531,6 @@ function screenReferenceForElement(element: ExcalidrawElement): AstryxScreenRefe
     platform: reference.platform,
   };
 }
-
-
-
-
-
-
-
 
 function withCanvasElementUpdate(
   element: ExcalidrawElement,
@@ -967,22 +1549,26 @@ function documentReferenceForElement(
   element: ExcalidrawElement,
 ): AstryxCanvasDocumentReference | undefined {
   const customData = element.customData as Record<string, unknown> | undefined;
-  const reference = customData?.astryxReference as Record<string, unknown> | undefined;
+  const reference = customData?.astryxReference as
+    | Record<string, unknown>
+    | undefined;
   if (
-    reference?.kind !== "document"
-    || typeof reference.documentId !== "string"
-    || typeof reference.title !== "string"
-    || typeof reference.body !== "string"
-    || typeof reference.expanded !== "boolean"
-  ) return undefined;
+    reference?.kind !== "document" ||
+    typeof reference.documentId !== "string" ||
+    typeof reference.title !== "string" ||
+    typeof reference.body !== "string" ||
+    typeof reference.expanded !== "boolean"
+  )
+    return undefined;
   return {
     elementId: element.id,
     documentId: reference.documentId,
     title: reference.title,
     body: reference.body,
-    templateId: typeof reference.templateId === "string"
-      ? reference.templateId as ProjectCanvasDocumentTemplateId
-      : undefined,
+    templateId:
+      typeof reference.templateId === "string"
+        ? (reference.templateId as ProjectCanvasDocumentTemplateId)
+        : undefined,
     expanded: reference.expanded,
     x: element.x,
     y: element.y,
@@ -1045,21 +1631,35 @@ function usesCanvasPresentation(
   snapshot: ExcalidrawProjectSnapshot,
   theme: "light" | "dark",
 ): boolean {
-  return snapshot.appState.theme === theme
-    && snapshot.appState.viewBackgroundColor === canvasSceneBackground
-    && snapshot.appState.gridModeEnabled === true
-    && snapshot.appState.gridSize === 20
-    && snapshot.appState.gridStep === 5;
+  return (
+    snapshot.appState.theme === theme &&
+    snapshot.appState.viewBackgroundColor === canvasSceneBackground &&
+    snapshot.appState.gridModeEnabled === true &&
+    snapshot.appState.gridSize === 20 &&
+    snapshot.appState.gridStep === 5
+  );
 }
 
-function isExcalidrawSnapshot(value: unknown): value is ExcalidrawProjectSnapshot {
+function isExcalidrawSnapshot(
+  value: unknown,
+): value is ExcalidrawProjectSnapshot {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const snapshot = value as Record<string, unknown>;
-  return snapshot.type === "excalidraw"
-    && typeof snapshot.version === "number"
-    && Array.isArray(snapshot.elements)
-    && Boolean(snapshot.appState && typeof snapshot.appState === "object" && !Array.isArray(snapshot.appState))
-    && Boolean(snapshot.files && typeof snapshot.files === "object" && !Array.isArray(snapshot.files));
+  return (
+    snapshot.type === "excalidraw" &&
+    typeof snapshot.version === "number" &&
+    Array.isArray(snapshot.elements) &&
+    Boolean(
+      snapshot.appState &&
+      typeof snapshot.appState === "object" &&
+      !Array.isArray(snapshot.appState),
+    ) &&
+    Boolean(
+      snapshot.files &&
+      typeof snapshot.files === "object" &&
+      !Array.isArray(snapshot.files),
+    )
+  );
 }
 
 function serializeCanvas(
@@ -1083,11 +1683,14 @@ const canvasSaveKey = (snapshot: ExcalidrawProjectSnapshot): string => {
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([id, file]) => `${id}:${hashString(file.dataURL ?? "")}`)
     .join("|");
-  const { gridModeEnabled, gridSize, gridStep, theme, viewBackgroundColor } = snapshot.appState;
+  const { gridModeEnabled, gridSize, gridStep, theme, viewBackgroundColor } =
+    snapshot.appState;
   return [
     hashElementsVersion(snapshot.elements),
     hashString(fileVersions),
-    hashString(JSON.stringify(normalizeDesignerCanvasComments(snapshot.comments))),
+    hashString(
+      JSON.stringify(normalizeDesignerCanvasComments(snapshot.comments)),
+    ),
     gridModeEnabled,
     gridSize,
     gridStep,
@@ -1096,7 +1699,9 @@ const canvasSaveKey = (snapshot: ExcalidrawProjectSnapshot): string => {
   ].join(":");
 };
 
-function imageDimensions(blob: Blob): Promise<{ width: number; height: number }> {
+function imageDimensions(
+  blob: Blob,
+): Promise<{ width: number; height: number }> {
   return createImageBitmap(blob)
     .then((image) => {
       const dimensions = { width: image.width, height: image.height };
@@ -1106,10 +1711,12 @@ function imageDimensions(blob: Blob): Promise<{ width: number; height: number }>
     .catch(() => ({ width: 640, height: 400 }));
 }
 
-
 function canvasMediaFetchUrl(source: string): string {
   const url = new URL(source, window.location.origin);
-  if (url.origin === window.location.origin && url.pathname.startsWith("/api/preview-media/")) {
+  if (
+    url.origin === window.location.origin &&
+    url.pathname.startsWith("/api/preview-media/")
+  ) {
     url.searchParams.set("inline", "1");
   }
   return url.toString();
@@ -1126,41 +1733,87 @@ export function ProjectPlayground({
   userId: string | number;
   userName: string;
 }) {
-  const resolvedTheme = useResolvedThemeMode();
   const [saveState, setSaveState] = useState<CanvasSaveState>("loading");
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [collaborationStatus, setCollaborationStatus] =
     useState<DesignerCanvasCollaborationStatus>("connecting");
-  const [remoteCollaborators, setRemoteCollaborators] =
-    useState<readonly DesignerCanvasCollaborator[]>([]);
+  const [remoteCollaborators, setRemoteCollaborators] = useState<
+    readonly DesignerCanvasCollaborator[]
+  >([]);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [researchFramesOpen, setResearchFramesOpen] = useState(false);
   const [researchFrameDrawing, setResearchFrameDrawing] = useState(false);
-  const [researchFrames, setResearchFrames] = useState<readonly AstryxResearchFrameReference[]>([]);
-  const [selectedResearchFrame, setSelectedResearchFrame] = useState<AstryxResearchFrameReference>();
+  const [markerDrawing, setMarkerDrawing] = useState(false);
+  const [markerMode, setMarkerMode] = useState<CanvasMarkerMode>("marker");
+  const [markerStrokeWeight, setMarkerStrokeWeight] =
+    useState<CanvasMarkerStrokeWeight>("thin");
+  const [markerColor, setMarkerColor] = useState(canvasMarkerColors[0].value);
+  const [highlighterColor, setHighlighterColor] = useState(
+    canvasHighlighterColors[3].value,
+  );
+  const [markerColorTransition, setMarkerColorTransition] = useState(false);
+  const markerStrokeColor =
+    markerMode === "highlighter" ? highlighterColor : markerColor;
+  const [researchFrames, setResearchFrames] = useState<
+    readonly AstryxResearchFrameReference[]
+  >([]);
+  const [selectedResearchFrame, setSelectedResearchFrame] =
+    useState<AstryxResearchFrameReference>();
   const [toolsCatalogOpen, setToolsCatalogOpen] = useState(false);
   const [toolsCatalogQuery, setToolsCatalogQuery] = useState("");
   const [shapePickerOpen, setShapePickerOpen] = useState(false);
-  const [shapePickerQuery, setShapePickerQuery] = useState("");
-  const [activeShapeTool, setActiveShapeTool] = useState<CanvasShapeTool>();
+  const [shapeLibraryOpen, setShapeLibraryOpen] = useState(false);
+  const [shapeLibraryQuery, setShapeLibraryQuery] = useState("");
+  const [canvasPagesOpen, setCanvasPagesOpen] = useState(false);
+  // FigJam opens the family with Rectangle as its current tool; no element is
+  // inserted until the user clicks or drags on the canvas.
+  const [activeShapeOptionId, setActiveShapeOptionId] =
+    useState<CanvasShapeOptionId>("rectangle");
+  const [shapePlacement, setShapePlacement] =
+    useState<CanvasShapeOption>();
+  const [shapeColor, setShapeColor] = useState(canvasShapeColors[0].value);
+  const [shapeColorPickerOpen, setShapeColorPickerOpen] = useState(false);
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
+  const [stickyToolColor, setStickyToolColor] = useState(
+    defaultProjectStickyNoteColor,
+  );
   const [stickyPlacement, setStickyPlacement] = useState<StickyPlacement>();
   const [commentPlacement, setCommentPlacement] = useState(false);
-  const [commentDraftAnchor, setCommentDraftAnchor] = useState<{ x: number; y: number }>();
+  const [commentDraftAnchor, setCommentDraftAnchor] = useState<{
+    x: number;
+    y: number;
+  }>();
   const [commentDraft, setCommentDraft] = useState("");
-  const [canvasComments, setCanvasComments] = useState<readonly DesignerCanvasCommentThread[]>([]);
+  const [canvasComments, setCanvasComments] = useState<
+    readonly DesignerCanvasCommentThread[]
+  >([]);
   const [selectedCommentId, setSelectedCommentId] = useState<string>();
   const [stickyDraft, setStickyDraft] = useState<StickyDraft>();
   const [canvasTextEditing, setCanvasTextEditing] = useState(false);
-  const [selectedStickyNote, setSelectedStickyNote] = useState<AstryxStickyNoteReference>();
-  const [stickyNotes, setStickyNotes] = useState<readonly AstryxStickyNoteReference[]>([]);
+  const [textToolActive, setTextToolActive] = useState(false);
+  const [textSelectionActive, setTextSelectionActive] = useState(false);
+  const [selectedCanvasText, setSelectedCanvasText] =
+    useState<CanvasTextReference>();
+  const [selectedStickyNote, setSelectedStickyNote] =
+    useState<AstryxStickyNoteReference>();
+  const [stickyNotes, setStickyNotes] = useState<
+    readonly AstryxStickyNoteReference[]
+  >([]);
   const [documentPlacement, setDocumentPlacement] = useState(false);
-  const [canvasDocuments, setCanvasDocuments] = useState<readonly AstryxCanvasDocumentReference[]>([]);
-  const [selectedCanvasDocument, setSelectedCanvasDocument] = useState<AstryxCanvasDocumentReference>();
-  const [canvasViewport, setCanvasViewport] = useState({ scrollX: 0, scrollY: 0, zoom: 1 });
-  const [referencesState, setReferencesState] = useState<ProjectReferenceState>("idle");
+  const [canvasDocuments, setCanvasDocuments] = useState<
+    readonly AstryxCanvasDocumentReference[]
+  >([]);
+  const [selectedCanvasDocument, setSelectedCanvasDocument] =
+    useState<AstryxCanvasDocumentReference>();
+  const [canvasViewport, setCanvasViewport] = useState({
+    scrollX: 0,
+    scrollY: 0,
+    zoom: 1,
+  });
+  const [referencesState, setReferencesState] =
+    useState<ProjectReferenceState>("idle");
   const [references, setReferences] = useState<ResearchProjectWorkspace>();
   const [referenceQuery, setReferenceQuery] = useState("");
   const [insertingReferenceId, setInsertingReferenceId] = useState<number>();
@@ -1168,32 +1821,58 @@ export function ProjectPlayground({
   const [insertingScreenKey, setInsertingScreenKey] = useState<string>();
   const [screenMessage, setScreenMessage] = useState("");
   const showToast = useApplicationToast();
-  const [selectedScreenReference, setSelectedScreenReference] = useState<AstryxScreenReference>();
-  const [selectedDataReference, setSelectedDataReference] = useState<AstryxCanvasDataReference>();
-  const [canvasToolbarHost, setCanvasToolbarHost] = useState<HTMLElement | null>(null);
+  const [selectedScreenReference, setSelectedScreenReference] =
+    useState<AstryxScreenReference>();
+  const [selectedDataReference, setSelectedDataReference] =
+    useState<AstryxCanvasDataReference>();
+  const [canvasToolbarHost, setCanvasToolbarHost] =
+    useState<HTMLElement | null>(null);
   const editorRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const canvasRootRef = useRef<HTMLDivElement | null>(null);
   const stickyComposerRef = useRef<HTMLDivElement | null>(null);
   const stickyInputRef = useRef<HTMLDivElement | null>(null);
   const canvasTextEditingRef = useRef(false);
   const canvasCommentsRef = useRef<readonly DesignerCanvasCommentThread[]>([]);
-  const projectMenuRef = useRef<HTMLSpanElement | null>(null);
-  const projectMenuWasOpenRef = useRef(false);
   const activeRef = useRef(true);
   const loadedRef = useRef(false);
   const savingRef = useRef(false);
-  const pendingSnapshotRef = useRef<ExcalidrawProjectSnapshot | undefined>(undefined);
+  const pendingSnapshotRef = useRef<ExcalidrawProjectSnapshot | undefined>(
+    undefined,
+  );
   const lastQueuedSnapshotKeyRef = useRef<string | undefined>(undefined);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const uploadingFileIdsRef = useRef(new Set<string>());
   const persistedFileIdsRef = useRef(new Set<string>());
-  const collaborationRef = useRef<DesignerCanvasCollaborationSession | null>(null);
-  const remoteCollaboratorsRef = useRef(new Map<string, DesignerCanvasCollaborator>());
-  const remoteCursorsRef = useRef(new Map<string, DesignerCanvasRemoteCursor>());
+  const collaborationRef = useRef<DesignerCanvasCollaborationSession | null>(
+    null,
+  );
+  const remoteCollaboratorsRef = useRef(
+    new Map<string, DesignerCanvasCollaborator>(),
+  );
+  const remoteCursorsRef = useRef(
+    new Map<string, DesignerCanvasRemoteCursor>(),
+  );
   const remoteElementsVersionRef = useRef<number | undefined>(undefined);
   const remoteBroadcastSuppressedUntilRef = useRef(0);
+
+  useEffect(() => {
+    const canvas =
+      canvasRootRef.current?.querySelector<HTMLElement>(".excalidraw");
+    if (!canvas) return;
+    canvas.style.setProperty(
+      "--canvas-marker-tool-icon",
+      `url("${coloredFigJamFreehandToolIcon("marker", markerColor)}")`,
+    );
+    canvas.style.setProperty(
+      "--canvas-highlighter-tool-icon",
+      `url("${coloredFigJamFreehandToolIcon("highlighter", highlighterColor)}")`,
+    );
+  }, [highlighterColor, markerColor]);
   const localStorageKey = useMemo(
-    () => `astryx:project:${projectId}:canvas:${canvasId ?? "legacy"}:excalidraw:v1`,
+    () =>
+      `astryx:project:${projectId}:canvas:${canvasId ?? "legacy"}:excalidraw:v1`,
     [canvasId, projectId],
   );
   const stickyDraftFocusKey = stickyDraft
@@ -1201,20 +1880,25 @@ export function ProjectPlayground({
     : "";
   const onlineCollaborators = useMemo(() => {
     const collaborators = new Map<string, { id: string; name: string }>();
-    collaborators.set(`user:${userId}`, { id: `user:${userId}`, name: userName });
+    collaborators.set(`user:${userId}`, {
+      id: `user:${userId}`,
+      name: userName,
+    });
     for (const collaborator of remoteCollaborators) {
       const id = `user:${collaborator.userId}`;
-      if (!collaborators.has(id)) collaborators.set(id, { id, name: collaborator.name });
+      if (!collaborators.has(id))
+        collaborators.set(id, { id, name: collaborator.name });
     }
     return [...collaborators.values()];
   }, [remoteCollaborators, userId, userName]);
-  const collaborationStatusLabel = collaborationStatus === "live"
-    ? `${onlineCollaborators.length} ${onlineCollaborators.length === 1 ? "person" : "people"} online`
-    : collaborationStatus === "connecting"
-      ? "Connecting"
-      : "Collaboration offline";
-  const canvasReadOnly = referencesState !== "ready"
-    || references?.access?.role === "viewer";
+  const collaborationStatusLabel =
+    collaborationStatus === "live"
+      ? `${onlineCollaborators.length} ${onlineCollaborators.length === 1 ? "person" : "people"} online`
+      : collaborationStatus === "connecting"
+        ? "Connecting"
+        : "Collaboration offline";
+  const canvasReadOnly =
+    referencesState !== "ready" || references?.access?.role === "viewer";
 
   const syncCanvasCollaborators = useCallback(() => {
     const collaborators = new Map<SocketId, Collaborator>();
@@ -1237,16 +1921,19 @@ export function ProjectPlayground({
     editorRef.current?.updateScene({ collaborators });
   }, []);
 
-  const handleCanvasPointerUpdate = useCallback(({ pointer, button }: CanvasPointerUpdate) => {
-    const selectedElementIds = Object.keys(
-      editorRef.current?.getAppState().selectedElementIds ?? {},
-    );
-    collaborationRef.current?.publishCursor({
-      pointer: { x: pointer.x, y: pointer.y },
-      button,
-      selectedElementIds,
-    });
-  }, []);
+  const handleCanvasPointerUpdate = useCallback(
+    ({ pointer, button }: CanvasPointerUpdate) => {
+      const selectedElementIds = Object.keys(
+        editorRef.current?.getAppState().selectedElementIds ?? {},
+      );
+      collaborationRef.current?.publishCursor({
+        pointer: { x: pointer.x, y: pointer.y },
+        button,
+        selectedElementIds,
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!stickyDraftFocusKey) return undefined;
@@ -1275,7 +1962,9 @@ export function ProjectPlayground({
       const nextHost = root.querySelector<HTMLElement>(
         ".App-toolbar > .Stack_horizontal",
       );
-      setCanvasToolbarHost((current) => current === nextHost ? current : nextHost);
+      setCanvasToolbarHost((current) =>
+        current === nextHost ? current : nextHost,
+      );
     };
 
     syncToolbarHost();
@@ -1297,13 +1986,16 @@ export function ProjectPlayground({
     }
   }, [localStorageKey]);
 
-  const writeLocalCanvas = useCallback((snapshot: ExcalidrawProjectSnapshot) => {
-    try {
-      window.localStorage.setItem(localStorageKey, JSON.stringify(snapshot));
-    } catch {
-      // Remote persistence still works when browser storage is unavailable.
-    }
-  }, [localStorageKey]);
+  const writeLocalCanvas = useCallback(
+    (snapshot: ExcalidrawProjectSnapshot) => {
+      try {
+        window.localStorage.setItem(localStorageKey, JSON.stringify(snapshot));
+      } catch {
+        // Remote persistence still works when browser storage is unavailable.
+      }
+    },
+    [localStorageKey],
+  );
 
   const flushCanvas = useCallback(async () => {
     if (savingRef.current || !pendingSnapshotRef.current) return;
@@ -1312,7 +2004,8 @@ export function ProjectPlayground({
       const snapshot = pendingSnapshotRef.current;
       pendingSnapshotRef.current = undefined;
       try {
-        if (canvasId) await saveDesignerCanvasFile(projectId, canvasId, snapshot);
+        if (canvasId)
+          await saveDesignerCanvasFile(projectId, canvasId, snapshot);
         else await saveDesignerCanvas(projectId, snapshot);
         if (activeRef.current) {
           setSaveErrorMessage("");
@@ -1321,7 +2014,9 @@ export function ProjectPlayground({
       } catch (error) {
         pendingSnapshotRef.current ??= snapshot;
         if (activeRef.current) {
-          setSaveErrorMessage(error instanceof Error ? error.message : "Canvas save failed");
+          setSaveErrorMessage(
+            error instanceof Error ? error.message : "Canvas save failed",
+          );
           setSaveState(
             error instanceof DesignerCanvasApiError && error.status === 404
               ? "unavailable"
@@ -1334,31 +2029,39 @@ export function ProjectPlayground({
     savingRef.current = false;
   }, [canvasId, projectId]);
 
-  const queueSnapshot = useCallback((snapshot: ExcalidrawProjectSnapshot) => {
-    const snapshotKey = canvasSaveKey(snapshot);
-    if (snapshotKey === lastQueuedSnapshotKeyRef.current) return;
-    lastQueuedSnapshotKeyRef.current = snapshotKey;
-    writeLocalCanvas(snapshot);
-    pendingSnapshotRef.current = snapshot;
-    if (activeRef.current) setSaveState("saving");
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => { void flushCanvas(); }, 750);
-  }, [flushCanvas, writeLocalCanvas]);
+  const queueSnapshot = useCallback(
+    (snapshot: ExcalidrawProjectSnapshot) => {
+      const snapshotKey = canvasSaveKey(snapshot);
+      if (snapshotKey === lastQueuedSnapshotKeyRef.current) return;
+      lastQueuedSnapshotKeyRef.current = snapshotKey;
+      writeLocalCanvas(snapshot);
+      pendingSnapshotRef.current = snapshot;
+      if (activeRef.current) setSaveState("saving");
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        void flushCanvas();
+      }, 750);
+    },
+    [flushCanvas, writeLocalCanvas],
+  );
 
-  const commitCanvasComments = useCallback((comments: readonly DesignerCanvasCommentThread[]) => {
-    canvasCommentsRef.current = comments;
-    setCanvasComments(comments);
-    const editor = editorRef.current;
-    if (!editor || !loadedRef.current) return;
-    const snapshot = serializeCanvas(
-      editor.getSceneElementsIncludingDeleted(),
-      editor.getAppState(),
-      editor.getFiles(),
-      comments,
-    );
-    queueSnapshot(snapshot);
-    collaborationRef.current?.publishScene(snapshot);
-  }, [queueSnapshot]);
+  const commitCanvasComments = useCallback(
+    (comments: readonly DesignerCanvasCommentThread[]) => {
+      canvasCommentsRef.current = comments;
+      setCanvasComments(comments);
+      const editor = editorRef.current;
+      if (!editor || !loadedRef.current) return;
+      const snapshot = serializeCanvas(
+        editor.getSceneElementsIncludingDeleted(),
+        editor.getAppState(),
+        editor.getFiles(),
+        comments,
+      );
+      queueSnapshot(snapshot);
+      collaborationRef.current?.publishScene(snapshot);
+    },
+    [queueSnapshot],
+  );
 
   const initialData = useCallback(async () => {
     loadedRef.current = false;
@@ -1366,19 +2069,32 @@ export function ProjectPlayground({
       const canvas = canvasId
         ? await getDesignerCanvasFile(projectId, canvasId)
         : await getDesignerCanvas(projectId);
-      const remote = isExcalidrawSnapshot(canvas.snapshot) ? canvas.snapshot : undefined;
-      const sourceSnapshot = remote ?? readLocalCanvas() ?? blankCanvas(resolvedTheme);
-      const snapshot = withCanvasPresentation({
-        ...sourceSnapshot,
-        files: await resolveCanvasAssetDataUrls(sourceSnapshot.files, sourceSnapshot.elements),
-      }, resolvedTheme);
+      const remote = isExcalidrawSnapshot(canvas.snapshot)
+        ? canvas.snapshot
+        : undefined;
+      const sourceSnapshot =
+        remote ?? readLocalCanvas() ?? blankCanvas(canvasTheme);
+      const snapshot = withCanvasPresentation(
+        {
+          ...sourceSnapshot,
+          files: await resolveCanvasAssetDataUrls(
+            sourceSnapshot.files,
+            sourceSnapshot.elements,
+          ),
+        },
+        canvasTheme,
+      );
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       writeLocalCanvas(snapshot);
-      if (!remote || !usesCanvasPresentation(remote, resolvedTheme)
-        || canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)) {
-        if (canvasId) await saveDesignerCanvasFile(projectId, canvasId, snapshot);
+      if (
+        !remote ||
+        !usesCanvasPresentation(remote, canvasTheme) ||
+        canvasSaveKey(snapshot) !== canvasSaveKey(sourceSnapshot)
+      ) {
+        if (canvasId)
+          await saveDesignerCanvasFile(projectId, canvasId, snapshot);
         else await saveDesignerCanvas(projectId, snapshot);
       }
       if (activeRef.current) setSaveState("saved");
@@ -1387,15 +2103,17 @@ export function ProjectPlayground({
       return { ...snapshot, scrollToContent: true };
     } catch (error) {
       const snapshot = withCanvasPresentation(
-        readLocalCanvas() ?? blankCanvas(resolvedTheme),
-        resolvedTheme,
+        readLocalCanvas() ?? blankCanvas(canvasTheme),
+        canvasTheme,
       );
       lastQueuedSnapshotKeyRef.current = canvasSaveKey(snapshot);
       canvasCommentsRef.current = snapshot.comments;
       if (activeRef.current) setCanvasComments(snapshot.comments);
       loadedRef.current = true;
       if (activeRef.current) {
-        setSaveErrorMessage(error instanceof Error ? error.message : "Canvas load failed");
+        setSaveErrorMessage(
+          error instanceof Error ? error.message : "Canvas load failed",
+        );
         setSaveState(
           error instanceof DesignerCanvasApiError && error.status === 404
             ? "unavailable"
@@ -1404,16 +2122,17 @@ export function ProjectPlayground({
       }
       return { ...snapshot, scrollToContent: true };
     }
-  }, [canvasId, projectId, readLocalCanvas, resolvedTheme, writeLocalCanvas]);
+  }, [canvasId, projectId, readLocalCanvas, writeLocalCanvas]);
 
   useEffect(() => {
     editorRef.current?.updateScene({
       appState: {
-        theme: resolvedTheme,
+        theme: canvasTheme,
         viewBackgroundColor: canvasSceneBackground,
+        gridModeEnabled: true,
       },
     });
-  }, [resolvedTheme]);
+  }, []);
 
   useEffect(() => {
     activeRef.current = true;
@@ -1443,159 +2162,282 @@ export function ProjectPlayground({
     }
   }, [projectId]);
 
-  useEffect(() => { void loadReferences(); }, [loadReferences]);
+  useEffect(() => {
+    void loadReferences();
+  }, [loadReferences]);
 
-  const persistEmbeddedFiles = useCallback((files: BinaryFiles) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    for (const file of Object.values(files)) {
-      if (!file.dataURL.startsWith("data:")
-        || uploadingFileIdsRef.current.has(file.id)
-        || persistedFileIdsRef.current.has(file.id)) continue;
-      uploadingFileIdsRef.current.add(file.id);
-      void apiFetch(file.dataURL)
-        .then((response) => response.blob())
-        .then(async (blob) => {
-          await uploadProjectCanvasAsset(projectId, `asset:${file.id}`, blob);
-          persistedFileIdsRef.current.add(file.id);
-        })
-        .catch((error) => {
-          if (activeRef.current) setReferenceMessage((error as Error).message);
-        })
-        .finally(() => uploadingFileIdsRef.current.delete(file.id));
-    }
-  }, [projectId]);
+  const persistEmbeddedFiles = useCallback(
+    (files: BinaryFiles) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      for (const file of Object.values(files)) {
+        if (
+          !file.dataURL.startsWith("data:") ||
+          uploadingFileIdsRef.current.has(file.id) ||
+          persistedFileIdsRef.current.has(file.id)
+        )
+          continue;
+        uploadingFileIdsRef.current.add(file.id);
+        void apiFetch(file.dataURL)
+          .then((response) => response.blob())
+          .then(async (blob) => {
+            await uploadProjectCanvasAsset(projectId, `asset:${file.id}`, blob);
+            persistedFileIdsRef.current.add(file.id);
+          })
+          .catch((error) => {
+            if (activeRef.current)
+              setReferenceMessage((error as Error).message);
+          })
+          .finally(() => uploadingFileIdsRef.current.delete(file.id));
+      }
+    },
+    [projectId],
+  );
 
-  const handleCanvasChange = useCallback((
-    elements: readonly ExcalidrawElement[],
-    appState: AppState,
-    files: BinaryFiles,
-  ) => {
-    const nextCanvasTextEditing = Boolean(appState.editingTextElement);
-    canvasTextEditingRef.current = nextCanvasTextEditing;
-    setCanvasTextEditing((current) => current === nextCanvasTextEditing ? current : nextCanvasTextEditing);
-    const frames = elements
-      .filter((element) => !element.isDeleted)
-      .map((element) => researchFrameReferenceForElement(element, elements))
-      .filter((reference): reference is AstryxResearchFrameReference => Boolean(reference));
-    setResearchFrames((current) => (
-      researchFrameReferencesEqual(current, frames) ? current : frames
-    ));
-    const selectedFrames = frames.filter((frame) => appState.selectedElementIds[frame.elementId]);
-    const selectedFrame = selectedFrames.length === 1 ? selectedFrames[0] : undefined;
-    setSelectedResearchFrame((current) => {
-      if (!current && !selectedFrame) return current;
-      if (
-        current?.elementId === selectedFrame?.elementId
-        && current?.title === selectedFrame?.title
-        && current?.itemCount === selectedFrame?.itemCount
-      ) return current;
-      return selectedFrame;
-    });
-    setResearchFrameDrawing(appState.activeTool.type === "frame");
-    const documents = elements
-      .filter((element) => !element.isDeleted)
-      .map(documentReferenceForElement)
-      .filter((reference): reference is AstryxCanvasDocumentReference => Boolean(reference));
-    setCanvasDocuments((current) => (
-      canvasDocumentReferencesEqual(current, documents) ? current : documents
-    ));
-    const selectedScreens = elements
-      .filter((element) => appState.selectedElementIds[element.id])
-      .map(screenReferenceForElement)
-      .filter((reference): reference is AstryxScreenReference => Boolean(reference));
-    const selectedScreen = selectedScreens.length === 1 ? selectedScreens[0] : undefined;
-    setSelectedScreenReference((current) =>
-      current?.elementId === selectedScreen?.elementId ? current : selectedScreen);
-    const selectedDataReferences = elements
-      .filter((element) => appState.selectedElementIds[element.id])
-      .map(canvasDataReferenceForElement)
-      .filter((reference): reference is AstryxCanvasDataReference => Boolean(reference));
-    const selectedDataReference = selectedDataReferences.length === 1
-      ? selectedDataReferences[0]
-      : undefined;
-    setSelectedDataReference((current) =>
-      current?.elementId === selectedDataReference?.elementId ? current : selectedDataReference);
-    const selectedDocuments = elements
-      .filter((element) => appState.selectedElementIds[element.id])
-      .map(documentReferenceForElement)
-      .filter((reference): reference is AstryxCanvasDocumentReference => Boolean(reference));
-    const selectedDocument = selectedDocuments.length === 1 ? selectedDocuments[0] : undefined;
-    setSelectedCanvasDocument((current) => {
-      if (!current && !selectedDocument) return current;
-      if (
-        current?.elementId === selectedDocument?.elementId
-        && current.title === selectedDocument.title
-        && current.body === selectedDocument.body
-        && current.templateId === selectedDocument.templateId
-        && current.expanded === selectedDocument.expanded
-        && current.x === selectedDocument.x
-        && current.y === selectedDocument.y
-        && current.width === selectedDocument.width
-        && current.height === selectedDocument.height
-      ) return current;
-      return selectedDocument;
-    });
-    /*
-     * Resolve a selection to its sticky container. Clicking into a note's text
-     * selects the bound text element, which is not a rectangle and carries no
-     * astryxReference — so matching only containers dropped the note and let
-     * Excalidraw's generic shape panel take over mid-edit.
-     */
-    const selectedStickyNotes = elements
-      .filter((element) => appState.selectedElementIds[element.id])
-      .map((element) => {
-        const direct = stickyNoteReferenceForElement(element);
-        if (direct) return direct;
-        const containerId = (element as { containerId?: string | null }).containerId;
-        if (!containerId) return undefined;
-        const container = elements.find((candidate) => candidate.id === containerId);
-        return container ? stickyNoteReferenceForElement(container) : undefined;
-      })
-      .filter((reference): reference is AstryxStickyNoteReference => Boolean(reference));
-    /* One note may resolve twice when both its container and its text are in the
+  /* Sticky Notes is an exclusive placement mode. Keep its UI state separate
+     from the editor tool change itself so the newly selected tool never gets
+     reset back to Select while React is reconciling the toolbar. */
+  const deactivateStickyTool = useCallback(() => {
+    setStickyPickerOpen(false);
+    setStickyPlacement(undefined);
+    setStickyDraft(undefined);
+  }, []);
+
+  const handleCanvasChange = useCallback(
+    (
+      elements: readonly ExcalidrawElement[],
+      appState: AppState,
+      files: BinaryFiles,
+    ) => {
+      const stickyToolIsActive =
+        appState.activeTool.type === "custom" &&
+        appState.activeTool.customType === "astryx-sticky-note";
+      if (!stickyToolIsActive) deactivateStickyTool();
+      const nextCanvasTextEditing = Boolean(appState.editingTextElement);
+      canvasTextEditingRef.current = nextCanvasTextEditing;
+      setCanvasTextEditing((current) =>
+        current === nextCanvasTextEditing ? current : nextCanvasTextEditing,
+      );
+      const selectedTextElement = elements.find(
+        (element) =>
+          !element.isDeleted &&
+          element.type === "text" &&
+          (appState.selectedElementIds[element.id] ||
+            appState.editingTextElement?.id === element.id),
+      );
+      /* Text bound to a sticky note belongs to its note's object toolbar. Plain
+       text owns the same compact shell, but not the note collaboration UI. */
+      const selectedTextContainerId = selectedTextElement
+        ? (selectedTextElement as { containerId?: string | null }).containerId
+        : undefined;
+      const nextSelectedCanvasText = selectedTextContainerId
+        ? undefined
+        : selectedTextElement
+          ? canvasTextReferenceForElement(selectedTextElement)
+          : undefined;
+      setSelectedCanvasText((current) =>
+        canvasTextReferencesEqual(current, nextSelectedCanvasText)
+          ? current
+          : nextSelectedCanvasText,
+      );
+      // Excalidraw changes back to Select when the inline editor opens. Keep the
+      // FigJam Text affordance active until that editing interaction is finished.
+      const nextTextToolActive =
+        nextCanvasTextEditing || appState.activeTool.type === "text";
+      setTextToolActive((current) =>
+        current === nextTextToolActive ? current : nextTextToolActive,
+      );
+      setTextSelectionActive((current) =>
+        current === (nextCanvasTextEditing || Boolean(selectedTextElement))
+          ? current
+          : nextCanvasTextEditing || Boolean(selectedTextElement),
+      );
+      const frames = elements
+        .filter((element) => !element.isDeleted)
+        .map((element) => researchFrameReferenceForElement(element, elements))
+        .filter((reference): reference is AstryxResearchFrameReference =>
+          Boolean(reference),
+        );
+      setResearchFrames((current) =>
+        researchFrameReferencesEqual(current, frames) ? current : frames,
+      );
+      const selectedFrames = frames.filter(
+        (frame) => appState.selectedElementIds[frame.elementId],
+      );
+      const selectedFrame =
+        selectedFrames.length === 1 ? selectedFrames[0] : undefined;
+      setSelectedResearchFrame((current) => {
+        if (!current && !selectedFrame) return current;
+        if (
+          current?.elementId === selectedFrame?.elementId &&
+          current?.title === selectedFrame?.title &&
+          current?.itemCount === selectedFrame?.itemCount
+        )
+          return current;
+        return selectedFrame;
+      });
+      setResearchFrameDrawing(appState.activeTool.type === "frame");
+      const nextMarkerDrawing =
+        appState.activeTool.type === "freedraw" ||
+        appState.activeTool.type === "eraser";
+      setMarkerDrawing((current) =>
+        current === nextMarkerDrawing ? current : nextMarkerDrawing,
+      );
+      if (appState.activeTool.type === "eraser") setMarkerMode("eraser");
+      if (appState.activeTool.type === "freedraw") {
+        const setActiveColor =
+          markerMode === "highlighter" ? setHighlighterColor : setMarkerColor;
+        setActiveColor((current) =>
+          current === appState.currentItemStrokeColor
+            ? current
+            : appState.currentItemStrokeColor,
+        );
+      }
+      const documents = elements
+        .filter((element) => !element.isDeleted)
+        .map(documentReferenceForElement)
+        .filter((reference): reference is AstryxCanvasDocumentReference =>
+          Boolean(reference),
+        );
+      setCanvasDocuments((current) =>
+        canvasDocumentReferencesEqual(current, documents) ? current : documents,
+      );
+      const selectedScreens = elements
+        .filter((element) => appState.selectedElementIds[element.id])
+        .map(screenReferenceForElement)
+        .filter((reference): reference is AstryxScreenReference =>
+          Boolean(reference),
+        );
+      const selectedScreen =
+        selectedScreens.length === 1 ? selectedScreens[0] : undefined;
+      setSelectedScreenReference((current) =>
+        current?.elementId === selectedScreen?.elementId
+          ? current
+          : selectedScreen,
+      );
+      const selectedDataReferences = elements
+        .filter((element) => appState.selectedElementIds[element.id])
+        .map(canvasDataReferenceForElement)
+        .filter((reference): reference is AstryxCanvasDataReference =>
+          Boolean(reference),
+        );
+      const selectedDataReference =
+        selectedDataReferences.length === 1
+          ? selectedDataReferences[0]
+          : undefined;
+      setSelectedDataReference((current) =>
+        current?.elementId === selectedDataReference?.elementId
+          ? current
+          : selectedDataReference,
+      );
+      const selectedDocuments = elements
+        .filter((element) => appState.selectedElementIds[element.id])
+        .map(documentReferenceForElement)
+        .filter((reference): reference is AstryxCanvasDocumentReference =>
+          Boolean(reference),
+        );
+      const selectedDocument =
+        selectedDocuments.length === 1 ? selectedDocuments[0] : undefined;
+      setSelectedCanvasDocument((current) => {
+        if (!current && !selectedDocument) return current;
+        if (
+          current?.elementId === selectedDocument?.elementId &&
+          current.title === selectedDocument.title &&
+          current.body === selectedDocument.body &&
+          current.templateId === selectedDocument.templateId &&
+          current.expanded === selectedDocument.expanded &&
+          current.x === selectedDocument.x &&
+          current.y === selectedDocument.y &&
+          current.width === selectedDocument.width &&
+          current.height === selectedDocument.height
+        )
+          return current;
+        return selectedDocument;
+      });
+      /*
+       * Resolve a selection to its sticky container. Clicking into a note's text
+       * selects the bound text element, which is not a rectangle and carries no
+       * astryxReference — so matching only containers dropped the note and let
+       * Excalidraw's generic shape panel take over mid-edit.
+       */
+      const selectedStickyNotes = elements
+        .filter((element) => appState.selectedElementIds[element.id])
+        .map((element) => {
+          const direct = stickyNoteReferenceForElement(element);
+          if (direct) return direct;
+          const containerId = (element as { containerId?: string | null })
+            .containerId;
+          if (!containerId) return undefined;
+          const container = elements.find(
+            (candidate) => candidate.id === containerId,
+          );
+          return container
+            ? stickyNoteReferenceForElement(container)
+            : undefined;
+        })
+        .filter((reference): reference is AstryxStickyNoteReference =>
+          Boolean(reference),
+        );
+      /* One note may resolve twice when both its container and its text are in the
        selection; that is still a single note. */
-    const uniqueSelectedStickyNotes = selectedStickyNotes.filter(
-      (reference, index) => selectedStickyNotes
-        .findIndex((candidate) => candidate.elementId === reference.elementId) === index,
-    );
-    const selectedSticky = uniqueSelectedStickyNotes.length === 1
-      ? uniqueSelectedStickyNotes[0]
-      : undefined;
-    setSelectedStickyNote((current) => (
-      stickyNoteReferencesEqual(current, selectedSticky) ? current : selectedSticky
-    ));
-    const nextStickyNotes = elements
-      .map(stickyNoteReferenceForElement)
-      .filter((reference): reference is AstryxStickyNoteReference => Boolean(reference));
-    setStickyNotes((current) => (
-      stickyNoteReferenceListsEqual(current, nextStickyNotes) ? current : nextStickyNotes
-    ));
-    const nextViewport = {
-      scrollX: appState.scrollX,
-      scrollY: appState.scrollY,
-      zoom: appState.zoom.value,
-    };
-    setCanvasViewport((current) => (
-      current.scrollX === nextViewport.scrollX
-      && current.scrollY === nextViewport.scrollY
-      && current.zoom === nextViewport.zoom
-        ? current
-        : nextViewport
-    ));
-    if (!loadedRef.current) return;
-    const snapshot = serializeCanvas(elements, appState, files, canvasCommentsRef.current);
-    queueSnapshot(snapshot);
-    const elementsVersion = hashElementsVersion(elements);
-    const isRemoteApplication = remoteElementsVersionRef.current === elementsVersion
-      && Date.now() <= remoteBroadcastSuppressedUntilRef.current;
-    if (isRemoteApplication) {
-      remoteElementsVersionRef.current = undefined;
-    } else {
-      collaborationRef.current?.publishScene(snapshot);
-    }
-    persistEmbeddedFiles(files);
-  }, [persistEmbeddedFiles, queueSnapshot]);
+      const uniqueSelectedStickyNotes = selectedStickyNotes.filter(
+        (reference, index) =>
+          selectedStickyNotes.findIndex(
+            (candidate) => candidate.elementId === reference.elementId,
+          ) === index,
+      );
+      const selectedSticky =
+        uniqueSelectedStickyNotes.length === 1
+          ? uniqueSelectedStickyNotes[0]
+          : undefined;
+      setSelectedStickyNote((current) =>
+        stickyNoteReferencesEqual(current, selectedSticky)
+          ? current
+          : selectedSticky,
+      );
+      const nextStickyNotes = elements
+        .map(stickyNoteReferenceForElement)
+        .filter((reference): reference is AstryxStickyNoteReference =>
+          Boolean(reference),
+        );
+      setStickyNotes((current) =>
+        stickyNoteReferenceListsEqual(current, nextStickyNotes)
+          ? current
+          : nextStickyNotes,
+      );
+      const nextViewport = {
+        scrollX: appState.scrollX,
+        scrollY: appState.scrollY,
+        zoom: appState.zoom.value,
+      };
+      setCanvasViewport((current) =>
+        current.scrollX === nextViewport.scrollX &&
+        current.scrollY === nextViewport.scrollY &&
+        current.zoom === nextViewport.zoom
+          ? current
+          : nextViewport,
+      );
+      if (!loadedRef.current) return;
+      const snapshot = serializeCanvas(
+        elements,
+        appState,
+        files,
+        canvasCommentsRef.current,
+      );
+      queueSnapshot(snapshot);
+      const elementsVersion = hashElementsVersion(elements);
+      const isRemoteApplication =
+        remoteElementsVersionRef.current === elementsVersion &&
+        Date.now() <= remoteBroadcastSuppressedUntilRef.current;
+      if (isRemoteApplication) {
+        remoteElementsVersionRef.current = undefined;
+      } else {
+        collaborationRef.current?.publishScene(snapshot);
+      }
+      persistEmbeddedFiles(files);
+    },
+    [deactivateStickyTool, markerMode, persistEmbeddedFiles, queueSnapshot],
+  );
 
   useEffect(() => {
     const collaboration = openDesignerCanvasCollaboration({
@@ -1604,7 +2446,10 @@ export function ProjectPlayground({
       onStatus: setCollaborationStatus,
       onPresence(collaborators) {
         remoteCollaboratorsRef.current = new Map(
-          collaborators.map((collaborator) => [collaborator.clientId, collaborator]),
+          collaborators.map((collaborator) => [
+            collaborator.clientId,
+            collaborator,
+          ]),
         );
         for (const clientId of remoteCursorsRef.current.keys()) {
           if (!remoteCollaboratorsRef.current.has(clientId)) {
@@ -1634,18 +2479,23 @@ export function ProjectPlayground({
           elements: value.elements,
           appState: { selectedElementIds },
         });
-        queueSnapshot(serializeCanvas(value.elements, editor.getAppState(), files, comments));
+        queueSnapshot(
+          serializeCanvas(
+            value.elements,
+            editor.getAppState(),
+            files,
+            comments,
+          ),
+        );
       },
     });
     collaborationRef.current = collaboration;
     return () => {
       collaboration.close();
-      if (collaborationRef.current === collaboration) collaborationRef.current = null;
+      if (collaborationRef.current === collaboration)
+        collaborationRef.current = null;
     };
   }, [canvasId, projectId, queueSnapshot, syncCanvasCollaborators]);
-
-
-
 
   const canvasImagePlacement = useCallback((width: number, height: number) => {
     const editor = editorRef.current;
@@ -1665,219 +2515,274 @@ export function ProjectPlayground({
     };
   }, []);
 
-  const insertReference = useCallback(async (item: ResearchProjectItem) => {
-    const editor = editorRef.current;
-    if (!editor || !item.mediaUrl || item.restricted) return;
-    setInsertingReferenceId(item.id);
-    setReferenceMessage("");
-    try {
-      const response = await apiFetch(item.mediaUrl, { credentials: "same-origin" });
-      if (!response.ok) throw new Error(`Reference image returned ${response.status}`);
-      const blob = await response.blob();
-      if (!canvasMediaMimeTypeSet.has(blob.type)) {
-        throw new Error("This reference is not a supported PNG, JPEG, or WebP image.");
-      }
-      const fileId = crypto.randomUUID() as FileId;
-      const dataURL = await blobDataUrl(blob);
-      await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
-      const dimensions = await imageDimensions(blob);
-      const placement = canvasImagePlacement(dimensions.width, dimensions.height);
-      const file: BinaryFileData = {
-        id: fileId,
-        mimeType: blob.type as BinaryFileData["mimeType"],
-        dataURL,
-        created: Date.now(),
-      };
-      const [image] = convertToExcalidrawElements([{
-        type: "image",
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-        fileId,
-        status: "saved",
-      }]);
-      const referenceImage = {
-        ...image,
-        frameId: placement.frameId ?? null,
-        customData: {
-          ...image.customData,
-          astryxReference: {
-            kind: "research-reference",
-            itemId: item.id,
-            appId: item.appId ?? null,
-            title: item.snapshot.title,
+  const insertReference = useCallback(
+    async (item: ResearchProjectItem) => {
+      const editor = editorRef.current;
+      if (!editor || !item.mediaUrl || item.restricted) return;
+      setInsertingReferenceId(item.id);
+      setReferenceMessage("");
+      try {
+        const response = await apiFetch(item.mediaUrl, {
+          credentials: "same-origin",
+        });
+        if (!response.ok)
+          throw new Error(`Reference image returned ${response.status}`);
+        const blob = await response.blob();
+        if (!canvasMediaMimeTypeSet.has(blob.type)) {
+          throw new Error(
+            "This reference is not a supported PNG, JPEG, or WebP image.",
+          );
+        }
+        const fileId = crypto.randomUUID() as FileId;
+        const dataURL = await blobDataUrl(blob);
+        await uploadProjectCanvasAsset(projectId, `asset:${fileId}`, blob);
+        const dimensions = await imageDimensions(blob);
+        const placement = canvasImagePlacement(
+          dimensions.width,
+          dimensions.height,
+        );
+        const file: BinaryFileData = {
+          id: fileId,
+          mimeType: blob.type as BinaryFileData["mimeType"],
+          dataURL,
+          created: Date.now(),
+        };
+        const [image] = convertToExcalidrawElements([
+          {
+            type: "image",
+            x: placement.x,
+            y: placement.y,
+            width: placement.width,
+            height: placement.height,
+            fileId,
+            status: "saved",
           },
-        },
-      } as ExcalidrawElement;
-      editor.addFiles([file]);
-      persistedFileIdsRef.current.add(file.id);
-      editor.updateScene({ elements: [...editor.getSceneElements(), referenceImage] });
-      editor.scrollToContent(referenceImage, { animate: true, fitToViewport: false });
-      setReferenceMessage(`Added ${item.stepLabel || item.snapshot.title} to the canvas.`);
-    } catch (error) {
-      setReferenceMessage((error as Error).message);
-    } finally {
-      setInsertingReferenceId(undefined);
-    }
-  }, [canvasImagePlacement, projectId]);
+        ]);
+        const referenceImage = {
+          ...image,
+          frameId: placement.frameId ?? null,
+          customData: {
+            ...image.customData,
+            astryxReference: {
+              kind: "research-reference",
+              itemId: item.id,
+              appId: item.appId ?? null,
+              title: item.snapshot.title,
+            },
+          },
+        } as ExcalidrawElement;
+        editor.addFiles([file]);
+        persistedFileIdsRef.current.add(file.id);
+        editor.updateScene({
+          elements: [...editor.getSceneElements(), referenceImage],
+        });
+        editor.scrollToContent(referenceImage, {
+          animate: true,
+          fitToViewport: false,
+        });
+        setReferenceMessage(
+          `Added ${item.stepLabel || item.snapshot.title} to the canvas.`,
+        );
+      } catch (error) {
+        setReferenceMessage((error as Error).message);
+      } finally {
+        setInsertingReferenceId(undefined);
+      }
+    },
+    [canvasImagePlacement, projectId],
+  );
 
-  const insertCatalogScreen = useCallback(async (
-    result: AppsDiscoveryScreenResult,
-    dropPoint?: { x: number; y: number },
-  ) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const { app, screen } = result;
-    setInsertingScreenKey(projectScreenKey(result));
-    setScreenMessage("");
-    try {
-      /* Same loader the App and Flow cards use: it fetches through the media
+  const insertCatalogScreen = useCallback(
+    async (
+      result: AppsDiscoveryScreenResult,
+      dropPoint?: { x: number; y: number },
+    ) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const { app, screen } = result;
+      setInsertingScreenKey(projectScreenKey(result));
+      setScreenMessage("");
+      try {
+        /* Same loader the App and Flow cards use: it fetches through the media
          proxy, stores the asset in the project, and keeps the bytes inline when
          that upload fails — so the card never points an <img> at a URL the page
          cannot load. */
-      /* Catalog tiles may use a resized preview, but the canvas is evidence:
+        /* Catalog tiles may use a resized preview, but the canvas is evidence:
          only the original screen capture belongs on the board. */
-      const loaded = await loadCatalogCardImage(screen.url, projectId);
-      const image = loaded?.image;
-      if (!image || !loaded) {
-        setScreenMessage("This screen image could not be loaded. Try another reference.");
-        return;
-      }
-      /* A drop names its own spot; repeated clicks cascade images to the right
+        const loaded = await loadCatalogCardImage(screen.url, projectId);
+        const image = loaded?.image;
+        if (!image || !loaded) {
+          setScreenMessage(
+            "This screen image could not be loaded. Try another reference.",
+          );
+          return;
+        }
+        /* A drop names its own spot; repeated clicks cascade images to the right
          instead of stacking every newly chosen screen in the same place. */
-      const auto = canvasImagePlacement(image.width, image.height);
-      const lastScreenImage = dropPoint ? undefined : [...editor.getSceneElements()]
-        .reverse()
-        .find((element) => screenReferenceForElement(element));
-      const placement = dropPoint
-        ? { ...auto, x: dropPoint.x - auto.width / 2, y: dropPoint.y - auto.height / 2 }
-        : lastScreenImage
+        const auto = canvasImagePlacement(image.width, image.height);
+        const lastScreenImage = dropPoint
+          ? undefined
+          : [...editor.getSceneElements()]
+              .reverse()
+              .find((element) => screenReferenceForElement(element));
+        const placement = dropPoint
           ? {
-            ...auto,
-            x: lastScreenImage.x + lastScreenImage.width + 40,
-            y: lastScreenImage.y,
-          }
-          : auto;
-      const [imageElement] = convertToExcalidrawElements([{
-        type: "image",
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-        fileId: image.fileId,
-        status: "saved",
-      }]);
-      const canvasImage = {
-        ...imageElement,
-        frameId: placement.frameId ?? null,
-        customData: {
-          ...imageElement.customData,
-          astryxReference: {
-            kind: "screen",
-            appId: app.id,
-            appName: app.app,
-            screenId: screen.id,
-            screenType: screen.type,
-            platform: screen.platform,
-            mediaUrl: screen.url,
-            sourceUrl: screen.sourceUrl ?? null,
+              ...auto,
+              x: dropPoint.x - auto.width / 2,
+              y: dropPoint.y - auto.height / 2,
+            }
+          : lastScreenImage
+            ? {
+                ...auto,
+                x: lastScreenImage.x + lastScreenImage.width + 40,
+                y: lastScreenImage.y,
+              }
+            : auto;
+        const [imageElement] = convertToExcalidrawElements([
+          {
+            type: "image",
+            x: placement.x,
+            y: placement.y,
+            width: placement.width,
+            height: placement.height,
+            fileId: image.fileId,
+            status: "saved",
           },
-        },
-      } as ExcalidrawElement;
-      editor.addFiles([loaded.file]);
-      if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
-      editor.updateScene({
-        elements: [...editor.getSceneElements(), canvasImage],
-        appState: { selectedElementIds: { [canvasImage.id]: true } },
-      });
-      editor.scrollToContent(canvasImage, { animate: true, fitToViewport: false });
-      showToast(loaded.stored
-        ? `Added ${app.app} to the canvas.`
-        : `Added ${app.app} to the canvas locally. Sign in to sync it.`);
-    } catch (error) {
-      setScreenMessage((error as Error).message);
-    } finally {
-      setInsertingScreenKey(undefined);
-    }
-  }, [canvasImagePlacement, projectId, showToast]);
+        ]);
+        const canvasImage = {
+          ...imageElement,
+          frameId: placement.frameId ?? null,
+          customData: {
+            ...imageElement.customData,
+            astryxReference: {
+              kind: "screen",
+              appId: app.id,
+              appName: app.app,
+              screenId: screen.id,
+              screenType: screen.type,
+              platform: screen.platform,
+              mediaUrl: screen.url,
+              sourceUrl: screen.sourceUrl ?? null,
+            },
+          },
+        } as ExcalidrawElement;
+        editor.addFiles([loaded.file]);
+        if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
+        editor.updateScene({
+          elements: [...editor.getSceneElements(), canvasImage],
+          appState: { selectedElementIds: { [canvasImage.id]: true } },
+        });
+        editor.scrollToContent(canvasImage, {
+          animate: true,
+          fitToViewport: false,
+        });
+        showToast(
+          loaded.stored
+            ? `Added ${app.app} to the canvas.`
+            : `Added ${app.app} to the canvas locally. Sign in to sync it.`,
+        );
+      } catch (error) {
+        setScreenMessage((error as Error).message);
+      } finally {
+        setInsertingScreenKey(undefined);
+      }
+    },
+    [canvasImagePlacement, projectId, showToast],
+  );
 
-
-  const insertCanvasDataReference = useCallback(async (
-    reference: AstryxCanvasDataPayload,
-    message: string,
-    /* Where the reader dropped it. Without one the card cascades from the last
+  const insertCanvasDataReference = useCallback(
+    async (
+      reference: AstryxCanvasDataPayload,
+      message: string,
+      /* Where the reader dropped it. Without one the card cascades from the last
        one placed, which is right for a click and wrong for a drag. */
-    placement?: { x: number; y: number },
-    /* Thumbnail for the card's media band. */
-    imageUrl?: string,
-  ) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const appState = editor.getAppState();
-    const zoom = appState.zoom.value;
-    const sceneElements = editor.getSceneElements();
-    const lastDataCard = [...sceneElements]
-      .reverse()
-      .find((element) => canvasDataReferenceForElement(element));
-    const cardWidth = catalogCardLayout.width;
-    const cardHeight = 340;
-    const centerX = placement?.x ?? (lastDataCard
-      ? lastDataCard.x + lastDataCard.width + 40 + cardWidth / 2
-      : -appState.scrollX + appState.width / (2 * zoom));
-    const centerY = placement?.y ?? (lastDataCard
-      ? lastDataCard.y + cardHeight / 2
-      : -appState.scrollY + appState.height / (2 * zoom));
+      placement?: { x: number; y: number },
+      /* Thumbnail for the card's media band. */
+      imageUrl?: string,
+    ) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const appState = editor.getAppState();
+      const zoom = appState.zoom.value;
+      const sceneElements = editor.getSceneElements();
+      const lastDataCard = [...sceneElements]
+        .reverse()
+        .find((element) => canvasDataReferenceForElement(element));
+      const cardWidth = catalogCardLayout.width;
+      const cardHeight = 340;
+      const centerX =
+        placement?.x ??
+        (lastDataCard
+          ? lastDataCard.x + lastDataCard.width + 40 + cardWidth / 2
+          : -appState.scrollX + appState.width / (2 * zoom));
+      const centerY =
+        placement?.y ??
+        (lastDataCard
+          ? lastDataCard.y + cardHeight / 2
+          : -appState.scrollY + appState.height / (2 * zoom));
 
-    const isApp = reference.kind === "app";
-    const loaded = await loadCatalogCardImage(imageUrl, projectId);
-    const created = createCatalogCardElements({
-      x: centerX,
-      y: centerY,
-      eyebrow: isApp ? "App" : "Flow",
-      title: isApp ? reference.appName : reference.flowTitle,
-      meta: isApp
-        ? `${reference.category || reference.platform} · ${reference.totalScreens} screens`
-        : `${reference.appName} · ${reference.stepCount} ${reference.stepCount === 1 ? "step" : "steps"}`,
-      accent: isApp
-        ? { stroke: "#9cb6df", fill: "#eef4ff" }
-        : { stroke: "#9d94d8", fill: "#f2efff" },
-      image: loaded?.image,
-      reference: reference as unknown as Record<string, unknown>,
-    });
-    const container = created.find((element) => element.type === "rectangle");
-    if (loaded) {
-      editor.addFiles([loaded.file]);
-      if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
-    }
-    editor.updateScene({
-      elements: [...editor.getSceneElements(), ...created],
-      appState: { selectedElementIds: container ? { [container.id]: true } : {} },
-    });
-    editor.scrollToContent(created, { animate: true, fitToViewport: false });
-    if (container) setSelectedDataReference(canvasDataReferenceForElement(container));
-    showToast(message);
-  }, [showToast]);
+      const isApp = reference.kind === "app";
+      const loaded = await loadCatalogCardImage(imageUrl, projectId);
+      const created = createCatalogCardElements({
+        x: centerX,
+        y: centerY,
+        eyebrow: isApp ? "App" : "Flow",
+        title: isApp ? reference.appName : reference.flowTitle,
+        meta: isApp
+          ? `${reference.category || reference.platform} · ${reference.totalScreens} screens`
+          : `${reference.appName} · ${reference.stepCount} ${reference.stepCount === 1 ? "step" : "steps"}`,
+        accent: isApp
+          ? { stroke: "#9cb6df", fill: "#eef4ff" }
+          : { stroke: "#9d94d8", fill: "#f2efff" },
+        image: loaded?.image,
+        reference: reference as unknown as Record<string, unknown>,
+      });
+      const container = created.find((element) => element.type === "rectangle");
+      if (loaded) {
+        editor.addFiles([loaded.file]);
+        if (loaded.stored) persistedFileIdsRef.current.add(loaded.file.id);
+      }
+      editor.updateScene({
+        elements: [...editor.getSceneElements(), ...created],
+        appState: {
+          selectedElementIds: container ? { [container.id]: true } : {},
+        },
+      });
+      editor.scrollToContent(created, { animate: true, fitToViewport: false });
+      if (container)
+        setSelectedDataReference(canvasDataReferenceForElement(container));
+      showToast(message);
+    },
+    [showToast],
+  );
 
-  const insertCatalogFlow = useCallback((
-    item: FlowCatalogItem,
-    platform: Platform,
-    placement?: { x: number; y: number },
-  ) => {
-    return insertCanvasDataReference({
-      kind: "flow",
-      appId: item.preview.appId,
-      appName: item.preview.appName,
-      flowId: item.preview.sourceFlowId,
-      flowTitle: item.title,
-      category: item.category,
-      description: item.preview.flow.description,
-      platform,
-      version: item.preview.version,
-      stepCount: item.preview.screenCount,
-    }, `Added ${item.title} to the canvas.`, placement,
-      item.preview.flow.steps.flatMap((step) => step.evidence)[0]?.thumbnailUrl);
-  }, [insertCanvasDataReference]);
+  const insertCatalogFlow = useCallback(
+    (
+      item: FlowCatalogItem,
+      platform: Platform,
+      placement?: { x: number; y: number },
+    ) => {
+      return insertCanvasDataReference(
+        {
+          kind: "flow",
+          appId: item.preview.appId,
+          appName: item.preview.appName,
+          flowId: item.preview.sourceFlowId,
+          flowTitle: item.title,
+          category: item.category,
+          description: item.preview.flow.description,
+          platform,
+          version: item.preview.version,
+          stepCount: item.preview.screenCount,
+        },
+        `Added ${item.title} to the canvas.`,
+        placement,
+        item.preview.flow.steps.flatMap((step) => step.evidence)[0]
+          ?.thumbnailUrl,
+      );
+    },
+    [insertCanvasDataReference],
+  );
 
   const insertTemplate = useCallback((template: ProjectCanvasTemplate) => {
     const editor = editorRef.current;
@@ -1886,21 +2791,31 @@ export function ProjectPlayground({
     const zoom = appState.zoom.value;
     const minX = Math.min(...template.elements.map((element) => element.x));
     const minY = Math.min(...template.elements.map((element) => element.y));
-    const maxX = Math.max(...template.elements.map((element) => element.x + (element.width ?? 0)));
-    const maxY = Math.max(...template.elements.map((element) => element.y + (element.height ?? 0)));
+    const maxX = Math.max(
+      ...template.elements.map((element) => element.x + (element.width ?? 0)),
+    );
+    const maxY = Math.max(
+      ...template.elements.map((element) => element.y + (element.height ?? 0)),
+    );
     const width = Math.max(1, maxX - minX);
     const height = Math.max(1, maxY - minY);
     const centerX = -appState.scrollX + appState.width / (2 * zoom);
     const centerY = -appState.scrollY + appState.height / (2 * zoom);
     const offsetX = centerX - width / 2 - minX;
     const offsetY = centerY - height / 2 - minY;
-    type ElementSkeleton = NonNullable<Parameters<typeof convertToExcalidrawElements>[0]>[number];
-    const elements = convertToExcalidrawElements(template.elements.map((element) => ({
-      ...element,
-      x: element.x + offsetX,
-      y: element.y + offsetY,
-    })) as unknown as ElementSkeleton[]);
-    editor.updateScene({ elements: [...editor.getSceneElements(), ...elements] });
+    type ElementSkeleton = NonNullable<
+      Parameters<typeof convertToExcalidrawElements>[0]
+    >[number];
+    const elements = convertToExcalidrawElements(
+      template.elements.map((element) => ({
+        ...element,
+        x: element.x + offsetX,
+        y: element.y + offsetY,
+      })) as unknown as ElementSkeleton[],
+    );
+    editor.updateScene({
+      elements: [...editor.getSceneElements(), ...elements],
+    });
     editor.scrollToContent(elements, { animate: true, fitToViewport: false });
     setTemplatesOpen(false);
     setReferenceMessage(`Added ${template.title} to the canvas.`);
@@ -1909,55 +2824,73 @@ export function ProjectPlayground({
   const focusResearchFrame = useCallback((elementId: string) => {
     const editor = editorRef.current;
     if (!editor) return;
-    const frame = editor.getSceneElements().find((element) => (
-      !element.isDeleted && element.type === "frame" && element.id === elementId
-    ));
+    const frame = editor
+      .getSceneElements()
+      .find(
+        (element) =>
+          !element.isDeleted &&
+          element.type === "frame" &&
+          element.id === elementId,
+      );
     if (!frame) return;
     editor.setActiveTool({ type: "selection" });
-    editor.updateScene({ appState: { selectedElementIds: { [frame.id]: true } } });
-    editor.scrollToContent(frame, { animate: true, fitToViewport: true });
-    setSelectedResearchFrame(researchFrameReferenceForElement(frame, editor.getSceneElements()));
-  }, []);
-
-  const insertResearchFrame = useCallback((preset: ProjectResearchFramePreset) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const appState = editor.getAppState();
-    const zoom = appState.zoom.value;
-    const sceneElements = editor.getSceneElements();
-    const lastFrame = [...sceneElements]
-      .reverse()
-      .find((element) => !element.isDeleted && element.type === "frame");
-    const x = lastFrame
-      ? lastFrame.x + lastFrame.width + 96
-      : -appState.scrollX + appState.width / (2 * zoom) - researchFrameWidth / 2;
-    const y = lastFrame
-      ? lastFrame.y
-      : -appState.scrollY + appState.height / (2 * zoom) - researchFrameHeight / 2;
-    const [frame] = convertToExcalidrawElements([{
-      type: "frame",
-      children: [],
-      x,
-      y,
-      width: researchFrameWidth,
-      height: researchFrameHeight,
-      name: preset.title,
-      customData: {
-        astryxReference: {
-          kind: "research-frame",
-          frameType: preset.id,
-          createdAt: new Date().toISOString(),
-        },
-      },
-    } as ElementSkeleton]);
-    editor.setActiveTool({ type: "selection" });
     editor.updateScene({
-      elements: [...sceneElements, frame],
       appState: { selectedElementIds: { [frame.id]: true } },
     });
     editor.scrollToContent(frame, { animate: true, fitToViewport: true });
-    setResearchFramesOpen(false);
+    setSelectedResearchFrame(
+      researchFrameReferenceForElement(frame, editor.getSceneElements()),
+    );
   }, []);
+
+  const insertResearchFrame = useCallback(
+    (preset: ProjectResearchFramePreset) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const appState = editor.getAppState();
+      const zoom = appState.zoom.value;
+      const sceneElements = editor.getSceneElements();
+      const lastFrame = [...sceneElements]
+        .reverse()
+        .find((element) => !element.isDeleted && element.type === "frame");
+      const x = lastFrame
+        ? lastFrame.x + lastFrame.width + 96
+        : -appState.scrollX +
+          appState.width / (2 * zoom) -
+          researchFrameWidth / 2;
+      const y = lastFrame
+        ? lastFrame.y
+        : -appState.scrollY +
+          appState.height / (2 * zoom) -
+          researchFrameHeight / 2;
+      const [frame] = convertToExcalidrawElements([
+        {
+          type: "frame",
+          children: [],
+          x,
+          y,
+          width: researchFrameWidth,
+          height: researchFrameHeight,
+          name: preset.title,
+          customData: {
+            astryxReference: {
+              kind: "research-frame",
+              frameType: preset.id,
+              createdAt: new Date().toISOString(),
+            },
+          },
+        } as ElementSkeleton,
+      ]);
+      editor.setActiveTool({ type: "selection" });
+      editor.updateScene({
+        elements: [...sceneElements, frame],
+        appState: { selectedElementIds: { [frame.id]: true } },
+      });
+      editor.scrollToContent(frame, { animate: true, fitToViewport: true });
+      setResearchFramesOpen(false);
+    },
+    [],
+  );
 
   const drawResearchFrame = useCallback(() => {
     const editor = editorRef.current;
@@ -1967,6 +2900,7 @@ export function ProjectPlayground({
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
     setStickyPlacement(undefined);
+    setShapePlacement(undefined);
     setDocumentPlacement(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -1976,12 +2910,11 @@ export function ProjectPlayground({
   }, []);
 
   const stopStickyPlacement = useCallback(() => {
-    setStickyPickerOpen(false);
-    setStickyPlacement(undefined);
+    deactivateStickyTool();
     const editor = editorRef.current;
     editor?.resetCursor();
     editor?.setActiveTool({ type: "selection" });
-  }, []);
+  }, [deactivateStickyTool]);
 
   const stopDocumentPlacement = useCallback(() => {
     setDocumentPlacement(false);
@@ -2007,6 +2940,7 @@ export function ProjectPlayground({
     setCommentDraftAnchor(undefined);
     setCommentDraft("");
     setSelectedCommentId(undefined);
+    setShapePlacement(undefined);
     setResearchFramesOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -2016,7 +2950,12 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-comment" });
     editor?.setCursor(commentPlacementCursor);
-  }, [commentPlacement, stopCommentPlacement, stopDocumentPlacement, stopStickyPlacement]);
+  }, [
+    commentPlacement,
+    stopCommentPlacement,
+    stopDocumentPlacement,
+    stopStickyPlacement,
+  ]);
 
   const armDocumentPlacement = useCallback(() => {
     stopCommentPlacement();
@@ -2024,6 +2963,7 @@ export function ProjectPlayground({
     setResearchFramesOpen(false);
     setStickyPickerOpen(false);
     setStickyDraft(undefined);
+    setShapePlacement(undefined);
     stopStickyPlacement();
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -2047,9 +2987,10 @@ export function ProjectPlayground({
     // Excalidraw's scroll coordinates include its internal viewport offset.
     // Convert that screen-space offset back into scene units before clamping.
     const viewportTop = -appState.scrollY + appState.offsetTop / zoom;
-    const minimumCenterY = viewportTop
-      + canvasDocumentViewportTopSafeArea / zoom
-      + canvasDocumentHeight / 2;
+    const minimumCenterY =
+      viewportTop +
+      canvasDocumentViewportTopSafeArea / zoom +
+      canvasDocumentHeight / 2;
     const created = createCanvasDocumentElements({
       x,
       y: Math.max(y, minimumCenterY),
@@ -2067,26 +3008,68 @@ export function ProjectPlayground({
         scrollY: appState.scrollY,
       },
     });
-    if (container) setSelectedCanvasDocument(documentReferenceForElement(container));
+    if (container)
+      setSelectedCanvasDocument(documentReferenceForElement(container));
   }, []);
 
-  const armStickyPlacement = useCallback((
-    color: ProjectStickyNoteColor,
-    mode: StickyPlacementMode,
-    keepPickerOpen = false,
-  ) => {
-    stopCommentPlacement();
-    setStickyPickerOpen(keepPickerOpen);
-    setResearchFramesOpen(false);
-    setStickyDraft(undefined);
-    setStickyPlacement({ color, mode });
-    setScreensOpen(false);
-    setTemplatesOpen(false);
-    setReferencesOpen(false);
-    const editor = editorRef.current;
-    editor?.setActiveTool({ type: "custom", customType: "astryx-sticky-note" });
-    editor?.setCursor(stickyNotePlacementCursor(color, mode));
-  }, [stopCommentPlacement]);
+  const insertCanvasCustomShapeAt = useCallback(
+    (x: number, y: number, shape: CanvasShapeOption) => {
+      const editor = editorRef.current;
+      if (!editor || !shape.customShape) return;
+      const created = createCanvasCustomShapeElements({
+        shape,
+        x,
+        y,
+        color: shapeColor,
+      });
+      if (created.length === 0) return;
+      editor.updateScene({
+        elements: [...editor.getSceneElements(), ...created],
+        appState: {
+          selectedElementIds: Object.fromEntries(
+            created.map((element) => [element.id, true]),
+          ),
+        },
+      });
+    },
+    [shapeColor],
+  );
+
+  const armStickyPlacement = useCallback(
+    (
+      color: ProjectStickyNoteColor,
+      mode: StickyPlacementMode,
+      keepPickerOpen = false,
+    ) => {
+      stopCommentPlacement();
+      // Sticky Notes is a complete canvas mode. It can be entered through the
+      // toolbar or the N shortcut, so it must clear every competing family here
+      // instead of relying on whichever caller happened to open it.
+      setShapePickerOpen(false);
+      setShapeLibraryOpen(false);
+      setShapeLibraryQuery("");
+      setShapeColorPickerOpen(false);
+      setMarkerDrawing(false);
+      setResearchFrameDrawing(false);
+      setShapePlacement(undefined);
+      setDocumentPlacement(false);
+      setStickyPickerOpen(keepPickerOpen);
+      setResearchFramesOpen(false);
+      setStickyDraft(undefined);
+      setStickyToolColor(color);
+      setStickyPlacement({ color, mode });
+      setScreensOpen(false);
+      setTemplatesOpen(false);
+      setReferencesOpen(false);
+      const editor = editorRef.current;
+      editor?.setActiveTool({
+        type: "custom",
+        customType: "astryx-sticky-note",
+      });
+      editor?.setCursor(stickyNotePlacementCursor(color, mode));
+    },
+    [stopCommentPlacement],
+  );
 
   const toggleStickyNoteTool = useCallback(() => {
     if (stickyPickerOpen || stickyPlacement) {
@@ -2096,9 +3079,10 @@ export function ProjectPlayground({
     stopDocumentPlacement();
     editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
     setSelectedStickyNote(undefined);
-    armStickyPlacement(projectStickyNoteColors[0], "single", true);
+    armStickyPlacement(stickyToolColor, "single", true);
   }, [
     armStickyPlacement,
+    stickyToolColor,
     stickyPickerOpen,
     stickyPlacement,
     stopDocumentPlacement,
@@ -2106,171 +3090,279 @@ export function ProjectPlayground({
   ]);
 
   const toggleShapePicker = useCallback(() => {
-    const nextOpen = !shapePickerOpen;
-    setToolsCatalogOpen(false);
-    setShapePickerQuery("");
-    stopStickyPlacement();
-    stopDocumentPlacement();
-    stopCommentPlacement();
-    setResearchFramesOpen(false);
-    setScreensOpen(false);
-    setTemplatesOpen(false);
-    setDataToolsOpen(false);
-    setReferencesOpen(false);
-    setShapePickerOpen(nextOpen);
-  }, [
-    shapePickerOpen,
-    stopCommentPlacement,
-    stopDocumentPlacement,
-    stopStickyPlacement,
-  ]);
-
-  const selectCanvasShape = useCallback((tool: CanvasShapeTool) => {
-    stopStickyPlacement();
-    stopDocumentPlacement();
-    stopCommentPlacement();
-    setToolsCatalogOpen(false);
-    setResearchFramesOpen(false);
-    setScreensOpen(false);
-    setTemplatesOpen(false);
-    setDataToolsOpen(false);
-    setReferencesOpen(false);
-    setActiveShapeTool(tool);
+    setShapePickerOpen((open) => !open);
+    setShapeLibraryOpen(false);
+    setShapeLibraryQuery("");
+    setShapeColorPickerOpen(false);
+    setShapePlacement(undefined);
     editorRef.current?.resetCursor();
-    editorRef.current?.setActiveTool({ type: tool });
-  }, [stopCommentPlacement, stopDocumentPlacement, stopStickyPlacement]);
+    deactivateStickyTool();
+    setDocumentPlacement(false);
+    setCommentPlacement(false);
+  }, [deactivateStickyTool]);
 
+  const selectCanvasShape = useCallback(
+    (shape: CanvasShapeOption) => {
+      setActiveShapeOptionId(shape.id);
+      const editor = editorRef.current;
+      editor?.updateScene({
+        appState: {
+          currentItemStrokeColor: shapeColor,
+          currentItemStrokeWidth: 2,
+          currentItemRoughness: 0,
+          currentItemRoundness: shape.roundness ?? "sharp",
+          currentItemArrowType: shape.arrowType ?? "sharp",
+        },
+      });
+      if (shape.customShape) {
+        setShapePlacement(shape);
+        editor?.setActiveTool({
+          type: "custom",
+          customType: `astryx-shape:${shape.id}`,
+        });
+        editor?.setCursor("crosshair");
+      } else if (shape.tool) {
+        setShapePlacement(undefined);
+        editor?.resetCursor();
+        editor?.setActiveTool({ type: shape.tool });
+      }
+      setShapePickerOpen(true);
+      setShapeLibraryOpen(false);
+      setShapeLibraryQuery("");
+      setShapeColorPickerOpen(false);
+      deactivateStickyTool();
+      setDocumentPlacement(false);
+      setCommentPlacement(false);
+    },
+    [deactivateStickyTool, shapeColor],
+  );
 
+  const selectCanvasShapeColor = useCallback((color: string) => {
+    setShapeColor(color);
+    setShapeColorPickerOpen(false);
+    editorRef.current?.updateScene({
+      appState: {
+        currentItemStrokeColor: color,
+        currentItemStrokeWidth: 2,
+        currentItemRoughness: 0,
+      },
+    });
+  }, []);
 
+  const selectMarkerMode = useCallback(
+    (mode: CanvasMarkerMode) => {
+      const editor = editorRef.current;
+      setMarkerMode(mode);
+      setMarkerDrawing(true);
+      setShapePlacement(undefined);
+      deactivateStickyTool();
+      if (!editor) return;
+      if (mode === "eraser") {
+        editor.setActiveTool({ type: "eraser" });
+        return;
+      }
+      const color = mode === "highlighter" ? highlighterColor : markerColor;
+      editor.updateScene({
+        appState: {
+          currentItemStrokeColor: color,
+          currentItemStrokeWidth: canvasMarkerStrokeWidth(
+            mode,
+            markerStrokeWeight,
+          ),
+          currentItemOpacity: canvasMarkerOpacity(mode),
+          currentItemRoughness: 0,
+        },
+      });
+      editor.setActiveTool({ type: "freedraw" });
+    },
+    [deactivateStickyTool, highlighterColor, markerColor, markerStrokeWeight],
+  );
 
-  const activateCanvasTool = useCallback((tool: ProjectCanvasTool) => {
-    setToolsCatalogQuery("");
-    setShapePickerOpen(false);
-    setShapePickerQuery("");
+  const selectMarkerStrokeWeight = useCallback(
+    (weight: CanvasMarkerStrokeWeight) => {
+      setMarkerStrokeWeight(weight);
+      setShapePlacement(undefined);
+      if (markerMode === "eraser") return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.updateScene({
+        appState: {
+          currentItemStrokeWidth: canvasMarkerStrokeWidth(markerMode, weight),
+          currentItemOpacity: canvasMarkerOpacity(markerMode),
+          currentItemRoughness: 0,
+        },
+      });
+      editor.setActiveTool({ type: "freedraw" });
+    },
+    [markerMode],
+  );
 
-    if (tool === "more") {
-      const nextOpen = !toolsCatalogOpen;
+  const selectMarkerColor = useCallback(
+    (color: string) => {
+      if (markerMode === "eraser") return;
+      if (markerMode === "highlighter") setHighlighterColor(color);
+      else setMarkerColor(color);
+      setMarkerColorTransition((transition) => !transition);
+      setShapePlacement(undefined);
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.updateScene({
+        appState: {
+          currentItemStrokeColor: color,
+          currentItemStrokeWidth: canvasMarkerStrokeWidth(
+            markerMode,
+            markerStrokeWeight,
+          ),
+          currentItemOpacity: canvasMarkerOpacity(markerMode),
+          currentItemRoughness: 0,
+        },
+      });
+      editor.setActiveTool({ type: "freedraw" });
+    },
+    [markerMode, markerStrokeWeight],
+  );
+
+  const activateCanvasTool = useCallback(
+    (tool: ProjectCanvasTool) => {
+      setToolsCatalogQuery("");
+      setShapePickerOpen(false);
+      setShapePlacement(undefined);
+
+      if (tool === "more") {
+        const nextOpen = !toolsCatalogOpen;
+        stopStickyPlacement();
+        stopDocumentPlacement();
+        setResearchFramesOpen(false);
+        setScreensOpen(false);
+        setTemplatesOpen(false);
+        setReferencesOpen(false);
+        setToolsCatalogOpen(nextOpen);
+        return;
+      }
+
+      setToolsCatalogOpen(false);
+      if (tool === "sticky") {
+        toggleStickyNoteTool();
+        return;
+      }
+      if (tool === "comments") {
+        toggleCommentTool();
+        return;
+      }
+      if (tool === "document") {
+        if (documentPlacement) stopDocumentPlacement();
+        else armDocumentPlacement();
+        return;
+      }
+
       stopStickyPlacement();
       stopDocumentPlacement();
+      stopCommentPlacement();
       setResearchFramesOpen(false);
       setScreensOpen(false);
       setTemplatesOpen(false);
       setReferencesOpen(false);
-      setToolsCatalogOpen(nextOpen);
-      return;
-    }
 
-    setToolsCatalogOpen(false);
-    if (tool === "sticky") {
-      toggleStickyNoteTool();
-      return;
-    }
-    if (tool === "comments") {
-      toggleCommentTool();
-      return;
-    }
-    if (tool === "document") {
-      if (documentPlacement) stopDocumentPlacement();
-      else armDocumentPlacement();
-      return;
-    }
+      if (tool === "screens") {
+        setScreensOpen(!screensOpen);
+      } else if (tool === "research-frames") {
+        editorRef.current?.setActiveTool({ type: "selection" });
+        editorRef.current?.resetCursor();
+        setResearchFrameDrawing(false);
+        setResearchFramesOpen(!researchFramesOpen);
+      } else if (tool === "templates") {
+        setTemplatesOpen(!templatesOpen);
+      }
+    },
+    [
+      armDocumentPlacement,
+      documentPlacement,
+      researchFramesOpen,
+      screensOpen,
+      stopDocumentPlacement,
+      stopStickyPlacement,
+      stopCommentPlacement,
+      templatesOpen,
+      toggleStickyNoteTool,
+      toggleCommentTool,
+      toolsCatalogOpen,
+    ],
+  );
 
-    stopStickyPlacement();
-    stopDocumentPlacement();
-    stopCommentPlacement();
-    setResearchFramesOpen(false);
-    setScreensOpen(false);
-    setTemplatesOpen(false);
-    setReferencesOpen(false);
+  const insertStickyNotesAt = useCallback(
+    (
+      x: number,
+      y: number,
+      color: ProjectStickyNoteColor,
+      labels: readonly string[],
+      format = defaultProjectStickyNoteFormat,
+    ) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const created = labels.flatMap((text, index) =>
+        createStickyNoteElements({
+          x: x + index * 18,
+          y: y + index * 18,
+          color,
+          text,
+          format,
+        }),
+      );
+      const lastContainer = [...created]
+        .reverse()
+        .find((element) => element.type === "rectangle");
+      editor.updateScene({
+        elements: [...editor.getSceneElements(), ...created],
+        appState: {
+          selectedElementIds: lastContainer ? { [lastContainer.id]: true } : {},
+        },
+      });
+      return lastContainer?.id;
+    },
+    [],
+  );
 
-    if (tool === "screens") {
-      setScreensOpen(!screensOpen);
-    } else if (tool === "research-frames") {
-      editorRef.current?.setActiveTool({ type: "selection" });
-      editorRef.current?.resetCursor();
-      setResearchFrameDrawing(false);
-      setResearchFramesOpen(!researchFramesOpen);
-    } else if (tool === "templates") {
-      setTemplatesOpen(!templatesOpen);
-    }
-  }, [
-    armDocumentPlacement,
-    documentPlacement,
-    researchFramesOpen,
-    screensOpen,
-    stopDocumentPlacement,
-    stopStickyPlacement,
-    stopCommentPlacement,
-    templatesOpen,
-    toggleStickyNoteTool,
-    toggleCommentTool,
-    toolsCatalogOpen,
-  ]);
+  const commitStickyDraft = useCallback(
+    (
+      value = stickyDraft?.value ?? "",
+      /*
+       * Whether to pull focus back to the board and select the new note. True for
+       * a deliberate finish (⌘↵), false when the draft ended because the reader
+       * clicked somewhere else: they have already said where they want to be, and
+       * running focus() plus a re-select 80ms later dragged them back to the note
+       * they had just left — and re-selected it after their click had deselected.
+       */
+      { selectNote = true }: { selectNote?: boolean } = {},
+    ) => {
+      if (!stickyDraft) return;
+      const text = value.trim();
+      setStickyDraft(undefined);
+      const selectedElementId = insertStickyNotesAt(
+        stickyDraft.x,
+        stickyDraft.y,
+        stickyDraft.color,
+        [text],
+        stickyDraft.format,
+      );
 
-  const insertStickyNotesAt = useCallback((
-    x: number,
-    y: number,
-    color: ProjectStickyNoteColor,
-    labels: readonly string[],
-    format = defaultProjectStickyNoteFormat,
-  ) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const created = labels.flatMap((text, index) => createStickyNoteElements({
-      x: x + index * 18,
-      y: y + index * 18,
-      color,
-      text,
-      format,
-    }));
-    const lastContainer = [...created].reverse().find((element) => element.type === "rectangle");
-    editor.updateScene({
-      elements: [...editor.getSceneElements(), ...created],
-      appState: {
-        selectedElementIds: lastContainer ? { [lastContainer.id]: true } : {},
-      },
-    });
-    return lastContainer?.id;
-  }, []);
-
-  const commitStickyDraft = useCallback((
-    value = stickyDraft?.value ?? "",
-    /*
-     * Whether to pull focus back to the board and select the new note. True for
-     * a deliberate finish (⌘↵), false when the draft ended because the reader
-     * clicked somewhere else: they have already said where they want to be, and
-     * running focus() plus a re-select 80ms later dragged them back to the note
-     * they had just left — and re-selected it after their click had deselected.
-     */
-    { selectNote = true }: { selectNote?: boolean } = {},
-  ) => {
-    if (!stickyDraft) return;
-    const text = value.trim();
-    setStickyDraft(undefined);
-    const selectedElementId = insertStickyNotesAt(
-      stickyDraft.x,
-      stickyDraft.y,
-      stickyDraft.color,
-      [text],
-      stickyDraft.format,
-    );
-
-    if (selectedElementId && selectNote) {
-      window.setTimeout(() => {
-        const editor = editorRef.current;
-        canvasRootRef.current
-          ?.querySelector<HTMLElement>(".excalidraw__canvas")
-          ?.focus({ preventScroll: true });
-        editor?.setActiveTool({ type: "selection" });
-        editor?.updateScene({
-          appState: {
-            selectedElementIds: { [selectedElementId]: true },
-          },
-        });
-        editor?.refresh();
-      }, 80);
-    }
-  }, [insertStickyNotesAt, stickyDraft]);
+      if (selectedElementId && selectNote) {
+        window.setTimeout(() => {
+          const editor = editorRef.current;
+          canvasRootRef.current
+            ?.querySelector<HTMLElement>(".excalidraw__canvas")
+            ?.focus({ preventScroll: true });
+          editor?.setActiveTool({ type: "selection" });
+          editor?.updateScene({
+            appState: {
+              selectedElementIds: { [selectedElementId]: true },
+            },
+          });
+          editor?.refresh();
+        }, 80);
+      }
+    },
+    [insertStickyNotesAt, stickyDraft],
+  );
 
   const cancelStickyDraft = useCallback(() => {
     setStickyDraft(undefined);
@@ -2291,7 +3383,6 @@ export function ProjectPlayground({
      affordance — a target that accepts a drop should say so. */
   const [catalogDropActive, setCatalogDropActive] = useState(false);
 
-
   /*
    * Native listeners on document, in the capture phase. React attaches its
    * synthetic handlers at the app root, and Excalidraw runs its own drag/drop on
@@ -2299,7 +3390,9 @@ export function ProjectPlayground({
    * stopping it there keeps both out of a catalog drag.
    */
   useEffect(() => {
-    const readPayload = (transfer: DataTransfer | null): CatalogDragPayload | undefined => {
+    const readPayload = (
+      transfer: DataTransfer | null,
+    ): CatalogDragPayload | undefined => {
       if (!transfer) return catalogDragRef.current;
       try {
         const raw = transfer.getData(catalogDragMimeType);
@@ -2320,8 +3413,9 @@ export function ProjectPlayground({
        `.includes` is not a method and throws — taking the whole listener with
        it, so nothing claims the drag and the drop silently never happens. */
     const carriesCatalog = (event: DragEvent) =>
-      Array.from(event.dataTransfer?.types ?? []).includes(catalogDragMimeType)
-      || Boolean(catalogDragRef.current);
+      Array.from(event.dataTransfer?.types ?? []).includes(
+        catalogDragMimeType,
+      ) || Boolean(catalogDragRef.current);
 
     const onDragOver = (event: DragEvent) => {
       if (!isOverBoard(event) || !carriesCatalog(event)) return;
@@ -2358,7 +3452,11 @@ export function ProjectPlayground({
       };
 
       if (payload.kind === "flow") {
-        insertCatalogFlow(payload.item, payload.platform as Platform, placement);
+        insertCatalogFlow(
+          payload.item,
+          payload.platform as Platform,
+          placement,
+        );
       } else {
         void insertCatalogScreen(payload.result, placement);
       }
@@ -2383,75 +3481,94 @@ export function ProjectPlayground({
     };
   }, [insertCatalogFlow, insertCatalogScreen]);
 
-  const handleCanvasPointerUp = useCallback((
-    _activeTool: AppState["activeTool"],
-    pointerDownState: PointerDownState,
-  ) => {
-    setToolsCatalogOpen(false);
-    // Insert Astryx elements after Excalidraw finishes its own pointer-up
-    // reconciliation. Updating the scene from onPointerDown lets Excalidraw's
-    // selection handler restore the pre-click scene and discard the new item.
-    // The visible placement state remains the source of truth because custom
-    // tools may be normalized back to selection before this callback runs.
-    if (commentPlacement) {
+  const handleCanvasPointerUp = useCallback(
+    (
+      _activeTool: AppState["activeTool"],
+      pointerDownState: PointerDownState,
+    ) => {
+      setToolsCatalogOpen(false);
+      // Insert Astryx elements after Excalidraw finishes its own pointer-up
+      // reconciliation. Updating the scene from onPointerDown lets Excalidraw's
+      // selection handler restore the pre-click scene and discard the new item.
+      // The visible placement state remains the source of truth because custom
+      // tools may be normalized back to selection before this callback runs.
+      if (shapePlacement) {
+        const { x, y } = pointerDownState.origin;
+        insertCanvasCustomShapeAt(x, y, shapePlacement);
+        setShapePlacement(undefined);
+        editorRef.current?.resetCursor();
+        return;
+      }
+      if (commentPlacement) {
+        const { x, y } = pointerDownState.origin;
+        setCommentDraftAnchor({ x, y });
+        setCommentDraft("");
+        setSelectedCommentId(undefined);
+        stopCommentPlacement();
+        return;
+      }
+      if (documentPlacement) {
+        const { x, y } = pointerDownState.origin;
+        insertCanvasDocumentAt(x, y);
+        stopDocumentPlacement();
+        return;
+      }
+      if (!stickyPlacement) return;
       const { x, y } = pointerDownState.origin;
-      setCommentDraftAnchor({ x, y });
-      setCommentDraft("");
-      setSelectedCommentId(undefined);
-      stopCommentPlacement();
-      return;
-    }
-    if (documentPlacement) {
-      const { x, y } = pointerDownState.origin;
-      insertCanvasDocumentAt(x, y);
-      stopDocumentPlacement();
-      return;
-    }
-    if (!stickyPlacement) return;
-    const { x, y } = pointerDownState.origin;
-    if (stickyPlacement.mode === "stack") {
-      insertStickyNotesAt(x, y, stickyPlacement.color, ["New idea", "New idea", "New idea"]);
+      if (stickyPlacement.mode === "stack") {
+        insertStickyNotesAt(x, y, stickyPlacement.color, [
+          "New idea",
+          "New idea",
+          "New idea",
+        ]);
+        stopStickyPlacement();
+        return;
+      }
+      setStickyDraft({
+        x,
+        y,
+        color: stickyPlacement.color,
+        value: "",
+        format: defaultProjectStickyNoteFormat,
+      });
       stopStickyPlacement();
-      return;
-    }
-    setStickyDraft({
-      x,
-      y,
-      color: stickyPlacement.color,
-      value: "",
-      format: defaultProjectStickyNoteFormat,
-    });
-    stopStickyPlacement();
-  }, [
-    documentPlacement,
-    commentPlacement,
-    insertCanvasDocumentAt,
-    insertStickyNotesAt,
-    stickyPlacement,
-    stopDocumentPlacement,
-    stopCommentPlacement,
-    stopStickyPlacement,
-  ]);
+    },
+    [
+      documentPlacement,
+      commentPlacement,
+      insertCanvasCustomShapeAt,
+      insertCanvasDocumentAt,
+      insertStickyNotesAt,
+      shapePlacement,
+      stickyPlacement,
+      stopDocumentPlacement,
+      stopCommentPlacement,
+      stopStickyPlacement,
+    ],
+  );
 
   useEffect(() => {
     const handleStickyShortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (
-        event.defaultPrevented
-        || event.metaKey
-        || event.ctrlKey
-        || event.altKey
-        || canvasTextEditingRef.current
-        || target?.closest("input, textarea, [contenteditable='true']")
-      ) return;
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        canvasTextEditingRef.current ||
+        target?.closest("input, textarea, [contenteditable='true']")
+      )
+        return;
       if (event.key.toLowerCase() === "n") {
         event.preventDefault();
         toggleStickyNoteTool();
+      } else if (event.shiftKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        drawResearchFrame();
       } else if (event.key === "Escape") {
         event.preventDefault();
         setToolsCatalogOpen(false);
         setShapePickerOpen(false);
-        setShapePickerQuery("");
         setResearchFramesOpen(false);
         setScreensOpen(false);
         setTemplatesOpen(false);
@@ -2465,8 +3582,16 @@ export function ProjectPlayground({
       }
     };
     window.addEventListener("keydown", handleStickyShortcut, true);
-    return () => window.removeEventListener("keydown", handleStickyShortcut, true);
-  }, [cancelStickyDraft, stopCommentPlacement, stopDocumentPlacement, stopStickyPlacement, toggleStickyNoteTool]);
+    return () =>
+      window.removeEventListener("keydown", handleStickyShortcut, true);
+  }, [
+    cancelStickyDraft,
+    drawResearchFrame,
+    stopCommentPlacement,
+    stopDocumentPlacement,
+    stopStickyPlacement,
+    toggleStickyNoteTool,
+  ]);
 
   /*
    * Positioned from the reactive viewport, like every other canvas overlay —
@@ -2494,8 +3619,12 @@ export function ProjectPlayground({
     const noteTop = (stickyDraft.y - stickyNoteSize / 2 + scrollY) * zoom;
     /* Clamp inside the canvas when it has been measured; before that, place it
        where asked rather than withholding the composer entirely. */
-    const maxLeft = root ? Math.max(76, root.clientWidth - width - 16) : noteLeft;
-    const maxTop = root ? Math.max(96, root.clientHeight - height - 16) : noteTop;
+    const maxLeft = root
+      ? Math.max(76, root.clientWidth - width - 16)
+      : noteLeft;
+    const maxTop = root
+      ? Math.max(96, root.clientHeight - height - 16)
+      : noteTop;
     return {
       left: `${Math.min(Math.max(76, noteLeft), Math.max(76, maxLeft))}px`,
       top: `${Math.min(Math.max(96, noteTop), Math.max(96, maxTop))}px`,
@@ -2505,25 +3634,25 @@ export function ProjectPlayground({
       "--sticky-fill": stickyDraft.color.fill,
       "--sticky-stroke": stickyDraft.color.stroke,
       "--sticky-text": stickyDraft.color.text,
-      "--sticky-font-family": stickyDraft.format.font === "sketch"
-        ? '"Virgil", "Comic Sans MS", cursive'
-        : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
+      "--sticky-font-family":
+        stickyDraft.format.font === "sketch"
+          ? '"Virgil", "Comic Sans MS", cursive'
+          : 'var(--reference-font-family, "Figtree", system-ui, sans-serif)',
       "--sticky-font-size": `${stickyDraft.format.fontSize * zoom}px`,
       "--sticky-padding": `${24 * zoom}px`,
       "--sticky-text-align": stickyDraft.format.textAlign,
-      "--sticky-justify-content": stickyDraft.format.textAlign === "left"
-        ? "flex-start"
-        : stickyDraft.format.textAlign === "right"
-          ? "flex-end"
-          : "center",
-      // Excalidraw applies this filter to rendered scene colors in dark mode.
-      // Mirror it on the HTML composer surface so the note does not change
-      // color when editing ends and Excalidraw takes over rendering.
-      "--sticky-theme-filter": resolvedTheme === "dark"
-        ? "invert(93%) hue-rotate(180deg)"
-        : "none",
+      "--sticky-justify-content":
+        stickyDraft.format.textAlign === "left"
+          ? "flex-start"
+          : stickyDraft.format.textAlign === "right"
+            ? "flex-end"
+            : "center",
+      // The board is intentionally light regardless of the surrounding app
+      // theme, so applying a dark-theme filter here made the draft differ from
+      // the exact palette color rendered by Excalidraw after insertion.
+      "--sticky-theme-filter": "none",
     } as CSSProperties;
-  }, [canvasViewport, resolvedTheme, stickyDraft]);
+  }, [canvasViewport, stickyDraft]);
 
   /*
    * Colour, type and collaboration for an existing note. Two elements carry it:
@@ -2531,109 +3660,178 @@ export function ProjectPlayground({
    * the bound text holds font, size, alignment and ink — so a colour change has
    * to touch both or the label keeps the old contrast.
    */
-  const updateSelectedStickyNote = useCallback((patch: {
-    color?: ProjectStickyNoteColor;
-    format?: ProjectStickyNoteFormat;
-    collaboration?: ProjectStickyNoteCollaboration;
-  }) => {
-    const editor = editorRef.current;
-    const note = selectedStickyNote;
-    if (!editor || !note) return;
-    const color = patch.color ?? note.color;
-    const format = patch.format ?? note.format;
-    const collaboration = patch.collaboration ?? note.collaboration;
+  const updateSelectedStickyNote = useCallback(
+    (patch: {
+      color?: ProjectStickyNoteColor;
+      format?: ProjectStickyNoteFormat;
+      collaboration?: ProjectStickyNoteCollaboration;
+    }) => {
+      const editor = editorRef.current;
+      const note = selectedStickyNote;
+      if (!editor || !note) return;
+      const color = patch.color ?? note.color;
+      const format = patch.format ?? note.format;
+      const collaboration = patch.collaboration ?? note.collaboration;
 
-    const elements = editor.getSceneElements().map((element) => {
-      if (element.id === note.elementId) {
-        const customData = element.customData as Record<string, unknown> | undefined;
-        const reference = customData?.astryxReference as Record<string, unknown> | undefined;
-        return withCanvasElementUpdate(element, {
-          strokeColor: color.stroke,
-          backgroundColor: color.fill,
-          link: format.link || null,
-          locked: format.locked,
-          customData: {
-            ...customData,
-            astryxReference: {
-              ...reference,
-              color: color.id,
-              format,
-              collaboration,
+      const elements = editor.getSceneElements().map((element) => {
+        if (element.id === note.elementId) {
+          const customData = element.customData as
+            | Record<string, unknown>
+            | undefined;
+          const reference = customData?.astryxReference as
+            | Record<string, unknown>
+            | undefined;
+          return withCanvasElementUpdate(element, {
+            strokeColor: color.stroke,
+            backgroundColor: color.fill,
+            link: format.link || null,
+            locked: format.locked,
+            customData: {
+              ...customData,
+              astryxReference: {
+                ...reference,
+                color: color.id,
+                format,
+                collaboration,
+              },
             },
-          },
-        } as Partial<ExcalidrawElement>);
-      }
-      if (note.textElementId && element.id === note.textElementId) {
-        return withCanvasElementUpdate(element, {
-          fontSize: format.fontSize,
-          fontFamily: projectStickyNoteFontFamilies[format.font],
-          textAlign: format.textAlign,
-          strokeColor: color.text,
-        } as Partial<ExcalidrawElement>);
-      }
-      return element;
-    });
-    editor.updateScene({ elements });
-  }, [selectedStickyNote]);
+          } as Partial<ExcalidrawElement>);
+        }
+        if (note.textElementId && element.id === note.textElementId) {
+          return withCanvasElementUpdate(element, {
+            fontSize: format.fontSize,
+            fontFamily: projectStickyNoteFontFamilies[format.font],
+            textAlign: format.textAlign,
+            strokeColor: color.text,
+          } as Partial<ExcalidrawElement>);
+        }
+        return element;
+      });
+      editor.updateScene({ elements });
+    },
+    [selectedStickyNote],
+  );
 
   /* Above the note, in the same screen space as every other canvas overlay. */
   const stickyToolbarStyle = useMemo(() => {
     if (!selectedStickyNote) return undefined;
     const { scrollX, scrollY, zoom } = canvasViewport;
-    const centreX = (selectedStickyNote.x + selectedStickyNote.width / 2 + scrollX) * zoom;
+    const centreX =
+      (selectedStickyNote.x + selectedStickyNote.width / 2 + scrollX) * zoom;
     const noteTop = (selectedStickyNote.y + scrollY) * zoom;
     return {
-      left: `${Math.max(96, centreX)}px`,
-      top: `${Math.max(96, noteTop - 60)}px`,
+      "--project-object-toolbar-anchor-x": `${centreX}px`,
+      "--project-object-toolbar-top": `${Math.max(76, noteTop - 56)}px`,
     } as CSSProperties;
   }, [canvasViewport, selectedStickyNote]);
 
-  const stickyNoteMetadataStyle = useCallback((note: AstryxStickyNoteReference) => ({
-    left: `${(note.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-    top: `${(note.y + note.height + canvasViewport.scrollY) * canvasViewport.zoom + 8}px`,
-    maxWidth: `${Math.max(160, note.width * canvasViewport.zoom)}px`,
-    opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
-  } as CSSProperties), [canvasViewport]);
-
-  const canvasDocumentStyle = useCallback((document: AstryxCanvasDocumentReference) => {
+  const canvasTextToolbarStyle = useMemo(() => {
+    if (!selectedCanvasText) return undefined;
+    const { scrollX, scrollY, zoom } = canvasViewport;
+    const centreX =
+      (selectedCanvasText.x + selectedCanvasText.width / 2 + scrollX) * zoom;
+    const textTop = (selectedCanvasText.y + scrollY) * zoom;
     return {
-      left: `${(document.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-      top: `${(document.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-      transform: `scale(${canvasViewport.zoom})`,
-      transformOrigin: "top left",
-      "--canvas-document-inverse-zoom": 1 / canvasViewport.zoom,
+      "--project-object-toolbar-anchor-x": `${centreX}px`,
+      "--project-object-toolbar-top": `${Math.max(76, textTop - 56)}px`,
     } as CSSProperties;
-  }, [canvasViewport]);
+  }, [canvasViewport, selectedCanvasText]);
 
-  const replaceCanvasDocument = useCallback((document: ProjectCanvasDocumentData) => {
-    const editor = editorRef.current;
-    const selected = selectedCanvasDocument;
-    if (!editor || !selected) return;
-    const sceneElements = editor.getSceneElements();
-    const replacedIds = new Set([
-      selected.elementId,
-      ...sceneElements
-        .filter((element) => (
-          (element as ExcalidrawElement & { containerId?: string | null }).containerId
-          === selected.elementId
-        ))
-        .map((element) => element.id),
-    ]);
-    const created = createCanvasDocumentElements({
-      x: selected.x + selected.width / 2,
-      y: selected.y + selected.height / 2,
-      document,
-    });
-    const container = created.find((element) => element.type === "rectangle");
-    editor.updateScene({
-      elements: [
-        ...sceneElements.filter((element) => !replacedIds.has(element.id)),
-        ...created,
-      ],
-      appState: { selectedElementIds: container ? { [container.id]: true } : {} },
-    });
-    if (container) setSelectedCanvasDocument(documentReferenceForElement(container));
-  }, [selectedCanvasDocument]);
+  const updateSelectedCanvasText = useCallback(
+    (patch: {
+      color?: ProjectStickyNoteColor;
+      format?: ProjectStickyNoteFormat;
+    }) => {
+      const editor = editorRef.current;
+      const text = selectedCanvasText;
+      if (!editor || !text) return;
+      const color = patch.color ?? text.color;
+      const format = patch.format ?? text.format;
+      const elements = editor.getSceneElements().map((element) =>
+        element.id === text.elementId
+          ? withCanvasElementUpdate(element, {
+              fontSize: format.fontSize,
+              fontFamily: projectStickyNoteFontFamilies[format.font],
+              textAlign: format.textAlign,
+              strokeColor: color.text,
+              link: format.link || null,
+              locked: format.locked,
+            } as Partial<ExcalidrawElement>)
+          : element,
+      );
+      editor.updateScene({
+        elements,
+        appState: {
+          currentItemFontSize: format.fontSize,
+          currentItemFontFamily: projectStickyNoteFontFamilies[format.font],
+          currentItemTextAlign: format.textAlign,
+          currentItemStrokeColor: color.text,
+        },
+      });
+    },
+    [selectedCanvasText],
+  );
+
+  const stickyNoteMetadataStyle = useCallback(
+    (note: AstryxStickyNoteReference) =>
+      ({
+        left: `${(note.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(note.y + note.height + canvasViewport.scrollY) * canvasViewport.zoom + 8}px`,
+        maxWidth: `${Math.max(160, note.width * canvasViewport.zoom)}px`,
+        opacity: canvasViewport.zoom < 0.35 ? 0 : 1,
+      }) as CSSProperties,
+    [canvasViewport],
+  );
+
+  const canvasDocumentStyle = useCallback(
+    (document: AstryxCanvasDocumentReference) => {
+      return {
+        left: `${(document.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(document.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        transform: `scale(${canvasViewport.zoom})`,
+        transformOrigin: "top left",
+        "--canvas-document-inverse-zoom": 1 / canvasViewport.zoom,
+      } as CSSProperties;
+    },
+    [canvasViewport],
+  );
+
+  const replaceCanvasDocument = useCallback(
+    (document: ProjectCanvasDocumentData) => {
+      const editor = editorRef.current;
+      const selected = selectedCanvasDocument;
+      if (!editor || !selected) return;
+      const sceneElements = editor.getSceneElements();
+      const replacedIds = new Set([
+        selected.elementId,
+        ...sceneElements
+          .filter(
+            (element) =>
+              (element as ExcalidrawElement & { containerId?: string | null })
+                .containerId === selected.elementId,
+          )
+          .map((element) => element.id),
+      ]);
+      const created = createCanvasDocumentElements({
+        x: selected.x + selected.width / 2,
+        y: selected.y + selected.height / 2,
+        document,
+      });
+      const container = created.find((element) => element.type === "rectangle");
+      editor.updateScene({
+        elements: [
+          ...sceneElements.filter((element) => !replacedIds.has(element.id)),
+          ...created,
+        ],
+        appState: {
+          selectedElementIds: container ? { [container.id]: true } : {},
+        },
+      });
+      if (container)
+        setSelectedCanvasDocument(documentReferenceForElement(container));
+    },
+    [selectedCanvasDocument],
+  );
 
   const dismissCanvasDocument = useCallback(() => {
     editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
@@ -2649,12 +3847,16 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     if (!editor) return;
     setSaveState("loading");
-    void (canvasId
-      ? getDesignerCanvasFile(projectId, canvasId)
-      : getDesignerCanvas(projectId))
+    void (
+      canvasId
+        ? getDesignerCanvasFile(projectId, canvasId)
+        : getDesignerCanvas(projectId)
+    )
       .then(async (canvas) => {
         if (isExcalidrawSnapshot(canvas.snapshot)) {
-          const comments = normalizeDesignerCanvasComments(canvas.snapshot.comments);
+          const comments = normalizeDesignerCanvasComments(
+            canvas.snapshot.comments,
+          );
           canvasCommentsRef.current = comments;
           setCanvasComments(comments);
           lastQueuedSnapshotKeyRef.current = canvasSaveKey(canvas.snapshot);
@@ -2670,7 +3872,8 @@ export function ProjectPlayground({
             editor.getFiles(),
             canvasCommentsRef.current,
           );
-          if (canvasId) await saveDesignerCanvasFile(projectId, canvasId, snapshot);
+          if (canvasId)
+            await saveDesignerCanvasFile(projectId, canvasId, snapshot);
           else await saveDesignerCanvas(projectId, snapshot);
         }
         if (activeRef.current) setSaveState("saved");
@@ -2685,153 +3888,149 @@ export function ProjectPlayground({
       });
   }, [canvasId, flushCanvas, projectId]);
 
-  const syncProjectMenuPosition = useCallback(() => {
-    const root = canvasRootRef.current;
-    const trigger = projectMenuRef.current;
-    if (!root || !trigger) return;
-    const rect = trigger.getBoundingClientRect();
-    const headerBottom = trigger.closest(".project-canvas-header")
-      ?.getBoundingClientRect().bottom ?? rect.bottom;
-    root.style.setProperty(
-      "--project-menu-top",
-      `${Math.round(Math.max(rect.bottom, headerBottom) + 8)}px`,
-    );
-    root.style.setProperty(
-      "--project-menu-right",
-      `${Math.max(8, Math.round(window.innerWidth - rect.right))}px`,
-    );
-  }, []);
-
-  useEffect(() => {
-    syncProjectMenuPosition();
-    window.addEventListener("resize", syncProjectMenuPosition);
-    return () => window.removeEventListener("resize", syncProjectMenuPosition);
-  }, [syncProjectMenuPosition]);
-
-  const toggleProjectMenu = useCallback(() => {
-    if (projectMenuWasOpenRef.current) {
-      projectMenuWasOpenRef.current = false;
-      return;
-    }
-    canvasRootRef.current
-      ?.querySelector<HTMLButtonElement>("button.main-menu-trigger")
-      ?.click();
-  }, []);
-
-  const rememberProjectMenuState = useCallback(() => {
-    syncProjectMenuPosition();
-    projectMenuWasOpenRef.current = Boolean(
-      canvasRootRef.current?.querySelector(".App-menu_top__left .dropdown-menu"),
-    );
-  }, [syncProjectMenuPosition]);
-
-  const selectedComment = canvasComments.find((thread) => thread.id === selectedCommentId);
-  const submitCanvasComment = useCallback((body: string) => {
-    const now = new Date().toISOString();
-    const message = {
-      id: crypto.randomUUID(),
-      authorId: String(userId),
-      authorName: userName,
-      body,
-      createdAt: now,
-    };
-    if (commentDraftAnchor) {
-      const thread: DesignerCanvasCommentThread = {
+  const selectedComment = canvasComments.find(
+    (thread) => thread.id === selectedCommentId,
+  );
+  const submitCanvasComment = useCallback(
+    (body: string) => {
+      const now = new Date().toISOString();
+      const message = {
         id: crypto.randomUUID(),
-        x: commentDraftAnchor.x,
-        y: commentDraftAnchor.y,
-        resolved: false,
+        authorId: String(userId),
+        authorName: userName,
+        body,
         createdAt: now,
-        messages: [message],
       };
-      commitCanvasComments([...canvasCommentsRef.current, thread]);
-      setCommentDraftAnchor(undefined);
+      if (commentDraftAnchor) {
+        const thread: DesignerCanvasCommentThread = {
+          id: crypto.randomUUID(),
+          x: commentDraftAnchor.x,
+          y: commentDraftAnchor.y,
+          resolved: false,
+          createdAt: now,
+          messages: [message],
+        };
+        commitCanvasComments([...canvasCommentsRef.current, thread]);
+        setCommentDraftAnchor(undefined);
+        setCommentDraft("");
+        setSelectedCommentId(thread.id);
+        return;
+      }
+      if (!selectedCommentId) return;
+      commitCanvasComments(
+        canvasCommentsRef.current.map((thread) =>
+          thread.id === selectedCommentId
+            ? { ...thread, messages: [...thread.messages, message] }
+            : thread,
+        ),
+      );
       setCommentDraft("");
-      setSelectedCommentId(thread.id);
-      return;
-    }
-    if (!selectedCommentId) return;
-    commitCanvasComments(canvasCommentsRef.current.map((thread) => (
-      thread.id === selectedCommentId
-        ? { ...thread, messages: [...thread.messages, message] }
-        : thread
-    )));
-    setCommentDraft("");
-  }, [commentDraftAnchor, commitCanvasComments, selectedCommentId, userId, userName]);
+    },
+    [
+      commentDraftAnchor,
+      commitCanvasComments,
+      selectedCommentId,
+      userId,
+      userName,
+    ],
+  );
 
   const toggleSelectedCommentResolved = useCallback(() => {
     if (!selectedCommentId) return;
-    commitCanvasComments(canvasCommentsRef.current.map((thread) => (
-      thread.id === selectedCommentId
-        ? { ...thread, resolved: !thread.resolved }
-        : thread
-    )));
+    commitCanvasComments(
+      canvasCommentsRef.current.map((thread) =>
+        thread.id === selectedCommentId
+          ? { ...thread, resolved: !thread.resolved }
+          : thread,
+      ),
+    );
   }, [commitCanvasComments, selectedCommentId]);
 
   const deleteSelectedComment = useCallback(() => {
     if (!selectedCommentId) return;
     commitCanvasComments(
-      canvasCommentsRef.current.filter((thread) => thread.id !== selectedCommentId),
+      canvasCommentsRef.current.filter(
+        (thread) => thread.id !== selectedCommentId,
+      ),
     );
     setCommentDraftAnchor(undefined);
     setCommentDraft("");
     setSelectedCommentId(undefined);
   }, [commitCanvasComments, selectedCommentId]);
 
-  const commentPinStyle = useCallback((thread: DesignerCanvasCommentThread) => ({
-    left: `${(thread.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
-    top: `${(thread.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
-    opacity: canvasViewport.zoom < 0.2 ? 0 : 1,
-  } as CSSProperties), [canvasViewport]);
+  const commentPinStyle = useCallback(
+    (thread: DesignerCanvasCommentThread) =>
+      ({
+        left: `${(thread.x + canvasViewport.scrollX) * canvasViewport.zoom}px`,
+        top: `${(thread.y + canvasViewport.scrollY) * canvasViewport.zoom}px`,
+        opacity: canvasViewport.zoom < 0.2 ? 0 : 1,
+      }) as CSSProperties,
+    [canvasViewport],
+  );
 
-  const saveStatusLabel = saveErrorMessage
-    && (saveState === "offline" || saveState === "unavailable")
-    ? `${saveLabels[saveState]}: ${saveErrorMessage}`
-    : saveLabels[saveState];
+  const saveStatusLabel =
+    saveErrorMessage && (saveState === "offline" || saveState === "unavailable")
+      ? `${saveLabels[saveState]}: ${saveErrorMessage}`
+      : saveLabels[saveState];
   const normalizedToolsCatalogQuery = toolsCatalogQuery.trim().toLowerCase();
-  const filteredCanvasToolCatalogItems = projectCanvasToolCatalogItems.filter((item) => (
-    !normalizedToolsCatalogQuery
-    || `${item.title} ${item.description}`.toLowerCase().includes(normalizedToolsCatalogQuery)
-  ));
-  const normalizedShapePickerQuery = shapePickerQuery.trim().toLowerCase();
-  const filteredCanvasShapeOptions = canvasShapeOptions.filter((shape) => (
-    !normalizedShapePickerQuery || shape.label.toLowerCase().includes(normalizedShapePickerQuery)
-  ));
-  const canvasToolPanelOpen = toolsCatalogOpen
-    || shapePickerOpen
-    || researchFramesOpen
-    || screensOpen
-    || templatesOpen
-    || stickyPickerOpen
-    || Boolean(commentDraftAnchor)
-    || Boolean(selectedComment);
+  const filteredCanvasToolCatalogItems = projectCanvasToolCatalogItems.filter(
+    (item) =>
+      !normalizedToolsCatalogQuery ||
+      `${item.title} ${item.description}`
+        .toLowerCase()
+        .includes(normalizedToolsCatalogQuery),
+  );
+  const canvasToolPanelOpen =
+    toolsCatalogOpen ||
+    shapePickerOpen ||
+    researchFramesOpen ||
+    screensOpen ||
+    templatesOpen ||
+    stickyPickerOpen ||
+    Boolean(commentDraftAnchor) ||
+    Boolean(selectedComment);
 
   return (
     <main className="vitrine-page research-project-page research-project-page--playground">
-      <header className="project-canvas-header" aria-label="Project canvas controls">
+      <header
+        className="project-canvas-header"
+        aria-label="Project canvas controls"
+      >
         <div
           className="project-canvas-header__group project-canvas-header__group--left"
           data-canvas-toolbar-region="top-left"
         >
-          <IconButton
-            label="Projects home"
-            icon={<img className="project-canvas-header__brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />}
-            variant="ghost"
-            size="sm"
-            clickAction={() => navigate({ name: "projects" })}
-          />
-          <Button
-            label="Projects"
-            variant="ghost"
-            size="sm"
-            clickAction={() => navigate({ name: "projects" })}
-          />
+          <button
+            type="button"
+            className="project-canvas-header__workspace-button"
+            aria-label="Projects home"
+            onClick={() => navigate({ name: "projects" })}
+          >
+            <img
+              className="project-canvas-header__brand-mark"
+              src="/favicon.svg"
+              alt=""
+              aria-hidden="true"
+            />
+          </button>
           <span className="project-canvas-header__divider" aria-hidden="true" />
-          <div className="project-canvas-header__identity">
+          <button
+            type="button"
+            className="project-canvas-header__identity"
+            aria-label="Open canvas pages"
+            aria-expanded={canvasPagesOpen}
+            onClick={() => setCanvasPagesOpen((open) => !open)}
+          >
             <span>Designer canvas</span>
-            <div className="project-canvas-header__identity-title">
+            <span className="project-canvas-header__identity-title">
               <h1>{references?.title ?? "Designer project"}</h1>
-              {(saveState === "offline" || saveState === "unavailable") ? (
+              <span
+                className="project-canvas-header__file-kind"
+                aria-hidden="true"
+              >
+                Canvas
+              </span>
+              {saveState === "offline" || saveState === "unavailable" ? (
                 <IconButton
                   label={saveStatusLabel}
                   icon={<Icon icon={saveStateIcons[saveState]} size="sm" />}
@@ -2851,95 +4050,178 @@ export function ProjectPlayground({
                   <Icon icon={saveStateIcons[saveState]} size="sm" />
                 </span>
               )}
-            </div>
-          </div>
+            </span>
+          </button>
           <span className="project-canvas-header__divider" aria-hidden="true" />
-          <span ref={projectMenuRef} className="project-canvas-header__menu">
+          <span className="project-canvas-header__menu">
             <IconButton
-              label="Project menu"
-              icon={<Icon icon="menu" size="sm" />}
+              label="Canvas pages and menu"
+              icon={<Icon icon="viewColumns" size="sm" />}
               variant="ghost"
               size="sm"
-              onPointerDown={rememberProjectMenuState}
-              clickAction={toggleProjectMenu}
+              clickAction={() => setCanvasPagesOpen((open) => !open)}
             />
           </span>
         </div>
+        {canvasPagesOpen && (
+          <div
+            className="project-canvas-header__page-menu"
+            role="menu"
+            aria-label="Canvas pages"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => navigate({ name: "project", projectId })}
+            >
+              Project home
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-current="page"
+              onClick={() => setCanvasPagesOpen(false)}
+            >
+              Designer canvas
+            </button>
+          </div>
+        )}
         <div
           className="project-canvas-header__group project-canvas-header__actions"
           data-canvas-toolbar-region="top-right"
         >
-          <div
+          <button
+            type="button"
             className="project-canvas-collaborators"
             data-state={collaborationStatus}
-            role="status"
-            aria-live="polite"
             aria-label={collaborationStatusLabel}
             title={collaborationStatusLabel}
+            onClick={syncCanvasCollaborators}
           >
-            <span className="project-canvas-collaborators__avatars" aria-hidden="true">
-              {onlineCollaborators.slice(0, 3).map((collaborator) => (
+            <span
+              className="project-canvas-collaborators__avatars"
+              aria-hidden="true"
+            >
+              {onlineCollaborators.slice(0, 1).map((collaborator) => (
                 <span
                   key={collaborator.id}
-                  style={{ backgroundColor: canvasCollaboratorColor(collaborator.name).background }}
+                  style={{
+                    backgroundColor: canvasCollaboratorColor(collaborator.name)
+                      .background,
+                  }}
                 >
                   {canvasCollaboratorInitials(collaborator.name)}
                 </span>
               ))}
             </span>
-            <span className="project-canvas-collaborators__label">{collaborationStatusLabel}</span>
-          </div>
+            <Icon icon="chevronDown" size="sm" aria-hidden="true" />
+          </button>
           <ProjectAccessButton
-            project={{ id: projectId, title: references?.title ?? "Designer project" }}
+            project={{
+              id: projectId,
+              title: references?.title ?? "Designer project",
+            }}
             emphasized
           />
         </div>
       </header>
-      <section className="project-playground project-playground--canvas-first" aria-label="Designer canvas">
+      <section
+        className="project-playground project-playground--canvas-first"
+        aria-label="Designer canvas"
+      >
         <div
           ref={canvasRootRef}
+          data-marker-mode={markerDrawing ? markerMode : undefined}
+          data-marker-color-transition={markerColorTransition ? "b" : "a"}
           className={`project-playground__canvas${
-            selectedScreenReference ? " project-playground__canvas--screen-selected" : ""
+            selectedScreenReference
+              ? " project-playground__canvas--screen-selected"
+              : ""
           }${
-            selectedCanvasDocument ? " project-playground__canvas--document-selected" : ""
+            selectedCanvasDocument
+              ? " project-playground__canvas--document-selected"
+              : ""
           }${
-            selectedDataReference ? " project-playground__canvas--data-selected" : ""
+            selectedDataReference
+              ? " project-playground__canvas--data-selected"
+              : ""
           }${
             catalogDropActive ? " project-playground__canvas--catalog-drop" : ""
           }${
-            selectedStickyNote ? " project-playground__canvas--sticky-selected" : ""
+            selectedStickyNote
+              ? " project-playground__canvas--sticky-selected"
+              : ""
           }${
-            selectedResearchFrame ? " project-playground__canvas--frame-selected" : ""
+            selectedResearchFrame
+              ? " project-playground__canvas--frame-selected"
+              : ""
           }${
-            researchFrameDrawing ? " project-playground__canvas--frame-drawing" : ""
+            researchFrameDrawing
+              ? " project-playground__canvas--frame-drawing"
+              : ""
           }${
-            canvasToolPanelOpen ? " project-playground__canvas--tool-panel-open" : ""
+            markerDrawing ? " project-playground__canvas--marker-drawing" : ""
           }${
-            stickyPlacement ? " project-playground__canvas--sticky-placement" : ""
+            markerDrawing && markerMode === "highlighter"
+              ? " project-playground__canvas--highlighter-drawing"
+              : ""
           }${
-            commentPlacement ? " project-playground__canvas--comment-placement" : ""
+            markerDrawing && markerMode === "eraser"
+              ? " project-playground__canvas--eraser-drawing"
+              : ""
+          }${textToolActive ? " project-playground__canvas--text-tool" : ""}${
+            textSelectionActive
+              ? " project-playground__canvas--text-selection"
+              : ""
+          }${
+            canvasToolPanelOpen
+              ? " project-playground__canvas--tool-panel-open"
+              : ""
+          }${
+            stickyPlacement
+              ? " project-playground__canvas--sticky-placement"
+              : ""
+          }${
+            commentPlacement
+              ? " project-playground__canvas--comment-placement"
+              : ""
           }`}
-          style={({
-            ...(stickyPlacement ? {
-              "--project-sticky-note-cursor": stickyNotePlacementCursor(
-                stickyPlacement.color,
-                stickyPlacement.mode,
-              ),
-            } : {}),
-            ...(commentPlacement ? {
-              "--project-comment-cursor": commentPlacementCursor,
-            } : {}),
-          } as CSSProperties)}
+          style={
+            {
+              "--canvas-marker-tool-icon": `url("${coloredFigJamFreehandToolIcon("marker", markerColor)}")`,
+              "--canvas-highlighter-tool-icon": `url("${coloredFigJamFreehandToolIcon("highlighter", highlighterColor)}")`,
+              ...(stickyPlacement
+                ? {
+                    "--project-sticky-note-cursor": stickyNotePlacementCursor(
+                      stickyPlacement.color,
+                      stickyPlacement.mode,
+                    ),
+                  }
+                : {}),
+              ...(commentPlacement
+                ? {
+                    "--project-comment-cursor": commentPlacementCursor,
+                  }
+                : {}),
+            } as CSSProperties
+          }
         >
           <Excalidraw
             key={projectId}
             name={references?.title ?? "Astryx designer canvas"}
-            theme={resolvedTheme}
+            theme={canvasTheme}
             gridModeEnabled
             viewModeEnabled={canvasReadOnly}
             initialData={initialData}
             excalidrawAPI={(api) => {
               editorRef.current = api;
+              api.updateScene({
+                appState: {
+                  theme: canvasTheme,
+                  viewBackgroundColor: canvasSceneBackground,
+                  gridModeEnabled: true,
+                },
+              });
               syncCanvasCollaborators();
             }}
             isCollaborating={collaborationStatus === "live"}
@@ -2947,7 +4229,12 @@ export function ProjectPlayground({
             onPointerUpdate={handleCanvasPointerUpdate}
             onPointerUp={handleCanvasPointerUp}
             autoFocus
-            handleKeyboardGlobally={!stickyDraft && !canvasTextEditing && !commentDraftAnchor && !selectedComment}
+            handleKeyboardGlobally={
+              !stickyDraft &&
+              !canvasTextEditing &&
+              !commentDraftAnchor &&
+              !selectedComment
+            }
             UIOptions={{
               canvasActions: {
                 loadScene: false,
@@ -2958,94 +4245,135 @@ export function ProjectPlayground({
             }}
           />
         </div>
-        {canvasToolbarHost && createPortal(
-          <>
-            <div
-              className="project-playground__sticky-tools"
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-            <button
-              type="button"
-              className="project-playground__sticky-trigger"
-              aria-label={stickyPickerOpen ? "Close sticky notes" : "Sticky notes"}
-              aria-pressed={stickyPickerOpen || Boolean(stickyPlacement)}
-              title="Sticky notes (N)"
-              onClick={() => activateCanvasTool("sticky")}
-            >
-              <ProjectCanvasToolGlyph tool="sticky" />
-            </button>
-            </div>
-            <div
-              className="project-playground__astryx-tools"
-              role="group"
-              aria-label="Vitrines canvas tools"
-              data-canvas-toolbar-region="bottom"
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-            <span className="project-playground__astryx-tools-divider" aria-hidden="true" />
-            <button
-              type="button"
-              className="project-playground__shapes-trigger"
-              aria-label={shapePickerOpen ? "Close shapes and connectors" : "Shapes and connectors"}
-              aria-expanded={shapePickerOpen}
-              aria-pressed={shapePickerOpen}
-              title="Shapes and connectors"
-              onClick={toggleShapePicker}
-            >
-              <Icon icon="viewColumns" size="sm" />
-            </button>
-            <button
-              type="button"
-              className="project-playground__comments-trigger"
-              aria-label={commentPlacement ? "Cancel comment placement" : "Comments"}
-              aria-pressed={commentPlacement || Boolean(commentDraftAnchor) || Boolean(selectedComment)}
-              title="Comments"
-              onClick={() => activateCanvasTool("comments")}
-            >
-              <ProjectCanvasToolGlyph tool="comments" />
-              {canvasComments.some((thread) => !thread.resolved) ? (
-                <span className="project-playground__comments-count">
-                  {canvasComments.filter((thread) => !thread.resolved).length}
-                </span>
-              ) : null}
-            </button>
-            <button
-              type="button"
-              className="project-playground__document-trigger"
-              aria-label={documentPlacement ? "Cancel document placement" : "Document"}
-              aria-pressed={documentPlacement}
-              title="Document"
-              onClick={() => activateCanvasTool("document")}
-            >
-              <ProjectCanvasToolGlyph tool="document" />
-            </button>
-            {/* Promoted out of the "more tools" catalog: it is the way onto the
+        {canvasToolbarHost &&
+          createPortal(
+            <>
+              <div
+                className="project-playground__sticky-tools"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="project-playground__sticky-trigger"
+                  aria-label={
+                    stickyPickerOpen ? "Close sticky notes" : "Sticky notes"
+                  }
+                  aria-pressed={stickyPickerOpen || Boolean(stickyPlacement)}
+                  title="Sticky notes (N)"
+                  onClick={() => activateCanvasTool("sticky")}
+                >
+                  <ProjectCanvasToolGlyph
+                    tool="sticky"
+                    stickyColor={stickyToolColor}
+                  />
+                </button>
+                <button
+                  type="button"
+                  className="project-playground__shapes-trigger"
+                  aria-label={
+                    shapePickerOpen
+                      ? "Close shapes and connectors"
+                      : "Shapes and connectors"
+                  }
+                  aria-expanded={shapePickerOpen}
+                  aria-pressed={shapePickerOpen}
+                  title="Shapes and connectors"
+                  onClick={toggleShapePicker}
+                >
+                  <CanvasShapesCollageGlyph color={shapeColor} />
+                </button>
+              </div>
+              <div
+                className="project-playground__section-tool"
+                role="group"
+                aria-label="Section tool"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <span
+                  className="project-playground__section-tool-divider"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  className="project-playground__section-trigger"
+                  aria-label="Section"
+                  aria-pressed={researchFrameDrawing}
+                  title="Section (Shift+S)"
+                  onClick={drawResearchFrame}
+                >
+                  <img src={figjamSectionToolIcon} alt="" aria-hidden="true" />
+                </button>
+              </div>
+              <div
+                className="project-playground__astryx-tools"
+                role="group"
+                aria-label="Vitrines canvas tools"
+                data-canvas-toolbar-region="bottom"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="project-playground__comments-trigger"
+                  aria-label={
+                    commentPlacement ? "Cancel comment placement" : "Comments"
+                  }
+                  aria-pressed={
+                    commentPlacement ||
+                    Boolean(commentDraftAnchor) ||
+                    Boolean(selectedComment)
+                  }
+                  title="Comments"
+                  onClick={() => activateCanvasTool("comments")}
+                >
+                  <ProjectCanvasToolGlyph tool="comments" />
+                  {canvasComments.some((thread) => !thread.resolved) ? (
+                    <span className="project-playground__comments-count">
+                      {
+                        canvasComments.filter((thread) => !thread.resolved)
+                          .length
+                      }
+                    </span>
+                  ) : null}
+                </button>
+                <button
+                  type="button"
+                  className="project-playground__document-trigger"
+                  aria-label={
+                    documentPlacement ? "Cancel document placement" : "Document"
+                  }
+                  aria-pressed={documentPlacement}
+                  title="Document"
+                  onClick={() => activateCanvasTool("document")}
+                >
+                  <ProjectCanvasToolGlyph tool="document" />
+                </button>
+                {/* Promoted out of the "more tools" catalog: it is the way onto the
                 canvas for apps, screens and flows, not an occasional extra. */}
-            <button
-              type="button"
-              className="project-playground__screens-trigger"
-              aria-label={screensOpen ? "Close catalog" : "Catalog"}
-              aria-pressed={screensOpen}
-              title="Catalog"
-              onClick={() => activateCanvasTool("screens")}
-            >
-              <ProjectCanvasToolGlyph tool="screens" />
-            </button>
-            <button
-              type="button"
-              className="project-playground__more-tools-trigger"
-              aria-label={toolsCatalogOpen ? "Close tools" : "More tools"}
-              aria-expanded={toolsCatalogOpen}
-              aria-pressed={toolsCatalogOpen}
-              title="More tools"
-              onClick={() => activateCanvasTool("more")}
-            >
-              <ProjectCanvasToolGlyph tool="more" />
-            </button>
-            </div>
-          </>,
-          canvasToolbarHost,
-        )}
+                <button
+                  type="button"
+                  className="project-playground__screens-trigger"
+                  aria-label={screensOpen ? "Close catalog" : "Catalog"}
+                  aria-pressed={screensOpen}
+                  title="Catalog"
+                  onClick={() => activateCanvasTool("screens")}
+                >
+                  <ProjectCanvasToolGlyph tool="screens" />
+                </button>
+                <button
+                  type="button"
+                  className="project-playground__more-tools-trigger"
+                  aria-label={toolsCatalogOpen ? "Close tools" : "More tools"}
+                  aria-expanded={toolsCatalogOpen}
+                  aria-pressed={toolsCatalogOpen}
+                  title="More tools"
+                  onClick={() => activateCanvasTool("more")}
+                >
+                  <ProjectCanvasToolGlyph tool="more" />
+                </button>
+              </div>
+            </>,
+            canvasToolbarHost,
+          )}
         {canvasComments.map((thread, index) => (
           <ProjectCanvasCommentPin
             key={thread.id}
@@ -3062,13 +4390,17 @@ export function ProjectPlayground({
           />
         ))}
         {commentPlacement ? (
-          <div className="project-canvas-comment-placement-hint" role="status" aria-live="polite">
+          <div
+            className="project-canvas-comment-placement-hint"
+            role="status"
+            aria-live="polite"
+          >
             <ProjectCanvasCommentGlyph />
             <span>Click anywhere to place a comment.</span>
             <kbd>Esc</kbd>
           </div>
         ) : null}
-        {(commentDraftAnchor || selectedComment) ? (
+        {commentDraftAnchor || selectedComment ? (
           <ProjectCanvasCommentPanel
             thread={selectedComment}
             draft={commentDraft}
@@ -3113,10 +4445,15 @@ export function ProjectPlayground({
               autoFocus
             />
             {[true, false].map((pinned) => {
-              const items = filteredCanvasToolCatalogItems.filter((item) => item.pinned === pinned);
+              const items = filteredCanvasToolCatalogItems.filter(
+                (item) => item.pinned === pinned,
+              );
               if (items.length === 0) return null;
               return (
-                <section key={pinned ? "pinned" : "more"} className="project-canvas-tools-catalog__section">
+                <section
+                  key={pinned ? "pinned" : "more"}
+                  className="project-canvas-tools-catalog__section"
+                >
                   <h3>{pinned ? "Pinned" : "More tools"}</h3>
                   <div className="project-canvas-tools-catalog__list">
                     {items.map((item) => (
@@ -3126,14 +4463,21 @@ export function ProjectPlayground({
                         className="project-canvas-tools-catalog__item"
                         onClick={() => activateCanvasTool(item.tool)}
                       >
-                        <span className="project-canvas-tools-catalog__icon" aria-hidden="true">
+                        <span
+                          className="project-canvas-tools-catalog__icon"
+                          aria-hidden="true"
+                        >
                           <ProjectCanvasToolGlyph tool={item.tool} />
                         </span>
                         <span className="project-canvas-tools-catalog__copy">
                           <strong>{item.title}</strong>
                           <small>{item.description}</small>
                         </span>
-                        {item.pinned ? <span className="project-canvas-tools-catalog__badge">Pinned</span> : null}
+                        {item.pinned ? (
+                          <span className="project-canvas-tools-catalog__badge">
+                            Pinned
+                          </span>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -3141,62 +4485,296 @@ export function ProjectPlayground({
               );
             })}
             {filteredCanvasToolCatalogItems.length === 0 ? (
-              <p className="project-canvas-tools-catalog__empty">No tools match “{toolsCatalogQuery}”.</p>
+              <p className="project-canvas-tools-catalog__empty">
+                No tools match “{toolsCatalogQuery}”.
+              </p>
             ) : null}
           </aside>
         )}
         {shapePickerOpen && (
           <aside
             className="project-canvas-shape-library"
+            role="toolbar"
             aria-label="Shapes and connectors"
+            aria-orientation="horizontal"
             onPointerDown={(event) => event.stopPropagation()}
           >
-            <header className="project-canvas-shape-library__header">
-              <h2>Shapes</h2>
-              <IconButton
-                label="Close shapes"
-                icon={<Icon icon="close" size="sm" />}
-                variant="ghost"
-                size="sm"
-                clickAction={() => setShapePickerOpen(false)}
-              />
-            </header>
-            <TextInput
-              label="Search shapes"
-              isLabelHidden
-              value={shapePickerQuery}
-              onChange={setShapePickerQuery}
-              placeholder="Search shapes"
-              width="100%"
-              autoFocus
+            <div className="project-canvas-shape-library__color-control">
+              <button
+                type="button"
+                className="project-canvas-shape-library__color-trigger"
+                role="combobox"
+                aria-label={`Shape color, ${canvasShapeColors.find((color) => color.value === shapeColor)?.label ?? "custom"}`}
+                aria-expanded={shapeColorPickerOpen}
+                title="Shape color"
+                onClick={() => setShapeColorPickerOpen((open) => !open)}
+              >
+                <span
+                  style={{ "--shape-color": shapeColor } as CSSProperties}
+                />
+                <ChevronSmallDownIcon aria-hidden="true" />
+              </button>
+              {shapeColorPickerOpen ? (
+                <div
+                  className="project-canvas-shape-library__color-menu"
+                  role="dialog"
+                  aria-label="Shape colors"
+                >
+                  {canvasShapeColors.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      className="project-canvas-shape-library__color-swatch"
+                      aria-label={`Use ${color.label}`}
+                      aria-pressed={shapeColor === color.value}
+                      style={{ "--shape-color": color.value } as CSSProperties}
+                      onClick={() => selectCanvasShapeColor(color.value)}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <span
+              className="project-canvas-shape-library__divider"
+              aria-hidden="true"
             />
-            {(["Connections", "Basic"] as const).map((group) => {
-              const shapes = filteredCanvasShapeOptions.filter((shape) => shape.group === group);
+            <section
+              className="project-canvas-shape-library__section"
+              aria-label="Shapes and connectors"
+            >
+              <div className="project-canvas-shape-library__grid">
+                {canvasShapeOptions.map((shape) => (
+                  <button
+                    key={shape.id}
+                    type="button"
+                    className="project-canvas-shape-library__tile"
+                    aria-current={activeShapeOptionId === shape.id}
+                    aria-label={shape.label}
+                    title={shape.label}
+                    onClick={() => selectCanvasShape(shape)}
+                  >
+                    <ShapeLibraryGlyph shape={shape} />
+                  </button>
+                ))}
+              </div>
+            </section>
+            <button
+              type="button"
+              className="project-canvas-shape-library__more"
+              aria-expanded={shapeLibraryOpen}
+              title="More shapes"
+              onClick={() => {
+                setShapeLibraryOpen((open) => !open);
+                setShapeLibraryQuery("");
+              }}
+            >
+              More shapes
+            </button>
+          </aside>
+        )}
+        {shapeLibraryOpen ? (
+          <aside
+            className="project-canvas-more-shapes"
+            role="dialog"
+            aria-label="More shapes"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <header className="project-canvas-more-shapes__header">
+              <strong>Shapes</strong>
+              <button
+                type="button"
+                aria-label="Close more shapes"
+                title="Close more shapes"
+                onClick={() => setShapeLibraryOpen(false)}
+              >
+                <Icon icon="close" size="sm" />
+              </button>
+            </header>
+            <input
+              type="search"
+              className="project-canvas-more-shapes__search"
+              aria-label="Search shapes"
+              placeholder="Search shapes"
+              value={shapeLibraryQuery}
+              onChange={(event) => setShapeLibraryQuery(event.target.value)}
+            />
+            {(["Connectors", "Basic"] as const).map((group) => {
+              const shapes = canvasShapeOptions.filter(
+                (shape) =>
+                  shape.group === group &&
+                  shape.label
+                    .toLocaleLowerCase()
+                    .includes(shapeLibraryQuery.trim().toLocaleLowerCase()),
+              );
               if (shapes.length === 0) return null;
               return (
-                <section key={group} className="project-canvas-shape-library__section">
+                <section
+                  className="project-canvas-more-shapes__section"
+                  key={group}
+                  aria-label={group}
+                >
                   <h3>{group}</h3>
-                  <div className="project-canvas-shape-library__grid">
+                  <div className="project-canvas-more-shapes__grid">
                     {shapes.map((shape) => (
                       <button
-                        key={shape.tool}
+                        key={shape.id}
                         type="button"
-                        className="project-canvas-shape-library__tile"
-                        aria-pressed={activeShapeTool === shape.tool}
-                        onClick={() => selectCanvasShape(shape.tool)}
+                        aria-current={activeShapeOptionId === shape.id}
+                        aria-label={shape.label}
+                        title={shape.label}
+                        onClick={() => selectCanvasShape(shape)}
                       >
-                        {shape.label}
+                        <ShapeLibraryGlyph shape={shape} />
                       </button>
                     ))}
                   </div>
                 </section>
               );
             })}
-            {filteredCanvasShapeOptions.length === 0 ? (
-              <p className="project-canvas-shape-library__empty">No shapes match “{shapePickerQuery}”.</p>
+            {canvasShapeOptions.every(
+              (shape) =>
+                !shape.label
+                  .toLocaleLowerCase()
+                  .includes(shapeLibraryQuery.trim().toLocaleLowerCase()),
+            ) ? (
+              <p className="project-canvas-more-shapes__empty">
+                No supported shapes found.
+              </p>
             ) : null}
           </aside>
-        )}
+        ) : null}
+        {markerDrawing && !canvasReadOnly ? (
+          <div
+            className="project-canvas-marker-controls"
+            aria-label="Marker controls"
+            data-marker-color-transition={markerColorTransition ? "b" : "a"}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {(() => {
+              const markerOptionsDisabled = markerMode === "eraser";
+              const markerColors =
+                markerMode === "highlighter"
+                  ? canvasHighlighterColors
+                  : canvasMarkerColors;
+              return (
+                <>
+                  <div
+                    className="project-canvas-marker-controls__tools"
+                    role="group"
+                    aria-label="Freehand tools"
+                  >
+                    {(
+                      [
+                        { mode: "marker", label: "Marker" },
+                        { mode: "highlighter", label: "Highlighter" },
+                        { mode: "eraser", label: "Eraser" },
+                      ] as const
+                    ).map((tool) => (
+                      <button
+                        key={tool.mode}
+                        type="button"
+                        className="project-canvas-marker-controls__tool"
+                        aria-label={tool.label}
+                        aria-pressed={markerMode === tool.mode}
+                        title={tool.label}
+                        onClick={() => selectMarkerMode(tool.mode)}
+                      >
+                        <img
+                          src={coloredFigJamFreehandToolIcon(
+                            tool.mode,
+                            tool.mode === "highlighter"
+                              ? highlighterColor
+                              : markerColor,
+                          )}
+                          alt=""
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span
+                    className="project-canvas-marker-controls__divider"
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="project-canvas-marker-controls__weight"
+                    role="group"
+                    aria-label={
+                      markerOptionsDisabled
+                        ? "Stroke weight unavailable for Eraser"
+                        : "Stroke weight"
+                    }
+                  >
+                    {(["thin", "thick"] as const).map((weight) => (
+                      <button
+                        key={weight}
+                        type="button"
+                        className="project-canvas-marker-controls__weight-button"
+                        aria-label={weight === "thin" ? "Thin" : "Thick"}
+                        aria-pressed={markerStrokeWeight === weight}
+                        title={weight === "thin" ? "Thin" : "Thick"}
+                        disabled={markerOptionsDisabled}
+                        onClick={() => selectMarkerStrokeWeight(weight)}
+                      >
+                        <img
+                          src={
+                            weight === "thin" ? thinStrokeIcon : thickStrokeIcon
+                          }
+                          alt=""
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span
+                    className="project-canvas-marker-controls__divider"
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="project-canvas-marker-controls__swatches"
+                    role="group"
+                    aria-label={
+                      markerOptionsDisabled
+                        ? "Color unavailable for Eraser"
+                        : `${markerMode === "highlighter" ? "Highlighter" : "Marker"} color`
+                    }
+                  >
+                    {markerColors.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        className="project-canvas-marker-controls__swatch"
+                        aria-label={`${color.label} ${markerMode === "highlighter" ? "highlighter" : "marker"}`}
+                        aria-pressed={
+                          markerStrokeColor.toLowerCase() === color.value
+                        }
+                        style={
+                          { "--marker-color": color.value } as CSSProperties
+                        }
+                        disabled={markerOptionsDisabled}
+                        onClick={() => selectMarkerColor(color.value)}
+                      />
+                    ))}
+                    <label
+                      className="project-canvas-marker-controls__custom-color"
+                      aria-label={`Custom ${markerMode === "highlighter" ? "highlighter" : "marker"} color`}
+                      title="Custom"
+                      data-disabled={markerOptionsDisabled || undefined}
+                    >
+                      <input
+                        type="color"
+                        value={markerStrokeColor}
+                        aria-label={`Custom ${markerMode === "highlighter" ? "highlighter" : "marker"} color`}
+                        disabled={markerOptionsDisabled}
+                        onChange={(event) =>
+                          selectMarkerColor(event.currentTarget.value)
+                        }
+                      />
+                    </label>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        ) : null}
         {researchFramesOpen && (
           <ProjectResearchFramePicker
             frames={researchFrames}
@@ -3209,8 +4787,8 @@ export function ProjectPlayground({
         )}
         {stickyPickerOpen && (
           <ProjectStickyNotePicker
-            onSelectColor={(color) => armStickyPlacement(color, "single")}
-            onCreateStack={(color) => armStickyPlacement(color, "stack")}
+            selectedColor={stickyToolColor}
+            onSelectColor={(color) => armStickyPlacement(color, "single", true)}
           />
         )}
         {stickyPlacement ? (
@@ -3219,9 +4797,13 @@ export function ProjectPlayground({
             role="status"
             aria-live="polite"
           >
-            <StickyNoteGlyph />
+            <StickyNoteGlyph color={stickyPlacement.color} />
             <span>
-              Click anywhere to place {stickyPlacement.mode === "stack" ? "a stack of notes" : `a ${stickyPlacement.color.name} note`}.
+              Click anywhere to place{" "}
+              {stickyPlacement.mode === "stack"
+                ? "a stack of notes"
+                : `a ${stickyPlacement.color.name} note`}
+              .
             </span>
             <kbd>Esc</kbd>
           </div>
@@ -3233,9 +4815,7 @@ export function ProjectPlayground({
             style={stickyComposerStyle}
             aria-label="New sticky note"
           >
-            <div
-              className="project-sticky-note-composer__surface"
-            >
+            <div className="project-sticky-note-composer__surface">
               <div
                 ref={stickyInputRef}
                 autoFocus
@@ -3247,21 +4827,37 @@ export function ProjectPlayground({
                 aria-placeholder="Type your note"
                 data-placeholder="Type your note"
                 spellCheck
-                onInput={(event) => setStickyDraft((current) => (
-                  current ? { ...current, value: event.currentTarget.textContent ?? "" } : current
-                ))}
+                onInput={(event) =>
+                  setStickyDraft((current) =>
+                    current
+                      ? {
+                          ...current,
+                          value: event.currentTarget.textContent ?? "",
+                        }
+                      : current,
+                  )
+                }
                 onBlur={(event) => {
                   const nextTarget = event.relatedTarget as Node | null;
-                  if (nextTarget && stickyComposerRef.current?.contains(nextTarget)) return;
+                  if (
+                    nextTarget &&
+                    stickyComposerRef.current?.contains(nextTarget)
+                  )
+                    return;
                   /* Save the note, but leave focus where the reader put it. */
-                  commitStickyDraft(event.currentTarget.textContent ?? "", { selectNote: false });
+                  commitStickyDraft(event.currentTarget.textContent ?? "", {
+                    selectNote: false,
+                  });
                 }}
                 onKeyDown={(event) => {
                   event.stopPropagation();
                   if (event.key === "Escape") {
                     event.preventDefault();
                     cancelStickyDraft();
-                  } else if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  } else if (
+                    event.key === "Enter" &&
+                    (event.metaKey || event.ctrlKey)
+                  ) {
                     event.preventDefault();
                     commitStickyDraft(event.currentTarget.textContent ?? "");
                   }
@@ -3271,14 +4867,28 @@ export function ProjectPlayground({
           </div>
         )}
         {selectedStickyNote && !canvasReadOnly && (
-          <ProjectStickyNoteToolbar
+          <ProjectObjectToolbar
             color={selectedStickyNote.color}
             format={selectedStickyNote.format}
             collaboration={selectedStickyNote.collaboration}
             style={stickyToolbarStyle}
+            objectLabel="Sticky note"
             onColorChange={(color) => updateSelectedStickyNote({ color })}
             onFormatChange={(format) => updateSelectedStickyNote({ format })}
-            onCollaborationChange={(collaboration) => updateSelectedStickyNote({ collaboration })}
+            onCollaborationChange={(collaboration) =>
+              updateSelectedStickyNote({ collaboration })
+            }
+          />
+        )}
+        {selectedCanvasText && !selectedStickyNote && !canvasReadOnly && (
+          <ProjectObjectToolbar
+            color={selectedCanvasText.color}
+            colorOptions={canvasTextColors}
+            format={selectedCanvasText.format}
+            style={canvasTextToolbarStyle}
+            objectLabel="Text"
+            onColorChange={(color) => updateSelectedCanvasText({ color })}
+            onFormatChange={(format) => updateSelectedCanvasText({ format })}
           />
         )}
         {stickyNotes.map((note) => (
@@ -3299,15 +4909,23 @@ export function ProjectPlayground({
               expanded: document.expanded,
             }}
             style={canvasDocumentStyle(document)}
-            isSelected={selectedCanvasDocument?.elementId === document.elementId}
+            isSelected={
+              selectedCanvasDocument?.elementId === document.elementId
+            }
             onCommit={replaceCanvasDocument}
             onDismiss={dismissCanvasDocument}
           />
         ))}
         {selectedScreenReference && !screensOpen && (
-          <aside className="project-screen-inspector" aria-label="Selected catalog screen">
+          <aside
+            className="project-screen-inspector"
+            aria-label="Selected catalog screen"
+          >
             <header className="project-screen-inspector__header">
-              <span className="project-screen-inspector__icon" aria-hidden="true">
+              <span
+                className="project-screen-inspector__icon"
+                aria-hidden="true"
+              >
                 <Icon icon="viewColumns" size="sm" />
               </span>
               <div>
@@ -3320,7 +4938,9 @@ export function ProjectPlayground({
                 variant="ghost"
                 size="sm"
                 clickAction={() => {
-                  editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
+                  editorRef.current?.updateScene({
+                    appState: { selectedElementIds: {} },
+                  });
                   setSelectedScreenReference(undefined);
                 }}
               />
@@ -3339,26 +4959,47 @@ export function ProjectPlayground({
               label="Open screen details"
               variant="primary"
               size="sm"
-              clickAction={() => navigate({
-                name: "app",
-                appId: selectedScreenReference.appId,
-                section: "screens",
-                evidence: `SCREEN-${selectedScreenReference.screenId}`,
-              })}
+              clickAction={() =>
+                navigate({
+                  name: "app",
+                  appId: selectedScreenReference.appId,
+                  section: "screens",
+                  evidence: `SCREEN-${selectedScreenReference.screenId}`,
+                })
+              }
             />
           </aside>
         )}
         {selectedDataReference && (
-          <aside className="project-canvas-data-inspector" aria-label="Selected catalog card">
+          <aside
+            className="project-canvas-data-inspector"
+            aria-label="Selected catalog card"
+          >
             <header className="project-screen-inspector__header">
-              <span className="project-screen-inspector__icon" aria-hidden="true">
-                <Icon icon={selectedDataReference.kind === "app" ? "viewColumns" : "arrowsUpDown"} size="sm" />
+              <span
+                className="project-screen-inspector__icon"
+                aria-hidden="true"
+              >
+                <Icon
+                  icon={
+                    selectedDataReference.kind === "app"
+                      ? "viewColumns"
+                      : "arrowsUpDown"
+                  }
+                  size="sm"
+                />
               </span>
               <div>
-                <span>{selectedDataReference.kind === "app" ? "Catalog app" : "Catalog flow"}</span>
-                <strong>{selectedDataReference.kind === "app"
-                  ? selectedDataReference.appName
-                  : selectedDataReference.flowTitle}</strong>
+                <span>
+                  {selectedDataReference.kind === "app"
+                    ? "Catalog app"
+                    : "Catalog flow"}
+                </span>
+                <strong>
+                  {selectedDataReference.kind === "app"
+                    ? selectedDataReference.appName
+                    : selectedDataReference.flowTitle}
+                </strong>
               </div>
               <IconButton
                 label="Close catalog inspector"
@@ -3366,7 +5007,9 @@ export function ProjectPlayground({
                 variant="ghost"
                 size="sm"
                 clickAction={() => {
-                  editorRef.current?.updateScene({ appState: { selectedElementIds: {} } });
+                  editorRef.current?.updateScene({
+                    appState: { selectedElementIds: {} },
+                  });
                   setSelectedDataReference(undefined);
                 }}
               />
@@ -3377,10 +5020,14 @@ export function ProjectPlayground({
                 <dd>{selectedDataReference.appName}</dd>
               </div>
               <div>
-                <dt>{selectedDataReference.kind === "app" ? "Screens" : "Steps"}</dt>
-                <dd>{selectedDataReference.kind === "app"
-                  ? selectedDataReference.totalScreens
-                  : selectedDataReference.stepCount}</dd>
+                <dt>
+                  {selectedDataReference.kind === "app" ? "Screens" : "Steps"}
+                </dt>
+                <dd>
+                  {selectedDataReference.kind === "app"
+                    ? selectedDataReference.totalScreens
+                    : selectedDataReference.stepCount}
+                </dd>
               </div>
               <div>
                 <dt>Platform</dt>
@@ -3388,7 +5035,11 @@ export function ProjectPlayground({
               </div>
             </dl>
             <Button
-              label={selectedDataReference.kind === "app" ? "Open app details" : "Open flow details"}
+              label={
+                selectedDataReference.kind === "app"
+                  ? "Open app details"
+                  : "Open flow details"
+              }
               variant="primary"
               size="sm"
               clickAction={() => {
@@ -3413,10 +5064,15 @@ export function ProjectPlayground({
         {screensOpen && (
           <ProjectScreenLibrary
             message={screenMessage}
-            onDragItem={(payload) => { catalogDragRef.current = payload; }}
+            onDragItem={(payload) => {
+              catalogDragRef.current = payload;
+            }}
             onAddItem={(payload) => {
               if (payload.kind === "flow") {
-                return insertCatalogFlow(payload.item, payload.platform as Platform);
+                return insertCatalogFlow(
+                  payload.item,
+                  payload.platform as Platform,
+                );
               }
               return insertCatalogScreen(payload.result);
             }}
@@ -3431,8 +5087,12 @@ export function ProjectPlayground({
             message={referenceMessage}
             insertingId={insertingReferenceId}
             onQueryChange={setReferenceQuery}
-            onInsert={(item) => { void insertReference(item); }}
-            onRetry={() => { void loadReferences(); }}
+            onInsert={(item) => {
+              void insertReference(item);
+            }}
+            onRetry={() => {
+              void loadReferences();
+            }}
             onClose={() => setReferencesOpen(false)}
           />
         )}
@@ -3446,10 +5106,17 @@ export function ProjectPlayground({
           <div className="project-playground__unavailable" role="alert">
             <div>
               <h2>Project canvas unavailable</h2>
-              <p>The project may have been removed or you may no longer have access.</p>
+              <p>
+                The project may have been removed or you may no longer have
+                access.
+              </p>
             </div>
             <div className="project-playground__unavailable-actions">
-              <Button label="Retry" variant="primary" clickAction={retryCanvas} />
+              <Button
+                label="Retry"
+                variant="primary"
+                clickAction={retryCanvas}
+              />
               <Button
                 label="Back to projects"
                 variant="secondary"

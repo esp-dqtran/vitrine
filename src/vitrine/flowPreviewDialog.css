@@ -323,7 +323,7 @@ dialog.flow-preview-dialog-shell::backdrop {
 
 .flow-preview-dialog--web .flow-preview-dialog__screen > img,
 .flow-preview-dialog--web .flow-preview-dialog__screen img {
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .flow-preview-dialog__prototype {

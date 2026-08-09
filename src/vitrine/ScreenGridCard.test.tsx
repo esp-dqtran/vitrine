@@ -40,6 +40,21 @@ test("renders Screen cards from the full source without cropping or badge overla
   assert.doesNotMatch(html, />Default</);
 });
 
+test("uses a consistent 16:10 frame without cropping Web Screen images", () => {
+  const html = renderToStaticMarkup(
+    <ScreenGridCard
+      screen={{ ...screen, platform: "web" }}
+      accent="#3399ff"
+      delay={0}
+      onOpen={() => undefined}
+    />,
+  );
+
+  assert.match(html, /aspect-ratio:16\/10/);
+  assert.match(html, /object-fit:contain/);
+  assert.doesNotMatch(html, /object-fit:cover/);
+});
+
 test("renders hover collection and copy actions inside the card without a source action", () => {
   const html = renderToStaticMarkup(
     <ScreenGridCard

@@ -1,6 +1,6 @@
-import { Button } from "@astryxdesign/core";
 import type { CSSProperties } from "react";
 import figjamStickyNoteTool from "../assets/figjam-sticky-note-tool.svg";
+import figjamStickyNoteToolSource from "../assets/figjam-sticky-note-tool.svg?raw";
 
 export interface ProjectStickyNoteColor {
   id: string;
@@ -11,28 +11,30 @@ export interface ProjectStickyNoteColor {
 }
 
 export const projectStickyNoteColors: readonly ProjectStickyNoteColor[] = [
-  { id: "light-yellow", name: "light yellow", fill: "#fff4a3", stroke: "#e3d16a", text: "#252525" },
-  { id: "yellow", name: "yellow", fill: "#ffd966", stroke: "#dfba4d", text: "#252525" },
-  { id: "orange", name: "orange", fill: "#ffb36b", stroke: "#dc9252", text: "#252525" },
-  { id: "red", name: "red", fill: "#f08a8a", stroke: "#cf6c6c", text: "#252525" },
-  { id: "light-pink", name: "light pink", fill: "#f6c1e8", stroke: "#d6a1c8", text: "#252525" },
-  { id: "pink", name: "pink", fill: "#ec8bd8", stroke: "#c96fb6", text: "#252525" },
-  { id: "light-blue", name: "light blue", fill: "#a9c7f5", stroke: "#89a7d4", text: "#252525" },
-  { id: "violet", name: "violet", fill: "#ad99eb", stroke: "#8e78cc", text: "#252525" },
-  { id: "blue", name: "blue", fill: "#78a7e8", stroke: "#5f88c1", text: "#252525" },
-  { id: "dark-blue", name: "dark blue", fill: "#4f79c8", stroke: "#3c60a3", text: "#ffffff" },
-  { id: "cyan", name: "cyan", fill: "#83d5e7", stroke: "#62b5c7", text: "#252525" },
-  { id: "dark-green", name: "dark green", fill: "#61c7b8", stroke: "#46a797", text: "#252525" },
-  { id: "light-green", name: "light green", fill: "#bfe68c", stroke: "#9fc26f", text: "#252525" },
-  { id: "green", name: "green", fill: "#7ccf83", stroke: "#5caf64", text: "#252525" },
-  { id: "gray", name: "gray", fill: "#e5e7eb", stroke: "#c4c7ce", text: "#252525" },
-  { id: "black", name: "black", fill: "#222222", stroke: "#090909", text: "#ffffff" },
+  { id: "white", name: "white", fill: "#ffffff", stroke: "#ffffff", text: "#252525" },
+  { id: "gray", name: "gray", fill: "#e6e6e6", stroke: "#e6e6e6", text: "#252525" },
+  { id: "red", name: "red", fill: "#ffafa3", stroke: "#ffafa3", text: "#252525" },
+  { id: "orange", name: "orange", fill: "#ffd3a8", stroke: "#ffd3a8", text: "#252525" },
+  { id: "yellow", name: "yellow", fill: "#ffe299", stroke: "#ffe299", text: "#252525" },
+  { id: "green", name: "green", fill: "#b3efbd", stroke: "#b3efbd", text: "#252525" },
+  { id: "teal", name: "teal", fill: "#b3f4ef", stroke: "#b3f4ef", text: "#252525" },
+  { id: "blue", name: "blue", fill: "#a8daff", stroke: "#a8daff", text: "#252525" },
+  { id: "violet", name: "violet", fill: "#d3bdff", stroke: "#d3bdff", text: "#252525" },
+  { id: "pink", name: "pink", fill: "#ffa8db", stroke: "#ffa8db", text: "#252525" },
 ];
 
-export function StickyNoteGlyph() {
+export const defaultProjectStickyNoteColor = projectStickyNoteColors[4];
+
+export function StickyNoteGlyph({ color }: { color?: ProjectStickyNoteColor }) {
+  const src = color
+    ? `data:image/svg+xml,${encodeURIComponent(
+      figjamStickyNoteToolSource.replaceAll("rgb(255 175 163)", color.fill),
+    )}`
+    : figjamStickyNoteTool;
+
   return (
     <img
-      src={figjamStickyNoteTool}
+      src={src}
       width="20"
       height="20"
       alt=""
@@ -42,38 +44,28 @@ export function StickyNoteGlyph() {
 }
 
 export function ProjectStickyNotePicker({
+  selectedColor,
   onSelectColor,
-  onCreateStack,
 }: {
+  selectedColor: ProjectStickyNoteColor;
   onSelectColor(color: ProjectStickyNoteColor): void;
-  onCreateStack(color: ProjectStickyNoteColor): void;
 }) {
   return (
-    <div className="project-sticky-note-picker" role="dialog" aria-label="Sticky notes">
-      <div className="project-sticky-note-picker__header">
-        <strong>Sticky notes</strong>
-        <span>Choose a color, then click the canvas.</span>
-      </div>
-      <div className="project-sticky-note-picker__colors" aria-label="Sticky note color choices">
+    <div className="project-sticky-note-picker" role="toolbar" aria-label="Sticky options">
+      <div className="project-sticky-note-picker__colors" role="radiogroup" aria-label="Sticky color">
         {projectStickyNoteColors.map((color) => (
           <button
             key={color.id}
             type="button"
             className="project-sticky-note-picker__swatch"
-            aria-label={`Place ${color.name} sticky note`}
+            role="radio"
+            aria-label={color.name}
+            aria-checked={selectedColor.id === color.id}
             title={color.name}
             style={{ "--sticky-fill": color.fill, "--sticky-stroke": color.stroke } as CSSProperties}
             onClick={() => onSelectColor(color)}
           />
         ))}
-      </div>
-      <div className="project-sticky-note-picker__actions">
-        <Button
-          label="Place a stack"
-          variant="secondary"
-          size="sm"
-          clickAction={() => onCreateStack(projectStickyNoteColors[0])}
-        />
       </div>
     </div>
   );

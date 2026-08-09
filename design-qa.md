@@ -1,3 +1,291 @@
+# Design QA — FigJam Sticky Color Parity
+
+Source visual truth:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/sticky-palette-review/figjam-sticky-options.png`
+  — live FigJam Sticky note tool with its color options open.
+
+Implementation evidence:
+
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/sticky-palette-review/vitrines-sticky-options-final.png`
+  — live Vitrines canvas with Sticky notes active.
+- `/Users/kai/works/eastplayers/Astryx/.codex-artifacts/sticky-palette-review/comparison-final.png`
+  — same-state, side-by-side comparison.
+- `http://127.0.0.1:5173/projects/3d48a5c7-20b5-480a-a268-c3de515d8344/canvases/2dd5641d-50be-4c3e-b370-a994ab160d02`
+  — current browser-rendered insertion preview, compared side-by-side with the
+  live FigJam capture during this QA pass.
+
+Viewport and normalization: both browser captures are 779 × 863 CSS px at 1×
+density. The comparison is a direct 1558 × 863 side-by-side composition; no
+scaling or density normalization was required.
+
+State: Sticky note is active, the color tray is visible directly above the
+bottom toolbelt, and Yellow is selected.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped sticky palette.
+- Fonts and typography: the palette has no visible copy, matching FigJam's
+  color-only option tray. Vitrines retains its existing placement hint for the
+  active tool, rather than adding a second palette label.
+- Spacing and layout rhythm: both trays are centered above the bottom toolbar,
+  use a compact white floating surface, and maintain a clear gap from the
+  persistent toolbelt. The 28px interaction targets retain FigJam's compact
+  visual density while remaining easy to select.
+- Colors and visual tokens: Vitrines now uses FigJam's exact ten fills: White
+  `#ffffff`, Gray `#e6e6e6`, Red `#ffafa3`, Orange `#ffd3a8`, Yellow
+  `#ffe299`, Green `#b3efbd`, Teal `#b3f4ef`, Blue `#a8daff`, Violet
+  `#d3bdff`, and Pink `#ffa8db`. The inserted rectangle uses the exact selected
+  fill for both its surface and edge, so the swatch, tool preview, and note do
+  not drift.
+- Image quality and asset fidelity: the existing source sticky-note icon is
+  retained; the palette uses semantic CSS color controls, not a replacement
+  asset or approximate icon.
+- Copy and content: accessibility names expose `Sticky options` and `Sticky
+  color`, with each color as a radio option; no unnecessary picker copy or
+  stack action remains.
+
+## Full-view comparison evidence
+
+`comparison-final.png` compares the live FigJam source and live Vitrines
+implementation at the same viewport and active sticky-tool state. A current
+779 × 863 browser side-by-side comparison of FigJam's selected Yellow sticky
+with the Vitrines insertion preview confirmed the exact `rgb(255, 226, 153)`
+surface value. The scoped comparison confirms matching palette order, centered
+placement, white floating surface, circular color controls, and selected-color
+treatment.
+
+## Focused region comparison evidence
+
+The palette and its immediate toolbar context are fully readable in the
+full-view comparison, so an additional crop is not needed.
+
+## Comparison history
+
+1. First comparison found that Vitrines used large rounded-square swatches,
+   while the FigJam source uses compact circular color controls.
+2. Updated the swatches to circular fills with a violet selected ring and
+   recaptured `vitrines-sticky-options-final.png`.
+3. A later FigJam inspection found the Vitrines fill values were approximate;
+   the Yellow insertion preview was `#fff4a3` instead of FigJam's `#ffe299`.
+4. Replaced every sticky token with the inspected FigJam RGB values and
+   verified a fresh Yellow insertion preview resolves to
+   `rgb(255, 226, 153)` without committing a test note.
+
+## Primary interactions tested
+
+- Open Sticky notes from the Vitrines bottom toolbelt.
+- Confirm Yellow is selected by default.
+- Select Violet and confirm the radio state and placement hint update.
+- Close the picker and reopen it.
+- Select Orange then Yellow and open a transient sticky draft; confirm the
+  computed preview color is `#ffe299` / `rgb(255, 226, 153)`, then cancel it.
+
+final result: passed
+
+# Design QA — FigJam Section Tool
+
+Source visual truth:
+
+- `/tmp/figjam-section-reference.png` — live FigJam with Section active.
+
+Implementation evidence:
+
+- `/tmp/vitrines-section-drawing-final.png` — Vitrines Canvas with Section
+  active.
+- `/tmp/vitrines-section-created-final.png` — native Vitrines frame created
+  from the tool, before the test frame was deleted.
+- `/tmp/section-tool-design-qa-comparison.png` — unscaled side-by-side active
+  toolbar comparison.
+
+Viewport and normalization: both source and implementation captures are
+1280 × 720 CSS px at 1× density. The comparison is one 2560 × 720 px image,
+with no scale, crop, or density conversion.
+
+State: Section is active in the bottom toolbar. Vitrines intentionally keeps
+its existing divider before this grouped tool, as requested; FigJam uses no
+divider at that point.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped Section tool.
+- Fonts and typography: the focused control has no visible copy; its accessible
+  name is `Section` and its tooltip includes the FigJam `Shift+S` shortcut.
+- Spacing and layout rhythm: it is a 40px Vitrines control on the existing
+  compact toolbar rail, separated from the previous tool group by one divider.
+- Colors and visual tokens: activation is the same violet `#9747ff` / white
+  icon pair used by the surrounding FigJam-inspired controls.
+- Image quality and asset fidelity: the exact supplied 24px FigJam Section SVG
+  is rendered directly; no replacement icon or hand-drawn approximation was
+  introduced.
+- Copy and content: clicking Section switches to Excalidraw's native frame
+  creation mode. Drawing produces a real, selectable board frame, then returns
+  to Select with contextual frame actions.
+
+## Focused comparison evidence
+
+`section-tool-design-qa-comparison.png` was reviewed as one combined image.
+It confirms the matching nested-corner Section glyph, black idle ink, violet
+active surface, white active ink, and bottom-toolbelt behavior. The overall
+board composition is intentionally not treated as a visual mismatch because
+this is a scoped tool build on top of Vitrines' existing Canvas.
+
+## Primary interactions tested
+
+- Activate Section from the bottom toolbar and confirm the pressed violet state.
+- Drag on the Canvas to create a real native frame, then confirm native
+  contextual actions appear after creation.
+- Delete the temporary test frame to leave the user canvas unchanged.
+- Use the FigJam-aligned `Shift+S` keyboard shortcut path in the implementation.
+- Check the browser console: one pre-existing Excalidraw mount warning appeared
+  during initial page load; no Section click or frame-creation error occurred.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Shapes and Connectors
+
+- Source visual truth: live FigJam Shapes and connectors toolbar and its More shapes library.
+- Implementation: live Vitrines Canvas toolbar at the same compact bottom-toolbelt position.
+- States checked: compact shape row, active Bent connector, More shapes open, and a `rounded` search query.
+
+## Fidelity check
+
+- The main toolbar now uses FigJam's 64 × 40 px shape-family affordance, with an attached active state and a three-item collage preview.
+- The secondary toolbar uses the inspected 40 px white surface, 13 px radius, compact color combobox, divider, and small selectable tiles.
+- Bent, curved, and straight connectors map to Excalidraw's elbow, round, and sharp arrow modes; the endpoint-free connector maps to a line; square, ellipse, diamond, and rounded rectangle map to their corresponding supported primitives.
+- More shapes opens a searchable, grouped library following FigJam's two-level interaction. It intentionally lists only Vitrines primitives that can be drawn, instead of rendering inert FigJam-only shapes such as cylinder or mind map.
+- Browser verification confirmed the library search reduces the result set to Rounded rectangle and every visible selection controls the active canvas tool.
+
+## Verification
+
+- `node --test --import tsx src/vitrine/ProjectPlayground.test.ts` — 26 passed.
+- `npm run build` — passed (existing chunk-size warning only).
+- `git diff --check` — passed.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Shapes and Connectors
+
+- Source visual truth: `/tmp/vitrines-shape-toolbar-review/figjam-shapes.png` (live FigJam Shape and connector menu).
+- Implementation: `/tmp/vitrines-shape-toolbar-review/vitrines-shapes.png` (Vitrines Canvas Shape and connector menu).
+- Side-by-side comparison: `/tmp/vitrines-shape-toolbar-review/shape-toolbar-comparison.png`.
+- State: orange selected, Rectangle selected, at 779 × 863 CSS px.
+
+## Comparison history
+
+1. Initial finding [P1]: the Vitrines popup exposed only five loose shape controls, had no shape-color control, and could overlap the Sticky Notes popup.
+2. Fix: rebuilt it as a compact white toolbelt row, added a direct color chip with the shared eight-color palette, retained the active shape state, and made opening Shapes close competing transient tool controls.
+3. Post-fix: the Shape menu fits above the core toolbelt; Rectangle visibly stays selected; the orange chip and new shapes receive the same stroke color; no Sticky Notes popup remains after the Shapes tool opens.
+
+## Scope and fidelity
+
+- Follow-up visual review: the initial five-primitive row was visibly shorter and used generic glyphs, so it did not match the FigJam source closely enough.
+- Current implementation uses extracted FigJam SVG geometry for all twelve visible shortcuts and the source's 40px high, ~550px wide surface, 13px radius, white surface, compact color control, divider, and More shapes button.
+- The eight Vitrines primitives still select their matching Excalidraw tool. Triangle, down triangle, cylinder, and mind-map shortcuts truthfully open the searchable More shapes library because those primitives are not yet Canvas drawing tools.
+- Typography: tool names remain accessible labels, matching FigJam's icon-first compact control density.
+- Color: the tool chip, swatch selection, active glyph, and Excalidraw stroke state use the same exact color value.
+
+## Primary interactions tested
+
+- Opened Shapes and connectors from the live Vitrines canvas.
+- Opened Shape color and verified all eight palette choices are present.
+- Selected Orange and Rectangle; verified the Rectangle active state and orange current-tool color.
+- Opened Sticky Notes, then Shapes; verified Shapes is open and no competing Sticky popup remains.
+- Reopened Shapes after the visual rebuild: verified 12 source-geometry glyphs on a 560px toolbar and verified a Triangle shortcut opens the More shapes library.
+
+final result: passed
+
+---
+
+# Design QA — Compact Sticky Note Formatting Toolbar
+
+Source visual truth:
+
+- `/tmp/vitrines-sticky-toolbar-review/04-figjam-selected-sticky.png` — live
+  FigJam sticky note selected with its formatting toolbar open.
+
+Implementation evidence:
+
+- `/tmp/vitrines-sticky-toolbar-review/05-vitrines-compact-sticky.png` — live
+  Vitrines selected sticky note after the compact-toolbar update.
+- `/tmp/vitrines-sticky-toolbar-review/06-compact-comparison.png` — normalized
+  full-view FigJam/Vitrines side-by-side comparison.
+- `/tmp/vitrines-sticky-toolbar-review/07-focused-toolbar-comparison.png` —
+  focused selected-note and toolbar comparison.
+
+Viewport and normalization: both browser captures are 779 × 863 CSS/image px
+at 1× density. The full comparison is a direct 1558 × 863 horizontal pair;
+the focused comparison uses equal-density crops without scaling.
+
+State: a sticky note is selected on a light FigJam-style board. The main
+toolbar is closed; the Vitrines alignment menu and More options menu were
+separately opened and confirmed in the same state.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain for the selected sticky
+  toolbar. The former right-edge overflow is resolved.
+- Fonts and typography: compact label controls retain the existing Figtree
+  formatting hierarchy, while the selected values remain legible and do not
+  truncate inside the 779px viewport.
+- Spacing and layout rhythm: the toolbar now has a 42px compact floating
+  rhythm, stays clear of the viewport edge, and keeps the selected-note anchor
+  relationship from the FigJam reference.
+- Colors and visual tokens: both tools use the dark floating-toolbar surface
+  against the light dotted board. The selected sticky colour remains visible
+  as the colour control, without changing the actual note fill.
+- Image quality and asset fidelity: existing Vitrines and component-library
+  icons are retained; no custom-drawn replacement icon or raster asset was
+  introduced.
+- Copy and content: Font, size, alignment, link, colour, and More options are
+  mapped to truthful Vitrines sticky-note actions. Secondary collaboration and
+  lock controls are available from More options rather than being clipped.
+
+## Full-view comparison evidence
+
+`06-compact-comparison.png` shows the source and implementation side by side
+at the same viewport. The Vitrines toolbar is intentionally shorter because
+it groups collaboration controls into More options, while preserving the
+FigJam reference's compact dark-surface treatment and all persistent
+formatting affordances.
+
+## Focused region comparison evidence
+
+`07-focused-toolbar-comparison.png` makes the selected sticky and its toolbar
+legible at equal density. It confirms the Vitrines toolbar stays entirely
+inside the viewport with stable padding at the left edge.
+
+## Comparison history
+
+1. Initial selected-sticky capture found a P1: the Vitrines toolbar expanded
+   past the right viewport edge because every collaboration action and three
+   independent alignment buttons were persistent.
+2. Replaced the alignment button group with a selected-value dropdown, removed
+   redundant sticky identity chrome, and moved author, tag, reaction, comment,
+   and lock actions into More options.
+3. Replaced the unbounded screen coordinate with a CSS-clamped toolbar anchor,
+   then recaptured the same 779 × 863 selected-note state.
+4. Post-fix browser verification confirmed the main toolbar, the alignment
+   dropdown, and the More options dialog are all reachable without overflow.
+
+## Primary interactions tested
+
+- Select a sticky note on the live Vitrines canvas.
+- Open and close Text alignment; confirm Left, Centre, and Right choices are
+  exposed and the current choice is selected.
+- Open More sticky note options; confirm author, tag, reaction, comment, and
+  lock controls remain reachable.
+- Run `node --test --import tsx src/vitrine/ProjectPlayground.test.ts`,
+  `npm run build`, and `git diff --check`.
+
+final result: passed
+
+---
+
 # Design QA — Save to Project & Evidence Handoff
 
 Source visual truth:
@@ -51,6 +339,109 @@ State: dark-mode Aboard App Detail source and the Save-to-Project visual review.
 - Open Create new project and render the project-name/description form.
 - Confirm compact bottom-sheet behavior and stacked actions.
 - Focused Storybook tests pass; the Vite production build passes.
+
+final result: passed
+
+---
+
+# Design QA — FigJam-Inspired Right Toolbar
+
+Source visual truth:
+
+- User-provided FigJam `T · 03:00 · Share` toolbar capture at 807 × 863.
+
+Implementation evidence:
+
+- Live Vitrines canvas capture at 1280 × 720 during this review, with the toolbar in its idle state.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped right toolbar.
+- Structure and rhythm: Vitrines uses a compact white 48px floating surface, a 36px avatar/menu region, and a trailing primary Share action.
+- Product mapping: the unrelated FigJam timer and workspace controls are intentionally omitted, keeping this bar specific to Vitrines collaboration and access.
+- Actions: Share remains the connected project-access dialog. The avatar control refreshes collaborator presence.
+- Colors: the Share control uses FigJam's violet hierarchy while keeping the semantic Vitrines project-access action.
+
+## Primary interactions tested
+
+- Share opens the project access dialog and Escape closes it.
+- The collaboration control remains present and labelled in the rendered canvas.
+- Focused canvas test suite and production build pass.
+
+final result: passed
+
+---
+
+# Design QA — FigJam-Inspired Canvas Header
+
+Source visual truth:
+
+- `/tmp/figjam-top-left-toolbar-reference.png` — live FigJam canvas capture.
+
+Implementation evidence:
+
+- `/tmp/vitrines-top-left-toolbar-sized.png` — live Vitrines canvas capture.
+- `/tmp/vitrines-figjam-top-left-final-comparison.png` — equal-size side-by-side comparison.
+
+Viewport and normalization: both captures are 807 × 863 CSS/image pixels at 1× density. The comparison is a 1614 × 863 horizontal pair; no scaling or density normalization was applied.
+
+State: light canvas, idle toolbar, with the top-left board control closed.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped top-left header.
+- Fonts and typography: Vitrines retains its Figtree product font, while matching the compact 14px title hierarchy and small purple metadata chip from the FigJam reference.
+- Spacing and layout rhythm: the control uses the reference's 48px segmented rhythm, 12px outer inset, thin separators, rounded white surface, and a dedicated trailing pages segment.
+- Colors and visual tokens: the header is intentionally fixed to a near-white surface with dark ink and a restrained purple `Canvas` chip, so it remains legible when the surrounding Vitrines shell is dark.
+- Image quality and asset fidelity: the existing Vitrines mark remains vector-rendered; standard icons use the existing component icon set.
+- Copy and content: FigJam's `Untitled` and `Free` are mapped to the real project title and the truthful `Canvas` file-kind chip rather than presenting an unverified plan.
+
+## Full-view comparison evidence
+
+`/tmp/vitrines-figjam-top-left-final-comparison.png` places the source and the live Vitrines canvas side by side at equal dimensions. The remaining right-side collaboration control and board contents are outside this top-left-only change.
+
+## Focused region comparison evidence
+
+The top-left controls match the source structure: brand/dropdown segment, board title, compact metadata chip, status indicator, separator, and pages control. A separate crop was unnecessary because these details are legible in the normalized full-view pair.
+
+## Comparison history
+
+1. Initial live pass found that the title segment was hidden by a legacy direct-child selector.
+2. Fix: scoped that selector to only the hidden descriptor, then matched the control to the reference's 48px rhythm.
+3. A hot reload exposed an Excalidraw initialization race that could restore a dark board. The API handoff now reapplies the forced light scene configuration.
+4. Post-fix capture confirms the white board, rendered top-left toolbar, and the existing canvas controls remain visible.
+
+## Primary interactions tested
+
+- The brand segment retains its Projects-home route action.
+- The board/title and pages affordances expose the canvas-pages action and its Project home route in the component contract.
+- Focused canvas test suite and production build pass.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Board Background
+
+- Source visual truth: `/tmp/figjam-background-reference.png` — live FigJam board at `https://www.figma.com/board/qcrsrmVpogqrJrTeySwXOa/Untitled`.
+- Implementation evidence: `/tmp/vitrines-figjam-background-refined.png`.
+- Full-view comparison: `/tmp/figjam-background-comparison-refined.png`.
+- Viewport and density: both captures are 1280 × 720 CSS/image pixels at 1×; no density normalization was required.
+- State: idle canvas at 100% zoom with an empty visible region.
+
+## Comparison history
+
+1. Initial finding [P1]: Vitrines used a dark square grid, materially different from FigJam's light dotted board.
+2. Fix: set the Excalidraw scene to transparent/light, disabled the native square grid, and rendered a 16px dotted surface beneath the drawing layer.
+3. Post-fix evidence: both surfaces use a `#f5f5f5` base with the same 16px dot cadence; the implementation retains `filter: none` so drawing colors are unchanged.
+
+## Fidelity check
+
+- Typography and copy: outside the canvas-background comparison.
+- Spacing and layout rhythm: the repeating dot cadence and full-viewport surface match the reference.
+- Colors and visual tokens: the base surface is `rgb(245, 245, 245)`; dots are neutral gray and stay behind drawings.
+- Image quality and asset fidelity: no raster or substitute asset was introduced; the board is rendered by the canvas surface.
+- Focused region: not needed because the repeating pattern is fully legible in the full-view comparison.
 
 final result: passed
 
@@ -672,5 +1063,244 @@ Implementation evidence:
 - The production Vite build succeeds.
 - The Storybook build succeeds.
 - Browser verification covers Apps, Sites, Flows, Aboard App detail, Collections, Projects, Billing settings, Admin Users, and Pricing.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Marker Control
+
+- Source visual truth: `/tmp/marker-figjam-final.png` (live FigJam marker submenu).
+- Implementation: `/tmp/marker-vitrines-final.png` (Vitrines Canvas marker submenu).
+- Viewport: 864 × 864 px at 1× density.
+- State: Marker and thin stroke selected, black color selected.
+- Focused region: the first Marker tool button; the board themes and canvas contents intentionally differ.
+
+## Comparison history
+
+1. Initial finding [P1]: Vitrines used a 28 × 32 px button with a 16 × 28 px icon. FigJam uses a 24 × 24 px button and clips a 16 × 34 px SVG at a 4 px top inset.
+2. Fix: matched the 24px control, clipping, icon dimensions, and inset.
+3. Post-fix measurement: both source and Vitrines render a 24 × 24 px button with a 16 × 34 px SVG and a 20 px visible clipped portion.
+
+## Fidelity check
+
+- Typography and copy: not present in the focused icon.
+- Spacing: matched source button geometry and inset.
+- Color: FigJam violet selection state is retained.
+- Asset quality: source SVG remains the rendered artwork.
+- Follow-up: Highlighter, Washi tape, and Eraser need independent source-size passes; they are outside this marker-only change.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Text Tool
+
+Source visual truth:
+
+- `/tmp/figjam-text-tool-final-reference.png` — live FigJam with Text active.
+
+Implementation evidence:
+
+- `/tmp/vitrines-text-tool-final.png` — Vitrines Canvas with Text active.
+- `/tmp/vitrines-text-tool-editing-final.png` — Vitrines Canvas while the
+  inline text editor is active.
+- `/tmp/text-tool-design-qa-comparison.png` — focused side-by-side visual
+  comparison of the active toolbar state.
+
+Viewport and normalization: both captures are 1280 × 720 CSS px at 1× density.
+The comparison is an unscaled 2560 × 720 side-by-side composition.
+
+State: Text is active in the bottom toolbar. The editing capture verifies that
+Vitrines keeps the purple FigJam Text affordance while its inline editor owns
+keyboard input.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain in the scoped Text tool.
+- Fonts and typography: the Text tool now uses the supplied FigJam `T` mark,
+  including white active ink on the violet selected surface.
+- Spacing and layout rhythm: the existing 40px toolbar control and the divider
+  before Text remain intact, matching the compact grouped FigJam toolbelt.
+- Colors and visual tokens: active Text uses `#9747ff` with white icon ink;
+  Select loses its violet active state while an inline text editor is open.
+- Image quality and asset fidelity: the supplied `figjam-text-tool.svg` is
+  rendered directly, replacing Excalidraw's generic `A` icon.
+- Copy and content: formatting remains at the point of editing. The large
+  Excalidraw left inspector is suppressed for text selection and editing.
+
+## Focused comparison evidence
+
+`text-tool-design-qa-comparison.png` was reviewed as one image. It confirms
+the same source asset, violet selected state, white icon ink, and bottom-belt
+placement. The broad board content is intentionally not compared because the
+test only scopes the Text control.
+
+## Comparison history
+
+1. The initial Vitrines state used Excalidraw's `A` glyph and showed its large
+   left formatting inspector after placement.
+2. Replaced the toolbar glyph with the supplied FigJam Text asset; retained
+   the active violet state while the inline text editor is open; suppressed the
+   text inspector.
+3. The first edit-state check showed both Select and Text as violet. Updated
+   the Select override and recaptured the editing state. Only Text is active
+   now, while the editor remains usable and no inspector is visible.
+
+## Primary interactions tested
+
+- Activate Text from the Vitrines bottom toolbar.
+- Confirm the selected FigJam `T` asset, violet background, and no inspector.
+- Place an empty inline text editor, then confirm it is editable, the Text
+  affordance stays active, Select is visually inactive, and the inspector stays
+  hidden.
+- Leave the editor through Selection and confirm the editing surface closes.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Section Tool: Size and Order Correction
+
+Source visual truth:
+
+- `/tmp/section-audit-01-figjam-active.png` — live FigJam with Section active.
+
+Implementation evidence:
+
+- `/tmp/section-fix-02-vitrines-active.jpg` — Vitrines Canvas with Section
+  active after the correction.
+- `/tmp/section-fix-comparison.png` — focused source and implementation
+  toolbelt comparison.
+
+Viewport and normalization: both captures are 1280 × 720 CSS px. The focused
+comparison is composed at native scale, without resizing either toolbar.
+
+## Findings and correction
+
+1. Earlier Vitrines placed Section after the image and custom tools, and used
+   a 40px selected tile. FigJam places Section immediately after Text and uses
+   a compact 32px violet selected tile with a 24px icon.
+2. Section is now its own ordered toolbar group: it follows Text, precedes
+   Image and the remaining custom controls, and retains the requested divider
+   before the tool.
+3. The active Section surface is now exactly 32 × 32 px. The supplied FigJam
+   asset remains 24px and inverts to white when selected.
+
+## Interaction and runtime check
+
+- Clicked Section in the live Vitrines Canvas; its `aria-pressed` state became
+  `true`, confirming the native Section drawing action remains wired after
+  reordering.
+- The page reports one pre-existing Excalidraw mount-time React warning. No
+  error was emitted by clicking or activating Section.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Shapes Trigger and More Shapes Drawer
+
+Source visual truth:
+
+- `/tmp/shapes-source-more-open.jpg` — live FigJam with the Shapes drawer and
+  quick shape toolbelt open.
+
+Implementation evidence:
+
+- `/tmp/shapes-fix-00-vitrines-initial.jpg` — corrected Vitrines Shapes
+  drawer, quick toolbelt, and source-derived trigger.
+- `/tmp/shapes-fix-comparison.jpg` — same-state FigJam/Vitrines comparison at
+  the same viewport.
+
+Viewport and normalization: both captures are 1280 × 720 CSS px, composed at
+native scale without crop or density conversion.
+
+## Findings and correction
+
+1. The trigger had a solid black preview square because its source outline was
+   overlaid with an artificial fill. It now renders the source outline-only
+   Square and Ellipse assets beside the connector, matching FigJam's lighter
+   collage affordance.
+2. The More shapes drawer now follows FigJam's fixed left-edge geometry:
+   72px from the top, 12px from the bottom, 12px from the left, and 240px wide.
+   The quick toolbar remains visible above the main toolbelt while the drawer
+   stays open.
+3. The drawer only lists primitives Vitrines can actually draw. Unsupported
+   FigJam library items are not presented as inert controls.
+
+## Interaction and runtime check
+
+- Confirmed the quick shape toolbar and the More shapes drawer render together
+  from the live Canvas state.
+- Source inspection confirms the Shapes trigger provides the accessible name
+  `Shapes and connectors`, including its open/close state.
+
+final result: passed
+
+---
+
+# Design QA — FigJam Rectangle, Arrow, and Circle Assets
+
+Source visual truth: the exact FigJam Rectangle, Arrow, and Circle SVG markup
+provided for this task.
+
+Implementation evidence:
+
+- `/tmp/shapes-svg-fix-vitrines-final.jpg` — live Vitrines Canvas with the
+  updated Shapes toolbar visible.
+
+## Findings and correction
+
+1. Rectangle now uses the supplied 144 × 144 FigJam geometry with white fill,
+   rounded corners, and the exact 5.8947px source stroke.
+2. Arrow now uses the supplied 17 × 12 FigJam path and is named Arrow in the
+   shape picker.
+3. Circle now uses the supplied 144 × 144 FigJam geometry, white fill, and
+   exact 6.7368px source stroke. The picker labels are Rectangle, Arrow, and
+   Circle so the accessible names match their visible FigJam tools.
+4. The Shape trigger renders Rectangle and Circle as source SVG images rather
+   than masks, preserving their white interiors and outline treatment.
+
+## Verification
+
+- Vitrines Canvas was captured with the Shapes toolbar open after the asset
+  update.
+- `node --test --import tsx src/vitrine/ProjectPlayground.test.ts` — 26 passed.
+- `npm run build` and `git diff --check` — passed.
+
+final result: passed
+
+---
+
+# Design QA — Shared Canvas Object Toolbar
+
+Source visual truth: the existing compact Sticker Notes object toolbar in
+Vitrines Canvas. The same shell is now the shared formatting UI for canvas
+objects, starting with text.
+
+Implementation evidence:
+
+- `/tmp/vitrines-shared-object-toolbar-text.png` — live text editing with the
+  shared object toolbar visible above the text caret.
+
+## Findings and correction
+
+1. Text previously exposed Excalidraw's large left-side selected-object
+   inspector, which did not match the compact Canvas workflow.
+2. Text now uses the Sticker Notes shell for font, size, alignment, link, and
+   color. Its accessible region is `Object formatting`, with controls named
+   for Text.
+3. Sticky note collaboration actions remain note-only. The shared text toolbar
+   receives no collaboration props, so it has no sticky-only More menu.
+
+## Interaction and runtime check
+
+- Selected Text, clicked the live canvas, and confirmed the compact Object
+  formatting toolbar appeared with the inline text editor.
+- Confirmed the native Excalidraw selected-object inspector was absent.
+- Pressed Escape and confirmed the temporary editor and object toolbar closed
+  without leaving a test object on the board.
+- `npm run build` — passed.
 
 final result: passed

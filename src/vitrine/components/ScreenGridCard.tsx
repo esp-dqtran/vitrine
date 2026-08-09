@@ -131,7 +131,7 @@ export function ScreenGridCard({
           aspectRatio={screenAspectRatio(screen.platform)}
           imageFit="contain"
           preferFullImage
-          preserveNaturalAspectRatio
+          preserveNaturalAspectRatio={screen.platform !== 'web'}
           delay={delay}
           onOpen={onOpen}
         />

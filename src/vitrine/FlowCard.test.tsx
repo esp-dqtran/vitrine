@@ -30,8 +30,8 @@ test('renders a flow strip with responsive observed screen media', () => {
   assert.match(html, /aria-label="Preview Login flow screens"/);
   assert.match(html, /data-flow-preview-index="0"/);
   assert.match(html, /src="\/flow-thumb.webp"/);
-  assert.match(html, /object-fit:contain/);
-  assert.doesNotMatch(html, /srcSet=/);
+  assert.match(html, /srcSet="\/flow-thumb.webp 1x,\/flow.png 2x"/);
+  assert.match(html, /object-fit:cover/);
   assert.doesNotMatch(html, /background:#fff/);
   assert.match(html, /<h2>Login<\/h2>/);
   assert.match(html, />1 screen</);
