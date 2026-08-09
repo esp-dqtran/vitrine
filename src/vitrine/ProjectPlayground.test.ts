@@ -200,10 +200,7 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     source,
     /--project-canvas-shape-icon-color": color \?\? "#1e1e1e"/,
   );
-  assert.match(
-    source,
-    /editor\?\.setActiveTool\(\{ type: shape\.tool \}\)/,
-  );
+  assert.match(source, /editor\?\.setActiveTool\(\{ type: shape\.tool \}\)/);
   assert.match(source, /currentItemStrokeColor: shapeColor/);
   assert.match(source, /currentItemArrowType: shape\.arrowType \?\? "sharp"/);
   assert.match(source, /currentItemRoundness: shape\.roundness \?\? "sharp"/);
@@ -269,7 +266,9 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /role="toolbar"[\s\S]*aria-label="Shapes and connectors"/,
   );
   assert.match(source, /className="project-playground__document-trigger"/);
-  assert.match(source, /className="project-playground__more-tools-trigger"/);
+  assert.match(source, /className="project-playground__stamp-trigger"/);
+  assert.match(source, /className="project-playground__actions-trigger"/);
+  assert.match(source, /className="project-playground__widgets-trigger"/);
   assert.match(
     source,
     /import figjamSectionToolIcon from "\.\.\/assets\/figjam-section-tool\.svg"/,
@@ -296,16 +295,24 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
   assert.match(source, /customType: "astryx-table"/);
   assert.match(
     source,
-    /const handleCanvasPlacementPointerUp = useCallback\([\s\S]*?if \(!tablePlacementRef\.current[\s\S]*?insertCanvasTableAt\([\s\S]*?stopTablePlacement\(\);/,
+    /const handleCanvasPlacementPointerUp = useCallback\([\s\S]*?tablePlacementRef\.current[\s\S]*?insertCanvasTableAt\([\s\S]*?stopTablePlacement\(\);/,
+  );
+  assert.match(
+    source,
+    /stampPlacementRef\.current[\s\S]*?insertCanvasStampAt\([\s\S]*?currentStamp/,
   );
   assert.match(source, /onPointerUp=\{handleCanvasPlacementPointerUp\}/);
   assert.match(
     source,
-    /if \(nativeTool\) \{[\s\S]*?deactivateStickyTool\(\);[\s\S]*?deactivateTableTool\(\);/,
+    /if \(nativeTool\) \{[\s\S]*?deactivateStickyTool\(\);[\s\S]*?deactivateTableTool\(\);[\s\S]*?deactivateStampTool\(\);/,
   );
   assert.match(
     source,
     /event\.shiftKey && event\.key\.toLowerCase\(\) === "s"[\s\S]*?drawResearchFrame\(\)/,
+  );
+  assert.match(
+    source,
+    /event\.key\.toLowerCase\(\) === "e"[\s\S]*?toggleStampTool\(\)/,
   );
   assert.match(
     css,
@@ -320,7 +327,16 @@ test("hosts a project-scoped Excalidraw canvas inside the Astryx playground", ()
     /project-playground__canvas--frame-drawing[\s\S]*?selected-shape-actions[\s\S]*?display:\s*none !important/s,
   );
   assert.match(source, /className="project-canvas-tools-catalog"/);
-  assert.match(source, /placeholder="Search tools…"/);
+  assert.match(source, /placeholder="Search"/);
+  assert.match(source, /placeholder="Let’s find the perfect thing"/);
+  assert.match(
+    source,
+    /const canvasStampOptions:[\s\S]*?Thumbs up[\s\S]*?\+1[\s\S]*?Star[\s\S]*?Question[\s\S]*?Thumbs down[\s\S]*?Dot[\s\S]*?Profile[\s\S]*?Heart/,
+  );
+  assert.match(
+    source,
+    /const canvasWidgetsTabs:[\s\S]*?All[\s\S]*?Stickers[\s\S]*?Templates[\s\S]*?Widgets[\s\S]*?Plugins[\s\S]*?More/,
+  );
   assert.match(source, /const projectCanvasToolCatalogItems/);
   assert.match(source, /tool: "research-frames"/);
   assert.doesNotMatch(source, /tool: "data"/);
@@ -635,21 +651,21 @@ test("gives the infinite canvas the full available viewport", () => {
   );
   assert.match(
     css,
-    /\.project-playground__screens-trigger,[\s\S]*?\.project-playground__more-tools-trigger\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*height:\s*var\(--project-canvas-tool-size/s,
+    /\.project-playground__screens-trigger,[\s\S]*?\.project-playground__widgets-trigger,[\s\S]*?\.project-playground__more-tools-trigger\s*\{[^}]*width:\s*var\(--project-canvas-tool-size[^}]*height:\s*var\(--project-canvas-tool-size/s,
   );
   assert.match(css, /\.project-playground__section-tool\s*\{[^}]*order:\s*1;/s);
   assert.match(
     css,
     /\.project-playground__creation-tools\s*\{[^}]*order:\s*2;/s,
   );
-  assert.match(css, /toolbar-image"\]\)\s*\{[^}]*order:\s*3;/s);
+  assert.match(css, /toolbar-image"\]\)\s*\{[^}]*order:\s*6;/s);
   assert.match(
     css,
     /\.project-playground__section-trigger\s*\{[^}]*width:\s*32px;[^}]*height:\s*32px;/s,
   );
   assert.match(
     css,
-    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*top:\s*136px;[^}]*left:\s*64px;[^}]*width:\s*min\(420px,/s,
+    /\.project-canvas-tools-catalog\s*\{[^}]*position:\s*absolute;[^}]*top:\s*50%;[^}]*left:\s*50%;[^}]*width:\s*min\(588px,/s,
   );
   // \s+ between the compounds, not a literal space: the formatter wraps long
   // selectors across lines, which is not a change to what they select.
@@ -1055,7 +1071,10 @@ test("gives a selected sticky note its own formatting toolbar", () => {
   // of allowing every collaboration action to push the toolbar off-canvas.
   assert.match(toolbarSource, /label="More sticky note options"/);
   assert.match(toolbarSource, /aria-label="More sticky note options"/);
-  assert.match(toolbarSource, /ariaLabel=\{`\$\{objectLabel\} text alignment`\}/);
+  assert.match(
+    toolbarSource,
+    /ariaLabel=\{`\$\{objectLabel\} text alignment`\}/,
+  );
   assert.doesNotMatch(toolbarSource, /project-sticky-note-toolbar__identity/);
   assert.match(
     css,
@@ -1240,7 +1259,7 @@ test("keeps Vitrines actions inside the FigJam-style canvas toolbelt", () => {
    * value, so an Astryx tool and a native tool now light up identically.
    */
   const pressed =
-    /\.project-playground__more-tools-trigger\[aria-pressed="true"\],[\s\S]*?\.project-playground__section-trigger\[aria-pressed="true"\]\s*\{([^}]*)\}/.exec(
+    /\.project-playground__actions-trigger\[aria-pressed="true"\],[\s\S]*?\.project-playground__widgets-trigger\[aria-pressed="true"\]\s*\{([^}]*)\}/.exec(
       css,
     )?.[1] ?? "";
   assert.match(pressed, /background:\s*#9747ff/);
@@ -1282,7 +1301,7 @@ test("keeps Vitrines actions inside the FigJam-style canvas toolbelt", () => {
     /\.project-playground__canvas \.excalidraw \.App-toolbar > \.Stack_horizontal\s*\{[^}]*flex-direction:\s*row[^}]*overflow-x:\s*auto/s,
   );
   const railHover =
-    /\.project-playground__more-tools-trigger:hover,[\s\S]*?\.project-playground__section-trigger:hover\s*\{([^}]*)\}/.exec(
+    /\.project-playground__stamp-trigger:hover,[\s\S]*?\.project-playground__widgets-trigger:hover\s*\{([^}]*)\}/.exec(
       css,
     )?.[1] ?? "";
   const nativeHover =
@@ -1294,13 +1313,14 @@ test("keeps Vitrines actions inside the FigJam-style canvas toolbelt", () => {
   assert.match(railHover, /#f2f4f7/);
   assert.match(nativeHover, /#f2f4f7/);
   const triggerSize =
-    /\.project-playground__more-tools-trigger\s*\{([^}]*)\}/.exec(css)?.[1] ??
-    "";
-  assert.match(triggerSize, /width:\s*var\(--project-canvas-tool-size/);
+    /\.project-playground__comments-trigger,[\s\S]*?\.project-playground__actions-trigger,[\s\S]*?\.project-playground__widgets-trigger\s*\{([^}]*)\}/.exec(
+      css,
+    )?.[1] ?? "";
+  assert.match(triggerSize, /width:\s*32px/);
   assert.doesNotMatch(triggerSize, /--default-button-size/);
   assert.match(
     css,
-    /\.project-playground__more-tools-trigger:focus-visible,[\s\S]*?\.project-playground__section-trigger:focus-visible\s*\{[^}]*outline:\s*2px solid #0d99ff/s,
+    /\.project-playground__stamp-trigger:focus-visible,[\s\S]*?\.project-playground__widgets-trigger:focus-visible\s*\{[^}]*outline:\s*2px solid #0d99ff/s,
   );
   const playground = readFileSync(
     new URL("./components/ProjectPlaygroundPage.tsx", import.meta.url),
@@ -1772,8 +1792,9 @@ test("places catalog records as composed cards, not a labelled rectangle", () =>
   assert.match(source, /const groupId = `astryx-card-/);
   // Every part shares the group, so the card moves and deletes as one object.
   const createCatalogCardSource =
-    /function createCatalogCardElements\([\s\S]*?\n}\n\nfunction/.exec(source)?.[0] ??
-    "";
+    /function createCatalogCardElements\([\s\S]*?\n}\n\nfunction/.exec(
+      source,
+    )?.[0] ?? "";
   assert.equal(
     (createCatalogCardSource.match(/groupIds: \[groupId\]/g) ?? []).length,
     5,
@@ -1854,7 +1875,10 @@ test("never points a catalog card at an image URL the page cannot load", () => {
   assert.ok(insertScreen, "expected to find insertCatalogScreen");
   assert.match(insertScreen, /loadCatalogCardImage\(screen\.url, projectId\)/);
   assert.doesNotMatch(insertScreen, /thumbnailUrl/);
-  assert.match(insertScreen, /const lastScreenImage = dropPoint\s*\? undefined/);
+  assert.match(
+    insertScreen,
+    /const lastScreenImage = dropPoint\s*\? undefined/,
+  );
   assert.match(
     insertScreen,
     /lastScreenImage\.x \+ lastScreenImage\.width \+ 40/,

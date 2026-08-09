@@ -16,7 +16,7 @@ import {
   TextInput,
   type IconName,
 } from "@astryxdesign/core";
-import { ChevronSmallDownIcon } from "@storybook/icons";
+import { ChevronSmallDownIcon, FaceHappyIcon } from "@storybook/icons";
 import {
   convertToExcalidrawElements,
   Excalidraw,
@@ -138,6 +138,17 @@ import figjamCylinderIcon from "../assets/figjam-cylinder.svg";
 import figjamMindMapIcon from "../assets/figjam-mind-map.svg";
 import figjamSectionToolIcon from "../assets/figjam-section-tool.svg";
 import figjamTableToolIcon from "../assets/figjam-table-tool.svg";
+import figjamStampToolIcon from "../assets/figjam-stamp-tool.svg";
+import figjamActionsToolIcon from "../assets/figjam-actions-tool.svg";
+import figjamWidgetsToolIcon from "../assets/figjam-widgets-tool.svg";
+import figjamStampThumbsUp from "../assets/figjam-stamp-thumbs-up.png";
+import figjamStampPlusOne from "../assets/figjam-stamp-plus-one.png";
+import figjamStampStar from "../assets/figjam-stamp-star.png";
+import figjamStampQuestion from "../assets/figjam-stamp-question.png";
+import figjamStampThumbsDown from "../assets/figjam-stamp-thumbs-down.png";
+import figjamStampDot from "../assets/figjam-stamp-dot.png";
+import figjamStampProfile from "../assets/figjam-stamp-profile.svg";
+import figjamStampHeart from "../assets/figjam-stamp-heart.png";
 
 const canvasMediaMimeTypeSet = new Set([
   "image/png",
@@ -274,6 +285,42 @@ interface CanvasMarkerColor {
 
 type CanvasMarkerMode = "marker" | "highlighter" | "washi" | "eraser";
 type CanvasMarkerStrokeWeight = "thin" | "thick";
+
+type CanvasStampId =
+  | "thumbs-up"
+  | "plus-one"
+  | "star"
+  | "question"
+  | "thumbs-down"
+  | "dot"
+  | "profile"
+  | "heart";
+
+interface CanvasStampOption {
+  id: CanvasStampId;
+  label: string;
+  asset: string;
+}
+
+const canvasStampOptions: readonly CanvasStampOption[] = [
+  { id: "thumbs-up", label: "Thumbs up", asset: figjamStampThumbsUp },
+  { id: "plus-one", label: "+1", asset: figjamStampPlusOne },
+  { id: "star", label: "Star", asset: figjamStampStar },
+  { id: "question", label: "Question", asset: figjamStampQuestion },
+  { id: "thumbs-down", label: "Thumbs down", asset: figjamStampThumbsDown },
+  { id: "dot", label: "Dot", asset: figjamStampDot },
+  { id: "profile", label: "Profile", asset: figjamStampProfile },
+  { id: "heart", label: "Heart", asset: figjamStampHeart },
+] as const;
+
+const defaultCanvasStamp = canvasStampOptions[0];
+type CanvasWidgetsTab =
+  | "all"
+  | "stickers"
+  | "templates"
+  | "widgets"
+  | "plugins"
+  | "more";
 
 const canvasShapeOptions: readonly CanvasShapeOption[] = [
   {
@@ -500,6 +547,71 @@ const projectCanvasToolCatalogItems: readonly ProjectCanvasToolCatalogItem[] = [
     title: "Templates",
     description: "Start common designer workflows from a reusable layout.",
     pinned: false,
+  },
+];
+
+interface CanvasWidgetsLauncherItem {
+  id: string;
+  title: string;
+  description: string;
+  category: Exclude<CanvasWidgetsTab, "all" | "plugins">;
+  tool: ProjectCanvasTool | "stamp";
+}
+
+const canvasWidgetsTabs: readonly {
+  id: CanvasWidgetsTab;
+  label: string;
+}[] = [
+  { id: "all", label: "All" },
+  { id: "stickers", label: "Stickers" },
+  { id: "templates", label: "Templates" },
+  { id: "widgets", label: "Widgets" },
+  { id: "plugins", label: "Plugins" },
+  { id: "more", label: "More" },
+];
+
+const canvasWidgetsLauncherItems: readonly CanvasWidgetsLauncherItem[] = [
+  {
+    id: "stamps",
+    title: "Quick stamps",
+    description: "React with FigJam-style stamps.",
+    category: "stickers",
+    tool: "stamp",
+  },
+  {
+    id: "templates",
+    title: "Designer templates",
+    description: "Start a reusable research or decision layout.",
+    category: "templates",
+    tool: "templates",
+  },
+  {
+    id: "research-frames",
+    title: "Research frames",
+    description: "Group evidence, ideas, and decisions.",
+    category: "widgets",
+    tool: "research-frames",
+  },
+  {
+    id: "comments",
+    title: "Comments",
+    description: "Place a discussion anywhere on the board.",
+    category: "widgets",
+    tool: "comments",
+  },
+  {
+    id: "catalog",
+    title: "Catalog",
+    description: "Browse Screens and Flows for this canvas.",
+    category: "more",
+    tool: "screens",
+  },
+  {
+    id: "document",
+    title: "Document",
+    description: "Add a structured working document.",
+    category: "more",
+    tool: "document",
   },
 ];
 
@@ -759,6 +871,39 @@ function createCanvasTableElements({
       } as ElementSkeleton;
     }),
   ) as ExcalidrawElement[];
+}
+
+function createCanvasStampElement({
+  x,
+  y,
+  fileId,
+  stamp,
+}: {
+  x: number;
+  y: number;
+  fileId: FileId;
+  stamp: CanvasStampOption;
+}): ExcalidrawElement {
+  const size = 88;
+  const [image] = convertToExcalidrawElements([
+    {
+      type: "image",
+      x: x - size / 2,
+      y: y - size / 2,
+      width: size,
+      height: size,
+      fileId,
+      status: "saved",
+      customData: {
+        astryxReference: {
+          kind: "stamp",
+          stampId: stamp.id,
+          label: stamp.label,
+        },
+      },
+    } as ElementSkeleton,
+  ]);
+  return image as ExcalidrawElement;
 }
 
 function createStickyNoteElements({
@@ -1796,6 +1941,15 @@ export function ProjectPlayground({
   const [researchFramesOpen, setResearchFramesOpen] = useState(false);
   const [researchFrameDrawing, setResearchFrameDrawing] = useState(false);
   const [tablePlacement, setTablePlacement] = useState(false);
+  const [stampPickerOpen, setStampPickerOpen] = useState(false);
+  const [activeStampId, setActiveStampId] = useState<CanvasStampId>(
+    defaultCanvasStamp.id,
+  );
+  const [stampPlacement, setStampPlacement] = useState<CanvasStampOption>();
+  const [widgetsLauncherOpen, setWidgetsLauncherOpen] = useState(false);
+  const [widgetsLauncherQuery, setWidgetsLauncherQuery] = useState("");
+  const [widgetsLauncherTab, setWidgetsLauncherTab] =
+    useState<CanvasWidgetsTab>("all");
   const [markerDrawing, setMarkerDrawing] = useState(false);
   const [markerMode, setMarkerMode] = useState<CanvasMarkerMode>("marker");
   const [markerStrokeWeight, setMarkerStrokeWeight] =
@@ -1822,8 +1976,7 @@ export function ProjectPlayground({
   // inserted until the user clicks or drags on the canvas.
   const [activeShapeOptionId, setActiveShapeOptionId] =
     useState<CanvasShapeOptionId>("rectangle");
-  const [shapePlacement, setShapePlacement] =
-    useState<CanvasShapeOption>();
+  const [shapePlacement, setShapePlacement] = useState<CanvasShapeOption>();
   const [shapeColor, setShapeColor] = useState(canvasShapeColors[0].value);
   const [shapeColorPickerOpen, setShapeColorPickerOpen] = useState(false);
   const [stickyPickerOpen, setStickyPickerOpen] = useState(false);
@@ -1884,6 +2037,7 @@ export function ProjectPlayground({
   const stickyInputRef = useRef<HTMLDivElement | null>(null);
   const canvasTextEditingRef = useRef(false);
   const tablePlacementRef = useRef(false);
+  const stampPlacementRef = useRef<CanvasStampOption>();
   const canvasCommentsRef = useRef<readonly DesignerCanvasCommentThread[]>([]);
   const activeRef = useRef(true);
   const loadedRef = useRef(false);
@@ -2260,6 +2414,12 @@ export function ProjectPlayground({
     setTablePlacement(false);
   }, []);
 
+  const deactivateStampTool = useCallback(() => {
+    stampPlacementRef.current = undefined;
+    setStampPlacement(undefined);
+    setStampPickerOpen(false);
+  }, []);
+
   const handleCanvasToolPointerDownCapture = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const target = event.target as HTMLElement;
@@ -2269,9 +2429,11 @@ export function ProjectPlayground({
       if (nativeTool) {
         deactivateStickyTool();
         deactivateTableTool();
+        deactivateStampTool();
+        setWidgetsLauncherOpen(false);
       }
     },
-    [deactivateStickyTool, deactivateTableTool],
+    [deactivateStickyTool, deactivateTableTool, deactivateStampTool],
   );
 
   const handleCanvasChange = useCallback(
@@ -2507,12 +2669,7 @@ export function ProjectPlayground({
       }
       persistEmbeddedFiles(files);
     },
-    [
-      deactivateStickyTool,
-      markerMode,
-      persistEmbeddedFiles,
-      queueSnapshot,
-    ],
+    [deactivateStickyTool, markerMode, persistEmbeddedFiles, queueSnapshot],
   );
 
   useEffect(() => {
@@ -2977,6 +3134,8 @@ export function ProjectPlayground({
     setStickyDraft(undefined);
     setStickyPlacement(undefined);
     deactivateTableTool();
+    deactivateStampTool();
+    setWidgetsLauncherOpen(false);
     setShapePlacement(undefined);
     setDocumentPlacement(false);
     setScreensOpen(false);
@@ -2984,7 +3143,7 @@ export function ProjectPlayground({
     setReferencesOpen(false);
     editor.setActiveTool({ type: "frame" });
     editor.setCursor("crosshair");
-  }, [deactivateTableTool]);
+  }, [deactivateStampTool, deactivateTableTool]);
 
   const stopStickyPlacement = useCallback(() => {
     deactivateStickyTool();
@@ -3026,6 +3185,8 @@ export function ProjectPlayground({
     setSelectedCommentId(undefined);
     setShapePlacement(undefined);
     deactivateTableTool();
+    deactivateStampTool();
+    setWidgetsLauncherOpen(false);
     setResearchFramesOpen(false);
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -3038,6 +3199,7 @@ export function ProjectPlayground({
   }, [
     commentPlacement,
     stopCommentPlacement,
+    deactivateStampTool,
     deactivateTableTool,
     stopDocumentPlacement,
     stopStickyPlacement,
@@ -3051,6 +3213,8 @@ export function ProjectPlayground({
     setStickyDraft(undefined);
     setShapePlacement(undefined);
     deactivateTableTool();
+    deactivateStampTool();
+    setWidgetsLauncherOpen(false);
     stopStickyPlacement();
     setScreensOpen(false);
     setTemplatesOpen(false);
@@ -3058,7 +3222,12 @@ export function ProjectPlayground({
     const editor = editorRef.current;
     editor?.setActiveTool({ type: "custom", customType: "astryx-document" });
     editor?.setCursor("crosshair");
-  }, [deactivateTableTool, stopCommentPlacement, stopStickyPlacement]);
+  }, [
+    deactivateStampTool,
+    deactivateTableTool,
+    stopCommentPlacement,
+    stopStickyPlacement,
+  ]);
 
   const insertCanvasDocumentAt = useCallback((x: number, y: number) => {
     const editor = editorRef.current;
@@ -3136,9 +3305,40 @@ export function ProjectPlayground({
     });
   }, []);
 
+  const insertCanvasStampAt = useCallback(
+    async (x: number, y: number, stamp: CanvasStampOption) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      try {
+        const response = await fetch(stamp.asset);
+        if (!response.ok)
+          throw new Error(`Stamp asset returned ${response.status}`);
+        const blob = await response.blob();
+        const fileId = crypto.randomUUID() as FileId;
+        const file: BinaryFileData = {
+          id: fileId,
+          mimeType: (blob.type || "image/png") as BinaryFileData["mimeType"],
+          dataURL: await blobDataUrl(blob),
+          created: Date.now(),
+        };
+        const image = createCanvasStampElement({ x, y, fileId, stamp });
+        editor.addFiles([file]);
+        editor.updateScene({
+          elements: [...editor.getSceneElements(), image],
+          appState: { selectedElementIds: { [image.id]: true } },
+        });
+      } catch (error) {
+        showToast(`Could not add ${stamp.label.toLowerCase()} stamp.`);
+        console.error(error);
+      }
+    },
+    [showToast],
+  );
+
   const handleCanvasPlacementPointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!tablePlacementRef.current || event.button !== 0) return;
+      const stamp = stampPlacementRef.current;
+      if ((!tablePlacementRef.current && !stamp) || event.button !== 0) return;
       const target = event.target as HTMLElement;
       if (!target.closest(".excalidraw__canvas")) return;
 
@@ -3157,13 +3357,63 @@ export function ProjectPlayground({
       // Add the table on the next frame so that reconciliation cannot restore
       // the pre-click scene over the newly created cells.
       window.requestAnimationFrame(() => {
-        if (!tablePlacementRef.current) return;
-        insertCanvasTableAt(placement.x, placement.y);
-        stopTablePlacement();
+        if (tablePlacementRef.current) {
+          insertCanvasTableAt(placement.x, placement.y);
+          stopTablePlacement();
+          return;
+        }
+        const currentStamp = stampPlacementRef.current;
+        if (currentStamp)
+          void insertCanvasStampAt(placement.x, placement.y, currentStamp);
       });
     },
-    [insertCanvasTableAt, stopTablePlacement],
+    [insertCanvasStampAt, insertCanvasTableAt, stopTablePlacement],
   );
+
+  const selectCanvasStamp = useCallback((stamp: CanvasStampOption) => {
+    setActiveStampId(stamp.id);
+    stampPlacementRef.current = stamp;
+    setStampPlacement(stamp);
+    setStampPickerOpen(false);
+    const editor = editorRef.current;
+    editor?.setActiveTool({ type: "custom", customType: "astryx-stamp" });
+    editor?.setCursor("crosshair");
+  }, []);
+
+  const toggleStampTool = useCallback(() => {
+    if (stampPlacementRef.current) {
+      setStampPickerOpen((open) => !open);
+      return;
+    }
+    stopStickyPlacement();
+    stopCommentPlacement();
+    setDocumentPlacement(false);
+    setShapePickerOpen(false);
+    setShapeLibraryOpen(false);
+    setShapePlacement(undefined);
+    setMarkerDrawing(false);
+    setResearchFrameDrawing(false);
+    deactivateTableTool();
+    setScreensOpen(false);
+    setTemplatesOpen(false);
+    setReferencesOpen(false);
+    setToolsCatalogOpen(false);
+    setWidgetsLauncherOpen(false);
+    const stamp =
+      canvasStampOptions.find((option) => option.id === activeStampId) ??
+      defaultCanvasStamp;
+    stampPlacementRef.current = stamp;
+    setStampPlacement(stamp);
+    setStampPickerOpen(true);
+    const editor = editorRef.current;
+    editor?.setActiveTool({ type: "custom", customType: "astryx-stamp" });
+    editor?.setCursor("crosshair");
+  }, [
+    activeStampId,
+    deactivateTableTool,
+    stopCommentPlacement,
+    stopStickyPlacement,
+  ]);
 
   const toggleTableTool = useCallback(() => {
     if (tablePlacement) {
@@ -3182,6 +3432,8 @@ export function ProjectPlayground({
     setTemplatesOpen(false);
     setReferencesOpen(false);
     setToolsCatalogOpen(false);
+    setWidgetsLauncherOpen(false);
+    deactivateStampTool();
     tablePlacementRef.current = true;
     setTablePlacement(true);
     const editor = editorRef.current;
@@ -3191,6 +3443,7 @@ export function ProjectPlayground({
     stopCommentPlacement,
     stopStickyPlacement,
     stopTablePlacement,
+    deactivateStampTool,
     tablePlacement,
   ]);
 
@@ -3211,6 +3464,8 @@ export function ProjectPlayground({
       setMarkerDrawing(false);
       setResearchFrameDrawing(false);
       deactivateTableTool();
+      deactivateStampTool();
+      setWidgetsLauncherOpen(false);
       setShapePlacement(undefined);
       setDocumentPlacement(false);
       setStickyPickerOpen(keepPickerOpen);
@@ -3228,7 +3483,7 @@ export function ProjectPlayground({
       });
       editor?.setCursor(stickyNotePlacementCursor(color, mode));
     },
-    [deactivateTableTool, stopCommentPlacement],
+    [deactivateStampTool, deactivateTableTool, stopCommentPlacement],
   );
 
   const toggleStickyNoteTool = useCallback(() => {
@@ -3257,10 +3512,12 @@ export function ProjectPlayground({
     setShapePlacement(undefined);
     editorRef.current?.resetCursor();
     deactivateStickyTool();
+    deactivateStampTool();
+    setWidgetsLauncherOpen(false);
     setDocumentPlacement(false);
     setCommentPlacement(false);
     deactivateTableTool();
-  }, [deactivateStickyTool, deactivateTableTool]);
+  }, [deactivateStickyTool, deactivateTableTool, deactivateStampTool]);
 
   const selectCanvasShape = useCallback(
     (shape: CanvasShapeOption) => {
@@ -3319,6 +3576,8 @@ export function ProjectPlayground({
       setShapePlacement(undefined);
       deactivateStickyTool();
       deactivateTableTool();
+      deactivateStampTool();
+      setWidgetsLauncherOpen(false);
       if (!editor) return;
       if (mode === "eraser") {
         editor.setActiveTool({ type: "eraser" });
@@ -3340,6 +3599,7 @@ export function ProjectPlayground({
     },
     [
       deactivateStickyTool,
+      deactivateStampTool,
       deactivateTableTool,
       highlighterColor,
       markerColor,
@@ -3391,6 +3651,37 @@ export function ProjectPlayground({
     [markerMode, markerStrokeWeight],
   );
 
+  const toggleWidgetsLauncher = useCallback(() => {
+    const nextOpen = !widgetsLauncherOpen;
+    stopStickyPlacement();
+    stopDocumentPlacement();
+    stopCommentPlacement();
+    deactivateTableTool();
+    deactivateStampTool();
+    setShapePickerOpen(false);
+    setShapeLibraryOpen(false);
+    setShapePlacement(undefined);
+    setMarkerDrawing(false);
+    setResearchFrameDrawing(false);
+    setResearchFramesOpen(false);
+    setScreensOpen(false);
+    setTemplatesOpen(false);
+    setReferencesOpen(false);
+    setToolsCatalogOpen(false);
+    setWidgetsLauncherQuery("");
+    setWidgetsLauncherTab("all");
+    setWidgetsLauncherOpen(nextOpen);
+    editorRef.current?.setActiveTool({ type: "selection" });
+    editorRef.current?.resetCursor();
+  }, [
+    deactivateStampTool,
+    deactivateTableTool,
+    stopCommentPlacement,
+    stopDocumentPlacement,
+    stopStickyPlacement,
+    widgetsLauncherOpen,
+  ]);
+
   const activateCanvasTool = useCallback(
     (tool: ProjectCanvasTool) => {
       setToolsCatalogQuery("");
@@ -3401,15 +3692,21 @@ export function ProjectPlayground({
         const nextOpen = !toolsCatalogOpen;
         stopStickyPlacement();
         stopDocumentPlacement();
+        stopCommentPlacement();
+        deactivateTableTool();
+        deactivateStampTool();
         setResearchFramesOpen(false);
         setScreensOpen(false);
         setTemplatesOpen(false);
         setReferencesOpen(false);
+        setWidgetsLauncherOpen(false);
         setToolsCatalogOpen(nextOpen);
         return;
       }
 
       setToolsCatalogOpen(false);
+      setWidgetsLauncherOpen(false);
+      deactivateStampTool();
       if (tool === "sticky") {
         toggleStickyNoteTool();
         return;
@@ -3445,6 +3742,8 @@ export function ProjectPlayground({
     },
     [
       armDocumentPlacement,
+      deactivateStampTool,
+      deactivateTableTool,
       documentPlacement,
       researchFramesOpen,
       screensOpen,
@@ -3456,6 +3755,18 @@ export function ProjectPlayground({
       toggleCommentTool,
       toolsCatalogOpen,
     ],
+  );
+
+  const openWidgetsTool = useCallback(
+    (tool: ProjectCanvasTool | "stamp") => {
+      setWidgetsLauncherOpen(false);
+      if (tool === "stamp") {
+        toggleStampTool();
+        return;
+      }
+      activateCanvasTool(tool);
+    },
+    [activateCanvasTool, toggleStampTool],
   );
 
   const insertStickyNotesAt = useCallback(
@@ -3731,9 +4042,21 @@ export function ProjectPlayground({
       if (event.key.toLowerCase() === "n") {
         event.preventDefault();
         toggleStickyNoteTool();
+      } else if (event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        toggleStampTool();
       } else if (event.shiftKey && event.key.toLowerCase() === "s") {
         event.preventDefault();
         drawResearchFrame();
+      } else if (
+        stampPlacementRef.current &&
+        ["v", "1", "h", "p", "7", "t", "8", "9"].includes(
+          event.key.toLowerCase(),
+        )
+      ) {
+        // Let Excalidraw handle the native shortcut after clearing Vitrines'
+        // persistent Stamp placement mode.
+        deactivateStampTool();
       } else if (event.key === "Escape") {
         event.preventDefault();
         setToolsCatalogOpen(false);
@@ -3747,6 +4070,8 @@ export function ProjectPlayground({
         setSelectedCommentId(undefined);
         setStickyPickerOpen(false);
         deactivateTableTool();
+        deactivateStampTool();
+        setWidgetsLauncherOpen(false);
         cancelStickyDraft();
         stopStickyPlacement();
       }
@@ -3756,11 +4081,13 @@ export function ProjectPlayground({
       window.removeEventListener("keydown", handleStickyShortcut, true);
   }, [
     cancelStickyDraft,
+    deactivateStampTool,
     deactivateTableTool,
     drawResearchFrame,
     stopCommentPlacement,
     stopDocumentPlacement,
     stopStickyPlacement,
+    toggleStampTool,
     toggleStickyNoteTool,
   ]);
 
@@ -4151,8 +4478,21 @@ export function ProjectPlayground({
         .toLowerCase()
         .includes(normalizedToolsCatalogQuery),
   );
+  const normalizedWidgetsLauncherQuery = widgetsLauncherQuery
+    .trim()
+    .toLowerCase();
+  const filteredWidgetsLauncherItems = canvasWidgetsLauncherItems.filter(
+    (item) =>
+      (widgetsLauncherTab === "all" || item.category === widgetsLauncherTab) &&
+      (!normalizedWidgetsLauncherQuery ||
+        `${item.title} ${item.description}`
+          .toLowerCase()
+          .includes(normalizedWidgetsLauncherQuery)),
+  );
   const canvasToolPanelOpen =
     toolsCatalogOpen ||
+    widgetsLauncherOpen ||
+    stampPickerOpen ||
     shapePickerOpen ||
     researchFramesOpen ||
     screensOpen ||
@@ -4358,7 +4698,9 @@ export function ProjectPlayground({
             commentPlacement
               ? " project-playground__canvas--comment-placement"
               : ""
-          }${tablePlacement ? " project-playground__canvas--table-placement" : ""}`}
+          }${tablePlacement ? " project-playground__canvas--table-placement" : ""}${
+            stampPlacement ? " project-playground__canvas--stamp-placement" : ""
+          }`}
           style={
             {
               "--canvas-marker-tool-icon": `url("${coloredFigJamFreehandToolIcon("marker", markerColor)}")`,
@@ -4493,6 +4835,59 @@ export function ProjectPlayground({
                 >
                   <img src={figjamTableToolIcon} alt="" aria-hidden="true" />
                 </button>
+                <span className="project-playground__stamp-tool">
+                  <button
+                    type="button"
+                    className="project-playground__stamp-trigger"
+                    aria-label="Stamp"
+                    aria-expanded={stampPickerOpen}
+                    aria-pressed={Boolean(stampPlacement)}
+                    title="Stamp (E)"
+                    onClick={toggleStampTool}
+                  >
+                    <img src={figjamStampToolIcon} alt="" aria-hidden="true" />
+                  </button>
+                  {stampPickerOpen ? (
+                    <div
+                      className="project-canvas-stamp-menu"
+                      role="toolbar"
+                      aria-label="Stamp options"
+                    >
+                      <span
+                        className="project-canvas-stamp-menu__surface"
+                        aria-hidden="true"
+                      />
+                      {canvasStampOptions.map((stamp, index) => (
+                        <button
+                          key={stamp.id}
+                          type="button"
+                          className="project-canvas-stamp-menu__option"
+                          aria-label={`${stamp.label} stamp`}
+                          aria-pressed={activeStampId === stamp.id}
+                          style={
+                            {
+                              "--stamp-angle": `${index * 45}deg`,
+                            } as CSSProperties
+                          }
+                          onClick={() => selectCanvasStamp(stamp)}
+                        >
+                          <img src={stamp.asset} alt="" aria-hidden="true" />
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className="project-canvas-stamp-menu__emoji"
+                        aria-label="Emoji stamps"
+                        onClick={() => {
+                          toggleWidgetsLauncher();
+                          setWidgetsLauncherTab("stickers");
+                        }}
+                      >
+                        <FaceHappyIcon size={34} />
+                      </button>
+                    </div>
+                  ) : null}
+                </span>
               </div>
               <div
                 className="project-playground__astryx-tools"
@@ -4527,6 +4922,32 @@ export function ProjectPlayground({
                 </button>
                 <button
                   type="button"
+                  className="project-playground__actions-trigger"
+                  aria-label={toolsCatalogOpen ? "Close actions" : "Actions"}
+                  aria-expanded={toolsCatalogOpen}
+                  aria-pressed={toolsCatalogOpen}
+                  title="Actions (⌘K)"
+                  onClick={() => activateCanvasTool("more")}
+                >
+                  <img src={figjamActionsToolIcon} alt="" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="project-playground__widgets-trigger"
+                  aria-label="Widgets, stickers, templates and more"
+                  aria-expanded={widgetsLauncherOpen}
+                  aria-pressed={widgetsLauncherOpen}
+                  title="Widgets, stickers, templates and more"
+                  onClick={toggleWidgetsLauncher}
+                >
+                  <img src={figjamWidgetsToolIcon} alt="" aria-hidden="true" />
+                </button>
+                <span
+                  className="project-playground__astryx-tools-divider"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
                   className="project-playground__document-trigger"
                   aria-label={
                     documentPlacement ? "Cancel document placement" : "Document"
@@ -4548,17 +4969,6 @@ export function ProjectPlayground({
                   onClick={() => activateCanvasTool("screens")}
                 >
                   <ProjectCanvasToolGlyph tool="screens" />
-                </button>
-                <button
-                  type="button"
-                  className="project-playground__more-tools-trigger"
-                  aria-label={toolsCatalogOpen ? "Close tools" : "More tools"}
-                  aria-expanded={toolsCatalogOpen}
-                  aria-pressed={toolsCatalogOpen}
-                  title="More tools"
-                  onClick={() => activateCanvasTool("more")}
-                >
-                  <ProjectCanvasToolGlyph tool="more" />
                 </button>
               </div>
             </>,
@@ -4609,28 +5019,15 @@ export function ProjectPlayground({
           <aside
             className="project-canvas-tools-catalog"
             role="dialog"
-            aria-label="Astryx canvas tools catalog"
+            aria-label="Canvas actions"
             onPointerDown={(event) => event.stopPropagation()}
           >
-            <header className="project-canvas-tools-catalog__header">
-              <div>
-                <span>Astryx canvas</span>
-                <h2>Tools</h2>
-              </div>
-              <IconButton
-                label="Close tools catalog"
-                icon={<Icon icon="close" size="sm" />}
-                variant="ghost"
-                size="sm"
-                clickAction={() => setToolsCatalogOpen(false)}
-              />
-            </header>
             <TextInput
-              label="Search tools"
+              label="Search actions"
               isLabelHidden
               value={toolsCatalogQuery}
               onChange={setToolsCatalogQuery}
-              placeholder="Search tools…"
+              placeholder="Search"
               width="100%"
               autoFocus
             />
@@ -4644,7 +5041,7 @@ export function ProjectPlayground({
                   key={pinned ? "pinned" : "more"}
                   className="project-canvas-tools-catalog__section"
                 >
-                  <h3>{pinned ? "Pinned" : "More tools"}</h3>
+                  <h3>{pinned ? "Suggestions" : "Canvas tools"}</h3>
                   <div className="project-canvas-tools-catalog__list">
                     {items.map((item) => (
                       <button
@@ -4663,11 +5060,6 @@ export function ProjectPlayground({
                           <strong>{item.title}</strong>
                           <small>{item.description}</small>
                         </span>
-                        {item.pinned ? (
-                          <span className="project-canvas-tools-catalog__badge">
-                            Pinned
-                          </span>
-                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -4681,6 +5073,99 @@ export function ProjectPlayground({
             ) : null}
           </aside>
         )}
+        {widgetsLauncherOpen ? (
+          <aside
+            className="project-canvas-widgets-launcher"
+            role="dialog"
+            aria-label="Widgets, stickers, templates and more"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <header className="project-canvas-widgets-launcher__header">
+              <TextInput
+                label="Search widgets, stickers, and templates"
+                isLabelHidden
+                value={widgetsLauncherQuery}
+                onChange={setWidgetsLauncherQuery}
+                placeholder="Let’s find the perfect thing"
+                width="100%"
+                autoFocus
+              />
+              <IconButton
+                label="Close widgets launcher"
+                icon={<Icon icon="close" size="sm" />}
+                variant="ghost"
+                size="sm"
+                clickAction={() => setWidgetsLauncherOpen(false)}
+              />
+            </header>
+            <div
+              className="project-canvas-widgets-launcher__tabs"
+              role="tablist"
+              aria-label="Launcher categories"
+            >
+              {canvasWidgetsTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={widgetsLauncherTab === tab.id}
+                  onClick={() => setWidgetsLauncherTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div
+              className="project-canvas-widgets-launcher__content"
+              role="tabpanel"
+              aria-label={
+                canvasWidgetsTabs.find((tab) => tab.id === widgetsLauncherTab)
+                  ?.label ?? "All"
+              }
+            >
+              {filteredWidgetsLauncherItems.length ? (
+                <div className="project-canvas-widgets-launcher__grid">
+                  {filteredWidgetsLauncherItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="project-canvas-widgets-launcher__card"
+                      onClick={() => openWidgetsTool(item.tool)}
+                    >
+                      <span
+                        className="project-canvas-widgets-launcher__preview"
+                        aria-hidden="true"
+                      >
+                        {item.tool === "stamp" ? (
+                          <img src={figjamStampStar} alt="" />
+                        ) : (
+                          <ProjectCanvasToolGlyph tool={item.tool} />
+                        )}
+                      </span>
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{item.description}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="project-canvas-widgets-launcher__empty">
+                  <strong>
+                    {widgetsLauncherTab === "plugins"
+                      ? "No workspace plugins yet"
+                      : "Nothing found"}
+                  </strong>
+                  <span>
+                    {widgetsLauncherTab === "plugins"
+                      ? "Approved integrations will appear here."
+                      : "Try a different search or category."}
+                  </span>
+                </div>
+              )}
+            </div>
+          </aside>
+        ) : null}
         {shapePickerOpen && (
           <aside
             className="project-canvas-shape-library"
